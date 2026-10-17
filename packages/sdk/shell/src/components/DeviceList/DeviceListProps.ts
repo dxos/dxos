@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SpaceMember } from '@dxos/react-client/echo';
-import { type Device } from '@dxos/react-client/halo';
 import { type ConnectionState } from '@dxos/react-client/mesh';
 
 /**
@@ -26,10 +24,9 @@ export type ShellDevice = {
 };
 
 export type DeviceListProps = {
-  devices: Device[];
+  devices: readonly ShellDevice[];
   connectionState?: ConnectionState;
-  onClickAdd?: () => void;
-  onClickEdit?: (device: Device) => void;
+  /** The current device's menu actions; the menu shows only when one is given. */
   onClickReset?: () => void;
   onClickJoinExisting?: () => void;
   onClickRecover?: () => void;
@@ -44,13 +41,6 @@ export type AgentFormProps = {
   agentHostingEnabled: boolean;
 };
 
-export type DeviceListItemProps = {
+export type DeviceListItemProps = Omit<DeviceListProps, 'devices'> & {
   device: ShellDevice;
-  presence?: SpaceMember['presence'];
-  connectionState?: ConnectionState;
-  onClickAdd?: () => void;
-  onClickEdit?: () => void;
-  onClickReset?: () => void;
-  onClickJoinExisting?: () => void;
-  onClickRecover?: () => void;
 };

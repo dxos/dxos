@@ -19,8 +19,10 @@ import * as Tooltip from './Tooltip.tsx';
 const LONG =
   'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
 
+const SIDES: readonly Tooltip.Side[] = ['top', 'right', 'bottom', 'left'];
+
 /**
- * Two triggers, then an Input without a tooltip to tab onto; a trigger using the `content`/`side` shorthand; and two
+ * Two triggers, then an Input without a tooltip to tab onto; a trigger per side using the `content`/`side` shorthand; and two
  * TextTooltips, one truncated and one that fits.
  */
 const DefaultStory = ({ size }: SizeArgs) => (
@@ -41,9 +43,11 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Input aria-label='Note' data-testid={`note-${size}`} />
     </Group>
     <Group>
-      <Tooltip.Trigger asChild content='Opens on the right' side='right'>
-        <Button data-testid={`side-${size}`}>Details</Button>
-      </Tooltip.Trigger>
+      {SIDES.map((side) => (
+        <Tooltip.Trigger key={side} asChild content={`Opens on the ${side}`} side={side}>
+          <Button data-testid={`side-${side}-${size}`}>{side}</Button>
+        </Tooltip.Trigger>
+      ))}
     </Group>
     <Tooltip.TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
     <Tooltip.TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
@@ -127,7 +131,7 @@ export const Test: Story = {
     await expect(byTestId(canvasElement, 'note-xs')).toHaveFocus();
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
 
-    const side = byTestId(canvasElement, 'side-md');
+    const side = byTestId(canvasElement, 'side-right-md');
     await userEvent.hover(side);
     await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Opens on the right'));
     await waitFor(() =>
@@ -138,6 +142,18 @@ export const Test: Story = {
     await expect(body.getByRole('tooltip').getBoundingClientRect().height).toBeLessThan(GEOMETRY.md.block);
     await userEvent.unhover(side);
     await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+
+    // The arrow points at the trigger on every side, its outer half clear of the tooltip's ring.
+    for (const placement of SIDES) {
+      const trigger = byTestId(canvasElement, `side-${placement}-md`);
+      await userEvent.hover(trigger);
+      await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent(`Opens on the ${placement}`));
+      const tooltip = body.getByRole('tooltip');
+      await expect(tooltip).toHaveAttribute('data-side', placement);
+      await expectArrow(trigger, tooltip);
+      await userEvent.unhover(trigger);
+      await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+    }
 
     const truncated = byTestId(canvasElement, 'truncated-md');
     await expect(truncated.scrollWidth).toBeGreaterThan(truncated.clientWidth);

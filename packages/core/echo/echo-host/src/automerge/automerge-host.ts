@@ -27,7 +27,14 @@ import {
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
+import {
+  type CommitId,
+  type MemorySigner,
+  type SedimentreeId,
+  SignedFragment,
+  SignedLooseCommit,
+  type Subduction,
+} from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -99,6 +106,8 @@ export type AutomergeHostProps = {
     evictionDelay?: number;
     /** How many released documents stay resident regardless of age. */
     minResidentDocuments?: number;
+    /** How many released documents may wait out the delay before the oldest are evicted at once. */
+    maxIdleDocuments?: number;
   };
 };
 
@@ -215,6 +224,8 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
  * the next one loaded.
  */
 const EVICT_IDLE_DELAY = 30_000;
+
+const MAX_IDLE_DOCUMENTS = 50;
 
 /**
  * Abstracts over the AutomergeRepo.
@@ -359,6 +370,7 @@ export class AutomergeHost extends Resource {
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
       minResidentDocuments: residency?.minResidentDocuments,
+      maxIdleDocuments: residency?.maxIdleDocuments ?? MAX_IDLE_DOCUMENTS,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;
@@ -939,6 +951,24 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * The document's saved changes as storage holds them, without loading the document: its snapshot and
+   * incremental chunks, concatenated in the form `A.loadIncremental` reads. Undefined when storage holds
+   * none, or more than `limit` bytes.
+   */
+  async readStoredChanges(id: DocumentId, { limit }: { limit?: number } = {}): Promise<Uint8Array | undefined> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const chunks = await this._storage.loadRange([id]);
+    const changes = chunks.flatMap(({ key, data }) =>
+      (key[1] === 'snapshot' || key[1] === 'incremental') && data != null && data.length > 0 ? [data] : [],
+    );
+    const size = changes.reduce((sum, data) => sum + data.length, 0);
+    if (size === 0 || (limit !== undefined && size > limit)) {
+      return undefined;
+    }
+    return bufferToArray(Buffer.concat(changes));
+  }
+
+  /**
    * Probe local storage to determine whether the document has any persisted
    * chunks. Does not request the document from the network and does not
    * touch the in-memory `Repo`. Returns `true` iff at least one non-empty
@@ -1411,6 +1441,11 @@ export class AutomergeHost extends Resource {
     return result;
   }
 
+  /** The heads each document's saved changes reach, from the heads store, whatever is loaded and unsaved. */
+  async getStoredHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+    return this._headsStore.getHeads(documentIds);
+  }
+
   /**
    * Iterate over all document heads stored on disk.
    */
@@ -1539,6 +1574,91 @@ export class AutomergeHost extends Resource {
     if (!changeIsPresentInDoc(doc, changeHash)) {
       return false;
     }
+    this._confirmChange(documentId, changeHash);
+    return true;
+  }
+
+  private async _confirmFromStorage(
+    documentIds: DocumentId[],
+    localState: CollectionState,
+    remoteState: CollectionState,
+  ): Promise<DocumentId[]> {
+    const unconfirmed: DocumentId[] = [];
+    for (const documentId of documentIds) {
+      const local = localState.documents[documentId] ?? [];
+      const beyond = (remoteState.documents[documentId] ?? []).filter(
+        (head) => !local.includes(head) && !this._hasLocalChange(documentId, head),
+      );
+      if (beyond.length === 0) {
+        continue;
+      }
+      const isStored = await this._storedHistoryCheck(documentId, local);
+      if (beyond.every(isStored)) {
+        for (const head of beyond) {
+          this._confirmChange(documentId, head);
+        }
+      } else {
+        unconfirmed.push(documentId);
+      }
+    }
+    return unconfirmed;
+  }
+
+  private async _storedHistoryCheck(
+    documentId: DocumentId,
+    heads: readonly string[],
+  ): Promise<(hash: string) => boolean> {
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    const families = ['commits', 'fragments'] as const;
+    const records = await Promise.all(
+      families.map((family) => this._storage.loadRange([SUBDUCTION_PREFIX, family, sedimentreeId])),
+    );
+    const beneath = new Map<string, string[]>();
+    families.forEach((family, index) => {
+      for (const { key, data } of records[index]) {
+        if (key.length === 4 && data) {
+          try {
+            beneath.set(key[3], recordDependencies(family, data));
+          } catch (err) {
+            log.warn('unreadable subduction record', { documentId, family, err });
+          }
+        }
+      }
+    });
+
+    const known = new Map<string, boolean>(heads.map((head) => [head, true]));
+    return (hash) => {
+      const stack = [hash];
+      const visiting = new Set<string>();
+      while (stack.length > 0) {
+        const current = stack[stack.length - 1];
+        if (known.has(current)) {
+          stack.pop();
+          continue;
+        }
+        const dependencies = this._hasLocalChange(documentId, current) ? [] : beneath.get(current);
+        if (dependencies === undefined) {
+          known.set(current, false);
+          stack.pop();
+          continue;
+        }
+        const pending = dependencies.filter((dependency) => !known.has(dependency));
+        if (pending.length > 0 && !visiting.has(current)) {
+          visiting.add(current);
+          stack.push(...pending);
+          continue;
+        }
+        known.set(
+          current,
+          dependencies.every((dependency) => known.get(dependency) === true),
+        );
+        stack.pop();
+      }
+      return known.get(hash) === true;
+    };
+  }
+
+  private _confirmChange(documentId: DocumentId, changeHash: string): void {
     const confirmed = this._confirmedChanges.get(documentId) ?? new Set<string>();
     if (!confirmed.has(changeHash) && confirmed.size >= MAX_CONFIRMED_PER_DOCUMENT) {
       confirmed.clear();
@@ -1551,7 +1671,6 @@ export class AutomergeHost extends Resource {
       const [leastRecent] = this._confirmedChanges.keys();
       this._confirmedChanges.delete(leastRecent);
     }
-    return true;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1604,14 +1723,17 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote, advertised } = diffCollectionStateForPeer(
-      localState,
-      remoteState,
-      {
-        isEdgePeer: isEdgePeerId(peerId),
-        hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
-      },
-    );
+    const diff = diffCollectionStateForPeer(localState, remoteState, {
+      isEdgePeer: isEdgePeerId(peerId),
+      hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
+    });
+    const { different, missingOnLocal, missingOnRemote } = diff;
+    const advertised = this._useSubduction
+      ? await this._confirmFromStorage(diff.advertised, localState, remoteState)
+      : diff.advertised;
+    if (ctx.disposed) {
+      return;
+    }
 
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
@@ -1817,7 +1939,7 @@ export class AutomergeHost extends Resource {
       if (!state) {
         continue;
       }
-      let newState: CollectionState | undefined;
+      let documents: Record<DocumentId, Heads> | undefined;
 
       for (const [documentId, heads] of docHeads) {
         const current = state.documents[documentId];
@@ -1834,14 +1956,12 @@ export class AutomergeHost extends Resource {
         if (headsEquals(current, heads)) {
           continue;
         }
-        if (!newState) {
-          newState = structuredClone(state);
-        }
-        newState.documents[documentId] = heads;
+        documents ??= { ...state.documents };
+        documents[documentId] = heads;
       }
 
-      if (newState) {
-        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+      if (documents) {
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
         collectionsChanged.add(collectionId as CollectionId);
       }
     }
@@ -1886,6 +2006,35 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
     };
     lease.on('change', onChange);
   });
+};
+
+const recordDependencies = (family: 'commits' | 'fragments', data: Uint8Array): string[] => {
+  const toHex = (ids: CommitId[]) =>
+    ids.map((id) => {
+      try {
+        return id.toHexString();
+      } finally {
+        id.free();
+      }
+    });
+  if (family === 'commits') {
+    const signed = SignedLooseCommit.tryDecode(data);
+    const commit = signed.payload;
+    try {
+      return toHex(commit.parents);
+    } finally {
+      commit.free();
+      signed.free();
+    }
+  }
+  const signed = SignedFragment.tryDecode(data);
+  const fragment = signed.payload;
+  try {
+    return toHex(fragment.boundary);
+  } finally {
+    fragment.free();
+    signed.free();
+  }
 };
 
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */

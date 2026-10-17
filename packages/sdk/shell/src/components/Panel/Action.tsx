@@ -2,28 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  forwardRef,
-} from 'react';
+import React, { type ComponentProps, type Dispatch, type SetStateAction, forwardRef } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ComponentProps<typeof Button.Root> & {
+type LargeButtonProps = ComponentProps<typeof Button.Root> & {
   isFull?: boolean;
 };
 
@@ -81,7 +73,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
+    <div className={mx('flex gap-px items-center', isFull && 'w-full')}>
       <Button.Root
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
@@ -139,50 +131,3 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
     </div>
   );
 });
-
-//
-// Action
-//
-
-/**
- * @deprecated Use Button directly.
- */
-export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
-  const { children, classNames, variant, isFull = true, ...rest } = props;
-  return (
-    <Button.Root {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
-      {children}
-    </Button.Root>
-  );
-});
-
-//
-// Actions
-//
-
-type ActionBarProps = Omit<Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
-  children: ReactNode | ReactNode[];
-};
-
-/**
- * @deprecated Use Dialog.ActionBar
- */
-const ActionBar = forwardRef<HTMLDivElement, ActionBarProps>(({ classNames, children, ...props }, forwardedRef) => {
-  return (
-    <div
-      {...props}
-      className={mx(
-        'flex flex-col gap-2 mt-2',
-        Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
-        classNames,
-      )}
-      ref={forwardedRef}
-    >
-      {children}
-    </div>
-  );
-});
-
-export { ActionBar };
-
-export type { ActionBarProps };

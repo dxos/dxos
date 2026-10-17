@@ -1,0 +1,3 @@
+node A "Dog"
+node B "Animal" right-of A
+edge A extends B

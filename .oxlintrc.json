@@ -62,6 +62,7 @@
     "@dxos/eslint-plugin-rules/operation-key-shape": "error",
     "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/no-error-class-name": "error",
     "@dxos/eslint-plugin-rules/no-similar-sibling-files": [
       "error",
       {

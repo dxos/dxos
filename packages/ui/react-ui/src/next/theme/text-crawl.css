@@ -27,6 +27,8 @@
   /* A block, not a flex line: on a flex line the text is an anonymous item and `text-overflow` never applies. */
   .dx-text-crawl-line {
     height: var(--dx-line-height);
+    /* Matches the box, not the root: a text-size utility on the root resets its line height and would ride the text up. */
+    line-height: var(--dx-line-height);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;

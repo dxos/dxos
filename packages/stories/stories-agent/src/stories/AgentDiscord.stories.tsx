@@ -3,28 +3,32 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import * as Panel from '@dxos/react-ui/Panel';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
   type DiscordBotArgs,
   type FakeDiscordBot,
-  KAI_APPLICATION_ID,
   ModuleContainer,
   type ModuleLayout,
   createDecorators,
   edgeFake,
-  edgeLocalPersistent,
-  ensureBotRecord,
   installFakeDiscordBot,
   setupAgent,
   setupDiscordAgent,
+  storyConfig,
   storyParameters,
 } from '../testing/index.ts';
 
-type StoryArgs = DiscordBotArgs & { layout?: ModuleLayout };
+type StoryArgs = DiscordBotArgs & {
+  layout?: ModuleLayout;
+  /** Keeps the profile (space, bindings, conversations) across reloads; a change reboots the story. */
+  persistent?: boolean;
+};
 
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-agent/AgentDiscord',
@@ -35,13 +39,13 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
-
 const companion = (variant: string) => ({
   type: StoryRole.AgentCompanion,
   data: { variant },
   id: `companion-${variant}`,
 });
+
+type Story = StoryObj<StoryArgs>;
 
 /**
  * Installing the DXOS Discord app (Kai) and routing a Discord channel to the agent, in a durable test space on a
@@ -51,22 +55,35 @@ const companion = (variant: string) => ({
  * 1. Discord: **Connect Discord** signs you in (the servers you administer appear).
  * 2. Pick a server without the bot and **Install** it (Discord's consent page), then **Refresh**.
  * 3. Pick the server, and **Connect** a channel: it appears in Activity → Channels.
- * 4. Mention @Kai in that channel: the conversation appears under Activity → Conversations.
- * 5. Reload: the space, the binding and the conversation are still there.
+ * 4. Activity: **Connect channels** starts the bot; the Discord bot panel reaches ready.
+ * 5. Mention @Kai in that channel: the conversation appears under Activity → Conversations.
+ * 6. Reload: the space, the binding and the conversation are still there.
  */
 export const Setup: Story = {
-  decorators: createDecorators({
-    config: edgeLocalPersistent,
+  render: (args) => (
+    <Panel.Root>
+      <Panel.Header>
+        <StorySettingsToolbar />
+      </Panel.Header>
+      {/* `ModuleContainer` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
+      <Panel.Body classNames='relative'>
+        <ModuleContainer {...args} />
+      </Panel.Body>
+    </Panel.Root>
+  ),
+  decorators: createDecorators<StoryArgs>(({ args }) => ({
+    config: storyConfig({ persistent: args.persistent }),
     onReady: async ({ db, invoker }) => {
       await setupAgent({ db, invoker, remote: true });
-      await ensureBotRecord(db, KAI_APPLICATION_ID);
     },
-  }),
+  })),
+  argTypes: { persistent: { control: 'boolean' } },
   args: {
+    persistent: true,
     layout: [
       [companion('discord'), StoryRole.DiscordBot],
-      [companion('activity')],
-      [StoryRole.Conversation],
+      [StoryRole.AgentProperties, companion('email')],
+      [companion('activity'), StoryRole.Conversation],
       [companion('brain')],
     ],
   },
@@ -115,10 +132,10 @@ export const Scripted: Story = {
     const monitor = await canvas.findByTestId('discord-bot-monitor', {}, { timeout: 60_000 });
     await findEntry(monitor, 'stopped · idle');
     // Setup put the agent in Support mode after the Activity panel mounted, so its skill list must follow the bindings.
-    const skills = await canvas.findByRole('region', { name: 'Skills' }, { timeout: 30_000 });
+    const skills = await canvas.findByRole('group', { name: 'Skills' }, { timeout: 30_000 });
     await within(skills).findByText('Community support', {}, { timeout: 30_000 });
     // Setup recorded each team member's expertise, which the skill reads to choose who to offer.
-    await canvas.findByText(/Dmytro Maretskyi \(DXOS\) is the one to ask about ECHO/, {}, { timeout: 30_000 });
+    await canvas.findByText(/Dmytro knows about ECHO/, {}, { timeout: 30_000 });
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Connect channels' }, { timeout: 30_000 }));
     await findEntry(monitor, 'running · connecting');

@@ -1,0 +1,28 @@
+[package]
+name = "dependency-closure"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "FSL-1.1-Apache-2.0"
+description = "moon toolchain plugin that keys tasks on the third-party packages their project can load."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+sha2 = "0.10"
+
+# The moon hooks build only for the plugin, so `cargo test` compiles just the closure logic.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+extism-pdk = "1.4.1"
+moon_pdk_api = "2.3.0"
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = true
+opt-level = "s"
+strip = true

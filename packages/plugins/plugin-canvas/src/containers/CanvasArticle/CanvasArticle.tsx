@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -17,8 +17,10 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
+  type BackgroundGrid,
   type Camera,
   type Element,
+  type InspectorMode,
   type Node,
   type SceneDisplay,
   type SceneId,
@@ -29,13 +31,23 @@ import {
   isLink,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import {
+  canvasRecordOf,
+  generatorCompiler,
+  isCanvasDrawing,
+  objectRef,
+  objectUri,
+  parseLinkedSceneId,
+  resolveDrawingLook,
+  updateCanvasRecord,
+} from '#model';
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
+import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -63,11 +75,23 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
-  const [snapshot] = useObject(canvas);
+  const [snapshot, updateCanvas] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
   const lattice = record?.lattice === true;
+  // The drawing's look is shared with collaborators, so it wins over the viewer's own default.
+  const look = resolveDrawingLook(record, settings);
+  const handleThemeChange = useCallback(
+    (theme: string | undefined) => updateCanvas((canvas) => updateCanvasRecord(canvas.content, { theme })),
+    [updateCanvas],
+  );
+  const handleBackgroundGridChange = useCallback(
+    (backgroundGrid: BackgroundGrid | undefined) =>
+      updateCanvas((canvas) => updateCanvasRecord(canvas.content, { backgroundGrid })),
+    [updateCanvas],
+  );
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
@@ -81,9 +105,17 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
-  // and shows the drawing alone: no palette and no panels.
+  // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
   const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
+  const handleInspectorsChange = useCallback(
+    (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
+    [updateViewState],
+  );
+  const handleReadonlyChange = useCallback(
+    (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
+    [updateViewState],
+  );
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],
@@ -97,18 +129,15 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A shape opens a scene of this drawing, never one bound from a linked drawing.
   const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
 
-  // A frame may show any object listed in the navtree but this drawing itself.
+  // A frame may show any object listed in the navigator but this drawing itself.
+  const { t } = UiHooks.useTranslation();
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
-      results
-        // System objects (space properties, canvases, traces) have no place in the navtree, so none here either.
-        .filter((result) => Obj.isObject(result) && TypeOptions.isUserObject(result))
-        .filter((result) => !(Obj.instanceOf(Drawing.Drawing, result) && result.canvas.target === canvas))
-        .map((result) => {
-          const id = Entity.getURI(result, { prefer: 'named' });
-          return { id, label: Entity.getLabel(result) ?? id };
-        }),
-    [canvas],
+      ObjectCombobox.toOptions(results, {
+        t,
+        filter: (object) => !(Obj.instanceOf(Drawing.Drawing, object) && object.canvas.target === canvas),
+      }),
+    [canvas, t],
   );
 
   // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
@@ -142,7 +171,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   return (
-    // A section takes the document's width and has no height of its own (its panels float, read-only), so its height
+    // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
     <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
       <Panel.Body>
@@ -156,12 +185,24 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               nodes={nodes}
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
+              theme={look.theme}
+              defaultTheme={look.defaultTheme}
+              styleSet={look.styleSet}
+              background={look.background}
+              backgroundGrid={look.backgroundGrid}
+              onThemeChange={section ? undefined : handleThemeChange}
+              onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
               readonly={readonly}
+              onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides, fit }}
               onDisplayChange={handleDisplayChange}
-              panels={floating ? 'floating' : 'docked'}
+              inspectors={floating ? 'floating' : 'docked'}
+              onInspectorsChange={handleInspectorsChange}
+              generators={generators}
+              compileGenerator={generatorCompiler}
+              createGeneratorWorker={createGeneratorWorker}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
@@ -170,6 +211,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   <SceneView.Navigation />
                   <SceneView.Actions />
                   <SceneView.Debug />
+                  {!section && <SceneView.Theme />}
                 </>
               )}
               {!section && (
@@ -181,7 +223,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                     overrides={overrides}
                     sceneFilter={isLocalScene}
                   />
+                  <SceneView.Timeline />
                   <SceneView.Layers />
+                  <SceneView.Objects />
                   <SceneView.About />
                 </>
               )}

@@ -174,6 +174,7 @@ type WorkerFactoryOptions = {
   createRuntime?: Worker.Options['createRuntime'];
   /** Grace before a worker queued on the storage lock escalates to the incumbent's tab. */
   displaceGraceTimeout?: number;
+  shutdownTimeout?: number;
   /**
    * Whether the handle carries `terminate()`, as a real `Worker` does. A bare `MessagePort` handle is
    * a supported production configuration and cannot stop the worker, so tests can opt out.
@@ -194,6 +195,7 @@ export const createWorkerFactory =
       onCreate,
       createRuntime = () => Effect.succeed({ createSession: () => Effect.never }),
       displaceGraceTimeout,
+      shutdownTimeout,
       terminable = true,
     }: WorkerFactoryOptions = {},
   ) =>
@@ -320,6 +322,7 @@ export const createWorkerFactory =
           },
           storageLockKey,
           displaceGraceTimeout,
+          shutdownTimeout,
           signal: terminated.signal,
           createRuntime,
         });

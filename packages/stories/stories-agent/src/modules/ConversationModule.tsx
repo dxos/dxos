@@ -17,6 +17,7 @@ import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
@@ -78,7 +79,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
       <Panel.Header>{toolbar}</Panel.Header>
       <Panel.Body asChild>
         <Layout.Flex column classNames='min-h-0'>
-          {conversations.length === 0 && <p className='p-2 text-description'>No channel conversations yet.</p>}
+          {conversations.length === 0 && <Status.Empty>No channel conversations yet.</Status.Empty>}
           {[visible, chat]
             .filter(
               (conversation, index, all): conversation is AssistantChat.Chat =>

@@ -7,6 +7,8 @@
 import type * as acp from '@agentclientprotocol/sdk';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
@@ -100,7 +102,10 @@ export const make = (
       return client.edge.http;
     });
 
-    const options: Options = { definition, control, accessTokens };
+    // Lent to every turn so the agent reaches the space through Composer's MCP server, as the signed-in identity.
+    const composerMcp = composerMcpCredentials(() => manager.getAll(ClientCapabilities.IdentityService).at(0));
+
+    const options: Options = { definition, control, accessTokens, composerMcp };
     return {
       id: definition.id,
       label: definition.label,
@@ -138,6 +143,8 @@ export type Options = {
   control: () => ProcessControl | undefined;
   /** Resolves the space's server-custodied tokens; without it, only tokens the space holds are lent. */
   accessTokens?: Layer.Layer<Credential.AccessTokenResolver>;
+  /** The variables that authorize the agent against Composer's MCP server; without it, the agent has no Composer tools. */
+  composerMcp?: Effect.Effect<Record<string, string>>;
 };
 
 /** The chat's process, and where to reach it. */
@@ -147,7 +154,7 @@ const makeTurnProducer =
   (options: Options): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
-      // The agent's tools are its own, in the container.
+      // The agent's tools are its own, in the container, and those of the Composer MCP server EDGE connects it to.
       getSkills: () => [],
       runTurn: (request: TurnRequest) =>
         runTurn(options, { chat, feed }, request).pipe(
@@ -165,9 +172,13 @@ export const runTurn = (
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
     const rpc = yield* target.control.rpc(target);
-    const env = yield* options.definition.credentials.pipe(
-      Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
-    );
+    // The Composer token is the signed-in identity's alone, so nothing the space lends may replace it.
+    const env = {
+      ...(yield* options.definition.credentials.pipe(
+        Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
+      )),
+      ...(yield* options.composerMcp ?? Effect.succeed(NO_CREDENTIALS)),
+    };
     yield* rpc
       .provideCredentials({ env })
       .pipe(
@@ -434,6 +445,80 @@ export const checkoutsOf = (
 const GITHUB_HOST = 'github.com';
 
 const NO_CREDENTIALS: Record<string, string> = {};
+
+/** How long a minted Composer MCP token lives; long enough to outlast a working session, short enough to lapse unused. */
+const COMPOSER_MCP_TOKEN_LIFETIME = Duration.days(1);
+
+/** A token this close to expiry is replaced before it is lent, so it cannot lapse mid-turn. */
+const COMPOSER_MCP_TOKEN_MARGIN = Duration.hours(1);
+
+/** The part of the identity service that mints API tokens. */
+export type ApiTokenMinter = {
+  getEdgeIdentity: () => Option.Option<{ readonly identityDid: string }>;
+  createApiToken: (options: { label: string; expiresAt?: number }) => Effect.Effect<{ token: string }, unknown>;
+};
+
+type MintedToken = { did: string; token: string; expiresAt: number };
+
+/**
+ * The variable ({@link EdgeProtocol.COMPOSER_MCP_TOKEN_ENV}) holding an API token minted for the signed-in
+ * identity, which EDGE presents to its Composer MCP server for the agent. One token is kept per identity DID and
+ * replaced as it nears expiry; concurrent turns share one mint. With no identity, or when minting fails, the
+ * agent goes without.
+ */
+export const composerMcpCredentials = (
+  identity: () => ApiTokenMinter | undefined,
+  now: () => number = Date.now,
+): Effect.Effect<Record<string, string>> => {
+  const tokens = new Map<string, MintedToken>();
+  const pending = new Map<string, Fiber.Fiber<MintedToken, unknown>>();
+  const currentDid = (service: ApiTokenMinter) => Option.getOrUndefined(service.getEdgeIdentity())?.identityDid;
+  return Effect.gen(function* () {
+    const service = identity();
+    const did = service && currentDid(service);
+    if (!service || !did) {
+      return NO_CREDENTIALS;
+    }
+    const cached = tokens.get(did);
+    if (cached && cached.expiresAt - now() >= Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
+      return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: cached.token };
+    }
+    let mint = pending.get(did);
+    if (!mint) {
+      const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
+      // Detached, so a turn interrupted while waiting cancels neither the mint nor the other turns sharing it.
+      mint = yield* service.createApiToken({ label: 'Claude Code (cloud)', expiresAt }).pipe(
+        Effect.map(({ token }): MintedToken => ({ did, token, expiresAt })),
+        Effect.forkDetach,
+      );
+      pending.set(did, mint);
+    }
+    const shared = mint;
+    const minted = yield* Fiber.join(shared).pipe(
+      Effect.onExit((exit) =>
+        Effect.sync(() => {
+          // Only a turn that saw the mint finish retires it; an interrupted waiter leaves it to the others.
+          if (!Exit.hasInterrupts(exit) && pending.get(did) === shared) {
+            pending.delete(did);
+          }
+        }),
+      ),
+    );
+    tokens.set(did, minted);
+    // A token minted while the signed-in identity or its service changed must never be lent as the new one's.
+    if (identity() !== service || currentDid(service) !== did) {
+      return NO_CREDENTIALS;
+    }
+    return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: minted.token };
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.sync(() => {
+        log.warn('no Composer MCP credential', { cause });
+        return NO_CREDENTIALS;
+      }),
+    ),
+  );
+};
 
 /**
  * The space's GitHub connection as the environment the agent's `git` and `gh` read: a token EDGE custodies

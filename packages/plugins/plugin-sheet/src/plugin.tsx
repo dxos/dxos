@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AnchorSort,
+  AppGraphBuilder,
   CommentConfig,
   ComputeGraphRegistry,
   CreateObject,
@@ -23,6 +24,7 @@ import { meta } from '#meta';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AnchorSort),
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CommentConfig),
   Plugin.addModule(ComputeGraphRegistry),
   Plugin.addModule(CreateObject),

@@ -1,0 +1,3 @@
+node A "Customer"
+node B "Order" right-of A
+edge A one-to-many B

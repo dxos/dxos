@@ -7,7 +7,7 @@ import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@au
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion, backingJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import {
   type DataSourceCursor,
@@ -18,6 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
+import { isSaved } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -191,11 +192,13 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
+          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, A.getHeads(doc));
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
             }
             const storedCreatedAt = structure.system?.createdAt;
+            const data = objectStructureToJson(objectId, structure);
             objects.push({
               spaceId,
               documentId,
@@ -203,9 +206,10 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               queuePosition: null,
               recordId: null,
-              data: objectStructureToJson(objectId, structure),
+              data,
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
+              heads: atSavedHeads && backingJson(doc, structure, data) !== undefined ? docHeads : undefined,
             });
           }
 

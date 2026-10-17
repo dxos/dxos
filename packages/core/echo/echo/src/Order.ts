@@ -6,6 +6,8 @@
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import type * as Annotation from './Annotation.ts';
+
 export const OrderTypeId = '~@dxos/echo/Order' as const;
 export type OrderTypeId = typeof OrderTypeId;
 
@@ -84,5 +86,51 @@ export const created = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T
   new OrderClass({
     kind: 'timestamp',
     field: 'createdAt',
+    direction,
+  });
+
+/** A value an annotation order can sort by. */
+export type AnnotationScalar = string | number | boolean;
+
+type PathDepth = [never, 0, 1, 2, 3];
+
+/**
+ * Key paths from `T` to a scalar field, as tuples; the depth bound keeps recursive value types finite.
+ */
+export type AnnotationPath<T, Depth extends number = 4> = [Depth] extends [never]
+  ? never
+  : T extends readonly unknown[]
+    ? never
+    : T extends object
+      ? {
+          [K in keyof T & string]-?: NonNullable<T[K]> extends AnnotationScalar
+            ? readonly [K]
+            : readonly [K, ...AnnotationPath<NonNullable<T[K]>, PathDepth[Depth]>];
+        }[keyof T & string]
+      : never;
+
+/**
+ * Order by an annotation set on the entity with `Annotation.set` (`meta.annotations[key]`).
+ * A struct-valued annotation orders by the scalar at `path` (e.g. `['meters']`).
+ * Entities without the annotation, or whose value is not a scalar, sort last in either direction.
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
+ */
+export const annotation: {
+  <T extends AnnotationScalar>(annotation: Annotation.Annotation<T>, direction?: QueryAST.OrderDirection): Order<any>;
+  <T, const P extends AnnotationPath<T>>(
+    annotation: Annotation.Annotation<T>,
+    direction: QueryAST.OrderDirection,
+    path: P,
+  ): Order<any>;
+} = (
+  annotation: Annotation.Annotation<unknown>,
+  direction: QueryAST.OrderDirection = 'asc',
+  path?: readonly string[],
+): Order<any> =>
+  new OrderClass({
+    kind: 'annotation',
+    key: annotation.key,
+    ...(path !== undefined && path.length > 0 ? { path: [...path] } : {}),
     direction,
   });

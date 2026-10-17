@@ -8,29 +8,13 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
-import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, EscapedPropPath, isEncodedReference, referenceIndexKey } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
-import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
+import { type EntityId, type SpaceId, URI } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref/index.ts';
-import { type EntityPropPath, EscapedPropPath, chunkArray, normalizePropPath } from '../utils.ts';
+import { type EntityPropPath, chunkArray, normalizePropPath } from '../utils.ts';
 import type { Index, IndexerObject } from './interface.ts';
-
-/**
- * Normalizes a reference URI so every spelling of the same target shares one index key: an echo
- * reference by its local (space-less) form, a named-entity `dxn:` by its unversioned NSID. Lookups
- * normalize identically (see `query`).
- */
-export const referenceIndexKey = (uri: URI.URI): URI.URI | undefined => {
-  const parsedEchoUri = EID.tryParse(uri);
-  if (parsedEchoUri) {
-    return EID.getEntityId(parsedEchoUri) ? EID.toLocal(parsedEchoUri) : undefined;
-  }
-  if (DXN.isDXN(uri)) {
-    return DXN.tryMake(uri) ? DXN.make<string>(DXN.getName(uri)) : undefined;
-  }
-  return uri;
-};
 
 /**
  * Extracts all outgoing references from an object's data.

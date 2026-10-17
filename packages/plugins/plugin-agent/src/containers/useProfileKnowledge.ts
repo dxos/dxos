@@ -4,42 +4,116 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HasSubject, type Organization, type Person } from '@dxos/types';
+import { RDF } from '@dxos/pipeline-rdf';
+import { type Organization, type Person } from '@dxos/types';
 
-import { Goal, Memory, Profile } from '#types';
+import { type ProfileFact } from '#components';
+import { BrainService, Goal, Profile, TriggerOperation } from '#types';
 
-/** The live goals and active memories agents hold about a person or organization. */
+import { entityKeys, isAbout } from '../operations/knowledge.ts';
+import { pollDelay } from './pollDelay.ts';
+
+/** How often the brains are re-read; neither brain has a change feed for its facts. */
+const POLL_MS = 3_000;
+
+/**
+ * The facts every agent in the space holds, re-read while mounted; an agent with a chat running on EDGE keeps its
+ * brain there, so it is read there.
+ */
+const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): RDF.Fact[] => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const agents = useQuery(db, Filter.type(Agent.Agent));
+  const chats = useQuery(db, Filter.type(Chat.Chat));
+  const remote = useMemo(
+    () =>
+      new Set(
+        chats.flatMap((chat) => {
+          const parent = Obj.getParent(chat);
+          return parent && Agent.chatLocation(chat) === 'edge' ? [parent.id] : [];
+        }),
+      ),
+    [chats],
+  );
+
+  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+    let cancelled = false;
+    let failures = 0;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    // Each read schedules the next once it settles, so a slow call never overlaps (or overwrites) a newer one.
+    const read = async () => {
+      const results = await Promise.all(
+        agents.map((agent) =>
+          invokePromise(
+            TriggerOperation.InspectBrain,
+            { agent: Ref.make(agent) },
+            { spaceId: db.spaceId, ...(remote.has(agent.id) ? { on: 'edge' as const } : {}) },
+          ),
+        ),
+      );
+      if (cancelled) {
+        return;
+      }
+      setFacts(results.flatMap(({ data }) => data?.facts ?? []));
+      failures = results.some(({ error }) => error) ? failures + 1 : 0;
+      timeout = setTimeout(() => void read(), pollDelay(POLL_MS, failures));
+    };
+    void read();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [db, agents, remote, invokePromise]);
+
+  return facts;
+};
+
+/** The live goals and the facts agents hold about a person or organization, newest first. */
 export const useProfileKnowledge = (
   subject: Person.Person | Organization.Organization,
-): { goals: Goal.Goal[]; memories: Memory.Memory[] } => {
+): { goals: Goal.Goal[]; facts: ProfileFact[] } => {
   const db = Obj.getDatabase(subject);
-  const subjectQuery = useMemo(() => Query.select(Filter.id(subject.id)).targetOf(HasSubject.HasSubject), [subject.id]);
-  const relations = useQuery(db, subjectQuery);
-  // All of each type, narrowed below to those about the subject.
-  const allMemories = useQuery(db, Filter.type(Memory.Memory));
+  const facts = useSpaceFacts(db);
   const allGoals = useQuery(db, Filter.type(Goal.Goal));
 
-  // A query re-emits on membership only, so status changes (confirmed, superseded) need per-object subscriptions.
-  const profileAtom = useMemo(
+  const profileFacts = useMemo(() => {
+    const keys = entityKeys(subject);
+    // Two agents reading one source store the same fact; it is listed once.
+    const unique = [
+      ...new Map(BrainService.currentFacts(facts, new Date().toISOString()).map((fact) => [fact.id, fact])).values(),
+    ];
+    return unique
+      .filter((fact) => isAbout(fact, keys))
+      .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime))
+      .map((fact): ProfileFact => ({
+        id: fact.id,
+        text: BrainService.factText(fact),
+        predicate: RDF.Ontology.DEFAULT.canonical(RDF.Mapping.predicateOf(fact))?.label ?? fact.assertion.predicate,
+        ...(fact.origin === 'stated' || fact.origin === 'inferred' ? { origin: fact.origin } : {}),
+        saidAt: fact.attribution.generatedAtTime,
+      }));
+  }, [facts, subject]);
+
+  // A query re-emits on membership only, so status changes (confirmed, dropped) need per-object subscriptions.
+  const goalsAtom = useMemo(
     () =>
       Atom.make((get) => {
-        allMemories.forEach((memory) => get(Obj.atom(memory)));
         allGoals.forEach((goal) => get(Obj.atom(goal)));
-        const ids = new Set(relations.map((relation) => Relation.getSource(relation).id));
-        return {
-          memories: allMemories
-            .filter((memory) => memory.status === 'active' && ids.has(memory.id))
-            .sort(Profile.byNewest),
-          goals: allGoals.filter(
-            (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
-          ),
-        };
+        return allGoals.filter(
+          (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
+        );
       }),
-    [relations, allMemories, allGoals, subject.id],
+    [allGoals, subject.id],
   );
-  return useAtomValue(profileAtom);
+  return { goals: useAtomValue(goalsAtom), facts: profileFacts };
 };

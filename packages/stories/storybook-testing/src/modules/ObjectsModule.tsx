@@ -91,16 +91,18 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
       </Panel.Header>
       <Panel.Body>
         <Listbox.Root items={filtered.map((object) => ({ value: object.id, label: object.id }))}>
-          <Listbox.Content aria-label='Objects'>
-            {filtered.map((object) => (
-              <Listbox.Item key={object.id} id={object.id}>
-                <div className='flex flex-col gap-0.5 overflow-hidden'>
-                  <div className='truncate'>{Obj.getLabel(object) ?? object.id}</div>
-                  <div className='text-xs text-fg-muted truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
-                </div>
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Objects'>
+              {filtered.map((object) => (
+                <Listbox.Item key={object.id} id={object.id}>
+                  <div className='flex flex-col gap-0.5 overflow-hidden'>
+                    <div className='truncate'>{Obj.getLabel(object) ?? object.id}</div>
+                    <div className='text-xs text-fg-muted truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
+                  </div>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </Panel.Body>
       <Panel.Footer>

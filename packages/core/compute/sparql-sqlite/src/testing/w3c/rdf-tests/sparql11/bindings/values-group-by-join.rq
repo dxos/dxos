@@ -1,0 +1,7 @@
+PREFIX : <http://example.org/>
+
+SELECT ?s (COUNT(*) AS ?c) {
+  ?s ?p ?o
+}
+GROUP BY ?s
+VALUES ?s { :a :d }

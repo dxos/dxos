@@ -207,7 +207,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
  */
 export type RoastLogsResult = { entries: Obj.Any[] };
 
-export const RoastLogs: SampleSpace.Phase<RoastLogsResult, PersonMap> = SampleSpace.phase('roastLogs', {
+export const RoastLogs: SampleSpace.Partial<RoastLogsResult, PersonMap> = SampleSpace.partial('roastLogs', {
   schemas: [RoastLog, View.View, Table.Table, Kanban.Kanban],
   run: (people: PersonMap) =>
     Effect.gen(function* () {

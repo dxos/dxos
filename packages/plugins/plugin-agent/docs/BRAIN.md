@@ -140,22 +140,22 @@ in a space stay there unread, with no migration.
 `@dxos/pipeline-rdf` defines the fact model every layer reuses, as Effect Schemas under the `RDF`
 namespace:
 
-| Type          | Fields                                                                                                          |
-| ------------- | --------------------------------------------------------------------------------------------------------------- |
-| `Fact`        | `id`, `assertion`, `factuality`, `illocution?`, `attribution`, `recordedAt`, `extractor`, `sourceHash`, `pass?` |
-| `Assertion`   | `subject: Term`, `predicate`, `object: Term`, `validFrom?`, `validTo?`, `quote?`                                |
-| `Term`        | `{ kind: 'entity', entity, label? }` or `{ kind: 'literal', literal }`                                          |
-| `Factuality`  | `value` (FactBank: `CT+ CT- PR+ PR- PS+ PS- CTu Uu`), `polarity` (`+ - ?`), `confidence?`, `nature?`            |
-| `Illocution`  | `force` (`assertive`, `directive`, `commissive`, `expressive`), `mood?`, `addressee?`                           |
-| `Attribution` | `agent?` (speaker), `source` (message DXN), `generatedAtTime`, `wasDerivedFrom?`, `span?`                       |
-| `Entity`      | `id`, `kind` (`person org place event concept thing`), `label`, `aliases`, `ref?` (an ECHO object)              |
+| Type          | Fields                                                                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Fact`        | `id`, `graph?`, `assertion`, `factuality`, `illocution?`, `attribution`, `recordedAt`, `extractor`, `sourceHash`, `pass?`, `kind?`, `origin?`, `supersedes?`, `retracts?` |
+| `Assertion`   | `subject: Term`, `predicate`, `predicateIri?`, `object: Term`, `validFrom?`, `validTo?`, `quote?`                                                                         |
+| `Term`        | `{ kind: 'entity', entity, label?, type? }` or `{ kind: 'literal', literal }`                                                                                             |
+| `Factuality`  | `value` (FactBank: `CT+ CT- PR+ PR- PS+ PS- CTu Uu`), `polarity` (`+ - ?`), `confidence?`, `nature?`                                                                      |
+| `Illocution`  | `force` (`assertive`, `directive`, `commissive`, `expressive`), `mood?`, `addressee?`                                                                                     |
+| `Attribution` | `agent?` (speaker), `source` (message DXN), `generatedAtTime`, `wasDerivedFrom?`, `span?`                                                                                 |
+| `Entity`      | `id`, `kind` (`person org place event concept thing`), `label`, `aliases`, `ref?` (an ECHO object)                                                                        |
 
-Its RDF form — the `sx:` (`https://dxos.org/semantic#`) and `prov:` vocabulary, entity and fact IRIs,
-and the `Fact` ↔ triples reification — is the one RDF definition: the brain reuses it for any RDF or N3
+Its RDF form — the `sx:` (`https://dxos.org/semantic#`), `dx:` (`https://dxos.org/ontology/`) and `prov:`
+vocabulary, entity, fact and graph IRIs, and the `Fact` ↔ quads mapping — is the one RDF definition: the brain reuses it for any RDF or N3
 output rather than inventing its own namespace. `FactStore` persists that form in SQLite (`triples`
 indexed by subject–predicate–object and predicate–object, `entities`, per-source `cursors`) and answers
 SPARQL. They are public as `RDF.Vocab` (namespaces and IRI helpers), `RDF.Mapping` (`factToTriples`,
-`triplesToFacts`) and `RDF.Predicate` (`normalize`). The mapping serializes `illocution` (`sx:force`,
+`triplesToFacts`), `RDF.Graph` (`assign`, `status`, `toTriG`), `RDF.Ontology` and `RDF.Predicate` (`normalize`). The mapping serializes `illocution` (`sx:force`,
 `sx:mood`, `sx:addressee`), which it previously dropped — a fact read back from `FactStore` had lost
 its speech act; round-trip tests cover both stores.
 
@@ -173,9 +173,36 @@ that possible:
   the run. It serializes as an optional `sx:pass` triple; `readSource` leaves it unset.
 
 Corrections and retractions are further facts (`attribution.wasDerivedFrom` lists what a correction
-supersedes; polarity `-`). A fact without an `illocution` is `assertive`. A fact's `id` is a
-deterministic `source#hash#index` that RDF reification and `wasDerivedFrom` refer to, so a fact read
-twice is stored once.
+supersedes; polarity `-`). A fact without an `illocution` is `assertive`.
+
+### Named graphs, IRIs and the ontology
+
+Decided 2026-10-13 (formerly QUESTIONS.md 1 and 2):
+
+- **A fact is a statement in a named graph.** Statements are real triples inside a graph, and the
+  provenance they share — source, speaker, time, quote, factuality, extraction pass — is stated once,
+  about the graph (`RDF.Graph.assign` groups them; a statement that differs in any of it starts
+  another graph). A `Fact` is one statement: its `id` is derived from the graph and the triple, so a
+  fact read twice is stored once. Facts stored before this were reified; pipeline-rdf's migration
+  `0002_named_graphs` made each a one-statement graph that keeps its id.
+- **Predicates are IRIs from an extensible ontology** (`RDF.Ontology`), seeded from shared
+  vocabularies under their own IRIs (`schema:jobTitle`, `schema:memberOf`, `foaf:knows`,
+  `dcterms:creator`), with `dx:` only for what none of them names (`dx:claim`, `dx:worksOn`, …). Each
+  has a label, synonyms, description, domain, range and inverse. A surface form the ontology knows maps
+  onto its predicate; one it does not know mints an IRI in the brain's namespace from its relation key,
+  so the same phrasing in two documents still meets. The brain's `Vocabulary` is built from the same
+  ontology. Wordings, labels and the vocabularies: pipeline-rdf's
+  [docs/ONTOLOGY.md](../../../core/compute/pipeline-rdf/docs/ONTOLOGY.md).
+- **Entities are IRIs where one is known**: a member by DID, a person or organization in the space by
+  its object URI (`echo://<spaceId>/<objectId>`), an email by `mailto:`, a page by its URL; otherwise
+  a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
+- **Agents record facts too.** `recordFacts` writes the same structured facts extraction does, as the
+  agent's own words; a correction is a graph that `supersedes` it. The seed vocabulary keeps the prose
+  predicates `claim` and `has_note` only so older graphs parse. Facts stay in the brain store, not
+  ECHO feeds.
+- Not yet built: linking an entity read before its object existed to that object (`owl:sameAs`), and
+  predicates proposed by the extractor with their own descriptions (they are minted from the surface
+  form).
 
 ### Encoding and vocabulary
 

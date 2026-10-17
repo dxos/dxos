@@ -17,7 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -26,10 +26,10 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
+  AgentPresence,
   BrainService,
   ChatParticipant,
   Goal,
-  Memory,
   MemoryOperation,
   Mode,
   Relay,
@@ -310,7 +310,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,
@@ -353,6 +352,26 @@ const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: 
   const session = yield* AgentService.getSession(chat);
   yield* session.submitPrompt(prompt, { sender: { name } });
   yield* session.waitForCompletion();
+});
+
+describe('AgentPresence.delivers', () => {
+  const agent = (keys: { source: string; id: string }[] = []) =>
+    Obj.make(Agent.Agent, {
+      name: 'Kai',
+      instructions: Ref.make(Instructions.make({ text: '' })),
+      [Obj.Meta]: { keys },
+    });
+
+  it('delivers a watch in the space it was set from, and one stored without an origin at home', ({ expect }) => {
+    const [homeSpace, otherSpace] = [SpaceId.random(), SpaceId.random()];
+    const home = agent();
+    const presence = agent([AgentPresence.homeKey(EID.make({ spaceId: homeSpace, entityId: home.id }))]);
+    const setThere = EID.make({ spaceId: otherSpace, entityId: presence.id });
+    expect(AgentPresence.delivers(presence, otherSpace, setThere)).toBe(true);
+    expect(AgentPresence.delivers(home, homeSpace, setThere)).toBe(false);
+    expect(AgentPresence.delivers(home, homeSpace, undefined)).toBe(true);
+    expect(AgentPresence.delivers(presence, otherSpace, undefined)).toBe(false);
+  });
 });
 
 describe('end-of-turn triggers', () => {
@@ -485,6 +504,50 @@ describe('end-of-turn triggers', () => {
     ),
     { timeout: 60_000 },
   );
+
+  it.effect(
+    'delivers a watch only in the space it was set from, and leaves one set in another space queued for it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
+        const { agent: agentRef } = yield* createLocalAgent('Kai');
+        const agent = yield* Database.load(agentRef);
+        const { chat: josiahChatRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make<Obj.Unknown>(josiah),
+        });
+        const josiahChat = yield* Database.load(josiahChatRef);
+        const { db } = yield* Database.Service;
+        yield* Database.flush();
+        const watch = (id: string, origin: string): Trigger.Trigger => ({
+          id,
+          agent: agent.id,
+          when: { speaker: DIMA, after: '2026-10-03T00:00:00.000Z' },
+          then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(josiah), message: 'Update on Dima: {fact}' },
+          ongoing: true,
+          createdAt: '2026-10-03T00:00:00.000Z',
+          origin,
+        });
+        const service = yield* BrainService.BrainService;
+        yield* service.subscribe(watch('here', EID.make({ spaceId: db.spaceId, entityId: agent.id })));
+        // Set through the agent in another space, whose goal and recipient this space cannot resolve.
+        yield* service.subscribe(
+          watch('elsewhere', EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() })),
+        );
+
+        const { fired } = yield* pushFacts(agent, [
+          fact({ subject: 'Dima', predicate: 'works on', object: 'agent plugin', quote: ONGOING.plugin }),
+        ]);
+        expect(fired).toEqual(['here']);
+        yield* settle(josiahChat);
+        expect((yield* texts(josiahChat)).filter((text) => text === COMPOSED[ONGOING.plugin])).toHaveLength(1);
+        expect(yield* service.take('elsewhere')).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
 });
 
 //
@@ -593,7 +656,6 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,

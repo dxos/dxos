@@ -10,12 +10,13 @@ import { evalite } from 'evalite';
 
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as InterviewSkill from '@dxos/plugin-agent/InterviewSkill';
-import * as Memory from '@dxos/plugin-agent/Memory';
+import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
@@ -27,7 +28,7 @@ import * as Scorer from '../Scorer.ts';
 
 //
 // The interview skill (plugin-agent) run live: DeepSeek V4 Pro interviews a persona played by
-// DeepSeek V4 Flash, and the graph it leaves (Person, Goal, Memory, profile document) is graded
+// DeepSeek V4 Flash, and the graph it leaves (Person, Goal, facts, profile document) is graded
 // against the persona's ground truth. Flash also judges the interviewing craft.
 //
 // Needs `DEEPSEEK_API_KEY`, which routes DeepSeek directly (see `runner.ts`); without it the eval is
@@ -42,9 +43,6 @@ const MAX_TURNS = 10;
 /** Fewer persona messages than this and nothing was really asked. */
 const MIN_TURNS = 3;
 
-/** A memory longer than this is a transcript excerpt rather than one claim. */
-const MAX_MEMORY_LENGTH = 200;
-
 type GoalTruth = {
   /** Every pattern must match the captured goal's title or description. */
   match: RegExp[];
@@ -54,7 +52,7 @@ type GoalTruth = {
 };
 
 type FactTruth = {
-  /** Every pattern must match one memory's content. */
+  /** Every pattern must match one fact, or its quote. */
   match: RegExp[];
 };
 
@@ -232,11 +230,8 @@ const liveGoals = Scorer.shared(
   ),
 );
 
-const memories = Scorer.shared(
-  Database.query(Filter.type(Memory.Memory)).run.pipe(
-    Effect.map((memories) => memories.filter((memory) => memory.status === 'active')),
-  ),
-);
+/** The current facts, from the agent's brain. */
+const facts = Scorer.shared(Operation.invoke(MemoryOperation.Recall, {}).pipe(Effect.map(({ facts }) => facts)));
 
 const people = Scorer.shared(Database.query(Filter.type(Person.Person)).run);
 
@@ -331,42 +326,23 @@ const scorersFor = (persona: Persona): Scorer.Any[] => [
     : []),
   Scorer.make({
     name: 'fact-recall',
-    description: 'Fraction of the persona’s stated facts recorded as at least one active Memory.',
-    score: memories.pipe(
-      Effect.map((memories) =>
+    description: 'Fraction of the persona’s stated facts recorded as at least one current fact.',
+    score: facts.pipe(
+      Effect.map((facts) =>
         fraction(
-          persona.facts.filter((truth) => memories.some((memory) => matchesAll(truth.match, memory.content))).length,
+          persona.facts.filter((truth) =>
+            facts.some((fact) => matchesAll(truth.match, `${fact.fact} ${fact.quote ?? ''}`)),
+          ).length,
           persona.facts.length,
         ),
       ),
     ),
   }),
   Scorer.make({
-    name: 'memory-provenance',
-    description: 'Fraction of active memories that cite their source message or chat.',
-    score: memories.pipe(
-      Effect.map((memories) =>
-        fraction(memories.filter((memory) => memory.source !== undefined).length, memories.length),
-      ),
-    ),
-  }),
-  Scorer.make({
-    name: 'memories-atomic',
-    description: `Fraction of active memories that are one sentence of at most ${MAX_MEMORY_LENGTH} characters.`,
-    score: memories.pipe(
-      Effect.map((memories) =>
-        fraction(
-          memories.filter(
-            ({ content }) =>
-              content.length <= MAX_MEMORY_LENGTH &&
-              content
-                .trim()
-                .split(/[.!?](?:\s|$)/)
-                .filter(Boolean).length <= 1,
-          ).length,
-          memories.length,
-        ),
-      ),
+    name: 'fact-quotes',
+    description: 'Fraction of current facts that quote the words they were stated in.',
+    score: facts.pipe(
+      Effect.map((facts) => fraction(facts.filter((fact) => fact.quote !== undefined).length, facts.length)),
     ),
   }),
   Scorer.make({
@@ -469,7 +445,7 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   skills: () => [Ref.make(InterviewSkill.make())],
   plugins: [MarkdownPlugin.make(), AgentPlugin.make()],
-  types: [Memory.Memory, Goal.Goal, HasSubject.HasSubject, Markdown.Document, ProfileOf.ProfileOf],
+  types: [Goal.Goal, HasSubject.HasSubject, Markdown.Document, ProfileOf.ProfileOf],
   conversation: {
     opening: (input) => personaOf(input).opening,
     reply: ({ input, transcript }) => simulateUser(personaOf(input), transcript),
@@ -484,7 +460,7 @@ const task = createEvalRunner({
 const run = DEEPSEEK_KEY ? evalite : evalite.skip;
 
 for (const persona of PERSONAS) {
-  run(`Interview — ${persona.id}: goals, memories and profile from a simulated interview`, {
+  run(`Interview — ${persona.id}: goals, facts and profile from a simulated interview`, {
     data: [
       { input: { persona: persona.id, displayName: persona.fullName.split(' ')[0], discordId: persona.discordId } },
     ],

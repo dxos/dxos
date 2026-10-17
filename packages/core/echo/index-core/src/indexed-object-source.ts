@@ -22,8 +22,8 @@ import { type IndexerObject } from './indexes/interface.ts';
 const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: null };
 
 /**
- * Objects one pass reads, and so one downstream transaction writes. Independent of how many bound
- * variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
+ * Most objects one pass reads; the engine asks for at most one transaction's worth. Independent of
+ * how many bound variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
  */
 const INDEX_BATCH_SIZE = 500;
 

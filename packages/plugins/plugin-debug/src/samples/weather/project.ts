@@ -41,13 +41,13 @@ This project needs no Cloudflare login and no API keys. If a step seems to need 
 wrong step.`;
 
 /**
- * The work-stream. It adopts the task set the tasks phase built and binds the Weather MCP skill
+ * The work-stream. It adopts the task set the tasks partial built and binds the Weather MCP skill
  * through `instructions.skills` — the only path a seeded skill reaches a chat by — so the run can
  * configure the server with one update and no enable step.
  */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   // `Project.make` builds an outline for the project and the instructions' prose is stored as a
-  // Text; a phase has to declare every type it persists or the space cannot register it.
+  // Text; a partial has to declare every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline, Text.Text],
   run: ({ tasks, skill }: ProjectInput) =>
     Effect.gen(function* () {

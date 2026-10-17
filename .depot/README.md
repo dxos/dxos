@@ -34,7 +34,7 @@ Depot CI runs [steps concurrently](https://depot.dev/docs/ci/how-to-guides/paral
 | `check` | knip alongside `check-plugin-set` + `docs:bundle` | About 2m30s against 1m and 1m. The two moon checks share one invocation because they overlap in `^:build`, so moon schedules that graph once instead of two processes contending for the same task locks. `fail-fast: false` replaces the old `continue-on-error` and gate-step pair. |
 | `test`, `e2e` | per-cell preparation | The browser download dominates, and the `find` and the `moon query` ride along with it. Step `id`s and outputs survive the block, since Depot merges each unit's state back when they join. |
 
-Two things a `parallel:` block must not contain: a step that mutates a moon task input, `pnpm-lock.yaml` above all, whose restoring `trap` does not survive a hard cancellation; and a second concurrent `moon` process in the same workspace. The peer-dependency check in `check` is sequential for the first reason.
+Two things a `parallel:` block must not contain: a step that mutates a moon task input, such as `pnpm-lock.yaml`, whose restoring `trap` does not survive a hard cancellation; and a second concurrent `moon` process in the same workspace. The peer-dependency check in `check` is sequential for the first reason.
 
 Depot snapshots step outputs, env and `$GITHUB_PATH` per unit and merges them back on join. The filesystem is shared across the whole block.
 
@@ -46,12 +46,12 @@ Depot snapshots step outputs, env and `$GITHUB_PATH` per unit and merges them ba
 
 | Job | What runs | JUnit paths Trunk reads |
 | :-- | :-- | :-- |
-| `test` | Every vitest flavour: unit, browser, storybook and workerd (`:test`, `:test-browser`, `:test-storybook`, `:test-workerd` via uploader; same workflow triggers as the rest of Check), sharded over 4 runners with `moon exec --job <0-3> --job-total 4` so cells are sized by work rather than by flavour. | `test-results/**/results.xml` |
+| `test-node`, `test-browser` | The vitest flavours through the uploader, two cells each: `test-node` runs `:test` and `:test-workerd` on every ready PR and in the merge queue; `test-browser` runs `:test-browser` and `:test-storybook` in the merge queue only, where its failure blocks the merge. Both run nightly and on dispatch. | `test-results/**/results.xml` |
 | `boot-budget` | `composer-app:check-boot-budget`, the static boot-graph budget over the production bundle, on its own runner because it builds `bundle` and nothing else in the workflow does. On a same-repo PR it also measures the base commit, restoring its report from the remote cache since the task declares it as an output. A separate `boot-budget-comment` job posts the sticky `<!-- boot-budget -->` comment, holds the only `pull-requests: write` grant, and runs no PR-controlled code. Advisory, so only the budget itself gates. | none |
 | `boot-budget-comment` | Posts, updates or deletes the boot-graph sticky comment from `boot-budget`'s outputs. No checkout and no build. It exists so the write token is never in a job that runs branch code. | none |
-| `e2e` | Playwright e2e via uploader, 6 matrix cells: browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`) x shard (`composer` runs `composer-app:e2e` in a dedicated cell; `rest` runs an explicit target list computed by `moon query tasks "task=e2e && project!=composer-app"`, so a new suite joins the pool with no hand-maintained list). DESIGN.md explains why a glob or `moon exec --query` cannot express that list. The job runs only for `main` and `changeset-release/*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](./workflows/check.yml)). | `test-results/playwright/report/*.xml` |
+| `e2e`, `e2e-rest` | Playwright e2e through the uploader, one cell per browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`): `e2e` runs `composer-app:e2e`, `e2e-rest` the rest of the e2e pool. They run in the merge queue, nightly and on dispatch, never on a PR, and report without gating. | `test-results/playwright/report/*.xml` |
 
-The vitest flavours go through Trunk on typical PRs. e2e only does when the `e2e` job runs, which is not on ordinary topic-branch PRs. Exact `moon` commands and `env` are in [`check.yml`](./workflows/check.yml).
+Pushes to main run no `Check` jobs: main moves to the commit the merge queue tested, so the queue's results are the ones GitHub shows on it. Exact `moon` commands and `env` are in [`check.yml`](./workflows/check.yml).
 
 Why the matrix is shaped this way, what it intermittently fails on, how to attribute a red cell, and which fixes are already refuted are in the CI project's [`DESIGN.md`](../.agents/projects/ci/DESIGN.md). Two other sharding strategies were measured against this one and rejected; that is recorded there too.
 

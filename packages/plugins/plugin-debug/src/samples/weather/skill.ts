@@ -25,7 +25,7 @@ export type SkillResult = { skill: Skill.Skill };
  * the one place a chat reads MCP servers from, and the project's instructions can bind a seeded
  * object — so configuring the server is one field update, not a skill to author and enable.
  */
-export const WeatherSkill: SampleSpace.Phase<SkillResult> = SampleSpace.phase('skill', {
+export const WeatherSkill: SampleSpace.Partial<SkillResult> = SampleSpace.partial('skill', {
   schemas: [Skill.Skill, Text.Text],
   run: () =>
     Effect.gen(function* () {

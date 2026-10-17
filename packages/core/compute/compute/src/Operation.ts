@@ -836,23 +836,27 @@ export const getVersion = (record: PersistentOperation): string | undefined => O
 /**
  * Serialize an operation definition to a persistent operation record.
  */
-export const serialize = (operation: Definition.Any): PersistentOperation => {
-  return Obj.make(PersistentOperation, {
-    [Obj.Meta]: {
-      key: operation.meta.key,
-      version: operation.meta.version ?? '0.0.0',
-      keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
-      annotations: operation.meta.annotations,
+export const serialize = (operation: Definition.Any, options?: Obj.MakeOptions): PersistentOperation => {
+  return Obj.make(
+    PersistentOperation,
+    {
+      [Obj.Meta]: {
+        key: operation.meta.key,
+        version: operation.meta.version ?? '0.0.0',
+        keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+        annotations: operation.meta.annotations,
+      },
+      name: operation.meta.name ?? '',
+      description: operation.meta.description,
+      icon: operation.meta.icon,
+      updated: undefined,
+      source: undefined,
+      inputSchema: JsonSchema.toJsonSchema(operation.input),
+      outputSchema: JsonSchema.toJsonSchema(operation.output),
+      services: operation.services.map((service) => service.key),
     },
-    name: operation.meta.name ?? '',
-    description: operation.meta.description,
-    icon: operation.meta.icon,
-    updated: undefined,
-    source: undefined,
-    inputSchema: JsonSchema.toJsonSchema(operation.input),
-    outputSchema: JsonSchema.toJsonSchema(operation.output),
-    services: operation.services.map((service) => service.key),
-  });
+    options,
+  );
 };
 
 /**

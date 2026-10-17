@@ -256,9 +256,10 @@ export const SkillDefinition = Capability$.make<Skill.Definition>()(
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
- * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability from a dependency-mode module. Consumers
- * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * Contributors load the raw file (e.g. `() => import('../PLUGIN.mdl?raw')`) through
+ * `AppCapability.pluginAsset`, whose module is gated on `ActivationEvents.PluginAssetsRequested`.
+ * Consumers fire that event, then read all contributions with
+ * `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
@@ -419,6 +420,20 @@ export type NavigationTargetResolver = (
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
+
+/**
+ * Changes that exist only in this page, which leaving it would lose: consulted before the page or the
+ * app goes away.
+ * @category Capability
+ */
+export type UnsavedChanges = {
+  /** Synchronous, so a `beforeunload` handler can decide. */
+  has(): boolean;
+  /** Hands the changes on to where they are kept, resolving whether none is left. */
+  save(): Promise<boolean>;
+};
+
+export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-framework.capability.unsavedChanges');
 
 /**
  * What a {@link NavigationTargetLoader} was able to determine about a target.

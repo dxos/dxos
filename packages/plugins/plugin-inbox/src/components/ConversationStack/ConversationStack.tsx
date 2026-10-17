@@ -541,7 +541,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
         <Card.Row
           align='start'
-          classNames='py-1'
+          classNames='pt-1'
           leading={
             <ContactAvatar
               actor={target.sender}
@@ -573,6 +573,10 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
               <span className='line-clamp-2'>{sender}</span>
             </Collapsible.Trigger>
           </h2>
+        </Card.Row>
+        {/* A row of its own rather than the heading's second line, so it runs under the trailing cell to the
+            card's end instead of stopping where the date and actions start. */}
+        <Card.Row span='end' classNames='min-h-0 auto-rows-auto pb-1'>
           {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
               tiles at once, and a summary line shorter than a subject line makes the two read as
               different row heights. Pinned rather than merely clamped, so a message with no subject

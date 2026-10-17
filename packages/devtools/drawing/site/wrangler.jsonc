@@ -1,0 +1,13 @@
+// drawing.sh: the landing page, served as static assets from a Worker on the drawing.sh zone.
+// Deploy: `moon run drawing:site && pnpm exec wrangler deploy -c packages/devtools/drawing/site/wrangler.jsonc`.
+{
+  "name": "drawing-sh",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+  },
+  "routes": [
+    { "pattern": "drawing.sh", "custom_domain": true },
+    { "pattern": "www.drawing.sh", "custom_domain": true },
+  ],
+}

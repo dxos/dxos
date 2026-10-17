@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EDGE_URLS } from '@dxos/config';
+
 /** Stable id used by `plugin-connector` to look up the Discord Bot provider entry. */
 export const DISCORD_PROVIDER_ID = 'discord';
 
@@ -78,3 +80,42 @@ export const generateInviteUrl = (applicationId: string): string => {
 
 /** Companion variant (and surface literal) of an agent's Discord setup: account, servers and routed channels. */
 export const DISCORD_AGENT_COMPANION = 'discord';
+
+/** The EDGE environments of `EDGE_URLS`, which the Kai apps and the hub console are per. */
+const EDGE_ENVIRONMENTS = ['local', 'dev', 'preview', 'production'] as const satisfies (keyof typeof EDGE_URLS)[];
+
+type EdgeEnvironment = (typeof EDGE_ENVIRONMENTS)[number];
+
+/** The known EDGE environment `edgeUrl` belongs to, matched by origin; undefined for a custom EDGE. */
+const edgeEnvironment = (edgeUrl: string | undefined): EdgeEnvironment | undefined => {
+  const origin = edgeUrl && URL.parse(edgeUrl)?.origin;
+  return origin
+    ? EDGE_ENVIRONMENTS.find((environment) => new URL(EDGE_URLS[environment]).origin === origin)
+    : undefined;
+};
+
+/** Hub console page listing the Discord bots EDGE hosts; one hub serves every environment, picked by `env`. */
+const EDGE_CONSOLE_URL = 'https://hub.dev.dxos.network/console/edge/discord';
+
+/** The hub console's Discord page for the EDGE environment `edgeUrl` belongs to; undefined for a custom EDGE. */
+export const edgeConsoleUrl = (edgeUrl: string | undefined): string | undefined => {
+  const environment = edgeEnvironment(edgeUrl);
+  return environment && `${EDGE_CONSOLE_URL}?${new URLSearchParams({ env: environment })}`;
+};
+
+/**
+ * DXOS's Kai Discord app in each EDGE environment. EDGE holds each app's token (discord-service's
+ * `DISCORD_KAI_APPLICATION_ID` / `DISCORD_KAI_BOT_TOKEN`), so a space records neither.
+ */
+export const KAI_APPLICATION_IDS: Readonly<Record<EdgeEnvironment, string>> = Object.freeze({
+  local: '1559967387972009984',
+  dev: '1559736753990926390',
+  preview: '1559967457274372126',
+  production: '1555777706459660288',
+});
+
+/** The Kai app of the EDGE at `edgeUrl`; undefined for a custom EDGE, which has none. */
+export const kaiApplicationId = (edgeUrl: string | undefined): string | undefined => {
+  const environment = edgeEnvironment(edgeUrl);
+  return environment && KAI_APPLICATION_IDS[environment];
+};

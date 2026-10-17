@@ -6,6 +6,9 @@ import * as Cause from 'effect/Cause';
 
 import { AiModelNotAvailableError, AiService } from '@dxos/ai';
 
+/** The declared error name; the class's own `name` is minified in production builds. */
+const AI_MODEL_NOT_AVAILABLE = 'AiModelNotAvailableError';
+
 /**
  * Recognise a failure caused by `@dxos/ai/AiService` being absent from the process-manager
  * `LayerStack`. The extract operations declare `AiService` in their `services`, so the process
@@ -47,7 +50,7 @@ export const isAiModelUnavailable = (error: unknown): boolean => {
     return true;
   }
   const message = (error as { message?: unknown } | null)?.message;
-  return typeof message === 'string' && message.includes(AiModelNotAvailableError.name);
+  return typeof message === 'string' && message.includes(AI_MODEL_NOT_AVAILABLE);
 };
 
 /** Either flavour of "the assistant is not ready yet" — no service in the stack, or no model resolver. */
@@ -65,5 +68,5 @@ export const isAiUnavailableCause = (cause: Cause.Cause<unknown>): boolean => {
     return true;
   }
   const rendered = Cause.pretty(cause);
-  return rendered.includes(AiModelNotAvailableError.name) || rendered.includes(AiService.key);
+  return rendered.includes(AI_MODEL_NOT_AVAILABLE) || rendered.includes(AiService.key);
 };

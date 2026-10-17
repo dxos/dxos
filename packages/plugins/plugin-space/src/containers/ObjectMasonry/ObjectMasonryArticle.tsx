@@ -8,6 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
+import { useLabels } from '@dxos/echo-react';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -43,17 +44,18 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
 
   // Ordered by label: the query returns index order, which reads as arbitrary to someone scanning a
   // directory of cards. Sorted on the INPUT, leaving the search below free to rank by match score.
+  const labels = useLabels(objects);
   const ordered = useMemo(
     () =>
       [...objects].sort((a, b) =>
-        (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '', undefined, { sensitivity: 'base' }),
+        (labels.get(a) ?? '').localeCompare(labels.get(b) ?? '', undefined, { sensitivity: 'base' }),
       ),
-    [objects],
+    [objects, labels],
   );
 
   const { results, handleSearch } = useSearchListResults<Obj.Unknown>({
     items: ordered,
-    extract: (object) => Obj.getLabel(object) ?? '',
+    extract: (object) => labels.get(object) ?? '',
   });
 
   const selectedIds = useSelection(attendableId, 'multi');

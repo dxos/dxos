@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  BackgroundGrid,
   DEFAULT_LAYER,
   type FrameNode,
   Layer,
@@ -21,13 +22,15 @@ import {
   NodeBase,
   type Scene,
   type SceneId,
+  SceneKind,
   type SceneMap,
   StyleClass,
   type StyleMap,
+  Timeline,
   elementLayer,
   isFrameNode,
   sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas/headless';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
@@ -52,6 +55,14 @@ export const CanvasRecord = Schema.Struct({
   grid: Schema.optional(Schema.Number),
   /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
   readonly: Schema.optional(Schema.Boolean),
+  /** The theme every collaborator sees, over each one's own default; an id the theme registry resolves. */
+  theme: Schema.optional(Schema.String),
+  /** Overrides the theme's style set. */
+  styleSet: Schema.optional(Schema.String),
+  /** Overrides the theme's background. */
+  background: Schema.optional(Schema.String),
+  /** Overrides the background's grid. */
+  backgroundGrid: Schema.optional(BackgroundGrid),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -62,6 +73,10 @@ export const SceneRecord = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
+  /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
+  sceneKind: Schema.optional(SceneKind),
+  /** The scene's animation, kept whole with it: keys are edited as a set and few. */
+  timeline: Schema.optional(Timeline),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -268,6 +283,26 @@ export const updateCanvasRecord = (content: ContentMap, values: Partial<Omit<Can
   }
 };
 
+/** What a drawing passes the view to pick its look: its own theme over the user's, then its overrides of the parts. */
+export type DrawingLook = Pick<CanvasRecord, 'theme' | 'styleSet' | 'background' | 'backgroundGrid'> & {
+  defaultTheme?: string;
+};
+
+/**
+ * The look a drawing draws with: its own theme (shared with collaborators) over the user's default, else classic, then
+ * the drawing's overrides of the theme's style set, background and grid.
+ */
+export const resolveDrawingLook = (
+  record: Pick<CanvasRecord, 'theme' | 'styleSet' | 'background' | 'backgroundGrid'> | undefined,
+  defaults: { theme?: string },
+): DrawingLook => ({
+  theme: record?.theme,
+  defaultTheme: defaults.theme,
+  styleSet: record?.styleSet,
+  background: record?.background,
+  backgroundGrid: record?.backgroundGrid,
+});
+
 /** The root scene id, when the content has been seeded. */
 export const rootOf = (content: ContentMap): SceneId | undefined => {
   const canvas = content[CANVAS_KEY];
@@ -408,6 +443,8 @@ export const readScenes = (content: ContentMap): SceneMap => {
       nodes: nodes[header.id],
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
+      ...(header.sceneKind ? { kind: header.sceneKind } : {}),
+      ...(header.timeline ? { timeline: clone(header.timeline) } : {}),
     };
   }
   return scenes;
@@ -429,6 +466,8 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
       id: scene.id,
       ...(scene.name ? { name: scene.name } : {}),
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+      ...(scene.kind && scene.kind !== 'scene' ? { sceneKind: scene.kind } : {}),
+      ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {
       content[key] = record;
@@ -473,4 +512,25 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
     }
   }
   return changed;
+};
+
+/** The scene record `id`, when the content has one. */
+export const sceneRecordOf = (content: ContentMap, id: SceneId): SceneRecord | undefined => {
+  const record: unknown = content[sceneKey(id)];
+  return isSceneRecord(record) ? record : undefined;
+};
+
+/** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
+export const putNodeRecord = (content: ContentMap, scene: SceneId, node: Node): void => {
+  content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
+};
+
+/** Replaces scene `scene`'s timeline in place; the scene must exist. */
+export const putTimeline = (content: ContentMap, scene: SceneId, timeline: Timeline): boolean => {
+  const record = sceneRecordOf(content, scene);
+  if (!record) {
+    return false;
+  }
+  content[sceneKey(scene)] = { ...clone(record), timeline: clone(timeline) } satisfies SceneRecord;
+  return true;
 };

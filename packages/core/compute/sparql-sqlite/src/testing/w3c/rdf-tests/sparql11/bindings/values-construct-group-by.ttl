@@ -1,0 +1,4 @@
+@prefix : <http://example.org/> .
+
+:a :rank 1 .
+:b :rank 2 .

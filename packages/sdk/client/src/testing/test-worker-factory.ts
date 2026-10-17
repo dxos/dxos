@@ -10,7 +10,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
+import { layerFile as sqliteLayerFile, layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../lock-key.ts';
@@ -54,11 +54,14 @@ export class TestWorkerFactory extends Resource {
       storageLockKey: STORAGE_LOCK_KEY,
       createRuntime: ({ config: configValues, requestShutdown }) =>
         Effect.gen({ self: this }, function* () {
+          const config = this._config ?? new Config(configValues ?? {});
+          // A configured data root persists across workers, so a replacement worker opens what its predecessor saved.
+          const dataRoot = config.get('runtime.client.storage.dataRoot');
           const runtime = yield* WorkerRuntime.makeWorkerRuntime({
-            configProvider: Effect.sync(() => this._config ?? new Config(configValues ?? {})),
+            configProvider: Effect.succeed(config),
             requestShutdown: Effect.sync(requestShutdown),
             automaticallyConnectWebrtc: false,
-            sqliteLayer: sqliteLayerMemory,
+            sqliteLayer: dataRoot ? sqliteLayerFile(`${dataRoot}/storage.db`) : sqliteLayerMemory,
           });
           if (terminated) {
             requestShutdown();

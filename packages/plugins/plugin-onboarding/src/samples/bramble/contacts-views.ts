@@ -22,7 +22,7 @@ import { Organization } from '@dxos/types';
  * Views live directly in the space DB and surface via the database viewer, so they need no
  * collection of their own.
  */
-export const ContactsViews: SampleSpace.Phase<void> = SampleSpace.phase('contactsViews', {
+export const ContactsViews: SampleSpace.Partial<void> = SampleSpace.partial('contactsViews', {
   schemas: [View.View, Table.Table, Kanban.Kanban, MapView.Map],
   run: () =>
     Effect.gen(function* () {

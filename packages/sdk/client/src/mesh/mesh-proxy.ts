@@ -42,10 +42,13 @@ export class MeshProxy {
   }
 
   async updateConfig(swarm: ConnectionState): Promise<void> {
-    await runServiceCall(this._runtime, this._serviceProvider.rpc['NetworkService.updateConfig']({ swarm }), {
-      timeout: RPC_TIMEOUT,
-      label: 'NetworkService.updateConfig',
-    });
+    await runServiceCall(
+      this._runtime,
+      this._serviceProvider.rpc,
+      'NetworkService.updateConfig',
+      { swarm },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**

@@ -304,7 +304,11 @@ describe('Relay', () => {
             ['assistant', 'Rich asked me to ask you to review the PR.'],
             ['assistant', 'Thanks!'],
           ]);
-          expect(messages.map((message) => message.properties)).toEqual([undefined, undefined]);
+          // Marked for the host to post: the only messages it posts for the agent.
+          expect(messages.map((message) => message.properties)).toEqual([
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+          ]);
         }
 
         const reported = yield* Operation.invoke(RelayOperation.SendMessage, {
@@ -325,6 +329,35 @@ describe('Relay', () => {
         }
 
         expect(mirrored.posts).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'skips a conversation on a channel the agent no longer has',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        // A conversation on a channel since disconnected: the chat stays, but no host posts there.
+        const former = yield* Database.add(makeTestChannel('former', TEST_MIRRORED_BACKEND_KIND));
+        const stale = yield* ensureChannelChat({ agent, channel: former, thread: 'thread-1' });
+        const person = yield* Database.load(josiah);
+        Obj.update(stale, (stale) => ChatParticipant.set(stale, person));
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        if (delivered.chat) {
+          const chat = yield* Database.load(delivered.chat);
+          expect(chat.id).not.toBe(stale.id);
+          expect(AgentChannels.conversationOf(chat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

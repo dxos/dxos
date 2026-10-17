@@ -22,6 +22,21 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./motion": {
+      "source": "./src/generator/motion.ts",
+      "types": "./dist/types/src/generator/motion.d.ts",
+      "import": "./dist/lib/motion.mjs"
+    },
+    "./generator-worker": {
+      "source": "./src/generator/worker.ts",
+      "types": "./dist/types/src/generator/worker.d.ts",
+      "import": "./dist/lib/generator-worker.mjs"
+    },
+    "./headless": {
+      "source": "./src/headless.ts",
+      "types": "./dist/types/src/headless.d.ts",
+      "import": "./dist/lib/headless.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -43,7 +58,8 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "d3": "catalog:"
+    "d3": "catalog:",
+    "esbuild-wasm": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",

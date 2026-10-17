@@ -33,6 +33,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
@@ -637,8 +638,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
-    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

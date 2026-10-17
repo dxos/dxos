@@ -13,6 +13,7 @@ import { gzip, isNode } from '@dxos/util';
 import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { DXOS_VERSION } from '../../version.ts';
 import { stubExtension } from '../stub.ts';
+import { dropBenignExceptions } from './before-send.ts';
 import {
   AI_GENERATION_EVENT,
   AI_SPAN_EVENT,
@@ -65,6 +66,11 @@ export type ExtensionsOptions = {
    * pass the absolute URL of a deployment that does.
    */
   feedbackLogsEndpoint?: string;
+  /**
+   * Holds session recording back until this settles, so the recorder's DOM snapshot and compression
+   * stay off the main thread during app startup. Ignored when `posthog.disable_session_recording` is set.
+   */
+  sessionRecordingStart?: Effect.Effect<void>;
   /** What the `posthog-node` transport needs; a browser host has posthog-js and reads none of it. */
   node?: NodeOptions;
 };
@@ -109,6 +115,12 @@ const uploadLogs = async (
   }
 };
 
+/**
+ * Class on an iframe that session replay records with its content. Only for a same-origin iframe the
+ * recorder can read: it never releases an opaque one removed with an ancestor, which replays empty anyway.
+ */
+export const REPLAY_IFRAME_CLASS = 'dx-replay-iframe';
+
 /** Create a PostHog-backed observability extension for events, errors, and support tickets. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({
@@ -120,6 +132,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     logStore,
     feedbackLogMaxSize,
     feedbackLogsEndpoint = DEFAULT_FEEDBACK_LOGS_ENDPOINT,
+    sessionRecordingStart,
     node,
   }) {
     if (isNode()) {
@@ -141,10 +154,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
     const { logProcessor } = yield* Effect.promise(() => import('./log-processor.ts'));
     let unregisterPosthogProcessors: (() => void) | undefined;
+    const recordingStart = posthogConfig?.disable_session_recording ? undefined : sessionRecordingStart;
 
     return {
       initialize: (context) =>
-        Effect.sync(() => {
+        Effect.gen(function* () {
           // https://posthog.com/docs/libraries/js/config
           posthog.init(apiKey, {
             api_host,
@@ -153,7 +167,22 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             // Cookies stay scoped to the exact host; the cross-subdomain dmn_chk_* probe fails on public-suffix hosts (e.g. *.pages.dev) and spams the console.
             cross_subdomain_cookie: false,
             ...posthogConfig,
+            session_recording: {
+              // The recorder never releases a cross-origin iframe removed with an ancestor, and that
+              // iframe pins the whole detached tree; children of a blocked element are never recorded.
+              // `<body>` is exempt, or a hidden iframe appended to it would blank the whole replay.
+              blockSelector: `:not(body):has(> iframe:not(.${REPLAY_IFRAME_CLASS}))`,
+              ...posthogConfig?.session_recording,
+            },
+            before_send: [dropBenignExceptions, ...[posthogConfig?.before_send ?? []].flat()],
+            ...(recordingStart ? { disable_session_recording: true } : {}),
           });
+          if (recordingStart) {
+            // Without an override this only lifts the local block; remote replay settings and sampling still apply.
+            yield* Effect.forkDetach(
+              recordingStart.pipe(Effect.andThen(Effect.sync(() => posthog.startSessionRecording()))),
+            );
+          }
           posthog.register({
             sdkVersion: DXOS_VERSION,
             ...(release ? { release } : {}),

@@ -15,6 +15,7 @@ import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,6 +47,7 @@ const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
 const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-tldraw/dist/assets');
+const identPublicDir = resolve(rootDir, 'tools/autocue/public');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -60,6 +62,8 @@ export const modules = [
   'stories/*/src/**',
   'ui/*/src/**',
   'ui/react-primitives/*/src/**',
+  // autocue's on-screen UI lives under `tools/` beside the skill scripts that inject it.
+  '../tools/autocue/src/**',
 ];
 
 /**
@@ -311,7 +315,12 @@ export const createConfig = ({
   // Per-package storybooks point `configDir` at their own `.storybook`, so the shared manager config
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
-  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
+  staticDirs: [
+    staticDir,
+    { from: sketchAssetsDir, to: '/assets/plugin-tldraw' },
+    // The ident's logo, sound and font, which Remotion's \`staticFile\` resolves from the root (autocue's ident story).
+    { from: identPublicDir, to: '/' },
+  ],
   // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
   // "Get started" onboarding checklist (sidebar widget and menu guide page).
   core: {
@@ -500,8 +509,9 @@ export const createConfig = ({
           // https://www.npmjs.com/package/@vitejs/plugin-react
           // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
           // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
-          // consumer of `@vitejs/plugin-react-swc`.
-          react(),
+          // consumer of `@vitejs/plugin-react-swc`. `.jsx`/`.tsx` only, as in composer-app: over plain
+          // script modules it emits Fast Refresh registrations that throw in the client's SharedWorker.
+          react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/ }),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({

@@ -6,10 +6,11 @@
 
 import { Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
+import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
-import * as Memory from './Memory.ts';
 
 /** True when the ref points at the entity, whether it is space-qualified or local. */
 export const refersTo = (ref: Pick<Ref.Unknown, 'uri'>, id: string): boolean => {
@@ -28,23 +29,8 @@ export const displayName = (subject: Obj.Unknown): string => {
   return Obj.getLabel(subject) ?? 'Unknown';
 };
 
-/** Newest first; the id breaks ties so equal timestamps keep a stable order. */
-export const byNewest = (left: Memory.Memory, right: Memory.Memory): number =>
-  right.observedAt.localeCompare(left.observedAt) || right.id.localeCompare(left.id);
-
 /** Goals that still matter: everything but dropped. */
 export const isLiveGoal = (goal: Goal.Goal): boolean => goal.status !== 'dropped';
-
-const KIND_SECTIONS: { kind: Memory.Kind; heading: string }[] = [
-  { kind: 'fact', heading: 'Facts' },
-  { kind: 'preference', heading: 'Preferences' },
-  { kind: 'goal', heading: 'Aspirations' },
-  { kind: 'commitment', heading: 'Commitments' },
-  { kind: 'relationship', heading: 'Relationships' },
-  { kind: 'event', heading: 'Events' },
-  { kind: 'directive', heading: 'Rules and preferences' },
-  { kind: 'note', heading: 'Notes' },
-];
 
 const GOAL_SECTIONS: { heading: string; statuses: Goal.Status[] }[] = [
   { heading: 'Goals', statuses: ['confirmed', 'active'] },
@@ -55,14 +41,20 @@ const GOAL_SECTIONS: { heading: string; statuses: Goal.Status[] }[] = [
 export type RenderProps = {
   name: string;
   goals: readonly Goal.Goal[];
-  memories: readonly Memory.Memory[];
+  /** The facts that hold about the subject. */
+  facts: readonly RDF.Fact[];
+  /** The entity keys facts about the subject use, so a fact it is the subject of reads as just its object. */
+  keys: ReadonlySet<string>;
 };
 
+/** A section heading for a predicate label: `works for` reads as `Works for`. */
+const sectionHeading = (label: string): string => label.charAt(0).toUpperCase() + label.slice(1);
+
 /**
- * Renders the profile markdown deterministically, so regenerating with unchanged memories yields
- * the same document; only active memories are included.
+ * Renders the profile markdown deterministically, so regenerating with unchanged facts yields the same document: goals
+ * by status, then one section per predicate, each listing what the facts state once.
  */
-export const render = ({ name, goals, memories }: RenderProps): string => {
+export const render = ({ name, goals, facts, keys }: RenderProps): string => {
   const lines = [`# ${name}`, ''];
   for (const { heading, statuses } of GOAL_SECTIONS) {
     const section = goals
@@ -77,16 +69,25 @@ export const render = ({ name, goals, memories }: RenderProps): string => {
     }
   }
 
-  const active = memories.filter((memory) => memory.status === 'active').sort(byNewest);
-  for (const { kind, heading } of KIND_SECTIONS) {
-    const section = active.filter((memory) => memory.kind === kind);
-    if (section.length > 0) {
-      lines.push(`## ${heading}`, '');
-      for (const memory of section) {
-        lines.push(`- ${memory.content}${memory.origin === 'inferred' ? ' _(inferred)_' : ''}`);
-      }
-      lines.push('');
+  const sections = new Map<string, Set<string>>();
+  for (const fact of facts) {
+    const { subject, predicate, object } = fact.assertion;
+    // Synonyms share their predicate's section, under its ontology label.
+    const label =
+      RDF.Ontology.DEFAULT.canonical(RDF.Mapping.predicateOf(fact))?.label ?? predicate.trim().toLowerCase();
+    const isSubject = subject.kind === 'entity' && keys.has(subject.entity);
+    const statement = isSubject
+      ? `${fact.factuality.polarity === '-' ? 'not: ' : ''}${BrainService.termText(object)}`
+      : BrainService.factText(fact);
+    const line = `${statement}${fact.origin === 'inferred' ? ' _(inferred)_' : ''}`;
+    sections.set(label, (sections.get(label) ?? new Set()).add(line));
+  }
+  for (const [label, section] of [...sections].sort(([left], [right]) => left.localeCompare(right))) {
+    lines.push(`## ${sectionHeading(label)}`, '');
+    for (const line of [...section].sort()) {
+      lines.push(`- ${line}`);
     }
+    lines.push('');
   }
 
   return lines.join('\n');

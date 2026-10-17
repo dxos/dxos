@@ -16,11 +16,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SheetCapabilities, SheetEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
   activatesOn: SheetEvents.Start,
@@ -81,6 +79,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

@@ -5,3 +5,4 @@
 export * from './storage.ts';
 export * from './profile-archive.ts';
 export * from './profile-archive-sqlite.ts';
+export * from './storage-watchdog.ts';

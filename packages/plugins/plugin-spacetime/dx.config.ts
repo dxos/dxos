@@ -28,6 +28,7 @@ export default Config2.make({
   `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-spacetime',
     icon: { key: 'ph--cube--regular', hue: 'teal' },
+    screenshots: [{ light: 'https://assets.composer.space/demos/2026-10-16-plugin-spacetime.mp4?v=bf256b99' }],
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },

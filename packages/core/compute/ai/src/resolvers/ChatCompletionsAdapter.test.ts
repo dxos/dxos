@@ -28,6 +28,7 @@ type ProviderConfig = {
   name: string;
   endpoint: string;
   apiFormat: ChatCompletionsAdapter.ApiFormat;
+  provider: string;
   model: string;
 };
 
@@ -36,12 +37,14 @@ const providers: ProviderConfig[] = [
     name: 'Ollama',
     endpoint: 'http://localhost:11434',
     apiFormat: 'ollama',
+    provider: 'ollama',
     model: 'llama3.2:1b',
   },
   {
     name: 'LM Studio',
     endpoint: 'http://localhost:1234',
     apiFormat: 'openai',
+    provider: 'lmstudio',
     model: 'llama-3.2-3b-instruct',
   },
 ];
@@ -53,6 +56,7 @@ const createLayer = (config: ProviderConfig) => {
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: config.endpoint,
     apiFormat: config.apiFormat,
+    provider: config.provider,
   }).pipe(Layer.provide(FetchHttpClient.layer));
   return ChatCompletionsAdapter.layer(config.model).pipe(Layer.provide(clientLayer));
 };
@@ -136,7 +140,7 @@ const assistantMessage = (body: WireRequestBody): WireMessage => {
 const captureRequestBody = (
   apiFormat: ChatCompletionsAdapter.ApiFormat,
   capture: (body: WireRequestBody) => void,
-  provider?: string,
+  provider: string,
 ) => {
   const stub = HttpClient.make((request) =>
     Effect.gen(function* () {
@@ -250,7 +254,7 @@ describe('tool call encoding', () => {
     Effect.fn(function* (_) {
       let body: any;
       yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
-        Effect.provide(captureRequestBody('ollama', (captured) => (body = captured))),
+        Effect.provide(captureRequestBody('ollama', (captured) => (body = captured), 'ollama')),
       );
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
@@ -270,7 +274,7 @@ describe('tool call encoding', () => {
       );
       let openai!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
-        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured))),
+        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured), 'openai')),
       );
 
       expect(assistantMessage(deepseek).reasoning_content).toBe('The id looks like an EID.');
@@ -338,7 +342,7 @@ describe('tool call encoding', () => {
     Effect.fn(function* (_) {
       let body: any;
       yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
-        Effect.provide(captureRequestBody('openai', (captured) => (body = captured))),
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'openai')),
       );
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
@@ -361,6 +365,7 @@ const serveSseStream = (lines: readonly string[]) => {
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: 'http://test',
     apiFormat: 'openai',
+    provider: 'openai',
     streamUsage: true,
   }).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)));
   return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));

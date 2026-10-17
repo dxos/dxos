@@ -17,9 +17,6 @@ import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const Connector = Capability.lazyModule(
   'GitHubConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
@@ -65,7 +62,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations);

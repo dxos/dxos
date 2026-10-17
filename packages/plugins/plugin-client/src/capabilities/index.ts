@@ -56,6 +56,7 @@ export const Client = Capability.lazyModule(
       Capabilities.Layer,
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
+      AppCapabilities.UnsavedChanges,
     ],
     environments: ['browser', 'node', 'tauri'],
   },

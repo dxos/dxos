@@ -13,14 +13,21 @@
     --dx-card-header-gap: var(--dx-gap-size);
     --dx-card-title-inset: 0px;
     --dx-card-trailing-min: 0px;
+    /* A card's icons read a step larger than its text; a sized card (`data-size`) keeps that size's scale. */
+    --dx-icon-size: 1.25rem;
     display: flex;
     flex-direction: column;
     min-width: 0;
     box-sizing: border-box;
     padding-block: var(--dx-gap-size);
     padding-inline: var(--dx-card-inset);
-    border: 1px solid var(--color-separator);
+    /* In light mode the raised surface is one step off its host and the separator barely reads, so a card takes a
+       darker edge and a soft shadow there; dark mode separates the levels by lightness alone. */
+    border: 1px solid light-dark(oklch(from var(--color-separator) calc(l - 0.06) c h), var(--color-separator));
     border-radius: var(--radius-md, 0.375rem);
+    box-shadow:
+      0 1px 2px 0 light-dark(rgb(0 0 0 / 0.06), transparent),
+      0 2px 6px -1px light-dark(rgb(0 0 0 / 0.08), transparent);
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
   }
@@ -96,9 +103,16 @@
   :is(.dx-card-body, .dx-card-section) > dx-surface > * {
     grid-column: content;
   }
-  /* Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders. */
+  /*
+   * Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders, or two
+   * when that surface nests another (a Person card's `Related` surface).
+   */
   :is(.dx-card, .dx-card-body, .dx-card-section) > :is(.dx-card-header, .dx-card-body, .dx-card-section, .dx-card-row),
   :is(.dx-card, .dx-card-body, .dx-card-section)
+    > dx-surface
+    > :is(.dx-card-header, .dx-card-body, .dx-card-section, .dx-card-row),
+  :is(.dx-card, .dx-card-body, .dx-card-section)
+    > dx-surface
     > dx-surface
     > :is(.dx-card-header, .dx-card-body, .dx-card-section, .dx-card-row) {
     grid-column: full;
@@ -153,6 +167,11 @@
   .dx-card[data-selected] {
     border-color: var(--color-accent-bg);
   }
+  /* In a stack the focus ring already marks the keyboard's card, so the chosen one reads as current, not a second edge. */
+  .dx-focus-item.dx-card[data-selected] {
+    border-color: var(--color-separator);
+    background: var(--color-current-surface);
+  }
 
   /* A clickable card or row: the hover surface, and the shared inset ring on keyboard focus. */
   .dx-card-clickable {
@@ -203,6 +222,10 @@
   }
   .dx-card-row[data-align='start'] .dx-card-row-trailing {
     min-height: var(--dx-block-size);
+  }
+  /* A tag is a line box shorter than a block, so it insets onto one and centres on the first line as text does. */
+  .dx-card-row[data-align='start'] .dx-tag {
+    margin-block: calc((var(--dx-block-size) - var(--dx-label-line-height)) / 2);
   }
   .dx-card-row > [data-rail='start'] {
     grid-column: full-start / content-start;
@@ -263,5 +286,12 @@
   /* The trailing cell's padding is the rail's inset, so an icon-only Button drops its own. */
   .dx-card-row-trailing > .dx-button[data-square] {
     margin: 0;
+  }
+  /* A toolbar fills its parent's width, which in a trailing cell is the cell itself: it then overflows over the row's
+     text instead of taking the width of its items. */
+  .dx-card-row-trailing > .dx-scroll-root.dx-toolbar-scroll,
+  .dx-card-row-trailing > .dx-toolbar-scroll > .dx-toolbar,
+  .dx-card-row-trailing > .dx-toolbar {
+    width: auto;
   }
 }

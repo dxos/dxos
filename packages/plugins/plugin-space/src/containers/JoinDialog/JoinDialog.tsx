@@ -12,9 +12,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import * as Dialog from '@dxos/react-ui/Dialog';
-import * as UiHooks from '@dxos/react-ui/Hooks';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -27,7 +25,6 @@ export type JoinDialogProps = JoinPanelProps & {
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -72,18 +69,15 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
     [invokePromise, client, navigableCollections, onDone],
   );
 
-  // TODO(burdon): Move JoinHeading into Dialog.Heading.
+  // The panel supplies the Header (and its Title), then each step's Body and Footer.
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
-      <Dialog.Body>
-        <JoinPanel
-          {...props}
-          exitActionParent={<Dialog.CloseTrigger asChild />}
-          doneActionParent={<Dialog.CloseTrigger asChild />}
-          onDone={handleDone}
-        />
-      </Dialog.Body>
+      <JoinPanel
+        {...props}
+        exitActionParent={<Dialog.CloseTrigger asChild />}
+        doneActionParent={<Dialog.CloseTrigger asChild />}
+        onDone={handleDone}
+      />
     </Dialog.Content>
   );
 };

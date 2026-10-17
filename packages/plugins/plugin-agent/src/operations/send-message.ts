@@ -11,7 +11,7 @@ import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
@@ -38,10 +38,15 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
 
       const brain = yield* BrainService.BrainService;
       const deliver: Effect.Effect<Delivery, never, Services> = Effect.gen(function* () {
+        // Only the agent's current channels: a disconnected one keeps its conversations, but no host posts there any more,
+        // so a mirrored append into it would be reported delivered and never sent.
+        const channels = yield* AgentChannels.loadChannels(agent);
+
         // The requester asked from a particular conversation, so the outcome goes back there first.
-        if (role === 'requester' && relay?.replyChannel) {
-          const channel = yield* Database.load(relay.replyChannel).pipe(Effect.orDie);
-          const sent = yield* postToChannel(agent, channel, relay.replyThread, text);
+        const replyChannelId = relay?.replyChannel ? Task.refEntityId(relay.replyChannel) : undefined;
+        const replyChannel = replyChannelId ? channels.find(({ id }) => id === replyChannelId) : undefined;
+        if (role === 'requester' && replyChannel) {
+          const sent = yield* postToChannel(agent, replyChannel, relay?.replyThread, text);
           if (sent.delivered) {
             return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
           }
@@ -57,7 +62,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
         const reasons: string[] = [];
         for (const chat of chats) {
           const conversation = AgentChannels.conversationOf(chat);
-          const channel = conversation && (yield* findChannel(conversation.channelId));
+          const channel = conversation && channels.find(({ id }) => id === conversation.channelId);
           if (conversation && channel) {
             const sent = yield* postToChannel(agent, channel, conversation.thread, text);
             if (sent.delivered) {
@@ -70,7 +75,6 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
         // Then a direct conversation opened through one of the agent's channels, before a Composer chat the person
         // may never have open.
         const name = partyName(recipient);
-        const channels = yield* AgentChannels.loadChannels(agent);
         if (Obj.instanceOf(Person.Person, recipient)) {
           for (const channel of channels) {
             const direct = yield* openDirect(channel, recipient);
@@ -80,7 +84,9 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
             }
             const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
             if (!sent.delivered) {
-              return { delivered: false, reason: sent.reason };
+              // A refused DM (closed DMs) falls through to the next channel, then the Composer chat.
+              reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the direct message.`);
+              continue;
             }
             // Replies in the direct conversation, and later deliveries, belong to this person's chat.
             Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
@@ -148,13 +154,6 @@ const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string, propert
     ]);
   });
 
-/** A channel in the space by entity id; a chat records only the id of the channel it mirrors. */
-const findChannel = (id: string) =>
-  Database.query(Filter.type(Channel.Channel)).run.pipe(
-    Effect.map((channels) => channels.find((channel) => channel.id === id)),
-    Effect.orDie,
-  );
-
 type Posted = { delivered: true; chat: Chat.Chat } | { delivered: false; reason?: string };
 
 /**
@@ -172,7 +171,7 @@ const postToChannel = (
   Effect.gen(function* () {
     if (yield* ChannelBackend.isMirrored(channel)) {
       const chat = yield* ensureChannelChat({ agent, channel, thread, direct }).pipe(Effect.orDie);
-      yield* appendToChat(agent, chat, text);
+      yield* appendToChat(agent, chat, text, { [AgentChannels.OUTBOUND_PROPERTY]: true });
       return { delivered: true, chat } satisfies Posted;
     }
     const sent = yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(channel), thread, text });
