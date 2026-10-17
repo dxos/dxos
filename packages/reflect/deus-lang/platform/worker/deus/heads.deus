@@ -144,6 +144,16 @@ def moveHead (bucket : Js) (project : Text) (claim : Claim) (sent : Int) (keyId 
     let latest := Js.toOption (Js.Async.await (readCurrent claim.branch))
     Moved.mk 409 required (Option.getOr (Option.map (fun c => Js.toText (Js.get c "causal")) latest) "")
 
+/-- Answers `/v1/<project>/headlog/<branch>` for `request`: every head the branch had, oldest first, one
+  `<ms>-<causal>` per line. Only pushes write the log. -/
+def serveLog (request : Js) (bucket : Js) (project : Text) (rest : List Text) : {Js.Async} Js :=
+  if Worker.Http.method request != "GET" then Worker.Http.problem 405 "the head log is written only by pushes"
+  else
+    let segments := List.filter (fun segment => not (Text.isEmpty segment)) rest
+    let branch := Text.join "/" (List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) segments)
+    if not (isBranch branch) then Worker.Http.problem 404 "the head log is read as /headlog/<branch>"
+    else Worker.Http.lines (List.filter isLogged (Worker.R2.listAll bucket (headLogKey project branch)))
+
 /-- A sample head for the tests. -/
 def headA : Text := Text.repeat 64 "a"
 

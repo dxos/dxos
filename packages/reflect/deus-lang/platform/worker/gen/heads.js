@@ -264,6 +264,22 @@ async function Worker$Heads$moveHead(bucket, project, claim, sent, keyId, readCu
 }
 rt.named(Worker$Heads$moveHead, "Worker.Heads.moveHead");
 
+async function Worker$Heads$serveLog(request, bucket, project, rest) {
+  const $stack = rt.handlers();
+  if ((Worker$Http$method(request) !== "GET")) {
+    return Worker$Http$problem(405, "the head log is written only by pushes");
+  } else {
+    const segments = List$filter(rt.named((segment) => not(Text$isEmpty(segment)), "Worker.Heads.serveLog/\u03bb"), rest);
+    const branch = rt.ap(rt.prims["Text.join"], "/", List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Heads.serveLog/\u03bb"), segments));
+    if (not(Worker$Heads$isBranch(branch))) {
+      return Worker$Http$problem(404, "the head log is read as /headlog/<branch>");
+    } else {
+      return Worker$Http$lines(List$filter(Worker$Heads$isLogged, rt.resumed($stack, await Worker$R2$listAll(bucket, Worker$Heads$headLogKey(project, branch)))));
+    }
+  }
+}
+rt.named(Worker$Heads$serveLog, "Worker.Heads.serveLog");
+
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
     return List$all(rt.named((c) => {
@@ -711,6 +727,86 @@ function Option$bind(o, f) {
 }
 rt.named(Option$bind, "Option.bind");
 
+function Worker$Http$method(request) {
+  return lib$web$Js$toText(lib$web$Js$get(request, "method"));
+}
+rt.named(Worker$Http$method, "Worker.Http.method");
+
+function Worker$Http$problem(status, message) {
+  return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["error", lib$web$Js$text(message)]), rt.NIL)), status);
+}
+rt.named(Worker$Http$problem, "Worker.Http.problem");
+
+function List$filter(p, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          if (rt.ap(p, y)) {
+            acc$ = rt.cons(y, acc);
+            ys$ = rest;
+            continue;
+          } else {
+            acc$ = acc;
+            ys$ = rest;
+            continue;
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$filter, "List.filter");
+
+function Text$isEmpty(t) {
+  return (rt.ap(rt.prims["Text.length"], t) === 0);
+}
+rt.named(Text$isEmpty, "Text.isEmpty");
+
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
+
+function Worker$Http$lines(names) {
+  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+}
+rt.named(Worker$Http$lines, "Worker.Http.lines");
+
+async function Worker$R2$listAll(bucket, prefix) {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, rt.con0("#Option", 0)));
+}
+rt.named(Worker$R2$listAll, "Worker.R2.listAll");
+
 function List$any(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -854,6 +950,31 @@ function lib$base$Sexp$push(form, stack, done) {
 }
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
 
+function Worker$Http$json(value, status) {
+  return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+}
+rt.named(Worker$Http$json, "Worker.Http.json");
+
+function Worker$Http$response(body, status, headers) {
+  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
+}
+rt.named(Worker$Http$response, "Worker.Http.response");
+
+async function Worker$R2$listFrom(bucket, prefix, cursor) {
+  const $stack = rt.handlers();
+  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
+  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
+  const skip = rt.ap(rt.prims["Text.length"], prefix);
+  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
+  if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
+    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+  } else {
+    return keys;
+  }
+}
+rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
+
 function List$replicate(n, x) {
   function go(acc$, k$) {
     for (;;) {
@@ -872,6 +993,39 @@ function List$replicate(n, x) {
 }
 rt.named(List$replicate, "List.replicate");
 
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
+
+function Text$drop(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+}
+rt.named(Text$drop, "Text.drop");
+
+const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
+
+const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
+
 export const raw = {
   parseClaim: Worker$Heads$parseClaim,
   isBranch: Worker$Heads$isBranch,
@@ -883,6 +1037,7 @@ export const raw = {
   logHead: Worker$Heads$logHead,
   epochOf: Worker$Heads$epochOf,
   moveHead: Worker$Heads$moveHead,
+  serveLog: Worker$Heads$serveLog,
 };
 export const parseClaim = rt.exportFn(Worker$Heads$parseClaim, [['text']], ['option', ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]]]);
 export const isBranch = rt.exportFn(Worker$Heads$isBranch, [['text']], ['bool']);
@@ -894,4 +1049,5 @@ export const isLogged = rt.exportFn(Worker$Heads$isLogged, [['text']], ['bool'])
 export const logHead = rt.exportAsync(Worker$Heads$logHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']], ['option', ['text']]], ['unit']);
 export const epochOf = rt.exportFn(Worker$Heads$epochOf, [['text']], ['int']);
 export const moveHead = rt.exportAsync(Worker$Heads$moveHead, [['raw'], ['text'], ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]], ['int'], ['option', ['text']], ['fn', [['text']], ['raw']], ['fn', [['text']], ['raw']]], ['struct', "c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", ["status", "required", "head"], [['int'], ['int'], ['text']]]);
+export const serveLog = rt.exportAsync(Worker$Heads$serveLog, [['raw'], ['raw'], ['text'], ['list', ['text']]], ['raw']);
 //# sourceMappingURL=heads.js.map

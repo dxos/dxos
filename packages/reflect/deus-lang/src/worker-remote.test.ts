@@ -338,6 +338,9 @@ describe('replication API', () => {
       (await call(`/v1/toolchain/headlog/main/${logged[0]}`, { method: 'DELETE', key: await insertKey(db, ['admin']) }))
         .status,
     ).toBe(405);
+    const unread = await call('/v1/toolchain/headlog/-main');
+    expect([unread.status, (await unread.json()).error]).toEqual([404, 'the head log is read as /headlog/<branch>']);
+    expect(await (await call('/v1/toolchain/headlog/side')).text()).toBe('');
   });
 
   test('heads move in the bucket, so pushes work when D1 takes no writes (D181)', async ({ expect }) => {

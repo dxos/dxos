@@ -109,6 +109,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'Worker.Heads.logHead',
           'Worker.Heads.epochOf',
           'Worker.Heads.moveHead',
+          'Worker.Heads.serveLog',
           '-o',
           join(gen, 'heads.js'),
           '--js',

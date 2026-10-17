@@ -290,6 +290,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 280 | 10-18 05:30 | 1h 00m | f49ce02cbb | The files API in DEUS on typed R2 and HTTP modules (Worker.R2, Worker.Http, Worker.Files); an async call made whole in an argument no longer counts as passing a waiting function (D252) |
 | 281 | 10-18 06:15 | 45m 00s | 199a2af21d | The bundles API in DEUS (Worker.Bundles, Worker.Crypto); `deus build --js` refuses two roots with one last name (D253) |
 | 282 | 10-18 07:00 | 45m 00s | 77819b18a2 | The keys API and key minting in DEUS on a typed D1 module (Worker.D1, Worker.KeyAdmin) (D254) |
-| 283 | 10-18 07:30 | 30m 00s | this commit | The objects, meta and names APIs in DEUS (Worker.Objects, Worker.Names.serve) (D255) |
+| 283 | 10-18 07:30 | 30m 00s | this commit | The objects, meta, names and head log APIs in DEUS (Worker.Objects, Worker.Names.serve, Worker.Heads.serveLog) (D255) |
 
 Total from stage 1 to stage 283: 107h 20m.

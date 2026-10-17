@@ -217,20 +217,8 @@ export const headLogKey = (project, branch) => heads.headLogKey(project, branch)
 const logHead = (env, project, branch, causal, previous, keyId) =>
   heads.logHead(env.BUCKET, project, branch, causal, previous, keyId);
 
-/** `/v1/<project>/headlog/<branch>`: every head the branch had, oldest first, one `<ms>-<causal>` per line; never written by clients. */
-const headLog = async (request, env, project, rest) => {
-  if (request.method !== 'GET') {
-    throw new HttpError(405, 'the head log is written only by pushes');
-  }
-  const branch = rest
-    .filter((segment) => segment !== '')
-    .map(decodeURIComponent)
-    .join('/');
-  if (!heads.isBranch(branch)) {
-    throw new HttpError(404, 'the head log is read as /headlog/<branch>');
-  }
-  return lines((await listAll(env.BUCKET, headLogKey(project, branch))).filter((name) => heads.isLogged(name)));
-};
+/** `/v1/<project>/headlog/<branch>`: every head the branch had, oldest first (`Worker.Heads.serveLog`). */
+const headLog = (request, env, project, rest) => heads.serveLog(request, env.BUCKET, project, rest);
 
 //
 // Files beside the bundles: assets, the explorer's inbox and site, analytics events.
@@ -332,14 +320,6 @@ export const mintKey = () => keyAdminApi.mint();
 //
 
 export const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
-
-/** Compares in time independent of where the texts differ. */
-
-/** A listing is one name per line, which the CLI reads without a JSON parser. */
-const lines = (names) =>
-  new Response(names.map((name) => `${name}\n`).join(''), {
-    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
-  });
 
 export const json = (value, status = 200) =>
   new Response(JSON.stringify(value), {
