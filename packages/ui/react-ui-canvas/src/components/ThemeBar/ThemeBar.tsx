@@ -21,6 +21,7 @@ import {
   resolveStyleSet,
   styleVariant,
 } from '../../model/style-set.ts';
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 import { variantClasses } from '../../utils/style.ts';
 import { BACKGROUND_FILLS, RADIUS_CLASSES } from '../../utils/surfaces.ts';
 
@@ -86,7 +87,7 @@ const GRID_OPTIONS: readonly { grid: BackgroundGrid; icon: string; label: string
   { grid: 'none', icon: 'ph--prohibit--regular', label: 'No grid' },
 ];
 
-const barClasses = 'w-full gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
 
 export type ThemeBarProps = Util.ThemedClassName<{
   registry: ThemeRegistry;

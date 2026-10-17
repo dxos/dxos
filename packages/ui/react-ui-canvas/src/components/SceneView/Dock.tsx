@@ -25,6 +25,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { mx } from '@dxos/ui-theme';
+
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 
 /** A panel's section in the dock. */
 export type DockSection = {
@@ -100,7 +103,7 @@ export const Dock = ({ floating = false, onDockedChange }: DockProps) => {
     <Panel.Root
       classNames={
         floating
-          ? 'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] rounded-md border border-separator bg-base-surface shadow-md overflow-hidden'
+          ? mx('absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden', FLOATING_PANEL)
           : 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
       }
       data-testid='scene-view-dock'
