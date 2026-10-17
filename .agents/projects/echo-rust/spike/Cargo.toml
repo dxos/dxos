@@ -1,0 +1,32 @@
+[package]
+name = "echo-wasm-spike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+automerge = { version = "0.12", features = ["wasm"] }
+samod-core = "0.15"
+subduction_core = "0.19"
+sedimentree_core = "0.15"
+wasm-bindgen = "0.2"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom02 = { package = "getrandom", version = "0.2", features = ["js"] }
+rand = "0.9"
+uuid = { version = "1", features = ["js"] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[dependencies.automerge_subduction_wasm]
+git = "https://github.com/inkandswitch/subduction"
+rev = "239c5fc"
+default-features = false
+features = ["std", "idb"]
