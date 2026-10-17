@@ -1633,13 +1633,7 @@ const SceneViewRoot = ({
           {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-          {/* Edged at the top like the dock's side, so the canvas reads apart from the header above it. */}
-          <div
-            className={mx(
-              'relative flex dx-fill overflow-clip bg-base-surface border-t border-separator-subtle',
-              classNames,
-            )}
-          >
+          <div className={mx('relative flex dx-fill overflow-clip bg-base-surface', classNames)}>
             <div
               ref={rootRef}
               tabIndex={0}

@@ -132,7 +132,9 @@
   --color-group-surface: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-well) * 0.05) c h
   );
-  --color-input-surface: var(--color-group-surface);
+  --color-input-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-input) * 0.05) c h
+  );
   --color-focus-surface: var(--color-group-surface);
 
   /* Subtle alternate of group-surface for zebra striping (e.g. calendar months). */
