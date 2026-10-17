@@ -162,6 +162,18 @@ export const ThemeBar = ({
       </Menu.Content>
     </Menu.Root>
     <Toolbar.Separator variant='line' />
+    {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
+    {onGuidesToggle && (
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--frame-corners--regular'
+        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+        classNames={mx(guides && 'bg-primary-500/20')}
+        data-testid='toolbar-guides'
+        onClick={onGuidesToggle}
+      />
+    )}
     {GRID_OPTIONS.map((option) => (
       <Button.Root
         key={option.grid}
@@ -175,17 +187,5 @@ export const ThemeBar = ({
         onClick={() => onGridChange?.(option.grid === themeGrid ? undefined : option.grid)}
       />
     ))}
-    {/* A guide is drawn on the grid, so the toggle sits with the grid options. */}
-    {onGuidesToggle && (
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--frame-corners--regular'
-        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
-        classNames={mx(guides && 'bg-primary-500/20')}
-        data-testid='toolbar-guides'
-        onClick={onGuidesToggle}
-      />
-    )}
   </Toolbar.Root>
 );
