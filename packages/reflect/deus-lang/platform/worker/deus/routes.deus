@@ -1,0 +1,77 @@
+-- context: @dxos/worker/Worker
+/-
+  How the Worker routes a request path, in DEUS (task 41714c0d, D164, D166, D184): which project it names
+  (`/@owner/project/…`, else the host's own), the site version a page pinned (`/v/<version>/…`), and the area that
+  answers it. platform/worker/worker.mjs calls the area's handler.
+-/
+
+namespace Worker.Routes
+
+/-- A request path, routed: the project's `@owner` and name ("" for the host's own project), the path within it, the
+  version a page pinned ("" for none), and the area that answers: `v1`, `auth`, `api`, `assets` or `site`. -/
+structure Route @"urn:deus:worker:Route" where
+  owner : Text
+  project : Text
+  path : Text
+  version : Text
+  area : Text
+
+/-- `/@owner/project` and the path after it (from `/`, or "" for none); none for any other path, and for `/v1…`, which
+  names its project itself. -/
+def scoped (pathname : Text) : Option (Text, Text, Text) :=
+  if startsWith "/v1" pathname || not (startsWith "/@" pathname) then Option.none else
+    let rest := Text.drop 1 pathname
+    let slash := Text.indexOf rest "/" 0
+    if slash < 2 then Option.none else
+      let owner := Text.take slash rest
+      let after := Text.drop (slash + 1) rest
+      let next := Text.indexOf after "/" 0
+      let project := if next < 0 then after else Text.take next after
+      if Text.isEmpty project then Option.none
+      else Option.some (owner, project, if next < 0 then "" else Text.drop next after)
+
+/-- A path a page pinned to a site version: `/v/<16 hex digits>/…`, as (version, the path after it). -/
+def pinned (path : Text) : Option (Text, Text) :=
+  if not (startsWith "/v/" path) then Option.none else
+    let rest := Text.drop 3 path
+    let version := Text.take 16 rest
+    let after := Text.drop 16 rest
+    if Text.length version == 16 && List.all (fun c => isDigit c || (c >= 'a' && c <= 'f')) (Text.utf8 version) && startsWith "/" after then
+      Option.some (version, after)
+    else Option.none
+
+/-- The area that answers a path within a project. -/
+def areaOf (path : Text) : Text :=
+  if path == "/v1" || startsWith "/v1/" path then "v1"
+  else if startsWith "/auth/" path then "auth"
+  else if startsWith "/api/" path then "api"
+  else if startsWith "/assets/" path then "assets"
+  else "site"
+
+/-- Routes a request path. -/
+def route (pathname : Text) : Route :=
+  let (owner, project, inner) :=
+    match scoped pathname with
+    | Option.some (o, p, rest) => (o, p, if Text.isEmpty rest then "/" else rest)
+    | Option.none => ("", "", pathname)
+  let (version, path) := Option.getOr (pinned inner) ("", inner)
+  Route.mk owner project path version (areaOf path)
+
+/-- A sample site version for the tests. -/
+def versionA : Text := Text.repeat 16 "a"
+
+test routesSplitProjects :=
+  route "/@dxos/toolchain/" == Route.mk "@dxos" "toolchain" "/" "" "site"
+    && route "/@dxos/toolchain" == Route.mk "@dxos" "toolchain" "/" "" "site"
+    && route "/@dxos/toolchain/v1/x" == Route.mk "@dxos" "toolchain" "/v1/x" "" "v1"
+    && route "/v1/@dxos/toolchain/heads" == Route.mk "" "" "/v1/@dxos/toolchain/heads" "" "v1"
+    && route "/@/x/y" == Route.mk "" "" "/@/x/y" "" "site"
+    && route "/@dxos/" == Route.mk "" "" "/@dxos/" "" "site"
+
+test routesPinVersions :=
+  route ("/v/" ++ versionA ++ "/app.js") == Route.mk "" "" "/app.js" versionA "site"
+    && route ("/@o/p/v/" ++ versionA ++ "/api/me") == Route.mk "@o" "p" "/api/me" versionA "api"
+    && route "/v/abc/app.js" == Route.mk "" "" "/v/abc/app.js" "" "site"
+    && route ("/v/" ++ versionA) == Route.mk "" "" ("/v/" ++ versionA) "" "site"
+
+end Worker.Routes

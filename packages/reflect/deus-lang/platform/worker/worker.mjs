@@ -16,6 +16,7 @@
 import { addressOfFolder, projectAt } from './address.mjs';
 import { demoFiles } from './gen/demo-todo.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
+import * as routes from './gen/routes.js';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
@@ -37,36 +38,31 @@ export default {
   },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Which project, pinned version and area a path names is `Worker.Routes.route`, in DEUS.
+    const route = routes.route(url.pathname);
     let base = '';
-    const scoped = url.pathname.startsWith('/v1') ? undefined : PROJECT_PATH.exec(url.pathname);
-    if (scoped) {
-      const target = projectAt([scoped[1], scoped[2]]);
+    if (route.owner) {
+      const target = projectAt([route.owner, route.project]);
       if (!target) {
         return notFound();
       }
       // The rest of the request is the PREFIX project's handling, on this project's folder.
       env = { ...env, PREFIX: target.folder };
-      base = `/${scoped[1]}/${scoped[2]}`;
-      url.pathname = scoped[3] || '/';
+      base = `/${route.owner}/${route.project}`;
     }
-    // A page served at `/` loads everything relative to `/v/<version>/` (D166); only the site's
-    // top-level files are versioned, so every other path is the same with the prefix dropped.
-    const pinned = VERSIONED.exec(url.pathname);
-    if (pinned) {
-      url.pathname = pinned[2];
-    }
+    // A page served at `/` loads everything relative to `/v/<version>/` (D166); only the site's top-level files are
+    // versioned, so every other path is the same with the prefix dropped.
+    url.pathname = route.path;
     try {
-      if (url.pathname === '/v1' || url.pathname.startsWith('/v1/')) {
-        return await remoteApi(request, env, ctx, url);
-      }
-      if (url.pathname.startsWith('/auth/')) {
-        return await auth(request, env, url);
-      }
-      if (url.pathname.startsWith('/api/')) {
-        return await api(request, env, url);
-      }
-      if (url.pathname.startsWith('/assets/')) {
-        return await asset(env, url);
+      switch (route.area) {
+        case 'v1':
+          return await remoteApi(request, env, ctx, url);
+        case 'auth':
+          return await auth(request, env, url);
+        case 'api':
+          return await api(request, env, url);
+        case 'assets':
+          return await asset(env, url);
       }
     } catch (error) {
       if (!(error instanceof HttpError)) {
@@ -78,12 +74,9 @@ export default {
         error instanceof HttpError ? error.status : 500,
       );
     }
-    return site(env, ctx, url, pinned?.[1], base, request);
+    return site(env, ctx, url, route.version || undefined, base, request);
   },
 };
-
-/** `/@owner/project` and what follows it. */
-const PROJECT_PATH = /^\/(@[^/]+)\/([^/]+)(\/.*)?$/;
 
 //
 // The static site.
@@ -156,8 +149,6 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   return response;
 };
-
-const VERSIONED = /^\/v\/([0-9a-f]{16})(\/.*)$/;
 
 /** A site file rather than a definition's name, which never ends in one of these. */
 const FILE = /\.(html|js|mjs|css|json|wasm|png|svg|ico|txt|map|image|deus|mdl)$/;
