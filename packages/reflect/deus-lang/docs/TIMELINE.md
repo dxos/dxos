@@ -282,6 +282,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 272 | 10-17 18:00 | 1h 00m | 6060df53af | The js runtime and the explorer app come from the codebase without a checkout (D242); tasks 7b7a26ad and 353444f7 closed with reasons |
 | 273 | 10-17 19:30 | 1h 10m | 073c0893ef | Adversarial review of D233–D241: callbacks inside data and by name wait, sync locals keep promises, exports start under no handlers, names keep unknown entry kinds (D243) |
 | 274 | 10-17 21:00 | 50m 00s | 693c69ba9a | Bucket paths and the epoch rule in DEUS (D244, D238); the phone drawer names the project |
-| 275 | 10-17 22:30 | 50m 00s | this commit | `deus lib install` from a URL (D245); request routing in DEUS (D246); task e1cf2c6c lowered with measurements; phones offer the list layout only |
+| 275 | 10-17 22:30 | 50m 00s | 5a743e5888 | `deus lib install` from a URL (D245); request routing in DEUS (D246); task e1cf2c6c lowered with measurements; phones offer the list layout only |
+| 276 | 10-18 00:30 | 1h 00m | this commit | Newcomer walkthrough fixes: explore serves again, did-you-mean, empty test prefixes fail, .ts read as TS, guide examples that run (D247) |
 
-Total from stage 1 to stage 275: 100h 30m.
+Total from stage 1 to stage 276: 101h 30m.

@@ -67,18 +67,18 @@ end Geometry
 
 These are the parts to know:
 
-| Construct    | Example                                                                   | Note                                                                |
-| ------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Data types   | `inductive Shape where \| circle (r : Int) \| rect (w : Int) (h : Int)`   | Constructors are `Shape.circle`, `Shape.rect`.                      |
-| Records      | `structure Line where`, then one `field : Type` per line                  | Built with `Line.mk "tea" 2`, read with `line.item`.                |
-| Matching     | `match s with \| Shape.circle r => … \| Shape.rect w h => …`              | A value no case matches is a defect at run time; nothing checks it. |
-| Lambdas      | `fun x => x + 1`                                                          | `List.map (fun x => x + 1) xs`                                      |
-| Local values | `let total := a + b`                                                      | One per line, then the result.                                      |
-| Abilities    | `ability Prices where priceOf : Text -> Int`                              | Effects a function may perform, listed in its type: `{Prices} Int`. |
-| Handlers     | `handle body () with \| Prices.priceOf item -> resume => resume 3`        | Give an ability its meaning.                                        |
-| Errors       | `throw "bad input"` has type `{Throw Text} a`                             | `try` turns them into `Result.ok` or `Result.err`.                  |
-| Tests        | `test areas := area (Shape.rect 3 4) == 12`                               | Run by `deus test`.                                                 |
-| Theorems     | `theorem t (xs : List Int) : len xs >= 0 = true := by induction xs; auto` | Checked by `deus check`.                                            |
+| Construct    | Example                                                                                                 | Note                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Data types   | `inductive Shape where \| circle (r : Int) \| rect (w : Int) (h : Int)`                                 | Constructors are `Shape.circle`, `Shape.rect`.                      |
+| Records      | `structure Line where`, then one `field : Type` per line                                                | Built with `Line.mk "tea" 2`, read with `line.item`.                |
+| Matching     | `match s with \| Shape.circle r => … \| Shape.rect w h => …`                                            | A value no case matches is a defect at run time; nothing checks it. |
+| Lambdas      | `fun x => x + 1`                                                                                        | `List.map (fun x => x + 1) xs`                                      |
+| Local values | `let total := a + b`                                                                                    | One per line, then the result.                                      |
+| Abilities    | `ability Prices where`, then one `priceOf : Text -> Int` per line                                       | Effects a function may perform, listed in its type: `{Prices} Int`. |
+| Handlers     | `handle body () with \| Prices.priceOf item -> resume => resume 3`                                      | Give an ability its meaning.                                        |
+| Errors       | `throw "bad input"` has type `{Throw Text} a`                                                           | `try (fun _ => body)` gives `Result.ok` or `Result.err`.            |
+| Tests        | `test areas := area (Shape.rect 3 4) == 12`                                                             | Run by `deus test`.                                                 |
+| Theorems     | `theorem t (xs : List Int) (ys : List Int) : len (xs ++ ys) = len xs + len ys := by induction xs; auto` | Checked by `deus check`, given `len` by cases.                      |
 
 Two ideas set DEUS apart from most languages:
 
@@ -265,7 +265,8 @@ runs all three examples on local workerd.
 
 ## Recipe 5: Tasks and the explorer
 
-Issues live in the codebase. Open one about a definition:
+Issues live in the codebase. Open one about a definition (`Tour.area`, from Recipe 1's
+`deus add examples/tour.deus`):
 
 ```bash
 deus task new Circle area uses 3 for pi --priority high --labels bug --link Tour.area
@@ -368,8 +369,8 @@ end Shapes
 
 A `raw` hole reads text as written, which is how JSX text between tags works in `@dxos/web`
 (`<p>Hello, <b>{name}</b>!</p>`). `@[elab]` makes a notation's expansion a function the compiler runs at each
-use: it gets each hole as Core (a `Sexp`; `deus add deus/sexp.deus` brings the type) and returns the Core the use
-stores, or throws. Add an elaborator before the code that uses it:
+use: it gets each hole as Core (a `Sexp`) and returns the Core the use stores, or throws. An elaborator runs from
+the codebase, so it is added before the code that uses it, in an `add` of its own. Save this as `unroll.deus`:
 
 ```deus
 namespace Unroll
@@ -385,7 +386,20 @@ notation times := "times!(" k:num ", " f ", " x ")" =>
 end Unroll
 ```
 
-Then `def eight : Int := times!(3, double, 1)` stores `double (double (double 1))`.
+A notation is in scope in its namespace, so the code that uses it goes there too. Save this as `eight.deus`:
+
+```deus
+namespace Unroll
+def eight : Int := times!(3, double, 1)
+end Unroll
+```
+
+```bash
+deus add deus/sexp.deus      # the Sexp type (not needed when base is mounted, as above)
+deus add unroll.deus
+deus add eight.deus          # stores double (double (double 1))
+deus eval Unroll.eight       # 8
+```
 
 Every definition also reads as TypeScript-like code (`switch`, `const`, arrow functions, `#[a, b]` tuples), and
 that text reads back:

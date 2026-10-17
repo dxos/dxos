@@ -77,10 +77,11 @@ def buildExecutable (image : Text) (out : Text) (home : Text) (node : Text) : {I
   let _ := if mac then tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
 
-/-- The Rust kernel, built with cargo when it is missing; `$DEUS_KERNEL` names another one. -/
+/-- The Rust kernel, built with cargo when it is missing; `$DEUS_RUST_KERNEL` names another one. (`$DEUS_KERNEL` is not
+  a path: the launcher sets it to the kernel a command runs on, D219.) -/
 def kernel (u : Unit) : {IO, Throw Failure} Text :=
   let crate := require "DEUS_HOME" ++ "/../deus-kernel"
-  let path := Option.getOr (IO.getEnv "DEUS_KERNEL") (crate ++ "/target/release/deus-kernel")
+  let path := Option.getOr (IO.getEnv "DEUS_RUST_KERNEL") (crate ++ "/target/release/deus-kernel")
   let _ := if IO.exists path then ""
     else Failure.context "building the Rust kernel" [] (fun _ => tool "cargo" ["build", "--release", "--quiet", "--manifest-path", crate ++ "/Cargo.toml"])
   path

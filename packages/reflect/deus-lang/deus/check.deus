@@ -493,6 +493,10 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
         (if evidence == "refused" then "refused, as it must be" else if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix else "  ✓ " ++ name ++ suffix
     | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ nameTrace index reason ++ suffix
     | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
+  -- A prefix that names nothing is most often a typo, which a "0 passed" would let pass as success.
+  if List.isEmpty results && not (Text.isEmpty prefix) then
+    Throw.throw ("no " ++ (if wantTheorems then "theorems" else "tests") ++ " under " ++ prefix ++ "; `deus ls " ++ prefix ++ "` shows what is there")
+  else ()
   Cli.output args (fun _ => Json.arr (List.map (fun r =>
     let (name, v, wasCached) := r
     let status :=
