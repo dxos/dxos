@@ -146,7 +146,7 @@ export const ObjectsPanel = ({
                     >
                       <Editable.Preview classNames='px-0 cursor-pointer' data-testid={`object-name-${entry.id}`} />
                       <Editable.Input
-                        classNames='px-0'
+                        classNames='-ms-2 w-[calc(100%+0.5rem)] ps-2'
                         aria-label='Object name'
                         onKeyDown={(event) => event.stopPropagation()}
                       />
