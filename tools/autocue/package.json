@@ -19,9 +19,9 @@
       "import": "./src/index.ts"
     },
     "./ident": {
-      "source": "./src/ident/cards.ts",
-      "types": "./src/ident/cards.ts",
-      "import": "./src/ident/cards.ts"
+      "source": "./src/components/Ident/index.ts",
+      "types": "./src/components/Ident/index.ts",
+      "import": "./src/components/Ident/index.ts"
     }
   },
   "dependencies": {

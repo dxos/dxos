@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The idents as components, without `index.ts`'s `registerRoot`, so a Remotion `Player` can play them elsewhere
+// The idents as components, without `remotion.ts`'s `registerRoot`, so a Remotion `Player` can play them elsewhere
 // (the Ident and Frame stories play them, as `trim-static.mjs --ident` bookends a take with the rendered clips).
 
 export { type FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';

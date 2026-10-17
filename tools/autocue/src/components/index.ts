@@ -3,3 +3,4 @@
 //
 
 export * from './Frame/index.ts';
+export * from './Ident/index.ts';

@@ -580,7 +580,7 @@ sandbox `apt-get update` first: the preinstalled index is stale and the install 
 ### Open and close: `--ident`
 
 `--ident` opens the trimmed demo with the DXOS open title and closes it with the close card, both from
-`tools/autocue` (Remotion, `src/ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
+`tools/autocue` (Remotion, `src/components/Ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
 and the licensed Sharp Sans font in `tools/autocue/public/fonts/` (without it they render in a fallback face).
 The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800 viewport,
 `16x9` for 1920×1080), so it fills the frame. `--theme light` renders it off-black on off-white to match a light

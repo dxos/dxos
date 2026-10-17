@@ -31,7 +31,7 @@ const firstRunOnly = args.includes('--first-run');
 const exclude = opt('exclude')?.split(',') ?? [];
 const only = { ids: opt('id')?.split(','), length: opt('length'), format: opt('format') };
 const version = String(opt('version') ?? '1').padStart(2, '0');
-// The palette (see src/ident/theme.tsx): every composition takes it as props, and the file name carries it.
+// The palette (see src/components/Ident/theme.tsx): every composition takes it as props, and the file name carries it.
 const inputProps = { theme: opt('theme') ?? 'dark', logoColor: opt('logo-color') };
 const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}`;
 const browserExecutable = process.env.REMOTION_BROWSER || null;
@@ -42,13 +42,13 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const outDir = path.join(root, 'out');
 
 // Which provocations are in the first run (read from the source so there is one list).
-const src = fs.readFileSync(path.join(root, 'src/ident/provocations.ts'), 'utf8');
+const src = fs.readFileSync(path.join(root, 'src/components/Ident/provocations.ts'), 'utf8');
 const firstRunIds = [...src.matchAll(/id: '(P\d+)'[\s\S]*?firstRun: (true|false)/g)]
   .filter((m) => m[2] === 'true')
   .map((m) => m[1]);
 
 console.log('Bundling…');
-const serveUrl = await bundle({ entryPoint: path.join(root, 'src/ident/index.ts') });
+const serveUrl = await bundle({ entryPoint: path.join(root, 'src/components/Ident/remotion.ts') });
 const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptions, inputProps });
 
 const selected = comps.filter((c) => {

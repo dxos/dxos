@@ -1,6 +1,6 @@
 # Ident
 
-Sovereign Intelligence video ads, built with [Remotion](https://www.remotion.dev) (React), in `src/ident/`.
+Sovereign Intelligence video ads, built with [Remotion](https://www.remotion.dev) (React), in `src/components/Ident/`.
 autocue bookends recordings with its open title and close card (`trim-static.mjs --ident`).
 Every spot shares one system: black field, a provocation built word by word, a cut to black,
 then the DXOS end card. Only the words change.
@@ -41,15 +41,15 @@ Lengths: `10s`, `30s`.
 
 | Change                                                          | File                                                                            |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Add or edit a provocation, its resolve line or 30s "turn" lines | `src/ident/provocations.ts`                                                     |
-| Colors, tagline, CTA text, Discord URL, logo, timing            | `src/ident/brand.ts`                                                            |
-| How the type builds and how the end card animates               | `src/ident/components.tsx`                                                      |
-| The order of beats in 10s and 30s spots                         | `src/ident/Spots.tsx`                                                           |
+| Add or edit a provocation, its resolve line or 30s "turn" lines | `src/components/Ident/provocations.ts`                                          |
+| Colors, tagline, CTA text, Discord URL, logo, timing            | `src/components/Ident/brand.ts`                                                 |
+| How the type builds and how the end card animates               | `src/components/Ident/components.tsx`                                           |
+| The order of beats in 10s and 30s spots                         | `src/components/Ident/Spots.tsx`                                                |
 | Sounds                                                          | replace `public/audio/pulse.wav` and `public/audio/sonic-logo.wav` (keep names) |
 
 ## Using the real logo
 
-Export the mark from Affinity as SVG to `public/brand/dxos-mark.svg`, then in `src/ident/brand.ts`
+Export the mark from Affinity as SVG to `public/brand/dxos-mark.svg`, then in `src/components/Ident/brand.ts`
 set `markSrc: 'brand/dxos-mark.svg'`.
 
 ## Open items

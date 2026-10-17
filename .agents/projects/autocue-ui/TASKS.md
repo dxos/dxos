@@ -20,5 +20,5 @@
 - [ ] `driver-persist.local.mjs` still paints its own caption banner; move it to `updateFrame`.
 - [ ] `terminal/stage.html` title band uses `Frame` (layout mode).
 - [ ] `compose.mjs` header/footer bands: render with `Frame` instead of drawtext, or share its tokens.
-- [x] Merge `tools/ident` into `tools/autocue` (`src/ident/`); `--ident` renders at the recording's aspect ratio.
+- [x] Merge `tools/ident` into `tools/autocue` (`src/components/Ident/`); `--ident` renders at the recording's aspect ratio.
 - [ ] The ident shares the Frame tokens.

@@ -5,7 +5,7 @@
 import { Config } from '@remotion/cli/config';
 
 // The ident lives beside autocue's DOM components, so the studio needs its entry point named.
-Config.setEntryPoint('./src/ident/index.ts');
+Config.setEntryPoint('./src/components/Ident/remotion.ts');
 Config.setVideoImageFormat('jpeg');
 Config.setOverwriteOutput(true);
 Config.setCodec('h264');

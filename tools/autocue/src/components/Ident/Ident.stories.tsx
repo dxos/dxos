@@ -95,12 +95,12 @@ export const Open: Story = {
   args: { card: 'open' },
 };
 
-export const Composer: Story = {
-  args: { card: 'composer' },
-};
-
 export const Close: Story = {
   args: { card: 'close' },
+};
+
+export const Composer: Story = {
+  args: { card: 'composer' },
 };
 
 export const Provocation: Story = {

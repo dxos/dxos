@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ComposerIntro, EndOnly, OpenOnly, TAILWIND_HUES, TIMING, loadBrandFont } from '../../ident/cards.ts';
-import { IdentPlayer } from '../../ident/IdentPlayer.tsx';
+import { IdentPlayer } from '../Ident/IdentPlayer.tsx';
+import { ComposerIntro, EndOnly, OpenOnly, TAILWIND_HUES, TIMING, loadBrandFont } from '../Ident/index.ts';
 import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
 
@@ -246,7 +246,7 @@ export const OpenCaptions: Story = {
 /** The open-and-captions take, between the DXOS open and close cards. */
 export const Ident: StoryObj<typeof IdentStory> = {
   render: (args) => <IdentStory {...args} />,
-  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 3_000, openCard: 'dxos' },
+  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 3_000, openCard: 'dxos', logoColor: 'cyan' },
   argTypes: {
     openCard: { control: 'inline-radio', options: Object.keys(OPENS) },
     logoColor: { control: 'select', options: ['', ...TAILWIND_HUES] },
