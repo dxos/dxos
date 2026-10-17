@@ -28,17 +28,20 @@
   }
   [data-columns] > .dx-menu-item {
     justify-content: center;
-    margin-inline: 0;
     padding-inline: 0;
   }
 
-  /* Rows sit inset from the frame's sides, so a highlight reads as a rounded pill within the menu, not a band across it. */
+  /* A menu insets its rows a little more than other popups, equally on every side, so a highlight reads as a rounded
+     row within the menu rather than a band across it. */
+  .dx-scroll-root.dx-popup.dx-menu > .dx-scroll-viewport {
+    padding: calc(var(--dx-control-inset) * 3);
+    scroll-padding-block: calc(var(--dx-control-inset) * 3);
+  }
   .dx-menu-item {
     display: flex;
     align-items: center;
     gap: var(--dx-gap-size);
     height: var(--dx-block-size);
-    margin-inline: var(--dx-control-inset);
     padding-inline: calc(var(--dx-gap-size) * 1.5);
     border-radius: var(--radius-sm, 0.25rem);
     cursor: pointer;
