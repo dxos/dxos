@@ -231,6 +231,31 @@
         color: var(--ink);
         font-weight: 500;
       }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-left: -10px;
+      }
+      .tabs button {
+        font: 500 12px var(--mono);
+        color: var(--muted);
+        background: none;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 4px 9px;
+        cursor: pointer;
+      }
+      .tabs button:hover:not(:disabled) {
+        color: var(--ink);
+      }
+      .tabs button[aria-selected='true'] {
+        color: var(--ink);
+        border-color: var(--grid);
+      }
+      /* Disabled until the editor loads, since only the live editor can switch languages. */
+      .tabs button:disabled {
+        cursor: default;
+      }
       .actions {
         display: flex;
         gap: 8px;
@@ -686,7 +711,11 @@
         <div class="sheet" id="playground" aria-label="A diagram source and the drawing it produces">
           <div class="source">
             <div class="tab">
-              <span><b>arch.dx</b> — edit it</span>
+              <span class="tabs" role="tablist" aria-label="Source language">
+                <button type="button" role="tab" data-language="dx" aria-selected="true">DX</button>
+                <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>Mermaid</button>
+              </span>
+              <span>edit it</span>
             </div>
             <div class="editor" id="editor"><pre class="fallback">{{SOURCE}}</pre></div>
           </div>

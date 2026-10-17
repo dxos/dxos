@@ -6,6 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Plugin, defineConfig } from 'vite';
+import wasm from 'vite-plugin-wasm';
 
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
@@ -75,6 +76,14 @@ export default defineConfig({
     target: 'es2022',
     chunkSizeWarningLimit: 2048,
   },
+  // Dev serves the editor stack unshaken, so Automerge's wasm loads there and must be instantiated, not pre-bundled.
+  optimizeDeps: {
+    exclude: ['@automerge/automerge', '@automerge/automerge-subduction'],
+  },
+  resolve: {
+    // `@dxos/util` imports `node:util` at module scope; dev serves that module unshaken, so the browser needs a shim.
+    alias: [{ find: /^(node:)?util$/, replacement: '@dxos/node-std/util' }],
+  },
   // Workspace packages build from source: their per-module files tree-shake far better than a bundled `dist/lib`.
-  plugins: [PrerenderPlugin(), PluginImportSource({ include: ['@dxos/**'] }), ReactPlugin()],
+  plugins: [PrerenderPlugin(), PluginImportSource({ include: ['@dxos/**'] }), wasm(), ReactPlugin()],
 });
