@@ -70,8 +70,10 @@ import {
   type DocumentSize,
   OVERSIZED_DOCUMENT_CHANGES,
   OVERSIZED_DOCUMENT_OPS,
+  QUARANTINE_MIN_OPS,
   type QuarantineReason,
   type QuarantineRecord,
+  countStoredOps,
   isOutOfMemoryError,
   oversizeLevel,
 } from './quarantine.ts';
@@ -537,7 +539,7 @@ export class AutomergeHost extends Resource {
           log.warn('document load failed', { documentId, source, error });
           return;
         }
-        this.quarantineDocument(documentId, { reason: 'load-failed', error }).catch((err) =>
+        this.#quarantineIfLargeEnough(documentId, error).catch((err) =>
           log.error('failed to quarantine document', { documentId, err }),
         );
       },
@@ -869,6 +871,33 @@ export class AutomergeHost extends Resource {
    * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
    * {@link removeDocument}.
    */
+  /** Quarantines a document whose load ran out of memory, unless it holds too few ops to be the cause. */
+  async #quarantineIfLargeEnough(documentId: DocumentId, error: unknown): Promise<void> {
+    if (this.#quarantined.has(documentId)) {
+      return;
+    }
+    const recordsUnder = async (...prefixes: string[][]): Promise<Uint8Array[]> =>
+      (await Promise.all(prefixes.map((prefix) => this._storage.loadRange(prefix))))
+        .flat()
+        .flatMap(({ data }) => (data ? [data] : []));
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    // Either store may hold the whole document, so each is counted on its own rather than summed.
+    const ops = Math.max(
+      await countStoredOps(await recordsUnder([documentId])),
+      await countStoredOps(
+        await recordsUnder(
+          [SUBDUCTION_PREFIX, 'blobs', sedimentreeId],
+          [SUBDUCTION_PREFIX, 'fragment-blobs', sedimentreeId],
+        ),
+      ),
+    );
+    if (ops < QUARANTINE_MIN_OPS) {
+      log.warn('document ran out of memory but holds too few ops to be the cause', { documentId, ops, error });
+      return;
+    }
+    await this.quarantineDocument(documentId, { reason: 'load-failed', error });
+  }
+
   async quarantineDocument(
     documentId: DocumentId,
     { reason, error }: { reason: QuarantineReason; error?: unknown },

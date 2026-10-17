@@ -326,8 +326,10 @@ objects inline in the space root are never retired.
 
  ┌────────────────────┐        ┌─────────────────────┐   index has  ┌──────────────────────┐
  │ load runs out of   │───────►│ reason: load-failed │─────────────►│ rebuilt from index   │
- │ memory             │        └─────────────────────┘ all objects  │ reason: load-failed  │
- └────────────────────┘                  │                          └──────────┬───────────┘
+ │ memory, and stored │        └─────────────────────┘ all objects  │ reason: load-failed  │
+ │ bytes hold ≥100K   │                  │                          └──────────┬───────────┘
+ │ ops                │                  │                                     │
+ └────────────────────┘                  │                                     │
                                          │ index lacks objects                 │
                                          ▼                                     │
                                  restart → load again                          │
@@ -357,7 +359,10 @@ objects inline in the space root are never retired.
    the load waiting forever). An out-of-memory failure quarantines the document
    for the life of the host: loads resolve as unavailable, and nothing
    replicates or advertises it. Other failures are only logged, since they may
-   not repeat.
+   not repeat. Once the heap is full every load fails, so the host first counts
+   the document's ops from its stored chunks, without loading it, and
+   quarantines it only at `QUARANTINE_MIN_OPS` (100K) or more; a smaller
+   document is a bystander and is only logged.
 2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
    index (the last indexed JSON of each of its objects) into a replacement whose
    id is derived from the original, so peers retiring concurrently converge on

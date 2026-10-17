@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import { type DocumentId, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -16,7 +17,14 @@ import { log } from '@dxos/log';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { AutomergeHost } from './automerge-host.ts';
 import { DocumentQuarantinedError } from './errors.ts';
-import { OVERSIZED_DOCUMENT_CHANGES, OVERSIZED_DOCUMENT_OPS, isOutOfMemoryError, oversizeLevel } from './quarantine.ts';
+import {
+  OVERSIZED_DOCUMENT_CHANGES,
+  OVERSIZED_DOCUMENT_OPS,
+  QUARANTINE_MIN_OPS,
+  countStoredOps,
+  isOutOfMemoryError,
+  oversizeLevel,
+} from './quarantine.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
@@ -46,6 +54,82 @@ describe('isOutOfMemoryError', () => {
     expect(isOutOfMemoryError(new RangeError('unable to parse chunk: invalid magic bytes'))).toBe(false);
     expect(isOutOfMemoryError(new Error('database is locked'))).toBe(false);
     expect(isOutOfMemoryError('out of memory')).toBe(false);
+  });
+});
+
+describe('countStoredOps', () => {
+  const concat = (chunks: readonly Uint8Array[]) => {
+    const all = new Uint8Array(chunks.reduce((total, chunk) => total + chunk.length, 0));
+    let offset = 0;
+    for (const chunk of chunks) {
+      all.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return all;
+  };
+
+  /** A change chunk rewritten as the compressed form Subduction stores, which `@automerge/automerge` never emits. */
+  const compress = async (change: Uint8Array): Promise<Uint8Array> => {
+    let offset = 9;
+    let length = 0;
+    for (let shift = 0; ; shift += 7) {
+      const byte = change[offset++];
+      length += (byte & 0x7f) * 2 ** shift;
+      if ((byte & 0x80) === 0) {
+        break;
+      }
+    }
+    const deflated = new Uint8Array(
+      await new Response(
+        new Blob([change.slice(offset, offset + length)]).stream().pipeThrough(new CompressionStream('deflate-raw')),
+      ).arrayBuffer(),
+    );
+    const header = [...change.subarray(0, 8), 2];
+    for (let rest = deflated.length; ; rest = Math.floor(rest / 128)) {
+      header.push(rest >= 128 ? (rest % 128) | 0x80 : rest);
+      if (rest < 128) {
+        break;
+      }
+    }
+    return concat([new Uint8Array(header), deflated]);
+  };
+
+  const makeDocument = () => {
+    let doc = A.from<{ text: string; list: number[] }>({ text: 'x'.repeat(2_000), list: [1, 2, 3] });
+    for (let index = 0; index < 20; index++) {
+      doc = A.change(doc, (draft) => {
+        draft.text = 'y'.repeat(300 + index * 50);
+        draft.list.push(index);
+      });
+    }
+    return doc;
+  };
+
+  test('counts every op of a snapshot, its changes, a bundle and compressed changes', async ({ expect }) => {
+    const doc = makeDocument();
+    const ops = A.stats(doc).numOps;
+    const changes = A.getAllChanges(doc);
+    const hashes = changes.map((change) => A.decodeChange(change).hash);
+    expect(await countStoredOps([A.save(doc)])).toBe(ops);
+    expect(await countStoredOps([concat(changes)])).toBe(ops);
+    expect(await countStoredOps(changes)).toBe(ops);
+    expect(await countStoredOps([A.saveBundle(doc, hashes)])).toBe(ops);
+    expect(await countStoredOps(await Promise.all(changes.map(compress)))).toBe(ops);
+  });
+
+  test('never counts a change twice when a snapshot or bundle already holds it', async ({ expect }) => {
+    const doc = makeDocument();
+    const ops = A.stats(doc).numOps;
+    const changes = A.getAllChanges(doc);
+    const hashes = changes.map((change) => A.decodeChange(change).hash);
+    expect(await countStoredOps([A.save(doc), A.save(doc)])).toBe(ops);
+    expect(await countStoredOps([concat(changes), ...changes])).toBe(ops);
+    expect(await countStoredOps([A.saveBundle(doc, hashes.slice(0, 10)), ...changes])).toBe(ops);
+  });
+
+  test('counts bytes it cannot read as no ops', async ({ expect }) => {
+    const snapshot = A.save(makeDocument());
+    expect(await countStoredOps([new TextEncoder().encode('{"heads":[]}'), snapshot.subarray(0, 40)])).toBe(0);
   });
 });
 
@@ -104,23 +188,38 @@ describe('AutomergeHost quarantine', () => {
     expect(await pending).toBeNull();
   });
 
-  test('quarantines a document whose load ran out of memory, and only that one', async () => {
+  test('quarantines a document whose load ran out of memory only when it holds enough ops', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = await openHost(runtime);
-    const failed = randomDocumentId();
+    // One op per character.
+    using large = await host.createDoc<{ text: string }>({ text: 'x'.repeat(QUARANTINE_MIN_OPS) });
+    using small = await host.createDoc<{ text: string }>({ text: 'small' });
+    await host.flush(Context.default());
     const malformed = randomDocumentId();
+    const warn = vi.spyOn(log, 'warn');
+    onTestFinished(() => warn.mockRestore());
 
     const repo = host['_repo'];
-    repo.emit('document-load-failed', { documentId: failed, error: OUT_OF_MEMORY, source: 'storage' });
+    repo.emit('document-load-failed', { documentId: large.documentId, error: OUT_OF_MEMORY, source: 'storage' });
+    // Once the heap is full every load fails the same way, small documents included.
+    repo.emit('document-load-failed', { documentId: small.documentId, error: OUT_OF_MEMORY, source: 'subduction' });
     repo.emit('document-load-failed', {
       documentId: malformed,
       error: new RangeError('unable to parse chunk: invalid magic bytes'),
       source: 'storage',
     });
 
-    await expect.poll(() => host.isQuarantined(failed)).toBe(true);
-    expect(host.quarantinedDocuments.get(failed)?.reason).toBe('load-failed');
+    await expect.poll(() => host.isQuarantined(large.documentId)).toBe(true);
+    await expect
+      .poll(() =>
+        warn.mock.calls.some(
+          ([message]: unknown[]) => message === 'document ran out of memory but holds too few ops to be the cause',
+        ),
+      )
+      .toBe(true);
+    expect(host.quarantinedDocuments.get(large.documentId)?.reason).toBe('load-failed');
+    expect(host.isQuarantined(small.documentId)).toBe(false);
     expect(host.isQuarantined(malformed)).toBe(false);
   });
 
