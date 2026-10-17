@@ -33,10 +33,18 @@ chrome.action.onClicked.addListener(async (tab) => {
     show(tab.id, false);
     return;
   }
-  await chrome.debugger.attach(target, PROTOCOL);
-  await chrome.debugger.sendCommand(target, 'Emulation.setDeviceMetricsOverride', METRICS);
-  pinned.add(tab.id);
-  show(tab.id, true);
+  try {
+    await chrome.debugger.attach(target, PROTOCOL);
+    await chrome.debugger.sendCommand(target, 'Emulation.setDeviceMetricsOverride', METRICS);
+    pinned.add(tab.id);
+    show(tab.id, true);
+  } catch (error) {
+    // Chrome's own pages (chrome://, the Web Store) cannot be attached to; say so on the button, not as a crash.
+    await chrome.debugger.detach(target).catch(() => {});
+    chrome.action.setBadgeText({ tabId: tab.id, text: '!' });
+    chrome.action.setBadgeBackgroundColor({ tabId: tab.id, color: '#b91c1c' });
+    chrome.action.setTitle({ tabId: tab.id, title: `Cannot pin this tab: ${error.message}` });
+  }
 });
 
 // Closing Chrome's debugging banner, or the tab, detaches; the pin is gone with it.
