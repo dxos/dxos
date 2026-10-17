@@ -17,19 +17,16 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
 
 - [ ] **Run Composer** from this worktree: `moon run composer-app:serve` (http://localhost:5173), signed in, light
       theme (Settings › Appearance), the notices dismissed, and the plugins in the shot list enabled.
-- [ ] **Open the recording window**: `tools/autocue/showcase/chrome.sh [url] [width height]` opens Composer in a
-      Chrome _app_ window (no address bar, tab strip or bookmarks bar) in a clean profile, with a page area of exactly
-      the size given. On an external monitor use the default 1920x1080; on a laptop use `1280 720` (Screen Studio
-      captures Retina at 2x, so 2560x1440 scales cleanly to 1080p). Check it in the console:
-      `innerWidth + 'x' + innerHeight`; if the height is off, re-run with `TITLE_BAR=<n>`. Keep the zoom at 100% (⌘0).
-      macOS rounds a window's bottom corners, which show in a window capture: run with `PAD=16` for 16 extra rows
-      below the frame, then crop each clip in Screen Studio to the top 1920x1080 of the page. Content pinned to the
-      bottom (the assistant prompt, the canvas toolbar) sits 16pt lower and loses that sliver.
+- [ ] **Size the browser** to match the automated recordings (a 1920x1080 page at 2x), with 1 pt to spare on each
+      side so the window's own 1 px edge falls outside the crop:
+  - Open DevTools (⌥⌘I), dock it at the bottom at its smallest (73 px); it keeps the window's rounded bottom corners
+    off the page.
+  - With the Window Resizer extension, set the viewport to **1922x1155** (the page plus DevTools).
+  - Check in the console: `innerWidth + 'x' + innerHeight` prints **1922x1082**. Keep the zoom at 100% (⌘0). The
+    display must be at least 1922 points wide (an external monitor).
 - [ ] **Set up Screen Studio** (once per session):
-  - Recording the page only (no title bar), one of: _Area_ mode drawn over the page below the title bar (keep the
-    window still between shots); _Window_ mode, then crop the title bar off in the editor (the same crop on every
-    clip); or fullscreen the app window (⌃⌘F) and record the display (16:9 only on a 16:9 monitor; on a 16:10 laptop
-    `assemble.mjs` letterboxes it).
+  - Record the window and crop to **1920x1080 at (1, 88)** in window points: 87 pt of tab strip and address bar, plus
+    the 1 pt edge on each side. On a 2x display that captures the page at 3840x2160, as autocue does.
   - Background: _None_ (no wallpaper), padding 0, corner radius 0, shadow off, inset 0, so the export is the app only.
   - Cursor: small size, click effects off; hide it for screenshots. Auto-zoom: off for grid shots (a tile is too small
     to read a zoom); optional and subtle for the tour shots.
