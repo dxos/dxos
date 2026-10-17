@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button } from '../next/components/Button/Button.tsx';
-import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
+import { Button } from '../components/Button/Button.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
 import * as Match from './Match.tsx';
 import * as Show from './Show.tsx';
