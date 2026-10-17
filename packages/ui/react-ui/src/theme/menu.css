@@ -6,6 +6,7 @@
   /* The frame of `PopupScroll`; a long menu scrolls in it (`.dx-popup` with a viewport, `control.css`). */
   .dx-menu {
     min-width: 10rem;
+    border-radius: var(--radius-md, 0.375rem);
   }
   /*
    * A submenu's frame overhangs its positioner by the viewport's block padding, so the first item (or, flipped, the
@@ -27,20 +28,23 @@
   }
   [data-columns] > .dx-menu-item {
     justify-content: center;
+    margin-inline: 0;
     padding-inline: 0;
   }
 
+  /* Rows sit inset from the frame's sides, so a highlight reads as a rounded pill within the menu, not a band across it. */
   .dx-menu-item {
     display: flex;
     align-items: center;
     gap: var(--dx-gap-size);
     height: var(--dx-block-size);
-    padding-inline: var(--dx-gap-size);
+    margin-inline: var(--dx-control-inset);
+    padding-inline: calc(var(--dx-gap-size) * 1.5);
+    border-radius: var(--radius-sm, 0.25rem);
     cursor: pointer;
   }
   .dx-menu-item[data-highlighted] {
     background: var(--color-hover-surface);
-    border-radius: var(--radius-xs, 0.125rem);
   }
   .dx-menu-item[data-disabled] {
     opacity: 0.5;

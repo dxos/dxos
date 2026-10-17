@@ -1761,18 +1761,20 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
     [look.background, backgroundBounds, bounds, latticeBounds],
   );
   const zooming = useChanging(camera.zoom, ZOOM_SETTLE);
-  // While editing, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws no lines too.
+  // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
+  // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
   const snapLines = !readonly && look.background.grid === 'lines';
+  const snapGridDrawn = snapEnabled && snapLines && !(latticeOn && projection.lattice);
   // With WebGL, the surface and washes are drawn per pixel on the GPU (smooth, with no grain needed); the SVG field then
   // draws only the grid. Without it (a test DOM), the SVG draws the washes as before.
   const gpuWashes = look.background.washes.length > 0 && supportsWashCanvas();
   const fieldBackground = useMemo(
     () => ({
       ...look.background,
-      ...(snapLines && { grid: 'none' as const }),
+      ...(snapGridDrawn && { grid: 'none' as const }),
       ...(gpuWashes && { washes: [] }),
     }),
-    [snapLines, gpuWashes, look.background],
+    [snapGridDrawn, gpuWashes, look.background],
   );
 
   return (
@@ -1801,7 +1803,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
           states a constraint the canvas is not applying. The minor level goes when its cells get too
           small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
           cells, not the lines, so its cells are its grid. The theme bar's grid choice decides whether they show. */}
-      {snapEnabled && snapLines && !(latticeOn && projection.lattice) && (
+      {snapGridDrawn && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
