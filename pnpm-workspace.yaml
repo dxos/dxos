@@ -172,6 +172,8 @@ catalog:
   '@remotion/bundler': 4.0.534
   '@remotion/cli': 4.0.534
   '@remotion/fonts': 4.0.534
+  '@remotion/motion-blur': 4.0.534
+  '@remotion/player': 4.0.534
   '@remotion/renderer': 4.0.534
   '@replit/codemirror-vim': ^6.3.0
   '@replit/codemirror-vscode-keymap': ^6.0.2
@@ -737,9 +739,9 @@ overrides:
   '@remotion/elevenlabs>zod': 4.3.6
   '@remotion/media>zod': 4.3.6
   '@remotion/openai-whisper>zod': 4.3.6
-  '@remotion/studio>zod': 4.3.6
   '@remotion/studio-protocol>zod': 4.3.6
   '@remotion/studio-server>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
   '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'

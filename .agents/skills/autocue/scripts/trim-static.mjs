@@ -20,9 +20,9 @@
  * spinner moves a few pixels every frame), while a mean over the frame is dominated by frame area and
  * reads a small moving object — a dragged chess piece — as stillness.
  *
- * `--intro <video>` / `--outro <video>` bookend the trimmed demo with another clip (scaled and letterboxed
+ * `--open <video>` / `--close <video>` bookend the trimmed demo with another clip (scaled and letterboxed
  * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
- * `--ident` uses the DXOS ident from `tools/ident`, rendering it on first use.
+ * `--ident` uses the DXOS ident from `tools/autocue`, rendering it on first use.
  *
  * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
@@ -39,6 +39,8 @@ const parseArgs = () => {
   const args = process.argv.slice(2);
   const options = {
     'fps': 15,
+    // The recording's theme, which the ident is rendered in; `--logo-color <tailwind name>` recolours its logo.
+    'theme': 'dark',
     'max-static': 1.5,
     // Fraction of sampled pixels that must change materially. A mean-difference metric fails here: a
     // chess piece crossing two squares is ~0.7% of the frame, which averages down to noise, and the
@@ -86,29 +88,39 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --open <video> --close <video>] [--theme dark|light] [--logo-color <tailwind>] [--voiceover steps|<cues.json>] [--voice <name>] [--open-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
   );
   process.exit(1);
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
 
+/** The ident's formats (`tools/autocue/src/components/Ident/brand.ts` `FORMATS`) by aspect ratio. */
+const IDENT_FORMATS = { '16x9': 16 / 9, '16x10': 16 / 10, '9x16': 9 / 16, '1x1': 1, '4x5': 4 / 5 };
+
+/** The ident format nearest the recording's aspect ratio, so the bookends fill the frame instead of being padded. */
+const identFormat = (width, height) =>
+  Object.entries(IDENT_FORMATS).reduce((best, entry) =>
+    Math.abs(Math.log(entry[1] / (width / height))) < Math.abs(Math.log(best[1] / (width / height))) ? entry : best,
+  )[0];
+
 /**
- * The DXOS ident's opening title and end card, rendered by `tools/ident` into its `out/` on first use.
+ * The DXOS ident's opening title and end card in `format`, rendered by `tools/autocue` into its `out/` on first use.
  */
-const ident = (id) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/ident');
+const ident = (id, format) => {
+  const variant = `${options.theme === 'light' ? '_light' : ''}${options['logo-color'] ? `_${options['logo-color']}` : ''}`;
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/autocue');
   const dir = path.join(root, 'out', id);
-  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x9_v01.mp4`), so find it rather than spell it.
+  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it.
   const find = () =>
     existsSync(dir)
       ? readdirSync(dir)
-          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith('_16x9_v01.mp4'))
+          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}${variant}_v01.mp4`))
           .map((name) => path.join(dir, name))[0]
       : undefined;
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
   // Sources and the assets they render with (an installed or replaced font changes the clip too).
   const newest = Math.max(
-    ...['src', 'public'].flatMap((dir) =>
+    ...['src/components/Ident', 'public'].flatMap((dir) =>
       readdirSync(path.join(root, dir), { recursive: true }).map(
         (name) => statSync(path.join(root, dir, String(name))).mtimeMs,
       ),
@@ -116,31 +128,24 @@ const ident = (id) => {
   );
   let file = find();
   if (!file || statSync(file).mtimeMs < newest) {
-    console.error(`rendering ${id} ident…`);
-    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', '16x9'], {
+    console.error(`rendering ${id} ident (${format})…`);
+    const palette = [
+      '--theme',
+      options.theme,
+      ...(options['logo-color'] ? ['--logo-color', options['logo-color']] : []),
+    ];
+    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', format, ...palette], {
       cwd: root,
       stdio: ['ignore', 'ignore', 'inherit'],
     });
     file = find();
     if (render.status !== 0 || !file) {
-      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/ident/README.md)`);
+      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/autocue/IDENT.md)`);
       process.exit(1);
     }
   }
   return file;
 };
-if (options.ident) {
-  // `--ident composer` opens on the Composer logo instead of the DXOS title.
-  options.intro ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN');
-  options.outro ??= ident('END');
-}
-for (const clip of [options.intro, options.outro]) {
-  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
-    console.error(`no such clip: ${clip}`);
-    process.exit(1);
-  }
-}
-
 /** Geometry and duration come off ffmpeg's stderr, so the script needs no ffprobe. */
 const probe = async (file) => {
   const proc = spawn(FFMPEG, ['-hide_banner', '-i', file]);
@@ -164,6 +169,19 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
   process.exit(1);
 });
 
+if (options.ident) {
+  // `--ident composer` opens on the Composer logo instead of the DXOS title.
+  const format = identFormat(width, height);
+  options.open ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN', format);
+  options.close ??= ident('CLOSE', format);
+}
+for (const clip of [options.open, options.close]) {
+  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
+    console.error(`no such clip: ${clip}`);
+    process.exit(1);
+  }
+}
+
 /**
  * `--duration <min>-<max>` (default 45-60 seconds, bookends included) picks the still-frame cap instead of a
  * fixed `--max-static`: the longest cap whose result fits under the maximum, from one `--report` pass. A take
@@ -175,7 +193,7 @@ const fitDuration = async () => {
     .map(Number);
   const bookends = (
     await Promise.all(
-      [options.intro, options.outro].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
+      [options.open, options.close].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
     )
   ).reduce((total, value) => total + value, 0);
   const report = spawnSync(
@@ -395,8 +413,9 @@ decoder.stderr.pipe(process.stderr);
 encoder.stderr.pipe(process.stderr);
 
 /**
- * Pipes a whole clip into the encoder at the demo's size and rate. Letterboxed rather than cropped, so a
- * 16:9 ident inside a 16:10 recording keeps its edges; video only, since the recording has no audio.
+ * Pipes a whole clip into the encoder at the demo's size and rate. The ident is rendered at the recording's aspect
+ * ratio; any other clip (`--open` / `--close`) is letterboxed rather than cropped. Video only, since the recording
+ * has no audio.
  */
 const bookend = async (clip) => {
   const proc = spawn(FFMPEG, [
@@ -406,7 +425,9 @@ const bookend = async (clip) => {
     '-i',
     clip,
     '-vf',
-    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1`,
+    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:${
+      options.theme === 'light' ? 'white' : 'black'
+    },setsar=1`,
     '-r',
     String(options.fps),
     '-pix_fmt',
@@ -433,7 +454,7 @@ const bookend = async (clip) => {
   return frames / frameBytes;
 };
 
-const introFrames = options.intro ? await bookend(options.intro) : 0;
+const openFrames = options.open ? await bookend(options.open) : 0;
 
 let pending = Buffer.alloc(0);
 let previous;
@@ -490,7 +511,7 @@ for await (const chunk of decoder.stdout) {
   }
 }
 
-const outroFrames = options.outro ? await bookend(options.outro) : 0;
+const closeFrames = options.close ? await bookend(options.close) : 0;
 encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
 const [decodeStatus] = await decoderClosed;
@@ -513,10 +534,10 @@ const annotate = async () => {
     for (let frame = sourceFrame; frame < read; frame++) {
       const output = outputFrameOf.get(frame);
       if (output !== undefined) {
-        return (introFrames + output) / options.fps;
+        return (openFrames + output) / options.fps;
       }
     }
-    return (introFrames + kept) / options.fps;
+    return (openFrames + kept) / options.fps;
   };
 
   // Two captions issued back to back describe the same instant — the earlier one was never really on
@@ -541,7 +562,7 @@ const annotate = async () => {
     return `${hours}:${minutes}:${secs}`;
   };
 
-  const end = (introFrames + kept) / options.fps;
+  const end = (openFrames + kept) / options.fps;
   const metadata = [';FFMETADATA1'];
   const vtt = ['WEBVTT', ''];
   marks.forEach((mark, index) => {
@@ -683,12 +704,12 @@ const toMp4 = async () => {
 
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
-/** Spoken as the intro opens; `--intro-line <text>` replaces it and `--intro-line off` drops it. */
-const INTRO_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
+/** Spoken as the open clip starts; `--open-line <text>` replaces it and `--open-line off` drops it. */
+const OPEN_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
 
 /**
  * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
- * takes hand-written lines timed against the final video. With an intro, the intro line opens either. Both
+ * takes hand-written lines timed against the final video. With an open clip, the open line starts either. Both
  * run `voiceover.mjs` once over every output.
  */
 const voiceover = async () => {
@@ -698,10 +719,10 @@ const voiceover = async () => {
     console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
     return undefined;
   }
-  const introLine = typeof options['intro-line'] === 'string' ? options['intro-line'] : INTRO_LINE;
-  const introSeconds = introFrames / options.fps;
-  if (introFrames && options['intro-line'] !== 'off' && !cues.some((cue) => cue.at < introSeconds)) {
-    cues.unshift({ at: 0.3, text: introLine });
+  const openLine = typeof options['open-line'] === 'string' ? options['open-line'] : OPEN_LINE;
+  const openSeconds = openFrames / options.fps;
+  if (openFrames && options['open-line'] !== 'off' && !cues.some((cue) => cue.at < openSeconds)) {
+    cues.unshift({ at: 0.3, text: openLine });
   }
   const cuesFile = `${output.replace(/\.webm$/, '')}.cues.json`;
   writeFileSync(cuesFile, JSON.stringify(cues, null, 2));
@@ -834,7 +855,7 @@ console.log(
       voiced,
       uploaded,
       screenshot,
-      frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
+      frames: { read, kept, dropped: read - kept, open: openFrames, close: closeFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,

@@ -5,16 +5,16 @@
 import React from 'react';
 import { Composition, Folder } from 'remotion';
 
-import { FormatId, FORMATS, FPS, TIMING } from './brand.ts';
+import { FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';
 import { ComposerIntro } from './ComposerIntro.tsx';
 import { PROVOCATIONS } from './provocations.ts';
 import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
 import { Trail } from './Trail.tsx';
 
-const s10 = TIMING.spot10.provocation + TIMING.spot10.endCard;
-const s30 = TIMING.spot30.provocation + TIMING.spot30.turn + TIMING.spot30.resolve + TIMING.spot30.endCard;
+const s10 = SPOT_SECONDS['10s'];
+const s30 = SPOT_SECONDS['30s'];
 
-// One composition per provocation x length x format, e.g. "P03-10s-16x9", plus the opening title, the end card and the DXOS trail alone, e.g. "OPEN-3s-16x9", "END-3s-16x9" and "TRAIL-8s-16x9".
+// One composition per provocation x length x format, e.g. "P03-10s-16x9", plus the opening title, the close card and the DXOS trail alone, e.g. "OPEN-3s-16x9", "CLOSE-3s-16x9" and "TRAIL-8s-16x9".
 export const RemotionRoot: React.FC = () => (
   <>
     {PROVOCATIONS.map((p) => (
@@ -82,11 +82,11 @@ export const RemotionRoot: React.FC = () => (
         />
       ))}
     </Folder>
-    <Folder name='END'>
+    <Folder name='CLOSE'>
       {(Object.keys(FORMATS) as FormatId[]).map((f) => (
         <Composition
           key={f}
-          id={`END-${TIMING.spot10.endCard}s-${f}`}
+          id={`CLOSE-${TIMING.spot10.endCard}s-${f}`}
           component={EndOnly}
           durationInFrames={TIMING.spot10.endCard * FPS}
           fps={FPS}

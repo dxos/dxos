@@ -4,6 +4,7 @@
 
 import poiretOne from '@fontsource/poiret-one/files/poiret-one-latin-400-normal.woff2';
 import { loadFont } from '@remotion/fonts';
+import { CameraMotionBlur } from '@remotion/motion-blur';
 import React, { useEffect, useState } from 'react';
 import {
   AbsoluteFill,
@@ -17,7 +18,8 @@ import {
 
 import { type ComposerRing, composerRingPaths } from '@dxos/brand';
 
-import { COLORS, TIMING } from './brand.ts';
+import { TIMING } from './brand.ts';
+import { usePalette, withIdent } from './theme.tsx';
 
 /**
  * What the Turn ident adds to each ring of `composerRingPaths` (innermost first): its transform's x scale, to convert
@@ -75,6 +77,12 @@ const TURN = {
   wordmarkFade: 1200,
 };
 
+/**
+ * Motion blur on the rings only (`CameraMotionBlur` re-renders them at sub-frame times and averages the samples); the
+ * wordmark is drawn in its own layer above, so it stays crisp.
+ */
+const BLUR = { shutterAngle: 270, samples: 10 };
+
 const WORDMARK_FAMILY = 'Poiret One';
 /** Wordmark size and offset from the mark, in viewBox units (the mark is 256 square). */
 const WORDMARK_SIZE = 150;
@@ -111,14 +119,65 @@ const growPath = (ring: Ring, grown: number) =>
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
-export const ComposerIntro: React.FC = () => {
+/** The lockup's size, fixed to its final extent so nothing reflows while it animates. */
+type Lockup = { viewWidth: number; markSize: number };
+
+/** One `svg` per layer, sized identically and centred, so the rings and the wordmark line up. */
+const LockupLayer = ({ viewWidth, markSize, children }: Lockup & { children: React.ReactNode }) => (
+  <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <svg
+      width={(markSize * viewWidth) / 256}
+      height={markSize}
+      viewBox={`0 0 ${viewWidth} 256`}
+      style={{ overflow: 'visible' }}
+    >
+      {children}
+    </svg>
+  </AbsoluteFill>
+);
+
+/** The rings spinning in, read from the current frame so `CameraMotionBlur` can sample them between frames. */
+const Rings = (lockup: Lockup) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const ms = (frame / fps) * 1000;
+  const spin = TURN.easing(Math.min(1, ms / TURN.duration));
+  const growEnd = TURN.duration * TURN.growFinishAt;
+  return (
+    <LockupLayer {...lockup}>
+      {RINGS.map((ring, index) => {
+        // Alternate directions, inner rings turning further, so neighbours move against each other.
+        const turn = (index % 2 ? -1 : 1) * (1080 - index * 180);
+        const longest = Math.max(
+          ...ring.arms.map(([real, symmetric]) => Math.abs(parseFloat(real) - parseFloat(symmetric))),
+        );
+        const growDuration = (longest * ring.scaleX) / TURN.growRate;
+        const grown = interpolate(ms, [growEnd - growDuration, growEnd], [0, 1], clamp);
+        return (
+          <g
+            key={ring.fill}
+            style={{
+              opacity: Math.min(1, spin / 0.25),
+              transform: `rotate(${turn * (1 - spin)}deg)`,
+              transformBox: 'view-box',
+              transformOrigin: '128px 128px',
+            }}
+          >
+            <path transform={ring.transform} d={growPath(ring, grown)} style={{ fill: ring.fill }} />
+          </g>
+        );
+      })}
+    </LockupLayer>
+  );
+};
+
+const ComposerIntroCard = () => {
+  const colors = usePalette();
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const metrics = useWordmarkMetrics();
   const ms = (frame / fps) * 1000;
 
-  const spin = TURN.easing(Math.min(1, ms / TURN.duration));
-  const growEnd = TURN.duration * TURN.growFinishAt;
   const wordmarkStart = TURN.duration * TURN.settledAt + TURN.wordmarkDelay;
   const wordmarkOpacity = interpolate(ms, [wordmarkStart, wordmarkStart + TURN.wordmarkFade], [0, 1], {
     ...clamp,
@@ -131,55 +190,34 @@ export const ComposerIntro: React.FC = () => {
     clamp,
   );
 
-  // The lockup is sized to its final extent so nothing reflows while it animates.
+  // On the light ground the wordmark takes the second ring from the outside (rings are innermost first), so the
+  // lockup reads as one mark; a chosen logo colour still wins.
+  const wordmark = colors.theme === 'light' && !colors.tinted ? RINGS[RINGS.length - 2].fill : colors.logo;
   const viewWidth = metrics ? WORDMARK_X + metrics.width : 256;
-  const markSize = Math.round(Math.min(width * 0.8 * (256 / viewWidth), height * 0.3));
+  const lockup = { viewWidth, markSize: Math.round(Math.min(width * 0.8 * (256 / viewWidth), height * 0.3)) };
 
   return (
-    <AbsoluteFill
-      style={{ backgroundColor: COLORS.ground, alignItems: 'center', justifyContent: 'center', opacity: fadeOut }}
-    >
-      <svg
-        width={(markSize * viewWidth) / 256}
-        height={markSize}
-        viewBox={`0 0 ${viewWidth} 256`}
-        style={{ overflow: 'visible' }}
-      >
-        {RINGS.map((ring, index) => {
-          // Alternate directions, inner rings turning further, so neighbours move against each other.
-          const turn = (index % 2 ? -1 : 1) * (1080 - index * 180);
-          const longest = Math.max(
-            ...ring.arms.map(([real, symmetric]) => Math.abs(parseFloat(real) - parseFloat(symmetric))),
-          );
-          const growDuration = (longest * ring.scaleX) / TURN.growRate;
-          const grown = interpolate(ms, [growEnd - growDuration, growEnd], [0, 1], clamp);
-          return (
-            <g
-              key={ring.fill}
-              style={{
-                opacity: Math.min(1, spin / 0.25),
-                transform: `rotate(${turn * (1 - spin)}deg)`,
-                transformBox: 'view-box',
-                transformOrigin: '128px 128px',
-              }}
-            >
-              <path transform={ring.transform} d={growPath(ring, grown)} style={{ fill: ring.fill }} />
-            </g>
-          );
-        })}
-        {metrics && (
+    <AbsoluteFill style={{ backgroundColor: colors.ground, opacity: fadeOut }}>
+      <CameraMotionBlur {...BLUR}>
+        <Rings {...lockup} />
+      </CameraMotionBlur>
+      {metrics && (
+        <LockupLayer {...lockup}>
           <text
             x={WORDMARK_X}
             y={metrics.baseline}
-            fill={COLORS.main}
+            fill={wordmark}
             fontFamily={`"${WORDMARK_FAMILY}", sans-serif`}
             fontSize={WORDMARK_SIZE}
             opacity={wordmarkOpacity}
           >
             composer
           </text>
-        )}
-      </svg>
+        </LockupLayer>
+      )}
     </AbsoluteFill>
   );
 };
+
+/** The Composer logo assembling, then its wordmark in the logo colour; the rings keep their brand colours. */
+export const ComposerIntro = withIdent(ComposerIntroCard);

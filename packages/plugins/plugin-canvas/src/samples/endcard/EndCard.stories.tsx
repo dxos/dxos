@@ -169,7 +169,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The DXOS end card (tools/ident `EndCard`, 3 s) as a canvas document, authored through the canvas operations and
+ * The DXOS end card (tools/autocue `EndCard`, 3 s) as a canvas document, authored through the canvas operations and
  * exported with `scripts/render-story.mjs`, which seeks the exposed clock.
  *
  * Test:

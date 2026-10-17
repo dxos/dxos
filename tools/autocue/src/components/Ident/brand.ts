@@ -48,6 +48,12 @@ export const TIMING = {
   },
 };
 
+/** Seconds each spot length runs, its beats summed. */
+export const SPOT_SECONDS = {
+  '10s': TIMING.spot10.provocation + TIMING.spot10.endCard,
+  '30s': TIMING.spot30.provocation + TIMING.spot30.turn + TIMING.spot30.resolve + TIMING.spot30.endCard,
+};
+
 export type FormatId = '16x9' | '16x10' | '9x16' | '1x1' | '4x5';
 
 export const FORMATS: Record<FormatId, { width: number; height: number }> = {
