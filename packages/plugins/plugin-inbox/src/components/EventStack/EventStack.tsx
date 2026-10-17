@@ -84,7 +84,7 @@ export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
           onSelectionChange={handleSelectionChange}
         >
           <ScrollArea.Root>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}

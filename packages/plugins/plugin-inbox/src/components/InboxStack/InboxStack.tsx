@@ -286,7 +286,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
           onSelectionChange={handleSelectionChange}
         >
           <ScrollArea.Root>
-            <ScrollArea.Viewport ref={setViewport}>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}

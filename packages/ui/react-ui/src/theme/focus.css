@@ -19,8 +19,9 @@
     border-radius: inherit;
     pointer-events: none;
   }
-  .dx-focus-group[data-border]::after,
-  .dx-focus-item[data-border]::after {
+  /* A Card shares the element and writes `data-border='false'` for no edge, which a presence match would read as one. */
+  .dx-focus-group[data-border]:not([data-border='false'])::after,
+  .dx-focus-item[data-border]:not([data-border='false'])::after {
     box-shadow: inset 0 0 0 1px var(--color-separator);
   }
   .dx-focus-group:focus-visible::after,
