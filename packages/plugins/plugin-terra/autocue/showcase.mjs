@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'terra',
+  caption: 'Spin a generated planet.',
   plugins: ['terra'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'terra'),

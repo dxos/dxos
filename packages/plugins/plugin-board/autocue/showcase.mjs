@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'board',
+  caption: 'Open a new card board.',
   plugins: ['board'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'board'),

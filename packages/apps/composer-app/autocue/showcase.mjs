@@ -17,6 +17,7 @@ export const CLIP_MS = LONG_MS;
 
 export const steps = showcase({
   name: 'composer',
+  caption: 'Create the Bramble Coffee Roasters space from its template and walk its projects, documents and mail.',
   plugins: ['onboarding'],
   ms: CLIP_MS,
   clip: async ({ page }) => {

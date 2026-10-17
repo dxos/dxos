@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'sequencer',
+  caption: 'Fill a step grid in a new score.',
   plugins: ['sequencer'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'score'),

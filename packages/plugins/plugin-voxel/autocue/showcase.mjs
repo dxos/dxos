@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'voxel',
+  caption: 'Orbit a voxel world.',
   plugins: ['voxel'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'voxel'),

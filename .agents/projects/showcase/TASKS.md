@@ -56,6 +56,8 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       writes REPORT.md with four frames per clip. Dry run: map, markdown, chess all pass with correct frames.
 - [x] **26 flows and spec tests** — composer-app (Bramble), markdown, canvas (DXOS Architecture), projects (Chess MCP on
       Workers) at 20s; 22 plugins at 10s. The monolithic `flow.mjs`, `pipeline.sh`, `cut.sh`, `committed.sh` are gone.
+- [x] **Light and dark variants** — each flow records a light clip (60 fps, cut) and a dark demo (30 fps, caption,
+      ident and end card, not uploaded); each clip step carries the caption the dark demo shows.
 - [ ] **First full overnight run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
 - [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
       plank; give each a gesture that shows the plugin working.

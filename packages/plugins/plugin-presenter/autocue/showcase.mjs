@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'presenter',
+  caption: 'Present a document as slides and page through them.',
   plugins: ['markdown', 'presenter'],
   ms: CLIP_MS,
   setup: async ({ page }) => {

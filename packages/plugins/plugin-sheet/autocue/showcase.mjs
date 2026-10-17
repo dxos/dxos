@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'sheet',
+  caption: 'Fill a sheet with values and formulas.',
   plugins: ['sheet'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'sheet'),

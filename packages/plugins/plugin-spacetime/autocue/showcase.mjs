@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'spacetime',
+  caption: 'Orbit a 3D scene.',
   plugins: ['spacetime'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'spacetime.scene'),

@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'code',
+  caption: 'Open a new code project.',
   plugins: ['code'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'codeProject'),

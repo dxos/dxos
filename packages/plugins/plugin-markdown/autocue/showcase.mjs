@@ -17,6 +17,7 @@ export const CLIP_MS = LONG_MS;
 
 export const steps = showcase({
   name: 'markdown',
+  caption: 'Write a short formatted document: a heading, emphasis, a list, a checklist and a link.',
   plugins: ['markdown'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'document'),

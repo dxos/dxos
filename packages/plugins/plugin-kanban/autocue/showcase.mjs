@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'kanban',
+  caption: 'Open a new kanban board.',
   plugins: ['kanban'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'kanban'),

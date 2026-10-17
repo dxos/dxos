@@ -17,6 +17,7 @@ export const CLIP_MS = LONG_MS;
 
 export const steps = showcase({
   name: 'canvas',
+  caption: 'Create the DXOS Architecture space from its template, open a drawing and drill into a box.',
   plugins: ['canvas'],
   ms: CLIP_MS,
   clip: async ({ page }) => {

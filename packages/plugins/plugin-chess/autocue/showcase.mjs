@@ -22,6 +22,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'chess',
+  caption: "Replay Morphy's Opera Game move by move.",
   plugins: ['game', 'chess'],
   ms: CLIP_MS,
   setup: async ({ page }) => {

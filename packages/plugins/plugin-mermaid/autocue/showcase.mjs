@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'mermaid',
+  caption: 'A diagram in a document grows as edges are typed.',
   plugins: ['markdown', 'mermaid'],
   ms: CLIP_MS,
   setup: async ({ page }) => {

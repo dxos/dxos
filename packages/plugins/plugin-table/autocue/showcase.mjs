@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'table',
+  caption: 'Open a new table.',
   plugins: ['table'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'table'),

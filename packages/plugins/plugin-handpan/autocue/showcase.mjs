@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'handpan',
+  caption: 'Play a melody around the handpan.',
   plugins: ['handpan'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'instrument', { name: 'Handpan' }),

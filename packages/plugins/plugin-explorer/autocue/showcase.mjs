@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'explorer',
+  caption: 'Pan a graph of the space.',
   plugins: ['explorer'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'graph', { name: 'Graph' }),

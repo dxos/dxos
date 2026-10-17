@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'map',
+  caption: 'Pan a world map across named cities.',
   plugins: ['map'],
   ms: CLIP_MS,
   setup: async ({ page }) => {

@@ -17,6 +17,7 @@ export const CLIP_MS = LONG_MS;
 
 export const steps = showcase({
   name: 'projects',
+  caption: 'Create the Chess MCP on Workers space from its template, open its project and walk its task tree.',
   plugins: ['debug', 'projects'],
   ms: CLIP_MS,
   clip: async ({ page }) => {

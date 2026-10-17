@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'tasks',
+  caption: 'Write an outline of a launch plan.',
   plugins: ['tasks'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'outline'),

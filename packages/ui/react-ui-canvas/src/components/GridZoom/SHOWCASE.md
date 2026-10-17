@@ -21,10 +21,16 @@ One command records them all unattended, so it can run overnight:
 node tools/autocue/showcase/overnight.mjs
 ```
 
-It starts Composer on :4173 if nothing answers there, records each flow in light mode at 60 fps (retrying a failure
-once), cuts each `clip:` step to `temp/showcase/<run>/clips/<name>.mp4`, and writes `REPORT.md` with a pass/fail
-row and four frames per clip. A step can pass on a blank plank, so check the frames, not just the result.
-`--only map,chess` records a subset; `--no-serve` uses the running server only.
+It starts Composer on :4173 if nothing answers there and records each flow twice (retrying a failed take once):
+
+1. **Light**, the showcase clip: the `clip:` step cut to the flow's `CLIP_MS`, at 60 fps, to
+   `temp/showcase/<run>/clips/light/<name>.mp4`.
+2. **Dark**, the demo: the whole take at 30 fps with the clip's caption, trimmed of dead air and bookended by the
+   Composer ident and end card, to `clips/dark/<name>.mp4`. It is not uploaded; upload the ones you keep.
+
+`REPORT.md` has a pass/fail row and four frames per video. A step can pass on a blank plank, so check the frames,
+not just the result. `--only map,chess` records a subset, `--themes light` one variant, and `--no-serve` uses the
+running server only.
 
 Three flows start from a space template: composer-app from Bramble Coffee Roasters (plugin-onboarding), canvas
 from DXOS Architecture (plugin-canvas), and projects from Chess MCP on Workers (plugin-debug, which the flow enables).

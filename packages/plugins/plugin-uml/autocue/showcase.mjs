@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'uml',
+  caption: 'Draw class shapes on a canvas.',
   plugins: ['canvas', 'uml'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'drawing', { variant: 'Canvas' }),

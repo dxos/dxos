@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'conductor',
+  caption: 'Open a new compute circuit.',
   plugins: ['conductor'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'canvasBoard'),

@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'illustrator',
+  caption: 'Draw shapes on an SVG drawing.',
   plugins: ['illustrator'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'drawing', { variant: 'svg' }),

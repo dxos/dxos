@@ -148,15 +148,20 @@ export const prep = (plugins = []) => ({
 
 /**
  * The steps of one showcase flow: prep, an off-camera `setup`, and the `clip: <name>` step, held to `ms` so the cut
- * is exactly that long. A clip that throws still fails the step, so the overnight report shows it.
+ * is exactly that long. A clip that throws still fails the step, so the overnight report shows it. `caption` is the
+ * line the dark demo shows (the driver draws it only with `--captions on`).
  */
-export const showcase = ({ name, plugins, setup, clip, ms = SHORT_MS }) => [
+export const showcase = ({ name, caption, plugins, setup, clip, ms = SHORT_MS }) => [
   prep(plugins),
   ...(setup ? [{ name: `setup: ${name}`, setup: true, run: setup }] : []),
   {
     name: `clip: ${name}`,
+    narration: caption,
     run: async (ctx) => {
       const start = Date.now();
+      if (caption) {
+        await ctx.demo?.caption({ value: caption });
+      }
       await clip(ctx);
       const rest = ms - (Date.now() - start);
       if (rest > 0) {

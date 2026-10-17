@@ -17,6 +17,7 @@ export const CLIP_MS = SHORT_MS;
 
 export const steps = showcase({
   name: 'tldraw',
+  caption: 'Draw a few shapes in tldraw.',
   plugins: ['tldraw'],
   ms: CLIP_MS,
   setup: ({ page }) => create(page, 'drawing', { variant: 'tldraw' }),
