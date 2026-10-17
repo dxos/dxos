@@ -95,23 +95,12 @@ def recordMetas (dir : Text) (ns : Map Text Entry) (previous : Text) : {IO, Thro
   if IO.exists path then IO.remove path else ()
   root
 
-/-- The character of `h` that picks its node at `level` (0 or 1) of a metadata snapshot. -/
+/-- The character of `h` that picks its node at `level` of a metadata snapshot. -/
 def metaKey (h : Text) (level : Int) : Text := Text.slice h level (level + 1)
 
 /-- `items` grouped by `key`, in key order. -/
 def groupBy (key : a -> Text) (items : List a) : List (Text, List a) :=
   Map.toList (List.foldl (fun m x => Map.insert (key x) (x :: Option.getOr (Map.lookup (key x) m) []) m) Map.empty items)
-
-/-- A snapshot node's children by key; empty for `""`. -/
-def metaSubs (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text :=
-  if Text.isEmpty h then Map.empty
-  else
-    match readObject dir h with
-    | some form => Map.fromList (List.filterMap (fun item =>
-        match item with
-        | Sexp.list [Sexp.sym "sub", Sexp.str k, Sexp.str child] => some (k, child)
-        | _ => none) (Sexp.args form))
-    | none => throw ("missing metadata snapshot #" ++ h)
 
 def putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put dir (Sexp.node
   "metas"
@@ -119,21 +108,47 @@ def putMetaNode (dir : Text) (subs : Map Text Text) : {IO} Text := Codebase.put 
     (fun pair => Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (snd pair)])
     (Map.toList subs)))
 
+/-- How many sixteen-way levels sit above a metadata snapshot's leaves: three, so a leaf holds about one in 4,096 of the
+  hashes and a commit that touches a few dozen scattered hashes rewrites a few kilobytes (D288); two levels made each
+  leaf about 45 KB, and 82% of the codebase was rewritten leaves. -/
+def metaDepth : Int := 3
+
+/-- A node's entries when it is a leaf, or its children by key when it is not; both empty for `""`. -/
+def metaNode (dir : Text) (h : Text) : {IO, Throw Text} (Map Text Text, List (Text, Sexp)) :=
+  if Text.isEmpty h then (Map.empty, [])
+  else
+    match readObject dir h with
+    | some form =>
+        let items := Sexp.args form
+        let subs := Map.fromList (List.filterMap (fun item =>
+          match item with
+          | Sexp.list [Sexp.sym "sub", Sexp.str k, Sexp.str child] => some (k, child)
+          | _ => none) items)
+        let entries := List.filterMap (fun item =>
+          match item with
+          | Sexp.list [Sexp.sym "m", Sexp.str k, meta] => some (k, meta)
+          | _ => none) items
+        (subs, entries)
+    | none => throw ("missing metadata snapshot #" ++ h)
+
+/-- The node at `level` that `old` was, with `changes` (hash, metadata; a later one wins) written over it; its hash. A
+  leaf found above the leaf level, as an older layout wrote, is split into the levels below it. -/
+def putMetaTrie (dir : Text) (old : Text) (level : Int) (changes : List (Text, Sexp)) : {IO, Throw Text} Text :=
+  if level >= metaDepth then
+    let leaf := List.foldl (fun m c => Map.insert (fst c) (snd c) m) (if Text.isEmpty old then Map.empty else readMetas dir old) changes
+    Codebase.put dir (Sexp.node "metas" (List.map (fun pair => Sexp.node "m" [Sexp.str (fst pair), snd pair]) (Map.toList leaf)))
+  else
+    let (subs, carried) := metaNode dir old
+    let all := carried ++ changes
+    let groups := groupBy (fun c => metaKey (fst c) level) all
+    putMetaNode dir (List.foldl
+      (fun m group => Map.insert (fst group) (putMetaTrie dir (Option.getOr (Map.lookup (fst group) m) "") (level + 1) (List.reverse (snd group))) m)
+      subs
+      groups)
+
 /-- A metadata snapshot `previous` with `changes` (hash, metadata) written over it; its root hash. -/
-def putMetas (dir : Text) (previous : Text) (changes : List (Text, Sexp)) : {IO, Throw Text} Text := if List.isEmpty changes then previous else
-  -- Two levels of sixteen-way nodes over leaves: a change rewrites one leaf and its two parents.
-  putMetaNode dir (foldl (fun root group =>
-    let mid := metaSubs dir (getOr (Map.lookup (fst group) root) "")
-    let mid2 := foldl (fun m leafGroup =>
-      let old := getOr (Map.lookup (fst leafGroup) m) ""
-      let leaf := foldl
-        (fun l c => Map.insert (fst c) (snd c) l)
-        (if Text.isEmpty old then Map.empty else readMetas dir old)
-        (reverse (snd leafGroup))
-      Map.insert (fst leafGroup) (Codebase.put dir (Sexp.node
-        "metas"
-        (List.map (fun pair => Sexp.node "m" [Sexp.str (fst pair), snd pair]) (Map.toList leaf)))) m) mid (groupBy (fun c => metaKey (fst c) 1) (snd group))
-    Map.insert (fst group) (putMetaNode dir mid2) root) (metaSubs dir previous) (groupBy (fun c => metaKey (fst c) 0) changes))
+def putMetas (dir : Text) (previous : Text) (changes : List (Text, Sexp)) : {IO, Throw Text} Text :=
+  if List.isEmpty changes then previous else putMetaTrie dir previous 0 changes
 
 /-- A metadata snapshot's (hash, metadata) pairs; empty for `""`. -/
 def readMetas (dir : Text) (root : Text) : {IO, Throw Text} Map Text Sexp :=

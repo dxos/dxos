@@ -666,7 +666,7 @@ const metasAt = async (files) => {
   let metas = null;
   if (root) {
     metas = new Map();
-    // Two levels of sixteen-way nodes over leaves (`Codebase.putMetas`).
+    // Sixteen-way nodes over leaves, as deep as `Codebase.putMetas` wrote them (two levels before D288, three after).
     for (let level = [root]; level.length > 0;) {
       await fetchAll(
         files,

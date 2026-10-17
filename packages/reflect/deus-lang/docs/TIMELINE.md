@@ -319,6 +319,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 309 | 10-19 00:00 | 1h 00m | 17c9915687 | Built programs are kept by hash; the simulator runs the CLI's file tools, so push, pull and merge are pure tests (D282, D283) |
 | 310 | 10-19 00:30 | 30m 00s | e556d6bd12 | add/update refuse to shadow a mounted library's definition; test and check report their slowest checks (D284, D285) |
 | 311 | 10-19 01:00 | 30m 00s | 9f7f838d8b | The sync path's safety guards are pure tests: silent drops, new failures, a newer epoch (D286) |
-| 312 | 10-19 02:00 | 1h 00m | this commit | Review fixes: kept verdicts follow @[expectFail], a safer build cache, export --files keeps the executable bit (D287) |
+| 312 | 10-19 02:00 | 1h 00m | b4aa430d08 | Review fixes: kept verdicts follow @[expectFail], a safer build cache, export --files keeps the executable bit (D287) |
+| 313 | 10-19 03:00 | 1h 00m | this commit | Metadata snapshots use a three-level trie: a one-doc commit writes 7.5 KB of metadata, not 22-45 KB (D288) |
 
-Total from stage 1 to stage 312: 125h 50m.
+Total from stage 1 to stage 313: 126h 50m.
