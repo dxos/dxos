@@ -123,8 +123,8 @@ structure Moved @"urn:deus:worker:Moved" where
   head : Text
 
 /-- Where a project's branch heads live: R2 at the edge, a map in tests. `current branch` is the head and the tag a
-  conditional write moves it from (none for a head with no tag, which only an unconditional write may move: one
-  read from D1); `epochAt head` is the data-safety epoch a head asks for; `swap branch head tag` moves the head from
+  conditional write moves it from (none for a head read from D1, which a write moves only where the bucket holds
+  none); `epochAt head` is the data-safety epoch a head asks for; `swap branch head tag` moves the head from
   the one tagged `tag` (or only where there is none), false when another push moved it first; `log branch head
   previous` records a move. -/
 structure HeadStore where
@@ -184,7 +184,11 @@ test headsMoveOnlyFromWhereThePushPulled :=
   Worker.Http.offline (fun _ =>
     let heads := Ref.new Map.empty
     let moves := Ref.new []
-    let store := memoryHeads heads moves [(headB, 2)]
+    let asked := Ref.new []
+    let base := memoryHeads heads moves [(headB, 2)]
+    let store := { base with epochAt := fun head =>
+      let _ := Ref.set asked (Ref.get asked ++ [head])
+      base.epochAt head }
     let first := move store (Claim.mk "main" headA []) 0
     let retried := move store (Claim.mk "main" headA []) 0
     let built := move store (Claim.mk "main" headB [headA]) 0
@@ -195,19 +199,27 @@ test headsMoveOnlyFromWhereThePushPulled :=
       && built == Moved.mk 0 0 headB
       && stale == Moved.mk 409 2 headB
       && old == Moved.mk 426 2 ""
-      && Ref.get moves == [("main", headA, Option.none), ("main", headB, Option.some headA)])
+      && Ref.get moves == [("main", headA, Option.none), ("main", headB, Option.some headA)]
+      && Ref.get asked == [headA, headB, headB])
 
 test ofTwoPushesFromOneHeadOneMovesIt :=
   Worker.Http.offline (fun _ =>
     let heads := Ref.new (Map.insert "main" (headA, "t") Map.empty)
     let moves := Ref.new []
     let store := memoryHeads heads moves []
-    -- The second push read the head before the first moved it.
-    let raced := { store with current := fun _ => Option.some (headA, Option.some "t") }
+    -- The second push read the head before the first moved it, and reads it again once its write fails.
+    let reads := Ref.new 0
+    let raced := { store with current := fun branch =>
+      let _ := Ref.set reads (Ref.get reads + 1)
+      if Ref.get reads == 1 then Option.some (headA, Option.some "t") else store.current branch }
     let won := move store (Claim.mk "main" headB [headA]) 0
     let lost := move raced (Claim.mk "main" (Text.repeat 64 "c") [headA]) 0
-    won == Moved.mk 0 0 headB && lost.status == 409 && Map.lookup "main" (Ref.get heads) == Option.some (headB, "0")
-      && List.length (Ref.get moves) == 1)
+    -- A head read from D1 has no tag: the write creates the bucket's copy.
+    let fromD1 := { store with current := fun _ => Option.some (headA, Option.none) }
+    let copied := move fromD1 (Claim.mk "dev" headB [headA]) 0
+    won == Moved.mk 0 0 headB && lost == Moved.mk 409 0 headB && Map.lookup "main" (Ref.get heads) == Option.some (headB, "0")
+      && copied == Moved.mk 0 0 headB && Map.lookup "dev" (Ref.get heads) == Option.some (headB, "1")
+      && Ref.get moves == [("main", headB, Option.some headA), ("dev", headB, Option.some headA)])
 
 /-- Answers `/v1/<project>/headlog/<branch>` for `request`: every head the branch had, oldest first, one
   `<ms>-<causal>` per line. Only pushes write the log. -/

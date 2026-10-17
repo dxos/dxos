@@ -58,10 +58,12 @@ def answer (verb : Text) (path : List Text) (headOf : Text -> {Js.Async} Option 
   branch's head. `readHead branch` gives a promise of the head (`{causal}`) or `undefined`; `nameAt causal name` a
   promise of `{entry, hash, text}` or `undefined`, rejected with a 404 while the head is in no pack yet. -/
 def serve (request : Js) (rest : List Text) (readHead : Text -> Js) (nameAt : Text -> Text -> Js) : {Js.Async} Js :=
-  let path := List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) rest
+  let verb := Worker.Http.method request
+  -- Decoded only for a GET: a malformed escape in a request refused as 405 throws.
+  let path := if verb == "GET" then List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) rest else rest
   let reply :=
     answer
-      (Worker.Http.method request)
+      verb
       path
       (fun branch =>
         match Js.toOption (Js.Async.await (readHead branch)) with

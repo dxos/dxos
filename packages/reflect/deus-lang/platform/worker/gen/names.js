@@ -14,8 +14,14 @@ rt.named(Worker$Names$entryAt, "Worker.Names.entryAt");
 
 async function Worker$Names$serve(request, rest, readHead, nameAt) {
   const $stack = rt.handlers();
-  const path = List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Names.serve/\u03bb"), rest);
-  const reply = rt.resumed($stack, await Worker$Names$answer(Worker$Http$method(request), path, rt.named(async (branch) => {
+  const verb = Worker$Http$method(request);
+  let path;
+  if ((verb === "GET")) {
+    path = List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Names.serve/\u03bb"), rest);
+  } else {
+    path = rest;
+  }
+  const reply = rt.resumed($stack, await Worker$Names$answer(verb, path, rt.named(async (branch) => {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readHead, branch))));
   m1: {
@@ -109,6 +115,11 @@ const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "
 
 const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
+function Worker$Http$method(request) {
+  return lib$web$Js$toText(lib$web$Js$get(request, "method"));
+}
+rt.named(Worker$Http$method, "Worker.Http.method");
+
 function List$map(f, xs) {
   function go(acc$, ys$) {
     for (;;) {
@@ -191,11 +202,6 @@ async function Worker$Names$answer(verb, path, headOf, nameAt) {
   }
 }
 rt.named(Worker$Names$answer, "Worker.Names.answer");
-
-function Worker$Http$method(request) {
-  return lib$web$Js$toText(lib$web$Js$get(request, "method"));
-}
-rt.named(Worker$Http$method, "Worker.Http.method");
 
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
 

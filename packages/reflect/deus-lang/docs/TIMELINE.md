@@ -331,6 +331,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 321 | 10-19 12:00 | 30m 00s | 911879f65f | The Worker's bundle push rule is a pure, tested function: the first slice of the Cloudflare simulator (D297) |
 | 322 | 10-19 13:00 | 30m 00s | e0d02b9407 | The Worker answers the bundles API over a storage record, tested against a store in memory (D298) |
 | 323 | 10-19 13:30 | 30m 00s | 8880372b22 | Branch heads move over a storage record, with the race of two pushes tested in memory (D299) |
-| 324 | 10-19 14:00 | 30m 00s | this commit | Name lookups answer over a head and a namespace reader, tested in memory (D300) |
+| 324 | 10-19 14:00 | 30m 00s | 03e6079d73 | Name lookups answer over a head and a namespace reader, tested in memory (D300) |
+| 325 | 10-19 14:20 | 20m 00s | this commit | Review fixes for D298–D300: names decodes only GET paths; tests pin the head moves, epoch reads and the D1 copy |
 
-Total from stage 1 to stage 324: 136h 20m.
+Total from stage 1 to stage 325: 136h 40m.

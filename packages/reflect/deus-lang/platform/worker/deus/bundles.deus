@@ -104,8 +104,11 @@ test bundlesArePushedReadListedAndTrashed :=
     let store := memoryStore held
     let name := "0-" ++ Text.sha256 "(bundle)"
     let other := "1-" ++ Text.sha256 "(other)"
+    let claimed := Ref.new 0
     let send := fun verb rest body refusal =>
-      answer store verb rest true (fun _ => body) (fun scope => Ref.set scopes (Ref.get scopes ++ [scope])) (fun _ => refusal)
+      answer store verb rest true (fun _ => body) (fun scope => Ref.set scopes (Ref.get scopes ++ [scope])) (fun _ =>
+        let _ := Ref.set claimed (Ref.get claimed + 1)
+        refusal)
     let pushed := send "PUT" [name] "gz:(bundle)" Option.none
     let kept := send "PUT" [name] "gz:(bundle)" Option.none
     let misnamed := send "PUT" [other] "gz:(bundle)" Option.none
@@ -125,7 +128,9 @@ test bundlesArePushedReadListedAndTrashed :=
       && missing == Reply.problem 404 "no such bundle"
       && trashed == Reply.report name "deleted" true 200
       && Map.keys (Ref.get held) == []
-      && Ref.get scopes == ["push", "push", "push", "push", "push", "compact"])
+      && Ref.get scopes == ["push", "push", "push", "push", "push", "compact"]
+      -- Only the first push and the refused one reach the head: a kept or misnamed bundle never moves it.
+      && Ref.get claimed == 2)
 
 test bundlesRefuseOtherPathsAndVerbs :=
   Worker.Http.offline (fun _ =>
