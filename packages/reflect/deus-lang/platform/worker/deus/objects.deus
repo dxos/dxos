@@ -1,0 +1,44 @@
+-- context: @dxos/worker/Worker
+/-
+  One object's canonical text, as `deus pull` and the explorer read it (task 41714c0d, D180):
+  `/v1/<project>/objects/<id>` and `/v1/<project>/meta/<id>`. platform/worker/packs.mjs finds the text in the
+  project's packs.
+-/
+
+namespace Worker.Objects
+
+/-- A builtin's id: `#`, a letter, then up to 99 letters, digits, `_` or `.`. -/
+def isBuiltin (id : Text) : Bool :=
+  match Text.utf8 id with
+  | hash :: first :: rest =>
+      hash == '#' && isAlpha first && List.length rest <= 99 && List.all (fun c => isAlpha c || isDigit c || c == '_' || c == '.') rest
+  | _ => false
+
+/-- A member's id: a hash, `.`, and its index, one to six digits. -/
+def isMember (id : Text) : Bool :=
+  match Text.split id "." with
+  | [hash, index] => Worker.Heads.isHash hash && Text.length index >= 1 && Text.length index <= 6 && List.all isDigit (Text.utf8 index)
+  | _ => false
+
+/-- Whether `id` names an object: a hash, a builtin or a member. -/
+def isObjectId (id : Text) : Bool := Worker.Heads.isHash id || isBuiltin id || isMember id
+
+/-- Answers `/v1/<project>/<area>/<rest>`, where `area` is `objects` or `meta`, for `request`. `lookup id kind`
+  finds a text in the packs (kind 1 an object, 2 its metadata), giving a promise of the text or `undefined`. -/
+def serve (request : Js) (area : Text) (rest : List Text) (lookup : Text -> Int -> Js) : {Js.Async} Js :=
+  let id := Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text (Text.join "/" rest)])
+  if Worker.Http.method request != "GET" then Worker.Http.problem 405 "method not allowed"
+  else if List.length rest != 1 || not (isObjectId id) then Worker.Http.problem 404 "an object is named by its hash or a builtin id"
+  else
+    match Js.toOption (Js.Async.await (lookup id (if area == "meta" then 2 else 1))) with
+    | Option.none => Worker.Http.problem 404 ("no " ++ (if area == "meta" then "metadata" else "object") ++ " " ++ id ++ " in this project's packs")
+    -- An object never changes, so a cached copy is always right.
+    | Option.some text =>
+        Worker.Http.response text 200 [("content-type", "text/plain; charset=utf-8"), ("cache-control", "public, max-age=31536000, immutable")]
+
+test idsAreChecked :=
+  isObjectId Worker.Heads.headA && isObjectId "#Int" && isObjectId "#List.map_2" && isObjectId (Worker.Heads.headA ++ ".12")
+    && not (isObjectId "#") && not (isObjectId "#1a") && not (isObjectId (Worker.Heads.headA ++ ".")) && not (isObjectId (Worker.Heads.headA ++ ".1234567"))
+    && not (isObjectId "Int") && not (isObjectId ("#" ++ Text.repeat 101 "a")) && isObjectId ("#" ++ Text.repeat 100 "a")
+
+end Worker.Objects

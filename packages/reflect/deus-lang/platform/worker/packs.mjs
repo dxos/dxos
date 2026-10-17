@@ -8,6 +8,7 @@
 // binary search and one ranged read of the line, however large the codebase.
 
 import * as nameRules from './gen/names.js';
+import * as objectsApi from './gen/objects.js';
 import * as deus from './gen/packs.js';
 import { warmLive } from './live.mjs';
 import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
@@ -17,15 +18,9 @@ const PACK = /^([0-9]{1,3}-[0-9a-f]{64})(\.idx)?$/;
 
 const HASH = /^[0-9a-f]{64}$/;
 
-/** Ids that are not hashes: a builtin (`#Option`) or a recursive group's member (`<hash>.1`). */
-const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
-const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
-
 const FANOUT = 1024;
 
 const RECORD = 48;
-
-const KINDS = { objects: 1, meta: 2 };
 
 /** How long a pack listing is reused; packs are immutable, so only new ones can be missed. */
 const LIST_SECONDS = 5;
@@ -505,23 +500,9 @@ export const lookupMany = async (bucket, project, wanted) => {
   return found;
 };
 
-/** `/v1/<project>/objects/<id>` and `/v1/<project>/meta/<id>`: one object's canonical text. */
-export const objects = async (request, env, project, area, rest) => {
-  const id = decodeURIComponent(rest.join('/'));
-  if (request.method !== 'GET') {
-    throw new HttpError(405, 'method not allowed');
-  }
-  if (rest.length !== 1 || !(HASH.test(id) || BUILTIN.test(id) || MEMBER.test(id))) {
-    throw new HttpError(404, 'an object is named by its hash or a builtin id');
-  }
-  const text = await lookup(env.BUCKET, project, id, KINDS[area]);
-  if (text === undefined) {
-    throw new HttpError(404, `no ${area === 'meta' ? 'metadata' : 'object'} ${id} in this project's packs`);
-  }
-  return new Response(text, {
-    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=31536000, immutable' },
-  });
-};
+/** `/v1/<project>/objects/<id>` and `/v1/<project>/meta/<id>`: one object's canonical text (`Worker.Objects.serve`). */
+export const objects = (request, env, project, area, rest) =>
+  objectsApi.serve(request, area, rest, (id, kind) => lookup(env.BUCKET, project, id, kind));
 
 //
 // Names: a branch head's namespace tree, walked object by object.
@@ -583,25 +564,14 @@ export const parseSexp = (text) => {
 
 const fieldOf = (form, name) => form.find((item) => Array.isArray(item) && item[0] === name);
 
-/** `/v1/<project>/names/<branch>/<Name>`: the entry, hash and text of a name at the branch's head. */
-export const names = async (request, env, project, rest) => {
-  if (request.method !== 'GET') {
-    throw new HttpError(405, 'method not allowed');
-  }
-  const [branch, name] = rest.map(decodeURIComponent);
-  if (rest.length !== 2 || !branch || !name) {
-    throw new HttpError(404, 'a name is looked up as /names/<branch>/<Name>');
-  }
-  const head = await readHead(env, project, branch);
-  if (!head) {
-    throw new HttpError(404, `no branch ${branch}`);
-  }
-  const found = await nameAt(env.BUCKET, project, head.causal, name);
-  if (!found) {
-    throw new HttpError(404, `no ${name} on ${branch}`);
-  }
-  return json({ name, branch, head: head.causal, ...found });
-};
+/** `/v1/<project>/names/<branch>/<Name>`: the entry, hash and text of a name at the branch's head (`Worker.Names.serve`). */
+export const names = (request, env, project, rest) =>
+  nameRules.serve(
+    request,
+    rest,
+    (branch) => readHead(env, project, branch),
+    (causal, name) => nameAt(env.BUCKET, project, causal, name),
+  );
 
 /**
  * A name's entry, hash and object text in the namespace of history node `causal`, or undefined

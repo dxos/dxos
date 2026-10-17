@@ -44,6 +44,59 @@ async function Worker$Names$entryAt(lookup, snapshot, name) {
 }
 rt.named(Worker$Names$entryAt, "Worker.Names.entryAt");
 
+async function Worker$Names$serve(request, rest, readHead, nameAt) {
+  const $stack = rt.handlers();
+  if ((Worker$Http$method(request) !== "GET")) {
+    return Worker$Http$problem(405, "method not allowed");
+  } else {
+    const t0 = List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Names.serve/\u03bb"), rest);
+    m1: {
+      if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
+        const branch = t0.fields[0];
+        const name = t0.fields[1].fields[0];
+        let r2;
+        if (Text$isEmpty(branch)) {
+          r2 = true;
+        } else {
+          r2 = Text$isEmpty(name);
+        }
+        if (r2) {
+          return Worker$Http$problem(404, "a name is looked up as /names/<branch>/<Name>");
+        } else {
+          const t3 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readHead, branch))));
+          m4: {
+            if (t3.tag === 0) {
+              return Worker$Http$problem(404, rt.ap(rt.prims["append"], "no branch ", branch));
+            }
+            if (t3.tag === 1) {
+              const head = t3.fields[0];
+              const causal = lib$web$Js$toText(lib$web$Js$get(head, "causal"));
+              const t5 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(nameAt, causal, name))));
+              m6: {
+                if (t5.tag === 0) {
+                  return Worker$Http$problem(404, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "no ", name), " on "), branch));
+                }
+                if (t5.tag === 1) {
+                  const found = t5.fields[0];
+                  const named = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["name", lib$web$Js$text(name)]), rt.cons(new rt.Con("#Pair", 0, ["branch", lib$web$Js$text(branch)]), rt.cons(new rt.Con("#Pair", 0, ["head", lib$web$Js$text(causal)]), rt.NIL))));
+                  return Worker$Http$json(lib$web$Js$method(lib$web$Js$global("Object"), "assign", rt.cons(named, rt.cons(found, rt.NIL))), 200);
+                }
+                rt.nomatch(t5);
+              }
+            }
+            rt.nomatch(t3);
+          }
+        }
+      }
+      if (true) {
+        return Worker$Http$problem(404, "a name is looked up as /names/<branch>/<Name>");
+      }
+      rt.nomatch(t0);
+    }
+  }
+}
+rt.named(Worker$Names$serve, "Worker.Names.serve");
+
 function Option$map(f, v) {
   m0: {
     if (v.tag === 0) {
@@ -172,6 +225,65 @@ function lib$base$Sexp$print(s) {
   return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
 }
 rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
+
+function Worker$Http$method(request) {
+  return lib$web$Js$toText(lib$web$Js$get(request, "method"));
+}
+rt.named(Worker$Http$method, "Worker.Http.method");
+
+function Worker$Http$problem(status, message) {
+  return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["error", lib$web$Js$text(message)]), rt.NIL)), status);
+}
+rt.named(Worker$Http$problem, "Worker.Http.problem");
+
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
+
+const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
+
+function lib$web$Js$global(name) {
+  return lib$web$Js$get(lib$web$Js$globalThis(), name);
+}
+rt.named(lib$web$Js$global, "lib.web.Js.global");
+
+const lib$web$Js$text = rt.importFn(rt, "js.as.text", [['text']], ['raw'], "lib.web.Js.text");
+
+function Text$isEmpty(t) {
+  return (rt.ap(rt.prims["Text.length"], t) === 0);
+}
+rt.named(Text$isEmpty, "Text.isEmpty");
+
+const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
+
+const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
+
+function Worker$Http$json(value, status) {
+  return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+}
+rt.named(Worker$Http$json, "Worker.Http.json");
+
+const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
 
 function lib$base$Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -551,6 +663,16 @@ function lib$base$Sexp$emit(s, acc) {
 }
 rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
 
+const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+
+function Worker$Http$response(body, status, headers) {
+  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
+}
+rt.named(Worker$Http$response, "Worker.Http.response");
+
+const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
+
 function lib$base$Sexp$hexValue(c) {
   let r0;
   if ((c >= 48)) {
@@ -681,34 +803,36 @@ function lib$base$Sexp$quote(t) {
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
 
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
+
+const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
+
 function List$concat(xss) {
   return List$foldr(rt.named((xs, acc) => rt.ap(rt.prims["append"], xs, acc), "List.concat/\u03bb"), rt.NIL, xss);
 }
 rt.named(List$concat, "List.concat");
-
-function List$map(f, xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return List$reverse(acc);
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          acc$ = rt.cons(rt.ap(f, y), acc);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
-}
-rt.named(List$map, "List.map");
 
 function lib$base$Sexp$plain(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -962,6 +1086,8 @@ rt.named(List$map$wait, "List.map");
 
 export const raw = {
   entryAt: Worker$Names$entryAt,
+  serve: Worker$Names$serve,
 };
 export const entryAt = rt.exportAsync(Worker$Names$entryAt, [['fn', [['text']], ['raw']], ['text'], ['text']], ['struct', "2686892b7611063ded772301021cee7bea634838e1592dacb02595dd6de840a3", ["bound", "entry", "hash", "missing"], [['bool'], ['text'], ['text'], ['text']]]);
+export const serve = rt.exportAsync(Worker$Names$serve, [['raw'], ['list', ['text']], ['fn', [['text']], ['raw']], ['fn', [['text'], ['text']], ['raw']]], ['raw']);
 //# sourceMappingURL=names.js.map

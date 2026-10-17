@@ -132,7 +132,15 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
       );
       execFileSync(
         'node',
-        [join(root, 'bin/deus.mjs'), 'build', 'Worker.Names.entryAt', '-o', join(gen, 'names.js'), '--js'],
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
+          'Worker.Names.entryAt',
+          'Worker.Names.serve',
+          '-o',
+          join(gen, 'names.js'),
+          '--js',
+        ],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
       execFileSync(
@@ -172,6 +180,11 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
       execFileSync(
         'node',
         [join(root, 'bin/deus.mjs'), 'build', 'Worker.Bundles.serve', '-o', join(gen, 'bundles.js'), '--js'],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
+      execFileSync(
+        'node',
+        [join(root, 'bin/deus.mjs'), 'build', 'Worker.Objects.serve', '-o', join(gen, 'objects.js'), '--js'],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
       execFileSync(

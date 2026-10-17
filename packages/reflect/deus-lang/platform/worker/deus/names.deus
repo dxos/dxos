@@ -29,4 +29,25 @@ def entryAt (lookup : Text -> Js) (snapshot : Text) (name : Text) : {Js.Async} L
   | Result.ok Option.none => Lookup.mk false "" "" ""
   | Result.err problem => Lookup.mk false "" "" problem
 
+/-- Answers `/v1/<project>/names/<branch>/<Name>` for `request`: the entry, hash and text of a name at the branch's
+  head. `readHead branch` gives a promise of the head (`{causal}`) or `undefined`; `nameAt causal name` a promise of
+  `{entry, hash, text}` or `undefined`, rejected with a 404 while the head is in no pack yet. -/
+def serve (request : Js) (rest : List Text) (readHead : Text -> Js) (nameAt : Text -> Text -> Js) : {Js.Async} Js :=
+  if Worker.Http.method request != "GET" then Worker.Http.problem 405 "method not allowed"
+  else
+    match List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) rest with
+    | [branch, name] =>
+        if Text.isEmpty branch || Text.isEmpty name then Worker.Http.problem 404 "a name is looked up as /names/<branch>/<Name>"
+        else
+          match Js.toOption (Js.Async.await (readHead branch)) with
+          | Option.none => Worker.Http.problem 404 ("no branch " ++ branch)
+          | Option.some head =>
+              let causal := Js.toText (Js.get head "causal")
+              match Js.toOption (Js.Async.await (nameAt causal name)) with
+              | Option.none => Worker.Http.problem 404 ("no " ++ name ++ " on " ++ branch)
+              | Option.some found =>
+                  let named := Js.obj [("name", Js.text name), ("branch", Js.text branch), ("head", Js.text causal)]
+                  Worker.Http.json (Js.method (Js.global "Object") "assign" [named, found]) 200
+    | _ => Worker.Http.problem 404 "a name is looked up as /names/<branch>/<Name>"
+
 end Worker.Names

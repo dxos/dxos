@@ -573,6 +573,21 @@ describe('replication API', () => {
     });
     expect(await (await call('/v1/toolchain/names/main/top')).json()).toMatchObject({ hash: top, text: '(term 1)' });
     expect((await call('/v1/toolchain/names/main/A.c')).status).toBe(404);
+    const refusal = async (path: string) => {
+      const response = await call(path);
+      return [response.status, (await response.json()).error];
+    };
+    expect(await refusal('/v1/toolchain/objects/Option')).toEqual([
+      404,
+      'an object is named by its hash or a builtin id',
+    ]);
+    expect(await refusal(`/v1/toolchain/meta/${hash('9')}`)).toEqual([
+      404,
+      `no metadata ${hash('9')} in this project's packs`,
+    ]);
+    expect(await refusal('/v1/toolchain/names/side/A.b')).toEqual([404, 'no branch side']);
+    expect(await refusal('/v1/toolchain/names/main')).toEqual([404, 'a name is looked up as /names/<branch>/<Name>']);
+    expect(await refusal('/v1/toolchain/names/main/A.c')).toEqual([404, 'no A.c on main']);
     expect(reads.filter((read) => read.key.includes('/packs/') && !read.ranged)).toEqual([]);
 
     // Any client can read a pack in ranges.
