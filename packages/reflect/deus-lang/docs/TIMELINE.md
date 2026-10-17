@@ -309,6 +309,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 299 | 10-18 17:45 | 30m 00s | c053d80d75 | What the Worker serves for a site path is decided in DEUS (Worker.Site) (D271) |
 | 300 | 10-18 18:30 | 45m 00s | 526b6f07cd | Every document under docs/ is in the codebase and opens as a card; links between them stay in the explorer (D272) |
 | 301 | 10-18 19:00 | 30m 00s | ec97876f91 | The native CLI test builds its C at -O0: 170 s to 76 s (D273) |
-| 302 | 10-18 19:30 | 30m 00s | this commit | All 386 checks pass on the hosted overview; the finder opens documents; code spans follow CommonMark (D274) |
+| 302 | 10-18 19:30 | 30m 00s | 6989dd0ff6 | All 386 checks pass on the hosted overview; the finder opens documents; code spans follow CommonMark (D274) |
+| 303 | 10-18 19:45 | 15m 00s | this commit | The native self-builds run in a test file of their own (D275) |
 
-Total from stage 1 to stage 302: 119h 20m.
+Total from stage 1 to stage 303: 119h 35m.
