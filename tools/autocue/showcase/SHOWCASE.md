@@ -17,13 +17,16 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
 
 - [ ] **Run Composer** from this worktree: `moon run composer-app:serve` (http://localhost:5173), signed in, light
       theme (Settings › Appearance), the notices dismissed, and the plugins in the shot list enabled.
-- [ ] **Open the recording window**: `tools/autocue/showcase/chrome.sh` opens Composer in a Chrome _app_ window, so
-      there is no address bar, tab strip or bookmarks bar, in a clean profile (no extensions or saved sessions), with
-      a page area of exactly 1920x1080. Check it in the console: `innerWidth + 'x' + innerHeight` prints `1920x1080`;
-      if the height is off, re-run with `TITLE_BAR=<n>`. The display must be at least 1920 points wide, so use an
-      external monitor (a laptop panel is too small). Keep the browser zoom at 100% (⌘0).
+- [ ] **Open the recording window**: `tools/autocue/showcase/chrome.sh [url] [width height]` opens Composer in a
+      Chrome _app_ window (no address bar, tab strip or bookmarks bar) in a clean profile, with a page area of exactly
+      the size given. On an external monitor use the default 1920x1080; on a laptop use `1280 720` (Screen Studio
+      captures Retina at 2x, so 2560x1440 scales cleanly to 1080p). Check it in the console:
+      `innerWidth + 'x' + innerHeight`; if the height is off, re-run with `TITLE_BAR=<n>`. Keep the zoom at 100% (⌘0).
 - [ ] **Set up Screen Studio** (once per session):
-  - Recording: _Window_ mode on the Chrome app window, at the display's native (Retina) resolution.
+  - Recording the page only (no title bar), one of: _Area_ mode drawn over the page below the title bar (keep the
+    window still between shots); _Window_ mode, then crop the title bar off in the editor (the same crop on every
+    clip); or fullscreen the app window (⌃⌘F) and record the display (16:9 only on a 16:9 monitor; on a 16:10 laptop
+    `assemble.mjs` letterboxes it).
   - Background: _None_ (no wallpaper), padding 0, corner radius 0, shadow off, inset 0, so the export is the app only.
   - Cursor: small size, click effects off; hide it for screenshots. Auto-zoom: off for grid shots (a tile is too small
     to read a zoom); optional and subtle for the tour shots.
