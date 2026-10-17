@@ -230,21 +230,35 @@ export const properNouns = (text: string, limit = 6): string[] => {
 
 const PROMPT_AUTHOR = /\nAuthor: (.*)\n/;
 const PROMPT_MESSAGE = '\nMessage:\n';
+const TRANSCRIPT_MESSAGE = /<message tag="([^"]*)" author="([^"]*)" date="[^"]*">\n([\s\S]*?)\n<\/message>/g;
 
-/** Recover (author, text) from the extract stage's prompt and synthesize `(author) mentions (noun)` facts. */
+const mentions = (author: string, text: string, extra: Record<string, string> = {}) =>
+  properNouns(text).map((noun) => ({
+    subject: author,
+    predicate: 'mentions',
+    object: noun,
+    factuality: 'CT+',
+    polarity: '+',
+    ...extra,
+  }));
+
+/**
+ * Recover the messages from the extract stage's prompt and synthesize `(author) mentions (noun)` facts: one message
+ * from a single-document prompt, or every tagged message of a transcript, each fact citing its message's tag.
+ */
 const extractFromPrompt = (prompt: string) => {
+  const transcript = [...prompt.matchAll(TRANSCRIPT_MESSAGE)];
+  if (transcript.length > 0) {
+    return {
+      facts: transcript.flatMap(([, tag, author, text]) =>
+        mentions(author.replace(/&quot;/g, '"'), text, { message: tag }),
+      ),
+    };
+  }
   const author = PROMPT_AUTHOR.exec(prompt)?.[1] ?? 'unknown';
   const messageIndex = prompt.indexOf(PROMPT_MESSAGE);
   const text = messageIndex >= 0 ? prompt.slice(messageIndex + PROMPT_MESSAGE.length) : '';
-  return {
-    facts: properNouns(text).map((noun) => ({
-      subject: author,
-      predicate: 'mentions',
-      object: noun,
-      factuality: 'CT+',
-      polarity: '+',
-    })),
-  };
+  return { facts: mentions(author, text) };
 };
 
 /**
@@ -253,7 +267,10 @@ const extractFromPrompt = (prompt: string) => {
  * a live `AiService` to get model-quality extraction over the same pipeline.
  */
 // TODO(dmaretskyi): Extract to ai package as MockAiServiceLayer -- where you're able to configure prebaked replies in options. See about unifiying with scripted model.
-export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
+export const deterministicAiService = (
+  /** Receives every prompt the model is sent, so a test can count requests. */
+  prompts: string[] = [],
+): Layer.Layer<AiService.AiService> =>
   Layer.succeed(
     AiService.AiService,
     AiService.make({
@@ -263,7 +280,10 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
         Layer.succeed(LanguageModel.LanguageModel, {
           generateText: () => Effect.succeed({ text: '', content: [] }),
           generateObject: (request: { prompt: string }) =>
-            Effect.succeed({ value: extractFromPrompt(request.prompt), content: [] }),
+            Effect.sync(() => {
+              prompts.push(request.prompt);
+              return { value: extractFromPrompt(request.prompt), content: [] };
+            }),
           streamText: () => Stream.empty,
         } as any),
     }),

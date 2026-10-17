@@ -124,6 +124,39 @@ describe('EdgeTriggerManager', () => {
       expect(forceRun).toHaveBeenCalledTimes(1);
     }),
   );
+
+  it.effect('resets a feed trigger on edge, retrying while it replicates', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const reset = vi
+        .spyOn(edgeClient, 'resetTrigger')
+        .mockRejectedValueOnce(notReplicatedError())
+        .mockResolvedValue({ reset: true });
+
+      const fiber = yield* forkReset(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(reset).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('reports a reset edge refuses as not resettable, without retrying', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const reset = vi
+        .spyOn(edgeClient, 'resetTrigger')
+        .mockRejectedValue(refusedError('Trigger is not a feed trigger'));
+
+      const fiber = yield* forkReset(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      expect(yield* Effect.flip(Fiber.join(fiber))).toBeInstanceOf(Trigger.TriggerNotResettableError);
+      expect(reset).toHaveBeenCalledTimes(1);
+    }),
+  );
 });
 
 /** A failure envelope as `EdgeHttpClient` decodes it off the wire. */
@@ -149,6 +182,22 @@ const forkInvoke = (edgeClient: EdgeHttpClient) =>
     const manager = yield* RemoteTriggerManager.Service;
     const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
     yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
+  }).pipe(
+    Effect.provide(
+      Layer.provideMerge(
+        EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID),
+        Layer.succeed(Registry.AtomRegistry, Registry.make()),
+      ),
+    ),
+    Effect.forkChild,
+  );
+
+/** Resets a feed trigger through a manager backed by `edgeClient`, on a forked fiber (see {@link forkInvoke}). */
+const forkReset = (edgeClient: EdgeHttpClient) =>
+  Effect.gen(function* () {
+    const manager = yield* RemoteTriggerManager.Service;
+    const trigger = Trigger.make({ enabled: true, remote: true, spec: { kind: 'feed' } });
+    yield* manager.resetTrigger({ trigger });
   }).pipe(
     Effect.provide(
       Layer.provideMerge(

@@ -9,6 +9,7 @@ import { AgentCompanionModule, type AgentCompanionModuleData } from './AgentComp
 import { AgentPropertiesModule } from './AgentPropertiesModule.tsx';
 import { ConversationModule } from './ConversationModule.tsx';
 import { DiscordBotModule } from './DiscordBotModule.tsx';
+import { PipelineDiscordModule } from './PipelineDiscordModule.tsx';
 
 export { StorySettingsToolbar } from './StorySettingsToolbar.tsx';
 
@@ -18,6 +19,7 @@ export const StoryRole = {
   AgentProperties: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentProperties'),
   DiscordBot: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBot'),
   Conversation: Role.make<Record<string, unknown>>('org.dxos.storybook.role.conversation'),
+  PipelineDiscord: Role.make<Record<string, unknown>>('org.dxos.storybook.role.pipelineDiscord'),
 };
 
 export const moduleSurfaces: Surface.Definition[] = [
@@ -40,5 +42,10 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.conversation',
     filter: Surface.makeFilter(StoryRole.Conversation),
     component: ConversationModule,
+  }),
+  Surface.create({
+    id: 'role.pipelineDiscord',
+    filter: Surface.makeFilter(StoryRole.PipelineDiscord),
+    component: PipelineDiscordModule,
   }),
 ];
