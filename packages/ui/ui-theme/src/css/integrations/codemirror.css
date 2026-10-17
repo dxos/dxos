@@ -15,15 +15,12 @@
   );
   --color-cm-separator: var(--color-blue-500);
   --color-cm-cursor: light-dark(var(--color-neutral-900), var(--color-neutral-100));
-  /* Translucent in light mode, so selected text keeps its contrast against a soft tint rather than a solid blue. */
+  /* One translucent tint whether or not the editor has focus, so selected text keeps its contrast in both states. */
   --color-cm-selection: light-dark(
-    oklch(from var(--color-blue-400) l c h / 0.2),
+    oklch(from var(--color-blue-400) l c h / 0.5),
     oklch(from var(--color-blue-600) l c h / 0.5)
   );
-  --color-cm-focused-selection: light-dark(
-    oklch(from var(--color-blue-400) l c h / 0.35),
-    oklch(0.445 0.057 256)
-  );
+  --color-cm-focused-selection: var(--color-cm-selection);
   --color-cm-highlight: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-cm-highlight-surface: light-dark(var(--color-sky-200), var(--color-cyan-800));
   --color-cm-comment-text: light-dark(var(--color-neutral-950), var(--color-neutral-950));
