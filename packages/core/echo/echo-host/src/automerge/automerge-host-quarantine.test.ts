@@ -15,7 +15,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { AutomergeHost } from './automerge-host.ts';
+import { AutomergeHost, documentIdToSedimentreeIdHex } from './automerge-host.ts';
 import { DocumentQuarantinedError } from './errors.ts';
 import {
   OVERSIZED_DOCUMENT_CHANGES,
@@ -26,6 +26,7 @@ import {
   oversizeLevel,
 } from './quarantine.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
+import { SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
 const OUT_OF_MEMORY = new RangeError('error inflating document chunk ops: out of memory');
@@ -202,6 +203,30 @@ describe('AutomergeHost quarantine', () => {
 
     await host.quarantineDocument(large.documentId);
     expect(host.unloadableDocuments.size).toBe(0);
+  });
+
+  test('counts one store when the other cannot be read', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = await openHost(runtime);
+    using large = await host.createDoc<{ text: string }>({ text: 'x'.repeat(RETIREMENT_MIN_OPS) });
+    await host.flush(Context.default());
+    await host.storage.save(
+      [SUBDUCTION_PREFIX, 'blobs', documentIdToSedimentreeIdHex(large.documentId), 'unreadable'],
+      new Uint8Array([1, 2, 3]),
+    );
+    const unloadable: DocumentId[] = [];
+    host.documentUnloadable.on(({ documentId }) => {
+      unloadable.push(documentId);
+    });
+
+    host['_repo'].emit('document-load-failed', {
+      documentId: large.documentId,
+      error: OUT_OF_MEMORY,
+      source: 'storage',
+    });
+
+    await expect.poll(() => unloadable).toEqual([large.documentId]);
   });
 
   test('a document whose stored bytes cannot be applied reports the failure from storage', async () => {

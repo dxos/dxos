@@ -926,18 +926,27 @@ export class AutomergeHost extends Resource {
       this._storage.loadRange([SUBDUCTION_PREFIX, 'fragment-blobs', sedimentreeId]),
     ]);
     const bytesOf = (records: { data?: Uint8Array }[]) => records.flatMap(({ data }) => (data ? [data] : []));
-    let ops: number;
-    try {
-      // Each store may hold the whole document, so the two are counted apart rather than summed. The classical
-      // range also holds sync states, which are not Automerge chunks.
-      ops = Math.max(
-        await countOps(bytesOf(classical.filter(({ key }) => key[1] === 'snapshot' || key[1] === 'incremental'))),
-        await countOps(bytesOf(subduction.flat())),
-      );
-    } catch (err) {
-      log.warn('document ran out of memory and its stored bytes could not be read', { documentId, source, err });
+    // Counted apart so one unreadable store does not hide the other, which may hold the whole document.
+    const countStore = async (store: string, chunks: Uint8Array[]): Promise<number | undefined> => {
+      try {
+        return await countOps(chunks);
+      } catch (err) {
+        log.warn('stored bytes of a document that ran out of memory could not be read', { documentId, store, err });
+        return undefined;
+      }
+    };
+    const counts = [
+      // The classical range also holds sync states, which are not Automerge chunks.
+      await countStore(
+        'classical',
+        bytesOf(classical.filter(({ key }) => key[1] === 'snapshot' || key[1] === 'incremental')),
+      ),
+      await countStore('subduction', bytesOf(subduction.flat())),
+    ].filter((count): count is number => count !== undefined);
+    if (counts.length === 0) {
       return;
     }
+    const ops = Math.max(...counts);
     if (ops < RETIREMENT_MIN_OPS) {
       log.warn('document ran out of memory', { documentId, source, ops, error });
       return;
