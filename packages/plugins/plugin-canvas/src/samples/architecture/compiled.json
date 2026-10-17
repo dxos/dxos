@@ -73,7 +73,9 @@
         "origin": { "x": -128, "y": -64 },
         "scale": 1,
         "ref": "packages/apps/composer-app",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Composer App" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Composer App", "color": "blue" }
+        ]
       }
     },
     {
@@ -83,7 +85,18 @@
         "origin": { "x": 256, "y": 320 },
         "scale": 1,
         "ref": "packages/sdk/app-framework",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "App Framework" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "App Framework",
+            "color": "violet"
+          }
+        ]
       }
     },
     {
@@ -143,7 +156,9 @@
         "origin": { "x": 1024, "y": 320 },
         "scale": 1,
         "ref": "packages/core/echo",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ECHO" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ECHO", "color": "green" }
+        ]
       }
     },
     {
@@ -173,7 +188,9 @@
         "origin": { "x": 640, "y": 320 },
         "scale": 1,
         "ref": "packages/core/compute",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Compute" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Compute", "color": "yellow" }
+        ]
       }
     },
     {
@@ -183,7 +200,9 @@
         "origin": { "x": 1024, "y": 704 },
         "scale": 1,
         "ref": "packages/core/mesh/edge-client",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EDGE" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EDGE", "color": "orange" }
+        ]
       }
     },
     {
@@ -1965,7 +1984,9 @@
         "origin": { "x": 1024, "y": -64 },
         "scale": 1,
         "ref": "packages/apps/composer-app",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Composer" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Composer", "color": "blue" }
+        ]
       }
     },
     {
@@ -1985,7 +2006,9 @@
         "origin": { "x": 640, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/edge/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "edge router" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "edge router", "color": "orange" }
+        ]
       }
     },
     {
@@ -2005,7 +2028,9 @@
         "origin": { "x": -128, "y": 320 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "db-service" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "db-service", "color": "green" }
+        ]
       }
     },
     {
@@ -2015,7 +2040,18 @@
         "origin": { "x": -128, "y": 512 },
         "scale": 1,
         "ref": "edge/packages/services/compute-service/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "compute-service" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "compute-service",
+            "color": "yellow"
+          }
+        ]
       }
     },
     {
@@ -2045,7 +2081,9 @@
         "origin": { "x": -128, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/ai-service/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ai-service" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ai-service", "color": "violet" }
+        ]
       }
     },
     {
