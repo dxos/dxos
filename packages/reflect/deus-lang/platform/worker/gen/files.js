@@ -98,6 +98,12 @@ async function Worker$R2$listAll(bucket, prefix) {
 }
 rt.named(Worker$R2$listAll, "Worker.R2.listAll");
 
+async function Worker$R2$listFolders(bucket, prefix) {
+  const $stack = rt.handlers();
+  return List$sort(rt.resumed($stack, await Worker$R2$foldersFrom(bucket, prefix, rt.con0("#Option", 0))));
+}
+rt.named(Worker$R2$listFolders, "Worker.R2.listFolders");
+
 async function Worker$R2$toTrash(bucket, project, folder, name) {
   const $stack = rt.handlers();
   const key = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/"), folder), "/"), name);
@@ -361,6 +367,37 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
 }
 rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
 
+function List$sort(xs) {
+  return List$sortBy(rt.prims["compare"], xs);
+}
+rt.named(List$sort, "List.sort");
+
+async function Worker$R2$foldersFrom(bucket, prefix, cursor) {
+  const $stack = rt.handlers();
+  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.foldersFrom/\u03bb"), cursor), rt.NIL);
+  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), rt.cons(new rt.Con("#Pair", 0, ["delimiter", lib$web$Js$text("/")]), rt.NIL)), at)), rt.NIL)));
+  let folders;
+  const t0 = lib$web$Js$toOption(lib$web$Js$get(page, "delimitedPrefixes"));
+  m1: {
+    if (t0.tag === 1) {
+      const listed = t0.fields[0];
+      folders = List$map(lib$web$Js$toText, lib$web$Js$toList(listed));
+      break m1;
+    }
+    if (t0.tag === 0) {
+      folders = rt.NIL;
+      break m1;
+    }
+    rt.nomatch(t0);
+  }
+  if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
+    return rt.ap(rt.prims["append"], folders, rt.resumed($stack, await Worker$R2$foldersFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+  } else {
+    return folders;
+  }
+}
+rt.named(Worker$R2$foldersFrom, "Worker.R2.foldersFrom");
+
 const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
 
 function lib$web$Js$global(name) {
@@ -508,6 +545,17 @@ const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['
 
 const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
 
+function List$sortBy(cmp, xs) {
+  const n = List$length(xs);
+  if ((n <= 1)) {
+    return xs;
+  } else {
+    const half = rt.div(n, 2);
+    return List$merge(cmp, List$sortBy(cmp, List$take(half, xs)), List$sortBy(cmp, List$drop(half, xs)));
+  }
+}
+rt.named(List$sortBy, "List.sortBy");
+
 function List$foldl(f$, init$, xs$) {
   for (;;) {
     const f = f$, init = init$, xs = xs$;
@@ -584,14 +632,106 @@ function Worker$Bytes$length(bytes) {
 }
 rt.named(Worker$Bytes$length, "Worker.Bytes.length");
 
+function List$merge(cmp, xs, ys) {
+  function go(acc$, l$, r$) {
+    for (;;) {
+      const acc = acc$, l = l$, r = r$;
+      const t0 = new rt.Con("#Pair", 0, [l, r]);
+      m1: {
+        if (t0.tag === 0 && t0.fields[0].tag === 0) {
+          return rt.ap(rt.prims["append"], List$reverse(acc), r);
+        }
+        if (t0.tag === 0 && t0.fields[1].tag === 0) {
+          return rt.ap(rt.prims["append"], List$reverse(acc), l);
+        }
+        if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[1].tag === 1) {
+          const x = t0.fields[0].fields[0];
+          const xt = t0.fields[0].fields[1];
+          const y = t0.fields[1].fields[0];
+          const yt = t0.fields[1].fields[1];
+          if ((rt.ap(cmp, x, y) <= 0)) {
+            acc$ = rt.cons(x, acc);
+            l$ = xt;
+            r$ = r;
+            continue;
+          } else {
+            acc$ = rt.cons(y, acc);
+            l$ = l;
+            r$ = yt;
+            continue;
+          }
+        }
+        rt.nomatch(t0);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs, ys);
+}
+rt.named(List$merge, "List.merge");
+
+function List$take(n, xs) {
+  function go(acc$, k$, ys$) {
+    for (;;) {
+      const acc = acc$, k = k$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          if ((k <= 0)) {
+            return List$reverse(acc);
+          } else {
+            acc$ = rt.cons(y, acc);
+            k$ = ((k - 1) | 0);
+            ys$ = rest;
+            continue;
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, n, xs);
+}
+rt.named(List$take, "List.take");
+
+function List$drop(n$, xs$) {
+  for (;;) {
+    const n = n$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return rt.NIL;
+      }
+      if (xs.tag === 1) {
+        const rest = xs.fields[1];
+        if ((n <= 0)) {
+          return xs;
+        } else {
+          n$ = ((n - 1) | 0);
+          xs$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$drop, "List.drop");
+
 const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
 
 export const raw = {
   serve: Worker$Files$serve,
   listAll: Worker$R2$listAll,
+  listFolders: Worker$R2$listFolders,
   toTrash: Worker$R2$toTrash,
 };
 export const serve = rt.exportAsync(Worker$Files$serve, [['raw'], ['raw'], ['text'], ['text'], ['list', ['text']], ['fn', [['text']], ['raw']]], ['raw']);
 export const listAll = rt.exportAsync(Worker$R2$listAll, [['raw'], ['text']], ['list', ['text']]);
+export const listFolders = rt.exportAsync(Worker$R2$listFolders, [['raw'], ['text']], ['list', ['text']]);
 export const toTrash = rt.exportAsync(Worker$R2$toTrash, [['raw'], ['text'], ['text'], ['text']], ['unit']);
 //# sourceMappingURL=files.js.map

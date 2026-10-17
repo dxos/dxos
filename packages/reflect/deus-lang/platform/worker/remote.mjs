@@ -94,20 +94,8 @@ const bundles = (request, env, ctx, project, rest) =>
     (logged) => moveHead(request, env, project, logged),
   );
 
-/**
- * A branch's head and the etag that moves it, from the bucket (`Worker.Heads.readStored`, in DEUS). Heads moved
- * before D181 are D1 rows: reading one costs no write, and the first push after D181 copies it to the bucket.
- */
-export const readHead = async (env, project, branch) => {
-  const stored = await heads.readStored(env.BUCKET, project, branch);
-  if (stored) {
-    return stored;
-  }
-  const row = await env.DB?.prepare('select causal from heads where project = ? and branch = ?')
-    .bind(project, branch)
-    .first();
-  return row ? { causal: row.causal } : undefined;
-};
+/** A branch's head (`{causal, etag, uploaded}`, or `{causal}` for a D1 head from before D181): `Worker.Heads.readHead`. */
+export const readHead = (env, project, branch) => heads.readHead(env.BUCKET, env.DB, project, branch);
 
 /**
  * Moves the branch head a push claims, or answers why not (D167): `Worker.Heads.gate`, in DEUS
@@ -181,17 +169,8 @@ const files = (request, env, ctx, project, folder, rest) =>
  */
 export const toTrash = (bucket, project, folder, name) => filesApi.toTrash(bucket, project, folder, name);
 
-/** The folders directly under `prefix` (`toolchain/`, `dxos/`), following R2's pages. */
-export const listFolders = async (bucket, prefix) => {
-  const folders = [];
-  let cursor;
-  do {
-    const page = await bucket.list({ prefix, cursor, delimiter: '/' });
-    folders.push(...(page.delimitedPrefixes ?? []));
-    cursor = page.truncated ? page.cursor : undefined;
-  } while (cursor);
-  return folders.sort();
-};
+/** The folders directly under `prefix` (`toolchain/`, `dxos/`), sorted (`Worker.R2.listFolders`). */
+export const listFolders = (bucket, prefix) => filesApi.listFolders(bucket, prefix);
 
 /** Every key under `prefix`, without it, in order, following R2's pages (`Worker.R2.listAll`). */
 export const listAll = (bucket, prefix) => filesApi.listAll(bucket, prefix);

@@ -99,7 +99,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         [
           join(root, 'bin/deus.mjs'),
           'build',
-          'Worker.Heads.readStored',
+          'Worker.Heads.readHead',
           'Worker.Heads.headLogKey',
           'Worker.Heads.epochOf',
           'Worker.Heads.gate',
@@ -181,6 +181,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'build',
           'Worker.Files.serve',
           'Worker.R2.listAll',
+          'Worker.R2.listFolders',
           'Worker.R2.toTrash',
           '-o',
           join(gen, 'files.js'),

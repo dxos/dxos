@@ -2,22 +2,36 @@
 import * as rt from "./deus-runtime.mjs";
 rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "urn:deus:js:Async", ["await"]);
 
-async function Worker$Heads$readStored(bucket, project, branch) {
+async function Worker$Heads$readHead(bucket, db, project, branch) {
   const $stack = rt.handlers();
-  const t0 = lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(bucket, "get", rt.cons(lib$web$Js$text(Worker$Heads$headKey(project, branch)), rt.NIL))));
+  const stored = Option$map(rt.named((head) => lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(Worker$Heads$Stored$causal(head))]), rt.cons(new rt.Con("#Pair", 0, ["etag", lib$web$Js$text(Worker$Heads$Stored$etag(head))]), rt.cons(new rt.Con("#Pair", 0, ["uploaded", Worker$Heads$Stored$uploaded(head)]), rt.NIL)))), "Worker.Heads.readHead/\u03bb"), rt.resumed($stack, await Worker$Heads$readStored(bucket, project, branch)));
+  const legacy = rt.named(async (v) => {
+  const $stack = rt.handlers();
+  const t0 = lib$web$Js$toOption(db);
   m1: {
     if (t0.tag === 0) {
       return rt.con0("#Option", 0);
     }
     if (t0.tag === 1) {
-      const object = t0.fields[0];
-      const text = lib$web$Js$toText(rt.resumed($stack, await lib$web$Js$method(object, "text", rt.NIL)));
-      return new rt.Con("#Option", 1, [new rt.Con("caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", 0, [rt.ap(rt.prims["Text.trim"], text), lib$web$Js$toText(lib$web$Js$get(object, "etag")), lib$web$Js$get(object, "uploaded")])]);
+      const database = t0.fields[0];
+      const t2 = rt.resumed($stack, await Worker$D1$first(database, "select causal from heads where project = ? and branch = ?", rt.cons(lib$web$Js$text(project), rt.cons(lib$web$Js$text(branch), rt.NIL))));
+      m3: {
+        if (t2.tag === 0) {
+          return rt.con0("#Option", 0);
+        }
+        if (t2.tag === 1) {
+          const row = t2.fields[0];
+          return new rt.Con("#Option", 1, [lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$get(row, "causal")]), rt.NIL))]);
+        }
+        rt.nomatch(t2);
+      }
     }
     rt.nomatch(t0);
   }
+}, "Worker.Heads.readHead/\u03bb");
+  return Option$getOr(rt.resumed($stack, await Worker$Heads$preferStored(stored, legacy)), lib$web$Js$undefined());
 }
-rt.named(Worker$Heads$readStored, "Worker.Heads.readStored");
+rt.named(Worker$Heads$readHead, "Worker.Heads.readHead");
 
 function Worker$Heads$headLogKey(project, branch) {
   return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/headlog/"), branch), "/");
@@ -106,20 +120,120 @@ async function Worker$Heads$serveLog(request, bucket, project, rest) {
 }
 rt.named(Worker$Heads$serveLog, "Worker.Heads.serveLog");
 
-const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
+function Option$map(f, v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Option$map, "Option.map");
 
-const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
+const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
 
 const lib$web$Js$text = rt.importFn(rt, "js.as.text", [['text']], ['raw'], "lib.web.Js.text");
 
-function Worker$Heads$headKey(project, branch) {
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/heads/"), branch);
+function Worker$Heads$Stored$causal(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
 }
-rt.named(Worker$Heads$headKey, "Worker.Heads.headKey");
+rt.named(Worker$Heads$Stored$causal, "Worker.Heads.Stored.causal");
 
-const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
+function Worker$Heads$Stored$etag(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Stored$etag, "Worker.Heads.Stored.etag");
+
+function Worker$Heads$Stored$uploaded(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Stored$uploaded, "Worker.Heads.Stored.uploaded");
+
+async function Worker$Heads$readStored(bucket, project, branch) {
+  const $stack = rt.handlers();
+  const t0 = lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(bucket, "get", rt.cons(lib$web$Js$text(Worker$Heads$headKey(project, branch)), rt.NIL))));
+  m1: {
+    if (t0.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (t0.tag === 1) {
+      const object = t0.fields[0];
+      const text = lib$web$Js$toText(rt.resumed($stack, await lib$web$Js$method(object, "text", rt.NIL)));
+      return new rt.Con("#Option", 1, [new rt.Con("caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", 0, [rt.ap(rt.prims["Text.trim"], text), lib$web$Js$toText(lib$web$Js$get(object, "etag")), lib$web$Js$get(object, "uploaded")])]);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$readStored, "Worker.Heads.readStored");
+
+const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
+
+async function Worker$D1$first(db, sql, values) {
+  const $stack = rt.handlers();
+  return lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(Worker$D1$statement(db, sql, values), "first", rt.NIL)));
+}
+rt.named(Worker$D1$first, "Worker.D1.first");
 
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
+
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+async function Worker$Heads$preferStored(stored, legacy) {
+  const $stack = rt.handlers();
+  m0: {
+    if (stored.tag === 1) {
+      const head = stored.fields[0];
+      return new rt.Con("#Option", 1, [head]);
+    }
+    if (stored.tag === 0) {
+      return rt.resumed($stack, await rt.ap(legacy, undefined));
+    }
+    rt.nomatch(stored);
+  }
+}
+rt.named(Worker$Heads$preferStored, "Worker.Heads.preferStored");
+
+const lib$web$Js$undefined = rt.importValue(rt, "js.undefined", ['raw'], "lib.web.Js.undefined");
 
 function lib$base$Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -357,21 +471,9 @@ function List$map(f, xs) {
 }
 rt.named(List$map, "List.map");
 
-const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
+const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
 
-function Option$map(f, v) {
-  m0: {
-    if (v.tag === 0) {
-      return rt.con0("#Option", 0);
-    }
-    if (v.tag === 1) {
-      const x = v.fields[0];
-      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Option$map, "Option.map");
+const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
 
 async function Worker$Heads$claimed(claim, epoch, scopes, moveTo) {
   const $stack = rt.handlers();
@@ -517,8 +619,6 @@ function Worker$Heads$r2Heads(bucket, project, keyId, readCurrent, epochAt) {
 }
 rt.named(Worker$Heads$r2Heads, "Worker.Heads.r2Heads");
 
-const lib$web$Js$undefined = rt.importValue(rt, "js.undefined", ['raw'], "lib.web.Js.undefined");
-
 const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
 
 function Text$isEmpty(t) {
@@ -532,8 +632,6 @@ function Worker$Http$json(value, status) {
   return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$json, "Worker.Http.json");
-
-const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
 
 function Worker$Heads$refusalMessage(refusal) {
   m0: {
@@ -720,6 +818,18 @@ async function Worker$R2$listAll(bucket, prefix) {
   return rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, rt.con0("#Option", 0)));
 }
 rt.named(Worker$R2$listAll, "Worker.R2.listAll");
+
+const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
+
+function Worker$Heads$headKey(project, branch) {
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/heads/"), branch);
+}
+rt.named(Worker$Heads$headKey, "Worker.Heads.headKey");
+
+function Worker$D1$statement(db, sql, values) {
+  return lib$web$Js$method(lib$web$Js$method(db, "prepare", rt.cons(lib$web$Js$text(sql), rt.NIL)), "bind", values);
+}
+rt.named(Worker$D1$statement, "Worker.D1.statement");
 
 function List$reverse(xs) {
   function go(acc$, ys$) {
@@ -1256,20 +1366,6 @@ function List$any(p$, v$) {
 }
 rt.named(List$any, "List.any");
 
-function Option$getOr(o, fallback) {
-  m0: {
-    if (o.tag === 0) {
-      return fallback;
-    }
-    if (o.tag === 1) {
-      const x = o.fields[0];
-      return x;
-    }
-    rt.nomatch(o);
-  }
-}
-rt.named(Option$getOr, "Option.getOr");
-
 function Worker$Heads$Claim$bases(v) {
   m0: {
     if (v.tag === 0) {
@@ -1377,13 +1473,13 @@ async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, ep
 rt.named(Worker$Heads$r2Heads$wait, "Worker.Heads.r2Heads");
 
 export const raw = {
-  readStored: Worker$Heads$readStored,
+  readHead: Worker$Heads$readHead,
   headLogKey: Worker$Heads$headLogKey,
   epochOf: Worker$Heads$epochOf,
   gate: Worker$Heads$gate,
   serveLog: Worker$Heads$serveLog,
 };
-export const readStored = rt.exportAsync(Worker$Heads$readStored, [['raw'], ['text'], ['text']], ['option', ['struct', "caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", ["causal", "etag", "uploaded"], [['text'], ['text'], ['raw']]]]);
+export const readHead = rt.exportAsync(Worker$Heads$readHead, [['raw'], ['raw'], ['text'], ['text']], ['raw']);
 export const headLogKey = rt.exportFn(Worker$Heads$headLogKey, [['text'], ['text']], ['text']);
 export const epochOf = rt.exportFn(Worker$Heads$epochOf, [['text']], ['int']);
 export const gate = rt.exportAsync(Worker$Heads$gate, [['raw'], ['raw'], ['text'], ['raw'], ['fn', [['text']], ['raw']], ['fn', [['text']], ['raw']]], ['raw']);

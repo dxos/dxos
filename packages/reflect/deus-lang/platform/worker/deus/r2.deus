@@ -47,6 +47,21 @@ def listFrom (bucket : Js) (prefix : Text) (cursor : Option Text) : {Js.Async} L
   if Js.toBool (Js.get page "truncated") then keys ++ listFrom bucket prefix (Option.some (Js.toText (Js.get page "cursor")))
   else keys
 
+/-- The folders directly under `prefix` (`toolchain/`, `dxos/`), each ending in `/`, from the page `cursor` names to
+  the last. -/
+def foldersFrom (bucket : Js) (prefix : Text) (cursor : Option Text) : {Js.Async} List Text :=
+  let at := Option.getOr (Option.map (fun c => [("cursor", Js.text c)]) cursor) []
+  let page := Js.Async.await (Js.method bucket "list" [Js.obj ([("prefix", Js.text prefix), ("delimiter", Js.text "/")] ++ at)])
+  let folders :=
+    match Js.toOption (Js.get page "delimitedPrefixes") with
+    | Option.some listed => List.map Js.toText (Js.toList listed)
+    | Option.none => []
+  if Js.toBool (Js.get page "truncated") then folders ++ foldersFrom bucket prefix (Option.some (Js.toText (Js.get page "cursor")))
+  else folders
+
+/-- Every folder directly under `prefix`, following R2's pages, sorted. -/
+def listFolders (bucket : Js) (prefix : Text) : {Js.Async} List Text := List.sort (foldersFrom bucket prefix Option.none)
+
 /-- Every key under `prefix`, without it, following R2's pages, in R2's order, which is by key: sorting again would
   cost a 5,000-key listing about 40 ms of the Worker's CPU. -/
 def listAll (bucket : Js) (prefix : Text) : {Js.Async} List Text := listFrom bucket prefix Option.none

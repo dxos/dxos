@@ -67,6 +67,37 @@ def readStored (bucket : Js) (project : Text) (branch : Text) : {Js.Async} Optio
       let text := Js.toText (Js.Async.await (Js.method object "text" []))
       Option.some (Stored.mk (Text.trim text) (Js.toText (Js.get object "etag")) (Js.get object "uploaded"))
 
+/-- The bucket's head when there is one, else `legacy`'s, which is read only then: heads moved before D181 are D1
+  rows, and reading one costs no write. -/
+def preferStored (stored : Option a) (legacy : Unit -> {Js.Async} Option a) : {Js.Async} Option a :=
+  match stored with
+  | Option.some head => Option.some head
+  | Option.none => legacy ()
+
+/-- The head of `branch` as remote.mjs and live.mjs read it: `{causal, etag, uploaded}` from the bucket, else
+  `{causal}` from the D1 `db` (none when the Worker has no `db`), else `undefined`. The first push after D181 copies a
+  D1 head to the bucket, since its conditional write creates the bucket's copy. -/
+def readHead (bucket : Js) (db : Js) (project : Text) (branch : Text) : {Js.Async} Js :=
+  let stored := Option.map (fun head => Js.obj [("causal", Js.text head.causal), ("etag", Js.text head.etag), ("uploaded", head.uploaded)]) (readStored bucket project branch)
+  let legacy := fun _ =>
+    match Js.toOption db with
+    | Option.none => Option.none
+    | Option.some database =>
+        match Worker.D1.first database "select causal from heads where project = ? and branch = ?" [Js.text project, Js.text branch] with
+        | Option.none => Option.none
+        | Option.some row => Option.some (Js.obj [("causal", Js.get row "causal")])
+  Option.getOr (preferStored stored legacy) Js.undefined
+
+test storedHeadsComeFirst :=
+  Worker.Http.offline (fun _ =>
+    let asked := Ref.new 0
+    let legacy := fun _ =>
+      let _ := Ref.set asked (Ref.get asked + 1)
+      Option.some "d1"
+    preferStored (Option.some "r2") legacy == Option.some "r2" && Ref.get asked == 0
+      && preferStored Option.none legacy == Option.some "d1" && Ref.get asked == 1
+      && preferStored Option.none (fun _ => Option.none) == Option.none)
+
 /-- Moves the head of `branch` to `causal` by a conditional write: from the head whose etag is `etag`, or only where
   there is none. False when another push moved it first, so no two pushes both win (D167). -/
 def writeHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (etag : Option Text) : {Js.Async} Bool :=
