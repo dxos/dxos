@@ -168,20 +168,27 @@ const finish = async (theme, take, name, ms) => {
   }
   // A step can pass on a blank plank, so each video gets frames a person can check in the morning.
   const frames = path.join(CLIPS, theme, `${name}.png`);
-  const seconds = Number(
-    execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out], {
-      encoding: 'utf8',
-    }),
-  );
-  await run('ffmpeg', [
-    ...['-v', 'error', '-y', '-i', out],
-    ...['-vf', `fps=4/${seconds},scale=480:-1,tile=4x1`, '-frames:v', '1', frames],
-  ]);
+  // A probe that fails or reports no duration skips the frame sheet; it never ends the night's run.
+  let seconds = Number.NaN;
+  try {
+    seconds = Number(
+      execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out], {
+        encoding: 'utf8',
+      }),
+    );
+  } catch {}
+  const probed = Number.isFinite(seconds) && seconds > 0;
+  if (probed) {
+    await run('ffmpeg', [
+      ...['-v', 'error', '-y', '-i', out],
+      ...['-vf', `fps=4/${seconds},scale=480:-1,tile=4x1`, '-frames:v', '1', frames],
+    ]);
+  }
   return {
     ok: true,
     video: path.relative(ROOT, out),
-    seconds: Math.round(seconds),
-    frames: existsSync(frames) ? path.relative(OUT, frames) : undefined,
+    seconds: probed ? Math.round(seconds) : undefined,
+    frames: probed && existsSync(frames) ? path.relative(OUT, frames) : undefined,
   };
 };
 
