@@ -7,7 +7,7 @@
  * screenshots it into ffmpeg. A live screencast delivers about 25 frames a second at 1080p, which makes a camera
  * move judder however the result is re-encoded.
  *
- *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light]
+ *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light] [--hold 20000]
  */
 
 import { chromium } from '@playwright/test';
@@ -23,6 +23,8 @@ const { values } = parseArgs({
     theme: { type: 'string', default: 'light' },
     width: { type: 'string', default: '1920' },
     height: { type: 'string', default: '1080' },
+    // How long the camera holds on each tour cell; it should match the tour clips' length.
+    hold: { type: 'string' },
   },
 });
 
@@ -30,7 +32,7 @@ const fps = Number(values.fps);
 const size = { width: Number(values.width), height: Number(values.height) };
 const url =
   `${values.url}/iframe.html?id=tools-autocue-grid--default&viewMode=story` +
-  `&args=controls:!false;stepped:!true&globals=theme:${values.theme}`;
+  `&args=controls:!false;stepped:!true${values.hold ? `;hold:${Number(values.hold)}` : ''}&globals=theme:${values.theme}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });

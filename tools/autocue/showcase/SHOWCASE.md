@@ -7,6 +7,36 @@ fits, with the last tour cell in the bottom-left quadrant.
 Clips are read from the gitignored `temp/grid-zoom/` at the repo root: `tour-<n>.mp4` for the tour cells and
 `clip-<NN>.mp4` (row-major index) for every other cell.
 
+## Recording by hand
+
+The grid can also be built from clips recorded by hand in Screen Studio: three 20s tour shots and about 30 short
+(3s) shots or screenshots. The shot list for a session lives in its folder as `MANIFEST.md` (for example
+`/Volumes/SSD1/Media/Showcase/2026-10-17/MANIFEST.md`); `assemble.mjs` turns the folder into the composite.
+
+### Tasks
+
+- [ ] **Run Composer** from this worktree: `moon run composer-app:serve` (http://localhost:5173), signed in, light
+      theme (Settings › Appearance), the notices dismissed, and the plugins in the shot list enabled.
+- [ ] **Open the recording window**: `tools/autocue/showcase/chrome.sh` opens Composer in a Chrome _app_ window, so
+      there is no address bar, tab strip or bookmarks bar, in a clean profile (no extensions or saved sessions), with
+      a page area of exactly 1920x1080. Check it in the console: `innerWidth + 'x' + innerHeight` prints `1920x1080`;
+      if the height is off, re-run with `TITLE_BAR=<n>`. The display must be at least 1920 points wide, so use an
+      external monitor (a laptop panel is too small). Keep the browser zoom at 100% (⌘0).
+- [ ] **Set up Screen Studio** (once per session):
+  - Recording: _Window_ mode on the Chrome app window, at the display's native (Retina) resolution.
+  - Background: _None_ (no wallpaper), padding 0, corner radius 0, shadow off, inset 0, so the export is the app only.
+  - Cursor: small size, click effects off; hide it for screenshots. Auto-zoom: off for grid shots (a tile is too small
+    to read a zoom); optional and subtle for the tour shots.
+  - No camera, microphone or system audio.
+- [ ] **Record each shot** in `MANIFEST.md`: start each from a settled screen (no dialogs, toasts or companions
+      opening on camera), one continuous gesture, then trim in Screen Studio to exactly 20s (tours) or 3s (grid).
+- [ ] **Export** each as MP4, 1080p (1920x1080), 60 fps, high quality, named as in `MANIFEST.md` (`tour-1.mp4`,
+      `map.mp4`, …); a screenshot is a PNG at 1920x1080 (`table.png`). Save into the session folder and tick the shot.
+- [ ] **Assemble**: `node tools/autocue/showcase/assemble.mjs --clips <folder>`. It normalizes every file to
+      1920x1080 at 60 fps (a screenshot becomes a 3s still clip), lays out the grid (`tour-1`..`tour-3` on the tour
+      cells; other clips repeat only far from themselves), renders the composite from the Grid story with a 20s hold
+      per tour, and writes `composite.mp4` back to the folder.
+
 ## Recording it
 
 Every showcase clip is its own flow: `autocue/showcase.mjs` in the plugin's package (composer-app's lives in

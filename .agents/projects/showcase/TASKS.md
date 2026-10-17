@@ -92,6 +92,19 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       their flows.
 - [ ] **Grid timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.
 
+## Phase 5: Grid from hand-recorded clips
+
+Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled into the Grid composite.
+
+### Tasks
+
+- [x] **Recording checklist** — SHOWCASE.md "Recording by hand": Composer, `chrome.sh` (app window, 1920x1080 page,
+      no address bar), Screen Studio settings, export, assembly.
+- [x] **Shot list** — `MANIFEST.md` in `/Volumes/SSD1/Media/Showcase/2026-10-17`: 3 tours, 30 grid shots.
+- [x] **assemble.mjs** — normalizes the folder to 1080p60 (screenshots become 3s stills), lays out the grid with
+      `tour-1..3` as tours, renders with a 20s hold (`render.mjs --hold`), writes `composite.mp4` to the folder.
+- [ ] **Record the shots** (user), then run `assemble.mjs --clips /Volumes/SSD1/Media/Showcase/2026-10-17`.
+
 ## Phase 3: Open issues
 
 ### Tasks

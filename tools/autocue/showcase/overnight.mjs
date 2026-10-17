@@ -36,6 +36,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { publishFlow, r2Keys } from './publish.mjs';
+import { storybook } from './storybook.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -311,41 +312,10 @@ const layout = THEMES.includes('light')
     ])
   : undefined;
 
-/** Starts a storybook scoped to tools/autocue, where the Grid story lives; the shared :9009 one serves another worktree. */
-const storybook = async () => {
-  const reachable = async () => {
-    try {
-      return (await fetch(`${options.storybook}/index.json`, { signal: AbortSignal.timeout(5_000) })).ok;
-    } catch {
-      return false;
-    }
-  };
-  if (await reachable()) {
-    return { ok: true };
-  }
-  const port = new globalThis.URL(options.storybook).port;
-  log(`starting a storybook for Grid on :${port}`);
-  const child = spawn('bash', ['serve.sh', `--port=${port}`, '--no-open'], {
-    cwd: path.join(ROOT, 'tools/storybook-react'),
-    env: { ...env, DX_STORIES: '../tools/autocue' },
-    stdio: ['ignore', 'ignore', 'ignore'],
-    detached: true,
-  });
-  const deadline = Date.now() + 15 * 60_000;
-  while (Date.now() < deadline && child.exitCode === null) {
-    if (await reachable()) {
-      return { ok: true, child };
-    }
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-  }
-  process.kill(-child.pid, 'SIGTERM');
-  return { ok: false };
-};
-
 // The composite is rendered only from a grid that laid out cleanly, so a run never renders over a stale grid.
 let composite;
 if (layout?.code === 0 && !options['no-composite']) {
-  const book = await storybook();
+  const book = await storybook({ root: ROOT, url: options.storybook, env, log });
   if (!book.ok) {
     composite = { error: `no storybook answered on ${options.storybook}` };
   } else {
@@ -382,9 +352,7 @@ if (layout?.code === 0 && !options['no-composite']) {
     } else {
       composite = { error: render.output.trim().split('\n').slice(-2).join(' | ') };
     }
-    if (book.child) {
-      process.kill(-book.child.pid, 'SIGTERM');
-    }
+    book.stop?.();
   }
   log(`composite: ${composite.video ?? composite.error}`);
 }
