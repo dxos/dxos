@@ -79,4 +79,73 @@ test livePathsRoute :=
     && (route []).message == "a live explorer is /live/<branch> or /live/<causal>/…"
     && (route [".hidden"]).kind == "" && (route [hash, "def", "_.json"]).kind == ""
 
+/-- How many times each key occurs, in the order each first occurs; counted in a hash map, since a tree map's
+  rebalancing allocates per key and this runs over every name of a project. -/
+def tally (keys : List Text) : List (Text, Int) :=
+  let counts := MutMap.new ()
+  let firsts := List.filter (fun key =>
+    match MutMap.get counts key with
+    | Option.some n =>
+        let _ := MutMap.set counts key (n + 1)
+        false
+    | Option.none =>
+        let _ := MutMap.set counts key 1
+        true) keys
+  List.map (fun key => (key, Option.getOr (MutMap.get counts key) 0)) firsts
+
+/-- What the hub shows of a head, from its index's names (name, kind, hash) and its documents: counts by kind of the
+  project's own definitions (a mounted library's, `lib.…`, count in its own project, D206), the six top-level
+  namespaces with most definitions (specs, feature maps and QA documents aside), the hashes of its own tests and
+  theorems, which the hub counts against the latest pushed results (D209), and its feature map, if any. -/
+structure Summary @"urn:deus:worker:HubSummary" where
+  own : Int
+  kinds : List (Text, Int)
+  namespaces : List Text
+  checked : List Text
+  featureMap : Option Text
+
+def summary (names : List (Text, Text, Text)) (documents : List Text) : Summary :=
+  let own := List.filter (fun entry => match entry with | (name, _, _) => not (Text.startsWith "lib." name)) names
+  let tops := filterMap (fun entry =>
+    match entry with
+    | (name, _, _) =>
+        -- Only the first two segments matter, so the name is not split whole.
+        let dot := Text.indexOf name "." 0
+        if dot < 1 then Option.none
+        else
+          let top := Text.take dot name
+          let next := Text.indexOf name "." (dot + 1)
+          let second := if next < 0 then Text.drop (dot + 1) name else Text.slice name (dot + 1) next
+          if top == "lib" || second == "Spec" || second == "Features" || second == "QA" then Option.none else Option.some top) names
+  let ranked := List.sortBy (fun left right => snd right - snd left) (tally tops)
+  Summary.mk
+    (List.length own)
+    (tally (List.map (fun entry => match entry with | (_, kind, _) => kind) own))
+    (List.map fst (List.take 6 ranked))
+    (filterMap (fun entry => match entry with | (_, kind, hash) => if kind == "test" || kind == "theorem" then Option.some hash else Option.none) own)
+    (List.find (fun document => Text.endsWith ".Features" document) documents)
+
+/-- The hub's summary of a head's `index` (its `names`, `meta` and `features`), as live.mjs stores it with
+  `summaryVersion`. -/
+def summaryOf (index : Js) (version : Int) : Js :=
+  let listed := fun field => Option.getOr (Option.map Js.toList (Js.toOption (Js.get index field))) []
+  let names := List.map (fun entry => (Js.toText (Js.get entry "name"), Js.toText (Js.get entry "kind"), Js.toText (Js.get entry "hash"))) (listed "names")
+  let documents := filterMap (fun entry => Option.map Js.toText (Js.toOption (Js.get entry "document"))) (listed "features")
+  let meta := Option.getOr (Js.toOption (Js.get index "meta")) (Js.obj [])
+  let found := summary names documents
+  let features := Option.getOr (Js.toOption (Js.get meta "features")) (Js.int 0)
+  Js.obj ([("branch", Js.get meta "branch"), ("definitions", Js.get meta "definitions"), ("own", Js.int found.own),
+    ("tasks", Js.get meta "tasks"), ("open", Js.get meta "open"), ("features", features),
+    ("kinds", Js.obj (List.map (fun pair => (fst pair, Js.int (snd pair))) found.kinds)),
+    ("namespaces", Js.list (List.map Js.text found.namespaces)), ("checked", Js.list (List.map Js.text found.checked)),
+    ("summaryVersion", Js.int version)] ++ Option.getOr (Option.map (fun map => [("featureMap", Js.text map)]) found.featureMap) [])
+
+test hubSummariesCountOwnDefinitions :=
+  let names := [("A.f", "term", "h1"), ("A.g", "test", "h2"), ("B.t", "theorem", "h3"), ("lib.base.x", "test", "h4"),
+    ("A.Spec.R-1", "spec", "h5"), ("C.QA.x", "spec", "h6"), ("top", "term", "h7"), ("B.u", "term", "h8"), ("A.h", "type", "h9")]
+  let found := summary names ["A.Spec", "A.Features"]
+  found.own == 8 && found.kinds == [("term", 3), ("test", 1), ("theorem", 1), ("spec", 2), ("type", 1)]
+    && found.namespaces == ["A", "B"] && found.checked == ["h2", "h3"] && found.featureMap == Option.some "A.Features"
+    && (summary [] []).featureMap == Option.none
+
 end Worker.Live

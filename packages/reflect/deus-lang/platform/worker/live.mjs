@@ -93,46 +93,8 @@ const SUMMARY_VERSION = 6;
 
 const summaryKey = (project, causal) => `${project}/live/${causal}/summary.json`;
 
-/** What the hub shows of a head: its counts by kind and its tasks, from its index (a few hundred bytes, not megabytes). */
-const summaryOfIndex = (index) => {
-  // A mounted library's definitions count in its own project, so the hub counts each definition once (D206).
-  const own = (index.names ?? []).filter((entry) => !entry.name.startsWith('lib.'));
-  const kinds = {};
-  for (const entry of own) {
-    kinds[entry.kind] = (kinds[entry.kind] ?? 0) + 1;
-  }
-  const meta = index.meta ?? {};
-  // What the project is mostly made of, for a card that has no feature map to describe it.
-  const sizes = {};
-  for (const entry of index.names ?? []) {
-    const top = entry.name.includes('.') ? entry.name.slice(0, entry.name.indexOf('.')) : '';
-    // `lib.<name>` is a mounted library, not the project's own code (D49).
-    if (top && top !== 'lib' && !/\.(Spec|Features|QA)$/.test(entry.name.split('.').slice(0, 2).join('.'))) {
-      sizes[top] = (sizes[top] ?? 0) + 1;
-    }
-  }
-  const namespaces = Object.entries(sizes)
-    .sort((left, right) => right[1] - left[1])
-    .slice(0, 6)
-    .map(([name]) => name);
-  const map = (index.features ?? []).find((entry) => entry.document?.endsWith('.Features'))?.document;
-  return {
-    branch: meta.branch,
-    definitions: meta.definitions,
-    own: own.length,
-    tasks: meta.tasks,
-    open: meta.open,
-    features: meta.features ?? 0,
-    kinds,
-    namespaces,
-    // Its tests and theorems, which the hub counts against the latest pushed results (D209).
-    checked: (index.names ?? [])
-      .filter((entry) => (entry.kind === 'test' || entry.kind === 'theorem') && !entry.name.startsWith('lib.'))
-      .map((entry) => entry.hash),
-    summaryVersion: SUMMARY_VERSION,
-    ...(map ? { featureMap: map } : {}),
-  };
-};
+/** What the hub shows of a head: its counts by kind and its tasks, from its index (`Worker.Live.summaryOf`, in DEUS). */
+const summaryOfIndex = (index) => liveRoutes.summaryOf(index, SUMMARY_VERSION);
 
 /** The project folders in the bucket: a folder with a main head, or an owner folder's subfolders with one. */
 const projectFolders = async (bucket) => {

@@ -68,6 +68,17 @@ function Worker$Live$route(segments) {
 }
 rt.named(Worker$Live$route, "Worker.Live.route");
 
+function Worker$Live$summaryOf(index, version) {
+  const listed = rt.named((field) => Option$getOr(Option$map(lib$web$Js$toList, lib$web$Js$toOption(lib$web$Js$get(index, field))), rt.NIL), "Worker.Live.summaryOf/\u03bb");
+  const names = List$map(rt.named((entry) => new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "name")), new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "kind")), lib$web$Js$toText(lib$web$Js$get(entry, "hash"))])]), "Worker.Live.summaryOf/\u03bb"), rt.ap(listed, "names"));
+  const documents = List$filterMap(rt.named((entry_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(entry_1, "document"))), "Worker.Live.summaryOf/\u03bb"), rt.ap(listed, "features"));
+  const meta = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(index, "meta")), lib$web$Js$obj(rt.NIL));
+  const found = Worker$Live$summary(names, documents);
+  const features = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(meta, "features")), lib$web$Js$int(0));
+  return lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["branch", lib$web$Js$get(meta, "branch")]), rt.cons(new rt.Con("#Pair", 0, ["definitions", lib$web$Js$get(meta, "definitions")]), rt.cons(new rt.Con("#Pair", 0, ["own", lib$web$Js$int(Worker$Live$Summary$own(found))]), rt.cons(new rt.Con("#Pair", 0, ["tasks", lib$web$Js$get(meta, "tasks")]), rt.cons(new rt.Con("#Pair", 0, ["open", lib$web$Js$get(meta, "open")]), rt.cons(new rt.Con("#Pair", 0, ["features", features]), rt.cons(new rt.Con("#Pair", 0, ["kinds", lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$int(snd(pair))]), "Worker.Live.summaryOf/\u03bb"), Worker$Live$Summary$kinds(found)))]), rt.cons(new rt.Con("#Pair", 0, ["namespaces", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$namespaces(found)))]), rt.cons(new rt.Con("#Pair", 0, ["checked", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$checked(found)))]), rt.cons(new rt.Con("#Pair", 0, ["summaryVersion", lib$web$Js$int(version)]), rt.NIL)))))))))), Option$getOr(Option$map(rt.named((map) => rt.cons(new rt.Con("#Pair", 0, ["featureMap", lib$web$Js$text(map)]), rt.NIL), "Worker.Live.summaryOf/\u03bb"), Worker$Live$Summary$featureMap(found)), rt.NIL)));
+}
+rt.named(Worker$Live$summaryOf, "Worker.Live.summaryOf");
+
 function not(b) {
   if (b) {
     return false;
@@ -238,6 +249,289 @@ function Worker$Live$isDocument(name) {
 }
 rt.named(Worker$Live$isDocument, "Worker.Live.isDocument");
 
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+function Option$map(f, v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Option$map, "Option.map");
+
+const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
+
+const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
+
+const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
+
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
+
+const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
+
+function List$filterMap(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          const t1 = rt.ap(f, y);
+          m2: {
+            if (t1.tag === 1) {
+              const z = t1.fields[0];
+              acc$ = rt.cons(z, acc);
+              ys$ = rest;
+              continue;
+            }
+            if (t1.tag === 0) {
+              acc$ = acc;
+              ys$ = rest;
+              continue;
+            }
+            rt.nomatch(t1);
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$filterMap, "List.filterMap");
+
+const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
+
+function Worker$Live$summary(names, documents) {
+  const own = List$filter(rt.named((entry) => {
+  m0: {
+    if (entry.tag === 0 && entry.fields[1].tag === 0) {
+      const name = entry.fields[0];
+      return not(Text$startsWith("lib.", name));
+    }
+    rt.nomatch(entry);
+  }
+}, "Worker.Live.summary/\u03bb"), names);
+  const tops = List$filterMap(rt.named((entry_1) => {
+  m1: {
+    if (entry_1.tag === 0 && entry_1.fields[1].tag === 0) {
+      const name_1 = entry_1.fields[0];
+      const dot = rt.ap(rt.prims["Text.indexOf"], name_1, ".", 0);
+      if ((dot < 1)) {
+        return rt.con0("#Option", 0);
+      } else {
+        const top = Text$take(dot, name_1);
+        const next = rt.ap(rt.prims["Text.indexOf"], name_1, ".", ((dot + 1) | 0));
+        let second;
+        if ((next < 0)) {
+          second = Text$drop(((dot + 1) | 0), name_1);
+        } else {
+          second = rt.ap(rt.prims["Text.slice"], name_1, ((dot + 1) | 0), next);
+        }
+        let r2;
+        if ((top === "lib")) {
+          r2 = true;
+        } else {
+          if ((second === "Spec")) {
+            r2 = true;
+          } else {
+            if ((second === "Features")) {
+              r2 = true;
+            } else {
+              r2 = (second === "QA");
+            }
+          }
+        }
+        if (r2) {
+          return rt.con0("#Option", 0);
+        } else {
+          return new rt.Con("#Option", 1, [top]);
+        }
+      }
+    }
+    rt.nomatch(entry_1);
+  }
+}, "Worker.Live.summary/\u03bb"), names);
+  const ranked = List$sortBy(rt.named((left, right) => ((snd(right) - snd(left)) | 0), "Worker.Live.summary/\u03bb"), Worker$Live$tally(tops));
+  return new rt.Con("db3c0f57f2c03c94ab3e176a17fbc350b124cc1a84bab5972048911599116343", 0, [List$length(own), Worker$Live$tally(List$map(rt.named((entry_2) => {
+  m3: {
+    if (entry_2.tag === 0 && entry_2.fields[1].tag === 0) {
+      const kind = entry_2.fields[1].fields[0];
+      return kind;
+    }
+    rt.nomatch(entry_2);
+  }
+}, "Worker.Live.summary/\u03bb"), own)), List$map(fst, List$take(6, ranked)), List$filterMap(rt.named((entry_3) => {
+  m4: {
+    if (entry_3.tag === 0 && entry_3.fields[1].tag === 0) {
+      const kind_1 = entry_3.fields[1].fields[0];
+      const hash = entry_3.fields[1].fields[1];
+      let r5;
+      if ((kind_1 === "test")) {
+        r5 = true;
+      } else {
+        r5 = (kind_1 === "theorem");
+      }
+      if (r5) {
+        return new rt.Con("#Option", 1, [hash]);
+      } else {
+        return rt.con0("#Option", 0);
+      }
+    }
+    rt.nomatch(entry_3);
+  }
+}, "Worker.Live.summary/\u03bb"), own), List$find(rt.named((document) => Text$endsWith(".Features", document), "Worker.Live.summary/\u03bb"), documents)]);
+}
+rt.named(Worker$Live$summary, "Worker.Live.summary");
+
+const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
+
+function Worker$Live$Summary$own(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Live$Summary$own, "Worker.Live.Summary.own");
+
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+function Worker$Live$Summary$kinds(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Live$Summary$kinds, "Worker.Live.Summary.kinds");
+
+const lib$web$Js$list = rt.importFn(rt, "js.as.list", [['list', ['raw']]], ['raw'], "lib.web.Js.list");
+
+const lib$web$Js$text = rt.importFn(rt, "js.as.text", [['text']], ['raw'], "lib.web.Js.text");
+
+function Worker$Live$Summary$namespaces(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Live$Summary$namespaces, "Worker.Live.Summary.namespaces");
+
+function Worker$Live$Summary$checked(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Live$Summary$checked, "Worker.Live.Summary.checked");
+
+function Worker$Live$Summary$featureMap(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      return v_5;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Live$Summary$featureMap, "Worker.Live.Summary.featureMap");
+
 function List$all(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -360,6 +654,150 @@ function Text$drop(n, t) {
 }
 rt.named(Text$drop, "Text.drop");
 
+function List$reverse(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(y, acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$reverse, "List.reverse");
+
+function List$filter(p, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          if (rt.ap(p, y)) {
+            acc$ = rt.cons(y, acc);
+            ys$ = rest;
+            continue;
+          } else {
+            acc$ = acc;
+            ys$ = rest;
+            continue;
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$filter, "List.filter");
+
+function Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(Text$take, "Text.take");
+
+function List$sortBy(cmp, xs) {
+  const n = List$length(xs);
+  if ((n <= 1)) {
+    return xs;
+  } else {
+    const half = rt.div(n, 2);
+    return List$merge(cmp, List$sortBy(cmp, List$take(half, xs)), List$sortBy(cmp, List$drop(half, xs)));
+  }
+}
+rt.named(List$sortBy, "List.sortBy");
+
+function Worker$Live$tally(keys) {
+  const counts = rt.ap(rt.prims["MutMap.new"], undefined);
+  const firsts = List$filter(rt.named((key) => {
+  const t0 = rt.ap(rt.prims["MutMap.get"], counts, key);
+  m1: {
+    if (t0.tag === 1) {
+      const n = t0.fields[0];
+      rt.ap(rt.prims["MutMap.set"], counts, key, ((n + 1) | 0));
+      return false;
+    }
+    if (t0.tag === 0) {
+      rt.ap(rt.prims["MutMap.set"], counts, key, 1);
+      return true;
+    }
+    rt.nomatch(t0);
+  }
+}, "Worker.Live.tally/\u03bb"), keys);
+  return List$map(rt.named((key_1) => new rt.Con("#Pair", 0, [key_1, Option$getOr(rt.ap(rt.prims["MutMap.get"], counts, key_1), 0)]), "Worker.Live.tally/\u03bb"), firsts);
+}
+rt.named(Worker$Live$tally, "Worker.Live.tally");
+
+function List$take(n, xs) {
+  function go(acc$, k$, ys$) {
+    for (;;) {
+      const acc = acc$, k = k$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          if ((k <= 0)) {
+            return List$reverse(acc);
+          } else {
+            acc$ = rt.cons(y, acc);
+            k$ = ((k - 1) | 0);
+            ys$ = rest;
+            continue;
+          }
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, n, xs);
+}
+rt.named(List$take, "List.take");
+
+function List$find(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return new rt.Con("#Option", 1, [x]);
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$find, "List.find");
+
 function Text$endsWith(suffix, t) {
   const n = rt.ap(rt.prims["Text.length"], t);
   const m = rt.ap(rt.prims["Text.length"], suffix);
@@ -371,13 +809,71 @@ function Text$endsWith(suffix, t) {
 }
 rt.named(Text$endsWith, "Text.endsWith");
 
-function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+function List$merge(cmp, xs, ys) {
+  function go(acc$, l$, r$) {
+    for (;;) {
+      const acc = acc$, l = l$, r = r$;
+      const t0 = new rt.Con("#Pair", 0, [l, r]);
+      m1: {
+        if (t0.tag === 0 && t0.fields[0].tag === 0) {
+          return rt.ap(rt.prims["append"], List$reverse(acc), r);
+        }
+        if (t0.tag === 0 && t0.fields[1].tag === 0) {
+          return rt.ap(rt.prims["append"], List$reverse(acc), l);
+        }
+        if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[1].tag === 1) {
+          const x = t0.fields[0].fields[0];
+          const xt = t0.fields[0].fields[1];
+          const y = t0.fields[1].fields[0];
+          const yt = t0.fields[1].fields[1];
+          if ((rt.ap(cmp, x, y) <= 0)) {
+            acc$ = rt.cons(x, acc);
+            l$ = xt;
+            r$ = r;
+            continue;
+          } else {
+            acc$ = rt.cons(y, acc);
+            l$ = l;
+            r$ = yt;
+            continue;
+          }
+        }
+        rt.nomatch(t0);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs, ys);
 }
-rt.named(Text$take, "Text.take");
+rt.named(List$merge, "List.merge");
+
+function List$drop(n$, xs$) {
+  for (;;) {
+    const n = n$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return rt.NIL;
+      }
+      if (xs.tag === 1) {
+        const rest = xs.fields[1];
+        if ((n <= 0)) {
+          return xs;
+        } else {
+          n$ = ((n - 1) | 0);
+          xs$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$drop, "List.drop");
 
 export const raw = {
   route: Worker$Live$route,
+  summaryOf: Worker$Live$summaryOf,
 };
 export const route = rt.exportFn(Worker$Live$route, [['list', ['text']]], ['struct', "90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", ["kind", "branch", "causal", "path", "message"], [['text'], ['text'], ['text'], ['text'], ['text']]]);
+export const summaryOf = rt.exportFn(Worker$Live$summaryOf, [['raw'], ['int']], ['raw']);
 //# sourceMappingURL=live.js.map
