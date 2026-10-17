@@ -91,3 +91,25 @@ h1 {
   border-radius: 4px;
   background: #eef;
 }
+.inside .rerender {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  background: white;
+  font: inherit;
+  cursor: pointer;
+}
+.inside .rerender:hover {
+  border-color: #888;
+}
+.demo-nav {
+  max-width: 40rem;
+  margin: 1rem auto 0;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+.demo-nav a {
+  color: inherit;
+}

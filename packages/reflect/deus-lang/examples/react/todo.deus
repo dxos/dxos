@@ -90,7 +90,7 @@ def inside (u : Unit) : {Hooks} Element :=
       fact "useMemo" ("1² + 2² + 3² + 4² = " ++ Int.toText squares),
       fact "useRef" ("rendered " ++ Int.toText (Ref.get seen) ++ " times"),
       fact "useId" (if Text.isEmpty id then "none" else "an id"),
-      fact "useContext" ("theme " ++ theme),
+      fact "useContext" (theme ++ ", from the provider around this panel (the default is light)"),
       fact "codecs" (Int.toText (List.foldl (fun acc x => acc + Js.toInt x) 0 parsed) ++ ", " ++ Int.toText (Js.toInt sum) ++ ", " ++
         (match Js.toOption (Js.get (Js.obj []) "missing") with
         | Option.some _ => "some"

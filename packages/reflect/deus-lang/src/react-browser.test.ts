@@ -84,7 +84,9 @@ describe('DEUS × React in a browser', () => {
     await expect.poll(() => fact('useEffect')).toBe('useEffect: ran after the first render');
     expect(await fact('useMemo')).toBe('useMemo: 1² + 2² + 3² + 4² = 30');
     expect(await fact('useId')).toBe('useId: an id');
-    expect(await fact('useContext')).toBe('useContext: theme dark');
+    expect(await fact('useContext')).toBe(
+      'useContext: dark, from the provider around this panel (the default is light)',
+    );
     expect(await fact('codecs')).toBe('codecs: 6, 5, none, true');
     expect(await fact('jsComponent')).toBe('JavaScript props');
     expect(await fact('fragment')).toBe('one, two');
