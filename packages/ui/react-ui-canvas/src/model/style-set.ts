@@ -175,15 +175,17 @@ const FLAT_SHAPE = {
   label: 'surface',
 } as const;
 
+/** Unfilled first, like every set's tone 0, so a tone reads the same whichever set draws it. */
 export const FLAT_STYLE_SET: StyleSet = {
   id: 'flat',
   name: 'Flat',
   variants: [
+    { id: 'clear', name: 'Clear', surface: 'outline', ...FLAT_SHAPE },
     { id: 'subtle', name: 'Subtle', surface: 'muted-subtle', ...FLAT_SHAPE },
     { id: 'muted', name: 'Muted', surface: 'muted', ...FLAT_SHAPE },
     { id: 'solid', name: 'Solid', surface: 'muted-solid', ...FLAT_SHAPE },
   ],
-  defaultVariant: 1,
+  defaultVariant: 2,
   link: { kind: 'line', width: 3, caption: 'opaque' },
   frame: { contents: 'opaque' },
 };

@@ -35,6 +35,8 @@ export type ObjectsPanelProps = Util.ThemedClassName<{
   onDelete?: (id: SceneId, instances: boolean) => void;
   /** A small picture of a composite, drawn after its name. */
   thumbnail?: (id: SceneId) => ReactNode;
+  /** Gives the scene a timeline; absent while it has one or cannot be edited. */
+  onAnimate?: () => void;
   docked?: boolean;
   onDockedChange?: (docked: boolean) => void;
 }>;
@@ -42,7 +44,7 @@ export type ObjectsPanelProps = Util.ThemedClassName<{
 /**
  * The drawing's composite objects (ANIMATION.md §4.3), built like `LayersPanel`: a row per composite with a drag handle,
  * its name (renamed in place on a double-click), a thumbnail and its number of instances. Selecting a row opens the composite in
- * isolation. The toolbar groups the canvas selection as an object, places, duplicates and deletes.
+ * isolation. The toolbar groups the canvas selection as an object, places, animates the scene, duplicates and deletes.
  */
 export const ObjectsPanel = ({
   classNames,
@@ -56,6 +58,7 @@ export const ObjectsPanel = ({
   onDuplicate,
   onDelete,
   thumbnail,
+  onAnimate,
   docked = false,
   onDockedChange,
 }: ObjectsPanelProps) => {
@@ -82,6 +85,15 @@ export const ObjectsPanel = ({
             disabled={readonly || !current || !onPlace}
             data-testid='objects-place'
             onClick={() => current && onPlace?.(current.id)}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--film-strip--regular'
+            label='Animate'
+            disabled={!onAnimate}
+            data-testid='objects-animate'
+            onClick={onAnimate}
           />
           <Toolbar.Separator variant='gap' />
           <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='objects-menu'>

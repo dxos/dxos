@@ -22,9 +22,7 @@ import React, {
   useState,
 } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
@@ -700,7 +698,7 @@ const SceneViewRoot = ({
         }
         if (event.ctrlKey || event.metaKey) {
           // A trackpad pinch: small deltas, so a steeper rate.
-          setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.01)));
+          setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.006)));
         } else if (event.shiftKey) {
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
         } else {
@@ -709,7 +707,7 @@ const SceneViewRoot = ({
             zoomAt(
               panBy(camera, { x: -event.deltaX / camera.zoom, y: 0 }),
               pointer,
-              camera.zoom * Math.exp(-event.deltaY * 0.002),
+              camera.zoom * Math.exp(-event.deltaY * 0.001),
             ),
           );
         }
@@ -2310,8 +2308,18 @@ export type SceneViewObjectsProps = Util.ThemedClassName<{}>;
 
 /** The drawing's composite objects: a docked inspector beside the layers. */
 const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsProps) => {
-  const { store, capabilities, selection, displayScene, isolation, isolate, objectActions } =
-    useSceneViewContext('SceneView.Objects');
+  const {
+    store,
+    readonly,
+    capabilities,
+    selection,
+    displayScene,
+    isolation,
+    isolate,
+    objectActions,
+    baseProjection,
+    timeline,
+  } = useSceneViewContext('SceneView.Objects');
   const scenes = useAtomValue(store.scenes);
   const objects = useMemo(() => {
     const counts = instanceCounts(scenes);
@@ -2348,6 +2356,11 @@ const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsPr
         onDuplicate={objectActions.duplicate}
         onDelete={objectActions.remove}
         thumbnail={(id) => <ObjectThumbnail id={id} />}
+        onAnimate={
+          timeline || readonly || !capabilities.update
+            ? undefined
+            : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
+        }
       />
     ),
     classNames,
@@ -2363,40 +2376,16 @@ SceneViewObjects.displayName = 'SceneView.Objects';
 export type SceneViewTimelineProps = SceneViewBarProps;
 
 /**
- * The collapsed timeline bar (ANIMATION.md §5.8), over the bottom of the canvas: shown while the scene has a timeline;
- * otherwise, while editing, an Animate control that gives it one.
+ * The collapsed timeline bar (ANIMATION.md §5.8), over the bottom of the canvas: shown while the scene has a timeline
+ * (the Objects panel's Animate action gives it one).
  */
 const SceneViewTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: SceneViewTimelineProps) => {
-  const {
-    registry,
-    atoms,
-    readonly,
-    capabilities,
-    baseProjection,
-    timeline,
-    time,
-    playing,
-    fps,
-    seek,
-    selection,
-    timelineKeys,
-  } = useSceneViewContext('SceneView.Timeline');
+  const { registry, atoms, readonly, capabilities, timeline, time, playing, fps, seek, selection, timelineKeys } =
+    useSceneViewContext('SceneView.Timeline');
   const autoKey = useAtomValue(atoms.autoKey);
   const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
   if (!timeline) {
-    return readonly || !capabilities.update ? null : (
-      <div className={mx(barFrame, classNames)}>
-        <Toolbar.Root>
-          <Button.Root
-            variant='ghost'
-            icon='ph--film-strip--regular'
-            label='Animate'
-            data-testid='timeline-animate'
-            onClick={() => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })}
-          />
-        </Toolbar.Root>
-      </div>
-    );
+    return null;
   }
   return (
     <div className={mx(barFrame, 'max-w-[calc(100%-2rem)]', classNames)}>

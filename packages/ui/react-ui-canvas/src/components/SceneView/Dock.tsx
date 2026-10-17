@@ -120,6 +120,7 @@ export const Dock = ({ onClose }: DockProps) => {
           <ScrollArea.Viewport>
             <Accordion.Root
               border={false}
+              classNames='gap-2 p-2'
               onPointerDown={stop}
               onPointerMove={stop}
               onPointerUp={stop}
@@ -134,7 +135,13 @@ export const Dock = ({ onClose }: DockProps) => {
               }
             >
               {sections.map((section) => (
-                <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
+                // Framed like a floating inspector, so each docked panel reads as its own card.
+                <Accordion.Item
+                  key={section.id}
+                  value={section.id}
+                  classNames='rounded-sm border border-separator'
+                  data-testid={`dock-section-${section.id}`}
+                >
                   {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
                   <Accordion.ItemTrigger icon={section.icon} classNames='bg-group-surface'>
                     {section.title}
