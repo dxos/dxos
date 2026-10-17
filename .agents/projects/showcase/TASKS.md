@@ -65,6 +65,8 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       `dx.config.ts` `screenshots` (`screenshots.mjs`); one 1Password approval via `op run`.
 - [x] **Composite** — after the layout, the runner renders GridZoom from a scoped storybook on :9015 (retrying once).
 - [x] **SHOWCASE.md** moved to `tools/autocue/showcase`.
+- [x] **GridZoom story** moved to `tools/autocue/src/components/GridZoom` (story id `tools-autocue-gridzoom--default`);
+      react-ui-canvas keeps `interpolateCamera` and the camera utilities it imports.
 - [x] **First full run** — 22/26; canvas never left Home, projects opened Settings, uml had no `palette-class`: fixed.
 - [ ] **illustrator** — an empty svg drawing renders blank; the clip needs a drawing with content (e.g. `dx drawing`).
 - [ ] **script** — creating a Script neither opens a dialog nor navigates; find how it is created.

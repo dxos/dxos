@@ -5,16 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  type Bounds,
+  type Camera,
+  easeInOut,
+  fitBounds,
+  interpolateCamera,
+  screenBounds,
+  useViewport,
+} from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { useViewport } from '../../hooks/index.ts';
-import { type Bounds, type Camera } from '../../model/types.ts';
-import { easeInOut, fitBounds, interpolateCamera, screenBounds } from '../../utils/camera.ts';
-
 /** Clips are read from the gitignored `temp/grid-zoom/clip-NN.mp4` at the repo root; missing ones show a placeholder. */
-const CLIPS_DIR = '../../../../../../temp/grid-zoom/';
+const CLIPS_DIR = '../../../../../temp/grid-zoom/';
 
 const TILE = { width: 960, height: 540 };
 
@@ -331,7 +336,7 @@ const shotAt = (shots: Shot[], time: number): { shot: Shot; t: number } => {
 };
 
 const meta: Meta<GridZoomProps> = {
-  title: 'ui/react-ui-canvas/GridZoom',
+  title: 'tools/autocue/GridZoom',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };

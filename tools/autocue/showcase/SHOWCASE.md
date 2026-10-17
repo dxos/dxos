@@ -1,6 +1,6 @@
 # GridZoom showcase
 
-The [GridZoom story](../../../packages/ui/react-ui-canvas/src/components/GridZoom/GridZoom.stories.tsx) plays a 6x6 grid of Composer clips under one camera. It focuses each
+The [GridZoom story](../src/components/GridZoom/GridZoom.stories.tsx) plays a 6x6 grid of Composer clips under one camera. It focuses each
 tour cell in turn (about 10s each), slides right between them at constant zoom, then zooms out until the whole grid
 fits, with the last tour cell in the bottom-left quadrant.
 
@@ -36,7 +36,7 @@ repeats beside or near itself. It fails when two copies land closer than 3 cells
 
 Then it renders the GridZoom composite from the laid-out grid with [`render.mjs`](render.mjs), frame by frame at 60 fps,
 to `<run>/composite.mp4` and `temp/composite/composite.mp4`. It serves the story from a storybook scoped to
-`ui/react-ui-canvas` on :9015, starting one if nothing answers there and stopping it afterwards; `--no-composite`
+`tools/autocue` on :9015, starting one if nothing answers there and stopping it afterwards; `--no-composite`
 skips the render.
 
 With `--publish` (run under `op run --env-file ~/.env.tpl --` so the R2 keys are set), each flow whose two videos
@@ -88,7 +88,7 @@ Every standalone demo video follows these:
    the Dark column below.
 
 The composite is rendered from the story in isolation, stepped, with the controls hidden and the light theme:
-`/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story&args=controls:!false;stepped:!true&globals=theme:light`.
+`/iframe.html?id=tools-autocue-gridzoom--default&viewMode=story&args=controls:!false;stepped:!true&globals=theme:light`.
 Clips inside the tiles are live recordings, so their own motion runs at the screencast's rate.
 
 Clips are recorded headless with `--gpu on`, so 3D plugins render on the GPU, and without the action feed

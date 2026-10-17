@@ -29,7 +29,7 @@ const { values } = parseArgs({
 const fps = Number(values.fps);
 const size = { width: Number(values.width), height: Number(values.height) };
 const url =
-  `${values.url}/iframe.html?id=ui-react-ui-canvas-gridzoom--default&viewMode=story` +
+  `${values.url}/iframe.html?id=tools-autocue-gridzoom--default&viewMode=story` +
   `&args=controls:!false;stepped:!true&globals=theme:${values.theme}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
