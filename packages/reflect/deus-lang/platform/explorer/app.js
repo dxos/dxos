@@ -2752,6 +2752,76 @@ const rowsOf = (children, depth) =>
 
 const renderTree = () => {
   element('tree').innerHTML = topRows();
+  treeTabStops();
+};
+
+/**
+ * The tree is one Tab stop (the active row, else the first), and the arrow keys move within it: Tab otherwise
+ * walked every row and caret before the content (audit: 234 presses).
+ */
+const treeTabStops = () => {
+  const tree = element('tree');
+  const links = [...tree.querySelectorAll('.tree-row > a')];
+  const current =
+    links.find((link) => link === document.activeElement) ?? tree.querySelector('.tree-row > a.active') ?? links[0];
+  for (const link of links) {
+    link.tabIndex = link === current ? 0 : -1;
+  }
+  for (const caret of tree.querySelectorAll('.caret')) {
+    caret.tabIndex = -1;
+  }
+};
+
+/** Up and down move between visible rows, right opens a folder or steps in, left closes it or steps out to its parent. */
+const onTreeKey = (event) => {
+  const tree = element('tree');
+  const link = event.target.closest('.tree-row > a');
+  if (!link || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+  const links = [...tree.querySelectorAll('.tree-row > a')];
+  const at = links.indexOf(link);
+  const node = link.parentElement.parentElement;
+  const folder = node.classList.contains('tree-node') ? node.dataset.path : undefined;
+  let next;
+  switch (event.key) {
+    case 'ArrowDown':
+      next = links[at + 1];
+      break;
+    case 'ArrowUp':
+      next = links[at - 1];
+      break;
+    case 'Home':
+      next = links[0];
+      break;
+    case 'End':
+      next = links[links.length - 1];
+      break;
+    case 'ArrowRight':
+      if (folder !== undefined && !ui.expanded.has(folder)) {
+        toggleFolder(folder, true);
+        next = link;
+      } else {
+        next = folder !== undefined ? links[at + 1] : undefined;
+      }
+      break;
+    case 'ArrowLeft':
+      if (folder !== undefined && ui.expanded.has(folder)) {
+        toggleFolder(folder, false);
+        next = link;
+      } else {
+        next = link.closest('.tree-children')?.parentElement.querySelector(':scope > .tree-row > a');
+      }
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+  event.stopPropagation();
+  if (next) {
+    next.focus();
+    treeTabStops();
+  }
 };
 
 const toggleFolder = (path, expand) => {
@@ -2770,6 +2840,7 @@ const toggleFolder = (path, expand) => {
   caret.setAttribute('aria-expanded', String(next));
   const depth = path.split('.').length;
   node.querySelector(':scope > .tree-children').innerHTML = next ? treeRows(nodeAt(path), depth) : '';
+  treeTabStops();
 };
 
 /** Expands the tree down to a card's name and marks its row. */
@@ -2801,6 +2872,7 @@ const reveal = (key) => {
     (key.startsWith('n:') && self ? tree.querySelector(`[data-tree-key="d:${CSS.escape(self.hash)}"]`) : null);
   if (row) {
     row.classList.add('active');
+    treeTabStops();
     // Centered when out of view, so a deep link shows the row with its parents above it rather than at an edge.
     const box = element('sidebar').getBoundingClientRect();
     const { top, bottom } = row.getBoundingClientRect();
@@ -4341,6 +4413,7 @@ const main = async () => {
   });
   window.addEventListener('hashchange', render);
   element('skip').addEventListener('click', () => element('main').focus());
+  element('tree').addEventListener('keydown', onTreeKey);
   rememberScroll();
   // The finder opens on ⌘K or Ctrl+K; the help names the one this keyboard has.
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) {

@@ -296,6 +296,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 286 | 10-18 10:15 | 1h 15m | bf3aa34271 | The printer breaks long `else if` chains and list literals: the longest printed line falls from 42,816 to 1,026 columns, `Cli.dispatch` from 1,691 to 120, and the whole toolchain still prints back to the same hashes (D258) |
 | 287 | 10-18 10:45 | 30m 00s | 61eedcfa94 | After a push the queue draws first the pages no earlier head has, and a missing page comes from any of the eight kept heads (D259) |
 | 288 | 10-18 11:15 | 30m 00s | 078b74538f | The task board filters by text and by label; History's change counts load on a phone (D260) |
-| 289 | 10-18 12:00 | 45m 00s | this commit | The decision log lives in the codebase too, and the hosted explorer opens a decision as a card (D261) |
+| 289 | 10-18 12:00 | 45m 00s | 6913fb246b | The decision log lives in the codebase too, and the hosted explorer opens a decision as a card (D261) |
+| 290 | 10-18 12:30 | 30m 00s | this commit | The namespace tree is one Tab stop with arrow keys: the content is 11 Tab presses away, not 234 (D262) |
 
-Total from stage 1 to stage 289: 111h 50m.
+Total from stage 1 to stage 290: 112h 20m.
