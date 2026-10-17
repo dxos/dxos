@@ -153,6 +153,11 @@
       "types": "./dist/types/src/types/ChatParticipant.d.ts",
       "import": "./dist/lib/ChatParticipant.mjs"
     },
+    "./FactFeed": {
+      "source": "./src/types/FactFeed.ts",
+      "types": "./dist/types/src/types/FactFeed.d.ts",
+      "import": "./dist/lib/FactFeed.mjs"
+    },
     "./ConversationSkill": {
       "source": "./src/skills/ConversationSkill.ts",
       "types": "./dist/types/src/skills/ConversationSkill.d.ts",

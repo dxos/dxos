@@ -38,6 +38,10 @@ export type ExportSpaceOptions = {
    * @default SpacesService.SpaceArchiveFormat.enums.BINARY
    */
   format?: SpacesService.SpaceArchiveFormat;
+  /**
+   * Export only these feeds (`Feed` object ids) with their messages; always a JSON archive.
+   */
+  feedIds?: readonly string[];
 };
 
 export interface SpaceInternal {

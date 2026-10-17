@@ -95,12 +95,30 @@ export const ExtractedFact = Schema.Struct({
   /** For a predicate not in the listed vocabulary only: one sentence defining what it relates. */
   predicateDescription: OptionalString,
 });
+export interface ExtractedFact extends Schema.Schema.Type<typeof ExtractedFact> {}
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({
   facts: Schema.Array(ExtractedFact),
 });
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
+
+/**
+ * One fact extracted from a transcript of several messages: an {@link ExtractedFact} that also cites the tag of the
+ * message stating it. A separate schema, so single-document requests stay byte-identical to what they were.
+ */
+export const TranscriptFact = Schema.Struct({
+  ...ExtractedFact.fields,
+  /** The tag of the transcript message the proposition comes from (e.g. `m3`). */
+  message: OptionalString,
+});
+export interface TranscriptFact extends Schema.Schema.Type<typeof TranscriptFact> {}
+
+/** LLM payload for a transcript: facts that each cite their message. */
+export const TranscriptPayload = Schema.Struct({
+  facts: Schema.Array(TranscriptFact),
+});
+export interface TranscriptPayload extends Schema.Schema.Type<typeof TranscriptPayload> {}
 
 const BASE_PROMPT = `You extract atomic propositions from a message as structured facts.
 For each proposition output: subject, predicate (a listed predicate's shorthand, or a new short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), the source quote, optional subjectType/objectType (person|org|place|event|concept|thing), graph (a short name for the group of propositions it belongs to), and predicateDescription (only for a new predicate).`;
@@ -154,6 +172,13 @@ export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
 ];
 
 /**
+ * The rule a transcript request adds after the caller's: read the messages as one conversation, but attribute each
+ * proposition to the one message that states it, so its provenance survives batching.
+ */
+export const TRANSCRIPT_RULE =
+  'The input is a transcript of several messages, each wrapped in <message tag="..." author="..." date="...">. Read them as one conversation, so a reply, pronoun or "that" in one message resolves against the others, but emit each proposition once, from the message that states it: set "message" to that message\'s tag (e.g. "m3"), take the quote from that message, and treat its author as the speaker.';
+
+/**
  * Compose the system prompt from the base instruction, the (default + caller) rules, the vocabulary of predicates and
  * the known entities.
  */
@@ -167,6 +192,7 @@ export const buildExtractionPrompt = (options?: ExtractOptions): string => {
 };
 
 const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
+const decodeTranscriptFact = Schema.decodeUnknownOption(TranscriptFact);
 
 // Top-level balanced `{...}` spans, in order. Brace-only (does not skip braces inside string
 // literals) — a best-effort tokenizer for salvage, not a JSON validator.
@@ -199,28 +225,28 @@ const jsonObjectSpans = (raw: string): string[] => {
  * `}` match would span across stray braces and fail to parse. Entries that don't decode against
  * {@link ExtractedFact} are dropped rather than failing the whole document.
  */
-export const parseExtractPayload = (raw: string): ExtractPayload => {
+export const parseExtractPayload = (raw: string): ExtractPayload => ({ facts: salvageFacts(raw, decodeFact) });
+
+/** {@link parseExtractPayload} for a transcript request, keeping each fact's message tag. */
+export const parseTranscriptPayload = (raw: string): TranscriptPayload => ({
+  facts: salvageFacts(raw, decodeTranscriptFact),
+});
+
+/** A span that parses as JSON with a `facts` array; its entries stay unknown so each one is decoded on its own. */
+const decodeFactsSpan = Schema.decodeUnknownOption(
+  Schema.fromJsonString(Schema.Struct({ facts: Schema.Array(Schema.Unknown) })),
+);
+
+const salvageFacts = <F>(raw: string, decode: (entry: unknown) => Option.Option<F>): F[] => {
   for (const span of jsonObjectSpans(raw)) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(span);
-    } catch {
-      continue;
+    const payload = decodeFactsSpan(span);
+    if (Option.isSome(payload)) {
+      return payload.value.facts.flatMap((entry) =>
+        Option.match(decode(entry), { onNone: () => [], onSome: (fact) => [fact] }),
+      );
     }
-    if (typeof parsed !== 'object' || parsed === null) {
-      continue;
-    }
-    const factsValue = Reflect.get(parsed, 'facts');
-    if (!Array.isArray(factsValue)) {
-      continue;
-    }
-    return {
-      facts: factsValue.flatMap((entry) =>
-        Option.match(decodeFact(entry), { onNone: () => [], onSome: (fact) => [fact] }),
-      ),
-    };
   }
-  return { facts: [] };
+  return [];
 };
 
 /**
@@ -234,15 +260,60 @@ export const parseExtractPayload = (raw: string): ExtractPayload => {
 export const extractChunk = (
   doc: ExtractDocument,
   options?: ExtractOptions,
-): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> =>
+): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> => {
+  const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
+  const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+  return generatePayload({
+    source: doc.source,
+    strict: LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+      Effect.map((response) => response.value),
+    ),
+    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
+      Effect.map((response) => parseExtractPayload(response.text)),
+    ),
+    options,
+  });
+};
+
+/**
+ * {@link extractChunk} over a transcript of several tagged messages (see {@link TRANSCRIPT_RULE}): one generation
+ * covers every message in it, and each fact cites the tag of the message it comes from.
+ */
+export const extractTranscript = (
+  transcript: string,
+  label: string,
+  options?: ExtractOptions,
+): Effect.Effect<TranscriptPayload, SemanticIndexError, AiService.AiService> => {
+  const rules = [...(options?.rules ?? []), TRANSCRIPT_RULE];
+  const prompt = `${buildExtractionPrompt({ ...options, rules })}\n\n${transcript}`;
+  return generatePayload({
+    source: label,
+    strict: LanguageModel.generateObject({ schema: TranscriptPayload, prompt }).pipe(
+      Effect.map((response) => response.value),
+    ),
+    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
+      Effect.map((response) => parseTranscriptPayload(response.text)),
+    ),
+    options,
+  });
+};
+
+const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.';
+
+/** The strict-then-lenient generation both request shapes share; `source` labels its logs. */
+const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, StrictError, LenientError>({
+  source,
+  strict: strictAttempt,
+  lenient: lenientAttempt,
+  options,
+}: {
+  readonly source: string;
+  readonly strict: Effect.Effect<P, StrictError, LanguageModel.LanguageModel>;
+  readonly lenient: Effect.Effect<P, LenientError, LanguageModel.LanguageModel>;
+  readonly options?: ExtractOptions;
+}): Effect.Effect<P, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
-    const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
-    const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
-    const lenient = Effect.timed(
-      LanguageModel.generateText({
-        prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
-      }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
-    );
+    const lenient = Effect.timed(lenientAttempt);
 
     // Strong hosted models honor the schema; local providers (Ollama) reliably fail structured
     // output, so callers targeting them pass `strict: false` to skip the wasted strict pass.
@@ -250,7 +321,7 @@ export const extractChunk = (
     if (!useStrict) {
       const [lenientDuration, payload] = yield* lenient;
       log('extract-facts: lenient', {
-        source: doc.source,
+        source,
         lenientMs: Math.round(Duration.toMillis(lenientDuration)),
         facts: payload.facts.length,
       });
@@ -258,20 +329,20 @@ export const extractChunk = (
     }
 
     const [strictDuration, strict] = yield* Effect.timed(
-      LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
-        Effect.map((response) => Option.some(response.value)),
-        Effect.catch(() => Effect.succeed(Option.none<ExtractPayload>())),
+      strictAttempt.pipe(
+        Effect.map((value) => Option.some(value)),
+        Effect.catch(() => Effect.succeed(Option.none<P>())),
       ),
     );
     const strictMs = Math.round(Duration.toMillis(strictDuration));
     if (Option.isSome(strict)) {
-      log('extract-facts: strict', { source: doc.source, strictMs, facts: strict.value.facts.length });
+      log('extract-facts: strict', { source, strictMs, facts: strict.value.facts.length });
       return strict.value;
     }
     const [lenientDuration, payload] = yield* lenient;
     // Strict validation failed and its whole generation was wasted; the lenient retry doubles latency.
     log.warn('extract-facts: strict rejected, used lenient fallback', {
-      source: doc.source,
+      source,
       strictMs,
       lenientMs: Math.round(Duration.toMillis(lenientDuration)),
       facts: payload.facts.length,

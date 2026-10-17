@@ -270,6 +270,7 @@ describe('Binding.sync', () => {
       trigger.enabled
         ? Effect.sync(() => void fired.push(trigger.id))
         : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
+    resetTrigger: () => Effect.void,
   };
 
   const toastHandler = LayoutOperation.AddToast.pipe(
@@ -771,6 +772,7 @@ describe('Binding.syncAll', () => {
         fired.push(trigger.id);
         recorded.wake();
       }),
+    resetTrigger: () => Effect.void,
   };
 
   test('fans out to each binding', async ({ expect }) => {

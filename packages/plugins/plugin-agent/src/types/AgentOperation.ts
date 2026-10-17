@@ -13,6 +13,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
@@ -329,4 +330,59 @@ export const ReadSource = Operation.make({
     fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
     undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
   }),
+});
+
+//
+// Fact feeds: an agent's brain on EDGE indexes the fact feeds registered with it (`/compute/brain/:spaceId/:agentId/fact-feeds`).
+//
+
+const FactFeeds = Schema.Struct({
+  feeds: Schema.Array(Schema.String).annotate({ description: 'EIDs of the fact feeds the brain indexes.' }),
+});
+
+/** Has the agent's brain index a fact feed from now on, from the start of the feed. */
+export const AddFactFeed = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.addFactFeed'),
+    name: 'Add fact feed',
+    description: "Has the agent's brain on EDGE index a fact feed, reading it from where it left off.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to index the fact feed.' }),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to index.' }),
+  }),
+  output: FactFeeds,
+});
+
+/** Stops the agent's brain indexing a fact feed; the facts it already read stay. */
+export const RemoveFactFeed = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.removeFactFeed'),
+    name: 'Remove fact feed',
+    description: "Stops the agent's brain on EDGE indexing a fact feed; what it read stays.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to stop indexing the fact feed.' }),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to stop indexing.' }),
+  }),
+  output: FactFeeds,
+});
+
+/** The fact feeds the agent's brain indexes. */
+export const ListFactFeeds = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.listFactFeeds'),
+    name: 'List fact feeds',
+    description: "Lists the fact feeds the agent's brain on EDGE indexes.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain indexes the fact feeds.' }),
+  }),
+  output: FactFeeds,
 });

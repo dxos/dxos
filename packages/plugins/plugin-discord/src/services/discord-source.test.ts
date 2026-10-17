@@ -24,7 +24,8 @@ import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 
-import { discordSourceLayer, mapDiscordMessage, threadRefsOf } from './discord-source.ts';
+import { mapDiscordMessage, threadRefsOf } from './discord-message.ts';
+import { discordSourceLayer } from './discord-source.ts';
 
 // Test fixture: only the fields the mapper reads are populated (the full MessageResponse is large).
 const sample = (over: Record<string, unknown> = {}): MessageResponse =>
