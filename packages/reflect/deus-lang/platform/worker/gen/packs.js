@@ -65,7 +65,7 @@ function Worker$Packs$checkCombined(bytes) {
   if ((size < 12)) {
     r0 = true;
   } else {
-    r0 = not(List$all(rt.named((v) => {
+    r0 = not(List$all(({ "Worker.Packs.checkCombined/\u03bb": (v) => {
     m1: {
       if (v.tag === 0) {
         const at = v.fields[0];
@@ -74,7 +74,7 @@ function Worker$Packs$checkCombined(bytes) {
       }
       rt.nomatch(v);
     }
-  }, "Worker.Packs.checkCombined/\u03bb"), List$zip(List$range(0, 8), Worker$Packs$magic())));
+  } })["Worker.Packs.checkCombined/\u03bb"], List$zip(List$range(0, 8), Worker$Packs$magic())));
   }
   if (r0) {
     return new rt.Con("#Option", 1, ["a combined index starts with DEUSIX1"]);
@@ -140,7 +140,6 @@ function Worker$Packs$search(records, first, last, key, kind) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, first, last);
 }
 rt.named(Worker$Packs$search, "Worker.Packs.search");
@@ -149,13 +148,13 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
   if ((kind !== 2)) {
     return at;
   } else {
-    const same = rt.named((offset) => {
+    const same = ({ "Worker.Packs.newestAt/\u03bb": (offset) => {
     if ((Worker$Packs$compareKey(records, offset, key) === 0)) {
       return rt.equal(Worker$Bytes$u8(records, ((offset + 44) | 0)), kind);
     } else {
       return false;
     }
-  }, "Worker.Packs.newestAt/\u03bb");
+  } })["Worker.Packs.newestAt/\u03bb"];
     function walk(offset_1$, step$, best$) {
       for (;;) {
         const offset_1 = offset_1$, step = step$, best = best$;
@@ -186,7 +185,6 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
         }
       }
     }
-    rt.named(walk, "walk");
     return rt.ap(walk, ((at + Worker$Packs$record()) | 0), Worker$Packs$record(), rt.ap(walk, ((at - Worker$Packs$record()) | 0), ((0 - Worker$Packs$record()) | 0), at));
   }
 }
@@ -219,7 +217,7 @@ function Worker$Packs$digits(t) {
   let r0;
   if (not(Text$isEmpty(t))) {
     if ((rt.ap(rt.prims["Text.length"], t) <= 9)) {
-      r0 = List$all(rt.named((c) => Text$isDigit(c), "Worker.Packs.digits/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+      r0 = List$all(({ "Worker.Packs.digits/\u03bb": (c) => Text$isDigit(c) })["Worker.Packs.digits/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
     } else {
       r0 = false;
     }
@@ -284,7 +282,6 @@ function Worker$Packs$fanoutProblem(bytes, start, records) {
       }
     }
   }
-  rt.named(walk, "walk");
   return rt.ap(walk, 0, 0);
 }
 rt.named(Worker$Packs$fanoutProblem, "Worker.Packs.fanoutProblem");
@@ -338,7 +335,6 @@ function List$zip(xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(List$zip, "List.zip");
@@ -356,7 +352,6 @@ function List$range(lo, hi) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, ((hi - 1) | 0));
 }
 rt.named(List$range, "List.range");
@@ -402,7 +397,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");

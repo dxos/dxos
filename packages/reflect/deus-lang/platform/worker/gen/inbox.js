@@ -2,10 +2,10 @@
 import * as rt from "./deus-runtime.mjs";
 
 function Worker$Inbox$text(request) {
-  const present = List$filter(rt.named((key) => (lib$web$Js$typeOf(lib$web$Js$get(request, key)) !== "undefined"), "Worker.Inbox.text/\u03bb"), Worker$Inbox$fields());
-  const items = List$map(rt.named((key_1) => new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, [key_1]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(request, key_1))]), rt.NIL))]), "Worker.Inbox.text/\u03bb"), present);
+  const present = List$filter(({ "Worker.Inbox.text/\u03bb": (key) => (lib$web$Js$typeOf(lib$web$Js$get(request, key)) !== "undefined") })["Worker.Inbox.text/\u03bb"], Worker$Inbox$fields());
+  const items = List$map(({ "Worker.Inbox.text/\u03bb": (key_1) => new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, [key_1]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(request, key_1))]), rt.NIL))]) })["Worker.Inbox.text/\u03bb"], present);
   const assets = Option$getOr(Option$map(lib$web$Js$toList, lib$web$Js$toOption(lib$web$Js$get(request, "assets"))), rt.NIL);
-  const asset = rt.named((a) => new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["asset"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "hash"))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "type"))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "name"))]), rt.NIL))))]), "Worker.Inbox.text/\u03bb");
+  const asset = ({ "Worker.Inbox.text/\u03bb": (a) => new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["asset"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "hash"))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "type"))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [lib$web$Js$toText(lib$web$Js$get(a, "name"))]), rt.NIL))))]) })["Worker.Inbox.text/\u03bb"];
   return lib$base$Sexp$print(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["request"]), items), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["assets"]), List$map(asset, assets))]), rt.NIL))]));
 }
 rt.named(Worker$Inbox$text, "Worker.Inbox.text");
@@ -25,7 +25,7 @@ function Worker$Inbox$request(source) {
     }
     rt.nomatch(t0);
   }
-  const asset = rt.named((a) => {
+  const asset = ({ "Worker.Inbox.request/\u03bb": (a) => {
   m2: {
     if (a.tag === 3 && a.fields[0].tag === 1 && a.fields[0].fields[1].tag === 1 && a.fields[0].fields[1].fields[1].tag === 1 && a.fields[0].fields[1].fields[1].fields[1].tag === 1 && a.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const hash = a.fields[0].fields[1].fields[0];
@@ -38,8 +38,8 @@ function Worker$Inbox$request(source) {
     }
     rt.nomatch(a);
   }
-}, "Worker.Inbox.request/\u03bb");
-  const assets = List$concatMap(rt.named((item) => {
+} })["Worker.Inbox.request/\u03bb"];
+  const assets = List$concatMap(({ "Worker.Inbox.request/\u03bb": (item) => {
   m3: {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "assets") {
       const listed = item.fields[0].fields[1];
@@ -50,8 +50,8 @@ function Worker$Inbox$request(source) {
     }
     rt.nomatch(item);
   }
-}, "Worker.Inbox.request/\u03bb"), items);
-  const pairs = List$filterMap(rt.named((item_1) => {
+} })["Worker.Inbox.request/\u03bb"], items);
+  const pairs = List$filterMap(({ "Worker.Inbox.request/\u03bb": (item_1) => {
   m4: {
     if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[0] === "assets") {
       return rt.con0("#Option", 0);
@@ -59,14 +59,14 @@ function Worker$Inbox$request(source) {
     if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[1].tag === 1) {
       const key = item_1.fields[0].fields[0].fields[0];
       const v = item_1.fields[0].fields[1].fields[0];
-      return Option$map(rt.named((t) => new rt.Con("#Pair", 0, [key, lib$web$Js$text(t)]), "Worker.Inbox.request/\u03bb"), Worker$Inbox$value(v));
+      return Option$map(({ "Worker.Inbox.request/\u03bb": (t) => new rt.Con("#Pair", 0, [key, lib$web$Js$text(t)]) })["Worker.Inbox.request/\u03bb"], Worker$Inbox$value(v));
     }
     if (true) {
       return rt.con0("#Option", 0);
     }
     rt.nomatch(item_1);
   }
-}, "Worker.Inbox.request/\u03bb"), items);
+} })["Worker.Inbox.request/\u03bb"], items);
   return lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["assets", lib$web$Js$list(assets)]), pairs));
 }
 rt.named(Worker$Inbox$request, "Worker.Inbox.request");
@@ -96,7 +96,6 @@ function List$filter(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
@@ -126,7 +125,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -228,7 +226,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(readString, "readString");
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
@@ -240,7 +237,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(atomEnd, "atomEnd");
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
@@ -377,7 +373,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
@@ -440,7 +435,6 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
@@ -466,7 +460,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -513,7 +506,6 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      rt.named(go, "go");
       return rt.ap(go, true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
@@ -591,7 +583,7 @@ function lib$base$Sexp$push(form, stack, done) {
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
 
 function List$concat(xss) {
-  return List$foldr(rt.named((xs, acc) => rt.ap(rt.prims["append"], xs, acc), "List.concat/\u03bb"), rt.NIL, xss);
+  return List$foldr(({ "List.concat/\u03bb": (xs, acc) => rt.ap(rt.prims["append"], xs, acc) })["List.concat/\u03bb"], rt.NIL, xss);
 }
 rt.named(List$concat, "List.concat");
 
@@ -635,14 +627,13 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    rt.named(go, "go");
     return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
 
 function List$foldr(f, init, xs) {
-  return List$foldl(rt.named((acc, x) => rt.ap(f, x, acc), "List.foldr/\u03bb"), init, List$reverse(xs));
+  return List$foldl(({ "List.foldr/\u03bb": (acc, x) => rt.ap(f, x, acc) })["List.foldr/\u03bb"], init, List$reverse(xs));
 }
 rt.named(List$foldr, "List.foldr");
 
@@ -678,7 +669,6 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");

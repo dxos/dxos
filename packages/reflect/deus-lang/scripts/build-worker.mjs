@@ -201,6 +201,8 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'build',
           'Worker.Live.route',
           'Worker.Live.summaryOf',
+          'Worker.Live.causalFields',
+          'Worker.Live.batchLengths',
           '-o',
           join(gen, 'live.js'),
           '--js',

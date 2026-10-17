@@ -4,8 +4,8 @@ rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "
 
 async function Worker$Heads$readHead(bucket, db, project, branch) {
   const $stack = rt.handlers();
-  const stored = Option$map(rt.named((head) => lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(Worker$Heads$Stored$causal(head))]), rt.cons(new rt.Con("#Pair", 0, ["etag", lib$web$Js$text(Worker$Heads$Stored$etag(head))]), rt.cons(new rt.Con("#Pair", 0, ["uploaded", Worker$Heads$Stored$uploaded(head)]), rt.NIL)))), "Worker.Heads.readHead/\u03bb"), rt.resumed($stack, await Worker$Heads$readStored(bucket, project, branch)));
-  const legacy = rt.named(async (v) => {
+  const stored = Option$map(({ "Worker.Heads.readHead/\u03bb": (head) => lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(Worker$Heads$Stored$causal(head))]), rt.cons(new rt.Con("#Pair", 0, ["etag", lib$web$Js$text(Worker$Heads$Stored$etag(head))]), rt.cons(new rt.Con("#Pair", 0, ["uploaded", Worker$Heads$Stored$uploaded(head)]), rt.NIL)))) })["Worker.Heads.readHead/\u03bb"], rt.resumed($stack, await Worker$Heads$readStored(bucket, project, branch)));
+  const legacy = ({ "Worker.Heads.readHead/\u03bb": async (v) => {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(db);
   m1: {
@@ -28,7 +28,7 @@ async function Worker$Heads$readHead(bucket, db, project, branch) {
     }
     rt.nomatch(t0);
   }
-}, "Worker.Heads.readHead/\u03bb");
+} })["Worker.Heads.readHead/\u03bb"];
   return Option$getOr(rt.resumed($stack, await Worker$Heads$preferStored(stored, legacy)), lib$web$Js$undefined());
 }
 rt.named(Worker$Heads$readHead, "Worker.Heads.readHead");
@@ -61,10 +61,10 @@ async function Worker$Heads$gate(request, bucket, project, logged, readCurrent, 
   const $stack = rt.handlers();
   const scopes = List$map(lib$web$Js$toText, lib$web$Js$toList(lib$web$Js$get(logged, "scopes")));
   const keyId = Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(logged, "keyId")));
-  const refused = rt.resumed($stack, await Worker$Heads$claimed(Worker$Http$header(request, "x-deus-claim"), Worker$Http$header(request, "x-deus-epoch"), scopes, rt.named(async (claim, sent) => {
+  const refused = rt.resumed($stack, await Worker$Heads$claimed(Worker$Http$header(request, "x-deus-claim"), Worker$Http$header(request, "x-deus-epoch"), scopes, ({ "Worker.Heads.gate/\u03bb": async (claim, sent) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$move(rt.resumed($stack, await Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt)), claim, sent));
-}, "Worker.Heads.gate/\u03bb")));
+} })["Worker.Heads.gate/\u03bb"]));
   m0: {
     if (refused.tag === 0) {
       return lib$web$Js$undefined();
@@ -109,8 +109,8 @@ async function Worker$Heads$serveLog(request, bucket, project, rest) {
   if ((Worker$Http$method(request) !== "GET")) {
     return Worker$Http$problem(405, "the head log is written only by pushes");
   } else {
-    const segments = List$filter(rt.named((segment) => not(Text$isEmpty(segment)), "Worker.Heads.serveLog/\u03bb"), rest);
-    const branch = rt.ap(rt.prims["Text.join"], "/", List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Heads.serveLog/\u03bb"), segments));
+    const segments = List$filter(({ "Worker.Heads.serveLog/\u03bb": (segment) => not(Text$isEmpty(segment)) })["Worker.Heads.serveLog/\u03bb"], rest);
+    const branch = rt.ap(rt.prims["Text.join"], "/", List$map(({ "Worker.Heads.serveLog/\u03bb": (part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))) })["Worker.Heads.serveLog/\u03bb"], segments));
     if (not(Worker$Heads$isBranch(branch))) {
       return Worker$Http$problem(404, "the head log is read as /headlog/<branch>");
     } else {
@@ -293,7 +293,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(readString, "readString");
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
@@ -305,7 +304,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(atomEnd, "atomEnd");
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
@@ -442,7 +440,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
@@ -466,7 +463,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -477,13 +473,13 @@ const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['
 
 async function Worker$Heads$claimed(claim, epoch, scopes, moveTo) {
   const $stack = rt.handlers();
-  const t0 = Option$bind(claim, rt.named((header) => {
+  const t0 = Option$bind(claim, ({ "Worker.Heads.claimed/\u03bb": (header) => {
   if (Text$isEmpty(header)) {
     return rt.con0("#Option", 0);
   } else {
     return new rt.Con("#Option", 1, [header]);
   }
-}, "Worker.Heads.claimed/\u03bb"));
+} })["Worker.Heads.claimed/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       let r2;
@@ -593,7 +589,7 @@ async function Worker$Heads$move(store, claim, sent) {
 rt.named(Worker$Heads$move, "Worker.Heads.move");
 
 function Worker$Heads$r2Heads(bucket, project, keyId, readCurrent, epochAt) {
-  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [rt.named(async (branch) => {
+  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [({ "Worker.Heads.r2Heads/\u03bb": async (branch) => {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, branch))));
   m1: {
@@ -606,16 +602,16 @@ function Worker$Heads$r2Heads(bucket, project, keyId, readCurrent, epochAt) {
     }
     rt.nomatch(t0);
   }
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (head) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (head) => {
   const $stack = rt.handlers();
   return lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_1, head_1, tag) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (branch_1, head_1, tag) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, branch_1, head_1, tag));
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_2, head_2, previous) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (branch_2, head_2, previous) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$logHead(bucket, project, branch_2, head_2, previous, keyId));
-}, "Worker.Heads.r2Heads/\u03bb")]);
+} })["Worker.Heads.r2Heads/\u03bb"]]);
 }
 rt.named(Worker$Heads$r2Heads, "Worker.Heads.r2Heads");
 
@@ -711,7 +707,6 @@ function List$filter(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
@@ -746,7 +741,7 @@ function Worker$Heads$isBranch(t) {
       }
       if (r2) {
         if ((List$length(rest) <= 99)) {
-          return List$all(rt.named((c) => {
+          return List$all(({ "Worker.Heads.isBranch/\u03bb": (c) => {
           if (Text$isDigit(c)) {
             return true;
           } else {
@@ -768,7 +763,7 @@ function Worker$Heads$isBranch(t) {
               }
             }
           }
-        }, "Worker.Heads.isBranch/\u03bb"), rest);
+        } })["Worker.Heads.isBranch/\u03bb"], rest);
         } else {
           return false;
         }
@@ -785,7 +780,7 @@ function Worker$Heads$isBranch(t) {
 rt.named(Worker$Heads$isBranch, "Worker.Heads.isBranch");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
@@ -850,7 +845,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -939,7 +933,7 @@ function Option$bind(o, f) {
 rt.named(Option$bind, "Option.bind");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 
@@ -1211,7 +1205,7 @@ rt.named(Worker$Heads$writeHead, "Worker.Heads.writeHead");
 async function Worker$Heads$logHead(bucket, project, branch, causal, previous, keyId) {
   const $stack = rt.handlers();
   const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
-  const orNull = rt.named((value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()), "Worker.Heads.logHead/\u03bb");
+  const orNull = ({ "Worker.Heads.logHead/\u03bb": (value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()) })["Worker.Heads.logHead/\u03bb"];
   const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
   const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
   rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
@@ -1220,7 +1214,7 @@ async function Worker$Heads$logHead(bucket, project, branch, causal, previous, k
 rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -1280,7 +1274,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -1311,7 +1304,7 @@ rt.named(List$all, "List.all");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -1321,7 +1314,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -1330,10 +1323,10 @@ rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
 async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
-  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
+  const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
   const skip = rt.ap(rt.prims["Text.length"], prefix);
-  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
+  const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
     return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
@@ -1439,14 +1432,13 @@ function List$replicate(n, x) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, n);
 }
 rt.named(List$replicate, "List.replicate");
 
 async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt) {
   const $stack = rt.handlers();
-  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [rt.named(async (branch) => {
+  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [({ "Worker.Heads.r2Heads/\u03bb": async (branch) => {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, branch))));
   m1: {
@@ -1459,16 +1451,16 @@ async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, ep
     }
     rt.nomatch(t0);
   }
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (head) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (head) => {
   const $stack = rt.handlers();
   return lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_1, head_1, tag) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (branch_1, head_1, tag) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, branch_1, head_1, tag));
-}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_2, head_2, previous) => {
+} })["Worker.Heads.r2Heads/\u03bb"], ({ "Worker.Heads.r2Heads/\u03bb": async (branch_2, head_2, previous) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$logHead(bucket, project, branch_2, head_2, previous, keyId));
-}, "Worker.Heads.r2Heads/\u03bb")]);
+} })["Worker.Heads.r2Heads/\u03bb"]]);
 }
 rt.named(Worker$Heads$r2Heads$wait, "Worker.Heads.r2Heads");
 

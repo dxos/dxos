@@ -5,10 +5,10 @@ rt.ability("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", "
 
 async function Worker$Names$resolve(lookup, causal, name) {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await Worker$Names$resolveWith(rt.named(async (h) => {
+  return rt.resumed($stack, await Worker$Names$resolveWith(({ "Worker.Names.resolve/\u03bb": async (h) => {
   const $stack = rt.handlers();
   return Option$map(lib$web$Js$toText, lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(lookup, h)))));
-}, "Worker.Names.resolve/\u03bb"), causal, name));
+} })["Worker.Names.resolve/\u03bb"], causal, name));
 }
 rt.named(Worker$Names$resolve, "Worker.Names.resolve");
 
@@ -17,11 +17,11 @@ async function Worker$Names$serve(request, rest, readHead, nameAt) {
   const verb = Worker$Http$method(request);
   let path;
   if ((verb === "GET")) {
-    path = List$map(rt.named((part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))), "Worker.Names.serve/\u03bb"), rest);
+    path = List$map(({ "Worker.Names.serve/\u03bb": (part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))) })["Worker.Names.serve/\u03bb"], rest);
   } else {
     path = rest;
   }
-  const reply = rt.resumed($stack, await Worker$Names$answer(verb, path, rt.named(async (branch) => {
+  const reply = rt.resumed($stack, await Worker$Names$answer(verb, path, ({ "Worker.Names.serve/\u03bb": async (branch) => {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readHead, branch))));
   m1: {
@@ -34,10 +34,10 @@ async function Worker$Names$serve(request, rest, readHead, nameAt) {
     }
     rt.nomatch(t0);
   }
-}, "Worker.Names.serve/\u03bb"), rt.named(async (causal, name) => {
+} })["Worker.Names.serve/\u03bb"], ({ "Worker.Names.serve/\u03bb": async (causal, name) => {
   const $stack = rt.handlers();
   return lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(nameAt, causal, name))));
-}, "Worker.Names.serve/\u03bb")));
+} })["Worker.Names.serve/\u03bb"]));
   m2: {
     if (reply.tag === 1) {
       const status = reply.fields[0];
@@ -59,7 +59,7 @@ rt.named(Worker$Names$serve, "Worker.Names.serve");
 
 async function Worker$Names$resolveWith(read, causal, name) {
   const $stack = rt.handlers();
-  const without = rt.named((outcome, message) => new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, [outcome, message, "", "", "", false]), "Worker.Names.resolveWith/\u03bb");
+  const without = ({ "Worker.Names.resolveWith/\u03bb": (outcome, message) => new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, [outcome, message, "", "", "", false]) })["Worker.Names.resolveWith/\u03bb"];
   const t0 = rt.resumed($stack, await rt.ap(read, causal));
   m1: {
     if (t0.tag === 0) {
@@ -144,7 +144,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -243,8 +242,8 @@ function lib$toolchain$Codebase$Causal$snapshot(v) {
 rt.named(lib$toolchain$Codebase$Causal$snapshot, "lib.toolchain.Codebase.Causal.snapshot");
 
 function lib$toolchain$Codebase$causalFromSexp(form) {
-  const field = rt.named((key) => Option$getOr(List$find(rt.named((x) => rt.equal(lib$base$Sexp$head(x), key), "lib.toolchain.Codebase.causalFromSexp/\u03bb"), lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])), "lib.toolchain.Codebase.causalFromSexp/\u03bb");
-  const first = rt.named((key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))), "lib.toolchain.Codebase.causalFromSexp/\u03bb");
+  const field = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key) => Option$getOr(List$find(({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
+  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
   return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
 }
 rt.named(lib$toolchain$Codebase$causalFromSexp, "lib.toolchain.Codebase.causalFromSexp");
@@ -271,13 +270,13 @@ rt.named(Text$isEmpty, "Text.isEmpty");
 
 async function Worker$Names$entryWith(read, snapshot, name) {
   const $stack = rt.handlers();
-  const t0 = rt.resumed($stack, await _try$wait(rt.named(async (v) => {
+  const t0 = rt.resumed($stack, await _try$wait(({ "Worker.Names.entryWith/\u03bb": async (v) => {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await lib$toolchain$Codebase$lookupFormWith$wait(rt.named(async (h) => {
+  return rt.resumed($stack, await lib$toolchain$Codebase$lookupFormWith$wait(({ "Worker.Names.entryWith/\u03bb": async (h) => {
     const $stack = rt.handlers();
     return Option$map(lib$base$Sexp$read, rt.resumed($stack, await rt.ap(read, h)));
-  }, "Worker.Names.entryWith/\u03bb"), snapshot, name));
-}, "Worker.Names.entryWith/\u03bb")));
+  } })["Worker.Names.entryWith/\u03bb"], snapshot, name));
+} })["Worker.Names.entryWith/\u03bb"]));
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1) {
       const form = t0.fields[0].fields[0];
@@ -393,7 +392,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -401,7 +399,7 @@ rt.named(List$reverse, "List.reverse");
 const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -564,7 +562,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(readString, "readString");
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
@@ -576,7 +573,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(atomEnd, "atomEnd");
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
@@ -713,7 +709,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
@@ -729,7 +724,7 @@ function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
   for (;;) {
     const read = read$, h = h$, name = name$;
     const items = lib$toolchain$Codebase$nodeItemsWith(read, h);
-    const entry = List$head$p(List$filterMap(rt.named((item) => {
+    const entry = List$head$p(List$filterMap(({ "lib.toolchain.Codebase.lookupFormWith/\u03bb": (item) => {
   m0: {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "n" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const n = item.fields[0].fields[1].fields[0].fields[0];
@@ -745,7 +740,7 @@ function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
     }
     rt.nomatch(item);
   }
-}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+} })["lib.toolchain.Codebase.lookupFormWith/\u03bb"], items));
     const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
     m2: {
       if (t1.tag === 0 && t1.fields[0].tag === 1) {
@@ -755,7 +750,7 @@ function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
       if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1 && t1.fields[1].fields[0].tag === 0) {
         const seg = t1.fields[1].fields[0].fields[0];
         const rest = t1.fields[1].fields[0].fields[1];
-        const t4 = List$head$p(List$filterMap(rt.named((item_1) => {
+        const t4 = List$head$p(List$filterMap(({ "lib.toolchain.Codebase.lookupFormWith/\u03bb": (item_1) => {
       m3: {
         if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[0] === "sub" && item_1.fields[0].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].fields[1].tag === 0) {
           const s = item_1.fields[0].fields[1].fields[0].fields[0];
@@ -771,7 +766,7 @@ function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
         }
         rt.nomatch(item_1);
       }
-    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+    } })["lib.toolchain.Codebase.lookupFormWith/\u03bb"], items));
         m5: {
           if (t4.tag === 1) {
             const child_1 = t4.fields[0];
@@ -903,7 +898,7 @@ function lib$toolchain$Codebase$nodeItemsWith(read, h) {
     }
     if (t0.tag === 1) {
       const form = t0.fields[0];
-      return List$concatMap(rt.named((item) => {
+      return List$concatMap(({ "lib.toolchain.Codebase.nodeItemsWith/\u03bb": (item) => {
       m2: {
         if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
           const child = item.fields[0].fields[1].fields[0].fields[0];
@@ -914,7 +909,7 @@ function lib$toolchain$Codebase$nodeItemsWith(read, h) {
         }
         rt.nomatch(item);
       }
-    }, "lib.toolchain.Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form));
+    } })["lib.toolchain.Codebase.nodeItemsWith/\u03bb"], lib$base$Sexp$args(form));
     }
     rt.nomatch(t0);
   }
@@ -952,7 +947,6 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
@@ -1015,7 +1009,6 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      rt.named(go, "go");
       return rt.ap(go, true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
@@ -1078,14 +1071,13 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    rt.named(go, "go");
     return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
 
 function List$concat(xss) {
-  return List$foldr(rt.named((xs, acc) => rt.ap(rt.prims["append"], xs, acc), "List.concat/\u03bb"), rt.NIL, xss);
+  return List$foldr(({ "List.concat/\u03bb": (xs, acc) => rt.ap(rt.prims["append"], xs, acc) })["List.concat/\u03bb"], rt.NIL, xss);
 }
 rt.named(List$concat, "List.concat");
 
@@ -1121,7 +1113,6 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
@@ -1162,7 +1153,7 @@ function lib$base$Sexp$quoteCode(c) {
 rt.named(lib$base$Sexp$quoteCode, "lib.base.Sexp.quoteCode");
 
 function List$foldr(f, init, xs) {
-  return List$foldl(rt.named((acc, x) => rt.ap(f, x, acc), "List.foldr/\u03bb"), init, List$reverse(xs));
+  return List$foldl(({ "List.foldr/\u03bb": (acc, x) => rt.ap(f, x, acc) })["List.foldr/\u03bb"], init, List$reverse(xs));
 }
 rt.named(List$foldr, "List.foldr");
 
@@ -1213,7 +1204,7 @@ async function lib$toolchain$Codebase$lookupFormWith$wait(read$, h$, name$) {
   for (;;) {
     const read = read$, h = h$, name = name$;
     const items = rt.resumed($stack, await lib$toolchain$Codebase$nodeItemsWith$wait(read, h));
-    const entry = List$head$p(List$filterMap(rt.named((item) => {
+    const entry = List$head$p(List$filterMap(({ "lib.toolchain.Codebase.lookupFormWith/\u03bb": (item) => {
   m0: {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "n" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const n = item.fields[0].fields[1].fields[0].fields[0];
@@ -1229,7 +1220,7 @@ async function lib$toolchain$Codebase$lookupFormWith$wait(read$, h$, name$) {
     }
     rt.nomatch(item);
   }
-}, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+} })["lib.toolchain.Codebase.lookupFormWith/\u03bb"], items));
     const t1 = new rt.Con("#Pair", 0, [entry, lib$toolchain$Codebase$splitName(name)]);
     m2: {
       if (t1.tag === 0 && t1.fields[0].tag === 1) {
@@ -1239,7 +1230,7 @@ async function lib$toolchain$Codebase$lookupFormWith$wait(read$, h$, name$) {
       if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1 && t1.fields[1].fields[0].tag === 0) {
         const seg = t1.fields[1].fields[0].fields[0];
         const rest = t1.fields[1].fields[0].fields[1];
-        const t4 = List$head$p(List$filterMap(rt.named((item_1) => {
+        const t4 = List$head$p(List$filterMap(({ "lib.toolchain.Codebase.lookupFormWith/\u03bb": (item_1) => {
       m3: {
         if (item_1.tag === 3 && item_1.fields[0].tag === 1 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[0] === "sub" && item_1.fields[0].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].tag === 1 && item_1.fields[0].fields[1].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[1].fields[1].fields[1].tag === 0) {
           const s = item_1.fields[0].fields[1].fields[0].fields[0];
@@ -1255,7 +1246,7 @@ async function lib$toolchain$Codebase$lookupFormWith$wait(read$, h$, name$) {
         }
         rt.nomatch(item_1);
       }
-    }, "lib.toolchain.Codebase.lookupFormWith/\u03bb"), items));
+    } })["lib.toolchain.Codebase.lookupFormWith/\u03bb"], items));
         m5: {
           if (t4.tag === 1) {
             const child_1 = t4.fields[0];
@@ -1288,7 +1279,7 @@ async function lib$toolchain$Codebase$nodeItemsWith$wait(read, h) {
     }
     if (t0.tag === 1) {
       const form = t0.fields[0];
-      return rt.resumed($stack, await List$concatMap$wait(rt.named(async (item) => {
+      return rt.resumed($stack, await List$concatMap$wait(({ "lib.toolchain.Codebase.nodeItemsWith/\u03bb": async (item) => {
       const $stack = rt.handlers();
       m2: {
         if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
@@ -1300,7 +1291,7 @@ async function lib$toolchain$Codebase$nodeItemsWith$wait(read, h) {
         }
         rt.nomatch(item);
       }
-    }, "lib.toolchain.Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form)));
+    } })["lib.toolchain.Codebase.nodeItemsWith/\u03bb"], lib$base$Sexp$args(form)));
     }
     rt.nomatch(t0);
   }
@@ -1334,7 +1325,6 @@ async function List$map$wait(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.resumed($stack, await rt.ap(go, rt.NIL, xs));
 }
 rt.named(List$map$wait, "List.map");

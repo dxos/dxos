@@ -755,7 +755,8 @@ def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (l
     if wait then JsGen.emit ctx ("  " ++ stackLine) else ()
     forEach lines (fun line => JsGen.emit ctx ("  " ++ line))
     JsGen.emit ctx "}"
-  if env == [] then () else JsGen.emit ctx ("rt.named(" ++ jsName ++ ", " ++ JsGen.quote display ++ ");")
+  -- A `letrec` member's display name is its JavaScript name, and renaming it would redefine `name` on every call of its owner.
+  if env == [] || display == jsName then () else JsGen.emit ctx ("rt.named(" ++ jsName ++ ", " ++ JsGen.quote display ++ ");")
 
 /-- An arrow function of `names` whose body is `body`, compiled in its own scope (no self loop); `async` when it
   waits. -/
@@ -804,8 +805,10 @@ def expr (ctx : JsCtx) (env : List Text) (e : Sexp) : {Throw Text} Text :=
   | Sexp.list (Sexp.sym "lam" :: _ :: _ :: []) =>
       let (n, _) := JsGen.unlam e
       let (xs, body) := JsGen.params n e
-      "rt.named(" ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body (maybeWaits ctx e) ++ ", " ++
-        JsGen.quote (ctx.jxOwner ++ "/λ") ++ ")"
+      -- Named by a literal key, which V8 reads at parse time: `rt.named` redefines `name` on every closure made, which
+      -- costs twenty times the closure itself (D308). Stack traces show the same name.
+      let key := JsGen.quote (ctx.jxOwner ++ "/λ")
+      "({ " ++ key ++ ": " ++ JsGen.arrow ctx env (List.map (fun x => JsGen.local ctx x) xs) body (maybeWaits ctx e) ++ " })[" ++ key ++ "]"
   | Sexp.list (Sexp.sym "handle" :: body :: clauses) => JsGen.handleExpr ctx env body clauses
   | Sexp.list (Sexp.sym "app" :: f :: args) => JsGen.app ctx env f args
   | _ => if needsStatements e then

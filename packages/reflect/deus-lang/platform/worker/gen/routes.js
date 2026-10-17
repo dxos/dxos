@@ -115,7 +115,7 @@ function Worker$Routes$pinned(path) {
     const after = Text$drop(16, rest);
     let r0;
     if ((rt.ap(rt.prims["Text.length"], version) === 16)) {
-      if (List$all(rt.named((c) => {
+      if (List$all(({ "Worker.Routes.pinned/\u03bb": (c) => {
       if (Text$isDigit(c)) {
         return true;
       } else {
@@ -125,7 +125,7 @@ function Worker$Routes$pinned(path) {
           return false;
         }
       }
-    }, "Worker.Routes.pinned/\u03bb"), rt.ap(rt.prims["Text.utf8"], version))) {
+    } })["Worker.Routes.pinned/\u03bb"], rt.ap(rt.prims["Text.utf8"], version))) {
         r0 = Text$startsWith("/", after);
       } else {
         r0 = false;

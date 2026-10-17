@@ -2,7 +2,7 @@
 import * as rt from "./deus-runtime.mjs";
 
 function Worker$Live$route(segments) {
-  const notFound = rt.named((message) => new rt.Con("90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", 0, ["", "", "", "", message]), "Worker.Live.route/\u03bb");
+  const notFound = ({ "Worker.Live.route/\u03bb": (message) => new rt.Con("90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", 0, ["", "", "", "", message]) })["Worker.Live.route/\u03bb"];
   m0: {
     if (segments.tag === 1) {
       const first = segments.fields[0];
@@ -69,15 +69,72 @@ function Worker$Live$route(segments) {
 rt.named(Worker$Live$route, "Worker.Live.route");
 
 function Worker$Live$summaryOf(index, version) {
-  const listed = rt.named((field) => Option$getOr(Option$map(lib$web$Js$toList, lib$web$Js$toOption(lib$web$Js$get(index, field))), rt.NIL), "Worker.Live.summaryOf/\u03bb");
-  const names = List$map(rt.named((entry) => new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "name")), new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "kind")), lib$web$Js$toText(lib$web$Js$get(entry, "hash"))])]), "Worker.Live.summaryOf/\u03bb"), rt.ap(listed, "names"));
-  const documents = List$filterMap(rt.named((entry_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(entry_1, "document"))), "Worker.Live.summaryOf/\u03bb"), rt.ap(listed, "features"));
+  const listed = ({ "Worker.Live.summaryOf/\u03bb": (field) => Option$getOr(Option$map(lib$web$Js$toList, lib$web$Js$toOption(lib$web$Js$get(index, field))), rt.NIL) })["Worker.Live.summaryOf/\u03bb"];
+  const names = List$map(({ "Worker.Live.summaryOf/\u03bb": (entry) => new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "name")), new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "kind")), lib$web$Js$toText(lib$web$Js$get(entry, "hash"))])]) })["Worker.Live.summaryOf/\u03bb"], rt.ap(listed, "names"));
+  const documents = List$filterMap(({ "Worker.Live.summaryOf/\u03bb": (entry_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(entry_1, "document"))) })["Worker.Live.summaryOf/\u03bb"], rt.ap(listed, "features"));
   const meta = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(index, "meta")), lib$web$Js$obj(rt.NIL));
   const found = Worker$Live$summary(names, documents);
   const features = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(meta, "features")), lib$web$Js$int(0));
-  return lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["branch", lib$web$Js$get(meta, "branch")]), rt.cons(new rt.Con("#Pair", 0, ["definitions", lib$web$Js$get(meta, "definitions")]), rt.cons(new rt.Con("#Pair", 0, ["own", lib$web$Js$int(Worker$Live$Summary$own(found))]), rt.cons(new rt.Con("#Pair", 0, ["tasks", lib$web$Js$get(meta, "tasks")]), rt.cons(new rt.Con("#Pair", 0, ["open", lib$web$Js$get(meta, "open")]), rt.cons(new rt.Con("#Pair", 0, ["features", features]), rt.cons(new rt.Con("#Pair", 0, ["kinds", lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$int(snd(pair))]), "Worker.Live.summaryOf/\u03bb"), Worker$Live$Summary$kinds(found)))]), rt.cons(new rt.Con("#Pair", 0, ["namespaces", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$namespaces(found)))]), rt.cons(new rt.Con("#Pair", 0, ["checked", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$checked(found)))]), rt.cons(new rt.Con("#Pair", 0, ["summaryVersion", lib$web$Js$int(version)]), rt.NIL)))))))))), Option$getOr(Option$map(rt.named((map) => rt.cons(new rt.Con("#Pair", 0, ["featureMap", lib$web$Js$text(map)]), rt.NIL), "Worker.Live.summaryOf/\u03bb"), Worker$Live$Summary$featureMap(found)), rt.NIL)));
+  return lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["branch", lib$web$Js$get(meta, "branch")]), rt.cons(new rt.Con("#Pair", 0, ["definitions", lib$web$Js$get(meta, "definitions")]), rt.cons(new rt.Con("#Pair", 0, ["own", lib$web$Js$int(Worker$Live$Summary$own(found))]), rt.cons(new rt.Con("#Pair", 0, ["tasks", lib$web$Js$get(meta, "tasks")]), rt.cons(new rt.Con("#Pair", 0, ["open", lib$web$Js$get(meta, "open")]), rt.cons(new rt.Con("#Pair", 0, ["features", features]), rt.cons(new rt.Con("#Pair", 0, ["kinds", lib$web$Js$obj(List$map(({ "Worker.Live.summaryOf/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$int(snd(pair))]) })["Worker.Live.summaryOf/\u03bb"], Worker$Live$Summary$kinds(found)))]), rt.cons(new rt.Con("#Pair", 0, ["namespaces", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$namespaces(found)))]), rt.cons(new rt.Con("#Pair", 0, ["checked", lib$web$Js$list(List$map(lib$web$Js$text, Worker$Live$Summary$checked(found)))]), rt.cons(new rt.Con("#Pair", 0, ["summaryVersion", lib$web$Js$int(version)]), rt.NIL)))))))))), Option$getOr(Option$map(({ "Worker.Live.summaryOf/\u03bb": (map) => rt.cons(new rt.Con("#Pair", 0, ["featureMap", lib$web$Js$text(map)]), rt.NIL) })["Worker.Live.summaryOf/\u03bb"], Worker$Live$Summary$featureMap(found)), rt.NIL)));
 }
 rt.named(Worker$Live$summaryOf, "Worker.Live.summaryOf");
+
+function Worker$Live$causalFields(text) {
+  const t0 = Worker$Live$links(text);
+  m1: {
+    if (t0.tag === 0) {
+      const parents = t0.fields[0];
+      const snapshots = t0.fields[1];
+      return lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["parents", lib$web$Js$list(List$map(lib$web$Js$text, parents))]), rt.cons(new rt.Con("#Pair", 0, ["snapshots", lib$web$Js$list(List$map(lib$web$Js$text, snapshots))]), rt.NIL)));
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Live$causalFields, "Worker.Live.causalFields");
+
+function Worker$Live$batchLengths(sizes) {
+  const step = ({ "Worker.Live.batchLengths/\u03bb": (acc, size) => {
+  m0: {
+    if (acc.tag === 0 && acc.fields[1].tag === 0) {
+      const done = acc.fields[0];
+      const count = acc.fields[1].fields[0];
+      const bytes = acc.fields[1].fields[1];
+      let r1;
+      if ((count > 0)) {
+        if ((count === 100)) {
+          r1 = true;
+        } else {
+          r1 = (((bytes + size) | 0) > 200000);
+        }
+      } else {
+        r1 = false;
+      }
+      if (r1) {
+        return new rt.Con("#Pair", 0, [rt.cons(count, done), new rt.Con("#Pair", 0, [1, size])]);
+      } else {
+        return new rt.Con("#Pair", 0, [done, new rt.Con("#Pair", 0, [((count + 1) | 0), ((bytes + size) | 0)])]);
+      }
+    }
+    rt.nomatch(acc);
+  }
+} })["Worker.Live.batchLengths/\u03bb"];
+  const t2 = List$foldl(step, new rt.Con("#Pair", 0, [rt.NIL, new rt.Con("#Pair", 0, [0, 0])]), sizes);
+  m3: {
+    if (t2.tag === 0 && t2.fields[1].tag === 0) {
+      const done_1 = t2.fields[0];
+      const count_1 = t2.fields[1].fields[0];
+      let r4;
+      if ((count_1 > 0)) {
+        r4 = rt.cons(count_1, done_1);
+      } else {
+        r4 = done_1;
+      }
+      return List$reverse(r4);
+    }
+    rt.nomatch(t2);
+  }
+}
+rt.named(Worker$Live$batchLengths, "Worker.Live.batchLengths");
 
 function not(b) {
   if (b) {
@@ -90,7 +147,7 @@ rt.named(not, "not");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -100,7 +157,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -121,7 +178,7 @@ function Worker$Heads$isBranch(t) {
       }
       if (r2) {
         if ((List$length(rest) <= 99)) {
-          return List$all(rt.named((c) => {
+          return List$all(({ "Worker.Heads.isBranch/\u03bb": (c) => {
           if (Text$isDigit(c)) {
             return true;
           } else {
@@ -143,7 +200,7 @@ function Worker$Heads$isBranch(t) {
               }
             }
           }
-        }, "Worker.Heads.isBranch/\u03bb"), rest);
+        } })["Worker.Heads.isBranch/\u03bb"], rest);
         } else {
           return false;
         }
@@ -168,7 +225,7 @@ function Worker$Live$isPage(name) {
     if (t0.tag === 1) {
       const stem = t0.fields[0];
       if (Text$startsWith("_", stem)) {
-        return Worker$Live$word(rt.named((c) => {
+        return Worker$Live$word(({ "Worker.Live.isPage/\u03bb": (c) => {
         if (Text$isAlpha(c)) {
           return true;
         } else {
@@ -182,7 +239,7 @@ function Worker$Live$isPage(name) {
             }
           }
         }
-      }, "Worker.Live.isPage/\u03bb"), 99, Text$drop(1, stem));
+      } })["Worker.Live.isPage/\u03bb"], 99, Text$drop(1, stem));
       } else {
         const t2 = rt.ap(rt.prims["Text.split"], stem, ".");
         m3: {
@@ -229,7 +286,7 @@ function Worker$Live$isDocument(name) {
       const stem = t0.fields[0];
       const segments = rt.ap(rt.prims["Text.split"], stem, ".");
       if ((List$length(segments) <= 10)) {
-        return List$all(rt.ap(Worker$Live$word, rt.named((c) => {
+        return List$all(rt.ap(Worker$Live$word, ({ "Worker.Live.isDocument/\u03bb": (c) => {
         if (Text$isAlpha(c)) {
           return true;
         } else {
@@ -239,7 +296,7 @@ function Worker$Live$isDocument(name) {
             return (c === 95);
           }
         }
-      }, "Worker.Live.isDocument/\u03bb"), 99), segments);
+      } })["Worker.Live.isDocument/\u03bb"], 99), segments);
       } else {
         return false;
       }
@@ -302,7 +359,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -340,7 +396,6 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
@@ -348,7 +403,7 @@ rt.named(List$filterMap, "List.filterMap");
 const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
 
 function Worker$Live$summary(names, documents) {
-  const own = List$filter(rt.named((entry) => {
+  const own = List$filter(({ "Worker.Live.summary/\u03bb": (entry) => {
   m0: {
     if (entry.tag === 0 && entry.fields[1].tag === 0) {
       const name = entry.fields[0];
@@ -356,8 +411,8 @@ function Worker$Live$summary(names, documents) {
     }
     rt.nomatch(entry);
   }
-}, "Worker.Live.summary/\u03bb"), names);
-  const tops = List$filterMap(rt.named((entry_1) => {
+} })["Worker.Live.summary/\u03bb"], names);
+  const tops = List$filterMap(({ "Worker.Live.summary/\u03bb": (entry_1) => {
   m1: {
     if (entry_1.tag === 0 && entry_1.fields[1].tag === 0) {
       const name_1 = entry_1.fields[0];
@@ -396,9 +451,9 @@ function Worker$Live$summary(names, documents) {
     }
     rt.nomatch(entry_1);
   }
-}, "Worker.Live.summary/\u03bb"), names);
-  const ranked = List$sortBy(rt.named((left, right) => ((snd(right) - snd(left)) | 0), "Worker.Live.summary/\u03bb"), Worker$Live$tally(tops));
-  return new rt.Con("db3c0f57f2c03c94ab3e176a17fbc350b124cc1a84bab5972048911599116343", 0, [List$length(own), Worker$Live$tally(List$map(rt.named((entry_2) => {
+} })["Worker.Live.summary/\u03bb"], names);
+  const ranked = List$sortBy(({ "Worker.Live.summary/\u03bb": (left, right) => ((snd(right) - snd(left)) | 0) })["Worker.Live.summary/\u03bb"], Worker$Live$tally(tops));
+  return new rt.Con("db3c0f57f2c03c94ab3e176a17fbc350b124cc1a84bab5972048911599116343", 0, [List$length(own), Worker$Live$tally(List$map(({ "Worker.Live.summary/\u03bb": (entry_2) => {
   m3: {
     if (entry_2.tag === 0 && entry_2.fields[1].tag === 0) {
       const kind = entry_2.fields[1].fields[0];
@@ -406,7 +461,7 @@ function Worker$Live$summary(names, documents) {
     }
     rt.nomatch(entry_2);
   }
-}, "Worker.Live.summary/\u03bb"), own)), List$map(fst, List$take(6, ranked)), List$filterMap(rt.named((entry_3) => {
+} })["Worker.Live.summary/\u03bb"], own)), List$map(fst, List$take(6, ranked)), List$filterMap(({ "Worker.Live.summary/\u03bb": (entry_3) => {
   m4: {
     if (entry_3.tag === 0 && entry_3.fields[1].tag === 0) {
       const kind_1 = entry_3.fields[1].fields[0];
@@ -425,7 +480,7 @@ function Worker$Live$summary(names, documents) {
     }
     rt.nomatch(entry_3);
   }
-}, "Worker.Live.summary/\u03bb"), own), List$find(rt.named((document) => Text$endsWith(".Features", document), "Worker.Live.summary/\u03bb"), documents)]);
+} })["Worker.Live.summary/\u03bb"], own), List$find(({ "Worker.Live.summary/\u03bb": (document) => Text$endsWith(".Features", document) })["Worker.Live.summary/\u03bb"], documents)]);
 }
 rt.named(Worker$Live$summary, "Worker.Live.summary");
 
@@ -532,6 +587,56 @@ function Worker$Live$Summary$featureMap(v) {
 }
 rt.named(Worker$Live$Summary$featureMap, "Worker.Live.Summary.featureMap");
 
+function Worker$Live$links(text) {
+  const node = lib$toolchain$Codebase$causalFromSexp(lib$base$Sexp$read(text));
+  return new rt.Con("#Pair", 0, [lib$toolchain$Codebase$Causal$parents(node), List$filter(Worker$Heads$isHash, rt.cons(lib$toolchain$Codebase$Causal$tasks(node), rt.cons(lib$toolchain$Codebase$Causal$prior(node), rt.cons(lib$toolchain$Codebase$Causal$threads(node), rt.NIL))))]);
+}
+rt.named(Worker$Live$links, "Worker.Live.links");
+
+function List$foldl(f$, init$, xs$) {
+  for (;;) {
+    const f = f$, init = init$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return init;
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        f$ = f;
+        init$ = rt.ap(f, init, x);
+        xs$ = rest;
+        continue;
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$foldl, "List.foldl");
+
+function List$reverse(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(y, acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$reverse, "List.reverse");
+
 function List$all(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -602,7 +707,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -654,30 +758,6 @@ function Text$drop(n, t) {
 }
 rt.named(Text$drop, "Text.drop");
 
-function List$reverse(xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return acc;
-        }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          acc$ = rt.cons(y, acc);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
-}
-rt.named(List$reverse, "List.reverse");
-
 function List$filter(p, xs) {
   function go(acc$, ys$) {
     for (;;) {
@@ -703,7 +783,6 @@ function List$filter(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
@@ -726,7 +805,7 @@ rt.named(List$sortBy, "List.sortBy");
 
 function Worker$Live$tally(keys) {
   const counts = rt.ap(rt.prims["MutMap.new"], undefined);
-  const firsts = List$filter(rt.named((key) => {
+  const firsts = List$filter(({ "Worker.Live.tally/\u03bb": (key) => {
   const t0 = rt.ap(rt.prims["MutMap.get"], counts, key);
   m1: {
     if (t0.tag === 1) {
@@ -740,8 +819,8 @@ function Worker$Live$tally(keys) {
     }
     rt.nomatch(t0);
   }
-}, "Worker.Live.tally/\u03bb"), keys);
-  return List$map(rt.named((key_1) => new rt.Con("#Pair", 0, [key_1, Option$getOr(rt.ap(rt.prims["MutMap.get"], counts, key_1), 0)]), "Worker.Live.tally/\u03bb"), firsts);
+} })["Worker.Live.tally/\u03bb"], keys);
+  return List$map(({ "Worker.Live.tally/\u03bb": (key_1) => new rt.Con("#Pair", 0, [key_1, Option$getOr(rt.ap(rt.prims["MutMap.get"], counts, key_1), 0)]) })["Worker.Live.tally/\u03bb"], firsts);
 }
 rt.named(Worker$Live$tally, "Worker.Live.tally");
 
@@ -769,7 +848,6 @@ function List$take(n, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, n, xs);
 }
 rt.named(List$take, "List.take");
@@ -809,6 +887,100 @@ function Text$endsWith(suffix, t) {
 }
 rt.named(Text$endsWith, "Text.endsWith");
 
+function lib$toolchain$Codebase$causalFromSexp(form) {
+  const field = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key) => Option$getOr(List$find(({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
+  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
+  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
+}
+rt.named(lib$toolchain$Codebase$causalFromSexp, "lib.toolchain.Codebase.causalFromSexp");
+
+function lib$base$Sexp$read(t) {
+  const t0 = lib$base$Sexp$readAll(t);
+  m1: {
+    if (t0.tag === 1 && t0.fields[1].tag === 0) {
+      const form = t0.fields[0];
+      return form;
+    }
+    if (true) {
+      return rt.ap(rt.prims["defect"], "sexp: expected exactly one form");
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(lib$base$Sexp$read, "lib.base.Sexp.read");
+
+function lib$toolchain$Codebase$Causal$parents(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(lib$toolchain$Codebase$Causal$parents, "lib.toolchain.Codebase.Causal.parents");
+
+function lib$toolchain$Codebase$Causal$tasks(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(lib$toolchain$Codebase$Causal$tasks, "lib.toolchain.Codebase.Causal.tasks");
+
+function lib$toolchain$Codebase$Causal$prior(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_5;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(lib$toolchain$Codebase$Causal$prior, "lib.toolchain.Codebase.Causal.prior");
+
+function lib$toolchain$Codebase$Causal$threads(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      const v_5 = v.fields[4];
+      const v_6 = v.fields[5];
+      const v_7 = v.fields[6];
+      const v_8 = v.fields[7];
+      return v_6;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(lib$toolchain$Codebase$Causal$threads, "lib.toolchain.Codebase.Causal.threads");
+
 function List$merge(cmp, xs, ys) {
   function go(acc$, l$, r$) {
     for (;;) {
@@ -842,7 +1014,6 @@ function List$merge(cmp, xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(List$merge, "List.merge");
@@ -870,10 +1041,532 @@ function List$drop(n$, xs$) {
 }
 rt.named(List$drop, "List.drop");
 
+function lib$base$Sexp$head(s) {
+  m0: {
+    if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1) {
+      const h = s.fields[0].fields[0].fields[0];
+      return h;
+    }
+    if (true) {
+      return "";
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$head, "lib.base.Sexp.head");
+
+function lib$base$Sexp$args(s) {
+  m0: {
+    if (s.tag === 3 && s.fields[0].tag === 1) {
+      const rest = s.fields[0].fields[1];
+      return rest;
+    }
+    if (true) {
+      return rt.NIL;
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$args, "lib.base.Sexp.args");
+
+function lib$base$Sexp$asText(s) {
+  m0: {
+    if (s.tag === 2) {
+      const value = s.fields[0];
+      return value;
+    }
+    if (s.tag === 1) {
+      const name = s.fields[0];
+      return name;
+    }
+    if (true) {
+      return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "sexp: expected text, got ", lib$base$Sexp$print(s)));
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$asText, "lib.base.Sexp.asText");
+
+function List$head$p(v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [x]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(List$head$p, "List.head?");
+
+function lib$base$Sexp$readAll(t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  function readString(i$, start$, acc$) {
+    for (;;) {
+      const i = i$, start = start$, acc = acc$;
+      const c = rt.ap(rt.prims["Text.code"], t, i);
+      if ((c === (-1))) {
+        return rt.ap(rt.prims["defect"], "sexp: unterminated string");
+      } else {
+        if ((c === 34)) {
+          return new rt.Con("#Pair", 0, [rt.ap(rt.prims["Text.concat"], List$reverse(rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc))), ((i + 1) | 0)]);
+        } else {
+          if ((c === 92)) {
+            const e = rt.ap(rt.prims["Text.code"], t, ((i + 1) | 0));
+            const piece = rt.ap(rt.prims["Text.slice"], t, start, i);
+            if ((e === 110)) {
+              i$ = ((i + 2) | 0);
+              start$ = ((i + 2) | 0);
+              acc$ = rt.cons("\n", rt.cons(piece, acc));
+              continue;
+            } else {
+              if ((e === 116)) {
+                i$ = ((i + 2) | 0);
+                start$ = ((i + 2) | 0);
+                acc$ = rt.cons("\u0009", rt.cons(piece, acc));
+                continue;
+              } else {
+                if ((e === 114)) {
+                  i$ = ((i + 2) | 0);
+                  start$ = ((i + 2) | 0);
+                  acc$ = rt.cons("\u000d", rt.cons(piece, acc));
+                  continue;
+                } else {
+                  if ((e === 117)) {
+                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 5) | 0)))) | 0);
+                    i$ = ((i + 6) | 0);
+                    start$ = ((i + 6) | 0);
+                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], code), rt.cons(piece, acc));
+                    continue;
+                  } else {
+                    i$ = ((i + 2) | 0);
+                    start$ = ((i + 2) | 0);
+                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], e), rt.cons(piece, acc));
+                    continue;
+                  }
+                }
+              }
+            }
+          } else {
+            i$ = ((i + 1) | 0);
+            start$ = start;
+            acc$ = acc;
+            continue;
+          }
+        }
+      }
+    }
+  }
+  function atomEnd(i_1$) {
+    for (;;) {
+      const i_1 = i_1$;
+      if (lib$base$Sexp$isDelimiter(rt.ap(rt.prims["Text.code"], t, i_1))) {
+        return i_1;
+      } else {
+        i_1$ = ((i_1 + 1) | 0);
+        continue;
+      }
+    }
+  }
+  function go(i_2$, stack$, done$) {
+    for (;;) {
+      const i_2 = i_2$, stack = stack$, done = done$;
+      const c_1 = rt.ap(rt.prims["Text.code"], t, i_2);
+      if (rt.ap(rt.prims["ge"], i_2, n)) {
+        m0: {
+          if (stack.tag === 0) {
+            return List$reverse(done);
+          }
+          if (true) {
+            return rt.ap(rt.prims["defect"], "sexp: unbalanced (");
+          }
+          rt.nomatch(stack);
+        }
+      } else {
+        let r1;
+        if ((c_1 === 32)) {
+          r1 = true;
+        } else {
+          if ((c_1 === 10)) {
+            r1 = true;
+          } else {
+            if ((c_1 === 9)) {
+              r1 = true;
+            } else {
+              r1 = (c_1 === 13);
+            }
+          }
+        }
+        if (r1) {
+          i_2$ = ((i_2 + 1) | 0);
+          stack$ = stack;
+          done$ = done;
+          continue;
+        } else {
+          if ((c_1 === 59)) {
+            const j = rt.ap(rt.prims["Text.indexOf"], t, "\n", i_2);
+            let r2;
+            if ((j < 0)) {
+              r2 = n;
+            } else {
+              r2 = j;
+            }
+            i_2$ = r2;
+            stack$ = stack;
+            done$ = done;
+            continue;
+          } else {
+            if ((c_1 === 40)) {
+              i_2$ = ((i_2 + 1) | 0);
+              stack$ = rt.cons(rt.NIL, stack);
+              done$ = done;
+              continue;
+            } else {
+              if ((c_1 === 41)) {
+                m3: {
+                  if (stack.tag === 0) {
+                    return rt.ap(rt.prims["defect"], "sexp: unbalanced )");
+                  }
+                  if (stack.tag === 1) {
+                    const top = stack.fields[0];
+                    const rest = stack.fields[1];
+                    const t4 = lib$base$Sexp$push(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [List$reverse(top)]), rest, done);
+                    m5: {
+                      if (t4.tag === 0) {
+                        const stack2 = t4.fields[0];
+                        const done2 = t4.fields[1];
+                        i_2$ = ((i_2 + 1) | 0);
+                        stack$ = stack2;
+                        done$ = done2;
+                        continue;
+                      }
+                      rt.nomatch(t4);
+                    }
+                  }
+                  rt.nomatch(stack);
+                }
+              } else {
+                if ((c_1 === 34)) {
+                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  m7: {
+                    if (t6.tag === 0) {
+                      const value = t6.fields[0];
+                      const j_1 = t6.fields[1];
+                      const t8 = lib$base$Sexp$push(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [value]), stack, done);
+                      m9: {
+                        if (t8.tag === 0) {
+                          const stack2_1 = t8.fields[0];
+                          const done2_1 = t8.fields[1];
+                          i_2$ = j_1;
+                          stack$ = stack2_1;
+                          done$ = done2_1;
+                          continue;
+                        }
+                        rt.nomatch(t8);
+                      }
+                    }
+                    rt.nomatch(t6);
+                  }
+                } else {
+                  const j_2 = rt.ap(atomEnd, i_2);
+                  const atom = rt.ap(rt.prims["Text.slice"], t, i_2, j_2);
+                  let form;
+                  const t10 = rt.ap(rt.prims["Int.fromText"], atom);
+                  m11: {
+                    if (t10.tag === 1) {
+                      const value_1 = t10.fields[0];
+                      form = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [value_1]);
+                      break m11;
+                    }
+                    if (t10.tag === 0) {
+                      form = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, [atom]);
+                      break m11;
+                    }
+                    rt.nomatch(t10);
+                  }
+                  const t12 = lib$base$Sexp$push(form, stack, done);
+                  m13: {
+                    if (t12.tag === 0) {
+                      const stack2_2 = t12.fields[0];
+                      const done2_2 = t12.fields[1];
+                      i_2$ = j_2;
+                      stack$ = stack2_2;
+                      done$ = done2_2;
+                      continue;
+                    }
+                    rt.nomatch(t12);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rt.ap(go, 0, rt.NIL, rt.NIL);
+}
+rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
+
+function lib$base$Sexp$print(s) {
+  return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
+}
+rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
+
+function lib$base$Sexp$hexValue(c) {
+  let r0;
+  if ((c >= 48)) {
+    r0 = (c <= 57);
+  } else {
+    r0 = false;
+  }
+  if (r0) {
+    return ((c - 48) | 0);
+  } else {
+    let r1;
+    if ((c >= 97)) {
+      r1 = (c <= 102);
+    } else {
+      r1 = false;
+    }
+    if (r1) {
+      return ((((c - 97) | 0) + 10) | 0);
+    } else {
+      return ((((c - 65) | 0) + 10) | 0);
+    }
+  }
+}
+rt.named(lib$base$Sexp$hexValue, "lib.base.Sexp.hexValue");
+
+function lib$base$Sexp$isDelimiter(c) {
+  if ((c === 32)) {
+    return true;
+  } else {
+    if ((c === 10)) {
+      return true;
+    } else {
+      if ((c === 9)) {
+        return true;
+      } else {
+        if ((c === 13)) {
+          return true;
+        } else {
+          if ((c === 40)) {
+            return true;
+          } else {
+            if ((c === 41)) {
+              return true;
+            } else {
+              return (c === (-1));
+            }
+          }
+        }
+      }
+    }
+  }
+}
+rt.named(lib$base$Sexp$isDelimiter, "lib.base.Sexp.isDelimiter");
+
+function lib$base$Sexp$push(form, stack, done) {
+  m0: {
+    if (stack.tag === 0) {
+      return new rt.Con("#Pair", 0, [stack, rt.cons(form, done)]);
+    }
+    if (stack.tag === 1) {
+      const top = stack.fields[0];
+      const rest = stack.fields[1];
+      return new rt.Con("#Pair", 0, [rt.cons(rt.cons(form, top), rest), done]);
+    }
+    rt.nomatch(stack);
+  }
+}
+rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
+
+function lib$base$Sexp$emit(s, acc) {
+  m0: {
+    if (s.tag === 0) {
+      const n = s.fields[0];
+      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
+    }
+    if (s.tag === 1) {
+      const name = s.fields[0];
+      return rt.cons(name, acc);
+    }
+    if (s.tag === 2) {
+      const value = s.fields[0];
+      return rt.cons(lib$base$Sexp$quote(value), acc);
+    }
+    if (s.tag === 3) {
+      const items = s.fields[0];
+      function go(first$, rest$, acc2$) {
+        for (;;) {
+          const first = first$, rest = rest$, acc2 = acc2$;
+          m1: {
+            if (rest.tag === 0) {
+              return rt.cons(")", acc2);
+            }
+            if (rest.tag === 1) {
+              const x = rest.fields[0];
+              const xs = rest.fields[1];
+              let r2;
+              if (first) {
+                r2 = acc2;
+              } else {
+                r2 = rt.cons(" ", acc2);
+              }
+              const t3 = lib$base$Sexp$emit(x, r2);
+              first$ = false;
+              rest$ = xs;
+              acc2$ = t3;
+              continue;
+            }
+            rt.nomatch(rest);
+          }
+        }
+      }
+      return rt.ap(go, true, items, rt.cons("(", acc));
+    }
+    rt.nomatch(s);
+  }
+}
+rt.named(lib$base$Sexp$emit, "lib.base.Sexp.emit");
+
+function lib$base$Sexp$quote(t) {
+  if (lib$base$Sexp$plain(t)) {
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", t), "\"");
+  } else {
+    const n = rt.ap(rt.prims["Text.length"], t);
+    function go(start$, i$, acc$) {
+      for (;;) {
+        const start = start$, i = i$, acc = acc$;
+        if (rt.ap(rt.prims["ge"], i, n)) {
+          return rt.cons(rt.ap(rt.prims["Text.slice"], t, start, n), acc);
+        } else {
+          const c = rt.ap(rt.prims["Text.code"], t, i);
+          let r0;
+          if ((c === 34)) {
+            r0 = true;
+          } else {
+            if ((c === 92)) {
+              r0 = true;
+            } else {
+              if ((c < 32)) {
+                r0 = true;
+              } else {
+                r0 = (c === 127);
+              }
+            }
+          }
+          if (r0) {
+            start$ = ((i + 1) | 0);
+            i$ = ((i + 1) | 0);
+            acc$ = rt.cons(lib$base$Sexp$quoteCode(c), rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc));
+            continue;
+          } else {
+            start$ = start;
+            i$ = ((i + 1) | 0);
+            acc$ = acc;
+            continue;
+          }
+        }
+      }
+    }
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
+  }
+}
+rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
+
+function lib$base$Sexp$plain(t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  function go(i$) {
+    for (;;) {
+      const i = i$;
+      if (rt.ap(rt.prims["ge"], i, n)) {
+        return true;
+      } else {
+        const c = rt.ap(rt.prims["Text.code"], t, i);
+        let r0;
+        if ((c === 34)) {
+          r0 = true;
+        } else {
+          if ((c === 92)) {
+            r0 = true;
+          } else {
+            if ((c < 32)) {
+              r0 = true;
+            } else {
+              r0 = (c === 127);
+            }
+          }
+        }
+        if (r0) {
+          return false;
+        } else {
+          i$ = ((i + 1) | 0);
+          continue;
+        }
+      }
+    }
+  }
+  return rt.ap(go, 0);
+}
+rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
+
+function lib$base$Sexp$quoteCode(c) {
+  if ((c === 34)) {
+    return "\\\"";
+  } else {
+    if ((c === 92)) {
+      return "\\\\";
+    } else {
+      if ((c === 10)) {
+        return "\\n";
+      } else {
+        if ((c === 9)) {
+          return "\\t";
+        } else {
+          if ((c === 13)) {
+            return "\\r";
+          } else {
+            let r0;
+            if ((c < 32)) {
+              r0 = true;
+            } else {
+              r0 = (c === 127);
+            }
+            if (r0) {
+              return rt.ap(rt.prims["append"], "\\u", lib$base$Sexp$hex4(c));
+            } else {
+              return rt.ap(rt.prims["Text.fromCode"], c);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+rt.named(lib$base$Sexp$quoteCode, "lib.base.Sexp.quoteCode");
+
+function lib$base$Sexp$hex4(c) {
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Sexp$hexDigit(((c >> 12) & 15)), lib$base$Sexp$hexDigit(((c >> 8) & 15))), lib$base$Sexp$hexDigit(((c >> 4) & 15))), lib$base$Sexp$hexDigit((c & 15)));
+}
+rt.named(lib$base$Sexp$hex4, "lib.base.Sexp.hex4");
+
+function lib$base$Sexp$hexDigit(n) {
+  return rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0));
+}
+rt.named(lib$base$Sexp$hexDigit, "lib.base.Sexp.hexDigit");
+
 export const raw = {
   route: Worker$Live$route,
   summaryOf: Worker$Live$summaryOf,
+  causalFields: Worker$Live$causalFields,
+  batchLengths: Worker$Live$batchLengths,
 };
 export const route = rt.exportFn(Worker$Live$route, [['list', ['text']]], ['struct', "90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", ["kind", "branch", "causal", "path", "message"], [['text'], ['text'], ['text'], ['text'], ['text']]]);
 export const summaryOf = rt.exportFn(Worker$Live$summaryOf, [['raw'], ['int']], ['raw']);
+export const causalFields = rt.exportFn(Worker$Live$causalFields, [['text']], ['raw']);
+export const batchLengths = rt.exportFn(Worker$Live$batchLengths, [['list', ['int']]], ['list', ['int']]);
 //# sourceMappingURL=live.js.map

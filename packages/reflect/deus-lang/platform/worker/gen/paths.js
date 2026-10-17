@@ -47,7 +47,7 @@ function Worker$Paths$isSegment(segment) {
       }
       if (r2) {
         if ((List$length(rest) <= 199)) {
-          return List$all(rt.named((c) => {
+          return List$all(({ "Worker.Paths.isSegment/\u03bb": (c) => {
           if (Text$isAlpha(c)) {
             return true;
           } else {
@@ -65,7 +65,7 @@ function Worker$Paths$isSegment(segment) {
               }
             }
           }
-        }, "Worker.Paths.isSegment/\u03bb"), rest);
+        } })["Worker.Paths.isSegment/\u03bb"], rest);
         } else {
           return false;
         }
@@ -170,7 +170,7 @@ rt.named(Text$isDigit, "Text.isDigit");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -180,7 +180,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -224,13 +224,12 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 

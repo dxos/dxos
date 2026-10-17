@@ -29,13 +29,13 @@ function Address$projectAt(segments) {
 rt.named(Address$projectAt, "Address.projectAt");
 
 function Address$addressOfFolder(folder) {
-  return lib$base$Option$orElse(Address$legacyAddress(folder), rt.named((v) => {
+  return lib$base$Option$orElse(Address$legacyAddress(folder), ({ "Address.addressOfFolder/\u03bb": (v) => {
   if (lib$base$Text$contains("/", folder)) {
     return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "@", folder)]);
   } else {
     return rt.con0("#Option", 0);
   }
-}, "Address.addressOfFolder/\u03bb"));
+} })["Address.addressOfFolder/\u03bb"]);
 }
 rt.named(Address$addressOfFolder, "Address.addressOfFolder");
 
@@ -68,7 +68,7 @@ rt.named(Address$isGrantable, "Address.isGrantable");
 
 function Address$grants(projects, folder) {
   const address = Address$addressOfFolder(folder);
-  return lib$base$List$any(rt.named((granted) => {
+  return lib$base$List$any(({ "Address.grants/\u03bb": (granted) => {
   if (rt.equal(granted, folder)) {
     return true;
   } else {
@@ -91,7 +91,7 @@ function Address$grants(projects, folder) {
       }
     }
   }
-}, "Address.grants/\u03bb"), projects);
+} })["Address.grants/\u03bb"], projects);
 }
 rt.named(Address$grants, "Address.grants");
 
@@ -208,7 +208,7 @@ const Address$legacyFolders = rt.lazy("Address.legacyFolders", () => rt.cons(new
 
 function Address$isLegacy(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
-  const ok = rt.named((i) => {
+  const ok = ({ "Address.isLegacy/\u03bb": (i) => {
   const c = rt.ap(rt.prims["Text.code"], t, i);
   let r0;
   if ((c >= 97)) {
@@ -235,7 +235,7 @@ function Address$isLegacy(t) {
       }
     }
   }
-}, "Address.isLegacy/\u03bb");
+} })["Address.isLegacy/\u03bb"];
   if ((n > 0)) {
     if ((n <= 63)) {
       return lib$base$List$all(ok, lib$base$List$range(0, n));
@@ -249,7 +249,7 @@ function Address$isLegacy(t) {
 rt.named(Address$isLegacy, "Address.isLegacy");
 
 function Address$legacyAddress(folder) {
-  return lib$base$Option$map(lib$base$fst, lib$base$List$find(rt.named((pair) => rt.equal(lib$base$snd(pair), folder), "Address.legacyAddress/\u03bb"), Address$legacyFolders()));
+  return lib$base$Option$map(lib$base$fst, lib$base$List$find(({ "Address.legacyAddress/\u03bb": (pair) => rt.equal(lib$base$snd(pair), folder) })["Address.legacyAddress/\u03bb"], Address$legacyFolders()));
 }
 rt.named(Address$legacyAddress, "Address.legacyAddress");
 
@@ -305,7 +305,6 @@ function lib$base$List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(lib$base$List$length, "lib.base.List.length");
@@ -352,7 +351,7 @@ rt.named(lib$base$Text$take, "lib.base.Text.take");
 
 function Address$isSlug(max, t) {
   const n = rt.ap(rt.prims["Text.length"], t);
-  const ok = rt.named((i) => {
+  const ok = ({ "Address.isSlug/\u03bb": (i) => {
   const c = rt.ap(rt.prims["Text.code"], t, i);
   let r0;
   if ((c >= 97)) {
@@ -383,7 +382,7 @@ function Address$isSlug(max, t) {
       }
     }
   }
-}, "Address.isSlug/\u03bb");
+} })["Address.isSlug/\u03bb"];
   if ((n > 0)) {
     if (rt.ap(rt.prims["le"], n, max)) {
       return lib$base$List$all(ok, lib$base$List$range(0, n));
@@ -433,7 +432,6 @@ function lib$base$List$range(lo, hi) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, ((hi - 1) | 0));
 }
 rt.named(lib$base$List$range, "lib.base.List.range");

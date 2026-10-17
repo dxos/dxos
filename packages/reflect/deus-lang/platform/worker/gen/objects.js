@@ -90,7 +90,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -120,7 +119,7 @@ rt.named(Worker$Objects$isObjectId, "Worker.Objects.isObjectId");
 const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -138,7 +137,7 @@ const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -148,7 +147,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -165,7 +164,7 @@ function Worker$Objects$isBuiltin(id) {
       if ((hash === 35)) {
         if (Text$isAlpha(first)) {
           if ((List$length(rest) <= 99)) {
-            return List$all(rt.named((c) => {
+            return List$all(({ "Worker.Objects.isBuiltin/\u03bb": (c) => {
             if (Text$isAlpha(c)) {
               return true;
             } else {
@@ -179,7 +178,7 @@ function Worker$Objects$isBuiltin(id) {
                 }
               }
             }
-          }, "Worker.Objects.isBuiltin/\u03bb"), rest);
+          } })["Worker.Objects.isBuiltin/\u03bb"], rest);
           } else {
             return false;
           }
@@ -245,7 +244,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -349,7 +347,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");

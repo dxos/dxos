@@ -48,7 +48,7 @@ function Worker$Keys$mintProblem(label, scopes, known) {
     if (List$isEmpty(scopes)) {
       r0 = true;
     } else {
-      r0 = not(List$all(rt.named((scope) => List$contains(scope, known), "Worker.Keys.mintProblem/\u03bb"), scopes));
+      r0 = not(List$all(({ "Worker.Keys.mintProblem/\u03bb": (scope) => List$contains(scope, known) })["Worker.Keys.mintProblem/\u03bb"], scopes));
     }
     if (r0) {
       return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "scopes are some of ", rt.ap(rt.prims["Text.join"], ", ", known))]);
@@ -139,7 +139,7 @@ rt.named(Text$drop, "Text.drop");
 
 function Worker$Keys$isHex(count, t) {
   if (rt.equal(rt.ap(rt.prims["Text.length"], t), count)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Keys.isHex/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -149,7 +149,7 @@ function Worker$Keys$isHex(count, t) {
         return false;
       }
     }
-  }, "Worker.Keys.isHex/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Keys.isHex/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -157,7 +157,7 @@ function Worker$Keys$isHex(count, t) {
 rt.named(Worker$Keys$isHex, "Worker.Keys.isHex");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 
@@ -207,7 +207,7 @@ const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib
 
 function Worker$Keys$sameText(a, b) {
   if (rt.equal(rt.ap(rt.prims["Text.length"], a), rt.ap(rt.prims["Text.length"], b))) {
-    return (List$foldl(rt.named((acc, pair) => (acc | (fst(pair) ^ snd(pair))), "Worker.Keys.sameText/\u03bb"), 0, List$zip(rt.ap(rt.prims["Text.utf8"], a), rt.ap(rt.prims["Text.utf8"], b))) === 0);
+    return (List$foldl(({ "Worker.Keys.sameText/\u03bb": (acc, pair) => (acc | (fst(pair) ^ snd(pair))) })["Worker.Keys.sameText/\u03bb"], 0, List$zip(rt.ap(rt.prims["Text.utf8"], a), rt.ap(rt.prims["Text.utf8"], b))) === 0);
   } else {
     return false;
   }
@@ -239,7 +239,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -252,7 +251,7 @@ const lib$web$Js$typeOf = rt.importFn(rt, "js.typeOf", [['raw']], ['text'], "lib
 
 function lib$toolchain$Address$grants(projects, folder) {
   const address = lib$toolchain$Address$addressOfFolder(folder);
-  return List$any(rt.named((granted) => {
+  return List$any(({ "lib.toolchain.Address.grants/\u03bb": (granted) => {
   if (rt.equal(granted, folder)) {
     return true;
   } else {
@@ -275,7 +274,7 @@ function lib$toolchain$Address$grants(projects, folder) {
       }
     }
   }
-}, "lib.toolchain.Address.grants/\u03bb"), projects);
+} })["lib.toolchain.Address.grants/\u03bb"], projects);
 }
 rt.named(lib$toolchain$Address$grants, "lib.toolchain.Address.grants");
 
@@ -294,13 +293,13 @@ function Option$getOr(o, fallback) {
 rt.named(Option$getOr, "Option.getOr");
 
 function lib$toolchain$Address$addressOfFolder(folder) {
-  return Option$orElse(lib$toolchain$Address$legacyAddress(folder), rt.named((v) => {
+  return Option$orElse(lib$toolchain$Address$legacyAddress(folder), ({ "lib.toolchain.Address.addressOfFolder/\u03bb": (v) => {
   if (Text$contains("/", folder)) {
     return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "@", folder)]);
   } else {
     return rt.con0("#Option", 0);
   }
-}, "lib.toolchain.Address.addressOfFolder/\u03bb"));
+} })["lib.toolchain.Address.addressOfFolder/\u03bb"]);
 }
 rt.named(lib$toolchain$Address$addressOfFolder, "lib.toolchain.Address.addressOfFolder");
 
@@ -403,7 +402,6 @@ function List$zip(xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(List$zip, "List.zip");
@@ -427,7 +425,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -463,7 +460,7 @@ function Option$orElse(o, other) {
 rt.named(Option$orElse, "Option.orElse");
 
 function lib$toolchain$Address$legacyAddress(folder) {
-  return Option$map(fst, List$find(rt.named((pair) => rt.equal(snd(pair), folder), "lib.toolchain.Address.legacyAddress/\u03bb"), lib$toolchain$Address$legacyFolders()));
+  return Option$map(fst, List$find(({ "lib.toolchain.Address.legacyAddress/\u03bb": (pair) => rt.equal(snd(pair), folder) })["lib.toolchain.Address.legacyAddress/\u03bb"], lib$toolchain$Address$legacyFolders()));
 }
 rt.named(lib$toolchain$Address$legacyAddress, "lib.toolchain.Address.legacyAddress");
 

@@ -46,7 +46,7 @@ async function Worker$PackFiles$serve(request, bucket, project, rest, authorize,
                 if (not(rt.resumed($stack, await Worker$R2$exists(bucket, rt.ap(rt.prims["append"], folder, bundle))))) {
                   problem = new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [409, "the pack goes up before its index"])]);
                 } else {
-                  problem = Option$map(rt.named((message) => new rt.Con("#Pair", 0, [400, message]), "Worker.PackFiles.serve/\u03bb"), Worker$Packs$checkIndex(bytes));
+                  problem = Option$map(({ "Worker.PackFiles.serve/\u03bb": (message) => new rt.Con("#Pair", 0, [400, message]) })["Worker.PackFiles.serve/\u03bb"], Worker$Packs$checkIndex(bytes));
                 }
               } else {
                 if ((lib$web$Js$toText(lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("TextDecoder"), rt.NIL), "decode", rt.cons(lib$web$Js$method(bytes, "subarray", rt.cons(lib$web$Js$int(0), rt.cons(lib$web$Js$int(8), rt.NIL))), rt.NIL))) !== "DEUSLN1\n")) {
@@ -103,7 +103,7 @@ function Worker$Http$method(request) {
 rt.named(Worker$Http$method, "Worker.Http.method");
 
 function Worker$PackFiles$indexed(names) {
-  return List$filterMap(rt.named((name) => {
+  return List$filterMap(({ "Worker.PackFiles.indexed/\u03bb": (name) => {
   const t0 = Worker$PackFiles$parseName(name);
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 0 && t0.fields[0].fields[1] === true) {
@@ -115,7 +115,7 @@ function Worker$PackFiles$indexed(names) {
     }
     rt.nomatch(t0);
   }
-}, "Worker.PackFiles.indexed/\u03bb"), names);
+} })["Worker.PackFiles.indexed/\u03bb"], names);
 }
 rt.named(Worker$PackFiles$indexed, "Worker.PackFiles.indexed");
 
@@ -135,7 +135,7 @@ rt.named(Worker$Http$json, "Worker.Http.json");
 const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
@@ -195,7 +195,7 @@ async function Worker$PackFiles$read(bucket, key, rangeHeader) {
   m0: {
     if (range.tag === 1) {
       const r = range.fields[0];
-      const bounds = rt.cons(new rt.Con("#Pair", 0, ["offset", lib$web$Js$int(Worker$Packs$Range$offset(r))]), Option$getOr(Option$map(rt.named((n) => rt.cons(new rt.Con("#Pair", 0, ["length", lib$web$Js$int(n)]), rt.NIL), "Worker.PackFiles.read/\u03bb"), Worker$Packs$Range$length(r)), rt.NIL));
+      const bounds = rt.cons(new rt.Con("#Pair", 0, ["offset", lib$web$Js$int(Worker$Packs$Range$offset(r))]), Option$getOr(Option$map(({ "Worker.PackFiles.read/\u03bb": (n) => rt.cons(new rt.Con("#Pair", 0, ["length", lib$web$Js$int(n)]), rt.NIL) })["Worker.PackFiles.read/\u03bb"], Worker$Packs$Range$length(r)), rt.NIL));
       options = rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["range", lib$web$Js$obj(bounds)]), rt.NIL)), rt.NIL);
       break m0;
     }
@@ -221,8 +221,8 @@ async function Worker$PackFiles$read(bucket, key, rangeHeader) {
           const r_1 = range.fields[0];
           const size = lib$web$Js$toInt(lib$web$Js$get(object, "size"));
           const held = lib$web$Js$toOption(lib$web$Js$get(object, "range"));
-          const offset = Option$getOr(Option$map(rt.named((h) => lib$web$Js$toInt(lib$web$Js$get(h, "offset")), "Worker.PackFiles.read/\u03bb"), held), Worker$Packs$Range$offset(r_1));
-          const length = Option$getOr(Option$bind(held, rt.named((h_1) => Option$map(lib$web$Js$toInt, lib$web$Js$toOption(lib$web$Js$get(h_1, "length"))), "Worker.PackFiles.read/\u03bb")), Option$getOr(Worker$Packs$Range$length(r_1), ((size - offset) | 0)));
+          const offset = Option$getOr(Option$map(({ "Worker.PackFiles.read/\u03bb": (h) => lib$web$Js$toInt(lib$web$Js$get(h, "offset")) })["Worker.PackFiles.read/\u03bb"], held), Worker$Packs$Range$offset(r_1));
+          const length = Option$getOr(Option$bind(held, ({ "Worker.PackFiles.read/\u03bb": (h_1) => Option$map(lib$web$Js$toInt, lib$web$Js$toOption(lib$web$Js$get(h_1, "length"))) })["Worker.PackFiles.read/\u03bb"]), Option$getOr(Worker$Packs$Range$length(r_1), ((size - offset) | 0)));
           const span = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "bytes ", rt.ap(rt.prims["Int.toText"], offset)), "-"), rt.ap(rt.prims["Int.toText"], ((((offset + length) | 0) - 1) | 0))), "/"), rt.ap(rt.prims["Int.toText"], size));
           return Worker$Http$response(lib$web$Js$get(object, "body"), 206, rt.ap(rt.prims["append"], headers, rt.cons(new rt.Con("#Pair", 0, ["content-range", span]), rt.NIL)));
         }
@@ -362,17 +362,16 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
 
 async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
-  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
+  const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
   const skip = rt.ap(rt.prims["Text.length"], prefix);
-  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
+  const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
     return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
@@ -382,7 +381,7 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
 rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -410,7 +409,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -587,7 +585,6 @@ function Worker$Packs$fanoutProblem(bytes, start, records) {
       }
     }
   }
-  rt.named(walk, "walk");
   return rt.ap(walk, 0, 0);
 }
 rt.named(Worker$Packs$fanoutProblem, "Worker.Packs.fanoutProblem");
@@ -615,7 +612,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -686,7 +682,7 @@ rt.named(Text$isDigit, "Text.isDigit");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -696,7 +692,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -716,7 +712,7 @@ function Worker$Packs$digits(t) {
   let r0;
   if (not(Text$isEmpty(t))) {
     if ((rt.ap(rt.prims["Text.length"], t) <= 9)) {
-      r0 = List$all(rt.named((c) => Text$isDigit(c), "Worker.Packs.digits/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+      r0 = List$all(({ "Worker.Packs.digits/\u03bb": (c) => Text$isDigit(c) })["Worker.Packs.digits/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
     } else {
       r0 = false;
     }

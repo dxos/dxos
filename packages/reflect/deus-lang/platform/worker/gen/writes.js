@@ -3,8 +3,8 @@ import * as rt from "./deus-runtime.mjs";
 
 function Worker$Writes$request(path, body, author, assets) {
   const attached = List$length(lib$web$Js$toList(assets));
-  const base = rt.named((kind) => rt.cons(new rt.Con("#Pair", 0, ["kind", lib$web$Js$text(kind)]), rt.cons(new rt.Con("#Pair", 0, ["by", lib$web$Js$text(author)]), rt.NIL)), "Worker.Writes.request/\u03bb");
-  const made = rt.named((pairs) => lib$web$Js$obj(rt.ap(rt.prims["append"], pairs, rt.cons(new rt.Con("#Pair", 0, ["assets", assets]), rt.NIL))), "Worker.Writes.request/\u03bb");
+  const base = ({ "Worker.Writes.request/\u03bb": (kind) => rt.cons(new rt.Con("#Pair", 0, ["kind", lib$web$Js$text(kind)]), rt.cons(new rt.Con("#Pair", 0, ["by", lib$web$Js$text(author)]), rt.NIL)) })["Worker.Writes.request/\u03bb"];
+  const made = ({ "Worker.Writes.request/\u03bb": (pairs) => lib$web$Js$obj(rt.ap(rt.prims["append"], pairs, rt.cons(new rt.Con("#Pair", 0, ["assets", assets]), rt.NIL))) })["Worker.Writes.request/\u03bb"];
   if ((path === "/api/comment")) {
     const subject = Worker$Writes$text(lib$web$Js$get(body, "subject"), 500);
     if (not(Worker$Writes$isSubject(subject))) {
@@ -137,7 +137,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -222,7 +221,7 @@ function Text$isEmpty(t) {
 rt.named(Text$isEmpty, "Text.isEmpty");
 
 function Worker$Writes$labels(value) {
-  const given = List$filter(rt.named((label) => not(Text$isEmpty(label)), "Worker.Writes.labels/\u03bb"), List$map(rt.prims["Text.trim"], rt.ap(rt.prims["Text.split"], Worker$Writes$text(value, 200), ",")));
+  const given = List$filter(({ "Worker.Writes.labels/\u03bb": (label) => not(Text$isEmpty(label)) })["Worker.Writes.labels/\u03bb"], List$map(rt.prims["Text.trim"], rt.ap(rt.prims["Text.split"], Worker$Writes$text(value, 200), ",")));
   let r0;
   if ((List$length(given) > 5)) {
     r0 = true;
@@ -253,7 +252,7 @@ rt.named(List$isEmpty, "List.isEmpty");
 function Worker$Writes$isTaskId(id) {
   if ((rt.ap(rt.prims["Text.length"], id) >= 1)) {
     if ((rt.ap(rt.prims["Text.length"], id) <= 64)) {
-      return List$all(rt.named((c) => {
+      return List$all(({ "Worker.Writes.isTaskId/\u03bb": (c) => {
       if (Text$isDigit(c)) {
         return true;
       } else {
@@ -263,7 +262,7 @@ function Worker$Writes$isTaskId(id) {
           return false;
         }
       }
-    }, "Worker.Writes.isTaskId/\u03bb"), rt.ap(rt.prims["Text.utf8"], id));
+    } })["Worker.Writes.isTaskId/\u03bb"], rt.ap(rt.prims["Text.utf8"], id));
     } else {
       return false;
     }
@@ -299,7 +298,7 @@ rt.named(Worker$Writes$uploadProblem, "Worker.Writes.uploadProblem");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -309,7 +308,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -332,7 +331,7 @@ function Text$drop(n, t) {
 rt.named(Text$drop, "Text.drop");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 
@@ -383,7 +382,6 @@ function List$filter(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
@@ -407,7 +405,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -437,7 +434,7 @@ function List$all(p$, v$) {
 rt.named(List$all, "List.all");
 
 function Worker$Writes$isLabel(label) {
-  const lowerOrDigit = rt.named((c) => {
+  const lowerOrDigit = ({ "Worker.Writes.isLabel/\u03bb": (c) => {
   let r0;
   if ((c >= 97)) {
     r0 = (c <= 122);
@@ -449,7 +446,7 @@ function Worker$Writes$isLabel(label) {
   } else {
     return Text$isDigit(c);
   }
-}, "Worker.Writes.isLabel/\u03bb");
+} })["Worker.Writes.isLabel/\u03bb"];
   const t1 = rt.ap(rt.prims["Text.utf8"], label);
   m2: {
     if (t1.tag === 1) {
@@ -457,13 +454,13 @@ function Worker$Writes$isLabel(label) {
       const rest = t1.fields[1];
       if (rt.ap(lowerOrDigit, first)) {
         if ((List$length(rest) <= 31)) {
-          return List$all(rt.named((c_1) => {
+          return List$all(({ "Worker.Writes.isLabel/\u03bb": (c_1) => {
           if (rt.ap(lowerOrDigit, c_1)) {
             return true;
           } else {
             return (c_1 === 45);
           }
-        }, "Worker.Writes.isLabel/\u03bb"), rest);
+        } })["Worker.Writes.isLabel/\u03bb"], rest);
         } else {
           return false;
         }
@@ -566,7 +563,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");

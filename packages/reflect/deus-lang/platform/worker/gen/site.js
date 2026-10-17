@@ -164,7 +164,7 @@ function Text$contains(part, t) {
 rt.named(Text$contains, "Text.contains");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 
@@ -238,7 +238,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");

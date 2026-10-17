@@ -86,7 +86,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -135,13 +134,13 @@ async function Worker$KeyAdmin$create(db, request, known, logged) {
   }
   let grantable;
   if (Worker$KeyAdmin$isArray(projects)) {
-    grantable = List$all(rt.named((project) => {
+    grantable = List$all(({ "Worker.KeyAdmin.create/\u03bb": (project) => {
     if (Worker$KeyAdmin$isText(project)) {
       return lib$toolchain$Address$isGrantable(lib$web$Js$toText(project));
     } else {
       return false;
     }
-  }, "Worker.KeyAdmin.create/\u03bb"), lib$web$Js$toList(projects));
+  } })["Worker.KeyAdmin.create/\u03bb"], lib$web$Js$toList(projects));
   } else {
     grantable = false;
   }
@@ -187,7 +186,7 @@ rt.named(Worker$Http$problem, "Worker.Http.problem");
 async function Worker$D1$run(db, sql, values) {
   const $stack = rt.handlers();
   const result = rt.resumed($stack, await lib$web$Js$method(Worker$D1$statement(db, sql, values), "run", rt.NIL));
-  const t0 = Option$bind(lib$web$Js$toOption(lib$web$Js$get(result, "meta")), rt.named((meta) => lib$web$Js$toOption(lib$web$Js$get(meta, "changes")), "Worker.D1.run/\u03bb"));
+  const t0 = Option$bind(lib$web$Js$toOption(lib$web$Js$get(result, "meta")), ({ "Worker.D1.run/\u03bb": (meta) => lib$web$Js$toOption(lib$web$Js$get(meta, "changes")) })["Worker.D1.run/\u03bb"]);
   m1: {
     if (t0.tag === 1) {
       const changes = t0.fields[0];
@@ -247,7 +246,7 @@ function Worker$D1$statement(db, sql, values) {
 rt.named(Worker$D1$statement, "Worker.D1.statement");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -273,7 +272,6 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
@@ -282,7 +280,7 @@ const lib$web$Js$parse = rt.importFn(rt, "js.parse", [['text']], ['raw'], "lib.w
 
 async function Worker$KeyAdmin$body(request) {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await lib$web$Js$method(lib$web$Js$method(request, "json", rt.NIL), "then", rt.cons(lib$web$Js$fn(rt.named((value) => value, "Worker.KeyAdmin.body/\u03bb")), rt.cons(lib$web$Js$fn(rt.named((v) => lib$web$Js$obj(rt.NIL), "Worker.KeyAdmin.body/\u03bb")), rt.NIL))));
+  return rt.resumed($stack, await lib$web$Js$method(lib$web$Js$method(request, "json", rt.NIL), "then", rt.cons(lib$web$Js$fn(({ "Worker.KeyAdmin.body/\u03bb": (value) => value })["Worker.KeyAdmin.body/\u03bb"]), rt.cons(lib$web$Js$fn(({ "Worker.KeyAdmin.body/\u03bb": (v) => lib$web$Js$obj(rt.NIL) })["Worker.KeyAdmin.body/\u03bb"]), rt.NIL))));
 }
 rt.named(Worker$KeyAdmin$body, "Worker.KeyAdmin.body");
 
@@ -335,7 +333,7 @@ function Worker$Keys$mintProblem(label, scopes, known) {
     if (List$isEmpty(scopes)) {
       r0 = true;
     } else {
-      r0 = not(List$all(rt.named((scope) => List$contains(scope, known), "Worker.Keys.mintProblem/\u03bb"), scopes));
+      r0 = not(List$all(({ "Worker.Keys.mintProblem/\u03bb": (scope) => List$contains(scope, known) })["Worker.Keys.mintProblem/\u03bb"], scopes));
     }
     if (r0) {
       return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "scopes are some of ", rt.ap(rt.prims["Text.join"], ", ", known))]);
@@ -453,7 +451,7 @@ rt.named(lib$web$Js$path, "lib.web.Js.path");
 const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
 
 function Worker$Crypto$hex(bytes) {
-  return rt.ap(rt.prims["Text.concat"], List$map(rt.named((at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)), "Worker.Crypto.hex/\u03bb"), List$range(0, Worker$Bytes$length(bytes))));
+  return rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
 
@@ -507,7 +505,7 @@ function List$isEmpty(v) {
 rt.named(List$isEmpty, "List.isEmpty");
 
 function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+  return List$any(({ "List.contains/\u03bb": (y) => rt.equal(y, x) })["List.contains/\u03bb"], xs);
 }
 rt.named(List$contains, "List.contains");
 
@@ -528,7 +526,7 @@ rt.named(lib$toolchain$Address$namesAddress, "lib.toolchain.Address.namesAddress
 
 function lib$toolchain$Address$isLegacy(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
-  const ok = rt.named((i) => {
+  const ok = ({ "lib.toolchain.Address.isLegacy/\u03bb": (i) => {
   const c = rt.ap(rt.prims["Text.code"], t, i);
   let r0;
   if ((c >= 97)) {
@@ -555,7 +553,7 @@ function lib$toolchain$Address$isLegacy(t) {
       }
     }
   }
-}, "lib.toolchain.Address.isLegacy/\u03bb");
+} })["lib.toolchain.Address.isLegacy/\u03bb"];
   if ((n > 0)) {
     if ((n <= 63)) {
       return List$all(ok, List$range(0, n));
@@ -595,7 +593,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -622,7 +619,7 @@ function List$foldl(f$, init$, xs$) {
 rt.named(List$foldl, "List.foldl");
 
 function Worker$Crypto$hexByte(byte) {
-  const digit = rt.named((n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)), "Worker.Crypto.hexByte/\u03bb");
+  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
   return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
@@ -642,7 +639,6 @@ function List$range(lo, hi) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, ((hi - 1) | 0));
 }
 rt.named(List$range, "List.range");
@@ -810,13 +806,13 @@ rt.named(List$lookup, "List.lookup");
 const lib$toolchain$Address$legacyFolders = rt.lazy("lib.toolchain.Address.legacyFolders", () => rt.cons(new rt.Con("#Pair", 0, ["@dxos/toolchain", "toolchain"]), rt.NIL));
 
 function lib$toolchain$Address$legacyAddress(folder) {
-  return Option$map(fst, List$find(rt.named((pair) => rt.equal(snd(pair), folder), "lib.toolchain.Address.legacyAddress/\u03bb"), lib$toolchain$Address$legacyFolders()));
+  return Option$map(fst, List$find(({ "lib.toolchain.Address.legacyAddress/\u03bb": (pair) => rt.equal(snd(pair), folder) })["lib.toolchain.Address.legacyAddress/\u03bb"], lib$toolchain$Address$legacyFolders()));
 }
 rt.named(lib$toolchain$Address$legacyAddress, "lib.toolchain.Address.legacyAddress");
 
 function lib$toolchain$Address$isSlug(max, t) {
   const n = rt.ap(rt.prims["Text.length"], t);
-  const ok = rt.named((i) => {
+  const ok = ({ "lib.toolchain.Address.isSlug/\u03bb": (i) => {
   const c = rt.ap(rt.prims["Text.code"], t, i);
   let r0;
   if ((c >= 97)) {
@@ -847,7 +843,7 @@ function lib$toolchain$Address$isSlug(max, t) {
       }
     }
   }
-}, "lib.toolchain.Address.isSlug/\u03bb");
+} })["lib.toolchain.Address.isSlug/\u03bb"];
   if ((n > 0)) {
     if (rt.ap(rt.prims["le"], n, max)) {
       return List$all(ok, List$range(0, n));

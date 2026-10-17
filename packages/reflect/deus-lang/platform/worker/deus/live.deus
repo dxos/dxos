@@ -148,4 +148,32 @@ test hubSummariesCountOwnDefinitions :=
     && found.namespaces == ["A", "B"] && found.checked == ["h2", "h3"] && found.featureMap == Option.some "A.Features"
     && (summary [] []).featureMap == Option.none
 
+/-- A history node's parents and the snapshots besides its namespace that a history page reads (tasks, prior record,
+  comments), by the toolchain's own reading of a node (`Codebase.causalFromSexp`); none but whole hashes. -/
+def links (text : Text) : (List Text, List Text) :=
+  let node := Codebase.causalFromSexp (Sexp.read text)
+  (node.parents, List.filter Worker.Heads.isHash [node.tasks, node.prior, node.threads])
+
+/-- `links` as live.mjs reads it: `{parents, snapshots}`. -/
+def causalFields (text : Text) : Js :=
+  let (parents, snapshots) := links text
+  Js.obj [("parents", Js.list (List.map Js.text parents)), ("snapshots", Js.list (List.map Js.text snapshots))]
+
+/-- How many messages each queue batch takes, given each message's size in bytes: a batch holds at most 100 messages
+  and, unless it is one message, at most 200,000 bytes, as Cloudflare Queues' `sendBatch` allows. -/
+def batchLengths (sizes : List Int) : List Int :=
+  let step := fun acc size =>
+    let (done, count, bytes) := acc
+    if count > 0 && (count == 100 || bytes + size > 200000) then (count :: done, 1, size) else (done, count + 1, bytes + size)
+  let (done, count, _) := foldl step ([], 0, 0) sizes
+  List.reverse (if count > 0 then count :: done else done)
+
+test historyNodesLink :=
+  let node := "(causal (ns \"" ++ Worker.Heads.headA ++ "\") (parents \"p1\" \"p2\") (msg \"m\") (tasks \"" ++ Worker.Heads.headB ++ "\") (prior \"short\"))"
+  links node == (["p1", "p2"], [Worker.Heads.headB]) && links "(causal (ns \"x\") (parents) (msg \"\"))" == ([], [])
+
+test queueBatchesStayUnderTheLimits :=
+  batchLengths [] == [] && batchLengths [10, 10, 10] == [3] && batchLengths [150000, 60000, 10] == [1, 2]
+    && batchLengths [300000, 5] == [1, 1] && batchLengths (List.map (fun _ => 1) (List.range 0 250)) == [100, 100, 50]
+
 end Worker.Live

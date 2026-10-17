@@ -131,7 +131,7 @@ function Worker$Http$method(request) {
 rt.named(Worker$Http$method, "Worker.Http.method");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
@@ -191,7 +191,7 @@ function Worker$Paths$isSegment(segment) {
       }
       if (r2) {
         if ((List$length(rest) <= 199)) {
-          return List$all(rt.named((c) => {
+          return List$all(({ "Worker.Paths.isSegment/\u03bb": (c) => {
           if (Text$isAlpha(c)) {
             return true;
           } else {
@@ -209,7 +209,7 @@ function Worker$Paths$isSegment(segment) {
               }
             }
           }
-        }, "Worker.Paths.isSegment/\u03bb"), rest);
+        } })["Worker.Paths.isSegment/\u03bb"], rest);
         } else {
           return false;
         }
@@ -233,7 +233,7 @@ rt.named(Worker$R2$get, "Worker.R2.get");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
+    return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
     } else {
@@ -243,7 +243,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -251,7 +251,7 @@ function Worker$Heads$isHash(t) {
 rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
 function Worker$Http$response(body, status, headers) {
-  const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
+  const named = lib$web$Js$obj(List$map(({ "Worker.Http.response/\u03bb": (pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]) })["Worker.Http.response/\u03bb"], headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
@@ -355,10 +355,10 @@ rt.named(Worker$R2$delete, "Worker.R2.delete");
 
 async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
-  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.listFrom/\u03bb"), cursor), rt.NIL);
+  const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
   const skip = rt.ap(rt.prims["Text.length"], prefix);
-  const keys = List$map(rt.named((object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))), "Worker.R2.listFrom/\u03bb"), lib$web$Js$toList(lib$web$Js$get(page, "objects")));
+  const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
     return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
@@ -374,7 +374,7 @@ rt.named(List$sort, "List.sort");
 
 async function Worker$R2$foldersFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
-  const at = Option$getOr(Option$map(rt.named((c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL), "Worker.R2.foldersFrom/\u03bb"), cursor), rt.NIL);
+  const at = Option$getOr(Option$map(({ "Worker.R2.foldersFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.foldersFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), rt.cons(new rt.Con("#Pair", 0, ["delimiter", lib$web$Js$text("/")]), rt.NIL)), at)), rt.NIL)));
   let folders;
   const t0 = lib$web$Js$toOption(lib$web$Js$get(page, "delimitedPrefixes"));
@@ -433,7 +433,6 @@ function List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
@@ -484,7 +483,6 @@ function List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(List$length, "List.length");
@@ -530,7 +528,7 @@ function Option$map(f, v) {
 rt.named(Option$map, "Option.map");
 
 function Worker$Crypto$hex(bytes) {
-  return rt.ap(rt.prims["Text.concat"], List$map(rt.named((at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)), "Worker.Crypto.hex/\u03bb"), List$range(0, Worker$Bytes$length(bytes))));
+  return rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
 
@@ -596,13 +594,12 @@ function List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
 function Worker$Crypto$hexByte(byte) {
-  const digit = rt.named((n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)), "Worker.Crypto.hexByte/\u03bb");
+  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
   return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
@@ -622,7 +619,6 @@ function List$range(lo, hi) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, ((hi - 1) | 0));
 }
 rt.named(List$range, "List.range");
@@ -665,7 +661,6 @@ function List$merge(cmp, xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(List$merge, "List.merge");
@@ -694,7 +689,6 @@ function List$take(n, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, n, xs);
 }
 rt.named(List$take, "List.take");

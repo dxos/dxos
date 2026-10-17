@@ -346,23 +346,10 @@ export const warmLive = async (env, ctx, project) => {
  * A message of 200 hashes is about 13 kB, so a hundred of them would be refused whole and nothing drawn.
  */
 const queueBatches = (messages) => {
-  const batches = [];
-  let batch = [];
-  let size = 0;
-  for (const message of messages) {
-    const bytes = JSON.stringify(message.body).length + 100;
-    if (batch.length > 0 && (batch.length === 100 || size + bytes > 200_000)) {
-      batches.push(batch);
-      batch = [];
-      size = 0;
-    }
-    batch.push(message);
-    size += bytes;
-  }
-  if (batch.length > 0) {
-    batches.push(batch);
-  }
-  return batches;
+  // How many messages each batch takes is `Worker.Live.batchLengths`, in DEUS.
+  const lengths = liveRoutes.batchLengths(messages.map((message) => JSON.stringify(message.body).length + 100));
+  let at = 0;
+  return lengths.map((length) => messages.slice(at, (at += length)));
 };
 
 /** The definition hashes of the newest drawn head before `causal`, or none when there is no such head. */
@@ -874,17 +861,8 @@ const HISTORY = 1000;
 
 const chainKey = (project, causal) => `${project}/live/${causal}/chain.json`;
 
-/** The fields of a history node: `ns`, `parents`, `tasks`, `prior`, `comments`, `metas`, `at`. */
-const causalFields = (text) => {
-  const fields = parseSexp(text).slice(1);
-  const field = (name) => fields.find((item) => Array.isArray(item) && item[0] === name);
-  return {
-    parents: (field('parents') ?? []).slice(1).map((item) => item.s),
-    snapshots: ['tasks', 'prior', 'comments']
-      .map((name) => field(name)?.[1]?.s)
-      .filter((hash) => hash && HASH.test(hash)),
-  };
-};
+/** A history node's parents and the snapshots a history page reads besides its namespace (`Worker.Live.causalFields`). */
+const causalFields = (text) => liveRoutes.causalFields(text);
 
 /**
  * Reads the first-parent chain the log and task histories walk (`Codebase.history`), and the task,

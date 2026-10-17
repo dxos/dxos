@@ -24,7 +24,7 @@ function Explorer$site(dir) {
     }
     rt.nomatch(t0);
   }
-  const facts = lib$base$List$map(rt.named((pair) => {
+  const facts = lib$base$List$map(({ "Explorer.site/\u03bb": (pair) => {
   const h = Entry$hash(lib$base$snd(pair));
   const meta = Codebase$readMeta(dir, h);
   const object = Codebase$peekObject(dir, h);
@@ -45,8 +45,8 @@ function Explorer$site(dir) {
     rt.nomatch(t2);
   }
   return new rt.Con("#Pair", 0, [h, new rt.Con("#Pair", 0, [lib$base$List$dedup(lib$base$List$sort(rt.ap(rt.prims["append"], fromObject, fromScheme))), new rt.Con("#Pair", 0, [Explorer$hintsOf(lib$base$fst(pair), lib$base$snd(pair), object, meta), new rt.Con("#Pair", 0, [lib$base$fst(pair), new rt.Con("#Pair", 0, [sig, Explorer$summaryOf(Explorer$docOf(named))])])])])]);
-}, "Explorer.site/\u03bb"), entries);
-  const depsOf = lib$base$Map$fromList(lib$base$List$map(rt.named((f) => {
+} })["Explorer.site/\u03bb"], entries);
+  const depsOf = lib$base$Map$fromList(lib$base$List$map(({ "Explorer.site/\u03bb": (f) => {
   m4: {
     if (f.tag === 0 && f.fields[1].tag === 0 && f.fields[1].fields[1].tag === 0) {
       const h_1 = f.fields[0];
@@ -55,8 +55,8 @@ function Explorer$site(dir) {
     }
     rt.nomatch(f);
   }
-}, "Explorer.site/\u03bb"), facts));
-  const printer = Print$withHints(Print$printer(ns, rt.NIL), lib$base$Map$fromList(lib$base$List$concatMap(rt.named((f_1) => {
+} })["Explorer.site/\u03bb"], facts));
+  const printer = Print$withHints(Print$printer(ns, rt.NIL), lib$base$Map$fromList(lib$base$List$concatMap(({ "Explorer.site/\u03bb": (f_1) => {
   m5: {
     if (f_1.tag === 0 && f_1.fields[1].tag === 0 && f_1.fields[1].fields[1].tag === 0) {
       const hs = f_1.fields[1].fields[1].fields[0];
@@ -64,10 +64,10 @@ function Explorer$site(dir) {
     }
     rt.nomatch(f_1);
   }
-}, "Explorer.site/\u03bb"), facts)));
-  const dependents = lib$base$Map$foldr(rt.named((h_2, ds, m) => lib$base$List$foldl(rt.named((m2, d) => lib$base$Map$insert(d, rt.cons(h_2, lib$base$Option$getOr(lib$base$Map$lookup(d, m2), rt.NIL)), m2), "Explorer.site/\u03bb"), m, ds), "Explorer.site/\u03bb"), lib$base$Set$empty(), depsOf);
+} })["Explorer.site/\u03bb"], facts)));
+  const dependents = lib$base$Map$foldr(({ "Explorer.site/\u03bb": (h_2, ds, m) => lib$base$List$foldl(({ "Explorer.site/\u03bb": (m2, d) => lib$base$Map$insert(d, rt.cons(h_2, lib$base$Option$getOr(lib$base$Map$lookup(d, m2), rt.NIL)), m2) })["Explorer.site/\u03bb"], m, ds) })["Explorer.site/\u03bb"], lib$base$Set$empty(), depsOf);
   const tasks = lib$base$List$sortBy(Tasks$order, lib$base$Map$values(Tasks$current(dir)));
-  const info = lib$base$Map$fromList(lib$base$List$map(rt.named((f_2) => {
+  const info = lib$base$Map$fromList(lib$base$List$map(({ "Explorer.site/\u03bb": (f_2) => {
   m6: {
     if (f_2.tag === 0 && f_2.fields[1].tag === 0 && f_2.fields[1].fields[1].tag === 0) {
       const named_1 = f_2.fields[1].fields[1].fields[1];
@@ -75,8 +75,8 @@ function Explorer$site(dir) {
     }
     rt.nomatch(f_2);
   }
-}, "Explorer.site/\u03bb"), facts));
-  return new rt.Con("cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", 0, [dir, project, Codebase$currentBranch(dir), ns, entries, Codebase$nameIndex(ns), Codebase$namesByHash(ns), info, depsOf, dependents, printer, tasks, lib$base$Map$fromList(lib$base$List$map(rt.named((t) => new rt.Con("#Pair", 0, [Task$id(t), t]), "Explorer.site/\u03bb"), tasks))]);
+} })["Explorer.site/\u03bb"], facts));
+  return new rt.Con("cc0ef71c80c4b3df2fb765f8e6edcc3f672e875790abe024f4f473b523caf09b", 0, [dir, project, Codebase$currentBranch(dir), ns, entries, Codebase$nameIndex(ns), Codebase$namesByHash(ns), info, depsOf, dependents, printer, tasks, lib$base$Map$fromList(lib$base$List$map(({ "Explorer.site/\u03bb": (t) => new rt.Con("#Pair", 0, [Task$id(t), t]) })["Explorer.site/\u03bb"], tasks))]);
 }
 rt.named(Explorer$site, "Explorer.site");
 
@@ -99,13 +99,13 @@ rt.named(Explorer$liveChange, "Explorer.liveChange");
 
 function Explorer$liveDoc(s, d) {
   const documents = Export$specDocuments(Explorer$Site$ns(s));
-  const t0 = rt.ap(rt.prims["append"], lib$base$List$filter(rt.named((doc) => rt.equal(doc, d), "Explorer.liveDoc/\u03bb"), documents), lib$base$List$filter(rt.named((doc_1) => {
+  const t0 = rt.ap(rt.prims["append"], lib$base$List$filter(({ "Explorer.liveDoc/\u03bb": (doc) => rt.equal(doc, d) })["Explorer.liveDoc/\u03bb"], documents), lib$base$List$filter(({ "Explorer.liveDoc/\u03bb": (doc_1) => {
   if (!rt.equal(doc_1, d)) {
     return rt.equal(Names$unmount(doc_1), d);
   } else {
     return false;
   }
-}, "Explorer.liveDoc/\u03bb"), documents));
+} })["Explorer.liveDoc/\u03bb"], documents));
   m1: {
     if (t0.tag === 1) {
       const found = t0.fields[0];
@@ -149,7 +149,6 @@ function lib$base$List$filter(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(lib$base$List$filter, "lib.base.List.filter");
@@ -172,12 +171,12 @@ function Explorer$visible(pair) {
 rt.named(Explorer$visible, "Explorer.visible");
 
 function lib$base$Map$toList(m) {
-  return lib$base$Map$foldr(rt.named((key, value, acc) => rt.cons(new rt.Con("#Pair", 0, [key, value]), acc), "lib.base.Map.toList/\u03bb"), rt.NIL, m);
+  return lib$base$Map$foldr(({ "lib.base.Map.toList/\u03bb": (key, value, acc) => rt.cons(new rt.Con("#Pair", 0, [key, value]), acc) })["lib.base.Map.toList/\u03bb"], rt.NIL, m);
 }
 rt.named(lib$base$Map$toList, "lib.base.Map.toList");
 
 function Project$read(dir) {
-  return lib$base$Option$map(rt.named((text) => Project$fromSexp(lib$base$Sexp$read(text)), "Project.read/\u03bb"), rt.perform("#IO", 2, [Project$file(dir)]));
+  return lib$base$Option$map(({ "Project.read/\u03bb": (text) => Project$fromSexp(lib$base$Sexp$read(text)) })["Project.read/\u03bb"], rt.perform("#IO", 2, [Project$file(dir)]));
 }
 rt.named(Project$read, "Project.read");
 
@@ -212,7 +211,6 @@ function lib$base$List$map(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(lib$base$List$map, "lib.base.List.map");
@@ -322,7 +320,7 @@ function Explorer$namedHashes(form) {
         const head = x.fields[0].fields[0].fields[0];
         const h = x.fields[0].fields[1].fields[0].fields[0];
         const rest = x.fields[0].fields[1].fields[1];
-        const t1 = rt.named((a, y) => rt.ap(go, y, a), "Explorer.namedHashes/\u03bb");
+        const t1 = ({ "Explorer.namedHashes/\u03bb": (a, y) => rt.ap(go, y, a) })["Explorer.namedHashes/\u03bb"];
         let r2;
         if (lib$base$Map$contains(head, Explorer$refHeads())) {
           r2 = rt.cons(h, acc);
@@ -333,7 +331,7 @@ function Explorer$namedHashes(form) {
       }
       if (x.tag === 3) {
         const items = x.fields[0];
-        return lib$base$List$foldl(rt.named((a_1, y_1) => rt.ap(go, y_1, a_1), "Explorer.namedHashes/\u03bb"), acc, items);
+        return lib$base$List$foldl(({ "Explorer.namedHashes/\u03bb": (a_1, y_1) => rt.ap(go, y_1, a_1) })["Explorer.namedHashes/\u03bb"], acc, items);
       }
       if (true) {
         return acc;
@@ -341,7 +339,6 @@ function Explorer$namedHashes(form) {
       rt.nomatch(x);
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, form, rt.NIL);
 }
 rt.named(Explorer$namedHashes, "Explorer.namedHashes");
@@ -353,7 +350,7 @@ function Codebase$metaField(form, key) {
     }
     if (form.tag === 1) {
       const m = form.fields[0];
-      return lib$base$Option$bind(lib$base$List$find(rt.named((x) => rt.equal(lib$base$Sexp$head(x), key), "Codebase.metaField/\u03bb"), lib$base$Sexp$args(m)), rt.named((x_1) => lib$base$List$head$p(lib$base$Sexp$args(x_1)), "Codebase.metaField/\u03bb"));
+      return lib$base$Option$bind(lib$base$List$find(({ "Codebase.metaField/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["Codebase.metaField/\u03bb"], lib$base$Sexp$args(m)), ({ "Codebase.metaField/\u03bb": (x_1) => lib$base$List$head$p(lib$base$Sexp$args(x_1)) })["Codebase.metaField/\u03bb"]);
     }
     rt.nomatch(form);
   }
@@ -361,18 +358,18 @@ function Codebase$metaField(form, key) {
 rt.named(Codebase$metaField, "Codebase.metaField");
 
 function Codebase$metaFor(name, meta) {
-  const shared = lib$base$List$filter(rt.named((item) => (lib$base$Sexp$head(item) !== "for"), "Codebase.metaFor/\u03bb"), lib$base$Sexp$args(meta));
-  const t0 = lib$base$List$find(rt.named((item_1) => {
+  const shared = lib$base$List$filter(({ "Codebase.metaFor/\u03bb": (item) => (lib$base$Sexp$head(item) !== "for") })["Codebase.metaFor/\u03bb"], lib$base$Sexp$args(meta));
+  const t0 = lib$base$List$find(({ "Codebase.metaFor/\u03bb": (item_1) => {
   if ((lib$base$Sexp$head(item_1) === "for")) {
     return rt.equal(Codebase$forName(item_1), name);
   } else {
     return false;
   }
-}, "Codebase.metaFor/\u03bb"), lib$base$Sexp$args(meta));
+} })["Codebase.metaFor/\u03bb"], lib$base$Sexp$args(meta));
   m1: {
     if (t0.tag === 1) {
       const entry = t0.fields[0];
-      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), lib$base$List$filter(rt.named((item_2) => (lib$base$Sexp$head(item_2) === "scheme"), "Codebase.metaFor/\u03bb"), shared)), lib$base$List$drop(1, lib$base$Sexp$args(entry)))]);
+      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), lib$base$List$filter(({ "Codebase.metaFor/\u03bb": (item_2) => (lib$base$Sexp$head(item_2) === "scheme") })["Codebase.metaFor/\u03bb"], shared)), lib$base$List$drop(1, lib$base$Sexp$args(entry)))]);
     }
     if (t0.tag === 0) {
       return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["meta"]), shared)]);
@@ -394,7 +391,7 @@ function lib$base$fst(p) {
 rt.named(lib$base$fst, "lib.base.fst");
 
 function Explorer$signature(meta) {
-  return lib$base$Option$getOr(lib$base$Option$map(rt.named((s) => Types$displayScheme(s), "Explorer.signature/\u03bb"), Codebase$metaField(meta, "scheme")), "");
+  return lib$base$Option$getOr(lib$base$Option$map(({ "Explorer.signature/\u03bb": (s) => Types$displayScheme(s) })["Explorer.signature/\u03bb"], Codebase$metaField(meta, "scheme")), "");
 }
 rt.named(Explorer$signature, "Explorer.signature");
 
@@ -466,7 +463,7 @@ function Explorer$hintsOf(name, e, object, meta) {
 rt.named(Explorer$hintsOf, "Explorer.hintsOf");
 
 function Explorer$summaryOf(doc) {
-  const text = rt.ap(rt.prims["Text.join"], " ", lib$base$List$filter(rt.named((line) => lib$base$not(lib$base$Text$isEmpty(line)), "Explorer.summaryOf/\u03bb"), lib$base$List$map(rt.prims["Text.trim"], lib$base$Text$lines(lib$base$Option$getOr(doc, "")))));
+  const text = rt.ap(rt.prims["Text.join"], " ", lib$base$List$filter(({ "Explorer.summaryOf/\u03bb": (line) => lib$base$not(lib$base$Text$isEmpty(line)) })["Explorer.summaryOf/\u03bb"], lib$base$List$map(rt.prims["Text.trim"], lib$base$Text$lines(lib$base$Option$getOr(doc, "")))));
   const stop = rt.ap(rt.prims["Text.indexOf"], text, ". ", 0);
   let sentence;
   if ((stop < 0)) {
@@ -491,7 +488,7 @@ function lib$base$Map$fromList(pairs) {
   if (lib$base$Map$ascending(pairs)) {
     return lib$base$Map$fromAscending(pairs);
   } else {
-    return lib$base$List$foldl(rt.named((m, p) => lib$base$Map$insert(lib$base$fst(p), lib$base$snd(p), m), "lib.base.Map.fromList/\u03bb"), rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), pairs);
+    return lib$base$List$foldl(({ "lib.base.Map.fromList/\u03bb": (m, p) => lib$base$Map$insert(lib$base$fst(p), lib$base$snd(p), m) })["lib.base.Map.fromList/\u03bb"], rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), pairs);
   }
 }
 rt.named(lib$base$Map$fromList, "lib.base.Map.fromList");
@@ -505,7 +502,7 @@ function Print$printer(ns, locals) {
   const names = Names$build(ns);
   const bySegment = Names$bySegment(names);
   const index = Codebase$nameIndex(ns);
-  const display = lib$base$Map$fromList(lib$base$List$map(rt.named((pair) => {
+  const display = lib$base$Map$fromList(lib$base$List$map(({ "Print.printer/\u03bb": (pair) => {
   m0: {
     if (pair.tag === 0) {
       const key = pair.fields[0];
@@ -527,8 +524,8 @@ function Print$printer(ns, locals) {
     }
     rt.nomatch(pair);
   }
-}, "Print.printer/\u03bb"), lib$base$Map$toList(index)));
-  const typeNames = lib$base$List$foldl(rt.named((m, pair_1) => {
+} })["Print.printer/\u03bb"], lib$base$Map$toList(index)));
+  const typeNames = lib$base$List$foldl(({ "Print.printer/\u03bb": (m, pair_1) => {
   m4: {
     if (pair_1.tag === 0 && pair_1.fields[1].tag === 2) {
       const name = pair_1.fields[0];
@@ -545,13 +542,13 @@ function Print$printer(ns, locals) {
     }
     rt.nomatch(pair_1);
   }
-}, "Print.printer/\u03bb"), lib$base$Set$empty(), lib$base$Map$toList(ns));
-  const fieldNames = lib$base$List$foldl(rt.named((m_1, pair_2) => {
+} })["Print.printer/\u03bb"], lib$base$Set$empty(), lib$base$Map$toList(ns));
+  const fieldNames = lib$base$List$foldl(({ "Print.printer/\u03bb": (m_1, pair_2) => {
   m5: {
     if (pair_2.tag === 0 && pair_2.fields[1].tag === 2) {
       const owner = pair_2.fields[0];
       const fields = pair_2.fields[1].fields[2];
-      return lib$base$List$foldl(rt.named((m2, f) => {
+      return lib$base$List$foldl(({ "Print.printer/\u03bb": (m2, f) => {
         const t6 = new rt.Con("#Pair", 0, [lib$base$Map$lookup(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], owner, "."), f), ns), rt.ap(rt.prims["Dict.lookup"], f, Names$fieldOwners(names))]);
         m7: {
           if (t6.tag === 0 && t6.fields[0].tag === 1 && t6.fields[0].fields[0].tag === 0 && t6.fields[1].tag === 1 && t6.fields[1].fields[0].tag === 1 && t6.fields[1].fields[0].fields[1].tag === 0) {
@@ -563,15 +560,15 @@ function Print$printer(ns, locals) {
           }
           rt.nomatch(t6);
         }
-      }, "Print.printer/\u03bb"), m_1, fields);
+      } })["Print.printer/\u03bb"], m_1, fields);
     }
     if (true) {
       return m_1;
     }
     rt.nomatch(pair_2);
   }
-}, "Print.printer/\u03bb"), lib$base$Set$empty(), lib$base$Map$toList(ns));
-  const shadows = lib$base$List$concatMap(rt.named((pair_3) => {
+} })["Print.printer/\u03bb"], lib$base$Set$empty(), lib$base$Map$toList(ns));
+  const shadows = lib$base$List$concatMap(({ "Print.printer/\u03bb": (pair_3) => {
   m8: {
     if (pair_3.tag === 0) {
       const key_1 = pair_3.fields[0];
@@ -586,7 +583,7 @@ function Print$printer(ns, locals) {
       if (r9) {
         return rt.NIL;
       } else {
-        return lib$base$List$filterMap(rt.named((other) => {
+        return lib$base$List$filterMap(({ "Print.printer/\u03bb": (other) => {
           let r10;
           if (lib$base$not(lib$base$Text$startsWith("lib.", other))) {
             r10 = lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", shown), other);
@@ -598,12 +595,12 @@ function Print$printer(ns, locals) {
           } else {
             return rt.con0("#Option", 0);
           }
-        }, "Print.printer/\u03bb"), lib$base$Option$getOr(rt.ap(rt.prims["Dict.lookup"], Names$lastSegment(fqn_1), bySegment), rt.NIL));
+        } })["Print.printer/\u03bb"], lib$base$Option$getOr(rt.ap(rt.prims["Dict.lookup"], Names$lastSegment(fqn_1), bySegment), rt.NIL));
       }
     }
     rt.nomatch(pair_3);
   }
-}, "Print.printer/\u03bb"), lib$base$Map$toList(index));
+} })["Print.printer/\u03bb"], lib$base$Map$toList(index));
   return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [display, index, typeNames, fieldNames, Types$declaredNames(ns), Codebase$namesByHash(ns), rt.ap(rt.prims["Ref.new"], locals), rt.ap(rt.prims["Ref.new"], 0), lib$base$Set$empty(), lib$base$Set$empty(), shadows]);
 }
 rt.named(Print$printer, "Print.printer");
@@ -731,7 +728,7 @@ function lib$base$List$sortBy(cmp, xs) {
 rt.named(lib$base$List$sortBy, "lib.base.List.sortBy");
 
 function Tasks$order(a, b) {
-  const rank = rt.named((t) => {
+  const rank = ({ "Tasks.order/\u03bb": (t) => {
   let r0;
   if (Tasks$isOpen(t)) {
     r0 = 0;
@@ -745,7 +742,7 @@ function Tasks$order(a, b) {
     r1 = Task$priority(t);
   }
   return new rt.Con("#Pair", 0, [r0, r1]);
-}, "Tasks.order/\u03bb");
+} })["Tasks.order/\u03bb"];
   const ra = rt.ap(rank, a);
   const rb = rt.ap(rank, b);
   if (rt.equal(ra, rb)) {
@@ -757,13 +754,13 @@ function Tasks$order(a, b) {
 rt.named(Tasks$order, "Tasks.order");
 
 function lib$base$Map$values(m) {
-  return lib$base$Map$foldr(rt.named((v, value, acc) => rt.cons(value, acc), "lib.base.Map.values/\u03bb"), rt.NIL, m);
+  return lib$base$Map$foldr(({ "lib.base.Map.values/\u03bb": (v, value, acc) => rt.cons(value, acc) })["lib.base.Map.values/\u03bb"], rt.NIL, m);
 }
 rt.named(lib$base$Map$values, "lib.base.Map.values");
 
 function Tasks$current(dir) {
   const snapshot = Tasks$snapshotOf(dir, Codebase$readCausal(dir, Codebase$headOf(dir, Codebase$currentBranch(dir))));
-  return lib$base$Map$fromList(lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), Tasks$read(dir, lib$base$snd(pair))]), "Tasks.current/\u03bb"), lib$base$Map$toList(snapshot)));
+  return lib$base$Map$fromList(lib$base$List$map(({ "Tasks.current/\u03bb": (pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), Tasks$read(dir, lib$base$snd(pair))]) })["Tasks.current/\u03bb"], lib$base$Map$toList(snapshot)));
 }
 rt.named(Tasks$current, "Tasks.current");
 
@@ -773,7 +770,7 @@ function Codebase$currentBranch(dir) {
 rt.named(Codebase$currentBranch, "Codebase.currentBranch");
 
 function Codebase$nameIndex(ns) {
-  return lib$base$List$foldl(rt.named((m, pair) => {
+  return lib$base$List$foldl(({ "Codebase.nameIndex/\u03bb": (m, pair) => {
   m0: {
     if (pair.tag === 0) {
       const name = pair.fields[0];
@@ -816,12 +813,12 @@ function Codebase$nameIndex(ns) {
     }
     rt.nomatch(pair);
   }
-}, "Codebase.nameIndex/\u03bb"), lib$base$Set$empty(), lib$base$Map$toList(ns));
+} })["Codebase.nameIndex/\u03bb"], lib$base$Set$empty(), lib$base$Map$toList(ns));
 }
 rt.named(Codebase$nameIndex, "Codebase.nameIndex");
 
 function Codebase$namesByHash(ns) {
-  return lib$base$Map$foldr(rt.named((name, e, m) => lib$base$Map$insert(Entry$hash(e), rt.cons(name, lib$base$Option$getOr(lib$base$Map$lookup(Entry$hash(e), m), rt.NIL)), m), "Codebase.namesByHash/\u03bb"), lib$base$Set$empty(), ns);
+  return lib$base$Map$foldr(({ "Codebase.namesByHash/\u03bb": (name, e, m) => lib$base$Map$insert(Entry$hash(e), rt.cons(name, lib$base$Option$getOr(lib$base$Map$lookup(Entry$hash(e), m), rt.NIL)), m) })["Codebase.namesByHash/\u03bb"], lib$base$Set$empty(), ns);
 }
 rt.named(Codebase$namesByHash, "Codebase.namesByHash");
 
@@ -846,9 +843,9 @@ function Task$id(v) {
 rt.named(Task$id, "Task.id");
 
 function Explorer$eventsOf(s) {
-  const t1 = lib$base$try(rt.named((v) => {
+  const t1 = lib$base$try(({ "Explorer.eventsOf/\u03bb": (v) => {
   const ts = Analytics$types(Explorer$Site$dir(s), Explorer$Site$ns(s));
-  return new rt.Con("#Pair", 0, [Analytics$siteJson(Explorer$Site$dir(s), Explorer$Site$project(s), Explorer$Site$ns(s), 20), lib$base$List$sum(lib$base$List$map(rt.named((c) => {
+  return new rt.Con("#Pair", 0, [Analytics$siteJson(Explorer$Site$dir(s), Explorer$Site$project(s), Explorer$Site$ns(s), 20), lib$base$List$sum(lib$base$List$map(({ "Explorer.eventsOf/\u03bb": (c) => {
     m0: {
       if (c.tag === 0 && c.fields[1].tag === 0) {
         const pending = c.fields[1].fields[0];
@@ -857,8 +854,8 @@ function Explorer$eventsOf(s) {
       }
       rt.nomatch(c);
     }
-  }, "Explorer.eventsOf/\u03bb"), Analytics$counts(Explorer$Site$dir(s), ts)))]);
-}, "Explorer.eventsOf/\u03bb"));
+  } })["Explorer.eventsOf/\u03bb"], Analytics$counts(Explorer$Site$dir(s), ts)))]);
+} })["Explorer.eventsOf/\u03bb"]);
   m2: {
     if (t1.tag === 0) {
       const pair = t1.fields[0];
@@ -873,10 +870,10 @@ function Explorer$eventsOf(s) {
 rt.named(Explorer$eventsOf, "Explorer.eventsOf");
 
 function Explorer$featuresOfSite(s) {
-  const t0 = lib$base$try(rt.named((v) => {
+  const t0 = lib$base$try(({ "Explorer.featuresOfSite/\u03bb": (v) => {
   const docs = Cli$featureDocuments(Explorer$Site$dir(s), Explorer$Site$ns(s));
-  return new rt.Con("#Pair", 0, [Cli$featuresJson(Explorer$Site$dir(s), Explorer$Site$ns(s), docs), lib$base$List$sum(lib$base$List$map(rt.named((d) => lib$base$List$length(lib$base$fst(Cli$featuresOf(Explorer$Site$dir(s), Explorer$Site$ns(s), d))), "Explorer.featuresOfSite/\u03bb"), docs))]);
-}, "Explorer.featuresOfSite/\u03bb"));
+  return new rt.Con("#Pair", 0, [Cli$featuresJson(Explorer$Site$dir(s), Explorer$Site$ns(s), docs), lib$base$List$sum(lib$base$List$map(({ "Explorer.featuresOfSite/\u03bb": (d) => lib$base$List$length(lib$base$fst(Cli$featuresOf(Explorer$Site$dir(s), Explorer$Site$ns(s), d))) })["Explorer.featuresOfSite/\u03bb"], docs))]);
+} })["Explorer.featuresOfSite/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       const pair = t0.fields[0];
@@ -917,7 +914,7 @@ function lib$base$Json$render(j) {
     }
     if (j.tag === 5) {
       const fields = j.fields[0];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ",", lib$base$List$map(rt.named((pair) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Json$escape(lib$base$fst(pair)), ":"), lib$base$Json$render(lib$base$snd(pair))), "lib.base.Json.render/\u03bb"), fields))), "}");
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "{", rt.ap(rt.prims["Text.join"], ",", lib$base$List$map(({ "lib.base.Json.render/\u03bb": (pair) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Json$escape(lib$base$fst(pair)), ":"), lib$base$Json$render(lib$base$snd(pair))) })["lib.base.Json.render/\u03bb"], fields))), "}");
     }
     rt.nomatch(j);
   }
@@ -930,7 +927,7 @@ function Explorer$metaJson(s, _console, events, features) {
 rt.named(Explorer$metaJson, "Explorer.metaJson");
 
 function Explorer$namesJson(s) {
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((pair) => {
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.namesJson/\u03bb": (pair) => {
   const h = Entry$hash(lib$base$snd(pair));
   const t0 = lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair), Explorer$Site$info(s)), new rt.Con("#Pair", 0, ["", ""]));
   m1: {
@@ -961,23 +958,23 @@ function Explorer$namesJson(s) {
     }
     rt.nomatch(t0);
   }
-}, "Explorer.namesJson/\u03bb"), Explorer$Site$entries(s))]);
+} })["Explorer.namesJson/\u03bb"], Explorer$Site$entries(s))]);
 }
 rt.named(Explorer$namesJson, "Explorer.namesJson");
 
 function Explorer$tasksJson(s) {
   const histories = Tasks$histories(Explorer$Site$dir(s), 200);
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((t) => Explorer$taskJson(Explorer$Site$dir(s), Explorer$Site$ns(s), lib$base$Option$getOr(lib$base$Map$lookup(Task$id(t), histories), rt.NIL), t), "Explorer.tasksJson/\u03bb"), Explorer$Site$tasks(s))]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.tasksJson/\u03bb": (t) => Explorer$taskJson(Explorer$Site$dir(s), Explorer$Site$ns(s), lib$base$Option$getOr(lib$base$Map$lookup(Task$id(t), histories), rt.NIL), t) })["Explorer.tasksJson/\u03bb"], Explorer$Site$tasks(s))]);
 }
 rt.named(Explorer$tasksJson, "Explorer.tasksJson");
 
 function Explorer$commentsJson(s) {
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(Cli$commentJson, lib$base$snd(pair))])]), "Explorer.commentsJson/\u03bb"), lib$base$Map$toList(Comments$current(Explorer$Site$dir(s))))]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(({ "Explorer.commentsJson/\u03bb": (pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(Cli$commentJson, lib$base$snd(pair))])]) })["Explorer.commentsJson/\u03bb"], lib$base$Map$toList(Comments$current(Explorer$Site$dir(s))))]);
 }
 rt.named(Explorer$commentsJson, "Explorer.commentsJson");
 
 function Explorer$defByHash(s, h) {
-  const t0 = lib$base$List$find(rt.named((pair) => rt.equal(Entry$hash(lib$base$snd(pair)), h), "Explorer.defByHash/\u03bb"), Explorer$Site$entries(s));
+  const t0 = lib$base$List$find(({ "Explorer.defByHash/\u03bb": (pair) => rt.equal(Entry$hash(lib$base$snd(pair)), h) })["Explorer.defByHash/\u03bb"], Explorer$Site$entries(s));
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 0) {
       const name = t0.fields[0].fields[0];
@@ -1009,7 +1006,7 @@ function Explorer$changePage(dir, causal) {
     rt.nomatch(t0);
   }
   const diff = Codebase$diffNamespaces(dir, Codebase$Causal$snapshot(before), Codebase$Causal$snapshot(node));
-  const added = lib$base$List$filterMap(rt.named((change) => {
+  const added = lib$base$List$filterMap(({ "Explorer.changePage/\u03bb": (change) => {
   m2: {
     if (change.tag === 0 && change.fields[1].tag === 0 && change.fields[1].fields[0].tag === 0 && change.fields[1].fields[1].tag === 1) {
       const name = change.fields[0];
@@ -1025,8 +1022,8 @@ function Explorer$changePage(dir, causal) {
     }
     rt.nomatch(change);
   }
-}, "Explorer.changePage/\u03bb"), diff);
-  const changed = lib$base$List$filterMap(rt.named((change_1) => {
+} })["Explorer.changePage/\u03bb"], diff);
+  const changed = lib$base$List$filterMap(({ "Explorer.changePage/\u03bb": (change_1) => {
   m3: {
     if (change_1.tag === 0 && change_1.fields[1].tag === 0 && change_1.fields[1].fields[0].tag === 1 && change_1.fields[1].fields[1].tag === 1) {
       const name_1 = change_1.fields[0];
@@ -1049,8 +1046,8 @@ function Explorer$changePage(dir, causal) {
     }
     rt.nomatch(change_1);
   }
-}, "Explorer.changePage/\u03bb"), diff);
-  const removed = lib$base$List$filterMap(rt.named((change_2) => {
+} })["Explorer.changePage/\u03bb"], diff);
+  const removed = lib$base$List$filterMap(({ "Explorer.changePage/\u03bb": (change_2) => {
   m5: {
     if (change_2.tag === 0 && change_2.fields[1].tag === 0 && change_2.fields[1].fields[0].tag === 1 && change_2.fields[1].fields[1].tag === 0) {
       const name_2 = change_2.fields[0];
@@ -1066,7 +1063,7 @@ function Explorer$changePage(dir, causal) {
     }
     rt.nomatch(change_2);
   }
-}, "Explorer.changePage/\u03bb"), diff);
+} })["Explorer.changePage/\u03bb"], diff);
   let nsBefore;
   let r6;
   if (lib$base$List$isEmpty(changed)) {
@@ -1093,8 +1090,8 @@ function Explorer$changePage(dir, causal) {
   }
   const tasksAfter = Tasks$snapshotOf(dir, node);
   const tasksBefore = Tasks$snapshotOf(dir, before);
-  const touched = lib$base$List$filter(rt.named((id) => !rt.equal(lib$base$Map$lookup(id, tasksAfter), lib$base$Map$lookup(id, tasksBefore)), "Explorer.changePage/\u03bb"), lib$base$Set$toList(lib$base$Set$fromList(rt.ap(rt.prims["append"], lib$base$Map$keys(tasksAfter), lib$base$Map$keys(tasksBefore)))));
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["causal", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [causal])]), rt.cons(new rt.Con("#Pair", 0, ["message", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Codebase$Causal$message(node)])]), rt.cons(new rt.Con("#Pair", 0, ["parents", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Codebase$Causal$parents(node))])]), rt.cons(new rt.Con("#Pair", 0, ["added", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((pair) => Explorer$refJson(lib$base$fst(pair), Entry$hash(lib$base$snd(pair))), "Explorer.changePage/\u03bb"), added)])]), rt.cons(new rt.Con("#Pair", 0, ["changed", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((c) => {
+  const touched = lib$base$List$filter(({ "Explorer.changePage/\u03bb": (id) => !rt.equal(lib$base$Map$lookup(id, tasksAfter), lib$base$Map$lookup(id, tasksBefore)) })["Explorer.changePage/\u03bb"], lib$base$Set$toList(lib$base$Set$fromList(rt.ap(rt.prims["append"], lib$base$Map$keys(tasksAfter), lib$base$Map$keys(tasksBefore)))));
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["causal", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [causal])]), rt.cons(new rt.Con("#Pair", 0, ["message", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Codebase$Causal$message(node)])]), rt.cons(new rt.Con("#Pair", 0, ["parents", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Codebase$Causal$parents(node))])]), rt.cons(new rt.Con("#Pair", 0, ["added", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.changePage/\u03bb": (pair) => Explorer$refJson(lib$base$fst(pair), Entry$hash(lib$base$snd(pair))) })["Explorer.changePage/\u03bb"], added)])]), rt.cons(new rt.Con("#Pair", 0, ["changed", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.changePage/\u03bb": (c) => {
   const t7 = new rt.Con("#Pair", 0, [c, printers]);
   m8: {
     if (t7.tag === 0 && t7.fields[0].tag === 0 && t7.fields[0].fields[1].tag === 0 && t7.fields[1].tag === 1 && t7.fields[1].fields[0].tag === 0) {
@@ -1110,12 +1107,12 @@ function Explorer$changePage(dir, causal) {
     }
     rt.nomatch(t7);
   }
-}, "Explorer.changePage/\u03bb"), changed)])]), rt.cons(new rt.Con("#Pair", 0, ["removed", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((pair_1) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$fst(pair_1)]), "Explorer.changePage/\u03bb"), removed)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), touched)])]), rt.NIL))))))), lib$base$Option$getOr(lib$base$Option$map(rt.named((agent) => rt.cons(new rt.Con("#Pair", 0, ["by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [agent])]), rt.NIL), "Explorer.changePage/\u03bb"), Cli$producedBy(dir, causal)), rt.NIL)), Explorer$atJson(dir, causal))]);
+} })["Explorer.changePage/\u03bb"], changed)])]), rt.cons(new rt.Con("#Pair", 0, ["removed", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.changePage/\u03bb": (pair_1) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$fst(pair_1)]) })["Explorer.changePage/\u03bb"], removed)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), touched)])]), rt.NIL))))))), lib$base$Option$getOr(lib$base$Option$map(({ "Explorer.changePage/\u03bb": (agent) => rt.cons(new rt.Con("#Pair", 0, ["by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [agent])]), rt.NIL) })["Explorer.changePage/\u03bb"], Cli$producedBy(dir, causal)), rt.NIL)), Explorer$atJson(dir, causal))]);
 }
 rt.named(Explorer$changePage, "Explorer.changePage");
 
 function Export$specDocuments(ns) {
-  return lib$base$List$dedup(lib$base$List$sort(lib$base$List$filterMap(rt.named((pair) => {
+  return lib$base$List$dedup(lib$base$List$sort(lib$base$List$filterMap(({ "Export.specDocuments/\u03bb": (pair) => {
   m0: {
     if (pair.tag === 0 && pair.fields[1].tag === 7) {
       const name = pair.fields[0];
@@ -1126,7 +1123,7 @@ function Export$specDocuments(ns) {
     }
     rt.nomatch(pair);
   }
-}, "Export.specDocuments/\u03bb"), lib$base$Map$toList(ns))));
+} })["Export.specDocuments/\u03bb"], lib$base$Map$toList(ns))));
 }
 rt.named(Export$specDocuments, "Export.specDocuments");
 
@@ -1165,7 +1162,7 @@ rt.named(Names$unmount, "Names.unmount");
 
 function Explorer$docJson(s, d) {
   const text = Export$document(Explorer$Site$dir(s), Explorer$Site$ns(s), d);
-  const blockJson = rt.named((b) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["type", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockType(b)])]), rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockId(b)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockTitle(b)])]), rt.cons(new rt.Con("#Pair", 0, ["line", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [lib$base$Block$lineNo(b)])]), rt.cons(new rt.Con("#Pair", 0, ["props", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(rt.named((p) => new rt.Con("#Pair", 0, [lib$base$fst(p), new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$snd(p)])]), "Explorer.docJson/\u03bb"), lib$base$Block$props(b))])]), rt.NIL)))))]), "Explorer.docJson/\u03bb");
+  const blockJson = ({ "Explorer.docJson/\u03bb": (b) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["type", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockType(b)])]), rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockId(b)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$Block$blockTitle(b)])]), rt.cons(new rt.Con("#Pair", 0, ["line", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [lib$base$Block$lineNo(b)])]), rt.cons(new rt.Con("#Pair", 0, ["props", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(({ "Explorer.docJson/\u03bb": (p) => new rt.Con("#Pair", 0, [lib$base$fst(p), new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$snd(p)])]) })["Explorer.docJson/\u03bb"], lib$base$Block$props(b))])]), rt.NIL)))))]) })["Explorer.docJson/\u03bb"];
   return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [d])]), rt.cons(new rt.Con("#Pair", 0, ["text", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [text])]), rt.cons(new rt.Con("#Pair", 0, ["blocks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(blockJson, Doc$blocks(Mdl$parse(text)))])]), rt.NIL)))]);
 }
 rt.named(Explorer$docJson, "Explorer.docJson");
@@ -1194,7 +1191,6 @@ function lib$base$List$reverse(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(lib$base$List$reverse, "lib.base.List.reverse");
@@ -1202,7 +1198,7 @@ rt.named(lib$base$List$reverse, "lib.base.List.reverse");
 function Project$fromSexp(form) {
   const items = lib$base$Sexp$args(form);
   const iri = lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [form]), "iri")), "");
-  const libs = lib$base$List$filterMap(rt.named((item) => {
+  const libs = lib$base$List$filterMap(({ "Project.fromSexp/\u03bb": (item) => {
   m0: {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "lib" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const name = item.fields[0].fields[1].fields[0].fields[0];
@@ -1215,7 +1211,7 @@ function Project$fromSexp(form) {
     }
     rt.nomatch(item);
   }
-}, "Project.fromSexp/\u03bb"), items);
+} })["Project.fromSexp/\u03bb"], items);
   return new rt.Con("5ab81618bf49f7c933af68dd54c526b199a1c2fd423b05ed565378f84a133051", 0, [iri, libs]);
 }
 rt.named(Project$fromSexp, "Project.fromSexp");
@@ -1406,7 +1402,7 @@ function Codebase$metaList(form, key) {
     }
     if (form.tag === 1) {
       const m = form.fields[0];
-      const t1 = lib$base$List$find(rt.named((x) => rt.equal(lib$base$Sexp$head(x), key), "Codebase.metaList/\u03bb"), lib$base$Sexp$args(m));
+      const t1 = lib$base$List$find(({ "Codebase.metaList/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["Codebase.metaList/\u03bb"], lib$base$Sexp$args(m));
       m2: {
         if (t1.tag === 1) {
           const x_1 = t1.fields[0];
@@ -1441,7 +1437,6 @@ function lib$base$List$length(xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(lib$base$List$length, "lib.base.List.length");
@@ -1470,7 +1465,6 @@ function lib$base$List$take(n, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, n, xs);
 }
 rt.named(lib$base$List$take, "lib.base.List.take");
@@ -1579,7 +1573,6 @@ function lib$base$Map$fromAscending(pairs) {
       }
     }
   }
-  rt.named(build, "build");
   return lib$base$fst(rt.ap(build, lib$base$List$length(pairs), pairs));
 }
 rt.named(lib$base$Map$fromAscending, "lib.base.Map.fromAscending");
@@ -1796,8 +1789,8 @@ rt.named(Printer$shadows, "Printer.shadows");
 
 function Names$build(table) {
   const entries = lib$base$Map$toList(table);
-  const bySegment = Names$groups(lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [Names$lastSegment(lib$base$fst(pair)), lib$base$fst(pair)]), "Names.build/\u03bb"), entries));
-  const shadowed = rt.named((fqn) => {
+  const bySegment = Names$groups(lib$base$List$map(({ "Names.build/\u03bb": (pair) => new rt.Con("#Pair", 0, [Names$lastSegment(lib$base$fst(pair)), lib$base$fst(pair)]) })["Names.build/\u03bb"], entries));
+  const shadowed = ({ "Names.build/\u03bb": (fqn) => {
   const rest = lib$base$Text$drop(4, fqn);
   if (lib$base$Text$startsWith("lib.", fqn)) {
     const t0 = lib$base$Map$lookup(lib$base$Text$drop(((rt.ap(rt.prims["Text.indexOf"], rest, ".", 0) + 1) | 0), rest), table);
@@ -1813,8 +1806,8 @@ function Names$build(table) {
   } else {
     return false;
   }
-}, "Names.build/\u03bb");
-  const fieldOwners = Names$groups(lib$base$List$concatMap(rt.named((pair_1) => {
+} })["Names.build/\u03bb"];
+  const fieldOwners = Names$groups(lib$base$List$concatMap(({ "Names.build/\u03bb": (pair_1) => {
   m2: {
     if (pair_1.tag === 0 && pair_1.fields[1].tag === 2) {
       const fqn_1 = pair_1.fields[0];
@@ -1822,7 +1815,7 @@ function Names$build(table) {
       if (rt.ap(shadowed, fqn_1)) {
         return rt.NIL;
       } else {
-        return lib$base$List$map(rt.named((f) => new rt.Con("#Pair", 0, [f, fqn_1]), "Names.build/\u03bb"), fields);
+        return lib$base$List$map(({ "Names.build/\u03bb": (f) => new rt.Con("#Pair", 0, [f, fqn_1]) })["Names.build/\u03bb"], fields);
       }
     }
     if (true) {
@@ -1830,7 +1823,7 @@ function Names$build(table) {
     }
     rt.nomatch(pair_1);
   }
-}, "Names.build/\u03bb"), entries));
+} })["Names.build/\u03bb"], entries));
   return new rt.Con("1a72713c525ee4dd1b5d9aa0721ba7e5610df978af51b6a108210922c725e884", 0, [table, rt.ap(rt.prims["Dict.fromList"], entries), rt.ap(rt.prims["Dict.fromList"], bySegment), rt.ap(rt.prims["Dict.fromList"], fieldOwners)]);
 }
 rt.named(Names$build, "Names.build");
@@ -1853,17 +1846,17 @@ function Print$suffixifyAtLeast(least, all, fqn) {
   const segments = rt.ap(rt.prims["Text.split"], fqn, ".");
   const count = lib$base$List$length(segments);
   const mounted = lib$base$Text$startsWith("lib.", fqn);
-  const resolves = rt.named((candidate, clashes) => {
+  const resolves = ({ "Print.suffixifyAtLeast/\u03bb": (candidate, clashes) => {
   if ((lib$base$List$length(clashes) <= 1)) {
     return true;
   } else {
     if (mounted) {
-      return rt.equal(lib$base$List$filter(rt.named((other) => Names$atLibraryRoot(other, candidate), "Print.suffixifyAtLeast/\u03bb"), clashes), rt.cons(fqn, rt.NIL));
+      return rt.equal(lib$base$List$filter(({ "Print.suffixifyAtLeast/\u03bb": (other) => Names$atLibraryRoot(other, candidate) })["Print.suffixifyAtLeast/\u03bb"], clashes), rt.cons(fqn, rt.NIL));
     } else {
       return false;
     }
   }
-}, "Print.suffixifyAtLeast/\u03bb");
+} })["Print.suffixifyAtLeast/\u03bb"];
   function go(k$) {
     for (;;) {
       const k = k$;
@@ -1881,13 +1874,13 @@ function Print$suffixifyAtLeast(least, all, fqn) {
         return fqn;
       } else {
         const candidate_1 = rt.ap(rt.prims["Text.join"], ".", lib$base$List$drop(((count - k) | 0), segments));
-        const clashes_1 = lib$base$List$filter(rt.named((other_1) => {
+        const clashes_1 = lib$base$List$filter(({ "Print.suffixifyAtLeast/\u03bb": (other_1) => {
     if (rt.equal(other_1, candidate_1)) {
       return true;
     } else {
       return lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", candidate_1), other_1);
     }
-  }, "Print.suffixifyAtLeast/\u03bb"), lib$base$Option$getOr(rt.ap(rt.prims["Dict.lookup"], Names$lastSegment(fqn), all), rt.NIL));
+  } })["Print.suffixifyAtLeast/\u03bb"], lib$base$Option$getOr(rt.ap(rt.prims["Dict.lookup"], Names$lastSegment(fqn), all), rt.NIL));
         if (rt.ap(resolves, candidate_1, clashes_1)) {
           return candidate_1;
         } else {
@@ -1897,7 +1890,6 @@ function Print$suffixifyAtLeast(least, all, fqn) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, least);
 }
 rt.named(Print$suffixifyAtLeast, "Print.suffixifyAtLeast");
@@ -1966,7 +1958,6 @@ function lib$base$List$filterMap(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs);
 }
 rt.named(lib$base$List$filterMap, "lib.base.List.filterMap");
@@ -1998,13 +1989,12 @@ function Names$lastSegment(name) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, ((rt.ap(rt.prims["Text.length"], name) - 1) | 0));
 }
 rt.named(Names$lastSegment, "Names.lastSegment");
 
 function Types$declaredNames(ns) {
-  return lib$base$Map$foldr(rt.named((name, e, acc) => {
+  return lib$base$Map$foldr(({ "Types.declaredNames/\u03bb": (name, e, acc) => {
   m0: {
     if (e.tag === 2) {
       const iri = e.fields[1];
@@ -2019,12 +2009,12 @@ function Types$declaredNames(ns) {
     }
     rt.nomatch(e);
   }
-}, "Types.declaredNames/\u03bb"), lib$base$Set$empty(), ns);
+} })["Types.declaredNames/\u03bb"], lib$base$Set$empty(), ns);
 }
 rt.named(Types$declaredNames, "Types.declaredNames");
 
 function lib$base$List$concat(xss) {
-  return lib$base$List$foldr(rt.named((xs, acc) => rt.ap(rt.prims["append"], xs, acc), "lib.base.List.concat/\u03bb"), rt.NIL, xss);
+  return lib$base$List$foldr(({ "lib.base.List.concat/\u03bb": (xs, acc) => rt.ap(rt.prims["append"], xs, acc) })["lib.base.List.concat/\u03bb"], rt.NIL, xss);
 }
 rt.named(lib$base$List$concat, "lib.base.List.concat");
 
@@ -2104,7 +2094,6 @@ function lib$base$List$merge(cmp, xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(lib$base$List$merge, "lib.base.List.merge");
@@ -2216,7 +2205,7 @@ function lib$base$try(body) {
 rt.named(lib$base$try, "lib.base.try");
 
 function Analytics$types(dir, ns) {
-  return lib$base$List$filterMap(rt.named((pair) => {
+  return lib$base$List$filterMap(({ "Analytics.types/\u03bb": (pair) => {
   const t0 = lib$base$snd(pair);
   m1: {
     if (t0.tag === 2) {
@@ -2233,7 +2222,7 @@ function Analytics$types(dir, ns) {
     }
     rt.nomatch(t0);
   }
-}, "Analytics.types/\u03bb"), lib$base$Map$toList(ns));
+} })["Analytics.types/\u03bb"], lib$base$Map$toList(ns));
 }
 rt.named(Analytics$types, "Analytics.types");
 
@@ -2264,7 +2253,7 @@ function Analytics$siteJson(dir, project, ns, limit) {
   const ts = Analytics$types(dir, ns);
   const index = Codebase$namesByHash(ns);
   const tallies = lib$base$Map$toList(Analytics$byDefinition(dir, project, ns, ts));
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["project", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [project])]), rt.cons(new rt.Con("#Pair", 0, ["types", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.ap(Analytics$typeJson, dir, limit), ts)])]), rt.cons(new rt.Con("#Pair", 0, ["byDefinition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), Analytics$definitionJson(index, lib$base$fst(pair), lib$base$snd(pair))]), "Analytics.siteJson/\u03bb"), tallies)])]), rt.NIL)))]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["project", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [project])]), rt.cons(new rt.Con("#Pair", 0, ["types", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.ap(Analytics$typeJson, dir, limit), ts)])]), rt.cons(new rt.Con("#Pair", 0, ["byDefinition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [lib$base$List$map(({ "Analytics.siteJson/\u03bb": (pair) => new rt.Con("#Pair", 0, [lib$base$fst(pair), Analytics$definitionJson(index, lib$base$fst(pair), lib$base$snd(pair))]) })["Analytics.siteJson/\u03bb"], tallies)])]), rt.NIL)))]);
 }
 rt.named(Analytics$siteJson, "Analytics.siteJson");
 
@@ -2292,12 +2281,12 @@ function Explorer$Site$project(v) {
 rt.named(Explorer$Site$project, "Explorer.Site.project");
 
 function lib$base$List$sum(xs) {
-  return lib$base$List$foldl(rt.named((a, b) => ((a + b) | 0), "lib.base.List.sum/\u03bb"), 0, xs);
+  return lib$base$List$foldl(({ "lib.base.List.sum/\u03bb": (a, b) => ((a + b) | 0) })["lib.base.List.sum/\u03bb"], 0, xs);
 }
 rt.named(lib$base$List$sum, "lib.base.List.sum");
 
 function Analytics$counts(dir, ts) {
-  return lib$base$List$map(rt.named((t) => {
+  return lib$base$List$map(({ "Analytics.counts/\u03bb": (t) => {
   const t0 = Analytics$rows(dir, t);
   m1: {
     if (t0.tag === 0) {
@@ -2307,35 +2296,35 @@ function Analytics$counts(dir, ts) {
     }
     rt.nomatch(t0);
   }
-}, "Analytics.counts/\u03bb"), ts);
+} })["Analytics.counts/\u03bb"], ts);
 }
 rt.named(Analytics$counts, "Analytics.counts");
 
 function Cli$featureDocuments(dir, ns) {
-  return lib$base$List$filter(rt.named((d) => {
+  return lib$base$List$filter(({ "Cli.featureDocuments/\u03bb": (d) => {
   if (lib$base$not(lib$base$Text$startsWith("lib.", d))) {
     return lib$base$not(lib$base$List$isEmpty(lib$base$fst(Cli$featuresOf(dir, ns, d))));
   } else {
     return false;
   }
-}, "Cli.featureDocuments/\u03bb"), Export$specDocuments(ns));
+} })["Cli.featureDocuments/\u03bb"], Export$specDocuments(ns));
 }
 rt.named(Cli$featureDocuments, "Cli.featureDocuments");
 
 function Cli$featuresJson(dir, ns, docs) {
   const facts = Cli$featureFacts(dir, ns);
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((d) => {
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Cli.featuresJson/\u03bb": (d) => {
   const t0 = Cli$featuresOf(dir, ns, d);
   m1: {
     if (t0.tag === 0) {
       const fs = t0.fields[0];
       const bad = t0.fields[1];
-      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["document", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [d])]), rt.cons(new rt.Con("#Pair", 0, ["features", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((pair) => {
+      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["document", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [d])]), rt.cons(new rt.Con("#Pair", 0, ["features", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Cli.featuresJson/\u03bb": (pair) => {
         m2: {
           if (pair.tag === 0) {
             const depth = pair.fields[0];
             const f = pair.fields[1];
-            const opened = lib$base$List$filter(rt.named((id) => {
+            const opened = lib$base$List$filter(({ "Cli.featuresJson/\u03bb": (id) => {
               const t3 = rt.ap(facts, rt.ap(rt.prims["append"], "task:", id));
               m4: {
                 if (t3.tag === 0) {
@@ -2347,21 +2336,21 @@ function Cli$featuresJson(dir, ns, docs) {
                 }
                 rt.nomatch(t3);
               }
-            }, "Cli.featuresJson/\u03bb"), Feature$taskIds(f));
+            } })["Cli.featuresJson/\u03bb"], Feature$taskIds(f));
             return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureTitle(f)])]), rt.cons(new rt.Con("#Pair", 0, ["status", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$featureStatus(f)])]), rt.cons(new rt.Con("#Pair", 0, ["parent", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Feature$parentId(f)])]), rt.cons(new rt.Con("#Pair", 0, ["depth", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [depth])]), rt.cons(new rt.Con("#Pair", 0, ["specs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$specDocs(f))])]), rt.cons(new rt.Con("#Pair", 0, ["defs", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$definitions(f))])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$taskIds(f))])]), rt.cons(new rt.Con("#Pair", 0, ["tags", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Feature$featureTags(f))])]), rt.cons(new rt.Con("#Pair", 0, ["openTasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), opened)])]), rt.cons(new rt.Con("#Pair", 0, ["problems", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Features$problems(f, facts))])]), rt.NIL)))))))))))]);
           }
           rt.nomatch(pair);
         }
-      }, "Cli.featuresJson/\u03bb"), Features$tree(fs))])]), rt.cons(new rt.Con("#Pair", 0, ["notes", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Cli$featureNotes(facts, fs, bad))])]), rt.NIL)))]);
+      } })["Cli.featuresJson/\u03bb"], Features$tree(fs))])]), rt.cons(new rt.Con("#Pair", 0, ["notes", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Cli$featureNotes(facts, fs, bad))])]), rt.NIL)))]);
     }
     rt.nomatch(t0);
   }
-}, "Cli.featuresJson/\u03bb"), docs)]);
+} })["Cli.featuresJson/\u03bb"], docs)]);
 }
 rt.named(Cli$featuresJson, "Cli.featuresJson");
 
 function Cli$featuresOf(dir, ns, d) {
-  const orderOf = rt.named((h) => {
+  const orderOf = ({ "Cli.featuresOf/\u03bb": (h) => {
   const t0 = Codebase$metaField(Codebase$readMeta(dir, h), "order");
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 0) {
@@ -2373,8 +2362,8 @@ function Cli$featuresOf(dir, ns, d) {
     }
     rt.nomatch(t0);
   }
-}, "Cli.featuresOf/\u03bb");
-  const blocks = lib$base$List$filterMap(rt.named((pair) => {
+} })["Cli.featuresOf/\u03bb"];
+  const blocks = lib$base$List$filterMap(({ "Cli.featuresOf/\u03bb": (pair) => {
   m2: {
     if (pair.tag === 0 && pair.fields[1].tag === 7) {
       const name = pair.fields[0];
@@ -2382,7 +2371,7 @@ function Cli$featuresOf(dir, ns, d) {
       if (!rt.equal(Export$documentOf(name), d)) {
         return rt.con0("#Option", 0);
       } else {
-        return lib$base$Option$bind(Codebase$readObject(dir, h_1), rt.named((form) => {
+        return lib$base$Option$bind(Codebase$readObject(dir, h_1), ({ "Cli.featuresOf/\u03bb": (form) => {
           const t3 = Mdl$fromSexp(form);
           m4: {
             if (t3.tag === 0) {
@@ -2395,7 +2384,7 @@ function Cli$featuresOf(dir, ns, d) {
             }
             rt.nomatch(t3);
           }
-        }, "Cli.featuresOf/\u03bb"));
+        } })["Cli.featuresOf/\u03bb"]);
       }
     }
     if (true) {
@@ -2403,9 +2392,9 @@ function Cli$featuresOf(dir, ns, d) {
     }
     rt.nomatch(pair);
   }
-}, "Cli.featuresOf/\u03bb"), lib$base$Map$toList(ns));
-  const sorted = lib$base$List$map(lib$base$snd, lib$base$List$sortBy(rt.named((a, b_1) => rt.ap(rt.prims["compare"], lib$base$fst(a), lib$base$fst(b_1)), "Cli.featuresOf/\u03bb"), blocks));
-  return lib$base$List$foldl(rt.named((acc, b_2) => {
+} })["Cli.featuresOf/\u03bb"], lib$base$Map$toList(ns));
+  const sorted = lib$base$List$map(lib$base$snd, lib$base$List$sortBy(({ "Cli.featuresOf/\u03bb": (a, b_1) => rt.ap(rt.prims["compare"], lib$base$fst(a), lib$base$fst(b_1)) })["Cli.featuresOf/\u03bb"], blocks));
+  return lib$base$List$foldl(({ "Cli.featuresOf/\u03bb": (acc, b_2) => {
   const t5 = new rt.Con("#Pair", 0, [acc, Features$fromBlock(b_2)]);
   m6: {
     if (t5.tag === 0 && t5.fields[0].tag === 0 && t5.fields[1].tag === 0) {
@@ -2418,11 +2407,11 @@ function Cli$featuresOf(dir, ns, d) {
       const fs_1 = t5.fields[0].fields[0];
       const bad_1 = t5.fields[0].fields[1];
       const found = t5.fields[1].fields[0];
-      return new rt.Con("#Pair", 0, [fs_1, rt.ap(rt.prims["append"], bad_1, lib$base$List$map(rt.named((p) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Block$blockId(b_2), ": "), p), "Cli.featuresOf/\u03bb"), found))]);
+      return new rt.Con("#Pair", 0, [fs_1, rt.ap(rt.prims["append"], bad_1, lib$base$List$map(({ "Cli.featuresOf/\u03bb": (p) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Block$blockId(b_2), ": "), p) })["Cli.featuresOf/\u03bb"], found))]);
     }
     rt.nomatch(t5);
   }
-}, "Cli.featuresOf/\u03bb"), new rt.Con("#Pair", 0, [rt.NIL, rt.NIL]), sorted);
+} })["Cli.featuresOf/\u03bb"], new rt.Con("#Pair", 0, [rt.NIL, rt.NIL]), sorted);
 }
 rt.named(Cli$featuresOf, "Cli.featuresOf");
 
@@ -2481,7 +2470,6 @@ function lib$base$Json$escape(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(go, 0, 0, rt.NIL)), "\"");
 }
 rt.named(lib$base$Json$escape, "lib.base.Json.escape");
@@ -2592,7 +2580,7 @@ rt.named(Explorer$logJson, "Explorer.logJson");
 
 function Cli$fullLog(dir, limit) {
   const live = Codebase$history(dir, Codebase$currentBranch(dir), limit);
-  const own = lib$base$List$map(rt.named((pair) => {
+  const own = lib$base$List$map(({ "Cli.fullLog/\u03bb": (pair) => {
   m0: {
     if (pair.tag === 0) {
       const h = pair.fields[0];
@@ -2601,7 +2589,7 @@ function Cli$fullLog(dir, limit) {
     }
     rt.nomatch(pair);
   }
-}, "Cli.fullLog/\u03bb"), live);
+} })["Cli.fullLog/\u03bb"], live);
   function lastOnce(priors$, seen$, acc$) {
     for (;;) {
       const priors = priors$, seen = seen$, acc = acc$;
@@ -2634,8 +2622,7 @@ function Cli$fullLog(dir, limit) {
       }
     }
   }
-  rt.named(lastOnce, "lastOnce");
-  const imported = lib$base$List$concatMap(rt.named((prior) => Codebase$recordEntries(dir, prior), "Cli.fullLog/\u03bb"), rt.ap(lastOnce, lib$base$List$reverse(lib$base$List$map(rt.named((pair_1) => Codebase$Causal$prior(lib$base$snd(pair_1)), "Cli.fullLog/\u03bb"), live)), lib$base$Set$empty(), rt.NIL));
+  const imported = lib$base$List$concatMap(({ "Cli.fullLog/\u03bb": (prior) => Codebase$recordEntries(dir, prior) })["Cli.fullLog/\u03bb"], rt.ap(lastOnce, lib$base$List$reverse(lib$base$List$map(({ "Cli.fullLog/\u03bb": (pair_1) => Codebase$Causal$prior(lib$base$snd(pair_1)) })["Cli.fullLog/\u03bb"], live)), lib$base$Set$empty(), rt.NIL));
   function unique(entries$, seen_1$, acc_1$) {
     for (;;) {
       const entries = entries$, seen_1 = seen_1$, acc_1 = acc_1$;
@@ -2668,7 +2655,6 @@ function Cli$fullLog(dir, limit) {
       }
     }
   }
-  rt.named(unique, "unique");
   return lib$base$List$take(limit, lib$base$List$reverse(rt.ap(unique, lib$base$List$reverse(rt.ap(rt.prims["append"], own, imported)), lib$base$Set$empty(), rt.NIL)));
 }
 rt.named(Cli$fullLog, "Cli.fullLog");
@@ -2757,15 +2743,15 @@ function Explorer$verdictOf(dir, h) {
 rt.named(Explorer$verdictOf, "Explorer.verdictOf");
 
 function Tasks$histories(dir, limit) {
-  const touched = rt.named((parent, node) => {
+  const touched = ({ "Tasks.histories/\u03bb": (parent, node) => {
   if (rt.equal(Codebase$Causal$tasks(parent), Codebase$Causal$tasks(node))) {
     return rt.NIL;
   } else {
     const before = Tasks$snapshotOf(dir, parent);
     const after = Tasks$snapshotOf(dir, node);
-    return lib$base$List$filter(rt.named((id) => !rt.equal(lib$base$Map$lookup(id, before), lib$base$Map$lookup(id, after)), "Tasks.histories/\u03bb"), lib$base$List$dedup(lib$base$List$sort(rt.ap(rt.prims["append"], lib$base$Map$keys(before), lib$base$Map$keys(after)))));
+    return lib$base$List$filter(({ "Tasks.histories/\u03bb": (id) => !rt.equal(lib$base$Map$lookup(id, before), lib$base$Map$lookup(id, after)) })["Tasks.histories/\u03bb"], lib$base$List$dedup(lib$base$List$sort(rt.ap(rt.prims["append"], lib$base$Map$keys(before), lib$base$Map$keys(after)))));
   }
-}, "Tasks.histories/\u03bb");
+} })["Tasks.histories/\u03bb"];
   function walk(h$, n$, acc$) {
     for (;;) {
       const h = h$, n = n$, acc = acc$;
@@ -2791,18 +2777,17 @@ function Tasks$histories(dir, limit) {
       }
     }
   }
-  rt.named(walk, "walk");
-  return lib$base$List$foldl(rt.named((m, change) => lib$base$List$foldl(rt.named((m2, id_1) => lib$base$Map$insert(id_1, rt.cons(lib$base$fst(change), lib$base$Option$getOr(lib$base$Map$lookup(id_1, m2), rt.NIL)), m2), "Tasks.histories/\u03bb"), m, lib$base$snd(change)), "Tasks.histories/\u03bb"), lib$base$Set$empty(), rt.ap(walk, Codebase$headOf(dir, Codebase$currentBranch(dir)), limit, rt.NIL));
+  return lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m, change) => lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m2, id_1) => lib$base$Map$insert(id_1, rt.cons(lib$base$fst(change), lib$base$Option$getOr(lib$base$Map$lookup(id_1, m2), rt.NIL)), m2) })["Tasks.histories/\u03bb"], m, lib$base$snd(change)) })["Tasks.histories/\u03bb"], lib$base$Set$empty(), rt.ap(walk, Codebase$headOf(dir, Codebase$currentBranch(dir)), limit, rt.NIL));
 }
 rt.named(Tasks$histories, "Tasks.histories");
 
 function Explorer$taskJson(dir, ns, history, t) {
-  const link = rt.named((a) => {
+  const link = ({ "Explorer.taskJson/\u03bb": (a) => {
   m0: {
     if (a.tag === 0) {
       const name = a.fields[0];
       const linked = a.fields[1];
-      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["definition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [name])]), rt.cons(new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [linked])]), rt.cons(new rt.Con("#Pair", 0, ["current", lib$base$Option$getOr(lib$base$Option$map(rt.named((e) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$hash(e)]), "Explorer.taskJson/\u03bb"), Names$lookupMounted(ns, name)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.NIL)))]);
+      return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["definition", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [name])]), rt.cons(new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [linked])]), rt.cons(new rt.Con("#Pair", 0, ["current", lib$base$Option$getOr(lib$base$Option$map(({ "Explorer.taskJson/\u03bb": (e) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$hash(e)]) })["Explorer.taskJson/\u03bb"], Names$lookupMounted(ns, name)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.NIL)))]);
     }
     if (a.tag === 1) {
       const h = a.fields[0];
@@ -2824,7 +2809,7 @@ function Explorer$taskJson(dir, ns, history, t) {
     }
     rt.nomatch(a);
   }
-}, "Explorer.taskJson/\u03bb");
+} })["Explorer.taskJson/\u03bb"];
   return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.cons(new rt.Con("#Pair", 0, ["priority", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 2, [Task$priority(t)])]), rt.cons(new rt.Con("#Pair", 0, ["assignee", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$assignee(t)])]), rt.cons(new rt.Con("#Pair", 0, ["labels", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Task$labels(t))])]), rt.cons(new rt.Con("#Pair", 0, ["parent", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$parent(t)])]), rt.cons(new rt.Con("#Pair", 0, ["details", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$details(t)])]), rt.cons(new rt.Con("#Pair", 0, ["links", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(link, Task$links(t))])]), rt.cons(new rt.Con("#Pair", 0, ["comments", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(Cli$commentJson, Task$comments(t))])]), rt.cons(new rt.Con("#Pair", 0, ["history", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.ap(Explorer$changeJson, dir), history)])]), rt.NIL)))))))))))]);
 }
 rt.named(Explorer$taskJson, "Explorer.taskJson");
@@ -2836,7 +2821,7 @@ rt.named(Cli$commentJson, "Cli.commentJson");
 
 function Comments$current(dir) {
   const snapshot = Comments$snapshotOf(dir, Codebase$readCausal(dir, Codebase$headOf(dir, Codebase$currentBranch(dir))));
-  return lib$base$Map$mapValues(rt.named((h) => Comments$read(dir, h), "Comments.current/\u03bb"), snapshot);
+  return lib$base$Map$mapValues(({ "Comments.current/\u03bb": (h) => Comments$read(dir, h) })["Comments.current/\u03bb"], snapshot);
 }
 rt.named(Comments$current, "Comments.current");
 
@@ -2844,11 +2829,11 @@ function Explorer$defJson(s, name, e) {
   const h = Entry$hash(e);
   const shown = Names$unmount(name);
   let source;
-  const t0 = lib$base$try(rt.named((v) => Cli$viewEntryWith(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, false), "Explorer.defJson/\u03bb"));
+  const t0 = lib$base$try(({ "Explorer.defJson/\u03bb": (v) => Cli$viewEntryWith(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, false) })["Explorer.defJson/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       const text = t0.fields[0];
-      const body = rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(rt.named((l) => lib$base$not(lib$base$Text$startsWith("-- ", l)), "Explorer.defJson/\u03bb"), lib$base$Text$lines(text)));
+      const body = rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(({ "Explorer.defJson/\u03bb": (l) => lib$base$not(lib$base$Text$startsWith("-- ", l)) })["Explorer.defJson/\u03bb"], lib$base$Text$lines(text)));
       if (lib$base$Text$isEmpty(rt.ap(rt.prims["Text.trim"], body))) {
         source = lib$base$Option$getOr(lib$base$List$last$p(lib$base$Text$lines(text)), "");
       } else {
@@ -2864,11 +2849,11 @@ function Explorer$defJson(s, name, e) {
     rt.nomatch(t0);
   }
   let tsSource;
-  const t2 = lib$base$try(rt.named((v_1) => Cli$viewEntryIn(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, "ts"), "Explorer.defJson/\u03bb"));
+  const t2 = lib$base$try(({ "Explorer.defJson/\u03bb": (v_1) => Cli$viewEntryIn(Explorer$Site$printer(s), Explorer$Site$dir(s), Explorer$Site$ns(s), shown, e, "ts") })["Explorer.defJson/\u03bb"]);
   m3: {
     if (t2.tag === 0) {
       const text_1 = t2.fields[0];
-      tsSource = rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(rt.named((l_1) => lib$base$not(lib$base$Text$startsWith("// ", l_1)), "Explorer.defJson/\u03bb"), lib$base$Text$lines(text_1)));
+      tsSource = rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(({ "Explorer.defJson/\u03bb": (l_1) => lib$base$not(lib$base$Text$startsWith("// ", l_1)) })["Explorer.defJson/\u03bb"], lib$base$Text$lines(text_1)));
       break m3;
     }
     if (t2.tag === 1) {
@@ -2878,22 +2863,22 @@ function Explorer$defJson(s, name, e) {
     }
     rt.nomatch(t2);
   }
-  const deps = lib$base$List$filter(rt.named((d) => {
+  const deps = lib$base$List$filter(({ "Explorer.defJson/\u03bb": (d) => {
   if (lib$base$Map$contains(d, Explorer$Site$index(s))) {
     return !rt.equal(d, h);
   } else {
     return false;
   }
-}, "Explorer.defJson/\u03bb"), lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$depsOf(s)), rt.NIL));
-  const links = lib$base$Map$fromList(lib$base$List$map(rt.named((d_1) => new rt.Con("#Pair", 0, [Print$nameFor(Explorer$Site$printer(s), d_1), d_1]), "Explorer.defJson/\u03bb"), deps));
-  const users = lib$base$List$filter(rt.named((u) => !rt.equal(u, h), "Explorer.defJson/\u03bb"), lib$base$List$dedup(lib$base$List$sort(lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$dependents(s)), rt.NIL))));
-  const named = rt.named((hs) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((x) => Explorer$refJson(lib$base$Option$getOr(lib$base$Map$lookup(x, Explorer$Site$index(s)), Cli$short(x)), x), "Explorer.defJson/\u03bb"), hs)]), "Explorer.defJson/\u03bb");
+} })["Explorer.defJson/\u03bb"], lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$depsOf(s)), rt.NIL));
+  const links = lib$base$Map$fromList(lib$base$List$map(({ "Explorer.defJson/\u03bb": (d_1) => new rt.Con("#Pair", 0, [Print$nameFor(Explorer$Site$printer(s), d_1), d_1]) })["Explorer.defJson/\u03bb"], deps));
+  const users = lib$base$List$filter(({ "Explorer.defJson/\u03bb": (u) => !rt.equal(u, h) })["Explorer.defJson/\u03bb"], lib$base$List$dedup(lib$base$List$sort(lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$dependents(s)), rt.NIL))));
+  const named = ({ "Explorer.defJson/\u03bb": (hs) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.defJson/\u03bb": (x) => Explorer$refJson(lib$base$Option$getOr(lib$base$Map$lookup(x, Explorer$Site$index(s)), Cli$short(x)), x) })["Explorer.defJson/\u03bb"], hs)]) })["Explorer.defJson/\u03bb"];
   const meta = Explorer$siteMeta(s, name, h);
   const sig = Explorer$signature(meta);
   const t4 = new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [name])]);
   const t5 = new rt.Con("#Pair", 0, ["kind", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Entry$kind(e)])]);
   const t6 = new rt.Con("#Pair", 0, ["hash", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [h])]);
-  const t7 = new rt.Con("#Pair", 0, ["aliases", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), lib$base$List$filter(rt.named((other) => !rt.equal(other, name), "Explorer.defJson/\u03bb"), lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$namesByHash(s)), rt.NIL)))])]);
+  const t7 = new rt.Con("#Pair", 0, ["aliases", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), lib$base$List$filter(({ "Explorer.defJson/\u03bb": (other) => !rt.equal(other, name) })["Explorer.defJson/\u03bb"], lib$base$Option$getOr(lib$base$Map$lookup(h, Explorer$Site$namesByHash(s)), rt.NIL)))])]);
   let r8;
   m9: {
     if (e.tag === 6) {
@@ -2912,7 +2897,7 @@ function Explorer$defJson(s, name, e) {
   }
   const t10 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r8]);
   const t11 = new rt.Con("#Pair", 0, ["signature", t10]);
-  const t12 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", rt.ap(named, deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", rt.ap(named, users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]), "Explorer.defJson/\u03bb"), Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
+  const t12 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", rt.ap(named, deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", rt.ap(named, users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.defJson/\u03bb": (t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]) })["Explorer.defJson/\u03bb"], Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
   const t13 = rt.cons(t11, t12);
   const t14 = rt.cons(t7, t13);
   const t15 = rt.cons(t6, t14);
@@ -2923,16 +2908,16 @@ function Explorer$defJson(s, name, e) {
 rt.named(Explorer$defJson, "Explorer.defJson");
 
 function Codebase$parentsOf(dir, h) {
-  return lib$base$List$filter(rt.named((p) => rt.perform("#IO", 4, [Codebase$objectPath(dir, p)]), "Codebase.parentsOf/\u03bb"), Codebase$Causal$parents(Codebase$readCausal(dir, h)));
+  return lib$base$List$filter(({ "Codebase.parentsOf/\u03bb": (p) => rt.perform("#IO", 4, [Codebase$objectPath(dir, p)]) })["Codebase.parentsOf/\u03bb"], Codebase$Causal$parents(Codebase$readCausal(dir, h)));
 }
 rt.named(Codebase$parentsOf, "Codebase.parentsOf");
 
 function Codebase$diffNamespaces(dir, a, b) {
-  const index = rt.named((h) => {
+  const index = ({ "Codebase.diffNamespaces/\u03bb": (h) => {
   if (lib$base$Text$isEmpty(h)) {
     return lib$base$Set$empty();
   } else {
-    return lib$base$Map$fromList(lib$base$List$map(rt.named((item) => {
+    return lib$base$Map$fromList(lib$base$List$map(({ "Codebase.diffNamespaces/\u03bb": (item) => {
       m0: {
         if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "sub" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
           const seg = item.fields[0].fields[1].fields[0].fields[0];
@@ -2947,10 +2932,10 @@ function Codebase$diffNamespaces(dir, a, b) {
         }
         rt.nomatch(item);
       }
-    }, "Codebase.diffNamespaces/\u03bb"), Codebase$nodeItems(dir, h)));
+    } })["Codebase.diffNamespaces/\u03bb"], Codebase$nodeItems(dir, h)));
   }
-}, "Codebase.diffNamespaces/\u03bb");
-  const childOf = rt.named((item_1) => {
+} })["Codebase.diffNamespaces/\u03bb"];
+  const childOf = ({ "Codebase.diffNamespaces/\u03bb": (item_1) => {
   m1: {
     if (item_1.tag === 1 && item_1.fields[0].tag === 3 && item_1.fields[0].fields[0].tag === 1 && item_1.fields[0].fields[0].fields[1].tag === 1 && item_1.fields[0].fields[0].fields[1].fields[1].tag === 1 && item_1.fields[0].fields[0].fields[1].fields[1].fields[0].tag === 2 && item_1.fields[0].fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const child = item_1.fields[0].fields[0].fields[1].fields[1].fields[0].fields[0];
@@ -2961,8 +2946,8 @@ function Codebase$diffNamespaces(dir, a, b) {
     }
     rt.nomatch(item_1);
   }
-}, "Codebase.diffNamespaces/\u03bb");
-  const entryOf = rt.named((item_2) => {
+} })["Codebase.diffNamespaces/\u03bb"];
+  const entryOf = ({ "Codebase.diffNamespaces/\u03bb": (item_2) => {
   m2: {
     if (item_2.tag === 3 && item_2.fields[0].tag === 1 && item_2.fields[0].fields[1].tag === 1 && item_2.fields[0].fields[1].fields[1].tag === 1 && item_2.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const e = item_2.fields[0].fields[1].fields[1].fields[0];
@@ -2973,14 +2958,14 @@ function Codebase$diffNamespaces(dir, a, b) {
     }
     rt.nomatch(item_2);
   }
-}, "Codebase.diffNamespaces/\u03bb");
+} })["Codebase.diffNamespaces/\u03bb"];
   function go(prefix, x, y) {
     if (rt.equal(x, y)) {
       return rt.NIL;
     } else {
       const xs = rt.ap(index, x);
       const ys = rt.ap(index, y);
-      return lib$base$List$concatMap(rt.named((key) => {
+      return lib$base$List$concatMap(({ "Codebase.diffNamespaces/\u03bb": (key) => {
     const before = lib$base$Map$lookup(key, xs);
     const after = lib$base$Map$lookup(key, ys);
     if (rt.equal(before, after)) {
@@ -2992,11 +2977,10 @@ function Codebase$diffNamespaces(dir, a, b) {
         return rt.cons(new rt.Con("#Pair", 0, [rt.ap(rt.prims["append"], prefix, lib$base$Text$drop(1, key)), new rt.Con("#Pair", 0, [lib$base$Option$map(entryOf, before), lib$base$Option$map(entryOf, after)])]), rt.NIL);
       }
     }
-  }, "Codebase.diffNamespaces/\u03bb"), lib$base$Set$toList(lib$base$Set$fromList(rt.ap(rt.prims["append"], lib$base$Map$keys(xs), lib$base$Map$keys(ys)))));
+  } })["Codebase.diffNamespaces/\u03bb"], lib$base$Set$toList(lib$base$Set$fromList(rt.ap(rt.prims["append"], lib$base$Map$keys(xs), lib$base$Map$keys(ys)))));
     }
   }
-  rt.named(go, "go");
-  const joined = lib$base$List$foldl(rt.named((m, change) => {
+  const joined = lib$base$List$foldl(({ "Codebase.diffNamespaces/\u03bb": (m, change) => {
   m3: {
     if (change.tag === 0 && change.fields[1].tag === 0) {
       const name_1 = change.fields[0];
@@ -3007,7 +2991,7 @@ function Codebase$diffNamespaces(dir, a, b) {
         if (t4.tag === 1 && t4.fields[0].tag === 0) {
           const b0 = t4.fields[0].fields[0];
           const a0 = t4.fields[0].fields[1];
-          return lib$base$Map$insert(name_1, new rt.Con("#Pair", 0, [lib$base$Option$orElse(b0, rt.named((v) => before_1, "Codebase.diffNamespaces/\u03bb")), lib$base$Option$orElse(a0, rt.named((v_1) => after_1, "Codebase.diffNamespaces/\u03bb"))]), m);
+          return lib$base$Map$insert(name_1, new rt.Con("#Pair", 0, [lib$base$Option$orElse(b0, ({ "Codebase.diffNamespaces/\u03bb": (v) => before_1 })["Codebase.diffNamespaces/\u03bb"]), lib$base$Option$orElse(a0, ({ "Codebase.diffNamespaces/\u03bb": (v_1) => after_1 })["Codebase.diffNamespaces/\u03bb"])]), m);
         }
         if (t4.tag === 0) {
           return lib$base$Map$insert(name_1, new rt.Con("#Pair", 0, [before_1, after_1]), m);
@@ -3017,8 +3001,8 @@ function Codebase$diffNamespaces(dir, a, b) {
     }
     rt.nomatch(change);
   }
-}, "Codebase.diffNamespaces/\u03bb"), lib$base$Set$empty(), rt.ap(go, "", a, b));
-  return lib$base$List$filterMap(rt.named((pair) => {
+} })["Codebase.diffNamespaces/\u03bb"], lib$base$Set$empty(), rt.ap(go, "", a, b));
+  return lib$base$List$filterMap(({ "Codebase.diffNamespaces/\u03bb": (pair) => {
   m6: {
     if (pair.tag === 0 && pair.fields[1].tag === 0) {
       const name_2 = pair.fields[0];
@@ -3032,7 +3016,7 @@ function Codebase$diffNamespaces(dir, a, b) {
     }
     rt.nomatch(pair);
   }
-}, "Codebase.diffNamespaces/\u03bb"), lib$base$Map$toList(joined));
+} })["Codebase.diffNamespaces/\u03bb"], lib$base$Map$toList(joined));
 }
 rt.named(Codebase$diffNamespaces, "Codebase.diffNamespaces");
 
@@ -3056,7 +3040,7 @@ rt.named(Codebase$Causal$snapshot, "Codebase.Causal.snapshot");
 
 function Codebase$readNamespace(dir, h) {
   function go(prefix, node, acc) {
-    return lib$base$List$foldl(rt.named((m, item) => {
+    return lib$base$List$foldl(({ "Codebase.readNamespace/\u03bb": (m, item) => {
   m0: {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "sub" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const seg = item.fields[0].fields[1].fields[0].fields[0];
@@ -3073,9 +3057,8 @@ function Codebase$readNamespace(dir, h) {
     }
     rt.nomatch(item);
   }
-}, "Codebase.readNamespace/\u03bb"), acc, Codebase$nodeItems(dir, node));
+} })["Codebase.readNamespace/\u03bb"], acc, Codebase$nodeItems(dir, node));
   }
-  rt.named(go, "go");
   return rt.ap(go, "", h, lib$base$Set$empty());
 }
 rt.named(Codebase$readNamespace, "Codebase.readNamespace");
@@ -3086,12 +3069,12 @@ function lib$base$Set$toList(s) {
 rt.named(lib$base$Set$toList, "lib.base.Set.toList");
 
 function lib$base$Set$fromList(xs) {
-  return lib$base$List$foldl(rt.named((s, x) => lib$base$Set$insert(x, s), "lib.base.Set.fromList/\u03bb"), rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), xs);
+  return lib$base$List$foldl(({ "lib.base.Set.fromList/\u03bb": (s, x) => lib$base$Set$insert(x, s) })["lib.base.Set.fromList/\u03bb"], rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), xs);
 }
 rt.named(lib$base$Set$fromList, "lib.base.Set.fromList");
 
 function lib$base$Map$keys(m) {
-  return lib$base$Map$foldr(rt.named((key, v, acc) => rt.cons(key, acc), "lib.base.Map.keys/\u03bb"), rt.NIL, m);
+  return lib$base$Map$foldr(({ "lib.base.Map.keys/\u03bb": (key, v, acc) => rt.cons(key, acc) })["lib.base.Map.keys/\u03bb"], rt.NIL, m);
 }
 rt.named(lib$base$Map$keys, "lib.base.Map.keys");
 
@@ -3137,11 +3120,11 @@ function Explorer$refJson(name, h) {
 rt.named(Explorer$refJson, "Explorer.refJson");
 
 function Explorer$sourceOf(printer, dir, ns, name, e) {
-  const t0 = lib$base$try(rt.named((v) => Cli$viewEntryWith(printer, dir, ns, name, e, false), "Explorer.sourceOf/\u03bb"));
+  const t0 = lib$base$try(({ "Explorer.sourceOf/\u03bb": (v) => Cli$viewEntryWith(printer, dir, ns, name, e, false) })["Explorer.sourceOf/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       const text = t0.fields[0];
-      return rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(rt.named((l) => lib$base$not(lib$base$Text$startsWith("-- ", l)), "Explorer.sourceOf/\u03bb"), lib$base$Text$lines(text)));
+      return rt.ap(rt.prims["Text.join"], "\n", lib$base$List$filter(({ "Explorer.sourceOf/\u03bb": (l) => lib$base$not(lib$base$Text$startsWith("-- ", l)) })["Explorer.sourceOf/\u03bb"], lib$base$Text$lines(text)));
     }
     if (t0.tag === 1) {
       const message = t0.fields[0];
@@ -3153,7 +3136,7 @@ function Explorer$sourceOf(printer, dir, ns, name, e) {
 rt.named(Explorer$sourceOf, "Explorer.sourceOf");
 
 function Cli$producedBy(dir, causal) {
-  return lib$base$Option$orElse(lib$base$Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), rt.named((text) => lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [lib$base$Sexp$read(text)]), "by")), "Cli.producedBy/\u03bb")), rt.named((v) => lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(Codebase$readMeta(dir, causal), "by")), "Cli.producedBy/\u03bb"));
+  return lib$base$Option$orElse(lib$base$Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), ({ "Cli.producedBy/\u03bb": (text) => lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [lib$base$Sexp$read(text)]), "by")) })["Cli.producedBy/\u03bb"]), ({ "Cli.producedBy/\u03bb": (v) => lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(Codebase$readMeta(dir, causal), "by")) })["Cli.producedBy/\u03bb"]);
 }
 rt.named(Cli$producedBy, "Cli.producedBy");
 
@@ -3184,13 +3167,13 @@ function lib$base$Text$drop(n, t) {
 rt.named(lib$base$Text$drop, "lib.base.Text.drop");
 
 function Export$document(dir, ns, d) {
-  const blocks = lib$base$List$filterMap(rt.named((pair) => {
+  const blocks = lib$base$List$filterMap(({ "Export.document/\u03bb": (pair) => {
   m0: {
     if (pair.tag === 0 && pair.fields[1].tag === 7) {
       const name = pair.fields[0];
       const h = pair.fields[1].fields[0];
       if (rt.equal(Export$documentOf(name), d)) {
-        return lib$base$Option$map(rt.named((obj) => {
+        return lib$base$Option$map(({ "Export.document/\u03bb": (obj) => {
           const meta = Codebase$readMeta(dir, h);
           let order;
           const t1 = Codebase$metaField(meta, "order");
@@ -3207,7 +3190,7 @@ function Export$document(dir, ns, d) {
             rt.nomatch(t1);
           }
           return new rt.Con("#Pair", 0, [order, new rt.Con("#Pair", 0, [name, new rt.Con("#Pair", 0, [Mdl$fromSexp(obj), meta])])]);
-        }, "Export.document/\u03bb"), Codebase$readObject(dir, h));
+        } })["Export.document/\u03bb"], Codebase$readObject(dir, h));
       } else {
         return rt.con0("#Option", 0);
       }
@@ -3217,8 +3200,8 @@ function Export$document(dir, ns, d) {
     }
     rt.nomatch(pair);
   }
-}, "Export.document/\u03bb"), lib$base$Map$toList(ns));
-  const sorted = lib$base$List$sortBy(rt.named((a, b) => {
+} })["Export.document/\u03bb"], lib$base$Map$toList(ns));
+  const sorted = lib$base$List$sortBy(({ "Export.document/\u03bb": (a, b) => {
   const t3 = new rt.Con("#Pair", 0, [a, b]);
   m4: {
     if (t3.tag === 0 && t3.fields[0].tag === 0 && t3.fields[0].fields[1].tag === 0 && t3.fields[0].fields[1].fields[1].tag === 0 && t3.fields[1].tag === 0 && t3.fields[1].fields[1].tag === 0 && t3.fields[1].fields[1].fields[1].tag === 0) {
@@ -3234,13 +3217,13 @@ function Export$document(dir, ns, d) {
     }
     rt.nomatch(t3);
   }
-}, "Export.document/\u03bb"), blocks);
-  const text = rt.named((meta_1, key) => lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta_1, key)), ""), "Export.document/\u03bb");
+} })["Export.document/\u03bb"], blocks);
+  const text = ({ "Export.document/\u03bb": (meta_1, key) => lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta_1, key)), "") })["Export.document/\u03bb"];
   let front;
   m5: {
     if (sorted.tag === 1 && sorted.fields[0].tag === 0 && sorted.fields[0].fields[1].tag === 0 && sorted.fields[0].fields[1].fields[1].tag === 0) {
       const meta_2 = sorted.fields[0].fields[1].fields[1].fields[1];
-      front = lib$base$List$filterMap(rt.named((kv) => {
+      front = lib$base$List$filterMap(({ "Export.document/\u03bb": (kv) => {
       m6: {
         if (kv.tag === 3 && kv.fields[0].tag === 1 && kv.fields[0].fields[1].tag === 1 && kv.fields[0].fields[1].fields[1].tag === 0) {
           const k_1 = kv.fields[0].fields[0];
@@ -3252,7 +3235,7 @@ function Export$document(dir, ns, d) {
         }
         rt.nomatch(kv);
       }
-    }, "Export.document/\u03bb"), Codebase$metaList(meta_2, "front"));
+    } })["Export.document/\u03bb"], Codebase$metaList(meta_2, "front"));
       break m5;
     }
     if (sorted.tag === 0) {
@@ -3262,12 +3245,12 @@ function Export$document(dir, ns, d) {
     rt.nomatch(sorted);
   }
   let frontLines;
-  if (lib$base$List$any(rt.named((kv_1) => (lib$base$fst(kv_1) === "name"), "Export.document/\u03bb"), front)) {
+  if (lib$base$List$any(({ "Export.document/\u03bb": (kv_1) => (lib$base$fst(kv_1) === "name") })["Export.document/\u03bb"], front)) {
     frontLines = front;
   } else {
-    frontLines = rt.cons(new rt.Con("#Pair", 0, ["name", d]), lib$base$List$filter(rt.named((kv_2) => (lib$base$fst(kv_2) !== "name"), "Export.document/\u03bb"), front));
+    frontLines = rt.cons(new rt.Con("#Pair", 0, ["name", d]), lib$base$List$filter(({ "Export.document/\u03bb": (kv_2) => (lib$base$fst(kv_2) !== "name") })["Export.document/\u03bb"], front));
   }
-  const terms = lib$base$List$dedup(lib$base$List$sort(lib$base$List$map(rt.named((x) => {
+  const terms = lib$base$List$dedup(lib$base$List$sort(lib$base$List$map(({ "Export.document/\u03bb": (x) => {
   m7: {
     if (x.tag === 0 && x.fields[1].tag === 0 && x.fields[1].fields[1].tag === 0 && x.fields[1].fields[1].fields[0].tag === 0) {
       const uri = x.fields[1].fields[1].fields[0].fields[0];
@@ -3276,18 +3259,18 @@ function Export$document(dir, ns, d) {
     }
     rt.nomatch(x);
   }
-}, "Export.document/\u03bb"), sorted)));
+} })["Export.document/\u03bb"], sorted)));
   const table = rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.cons("| Term | URI |", rt.cons("| --- | --- |", rt.NIL)), terms));
-  const pieces = lib$base$List$concatMap(rt.named((x_1) => {
+  const pieces = lib$base$List$concatMap(({ "Export.document/\u03bb": (x_1) => {
   m8: {
     if (x_1.tag === 0 && x_1.fields[1].tag === 0 && x_1.fields[1].fields[1].tag === 0 && x_1.fields[1].fields[1].fields[0].tag === 0) {
       const b_2 = x_1.fields[1].fields[1].fields[0].fields[1];
       const meta_3 = x_1.fields[1].fields[1].fields[1];
-      return lib$base$List$filter(rt.named((t) => lib$base$not(lib$base$Text$isEmpty(t)), "Export.document/\u03bb"), rt.cons(rt.ap(text, meta_3, "lead"), rt.cons(Mdl$render(b_2), rt.NIL)));
+      return lib$base$List$filter(({ "Export.document/\u03bb": (t) => lib$base$not(lib$base$Text$isEmpty(t)) })["Export.document/\u03bb"], rt.cons(rt.ap(text, meta_3, "lead"), rt.cons(Mdl$render(b_2), rt.NIL)));
     }
     rt.nomatch(x_1);
   }
-}, "Export.document/\u03bb"), sorted);
+} })["Export.document/\u03bb"], sorted);
   let tail;
   const t9 = lib$base$List$last$p(sorted);
   m10: {
@@ -3312,13 +3295,13 @@ function Export$document(dir, ns, d) {
   const t12 = rt.ap(rt.prims["append"], pieces, r11);
   const t13 = rt.ap(rt.prims["Text.join"], "\n\n", t12);
   bodyLines = lib$base$Text$lines(t13);
-  const isExtensions = rt.named((l) => {
+  const isExtensions = ({ "Export.document/\u03bb": (l) => {
   if (lib$base$Text$startsWith("#", rt.ap(rt.prims["Text.trim"], l))) {
     return (Mdl$headingOf(rt.ap(rt.prims["Text.trim"], l)) === "Extensions");
   } else {
     return false;
   }
-}, "Export.document/\u03bb");
+} })["Export.document/\u03bb"];
   let body;
   if (lib$base$List$any(isExtensions, bodyLines)) {
     const at = lib$base$List$findIndex(isExtensions, bodyLines);
@@ -3326,7 +3309,7 @@ function Export$document(dir, ns, d) {
   } else {
     body = rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.cons("## Extensions", rt.cons("", rt.cons(table, rt.cons("", rt.NIL)))), bodyLines));
   }
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons("---", rt.NIL), lib$base$List$map(rt.named((kv_3) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$fst(kv_3), ": "), lib$base$snd(kv_3)), "Export.document/\u03bb"), frontLines)), rt.cons("---", rt.cons("", rt.cons(body, rt.NIL))))), "\n");
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.join"], "\n", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons("---", rt.NIL), lib$base$List$map(({ "Export.document/\u03bb": (kv_3) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$fst(kv_3), ": "), lib$base$snd(kv_3)) })["Export.document/\u03bb"], frontLines)), rt.cons("---", rt.cons("", rt.cons(body, rt.NIL))))), "\n");
 }
 rt.named(Export$document, "Export.document");
 
@@ -3419,7 +3402,7 @@ function Doc$blocks(v) {
 rt.named(Doc$blocks, "Doc.blocks");
 
 function Mdl$parse(doc) {
-  const t0 = Mdl$frontmatter(lib$base$List$mapIndexed(rt.named((i, l) => new rt.Con("#Pair", 0, [((i + 1) | 0), l]), "Mdl.parse/\u03bb"), lib$base$Text$lines(doc)));
+  const t0 = Mdl$frontmatter(lib$base$List$mapIndexed(({ "Mdl.parse/\u03bb": (i, l) => new rt.Con("#Pair", 0, [((i + 1) | 0), l]) })["Mdl.parse/\u03bb"], lib$base$Text$lines(doc)));
   m1: {
     if (t0.tag === 0) {
       const front = t0.fields[0];
@@ -3491,7 +3474,7 @@ function Mdl$parse(doc) {
                         rest$ = more;
                         section$ = section;
                         fence$ = rt.con0("#Option", 0);
-                        terms$ = lib$base$Option$getOr(lib$base$Option$map(rt.named((row) => rt.cons(row, terms), "Mdl.parse/\u03bb"), Mdl$termRow(t)), terms);
+                        terms$ = lib$base$Option$getOr(lib$base$Option$map(({ "Mdl.parse/\u03bb": (row) => rt.cons(row, terms) })["Mdl.parse/\u03bb"], Mdl$termRow(t)), terms);
                         blocks$ = blocks;
                         continue;
                       } else {
@@ -3512,7 +3495,6 @@ function Mdl$parse(doc) {
           }
         }
       }
-      rt.named(go, "go");
       return rt.ap(go, lines, "", rt.con0("#Option", 0), rt.NIL, rt.NIL);
     }
     rt.nomatch(t0);
@@ -3578,7 +3560,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(readString, "readString");
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
@@ -3590,7 +3571,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(atomEnd, "atomEnd");
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
@@ -3727,7 +3707,6 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
@@ -3748,7 +3727,7 @@ rt.named(lib$base$Option$isSome, "lib.base.Option.isSome");
 function Types$displaySchemeNamed(names, scheme) {
   const u = Types$newUnifier(undefined);
   const t = Types$zonk(u, Types$fromSexp(u, scheme, rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), rt.NIL, false));
-  const shared = lib$base$List$filter(rt.named((pair) => (lib$base$snd(pair) > 1), "Types.displaySchemeNamed/\u03bb"), lib$base$Map$toList(Types$rowVarCounts(t, lib$base$Set$empty())));
+  const shared = lib$base$List$filter(({ "Types.displaySchemeNamed/\u03bb": (pair) => (lib$base$snd(pair) > 1) })["Types.displaySchemeNamed/\u03bb"], lib$base$Map$toList(Types$rowVarCounts(t, lib$base$Set$empty())));
   return Types$showTypeWith(names, t, rt.ap(rt.prims["Ref.new"], lib$base$Set$empty()), 0, lib$base$Set$fromList(lib$base$List$map(lib$base$fst, shared)));
 }
 rt.named(Types$displaySchemeNamed, "Types.displaySchemeNamed");
@@ -3804,7 +3783,6 @@ function Names$groups(pairs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, lib$base$List$sort(pairs), "", rt.NIL, rt.NIL);
 }
 rt.named(Names$groups, "Names.groups");
@@ -3825,7 +3803,7 @@ function Names$atLibraryRoot(fqn, name) {
 rt.named(Names$atLibraryRoot, "Names.atLibraryRoot");
 
 function lib$base$List$foldr(f, init, xs) {
-  return lib$base$List$foldl(rt.named((acc, x) => rt.ap(f, x, acc), "lib.base.List.foldr/\u03bb"), init, lib$base$List$reverse(xs));
+  return lib$base$List$foldl(({ "lib.base.List.foldr/\u03bb": (acc, x) => rt.ap(f, x, acc) })["lib.base.List.foldr/\u03bb"], init, lib$base$List$reverse(xs));
 }
 rt.named(lib$base$List$foldr, "lib.base.List.foldr");
 
@@ -3916,7 +3894,7 @@ function Tasks$snapshotAt(dir, h) {
       }
       if (t0.tag === 1) {
         const form = t0.fields[0];
-        return lib$base$Map$fromList(lib$base$List$map(rt.named((item) => {
+        return lib$base$Map$fromList(lib$base$List$map(({ "Tasks.snapshotAt/\u03bb": (item) => {
         const t2 = lib$base$Sexp$args(item);
         m3: {
           if (t2.tag === 1 && t2.fields[1].tag === 1 && t2.fields[1].fields[1].tag === 0) {
@@ -3929,7 +3907,7 @@ function Tasks$snapshotAt(dir, h) {
           }
           rt.nomatch(t2);
         }
-      }, "Tasks.snapshotAt/\u03bb"), lib$base$Sexp$args(form)));
+      } })["Tasks.snapshotAt/\u03bb"], lib$base$Sexp$args(form)));
       }
       rt.nomatch(t0);
     }
@@ -3983,8 +3961,8 @@ function Codebase$readObject(dir, h) {
 rt.named(Codebase$readObject, "Codebase.readObject");
 
 function Codebase$causalFromSexp(form) {
-  const field = rt.named((key) => lib$base$Option$getOr(lib$base$List$find(rt.named((x) => rt.equal(lib$base$Sexp$head(x), key), "Codebase.causalFromSexp/\u03bb"), lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])), "Codebase.causalFromSexp/\u03bb");
-  const first = rt.named((key_1) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))), "Codebase.causalFromSexp/\u03bb");
+  const field = ({ "Codebase.causalFromSexp/\u03bb": (key) => lib$base$Option$getOr(lib$base$List$find(({ "Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["Codebase.causalFromSexp/\u03bb"];
+  const first = ({ "Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["Codebase.causalFromSexp/\u03bb"];
   return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
 }
 rt.named(Codebase$causalFromSexp, "Codebase.causalFromSexp");
@@ -3995,13 +3973,13 @@ function Codebase$branchHead(dir, branch) {
 rt.named(Codebase$branchHead, "Codebase.branchHead");
 
 function Tasks$fromSexp(form) {
-  const text = rt.named((key) => lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [form]), key)), ""), "Tasks.fromSexp/\u03bb");
+  const text = ({ "Tasks.fromSexp/\u03bb": (key) => lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [form]), key)), "") })["Tasks.fromSexp/\u03bb"];
   return new rt.Con("df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", 0, [rt.ap(text, "id"), rt.ap(text, "title"), lib$base$Option$getOr(lib$base$List$lookup(rt.ap(text, "state"), Tasks$states()), rt.con0("9e891131338d0d7a162df929ca47a8833b06234f9b72b853fcfaa9d091fae2e2", 0)), lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asInt, Codebase$metaField(new rt.Con("#Option", 1, [form]), "priority")), 0), rt.ap(text, "assignee"), lib$base$List$map(lib$base$Sexp$asText, Codebase$metaList(new rt.Con("#Option", 1, [form]), "labels")), rt.ap(text, "parent"), rt.ap(text, "details"), lib$base$List$map(Tasks$attachmentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "links")), lib$base$List$map(Tasks$commentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "comments"))]);
 }
 rt.named(Tasks$fromSexp, "Tasks.fromSexp");
 
 function Analytics$isEvent(dir, h) {
-  return lib$base$List$any(rt.named((a) => {
+  return lib$base$List$any(({ "Analytics.isEvent/\u03bb": (a) => {
   if ((lib$base$Sexp$head(a) === "event")) {
     return true;
   } else {
@@ -4016,7 +3994,7 @@ function Analytics$isEvent(dir, h) {
       rt.nomatch(a);
     }
   }
-}, "Analytics.isEvent/\u03bb"), Codebase$metaList(Codebase$readMeta(dir, h), "attrs"));
+} })["Analytics.isEvent/\u03bb"], Codebase$metaList(Codebase$readMeta(dir, h), "attrs"));
 }
 rt.named(Analytics$isEvent, "Analytics.isEvent");
 
@@ -4035,7 +4013,7 @@ function Analytics$typeOf(dir, name, h, fieldNames) {
     }
     rt.nomatch(t0);
   }
-  const columns = lib$base$List$map(rt.named((pair) => {
+  const columns = lib$base$List$map(({ "Analytics.typeOf/\u03bb": (pair) => {
   const t2 = Analytics$columnTypeOf(lib$base$snd(pair));
   m3: {
     if (t2.tag === 1) {
@@ -4047,21 +4025,21 @@ function Analytics$typeOf(dir, name, h, fieldNames) {
     }
     rt.nomatch(t2);
   }
-}, "Analytics.typeOf/\u03bb"), lib$base$List$zip(fieldNames, types));
+} })["Analytics.typeOf/\u03bb"], lib$base$List$zip(fieldNames, types));
   return new rt.Con("0e48470c83930f0f27d45e2d532bcc8314c7a418fd7a8e10c205d11b5eba4b6e", 0, [name, h, columns]);
 }
 rt.named(Analytics$typeOf, "Analytics.typeOf");
 
 function Analytics$byDefinition(dir, project, ns, ts) {
   const tally = rt.ap(rt.prims["MutMap.new"], undefined);
-  lib$base$List$forEach(ts, rt.named((t) => {
+  lib$base$List$forEach(ts, ({ "Analytics.byDefinition/\u03bb": (t) => {
   const t0 = Analytics$rows(dir, t);
   m1: {
     if (t0.tag === 0) {
       const pending = t0.fields[0];
       const pushed = t0.fields[1];
-      const refColumns = lib$base$List$filter(rt.named((pair) => (Column$columnType(lib$base$snd(pair)) === "ref"), "Analytics.byDefinition/\u03bb"), lib$base$List$zip(lib$base$List$range(0, lib$base$List$length(EventType$columns(t))), EventType$columns(t)));
-      return lib$base$List$forEach(rt.ap(rt.prims["append"], pending, pushed), rt.named((r) => lib$base$List$forEach(refColumns, rt.named((pair_1) => {
+      const refColumns = lib$base$List$filter(({ "Analytics.byDefinition/\u03bb": (pair) => (Column$columnType(lib$base$snd(pair)) === "ref") })["Analytics.byDefinition/\u03bb"], lib$base$List$zip(lib$base$List$range(0, lib$base$List$length(EventType$columns(t))), EventType$columns(t)));
+      return lib$base$List$forEach(rt.ap(rt.prims["append"], pending, pushed), ({ "Analytics.byDefinition/\u03bb": (r) => lib$base$List$forEach(refColumns, ({ "Analytics.byDefinition/\u03bb": (pair_1) => {
           const t2 = lib$base$List$get$p(Row$cells(r), lib$base$fst(pair_1));
           m3: {
             if (t2.tag === 1 && t2.fields[0].tag === 2) {
@@ -4079,12 +4057,12 @@ function Analytics$byDefinition(dir, project, ns, ts) {
             }
             rt.nomatch(t2);
           }
-        }, "Analytics.byDefinition/\u03bb")), "Analytics.byDefinition/\u03bb"));
+        } })["Analytics.byDefinition/\u03bb"]) })["Analytics.byDefinition/\u03bb"]);
     }
     rt.nomatch(t0);
   }
-}, "Analytics.byDefinition/\u03bb"));
-  return lib$base$List$foldl(rt.named((m, key_1) => {
+} })["Analytics.byDefinition/\u03bb"]);
+  return lib$base$List$foldl(({ "Analytics.byDefinition/\u03bb": (m, key_1) => {
   const t4 = rt.ap(rt.prims["Text.split"], key_1, "\n");
   m5: {
     if (t4.tag === 1 && t4.fields[1].tag === 1 && t4.fields[1].fields[1].tag === 1 && t4.fields[1].fields[1].fields[1].tag === 0) {
@@ -4098,7 +4076,7 @@ function Analytics$byDefinition(dir, project, ns, ts) {
     }
     rt.nomatch(t4);
   }
-}, "Analytics.byDefinition/\u03bb"), lib$base$Set$empty(), lib$base$List$sort(rt.ap(rt.prims["MutMap.keys"], tally)));
+} })["Analytics.byDefinition/\u03bb"], lib$base$Set$empty(), lib$base$List$sort(rt.ap(rt.prims["MutMap.keys"], tally)));
 }
 rt.named(Analytics$byDefinition, "Analytics.byDefinition");
 
@@ -4130,7 +4108,7 @@ function Cli$featureFacts(dir, ns) {
   const tasks = rt.ap(rt.prims["Ref.new"], rt.con0("#Option", 0));
   const documents = Export$specDocuments(ns);
   const mounted = Names$unmounted(ns);
-  return rt.named((name) => {
+  return ({ "Cli.featureFacts/\u03bb": (name) => {
   const t0 = Cli$featureFact(dir, documents, tasks, name);
   m1: {
     if (t0.tag === 1) {
@@ -4138,7 +4116,7 @@ function Cli$featureFacts(dir, ns) {
       return answer;
     }
     if (t0.tag === 0) {
-      const t2 = lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Map$lookup(name, mounted), "Cli.featureFacts/\u03bb"));
+      const t2 = lib$base$Option$orElse(lib$base$Map$lookup(name, ns), ({ "Cli.featureFacts/\u03bb": (v) => lib$base$Map$lookup(name, mounted) })["Cli.featureFacts/\u03bb"]);
       m3: {
         if (t2.tag === 0) {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.ap(rt.prims["append"], name, " is not in the codebase")]);
@@ -4174,7 +4152,7 @@ function Cli$featureFacts(dir, ns) {
     }
     rt.nomatch(t0);
   }
-}, "Cli.featureFacts/\u03bb");
+} })["Cli.featureFacts/\u03bb"];
 }
 rt.named(Cli$featureFacts, "Cli.featureFacts");
 
@@ -4338,7 +4316,7 @@ rt.named(Feature$featureTags, "Feature.featureTags");
 
 function Features$problems(f, facts) {
   const shipped = (Feature$featureStatus(f) === "shipped");
-  const defProblems = lib$base$List$concatMap(rt.named((name) => {
+  const defProblems = lib$base$List$concatMap(({ "Features.problems/\u03bb": (name) => {
   const t0 = rt.ap(facts, name);
   m1: {
     if (t0.tag === 1) {
@@ -4361,8 +4339,8 @@ function Features$problems(f, facts) {
     }
     rt.nomatch(t0);
   }
-}, "Features.problems/\u03bb"), Feature$definitions(f));
-  const specProblems = lib$base$List$concatMap(rt.named((d) => {
+} })["Features.problems/\u03bb"], Feature$definitions(f));
+  const specProblems = lib$base$List$concatMap(({ "Features.problems/\u03bb": (d) => {
   const t3 = rt.ap(facts, rt.ap(rt.prims["append"], "spec:", d));
   m4: {
     if (t3.tag === 1) {
@@ -4374,9 +4352,9 @@ function Features$problems(f, facts) {
     }
     rt.nomatch(t3);
   }
-}, "Features.problems/\u03bb"), Feature$specDocs(f));
-  const tasks = lib$base$List$map(rt.named((id) => new rt.Con("#Pair", 0, [id, rt.ap(facts, rt.ap(rt.prims["append"], "task:", id))]), "Features.problems/\u03bb"), Feature$taskIds(f));
-  const taskProblems = lib$base$List$concatMap(rt.named((pair) => {
+} })["Features.problems/\u03bb"], Feature$specDocs(f));
+  const tasks = lib$base$List$map(({ "Features.problems/\u03bb": (id) => new rt.Con("#Pair", 0, [id, rt.ap(facts, rt.ap(rt.prims["append"], "task:", id))]) })["Features.problems/\u03bb"], Feature$taskIds(f));
+  const taskProblems = lib$base$List$concatMap(({ "Features.problems/\u03bb": (pair) => {
   m5: {
     if (pair.tag === 0 && pair.fields[1].tag === 1) {
       const id_1 = pair.fields[0];
@@ -4400,8 +4378,8 @@ function Features$problems(f, facts) {
     }
     rt.nomatch(pair);
   }
-}, "Features.problems/\u03bb"), tasks);
-  const anyOpen = lib$base$List$any(rt.named((pair_1) => {
+} })["Features.problems/\u03bb"], tasks);
+  const anyOpen = lib$base$List$any(({ "Features.problems/\u03bb": (pair_1) => {
   m7: {
     if (pair_1.tag === 0 && pair_1.fields[1].tag === 0) {
       const known_2 = pair_1.fields[1].fields[0];
@@ -4412,7 +4390,7 @@ function Features$problems(f, facts) {
     }
     rt.nomatch(pair_1);
   }
-}, "Features.problems/\u03bb"), tasks);
+} })["Features.problems/\u03bb"], tasks);
   let linked;
   let r8;
   if (lib$base$List$isEmpty(Feature$definitions(f))) {
@@ -4459,16 +4437,16 @@ function Features$problems(f, facts) {
 rt.named(Features$problems, "Features.problems");
 
 function Features$tree(features) {
-  const ids = lib$base$List$map(rt.named((f) => Feature$featureId(f), "Features.tree/\u03bb"), features);
-  const isRoot = rt.named((f_1) => {
+  const ids = lib$base$List$map(({ "Features.tree/\u03bb": (f) => Feature$featureId(f) })["Features.tree/\u03bb"], features);
+  const isRoot = ({ "Features.tree/\u03bb": (f_1) => {
   if (lib$base$Text$isEmpty(Feature$parentId(f_1))) {
     return true;
   } else {
     return lib$base$not(lib$base$List$contains(Feature$parentId(f_1), ids));
   }
-}, "Features.tree/\u03bb");
+} })["Features.tree/\u03bb"];
   function under(depth, parent, seen) {
-    return lib$base$List$concatMap(rt.named((f_2) => {
+    return lib$base$List$concatMap(({ "Features.tree/\u03bb": (f_2) => {
   let r0;
   if (rt.equal(Feature$parentId(f_2), parent)) {
     r0 = lib$base$not(lib$base$List$contains(Feature$featureId(f_2), seen));
@@ -4480,15 +4458,14 @@ function Features$tree(features) {
   } else {
     return rt.NIL;
   }
-}, "Features.tree/\u03bb"), features);
+} })["Features.tree/\u03bb"], features);
   }
-  rt.named(under, "under");
-  return lib$base$List$concatMap(rt.named((f_3) => rt.cons(new rt.Con("#Pair", 0, [0, f_3]), rt.ap(under, 1, Feature$featureId(f_3), rt.cons(Feature$featureId(f_3), rt.NIL))), "Features.tree/\u03bb"), lib$base$List$filter(isRoot, features));
+  return lib$base$List$concatMap(({ "Features.tree/\u03bb": (f_3) => rt.cons(new rt.Con("#Pair", 0, [0, f_3]), rt.ap(under, 1, Feature$featureId(f_3), rt.cons(Feature$featureId(f_3), rt.NIL))) })["Features.tree/\u03bb"], lib$base$List$filter(isRoot, features));
 }
 rt.named(Features$tree, "Features.tree");
 
 function Cli$featureNotes(facts, fs, bad) {
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], bad, Features$orphans(fs)), lib$base$List$concatMap(rt.named((f) => lib$base$List$map(rt.named((p) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Feature$featureId(f), ": "), p), "Cli.featureNotes/\u03bb"), Features$problems(f, facts)), "Cli.featureNotes/\u03bb"), fs));
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], bad, Features$orphans(fs)), lib$base$List$concatMap(({ "Cli.featureNotes/\u03bb": (f) => lib$base$List$map(({ "Cli.featureNotes/\u03bb": (p) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Feature$featureId(f), ": "), p) })["Cli.featureNotes/\u03bb"], Features$problems(f, facts)) })["Cli.featureNotes/\u03bb"], fs));
 }
 rt.named(Cli$featureNotes, "Cli.featureNotes");
 
@@ -4501,7 +4478,7 @@ function Mdl$fromSexp(form) {
       const ident = t0.fields[1].fields[1].fields[0];
       const title = t0.fields[1].fields[1].fields[1].fields[0];
       const props = t0.fields[1].fields[1].fields[1].fields[1];
-      return new rt.Con("#Pair", 0, [lib$base$Sexp$asText(uri), new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, [lib$base$Sexp$asText(kind), lib$base$Sexp$asText(ident), lib$base$Sexp$asText(title), lib$base$List$filterMap(rt.named((p) => {
+      return new rt.Con("#Pair", 0, [lib$base$Sexp$asText(uri), new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, [lib$base$Sexp$asText(kind), lib$base$Sexp$asText(ident), lib$base$Sexp$asText(title), lib$base$List$filterMap(({ "Mdl.fromSexp/\u03bb": (p) => {
       m2: {
         if (p.tag === 3 && p.fields[0].tag === 1 && p.fields[0].fields[1].tag === 1 && p.fields[0].fields[1].fields[1].tag === 0) {
           const key = p.fields[0].fields[0];
@@ -4513,7 +4490,7 @@ function Mdl$fromSexp(form) {
         }
         rt.nomatch(p);
       }
-    }, "Mdl.fromSexp/\u03bb"), props), 0])]);
+    } })["Mdl.fromSexp/\u03bb"], props), 0])]);
     }
     if (true) {
       return new rt.Con("#Pair", 0, ["", new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, ["", "", "", rt.NIL, 0])]);
@@ -4550,7 +4527,7 @@ function Codebase$history(dir, branch, limit) {
         return lib$base$List$reverse(acc);
       } else {
         const c = Codebase$peekCausal(dir, h);
-        const t0 = lib$base$List$filter(rt.named((p) => rt.perform("#IO", 4, [Codebase$objectPath(dir, p)]), "Codebase.history/\u03bb"), Codebase$Causal$parents(c));
+        const t0 = lib$base$List$filter(({ "Codebase.history/\u03bb": (p) => rt.perform("#IO", 4, [Codebase$objectPath(dir, p)]) })["Codebase.history/\u03bb"], Codebase$Causal$parents(c));
         m1: {
           if (t0.tag === 0) {
             return lib$base$List$reverse(rt.cons(new rt.Con("#Pair", 0, [h, c]), acc));
@@ -4567,7 +4544,6 @@ function Codebase$history(dir, branch, limit) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, Codebase$headOf(dir, branch), limit, rt.NIL);
 }
 rt.named(Codebase$history, "Codebase.history");
@@ -4587,7 +4563,7 @@ function Codebase$recordEntries(dir, h) {
   m1: {
     if (t0.tag === 1) {
       const form = t0.fields[0];
-      return lib$base$List$filterMap(rt.named((x) => {
+      return lib$base$List$filterMap(({ "Codebase.recordEntries/\u03bb": (x) => {
       m2: {
         if (x.tag === 3 && x.fields[0].tag === 1 && x.fields[0].fields[0].tag === 1 && x.fields[0].fields[0].fields[0] === "entry" && x.fields[0].fields[1].tag === 1 && x.fields[0].fields[1].fields[0].tag === 2 && x.fields[0].fields[1].fields[1].tag === 1 && x.fields[0].fields[1].fields[1].fields[0].tag === 2 && x.fields[0].fields[1].fields[1].fields[1].tag === 1 && x.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 2 && x.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
           const c = x.fields[0].fields[1].fields[0].fields[0];
@@ -4600,7 +4576,7 @@ function Codebase$recordEntries(dir, h) {
         }
         rt.nomatch(x);
       }
-    }, "Codebase.recordEntries/\u03bb"), lib$base$Sexp$args(form));
+    } })["Codebase.recordEntries/\u03bb"], lib$base$Sexp$args(form));
     }
     if (t0.tag === 0) {
       return rt.NIL;
@@ -4787,7 +4763,7 @@ function Task$comments(v) {
 rt.named(Task$comments, "Task.comments");
 
 function Explorer$changeJson(dir, pair) {
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["causal", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$fst(pair)])]), rt.cons(new rt.Con("#Pair", 0, ["message", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Codebase$Causal$message(lib$base$snd(pair))])]), rt.NIL)), lib$base$Option$getOr(lib$base$Option$map(rt.named((agent) => rt.cons(new rt.Con("#Pair", 0, ["by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [agent])]), rt.NIL), "Explorer.changeJson/\u03bb"), Cli$producedBy(dir, lib$base$fst(pair))), rt.NIL)), Explorer$atJson(dir, lib$base$fst(pair)))]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["causal", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [lib$base$fst(pair)])]), rt.cons(new rt.Con("#Pair", 0, ["message", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Codebase$Causal$message(lib$base$snd(pair))])]), rt.NIL)), lib$base$Option$getOr(lib$base$Option$map(({ "Explorer.changeJson/\u03bb": (agent) => rt.cons(new rt.Con("#Pair", 0, ["by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [agent])]), rt.NIL) })["Explorer.changeJson/\u03bb"], Cli$producedBy(dir, lib$base$fst(pair))), rt.NIL)), Explorer$atJson(dir, lib$base$fst(pair)))]);
 }
 rt.named(Explorer$changeJson, "Explorer.changeJson");
 
@@ -4863,7 +4839,7 @@ function Comments$snapshotOf(dir, c) {
       }
       if (t0.tag === 1) {
         const form = t0.fields[0];
-        return lib$base$Map$fromList(lib$base$List$map(rt.named((item) => {
+        return lib$base$Map$fromList(lib$base$List$map(({ "Comments.snapshotOf/\u03bb": (item) => {
         const t2 = lib$base$Sexp$args(item);
         m3: {
           if (t2.tag === 1 && t2.fields[1].tag === 1 && t2.fields[1].fields[1].tag === 0) {
@@ -4876,7 +4852,7 @@ function Comments$snapshotOf(dir, c) {
           }
           rt.nomatch(t2);
         }
-      }, "Comments.snapshotOf/\u03bb"), lib$base$Sexp$args(form)));
+      } })["Comments.snapshotOf/\u03bb"], lib$base$Sexp$args(form)));
       }
       rt.nomatch(t0);
     }
@@ -5142,7 +5118,7 @@ function Highlight$htmlLinked(links, source) {
 rt.named(Highlight$htmlLinked, "Highlight.htmlLinked");
 
 function Highlight$htmlLinkedIn(dialect, links, source) {
-  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((run) => {
+  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Highlight.htmlLinkedIn/\u03bb": (run) => {
   m0: {
     if (run.tag === 0) {
       const kind = run.fields[0];
@@ -5177,12 +5153,12 @@ function Highlight$htmlLinkedIn(dialect, links, source) {
     }
     rt.nomatch(run);
   }
-}, "Highlight.htmlLinkedIn/\u03bb"), Highlight$runsWith(Highlight$keywordsFor(dialect), source)));
+} })["Highlight.htmlLinkedIn/\u03bb"], Highlight$runsWith(Highlight$keywordsFor(dialect), source)));
 }
 rt.named(Highlight$htmlLinkedIn, "Highlight.htmlLinkedIn");
 
 function Tasks$about(tasks, name, h) {
-  return lib$base$List$filter(rt.named((t) => lib$base$List$any(rt.named((a) => {
+  return lib$base$List$filter(({ "Tasks.about/\u03bb": (t) => lib$base$List$any(({ "Tasks.about/\u03bb": (a) => {
     m0: {
       if (a.tag === 0) {
         const n = a.fields[0];
@@ -5198,7 +5174,7 @@ function Tasks$about(tasks, name, h) {
       }
       rt.nomatch(a);
     }
-  }, "Tasks.about/\u03bb"), Task$links(t)), "Tasks.about/\u03bb"), lib$base$Map$values(tasks));
+  } })["Tasks.about/\u03bb"], Task$links(t)) })["Tasks.about/\u03bb"], lib$base$Map$values(tasks));
 }
 rt.named(Tasks$about, "Tasks.about");
 
@@ -5226,14 +5202,14 @@ function Explorer$Site$taskMap(v) {
 rt.named(Explorer$Site$taskMap, "Explorer.Site.taskMap");
 
 function Codebase$nodeItems(dir, h) {
-  return Codebase$nodeItemsWith(rt.named((x) => Codebase$readObject(dir, x), "Codebase.nodeItems/\u03bb"), h);
+  return Codebase$nodeItemsWith(({ "Codebase.nodeItems/\u03bb": (x) => Codebase$readObject(dir, x) })["Codebase.nodeItems/\u03bb"], h);
 }
 rt.named(Codebase$nodeItems, "Codebase.nodeItems");
 
 function Entry$fromSexp(s) {
   const a = lib$base$Sexp$args(s);
-  const txt = rt.named((k) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$get$p(a, k), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))), "Entry.fromSexp/\u03bb");
-  const num = rt.named((k_1) => lib$base$Sexp$asInt(lib$base$Option$getOr(lib$base$List$get$p(a, k_1), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]))), "Entry.fromSexp/\u03bb");
+  const txt = ({ "Entry.fromSexp/\u03bb": (k) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$get$p(a, k), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["Entry.fromSexp/\u03bb"];
+  const num = ({ "Entry.fromSexp/\u03bb": (k_1) => lib$base$Sexp$asInt(lib$base$Option$getOr(lib$base$List$get$p(a, k_1), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]))) })["Entry.fromSexp/\u03bb"];
   const h = lib$base$Sexp$head(s);
   if ((h === "term")) {
     return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 0, [rt.ap(txt, 0)]);
@@ -5300,14 +5276,14 @@ function Cli$madeAt(dir, causal) {
     }
     rt.nomatch(t0);
   }
-  return lib$base$Option$orElse(fromNode, rt.named((v) => lib$base$Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), rt.named((text) => lib$base$Option$bind(Codebase$metaField(new rt.Con("#Option", 1, [lib$base$Sexp$read(text)]), "at"), rt.named((at) => {
+  return lib$base$Option$orElse(fromNode, ({ "Cli.madeAt/\u03bb": (v) => lib$base$Option$bind(rt.perform("#IO", 2, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/provenance/"), causal)]), ({ "Cli.madeAt/\u03bb": (text) => lib$base$Option$bind(Codebase$metaField(new rt.Con("#Option", 1, [lib$base$Sexp$read(text)]), "at"), ({ "Cli.madeAt/\u03bb": (at) => {
       const ns = lib$base$Sexp$asText(at);
       if ((rt.ap(rt.prims["Text.length"], ns) > 9)) {
         return rt.ap(rt.prims["Int.fromText"], lib$base$Text$take(((rt.ap(rt.prims["Text.length"], ns) - 9) | 0), ns));
       } else {
         return rt.con0("#Option", 0);
       }
-    }, "Cli.madeAt/\u03bb")), "Cli.madeAt/\u03bb")), "Cli.madeAt/\u03bb"));
+    } })["Cli.madeAt/\u03bb"]) })["Cli.madeAt/\u03bb"]) })["Cli.madeAt/\u03bb"]);
 }
 rt.named(Cli$madeAt, "Cli.madeAt");
 
@@ -5352,22 +5328,22 @@ function Mdl$render(b) {
     r3 = rt.ap(rt.prims["append"], ": ", lib$base$Block$blockTitle(b));
   }
   head = rt.ap(rt.prims["append"], t2, r3);
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "```mdl\n", head), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((kv) => {
+  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "```mdl\n", head), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Mdl.render/\u03bb": (kv) => {
   const t4 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n  ", lib$base$fst(kv)), ":");
   let r5;
   if (lib$base$Text$contains("\n", lib$base$snd(kv))) {
-    r5 = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((l) => {
+    r5 = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Mdl.render/\u03bb": (l) => {
       if (lib$base$Text$startsWith("  ", l)) {
         return rt.ap(rt.prims["append"], "\n    ", rt.ap(rt.prims["Text.trim"], l));
       } else {
         return rt.ap(rt.prims["append"], "\n  - ", l);
       }
-    }, "Mdl.render/\u03bb"), lib$base$Text$lines(lib$base$snd(kv))));
+    } })["Mdl.render/\u03bb"], lib$base$Text$lines(lib$base$snd(kv))));
   } else {
     r5 = rt.ap(rt.prims["append"], " ", lib$base$snd(kv));
   }
   return rt.ap(rt.prims["append"], t4, r5);
-}, "Mdl.render/\u03bb"), lib$base$Block$props(b)))), "\n```");
+} })["Mdl.render/\u03bb"], lib$base$Block$props(b)))), "\n```");
 }
 rt.named(Mdl$render, "Mdl.render");
 
@@ -5389,7 +5365,6 @@ function Mdl$headingOf(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(rt.prims["Text.trim"], lib$base$Text$drop(rt.ap(go, 0), t));
 }
 rt.named(Mdl$headingOf, "Mdl.headingOf");
@@ -5417,7 +5392,6 @@ function lib$base$List$findIndex(p, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, xs);
 }
 rt.named(lib$base$List$findIndex, "lib.base.List.findIndex");
@@ -5431,11 +5405,11 @@ function Mdl$frontmatter(lines) {
       const first = lines.fields[0].fields[1];
       const rest = lines.fields[1];
       if ((rt.ap(rt.prims["Text.trim"], first) === "---")) {
-        const n = lib$base$List$findIndex(rt.named((p) => (rt.ap(rt.prims["Text.trim"], lib$base$snd(p)) === "---"), "Mdl.frontmatter/\u03bb"), rest);
+        const n = lib$base$List$findIndex(({ "Mdl.frontmatter/\u03bb": (p) => (rt.ap(rt.prims["Text.trim"], lib$base$snd(p)) === "---") })["Mdl.frontmatter/\u03bb"], rest);
         if ((n < 0)) {
           return new rt.Con("#Pair", 0, [rt.NIL, lines]);
         } else {
-          return new rt.Con("#Pair", 0, [lib$base$List$filterMap(rt.named((p_1) => Mdl$keyValue(lib$base$snd(p_1)), "Mdl.frontmatter/\u03bb"), lib$base$List$take(n, rest)), lib$base$List$drop(((n + 1) | 0), rest)]);
+          return new rt.Con("#Pair", 0, [lib$base$List$filterMap(({ "Mdl.frontmatter/\u03bb": (p_1) => Mdl$keyValue(lib$base$snd(p_1)) })["Mdl.frontmatter/\u03bb"], lib$base$List$take(n, rest)), lib$base$List$drop(((n + 1) | 0), rest)]);
         }
       } else {
         return new rt.Con("#Pair", 0, [rt.NIL, lines]);
@@ -5466,13 +5440,12 @@ function lib$base$List$mapIndexed(f, xs) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, rt.NIL, xs);
 }
 rt.named(lib$base$List$mapIndexed, "lib.base.List.mapIndexed");
 
 function Mdl$block(start, lines) {
-  const t0 = lib$base$List$filter(rt.named((l) => lib$base$not(lib$base$Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))), "Mdl.block/\u03bb"), lines);
+  const t0 = lib$base$List$filter(({ "Mdl.block/\u03bb": (l) => lib$base$not(lib$base$Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))) })["Mdl.block/\u03bb"], lines);
   m1: {
     if (t0.tag === 0) {
       return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, ["", "", "", rt.NIL, start]);
@@ -5598,7 +5571,7 @@ function Types$zonk(u, t) {
     if (t0.tag === 0) {
       const iri = t0.fields[0];
       const args = t0.fields[1];
-      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, lib$base$List$map(rt.named((a) => Types$zonk(u, a), "Types.zonk/\u03bb"), args)]);
+      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, lib$base$List$map(({ "Types.zonk/\u03bb": (a) => Types$zonk(u, a) })["Types.zonk/\u03bb"], args)]);
     }
     if (t0.tag === 1) {
       const a_1 = t0.fields[0];
@@ -5622,7 +5595,7 @@ rt.named(Types$zonk, "Types.zonk");
 function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
   for (;;) {
     const u = u$, s = s$, vars = vars$, rowVars = rowVars$, params = params$, openArrows = openArrows$;
-    const named = rt.named((key) => {
+    const named = ({ "Types.fromSexp/\u03bb": (key) => {
   const t0 = lib$base$Map$lookup(key, rt.ap(rt.prims["Ref.get"], vars));
   m1: {
     if (t0.tag === 1) {
@@ -5636,7 +5609,7 @@ function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
     }
     rt.nomatch(t0);
   }
-}, "Types.fromSexp/\u03bb");
+} })["Types.fromSexp/\u03bb"];
     m2: {
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
         const iri = s.fields[0].fields[1].fields[0].fields[0];
@@ -5670,7 +5643,7 @@ function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
         const iri_1 = s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
         const args = s.fields[0].fields[1].fields[1];
-        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri_1, lib$base$List$map(rt.named((a) => Types$fromSexp(u, a, vars, rowVars, params, false), "Types.fromSexp/\u03bb"), args)]);
+        return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri_1, lib$base$List$map(({ "Types.fromSexp/\u03bb": (a) => Types$fromSexp(u, a, vars, rowVars, params, false) })["Types.fromSexp/\u03bb"], args)]);
       }
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1) {
         const head = s.fields[0].fields[1].fields[0];
@@ -5703,7 +5676,7 @@ function Types$rowVarCounts(t$, acc$) {
     m0: {
       if (t.tag === 0) {
         const args = t.fields[1];
-        return lib$base$List$foldl(rt.named((m, a) => Types$rowVarCounts(a, m), "Types.rowVarCounts/\u03bb"), acc, args);
+        return lib$base$List$foldl(({ "Types.rowVarCounts/\u03bb": (m, a) => Types$rowVarCounts(a, m) })["Types.rowVarCounts/\u03bb"], acc, args);
       }
       if (t.tag === 1) {
         const a_1 = t.fields[0];
@@ -5744,7 +5717,7 @@ function Types$showTypeWith(names, t, seen, prec, shared) {
     if (t.tag === 0) {
       const iri_1 = t.fields[0];
       const args = t.fields[1];
-      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$nameOf(names, iri_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showTypeWith(names, a_1, seen, 100, shared)), "Types.showTypeWith/\u03bb"), args))));
+      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$nameOf(names, iri_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Types.showTypeWith/\u03bb": (a_1) => rt.ap(rt.prims["append"], " ", Types$showTypeWith(names, a_1, seen, 100, shared)) })["Types.showTypeWith/\u03bb"], args))));
     }
     if (t.tag === 1) {
       const a_2 = t.fields[0];
@@ -5814,7 +5787,6 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      rt.named(go, "go");
       return rt.ap(go, true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
@@ -5963,7 +5935,6 @@ function lib$base$List$zip(xs, ys) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, xs, ys);
 }
 rt.named(lib$base$List$zip, "lib.base.List.zip");
@@ -6014,7 +5985,6 @@ function lib$base$List$range(lo, hi) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, ((hi - 1) | 0));
 }
 rt.named(lib$base$List$range, "lib.base.List.range");
@@ -6124,12 +6094,12 @@ function EventType$typeHash(v) {
 rt.named(EventType$typeHash, "EventType.typeHash");
 
 function Analytics$columnsJson(columns) {
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(rt.named((c) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Column$columnName(c)])]), rt.cons(new rt.Con("#Pair", 0, ["type", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Column$columnType(c)])]), rt.NIL))]), "Analytics.columnsJson/\u03bb"), columns)]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Analytics.columnsJson/\u03bb": (c) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["name", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Column$columnName(c)])]), rt.cons(new rt.Con("#Pair", 0, ["type", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Column$columnType(c)])]), rt.NIL))]) })["Analytics.columnsJson/\u03bb"], columns)]);
 }
 rt.named(Analytics$columnsJson, "Analytics.columnsJson");
 
 function Analytics$rowJson(t, r) {
-  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["event_id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$eventId(r)])]), rt.cons(new rt.Con("#Pair", 0, ["recorded_at", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$recordedAt(r)])]), rt.cons(new rt.Con("#Pair", 0, ["recorded_by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$recordedBy(r)])]), rt.NIL))), lib$base$List$map(rt.named((pair) => new rt.Con("#Pair", 0, [Column$columnName(lib$base$fst(pair)), Analytics$cellJson(lib$base$snd(pair))]), "Analytics.rowJson/\u03bb"), lib$base$List$zip(EventType$columns(t), Row$cells(r))))]);
+  return new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["event_id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$eventId(r)])]), rt.cons(new rt.Con("#Pair", 0, ["recorded_at", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$recordedAt(r)])]), rt.cons(new rt.Con("#Pair", 0, ["recorded_by", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Row$recordedBy(r)])]), rt.NIL))), lib$base$List$map(({ "Analytics.rowJson/\u03bb": (pair) => new rt.Con("#Pair", 0, [Column$columnName(lib$base$fst(pair)), Analytics$cellJson(lib$base$snd(pair))]) })["Analytics.rowJson/\u03bb"], lib$base$List$zip(EventType$columns(t), Row$cells(r))))]);
 }
 rt.named(Analytics$rowJson, "Analytics.rowJson");
 
@@ -6183,15 +6153,15 @@ function Analytics$fileName(t) {
 rt.named(Analytics$fileName, "Analytics.fileName");
 
 function Names$unmounted(ns) {
-  const pairs = lib$base$List$filterMap(rt.named((pair) => {
+  const pairs = lib$base$List$filterMap(({ "Names.unmounted/\u03bb": (pair) => {
   if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
     return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [Names$unmount(lib$base$fst(pair)), lib$base$snd(pair)])]);
   } else {
     return rt.con0("#Option", 0);
   }
-}, "Names.unmounted/\u03bb"), lib$base$Map$toList(ns));
-  const counts = lib$base$List$foldl(rt.named((m, pair_1) => lib$base$Map$insert(lib$base$fst(pair_1), ((lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair_1), m), 0) + 1) | 0), m), "Names.unmounted/\u03bb"), lib$base$Set$empty(), pairs);
-  return lib$base$Map$fromList(lib$base$List$filter(rt.named((pair_2) => rt.equal(lib$base$Map$lookup(lib$base$fst(pair_2), counts), new rt.Con("#Option", 1, [1])), "Names.unmounted/\u03bb"), pairs));
+} })["Names.unmounted/\u03bb"], lib$base$Map$toList(ns));
+  const counts = lib$base$List$foldl(({ "Names.unmounted/\u03bb": (m, pair_1) => lib$base$Map$insert(lib$base$fst(pair_1), ((lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair_1), m), 0) + 1) | 0), m) })["Names.unmounted/\u03bb"], lib$base$Set$empty(), pairs);
+  return lib$base$Map$fromList(lib$base$List$filter(({ "Names.unmounted/\u03bb": (pair_2) => rt.equal(lib$base$Map$lookup(lib$base$fst(pair_2), counts), new rt.Con("#Option", 1, [1])) })["Names.unmounted/\u03bb"], pairs));
 }
 rt.named(Names$unmounted, "Names.unmounted");
 
@@ -6207,7 +6177,7 @@ function Cli$featureFact(dir, documents, tasks, name) {
       }
       if (t0.tag === 0) {
         let known_1;
-        const t2 = lib$base$try(rt.named((v) => Tasks$current(dir), "Cli.featureFact/\u03bb"));
+        const t2 = lib$base$try(({ "Cli.featureFact/\u03bb": (v) => Tasks$current(dir) })["Cli.featureFact/\u03bb"]);
         m3: {
           if (t2.tag === 0) {
             const found = t2.fields[0];
@@ -6244,13 +6214,13 @@ function Cli$featureFact(dir, documents, tasks, name) {
   } else {
     if (lib$base$Text$startsWith("spec:", name)) {
       let r7;
-      if (lib$base$List$any(rt.named((doc) => {
+      if (lib$base$List$any(({ "Cli.featureFact/\u03bb": (doc) => {
       if (rt.equal(doc, lib$base$Text$drop(5, name))) {
         return true;
       } else {
         return rt.equal(Names$unmount(doc), lib$base$Text$drop(5, name));
       }
-    }, "Cli.featureFact/\u03bb"), documents)) {
+    } })["Cli.featureFact/\u03bb"], documents)) {
         r7 = new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [rt.cons(new rt.Con("#Pair", 0, ["kind", "spec"]), rt.NIL)]);
       } else {
         r7 = new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.ap(rt.prims["append"], name, " is not in the codebase")]);
@@ -6286,13 +6256,13 @@ function Resolve$isStub(core$) {
 rt.named(Resolve$isStub, "Resolve.isStub");
 
 function lib$base$List$contains(x, xs) {
-  return lib$base$List$any(rt.named((y) => rt.equal(y, x), "lib.base.List.contains/\u03bb"), xs);
+  return lib$base$List$any(({ "lib.base.List.contains/\u03bb": (y) => rt.equal(y, x) })["lib.base.List.contains/\u03bb"], xs);
 }
 rt.named(lib$base$List$contains, "lib.base.List.contains");
 
 function Features$orphans(features) {
-  const ids = lib$base$List$map(rt.named((f) => Feature$featureId(f), "Features.orphans/\u03bb"), features);
-  return lib$base$List$filterMap(rt.named((f_1) => {
+  const ids = lib$base$List$map(({ "Features.orphans/\u03bb": (f) => Feature$featureId(f) })["Features.orphans/\u03bb"], features);
+  return lib$base$List$filterMap(({ "Features.orphans/\u03bb": (f_1) => {
   let r0;
   if (lib$base$Text$isEmpty(Feature$parentId(f_1))) {
     r0 = true;
@@ -6304,7 +6274,7 @@ function Features$orphans(features) {
   } else {
     return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Feature$featureId(f_1), ": no parent "), Feature$parentId(f_1))]);
   }
-}, "Features.orphans/\u03bb"), features);
+} })["Features.orphans/\u03bb"], features);
 }
 rt.named(Features$orphans, "Features.orphans");
 
@@ -6316,14 +6286,14 @@ rt.named(Features$prop, "Features.prop");
 const Features$statuses = rt.lazy("Features.statuses", () => rt.cons("planned", rt.cons("building", rt.cons("shipped", rt.cons("dropped", rt.NIL)))));
 
 function Features$items(t) {
-  const unbullet = rt.named((w) => {
+  const unbullet = ({ "Features.items/\u03bb": (w) => {
   if (lib$base$Text$startsWith("- ", w)) {
     return rt.ap(rt.prims["Text.trim"], lib$base$Text$drop(2, w));
   } else {
     return w;
   }
-}, "Features.items/\u03bb");
-  return lib$base$List$filter(rt.named((w_1) => lib$base$not(lib$base$Text$isEmpty(w_1)), "Features.items/\u03bb"), lib$base$List$map(rt.named((w_2) => rt.ap(unbullet, rt.ap(rt.prims["Text.trim"], w_2)), "Features.items/\u03bb"), rt.ap(rt.prims["Text.split"], lib$base$Text$replace("\n", "|", t), "|")));
+} })["Features.items/\u03bb"];
+  return lib$base$List$filter(({ "Features.items/\u03bb": (w_1) => lib$base$not(lib$base$Text$isEmpty(w_1)) })["Features.items/\u03bb"], lib$base$List$map(({ "Features.items/\u03bb": (w_2) => rt.ap(unbullet, rt.ap(rt.prims["Text.trim"], w_2)) })["Features.items/\u03bb"], rt.ap(rt.prims["Text.split"], lib$base$Text$replace("\n", "|", t), "|")));
 }
 rt.named(Features$items, "Features.items");
 
@@ -6472,10 +6442,10 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
             } else {
               const locals = lib$base$List$map(lib$base$Sexp$asText, Codebase$metaList(meta, "locals"));
               const notations = Print$notationsOf(meta);
-              const rules = lib$base$List$filterMap(rt.named((key) => lib$base$Option$bind(lib$base$List$head$p(lib$base$Option$getOr(lib$base$Map$lookup(key, Printer$namesByHash(base)), rt.NIL)), rt.named((ruleName) => Cli$loadRule(dir, ns, ruleName), "Cli.viewParts/\u03bb")), "Cli.viewParts/\u03bb"), lib$base$List$dedup(lib$base$List$map(lib$base$snd, notations)));
-              const p = Print$withRules(Print$withSelf(Print$withLocals(base, locals), h, name), lib$base$Map$fromList(lib$base$List$map(rt.named((r) => new rt.Con("#Pair", 0, [Syntax$Loaded$ruleKey(r), r]), "Cli.viewParts/\u03bb"), rules)));
+              const rules = lib$base$List$filterMap(({ "Cli.viewParts/\u03bb": (key) => lib$base$Option$bind(lib$base$List$head$p(lib$base$Option$getOr(lib$base$Map$lookup(key, Printer$namesByHash(base)), rt.NIL)), ({ "Cli.viewParts/\u03bb": (ruleName) => Cli$loadRule(dir, ns, ruleName) })["Cli.viewParts/\u03bb"]) })["Cli.viewParts/\u03bb"], lib$base$List$dedup(lib$base$List$map(lib$base$snd, notations)));
+              const p = Print$withRules(Print$withSelf(Print$withLocals(base, locals), h, name), lib$base$Map$fromList(lib$base$List$map(({ "Cli.viewParts/\u03bb": (r) => new rt.Con("#Pair", 0, [Syntax$Loaded$ruleKey(r), r]) })["Cli.viewParts/\u03bb"], rules)));
               let own;
-              if (lib$base$List$contains(rt.cons("syntax", rt.NIL), lib$base$List$map(rt.named((a) => lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(a)), "Cli.viewParts/\u03bb"), Codebase$metaList(meta, "attrs")))) {
+              if (lib$base$List$contains(rt.cons("syntax", rt.NIL), lib$base$List$map(({ "Cli.viewParts/\u03bb": (a) => lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(a)) })["Cli.viewParts/\u03bb"], Codebase$metaList(meta, "attrs")))) {
                 own = Cli$loadRule(dir, ns, name);
               } else {
                 own = rt.con0("#Option", 0);
@@ -6551,27 +6521,27 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
                   }
                   rt.nomatch(doc);
                 }
-                const opens = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((home) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "open ", home), " in\n"), "Cli.viewParts/\u03bb"), lib$base$List$dedup(lib$base$List$filter(rt.named((home_1) => (home_1 !== ""), "Cli.viewParts/\u03bb"), lib$base$List$map(rt.named((r_1) => Export$documentOf(Syntax$Loaded$ruleName(r_1)), "Cli.viewParts/\u03bb"), rules)))));
-                const attrs = lib$base$List$map(rt.named((a_1) => {
+                const opens = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (home) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "open ", home), " in\n") })["Cli.viewParts/\u03bb"], lib$base$List$dedup(lib$base$List$filter(({ "Cli.viewParts/\u03bb": (home_1) => (home_1 !== "") })["Cli.viewParts/\u03bb"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (r_1) => Export$documentOf(Syntax$Loaded$ruleName(r_1)) })["Cli.viewParts/\u03bb"], rules)))));
+                const attrs = lib$base$List$map(({ "Cli.viewParts/\u03bb": (a_1) => {
                 const t12 = lib$base$Sexp$asList(a_1);
                 m13: {
                   if (t12.tag === 1) {
                     const key_1 = t12.fields[0];
                     const values = t12.fields[1];
-                    return rt.ap(rt.prims["append"], lib$base$Sexp$asText(key_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((v) => rt.ap(rt.prims["append"], " ", Print$quoteText(lib$base$Sexp$asText(v))), "Cli.viewParts/\u03bb"), values)));
+                    return rt.ap(rt.prims["append"], lib$base$Sexp$asText(key_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (v) => rt.ap(rt.prims["append"], " ", Print$quoteText(lib$base$Sexp$asText(v))) })["Cli.viewParts/\u03bb"], values)));
                   }
                   if (t12.tag === 0) {
                     return "";
                   }
                   rt.nomatch(t12);
                 }
-              }, "Cli.viewParts/\u03bb"), lib$base$List$filter(rt.named((a_2) => {
+              } })["Cli.viewParts/\u03bb"], lib$base$List$filter(({ "Cli.viewParts/\u03bb": (a_2) => {
                 if (lib$base$Option$isNone(own)) {
                   return true;
                 } else {
                   return !rt.equal(lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(a_2)), rt.cons("syntax", rt.NIL));
                 }
-              }, "Cli.viewParts/\u03bb"), Codebase$metaList(meta, "attrs")));
+              } })["Cli.viewParts/\u03bb"], Codebase$metaList(meta, "attrs")));
                 let attrText;
                 if (lib$base$List$isEmpty(attrs)) {
                   attrText = "";
@@ -6583,7 +6553,7 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
                 m16: {
                   if (obj.tag === 3 && obj.fields[0].tag === 1 && obj.fields[0].fields[0].tag === 1 && obj.fields[0].fields[0].fields[0] === "term" && obj.fields[0].fields[1].tag === 1 && obj.fields[0].fields[1].fields[1].tag === 0) {
                     const c_2 = obj.fields[0].fields[1].fields[0];
-                    const t17 = lib$base$Option$bind(own, rt.named((rule) => Print$notationDecl(p, name, rule), "Cli.viewParts/\u03bb"));
+                    const t17 = lib$base$Option$bind(own, ({ "Cli.viewParts/\u03bb": (rule) => Print$notationDecl(p, name, rule) })["Cli.viewParts/\u03bb"]);
                     m18: {
                       if (t17.tag === 1) {
                         const text_1 = t17.fields[0];
@@ -6698,7 +6668,6 @@ function Highlight$runsWith(kws, source) {
                 }
               }
             }
-            rt.named(close, "close");
             const j_2 = rt.ap(close, ((i + 1) | 0));
             i$ = j_2;
             acc$ = rt.cons(new rt.Con("#Pair", 0, ["str", rt.ap(rt.prims["Text.slice"], source, i, j_2)]), acc);
@@ -6800,7 +6769,6 @@ function Highlight$runsWith(kws, source) {
                         }
                       }
                     }
-                    rt.named(word, "word");
                     const j_7 = rt.ap(word, i);
                     const w = rt.ap(rt.prims["Text.slice"], source, i, j_7);
                     let kind;
@@ -6835,7 +6803,6 @@ function Highlight$runsWith(kws, source) {
       }
     }
   }
-  rt.named(scan, "scan");
   return rt.ap(scan, 0, rt.NIL);
 }
 rt.named(Highlight$runsWith, "Highlight.runsWith");
@@ -6857,7 +6824,7 @@ function Codebase$nodeItemsWith(read, h) {
     }
     if (t0.tag === 1) {
       const form = t0.fields[0];
-      return lib$base$List$concatMap(rt.named((item) => {
+      return lib$base$List$concatMap(({ "Codebase.nodeItemsWith/\u03bb": (item) => {
       m2: {
         if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "part" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 0) {
           const child = item.fields[0].fields[1].fields[0].fields[0];
@@ -6868,7 +6835,7 @@ function Codebase$nodeItemsWith(read, h) {
         }
         rt.nomatch(item);
       }
-    }, "Codebase.nodeItemsWith/\u03bb"), lib$base$Sexp$args(form));
+    } })["Codebase.nodeItemsWith/\u03bb"], lib$base$Sexp$args(form));
     }
     rt.nomatch(t0);
   }
@@ -6913,7 +6880,7 @@ function Mdl$keyValue(line) {
     return rt.con0("#Option", 0);
   } else {
     const key = rt.ap(rt.prims["Text.trim"], lib$base$Text$take(i, line));
-    if (lib$base$List$all(rt.named((j) => Mdl$isKeyChar(rt.ap(rt.prims["Text.code"], key, j)), "Mdl.keyValue/\u03bb"), lib$base$List$range(0, rt.ap(rt.prims["Text.length"], key)))) {
+    if (lib$base$List$all(({ "Mdl.keyValue/\u03bb": (j) => Mdl$isKeyChar(rt.ap(rt.prims["Text.code"], key, j)) })["Mdl.keyValue/\u03bb"], lib$base$List$range(0, rt.ap(rt.prims["Text.length"], key)))) {
       return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [key, Mdl$uncomment(rt.ap(rt.prims["Text.trim"], lib$base$Text$drop(((i + 1) | 0), line)))])]);
     } else {
       return rt.con0("#Option", 0);
@@ -6936,7 +6903,7 @@ function Mdl$header(line, at) {
   } else {
     title = rt.ap(rt.prims["Text.trim"], lib$base$Text$drop(((colon + 1) | 0), line));
   }
-  const t0 = lib$base$List$filter(rt.named((w) => lib$base$not(lib$base$Text$isEmpty(w)), "Mdl.header/\u03bb"), rt.ap(rt.prims["Text.split"], rt.ap(rt.prims["Text.trim"], head), " "));
+  const t0 = lib$base$List$filter(({ "Mdl.header/\u03bb": (w) => lib$base$not(lib$base$Text$isEmpty(w)) })["Mdl.header/\u03bb"], rt.ap(rt.prims["Text.split"], rt.ap(rt.prims["Text.trim"], head), " "));
   m1: {
     if (t0.tag === 0) {
       return new rt.Con("424db22dd7cdc1c325d60ba5a3d655609c068f2e524402a122908579250ba8f8", 0, ["", "", title, rt.NIL, at]);
@@ -6957,7 +6924,7 @@ rt.named(Mdl$header, "Mdl.header");
 
 function Mdl$body(lines) {
   let base;
-  const t0 = lib$base$List$filter(rt.named((l) => lib$base$not(lib$base$Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))), "Mdl.body/\u03bb"), lines);
+  const t0 = lib$base$List$filter(({ "Mdl.body/\u03bb": (l) => lib$base$not(lib$base$Text$isEmpty(rt.ap(rt.prims["Text.trim"], l))) })["Mdl.body/\u03bb"], lines);
   m1: {
     if (t0.tag === 0) {
       base = 0;
@@ -6970,7 +6937,7 @@ function Mdl$body(lines) {
     }
     rt.nomatch(t0);
   }
-  return lib$base$List$reverse(lib$base$List$foldl(rt.named((acc, line) => {
+  return lib$base$List$reverse(lib$base$List$foldl(({ "Mdl.body/\u03bb": (acc, line) => {
   const t = rt.ap(rt.prims["Text.trim"], line);
   let r2;
   if (lib$base$Text$isEmpty(t)) {
@@ -7007,7 +6974,7 @@ function Mdl$body(lines) {
       }
     }
   }
-}, "Mdl.body/\u03bb"), rt.NIL, lines));
+} })["Mdl.body/\u03bb"], rt.NIL, lines));
 }
 rt.named(Mdl$body, "Mdl.body");
 
@@ -7135,7 +7102,7 @@ function Types$rowCounts(r$, acc$) {
       }
       if (r.tag === 2) {
         const id = r.fields[0];
-        return lib$base$Map$update(id, rt.named((old) => ((lib$base$Option$getOr(old, 0) + 1) | 0), "Types.rowCounts/\u03bb"), acc);
+        return lib$base$Map$update(id, ({ "Types.rowCounts/\u03bb": (old) => ((lib$base$Option$getOr(old, 0) + 1) | 0) })["Types.rowCounts/\u03bb"], acc);
       }
       if (r.tag === 0) {
         return acc;
@@ -7154,7 +7121,7 @@ function Types$varName(seen, key, row) {
       return name;
     }
     if (t0.tag === 0) {
-      const count = lib$base$List$length(lib$base$List$filter(rt.named((pair) => {
+      const count = lib$base$List$length(lib$base$List$filter(({ "Types.varName/\u03bb": (pair) => {
       let r2;
       if (row) {
         r2 = "r";
@@ -7163,7 +7130,7 @@ function Types$varName(seen, key, row) {
       }
       const t3 = lib$base$fst(pair);
       return lib$base$Text$startsWith(r2, t3);
-    }, "Types.varName/\u03bb"), lib$base$Map$toList(rt.ap(rt.prims["Ref.get"], seen))));
+    } })["Types.varName/\u03bb"], lib$base$Map$toList(rt.ap(rt.prims["Ref.get"], seen))));
       let name_1;
       if (row) {
         if ((count === 0)) {
@@ -7241,7 +7208,6 @@ function Types$showRowWith(names, r, seen, shared) {
       }
     }
   }
-  rt.named(labels, "labels");
   const t4 = rt.ap(labels, r, rt.NIL);
   m5: {
     if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === true) {
@@ -7309,7 +7275,6 @@ function Types$showRow(r, seen) {
       }
     }
   }
-  rt.named(labels, "labels");
   const t1 = rt.ap(labels, r, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1) {
@@ -7394,7 +7359,6 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    rt.named(go, "go");
     return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], lib$base$List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
   }
 }
@@ -7542,7 +7506,7 @@ function Cli$vitestFact(cited) {
   } else {
     const file = rt.ap(rt.prims["Text.trim"], lib$base$Text$take(i, cited));
     const testName = rt.ap(rt.prims["Text.trim"], lib$base$Text$drop(((i + 3) | 0), cited));
-    const home = lib$base$Option$map(rt.named((dir) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/"), file), "Cli.vitestFact/\u03bb"), rt.perform("#IO", 13, ["DEUS_HOME"]));
+    const home = lib$base$Option$map(({ "Cli.vitestFact/\u03bb": (dir) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], dir, "/"), file) })["Cli.vitestFact/\u03bb"], rt.perform("#IO", 13, ["DEUS_HOME"]));
     let source;
     const t0 = rt.perform("#IO", 2, [file]);
     m1: {
@@ -7563,7 +7527,7 @@ function Cli$vitestFact(cited) {
       }
       if (source.tag === 1) {
         const text_1 = source.fields[0];
-        const declares = rt.named((call) => lib$base$List$any(rt.named((quote) => lib$base$Text$contains(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], call, "("), quote), testName), quote), text_1), "Cli.vitestFact/\u03bb"), rt.cons("'", rt.cons("\"", rt.cons("`", rt.NIL)))), "Cli.vitestFact/\u03bb");
+        const declares = ({ "Cli.vitestFact/\u03bb": (call) => lib$base$List$any(({ "Cli.vitestFact/\u03bb": (quote) => lib$base$Text$contains(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], call, "("), quote), testName), quote), text_1) })["Cli.vitestFact/\u03bb"], rt.cons("'", rt.cons("\"", rt.cons("`", rt.NIL)))) })["Cli.vitestFact/\u03bb"];
         let r3;
         if (rt.ap(declares, "test")) {
           r3 = true;
@@ -7637,7 +7601,7 @@ function Print$withRules(base, rules) {
 rt.named(Print$withRules, "Print.withRules");
 
 function Print$withSelf(base, h, name) {
-  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [lib$base$List$foldl(rt.named((m, shadow) => {
+  return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [lib$base$List$foldl(({ "Print.withSelf/\u03bb": (m, shadow) => {
   m0: {
     if (shadow.tag === 0 && shadow.fields[1].tag === 0) {
       const space = shadow.fields[0];
@@ -7651,7 +7615,7 @@ function Print$withSelf(base, h, name) {
     }
     rt.nomatch(shadow);
   }
-}, "Print.withSelf/\u03bb"), lib$base$Map$insert(h, name, Printer$display(base)), Printer$shadows(base)), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), Printer$rules(base), Printer$shadows(base)]);
+} })["Print.withSelf/\u03bb"], lib$base$Map$insert(h, name, Printer$display(base)), Printer$shadows(base)), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), Printer$rules(base), Printer$shadows(base)]);
 }
 rt.named(Print$withSelf, "Print.withSelf");
 
@@ -7684,7 +7648,7 @@ function Ts$definition(p, name, core, sig, doc) {
       const b = t0.fields[1].fields[0];
       const env = t0.fields[1].fields[1];
       const count = lib$base$List$length(names);
-      const split = lib$base$Option$map(rt.named((s) => Print$splitSig(s, count), "Ts.definition/\u03bb"), sig);
+      const split = lib$base$Option$map(({ "Ts.definition/\u03bb": (s) => Print$splitSig(s, count) })["Ts.definition/\u03bb"], sig);
       let typed;
       m2: {
         if (split.tag === 1 && split.fields[0].tag === 0 && split.fields[0].fields[1].tag === 1) {
@@ -7704,13 +7668,13 @@ function Ts$definition(p, name, core, sig, doc) {
         rt.nomatch(split);
       }
       const gen = Ts$generics(lib$base$Option$getOr(lib$base$Option$map(Ts$typeVars, sig), rt.NIL));
-      const annotate = rt.named((t) => {
+      const annotate = ({ "Ts.definition/\u03bb": (t) => {
       if (Ts$isUnknown(t)) {
         return "";
       } else {
         return rt.ap(rt.prims["append"], ": ", Ts$ty(p, t, 3));
       }
-    }, "Ts.definition/\u03bb");
+    } })["Ts.definition/\u03bb"];
       if ((count === 0)) {
         let typeText;
         m3: {
@@ -7731,7 +7695,7 @@ function Ts$definition(p, name, core, sig, doc) {
         m4: {
           if (typed.tag === 1 && typed.fields[0].tag === 0) {
             const types_1 = typed.fields[0].fields[0];
-            paramText = lib$base$List$map(rt.named((pair) => rt.ap(rt.prims["append"], lib$base$fst(pair), rt.ap(annotate, lib$base$snd(pair))), "Ts.definition/\u03bb"), lib$base$List$zip(names, types_1));
+            paramText = lib$base$List$map(({ "Ts.definition/\u03bb": (pair) => rt.ap(rt.prims["append"], lib$base$fst(pair), rt.ap(annotate, lib$base$snd(pair))) })["Ts.definition/\u03bb"], lib$base$List$zip(names, types_1));
             break m4;
           }
           if (typed.tag === 0) {
@@ -7777,7 +7741,7 @@ function Ts$definition(p, name, core, sig, doc) {
         if (Print$fits(0, flat)) {
           header = flat;
         } else {
-          header = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "function ", name), gen), "("), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n  ", x), ","), "Ts.definition/\u03bb"), paramText))), "\n)"), resultText);
+          header = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "function ", name), gen), "("), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Ts.definition/\u03bb": (x) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n  ", x), ",") })["Ts.definition/\u03bb"], paramText))), "\n)"), resultText);
         }
         return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(doc), header), " "), Ts$functionBody(p, b, env, 0));
       }
@@ -7805,8 +7769,8 @@ function Ts$theoremDecl(p, name, types, prop, proof) {
       const names = t0.fields[0];
       const b = t0.fields[1].fields[0];
       const env = t0.fields[1].fields[1];
-      const binders = lib$base$List$map(rt.named((pair) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$fst(pair), ": "), Ts$ty(p, lib$base$snd(pair), 3)), "Ts.theoremDecl/\u03bb"), lib$base$List$zip(names, types));
-      const tactic = lib$base$List$map(rt.named((x) => {
+      const binders = lib$base$List$map(({ "Ts.theoremDecl/\u03bb": (pair) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$fst(pair), ": "), Ts$ty(p, lib$base$snd(pair), 3)) })["Ts.theoremDecl/\u03bb"], lib$base$List$zip(names, types));
+      const tactic = lib$base$List$map(({ "Ts.theoremDecl/\u03bb": (x) => {
       m2: {
         if (x.tag === 3 && x.fields[0].tag === 1 && x.fields[0].fields[0].tag === 1 && x.fields[0].fields[0].fields[0] === "ref" && x.fields[0].fields[1].tag === 1 && x.fields[0].fields[1].fields[0].tag === 2 && x.fields[0].fields[1].fields[1].tag === 0) {
           const l = x.fields[0].fields[1].fields[0].fields[0];
@@ -7817,7 +7781,7 @@ function Ts$theoremDecl(p, name, types, prop, proof) {
         }
         rt.nomatch(x);
       }
-    }, "Ts.theoremDecl/\u03bb"), lib$base$Sexp$args(proof));
+    } })["Ts.theoremDecl/\u03bb"], lib$base$Sexp$args(proof));
       let proofText;
       if (rt.equal(tactic, rt.cons("sorry", rt.NIL))) {
         proofText = "sorry";
@@ -7844,7 +7808,7 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
       const ctors = lib$base$List$map(rt.ap(View$nameParams, names), View$typeArgs(obj));
       if (lib$base$not(lib$base$List$isEmpty(fields))) {
         const types = lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$args, lib$base$List$head$p(ctors)), rt.NIL);
-        const lines = lib$base$List$map(rt.named((pair) => {
+        const lines = lib$base$List$map(({ "Ts.typeDecl/\u03bb": (pair) => {
         m2: {
           if (pair.tag === 0) {
             const f = pair.fields[0];
@@ -7853,10 +7817,10 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
           }
           rt.nomatch(pair);
         }
-      }, "Ts.typeDecl/\u03bb"), lib$base$List$zip(fields, lib$base$List$drop(1, types)));
+      } })["Ts.typeDecl/\u03bb"], lib$base$List$zip(fields, lib$base$List$drop(1, types)));
         return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "interface "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
       } else {
-        const ctorNames = lib$base$List$filterMap(rt.named((pair_1) => {
+        const ctorNames = lib$base$List$filterMap(({ "Ts.typeDecl/\u03bb": (pair_1) => {
         m3: {
           if (pair_1.tag === 0 && pair_1.fields[1].tag === 1) {
             const n = pair_1.fields[0];
@@ -7873,12 +7837,12 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
           }
           rt.nomatch(pair_1);
         }
-      }, "Ts.typeDecl/\u03bb"), lib$base$Map$toList(ns));
-        const lines_1 = lib$base$List$mapIndexed(rt.named((tag_1, c) => {
+      } })["Ts.typeDecl/\u03bb"], lib$base$Map$toList(ns));
+        const lines_1 = lib$base$List$mapIndexed(({ "Ts.typeDecl/\u03bb": (tag_1, c) => {
         const cname = lib$base$Option$getOr(lib$base$List$lookup(tag_1, ctorNames), rt.ap(rt.prims["append"], "ctor", rt.ap(rt.prims["Int.toText"], tag_1)));
         const fieldTypes = lib$base$List$drop(1, lib$base$Sexp$args(c));
         const named = lib$base$Option$getOr(lib$base$List$get$p(fieldNames, tag_1), rt.NIL);
-        const field = rt.named((pair_2) => {
+        const field = ({ "Ts.typeDecl/\u03bb": (pair_2) => {
           const t4 = lib$base$Option$getOr(lib$base$List$get$p(named, lib$base$fst(pair_2)), "");
           m5: {
             if (t4 === "") {
@@ -7890,8 +7854,8 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
             }
             rt.nomatch(t4);
           }
-        }, "Ts.typeDecl/\u03bb");
-        const args = lib$base$List$map(field, lib$base$List$mapIndexed(rt.named((i, t_2) => new rt.Con("#Pair", 0, [i, t_2]), "Ts.typeDecl/\u03bb"), fieldTypes));
+        } })["Ts.typeDecl/\u03bb"];
+        const args = lib$base$List$map(field, lib$base$List$mapIndexed(({ "Ts.typeDecl/\u03bb": (i, t_2) => new rt.Con("#Pair", 0, [i, t_2]) })["Ts.typeDecl/\u03bb"], fieldTypes));
         const t6 = rt.ap(rt.prims["append"], "  | ", cname);
         let r7;
         if (lib$base$List$isEmpty(args)) {
@@ -7900,7 +7864,7 @@ function Ts$typeDecl(p, ns, name, e, obj, meta) {
           r7 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", rt.ap(rt.prims["Text.join"], ", ", args)), ")");
         }
         return rt.ap(rt.prims["append"], t6, r7);
-      }, "Ts.typeDecl/\u03bb"), ctors);
+      } })["Ts.typeDecl/\u03bb"], ctors);
         const t8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "type "), name), Ts$generics(names)), " =");
         let r9;
         if (lib$base$List$isEmpty(lines_1)) {
@@ -7929,7 +7893,7 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
       const rawOps = t0.fields[1].fields[1].fields[1];
       const names = View$paramsFor(meta, count, obj);
       const ops = lib$base$List$map(rt.ap(View$nameParams, names), rawOps);
-      const opNames = lib$base$List$filterMap(rt.named((pair) => {
+      const opNames = lib$base$List$filterMap(({ "Ts.abilityDecl/\u03bb": (pair) => {
       m2: {
         if (pair.tag === 0 && pair.fields[1].tag === 4) {
           const n = pair.fields[0];
@@ -7946,8 +7910,8 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
         }
         rt.nomatch(pair);
       }
-    }, "Ts.abilityDecl/\u03bb"), lib$base$Map$toList(ns));
-      const lines = lib$base$List$mapIndexed(rt.named((index_1, op) => {
+    } })["Ts.abilityDecl/\u03bb"], lib$base$Map$toList(ns));
+      const lines = lib$base$List$mapIndexed(({ "Ts.abilityDecl/\u03bb": (index_1, op) => {
       const oname = lib$base$Option$getOr(lib$base$List$lookup(index_1, opNames), rt.ap(rt.prims["append"], "op", rt.ap(rt.prims["Int.toText"], index_1)));
       const t3 = lib$base$Sexp$args(op);
       m4: {
@@ -7962,7 +7926,7 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
             if (t5.tag === 0) {
               const args = t5.fields[0];
               const result_1 = t5.fields[1];
-              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "  ", oname), "("), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Ts$ty(p, x, 3), "Ts.abilityDecl/\u03bb"), args))), "): "), Ts$ty(p, result_1, 0)), ";");
+              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "  ", oname), "("), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Ts.abilityDecl/\u03bb": (x) => Ts$ty(p, x, 3) })["Ts.abilityDecl/\u03bb"], args))), "): "), Ts$ty(p, result_1, 0)), ";");
             }
             rt.nomatch(t5);
           }
@@ -7972,7 +7936,7 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
         }
         rt.nomatch(t3);
       }
-    }, "Ts.abilityDecl/\u03bb"), ops);
+    } })["Ts.abilityDecl/\u03bb"], ops);
       return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$docComment(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(meta, "doc"))), Ts$decorator(iri, name)), "ability "), name), Ts$generics(names)), " {\n"), rt.ap(rt.prims["Text.join"], "\n", lines)), "\n}");
     }
     if (true) {
@@ -7984,7 +7948,7 @@ function Ts$abilityDecl(p, ns, name, e, obj, meta) {
 rt.named(Ts$abilityDecl, "Ts.abilityDecl");
 
 function Print$commentLines(text, ind) {
-  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((l) => {
+  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.commentLines/\u03bb": (l) => {
   let r0;
   if (lib$base$Text$isEmpty(l)) {
     r0 = "";
@@ -7994,7 +7958,7 @@ function Print$commentLines(text, ind) {
   const t1 = rt.ap(rt.prims["append"], r0, "\n");
   const t2 = Print$spaces(ind);
   return rt.ap(rt.prims["append"], t1, t2);
-}, "Print.commentLines/\u03bb"), lib$base$Text$lines(text)));
+} })["Print.commentLines/\u03bb"], lib$base$Text$lines(text)));
 }
 rt.named(Print$commentLines, "Print.commentLines");
 
@@ -8071,7 +8035,6 @@ function Print$quoteText(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(go, 0, rt.NIL)), "\"");
 }
 rt.named(Print$quoteText, "Print.quoteText");
@@ -8112,7 +8075,6 @@ function Print$notationDecl(p, name, rule) {
           }
         }
       }
-      rt.named(binders, "binders");
       const t3 = rt.ap(binders, template, count, rt.NIL);
       m4: {
         if (t3.tag === 0) {
@@ -8122,9 +8084,9 @@ function Print$notationDecl(p, name, rule) {
           const body = t3.fields[0].fields[0];
           const env_1 = t3.fields[0].fields[1];
           const holeNames = lib$base$List$reverse(env_1);
-          const nameOf = rt.named((i) => lib$base$Option$getOr(lib$base$List$get$p(holeNames, i), "_"), "Print.notationDecl/\u03bb");
+          const nameOf = ({ "Print.notationDecl/\u03bb": (i) => lib$base$Option$getOr(lib$base$List$get$p(holeNames, i), "_") })["Print.notationDecl/\u03bb"];
           const parts = Syntax$Loaded$ruleParts(rule);
-          const partText = rt.named((k_1, part) => {
+          const partText = ({ "Print.notationDecl/\u03bb": (k_1, part) => {
           m5: {
             if (part.tag === 0) {
               const text = part.fields[0];
@@ -8153,7 +8115,7 @@ function Print$notationDecl(p, name, rule) {
             }
             rt.nomatch(part);
           }
-        }, "Print.notationDecl/\u03bb");
+        } })["Print.notationDecl/\u03bb"];
           let head;
           let r6;
           if ((Syntax$Loaded$ruleCategory(rule) === "term")) {
@@ -8216,7 +8178,6 @@ function Print$definition(p, name, core, sig, doc) {
       }
     }
   }
-  rt.named(params, "params");
   function lamCount(t_1) {
     if ((lib$base$Sexp$head(t_1) === "lam")) {
       return ((1 + rt.ap(lamCount, lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(t_1)), t_1))) | 0);
@@ -8224,8 +8185,7 @@ function Print$definition(p, name, core, sig, doc) {
       return 0;
     }
   }
-  rt.named(lamCount, "lamCount");
-  const unnamed = lib$base$List$all(rt.named((x_1) => (x_1 === ""), "Print.definition/\u03bb"), lib$base$List$take(rt.ap(lamCount, core), rt.ap(rt.prims["Ref.get"], Printer$supply(p))));
+  const unnamed = lib$base$List$all(({ "Print.definition/\u03bb": (x_1) => (x_1 === "") })["Print.definition/\u03bb"], lib$base$List$take(rt.ap(lamCount, core), rt.ap(rt.prims["Ref.get"], Printer$supply(p))));
   const t2 = rt.ap(params, core, rt.NIL, rt.NIL);
   m3: {
     if (t2.tag === 0 && t2.fields[1].tag === 0 && t2.fields[1].fields[0].tag === 3 && t2.fields[1].fields[0].fields[0].tag === 1 && t2.fields[1].fields[0].fields[0].fields[0].tag === 1 && t2.fields[1].fields[0].fields[0].fields[0].fields[0] === "match" && t2.fields[1].fields[0].fields[0].fields[1].tag === 1) {
@@ -8258,7 +8218,7 @@ function Print$definition(p, name, core, sig, doc) {
           }
           rt.nomatch(sig);
         }
-        const arms = lib$base$List$map(rt.named((c) => {
+        const arms = lib$base$List$map(({ "Print.definition/\u03bb": (c) => {
         m6: {
           if (c.tag === 3 && c.fields[0].tag === 1 && c.fields[0].fields[0].tag === 1 && c.fields[0].fields[0].fields[0] === "case" && c.fields[0].fields[1].tag === 1 && c.fields[0].fields[1].fields[1].tag === 1 && c.fields[0].fields[1].fields[1].fields[1].tag === 0) {
             const pat = c.fields[0].fields[1].fields[0];
@@ -8278,7 +8238,7 @@ function Print$definition(p, name, core, sig, doc) {
           }
           rt.nomatch(c);
         }
-      }, "Print.definition/\u03bb"), cases);
+      } })["Print.definition/\u03bb"], cases);
         return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], docText, "def "), name), sigText), rt.ap(rt.prims["Text.concat"], arms));
       } else {
         return Print$plainDefinition(p, name, docText, names, new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["match"]), rt.cons(scrut, cases))]), env_1, sig);
@@ -8311,7 +8271,7 @@ function Print$restoreAll(notes, spellings, notations, core) {
   } else {
     const byIndex = lib$base$Map$fromList(notes);
     const spelledAt = lib$base$Map$fromList(spellings);
-    const notationsAt = lib$base$List$foldl(rt.named((m, pair) => lib$base$Map$insert(lib$base$fst(pair), rt.ap(rt.prims["append"], lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair), m), rt.NIL), rt.cons(lib$base$snd(pair), rt.NIL)), m), "Print.restoreAll/\u03bb"), lib$base$Set$empty(), notations);
+    const notationsAt = lib$base$List$foldl(({ "Print.restoreAll/\u03bb": (m, pair) => lib$base$Map$insert(lib$base$fst(pair), rt.ap(rt.prims["append"], lib$base$Option$getOr(lib$base$Map$lookup(lib$base$fst(pair), m), rt.NIL), rt.cons(lib$base$snd(pair), rt.NIL)), m) })["Print.restoreAll/\u03bb"], lib$base$Set$empty(), notations);
     function go(x, count) {
       m1: {
         if (x.tag === 3) {
@@ -8343,7 +8303,6 @@ function Print$restoreAll(notes, spellings, notations, core) {
               }
             }
           }
-          rt.named(each, "each");
           const t5 = rt.ap(each, items, rt.NIL, ((count + 1) | 0));
           m6: {
             if (t5.tag === 0) {
@@ -8363,7 +8322,7 @@ function Print$restoreAll(notes, spellings, notations, core) {
                 }
                 rt.nomatch(t7);
               }
-              const rebuilt = lib$base$List$foldr(rt.named((key, e) => lib$base$Sexp$node("notation", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [key]), rt.cons(e, rt.NIL))), "Print.restoreAll/\u03bb"), spelled, lib$base$Option$getOr(lib$base$Map$lookup(count, notationsAt), rt.NIL));
+              const rebuilt = lib$base$List$foldr(({ "Print.restoreAll/\u03bb": (key, e) => lib$base$Sexp$node("notation", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [key]), rt.cons(e, rt.NIL))) })["Print.restoreAll/\u03bb"], spelled, lib$base$Option$getOr(lib$base$Map$lookup(count, notationsAt), rt.NIL));
               const t9 = lib$base$Map$lookup(count, byIndex);
               m10: {
                 if (t9.tag === 1) {
@@ -8385,7 +8344,6 @@ function Print$restoreAll(notes, spellings, notations, core) {
         rt.nomatch(x);
       }
     }
-    rt.named(go, "go");
     return lib$base$fst(rt.ap(go, core, 0));
   }
 }
@@ -8435,14 +8393,13 @@ function View$theoremDecl(p, name, types, prop, proof) {
       }
     }
   }
-  rt.named(params, "params");
   const t1 = rt.ap(params, prop, rt.NIL, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[1].tag === 0) {
       const names = t1.fields[0];
       const b_1 = t1.fields[1].fields[0];
       const env_1 = t1.fields[1].fields[1];
-      const binders = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((pair) => {
+      const binders = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "View.theoremDecl/\u03bb": (pair) => {
       m3: {
         if (pair.tag === 0) {
           const x_1 = pair.fields[0];
@@ -8451,8 +8408,8 @@ function View$theoremDecl(p, name, types, prop, proof) {
         }
         rt.nomatch(pair);
       }
-    }, "View.theoremDecl/\u03bb"), lib$base$List$zip(names, types)));
-      const tactic = lib$base$List$map(rt.named((x_2) => {
+    } })["View.theoremDecl/\u03bb"], lib$base$List$zip(names, types)));
+      const tactic = lib$base$List$map(({ "View.theoremDecl/\u03bb": (x_2) => {
       m4: {
         if (x_2.tag === 3 && x_2.fields[0].tag === 1 && x_2.fields[0].fields[0].tag === 1 && x_2.fields[0].fields[0].fields[0] === "ref" && x_2.fields[0].fields[1].tag === 1 && x_2.fields[0].fields[1].fields[0].tag === 2 && x_2.fields[0].fields[1].fields[1].tag === 0) {
           const l = x_2.fields[0].fields[1].fields[0].fields[0];
@@ -8463,7 +8420,7 @@ function View$theoremDecl(p, name, types, prop, proof) {
         }
         rt.nomatch(x_2);
       }
-    }, "View.theoremDecl/\u03bb"), lib$base$Sexp$args(proof));
+    } })["View.theoremDecl/\u03bb"], lib$base$Sexp$args(proof));
       let proofText;
       if (rt.equal(tactic, rt.cons("sorry", rt.NIL))) {
         proofText = "sorry";
@@ -8483,8 +8440,7 @@ function View$theoremDecl(p, name, types, prop, proof) {
           rt.nomatch(prop_1);
         }
       }
-      rt.named(parts, "parts");
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "theorem ", name), binders), " : "), rt.ap(rt.prims["Text.join"], " -> ", lib$base$List$map(rt.named((part) => Print$expr(p, part, env_1, 2, 0), "View.theoremDecl/\u03bb"), rt.ap(parts, b_1)))), " := "), proofText);
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "theorem ", name), binders), " : "), rt.ap(rt.prims["Text.join"], " -> ", lib$base$List$map(({ "View.theoremDecl/\u03bb": (part) => Print$expr(p, part, env_1, 2, 0) })["View.theoremDecl/\u03bb"], rt.ap(parts, b_1)))), " := "), proofText);
     }
     rt.nomatch(t1);
   }
@@ -8505,7 +8461,7 @@ function View$typeDecl(p, ns, name, e, obj, meta) {
       const display = name;
       if (lib$base$not(lib$base$List$isEmpty(fields))) {
         const types = lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$args, lib$base$List$head$p(ctors)), rt.NIL);
-        const lines = lib$base$List$map(rt.named((pair) => {
+        const lines = lib$base$List$map(({ "View.typeDecl/\u03bb": (pair) => {
         m2: {
           if (pair.tag === 0) {
             const f = pair.fields[0];
@@ -8514,10 +8470,10 @@ function View$typeDecl(p, ns, name, e, obj, meta) {
           }
           rt.nomatch(pair);
         }
-      }, "View.typeDecl/\u03bb"), lib$base$List$zip(fields, lib$base$List$drop(1, types)));
+      } })["View.typeDecl/\u03bb"], lib$base$List$zip(fields, lib$base$List$drop(1, types)));
         return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "structure ", display), View$params(names)), View$iriClause(iri, name)), " where\n"), rt.ap(rt.prims["Text.join"], "\n", lines));
       } else {
-        const ctorNames = lib$base$List$filterMap(rt.named((pair_1) => {
+        const ctorNames = lib$base$List$filterMap(({ "View.typeDecl/\u03bb": (pair_1) => {
         m3: {
           if (pair_1.tag === 0 && pair_1.fields[1].tag === 1) {
             const n = pair_1.fields[0];
@@ -8534,12 +8490,12 @@ function View$typeDecl(p, ns, name, e, obj, meta) {
           }
           rt.nomatch(pair_1);
         }
-      }, "View.typeDecl/\u03bb"), lib$base$Map$toList(ns));
-        const lines_1 = lib$base$List$mapIndexed(rt.named((tag_1, c) => {
+      } })["View.typeDecl/\u03bb"], lib$base$Map$toList(ns));
+        const lines_1 = lib$base$List$mapIndexed(({ "View.typeDecl/\u03bb": (tag_1, c) => {
         const cname = lib$base$Option$getOr(lib$base$List$lookup(tag_1, ctorNames), rt.ap(rt.prims["append"], "ctor", rt.ap(rt.prims["Int.toText"], tag_1)));
         const fieldTypes = lib$base$List$drop(1, lib$base$Sexp$args(c));
         const named = lib$base$Option$getOr(lib$base$List$get$p(fieldNames, tag_1), rt.NIL);
-        const field = rt.named((pair_2) => {
+        const field = ({ "View.typeDecl/\u03bb": (pair_2) => {
           const t4 = lib$base$Option$getOr(lib$base$List$get$p(named, lib$base$fst(pair_2)), "");
           m5: {
             if (t4 === "") {
@@ -8551,9 +8507,9 @@ function View$typeDecl(p, ns, name, e, obj, meta) {
             }
             rt.nomatch(t4);
           }
-        }, "View.typeDecl/\u03bb");
-        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "  | ", cname), rt.ap(rt.prims["Text.concat"], lib$base$List$map(field, lib$base$List$mapIndexed(rt.named((i, t_2) => new rt.Con("#Pair", 0, [i, t_2]), "View.typeDecl/\u03bb"), fieldTypes))));
-      }, "View.typeDecl/\u03bb"), ctors);
+        } })["View.typeDecl/\u03bb"];
+        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "  | ", cname), rt.ap(rt.prims["Text.concat"], lib$base$List$map(field, lib$base$List$mapIndexed(({ "View.typeDecl/\u03bb": (i, t_2) => new rt.Con("#Pair", 0, [i, t_2]) })["View.typeDecl/\u03bb"], fieldTypes))));
+      } })["View.typeDecl/\u03bb"], ctors);
         const t6 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "inductive ", display), View$params(names)), View$iriClause(iri, name)), " where");
         let r7;
         if (lib$base$List$isEmpty(lines_1)) {
@@ -8582,7 +8538,7 @@ function View$abilityDecl(p, ns, name, e, obj, meta) {
       const rawOps = t0.fields[1].fields[1].fields[1];
       const names = View$paramsFor(meta, count, obj);
       const ops = lib$base$List$map(rt.ap(View$nameParams, names), rawOps);
-      const opNames = lib$base$List$filterMap(rt.named((pair) => {
+      const opNames = lib$base$List$filterMap(({ "View.abilityDecl/\u03bb": (pair) => {
       m2: {
         if (pair.tag === 0 && pair.fields[1].tag === 4) {
           const n = pair.fields[0];
@@ -8599,8 +8555,8 @@ function View$abilityDecl(p, ns, name, e, obj, meta) {
         }
         rt.nomatch(pair);
       }
-    }, "View.abilityDecl/\u03bb"), lib$base$Map$toList(ns));
-      const lines = lib$base$List$mapIndexed(rt.named((index_1, op) => {
+    } })["View.abilityDecl/\u03bb"], lib$base$Map$toList(ns));
+      const lines = lib$base$List$mapIndexed(({ "View.abilityDecl/\u03bb": (index_1, op) => {
       const oname = lib$base$Option$getOr(lib$base$List$lookup(index_1, opNames), rt.ap(rt.prims["append"], "op", rt.ap(rt.prims["Int.toText"], index_1)));
       const t3 = lib$base$Sexp$args(op);
       m4: {
@@ -8613,7 +8569,7 @@ function View$abilityDecl(p, ns, name, e, obj, meta) {
         }
         rt.nomatch(t3);
       }
-    }, "View.abilityDecl/\u03bb"), ops);
+    } })["View.abilityDecl/\u03bb"], ops);
       return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "ability ", name), View$params(names)), View$iriClause(iri, name)), " where\n"), rt.ap(rt.prims["Text.join"], "\n", lines));
     }
     if (true) {
@@ -8741,7 +8697,6 @@ function Mdl$indentOf(line) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0);
 }
 rt.named(Mdl$indentOf, "Mdl.indentOf");
@@ -8819,7 +8774,7 @@ function Types$fresh(u) {
 rt.named(Types$fresh, "Types.fresh");
 
 function Types$paramRow(u, params, i) {
-  const t0 = lib$base$Option$map(rt.named((t) => Types$resolve(u, t), "Types.paramRow/\u03bb"), lib$base$List$get$p(params, i));
+  const t0 = lib$base$Option$map(({ "Types.paramRow/\u03bb": (t) => Types$resolve(u, t) })["Types.paramRow/\u03bb"], lib$base$List$get$p(params, i));
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 3) {
       const r = t0.fields[0].fields[0];
@@ -8872,7 +8827,7 @@ function Types$showType(t, seen, prec) {
     if (t.tag === 0) {
       const iri_1 = t.fields[0];
       const args = t.fields[1];
-      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$iriName(iri_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((a_1) => rt.ap(rt.prims["append"], " ", Types$showType(a_1, seen, 100)), "Types.showType/\u03bb"), args))));
+      return Print$paren(90, prec, rt.ap(rt.prims["append"], Types$iriName(iri_1), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Types.showType/\u03bb": (a_1) => rt.ap(rt.prims["append"], " ", Types$showType(a_1, seen, 100)) })["Types.showType/\u03bb"], args))));
     }
     if (t.tag === 1) {
       const a_2 = t.fields[0];
@@ -8932,7 +8887,6 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
@@ -8988,7 +8942,6 @@ function Analytics$parts(ref) {
       }
     }
   }
-  rt.named(lastHash, "lastHash");
   const mark = rt.ap(lastHash, ((rt.ap(rt.prims["Text.length"], ref) - 1) | 0));
   if ((mark < 0)) {
     return new rt.Con("#Pair", 0, [ref, ""]);
@@ -9000,7 +8953,7 @@ rt.named(Analytics$parts, "Analytics.parts");
 
 function Analytics$isHex(t) {
   if (lib$base$not(lib$base$Text$isEmpty(t))) {
-    return lib$base$List$all(rt.named((c) => {
+    return lib$base$List$all(({ "Analytics.isHex/\u03bb": (c) => {
     let r0;
     if ((c >= 48)) {
       r0 = (c <= 57);
@@ -9016,7 +8969,7 @@ function Analytics$isHex(t) {
         return false;
       }
     }
-  }, "Analytics.isHex/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } })["Analytics.isHex/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
   } else {
     return false;
   }
@@ -9065,7 +9018,7 @@ function Types$declaredScheme(sig) {
 rt.named(Types$declaredScheme, "Types.declaredScheme");
 
 function Print$indexedOf(meta, field) {
-  return lib$base$List$filterMap(rt.named((x) => {
+  return lib$base$List$filterMap(({ "Print.indexedOf/\u03bb": (x) => {
   m0: {
     if (x.tag === 3 && x.fields[0].tag === 1 && x.fields[0].fields[0].tag === 1 && x.fields[0].fields[0].fields[0] === "n" && x.fields[0].fields[1].tag === 1 && x.fields[0].fields[1].fields[0].tag === 0 && x.fields[0].fields[1].fields[1].tag === 1 && x.fields[0].fields[1].fields[1].fields[0].tag === 2 && x.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const i = x.fields[0].fields[1].fields[0].fields[0];
@@ -9077,7 +9030,7 @@ function Print$indexedOf(meta, field) {
     }
     rt.nomatch(x);
   }
-}, "Print.indexedOf/\u03bb"), Codebase$metaList(meta, field));
+} })["Print.indexedOf/\u03bb"], Codebase$metaList(meta, field));
 }
 rt.named(Print$indexedOf, "Print.indexedOf");
 
@@ -9099,7 +9052,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
               if (lib$base$not(Check$hasAttr(dir, h, "elab"))) {
                 return new rt.Con("#Option", 1, [rule]);
               } else {
-                const refused = rt.named((why) => {
+                const refused = ({ "Cli.loadRuleWith/\u03bb": (why) => {
                 let r6;
                 m7: {
                   if (rule.tag === 0) {
@@ -9115,15 +9068,15 @@ function Cli$loadRuleWith(types, dir, ns, name) {
                   rt.nomatch(rule);
                 }
                 return new rt.Con("#Option", 1, [r6]);
-              }, "Cli.loadRuleWith/\u03bb");
-                const t8 = lib$base$Option$bind(Codebase$metaField(Codebase$readMeta(dir, h), "scheme"), rt.named((s) => Syntax$elaboratorProblem(s, Syntax$holeCount(Syntax$Loaded$ruleParts(rule))), "Cli.loadRuleWith/\u03bb"));
+              } })["Cli.loadRuleWith/\u03bb"];
+                const t8 = lib$base$Option$bind(Codebase$metaField(Codebase$readMeta(dir, h), "scheme"), ({ "Cli.loadRuleWith/\u03bb": (s) => Syntax$elaboratorProblem(s, Syntax$holeCount(Syntax$Loaded$ruleParts(rule))) })["Cli.loadRuleWith/\u03bb"]);
                 m9: {
                   if (t8.tag === 1) {
                     const problem = t8.fields[0];
                     return rt.ap(refused, problem);
                   }
                   if (t8.tag === 0) {
-                    const t10 = lib$base$try(rt.named((v_6) => Image$load(rt.named((x) => Codebase$readObject(dir, x), "Cli.loadRuleWith/\u03bb"), rt.cons(h, rt.NIL)), "Cli.loadRuleWith/\u03bb"));
+                    const t10 = lib$base$try(({ "Cli.loadRuleWith/\u03bb": (v_6) => Image$load(({ "Cli.loadRuleWith/\u03bb": (x) => Codebase$readObject(dir, x) })["Cli.loadRuleWith/\u03bb"], rt.cons(h, rt.NIL)) })["Cli.loadRuleWith/\u03bb"]);
                     m11: {
                       if (t10.tag === 0) {
                         let r12;
@@ -9135,7 +9088,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
                             const v_10 = rule.fields[3];
                             const v_11 = rule.fields[4];
                             const v_12 = rule.fields[5];
-                            r12 = new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [v_7, v_8, v_9, v_10, v_11, lib$base$Option$map(rt.named((f) => lib$base$Sexp$node("elaborate", rt.cons(f, rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [name]), rt.NIL))), "Cli.loadRuleWith/\u03bb"), Syntax$Loaded$ruleTemplate(rule))]);
+                            r12 = new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [v_7, v_8, v_9, v_10, v_11, lib$base$Option$map(({ "Cli.loadRuleWith/\u03bb": (f) => lib$base$Sexp$node("elaborate", rt.cons(f, rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [name]), rt.NIL))) })["Cli.loadRuleWith/\u03bb"], Syntax$Loaded$ruleTemplate(rule))]);
                             break m13;
                           }
                           rt.nomatch(rule);
@@ -9174,7 +9127,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
 rt.named(Cli$loadRuleWith, "Cli.loadRuleWith");
 
 function Cli$notationTypes(ns) {
-  const typeNamed = rt.named((name) => Cli$ownOrMounted(ns, name), "Cli.notationTypes/\u03bb");
+  const typeNamed = ({ "Cli.notationTypes/\u03bb": (name) => Cli$ownOrMounted(ns, name) })["Cli.notationTypes/\u03bb"];
   const t0 = new rt.Con("#Pair", 0, [rt.ap(typeNamed, "Syntax.Notation"), rt.ap(typeNamed, "Syntax.Part")]);
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 2 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 2) {
@@ -9231,7 +9184,6 @@ function Ts$params(p, t, env) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, t, env, rt.NIL);
 }
 rt.named(Ts$params, "Ts.params");
@@ -9315,7 +9267,7 @@ function Ts$typeVars(t) {
       }
       if (x.tag === 3) {
         const items = x.fields[0];
-        return lib$base$List$foldl(rt.named((a2, item) => rt.ap(go, item, a2), "Ts.typeVars/\u03bb"), acc, items);
+        return lib$base$List$foldl(({ "Ts.typeVars/\u03bb": (a2, item) => rt.ap(go, item, a2) })["Ts.typeVars/\u03bb"], acc, items);
       }
       if (true) {
         return acc;
@@ -9323,7 +9275,6 @@ function Ts$typeVars(t) {
       rt.nomatch(x);
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, t, rt.NIL);
 }
 rt.named(Ts$typeVars, "Ts.typeVars");
@@ -9343,12 +9294,12 @@ function Ts$ty(p$, t$, prec$) {
     m0: {
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tapp" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#Pair" && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
         const args = t.fields[0].fields[1].fields[1];
-        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "#[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Ts$ty(p, x, 3), "Ts.ty/\u03bb"), args))), "]");
+        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "#[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Ts.ty/\u03bb": (x) => Ts$ty(p, x, 3) })["Ts.ty/\u03bb"], args))), "]");
       }
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tapp" && t.fields[0].fields[1].tag === 1) {
         const f = t.fields[0].fields[1].fields[0];
         const args_1 = t.fields[0].fields[1].fields[1];
-        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$ty(p, f, 100), "<"), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_1) => Ts$ty(p, x_1, 3), "Ts.ty/\u03bb"), args_1))), ">");
+        return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$ty(p, f, 100), "<"), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Ts.ty/\u03bb": (x_1) => Ts$ty(p, x_1, 3) })["Ts.ty/\u03bb"], args_1))), ">");
       }
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tfun") {
         const t1 = Ts$arrows(t);
@@ -9360,7 +9311,7 @@ function Ts$ty(p$, t$, prec$) {
             if (rt.equal(args_2, rt.cons(lib$base$Sexp$node("tref", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["#Unit"]), rt.NIL)), rt.NIL))) {
               argText = "";
             } else {
-              argText = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_2) => Ts$ty(p, x_2, 3), "Ts.ty/\u03bb"), args_2));
+              argText = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Ts.ty/\u03bb": (x_2) => Ts$ty(p, x_2, 3) })["Ts.ty/\u03bb"], args_2));
             }
             let r3;
             if (Ts$hasUses(result)) {
@@ -9482,7 +9433,7 @@ function Ts$expr(p, t, env, ind, prec) {
           } else {
             rendered = Ts$expr(p, b_2, env2, ind, 1);
           }
-          const shown = lib$base$List$map(rt.named((x) => {
+          const shown = lib$base$List$map(({ "Ts.expr/\u03bb": (x) => {
           let r3;
           if (Print$isGenerated(x)) {
             r3 = lib$base$not(Print$mentions(x, rendered));
@@ -9494,7 +9445,7 @@ function Ts$expr(p, t, env, ind, prec) {
           } else {
             return x;
           }
-        }, "Ts.expr/\u03bb"), names);
+        } })["Ts.expr/\u03bb"], names);
           let paramText;
           if (rt.equal(shown, rt.cons("_", rt.NIL))) {
             paramText = "";
@@ -9594,9 +9545,9 @@ function Ts$expr(p, t, env, ind, prec) {
 rt.named(Ts$expr, "Ts.expr");
 
 function Ts$uses(p, effs) {
-  const tails = lib$base$List$filter(rt.named((x) => (lib$base$Sexp$head(x) === "tvar"), "Ts.uses/\u03bb"), effs);
-  const named = lib$base$List$filter(rt.named((x_1) => (lib$base$Sexp$head(x_1) !== "tvar"), "Ts.uses/\u03bb"), effs);
-  return rt.ap(rt.prims["Text.join"], ", ", rt.ap(rt.prims["append"], lib$base$List$map(rt.named((x_2) => Ts$ty(p, x_2, 3), "Ts.uses/\u03bb"), named), lib$base$List$map(rt.named((x_3) => rt.ap(rt.prims["append"], "...", Ts$ty(p, x_3, 3)), "Ts.uses/\u03bb"), tails)));
+  const tails = lib$base$List$filter(({ "Ts.uses/\u03bb": (x) => (lib$base$Sexp$head(x) === "tvar") })["Ts.uses/\u03bb"], effs);
+  const named = lib$base$List$filter(({ "Ts.uses/\u03bb": (x_1) => (lib$base$Sexp$head(x_1) !== "tvar") })["Ts.uses/\u03bb"], effs);
+  return rt.ap(rt.prims["Text.join"], ", ", rt.ap(rt.prims["append"], lib$base$List$map(({ "Ts.uses/\u03bb": (x_2) => Ts$ty(p, x_2, 3) })["Ts.uses/\u03bb"], named), lib$base$List$map(({ "Ts.uses/\u03bb": (x_3) => rt.ap(rt.prims["append"], "...", Ts$ty(p, x_3, 3)) })["Ts.uses/\u03bb"], tails)));
 }
 rt.named(Ts$uses, "Ts.uses");
 
@@ -9635,7 +9586,7 @@ function View$paramsFor(meta, count, obj) {
 rt.named(View$paramsFor, "View.paramsFor");
 
 function View$fieldNamesFor(meta) {
-  return lib$base$List$map(rt.named((c) => lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$args(c)), "View.fieldNamesFor/\u03bb"), Codebase$metaList(meta, "fields"));
+  return lib$base$List$map(({ "View.fieldNamesFor/\u03bb": (c) => lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$args(c)) })["View.fieldNamesFor/\u03bb"], Codebase$metaList(meta, "fields"));
 }
 rt.named(View$fieldNamesFor, "View.fieldNamesFor");
 
@@ -9668,7 +9619,7 @@ function View$nameParams(names, t) {
 rt.named(View$nameParams, "View.nameParams");
 
 function View$typeArgs(form) {
-  return lib$base$List$filter(rt.named((x) => (lib$base$Sexp$head(x) === "ctor"), "View.typeArgs/\u03bb"), lib$base$Sexp$args(form));
+  return lib$base$List$filter(({ "View.typeArgs/\u03bb": (x) => (lib$base$Sexp$head(x) === "ctor") })["View.typeArgs/\u03bb"], lib$base$Sexp$args(form));
 }
 rt.named(View$typeArgs, "View.typeArgs");
 
@@ -9732,7 +9683,7 @@ function Syntax$Loaded$ruleTemplate(v) {
 rt.named(Syntax$Loaded$ruleTemplate, "Syntax.Loaded.ruleTemplate");
 
 function Syntax$holeCount(parts) {
-  return lib$base$List$foldl(rt.named((n, part) => {
+  return lib$base$List$foldl(({ "Syntax.holeCount/\u03bb": (n, part) => {
   m0: {
     if (part.tag === 1) {
       const i = part.fields[0];
@@ -9743,7 +9694,7 @@ function Syntax$holeCount(parts) {
     }
     rt.nomatch(part);
   }
-}, "Syntax.holeCount/\u03bb"), 0, parts);
+} })["Syntax.holeCount/\u03bb"], 0, parts);
 }
 rt.named(Syntax$holeCount, "Syntax.holeCount");
 
@@ -9800,7 +9751,6 @@ function Print$bind(p, env) {
       }
     }
   }
-  rt.named(unique, "unique");
   return rt.ap(unique, base, 1);
 }
 rt.named(Print$bind, "Print.bind");
@@ -9882,7 +9832,7 @@ function Print$equationScrutinee(scrut, count) {
   if ((count === 1)) {
     return rt.equal(scrut, lib$base$Sexp$node("var", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]), rt.NIL)));
   } else {
-    return rt.equal(scrut, Resolve$tuple(lib$base$List$map(rt.named((i) => lib$base$Sexp$node("var", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [((((count - 1) | 0) - i) | 0)]), rt.NIL)), "Print.equationScrutinee/\u03bb"), lib$base$List$range(0, count))));
+    return rt.equal(scrut, Resolve$tuple(lib$base$List$map(({ "Print.equationScrutinee/\u03bb": (i) => lib$base$Sexp$node("var", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [((((count - 1) | 0) - i) | 0)]), rt.NIL)) })["Print.equationScrutinee/\u03bb"], lib$base$List$range(0, count))));
   }
 }
 rt.named(Print$equationScrutinee, "Print.equationScrutinee");
@@ -9911,12 +9861,12 @@ function Print$ty(p, t, prec) {
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tapp" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#Pair" && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
       const args = t.fields[0].fields[1].fields[1];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Print$ty(p, x, 0), "Print.ty/\u03bb"), args))), ")");
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Print.ty/\u03bb": (x) => Print$ty(p, x, 0) })["Print.ty/\u03bb"], args))), ")");
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tapp" && t.fields[0].fields[1].tag === 1) {
       const f = t.fields[0].fields[1].fields[0];
       const args_1 = t.fields[0].fields[1].fields[1];
-      return Print$paren(90, prec, rt.ap(rt.prims["append"], Print$ty(p, f, 90), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x_1) => rt.ap(rt.prims["append"], " ", Print$ty(p, x_1, 100)), "Print.ty/\u03bb"), args_1))));
+      return Print$paren(90, prec, rt.ap(rt.prims["append"], Print$ty(p, f, 90), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.ty/\u03bb": (x_1) => rt.ap(rt.prims["append"], " ", Print$ty(p, x_1, 100)) })["Print.ty/\u03bb"], args_1))));
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "tfun" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const a = t.fields[0].fields[1].fields[0];
@@ -9984,13 +9934,13 @@ rt.named(Print$patternColumns, "Print.patternColumns");
 function Print$plainDefinition(p, name, docText, names, b, env, sig) {
   const count = lib$base$List$length(names);
   let parts;
-  const t0 = lib$base$Option$map(rt.named((s) => Print$splitSig(s, count), "Print.plainDefinition/\u03bb"), sig);
+  const t0 = lib$base$Option$map(({ "Print.plainDefinition/\u03bb": (s) => Print$splitSig(s, count) })["Print.plainDefinition/\u03bb"], sig);
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 0 && t0.fields[0].fields[1].tag === 1) {
       const types = t0.fields[0].fields[0];
       const result = t0.fields[0].fields[1].fields[0];
       if (rt.equal(lib$base$List$length(types), count)) {
-        const t4 = lib$base$List$map(rt.named((pair) => {
+        const t4 = lib$base$List$map(({ "Print.plainDefinition/\u03bb": (pair) => {
         m2: {
           if (pair.tag === 0) {
             const x = pair.fields[0];
@@ -10009,7 +9959,7 @@ function Print$plainDefinition(p, name, docText, names, b, env, sig) {
           }
           rt.nomatch(pair);
         }
-      }, "Print.plainDefinition/\u03bb"), lib$base$List$zip(names, types));
+      } })["Print.plainDefinition/\u03bb"], lib$base$List$zip(names, types));
         let r5;
         if (rt.equal(lib$base$Sexp$args(result), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["?"]), rt.NIL))) {
           r5 = rt.NIL;
@@ -10028,7 +9978,7 @@ function Print$plainDefinition(p, name, docText, names, b, env, sig) {
     }
     rt.nomatch(t0);
   }
-  const flat = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((part) => rt.ap(rt.prims["append"], " ", part), "Print.plainDefinition/\u03bb"), parts));
+  const flat = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.plainDefinition/\u03bb": (part) => rt.ap(rt.prims["append"], " ", part) })["Print.plainDefinition/\u03bb"], parts));
   let header;
   let r6;
   if (Print$fits(0, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "def ", name), flat), " :="))) {
@@ -10039,7 +9989,7 @@ function Print$plainDefinition(p, name, docText, names, b, env, sig) {
   if (r6) {
     header = flat;
   } else {
-    header = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((part_1) => rt.ap(rt.prims["append"], "\n    ", part_1), "Print.plainDefinition/\u03bb"), parts));
+    header = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.plainDefinition/\u03bb": (part_1) => rt.ap(rt.prims["append"], "\n    ", part_1) })["Print.plainDefinition/\u03bb"], parts));
   }
   let declared;
   const t7 = new rt.Con("#Pair", 0, [Resolve$stubOf(b), sig]);
@@ -10126,9 +10076,9 @@ function Print$stmts(p, t, env, ind) {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "letrec" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const fns = t.fields[0].fields[1].fields[0].fields[0];
       const b_2 = t.fields[0].fields[1].fields[1].fields[0];
-      const names = lib$base$List$map(rt.named((v_1) => Print$bind(p, env), "Print.stmts/\u03bb"), fns);
+      const names = lib$base$List$map(({ "Print.stmts/\u03bb": (v_1) => Print$bind(p, env) })["Print.stmts/\u03bb"], fns);
       const inner_1 = rt.ap(rt.prims["append"], lib$base$List$reverse(names), env);
-      const defs = lib$base$List$map(rt.named((pair) => {
+      const defs = lib$base$List$map(({ "Print.stmts/\u03bb": (pair) => {
       m1: {
         if (pair.tag === 0) {
           const name_1 = pair.fields[0];
@@ -10137,7 +10087,7 @@ function Print$stmts(p, t, env, ind) {
         }
         rt.nomatch(pair);
       }
-    }, "Print.stmts/\u03bb"), lib$base$List$zip(names, fns));
+    } })["Print.stmts/\u03bb"], lib$base$List$zip(names, fns));
       return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.join"], nl, defs), nl), Print$stmts(p, b_2, inner_1, ind));
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "match" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "case" && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].tag === 0) {
@@ -10295,7 +10245,6 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             }
           }
         }
-        rt.named(params, "params");
         const t6 = rt.ap(params, t, env, rt.NIL);
         m7: {
           if (t6.tag === 0 && t6.fields[1].tag === 0) {
@@ -10303,7 +10252,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             const b_3 = t6.fields[1].fields[0];
             const env2_1 = t6.fields[1].fields[1];
             const rendered = Print$body(p, b_3, env2_1, ind);
-            const shown = lib$base$List$map(rt.named((x_1) => {
+            const shown = lib$base$List$map(({ "Print.expr/\u03bb": (x_1) => {
           let r8;
           if (Print$isGenerated(x_1)) {
             r8 = lib$base$not(Print$mentions(x_1, rendered));
@@ -10315,7 +10264,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
           } else {
             return x_1;
           }
-        }, "Print.expr/\u03bb"), names);
+        } })["Print.expr/\u03bb"], names);
             return Print$paren(1, prec, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "fun ", rt.ap(rt.prims["Text.join"], " ", shown)), " =>"), rendered));
           }
           rt.nomatch(t6);
@@ -10325,7 +10274,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
         const scrut = t.fields[0].fields[1].fields[0];
         const cases = t.fields[0].fields[1].fields[1];
         const scrutText = Print$expr(p, scrut, env, ind, 0);
-        const arms = lib$base$List$map(rt.named((c_1) => {
+        const arms = lib$base$List$map(({ "Print.expr/\u03bb": (c_1) => {
       m9: {
         if (c_1.tag === 3 && c_1.fields[0].tag === 1 && c_1.fields[0].fields[0].tag === 1 && c_1.fields[0].fields[0].fields[0] === "case" && c_1.fields[0].fields[1].tag === 1 && c_1.fields[0].fields[1].fields[1].tag === 1 && c_1.fields[0].fields[1].fields[1].fields[1].tag === 0) {
           const pat = c_1.fields[0].fields[1].fields[0];
@@ -10345,14 +10294,14 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
         }
         rt.nomatch(c_1);
       }
-    }, "Print.expr/\u03bb"), cases);
+    } })["Print.expr/\u03bb"], cases);
         return Print$paren(1, prec, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "match ", scrutText), " with"), rt.ap(rt.prims["Text.concat"], arms)));
       }
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "handle" && t.fields[0].fields[1].tag === 1) {
         const b_5 = t.fields[0].fields[1].fields[0];
         const clauses = t.fields[0].fields[1].fields[1];
         const bodyText = Print$body(p, b_5, env, ind);
-        const rendered_1 = lib$base$List$map(rt.named((c_2) => {
+        const rendered_1 = lib$base$List$map(({ "Print.expr/\u03bb": (c_2) => {
       m12: {
         if (c_2.tag === 3 && c_2.fields[0].tag === 1 && c_2.fields[0].fields[0].tag === 1 && c_2.fields[0].fields[0].fields[0] === "ret" && c_2.fields[0].fields[1].tag === 1 && c_2.fields[0].fields[1].fields[1].tag === 0) {
           const rb = c_2.fields[0].fields[1].fields[0];
@@ -10378,14 +10327,13 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
               }
             }
           }
-          rt.named(args, "args");
           const t13 = rt.ap(args, arity, env, rt.NIL);
           m14: {
             if (t13.tag === 0) {
               const names_1 = t13.fields[0];
               const env2_4 = t13.fields[1];
               const k_1 = Print$bind(p, env2_4);
-              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(ind)), "| "), Print$nameFor(p, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], a_3, "!"), rt.ap(rt.prims["Int.toText"], index_1)))), rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x_2) => rt.ap(rt.prims["append"], " ", x_2), "Print.expr/\u03bb"), names_1))), " -> "), k_1), " =>"), Print$body(p, hb, rt.cons(k_1, env2_4), ((ind + 2) | 0)));
+              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(ind)), "| "), Print$nameFor(p, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], a_3, "!"), rt.ap(rt.prims["Int.toText"], index_1)))), rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.expr/\u03bb": (x_2) => rt.ap(rt.prims["append"], " ", x_2) })["Print.expr/\u03bb"], names_1))), " -> "), k_1), " =>"), Print$body(p, hb, rt.cons(k_1, env2_4), ((ind + 2) | 0)));
             }
             rt.nomatch(t13);
           }
@@ -10395,7 +10343,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
         }
         rt.nomatch(c_2);
       }
-    }, "Print.expr/\u03bb"), clauses);
+    } })["Print.expr/\u03bb"], clauses);
         const t15 = rt.ap(rt.prims["append"], "handle", bodyText);
         let r16;
         if (Print$isBlock(b_5)) {
@@ -10469,7 +10417,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             return Print$paren(95, prec, rt.ap(rt.prims["append"], "-", Print$expr(p, a_6, env, ind, 100)));
           }
           if (t21.tag === 0 && t21.fields[0].tag === 3 && t21.fields[0].fields[0].tag === 1 && t21.fields[0].fields[0].fields[0].tag === 1 && t21.fields[0].fields[0].fields[0].fields[0] === "con" && t21.fields[0].fields[0].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[0].tag === 2 && t21.fields[0].fields[0].fields[1].fields[0].fields[0] === "#Pair" && t21.fields[0].fields[0].fields[1].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t21.fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 2 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t21.fields[1].tag === 1 && t21.fields[1].fields[1].tag === 1 && t21.fields[1].fields[1].fields[1].tag === 0) {
-            return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_3) => Print$expr(p, x_3, env, ind, 0), "Print.expr/\u03bb"), Print$tupleItems(t)))), ")");
+            return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Print.expr/\u03bb": (x_3) => Print$expr(p, x_3, env, ind, 0) })["Print.expr/\u03bb"], Print$tupleItems(t)))), ")");
           }
           if (t21.tag === 0 && t21.fields[0].tag === 3 && t21.fields[0].fields[0].tag === 1 && t21.fields[0].fields[0].fields[0].tag === 1 && t21.fields[0].fields[0].fields[0].fields[0] === "con" && t21.fields[0].fields[0].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[0].tag === 2 && t21.fields[0].fields[0].fields[1].fields[0].fields[0] === "#List" && t21.fields[0].fields[0].fields[1].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t21.fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 2 && t21.fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t21.fields[1].tag === 1 && t21.fields[1].fields[1].tag === 1 && t21.fields[1].fields[1].fields[1].tag === 0) {
             const h_2 = t21.fields[1].fields[0];
@@ -10502,7 +10450,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
 rt.named(Print$expr, "Print.expr");
 
 function View$params(names) {
-  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((n) => rt.ap(rt.prims["append"], " ", n), "View.params/\u03bb"), names));
+  return rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "View.params/\u03bb": (n) => rt.ap(rt.prims["append"], " ", n) })["View.params/\u03bb"], names));
 }
 rt.named(View$params, "View.params");
 
@@ -10575,7 +10523,7 @@ function Types$signatureType(u, s, vars, rowVars) {
     if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tapp" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 3 && s.fields[0].fields[1].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "tref" && s.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0) {
       const iri = s.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
       const args = s.fields[0].fields[1].fields[1];
-      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, lib$base$List$map(rt.named((x) => Types$signatureType(u, x, vars, rowVars), "Types.signatureType/\u03bb"), args)]);
+      return new rt.Con("391d970f85419dcd277121e5d0a7faa87ea595f2ce8a1fe1ac1ff9adca17f905", 0, [iri, lib$base$List$map(({ "Types.signatureType/\u03bb": (x) => Types$signatureType(u, x, vars, rowVars) })["Types.signatureType/\u03bb"], args)]);
     }
     if (true) {
       return Types$fromSexp(u, s, vars, rowVars, rt.NIL, true);
@@ -10586,7 +10534,7 @@ function Types$signatureType(u, s, vars, rowVars) {
 rt.named(Types$signatureType, "Types.signatureType");
 
 function Syntax$decodeRule(notationType, partType, key, fqn, core) {
-  const text = rt.named((s) => {
+  const text = ({ "Syntax.decodeRule/\u03bb": (s) => {
   m0: {
     if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "text" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
       const v = s.fields[0].fields[1].fields[0].fields[0];
@@ -10597,8 +10545,8 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
     }
     rt.nomatch(s);
   }
-}, "Syntax.decodeRule/\u03bb");
-  const number = rt.named((s_1) => {
+} })["Syntax.decodeRule/\u03bb"];
+  const number = ({ "Syntax.decodeRule/\u03bb": (s_1) => {
   m1: {
     if (s_1.tag === 3 && s_1.fields[0].tag === 1 && s_1.fields[0].fields[0].tag === 1 && s_1.fields[0].fields[0].fields[0] === "int" && s_1.fields[0].fields[1].tag === 1 && s_1.fields[0].fields[1].fields[0].tag === 0 && s_1.fields[0].fields[1].fields[1].tag === 0) {
       const v_1 = s_1.fields[0].fields[1].fields[0].fields[0];
@@ -10609,8 +10557,8 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
     }
     rt.nomatch(s_1);
   }
-}, "Syntax.decodeRule/\u03bb");
-  const part = rt.named((s_2) => {
+} })["Syntax.decodeRule/\u03bb"];
+  const part = ({ "Syntax.decodeRule/\u03bb": (s_2) => {
   m2: {
     if (s_2.tag === 3 && s_2.fields[0].tag === 1 && s_2.fields[0].fields[0].tag === 1 && s_2.fields[0].fields[0].fields[0] === "app" && s_2.fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].tag === 3 && s_2.fields[0].fields[1].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0) {
       const t = s_2.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
@@ -10660,7 +10608,7 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
     }
     rt.nomatch(s_2);
   }
-}, "Syntax.decodeRule/\u03bb");
+} })["Syntax.decodeRule/\u03bb"];
   m6: {
     if (core.tag === 3 && core.fields[0].tag === 1 && core.fields[0].fields[0].tag === 1 && core.fields[0].fields[0].fields[0] === "app" && core.fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].tag === 3 && core.fields[0].fields[1].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && core.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && core.fields[0].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 1 && core.fields[0].fields[1].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const t_1 = core.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
@@ -10679,7 +10627,7 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
             const items = t7.fields[1].fields[1].fields[0];
             const decoded = lib$base$List$map(part, items);
             if (lib$base$List$all(lib$base$Option$isSome, decoded)) {
-              return new rt.Con("#Option", 1, [new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [key, fqn, c_1, n, lib$base$List$filterMap(rt.named((x) => x, "Syntax.decodeRule/\u03bb"), decoded), new rt.Con("#Option", 1, [template])])]);
+              return new rt.Con("#Option", 1, [new rt.Con("d088f862885c565b2cb7b89d670253892fc0b68d4c8a65b7bc7a84df72627666", 0, [key, fqn, c_1, n, lib$base$List$filterMap(({ "Syntax.decodeRule/\u03bb": (x) => x })["Syntax.decodeRule/\u03bb"], decoded), new rt.Con("#Option", 1, [template])])]);
             } else {
               return rt.con0("#Option", 0);
             }
@@ -10700,7 +10648,7 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
 rt.named(Syntax$decodeRule, "Syntax.decodeRule");
 
 function Check$hasAttr(dir, h, name) {
-  return lib$base$List$any(rt.named((a) => {
+  return lib$base$List$any(({ "Check.hasAttr/\u03bb": (a) => {
   if (rt.equal(lib$base$Sexp$head(a), name)) {
     return true;
   } else {
@@ -10715,14 +10663,14 @@ function Check$hasAttr(dir, h, name) {
       rt.nomatch(a);
     }
   }
-}, "Check.hasAttr/\u03bb"), Codebase$metaList(Codebase$readMeta(dir, h), "attrs"));
+} })["Check.hasAttr/\u03bb"], Codebase$metaList(Codebase$readMeta(dir, h), "attrs"));
 }
 rt.named(Check$hasAttr, "Check.hasAttr");
 
 function Syntax$elaboratorProblem(scheme, holes) {
   const sexp = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["urn:deus:Sexp"]), rt.NIL))]);
   const throws = new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tapp"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["urn:deus:Throw"]), rt.NIL))]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 1, ["tref"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["#Text"]), rt.NIL))]), rt.NIL)))]);
-  const allowed = rt.named((e) => {
+  const allowed = ({ "Syntax.elaboratorProblem/\u03bb": (e) => {
   m0: {
     if (e.tag === 3 && e.fields[0].tag === 1 && e.fields[0].fields[0].tag === 1 && e.fields[0].fields[0].fields[0] === "tvar" && e.fields[0].fields[1].tag === 1 && e.fields[0].fields[1].fields[1].tag === 0) {
       return true;
@@ -10732,7 +10680,7 @@ function Syntax$elaboratorProblem(scheme, holes) {
     }
     rt.nomatch(e);
   }
-}, "Syntax.elaboratorProblem/\u03bb");
+} })["Syntax.elaboratorProblem/\u03bb"];
   function walk(t$, n$) {
     for (;;) {
       const t = t$, n = n$;
@@ -10785,7 +10733,6 @@ function Syntax$elaboratorProblem(scheme, holes) {
       }
     }
   }
-  rt.named(walk, "walk");
   m4: {
     if (scheme.tag === 3 && scheme.fields[0].tag === 1 && scheme.fields[0].fields[0].tag === 1 && scheme.fields[0].fields[0].fields[0] === "tapp" && scheme.fields[0].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const expansion = scheme.fields[0].fields[1].fields[1].fields[0];
@@ -10800,7 +10747,7 @@ function Syntax$elaboratorProblem(scheme, holes) {
 rt.named(Syntax$elaboratorProblem, "Syntax.elaboratorProblem");
 
 function Image$load(fetch, roots) {
-  const pending = lib$base$List$filter(rt.named((pair) => lib$base$not(rt.ap(rt.unavailable("Code.has"), lib$base$fst(pair))), "Image.load/\u03bb"), Image$closure(fetch, roots));
+  const pending = lib$base$List$filter(({ "Image.load/\u03bb": (pair) => lib$base$not(rt.ap(rt.unavailable("Code.has"), lib$base$fst(pair))) })["Image.load/\u03bb"], Image$closure(fetch, roots));
   if (lib$base$List$isEmpty(pending)) {
     return undefined;
   } else {
@@ -10811,7 +10758,7 @@ rt.named(Image$load, "Image.load");
 
 function Cli$ownOrMounted(ns, name) {
   const depth = ((lib$base$List$length(rt.ap(rt.prims["Text.split"], name, ".")) + 2) | 0);
-  return lib$base$Option$orElse(lib$base$Map$lookup(name, ns), rt.named((v) => lib$base$Option$map(lib$base$snd, lib$base$List$find(rt.named((pair) => {
+  return lib$base$Option$orElse(lib$base$Map$lookup(name, ns), ({ "Cli.ownOrMounted/\u03bb": (v) => lib$base$Option$map(lib$base$snd, lib$base$List$find(({ "Cli.ownOrMounted/\u03bb": (pair) => {
     if (lib$base$Text$startsWith("lib.", lib$base$fst(pair))) {
       if (lib$base$Text$endsWith(rt.ap(rt.prims["append"], ".", name), lib$base$fst(pair))) {
         return rt.equal(lib$base$List$length(rt.ap(rt.prims["Text.split"], lib$base$fst(pair), ".")), depth);
@@ -10821,7 +10768,7 @@ function Cli$ownOrMounted(ns, name) {
     } else {
       return false;
     }
-  }, "Cli.ownOrMounted/\u03bb"), lib$base$Map$toList(ns))), "Cli.ownOrMounted/\u03bb"));
+  } })["Cli.ownOrMounted/\u03bb"], lib$base$Map$toList(ns))) })["Cli.ownOrMounted/\u03bb"]);
 }
 rt.named(Cli$ownOrMounted, "Cli.ownOrMounted");
 
@@ -10878,7 +10825,7 @@ rt.named(Print$isGenerated, "Print.isGenerated");
 
 function Print$mentions(name, text) {
   const n = rt.ap(rt.prims["Text.length"], name);
-  const isWord = rt.named((c) => {
+  const isWord = ({ "Print.mentions/\u03bb": (c) => {
   if (lib$base$Text$isAlpha(c)) {
     return true;
   } else {
@@ -10896,7 +10843,7 @@ function Print$mentions(name, text) {
       }
     }
   }
-}, "Print.mentions/\u03bb");
+} })["Print.mentions/\u03bb"];
   function scan(i$) {
     for (;;) {
       const i = i$;
@@ -10925,7 +10872,6 @@ function Print$mentions(name, text) {
       }
     }
   }
-  rt.named(scan, "scan");
   return rt.ap(scan, 0);
 }
 rt.named(Print$mentions, "Print.mentions");
@@ -10934,7 +10880,7 @@ function Ts$application(p, f, args, env, ind, prec) {
   const supply = rt.ap(rt.prims["Ref.get"], Printer$supply(p));
   const fresh = rt.ap(rt.prims["Ref.get"], Printer$fresh(p));
   const names = Print$hintNames(p, f, args);
-  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$expr(p, f, env, ind, 100), "("), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$mapIndexed(rt.named((i, a) => Print$hinted(names, i, Ts$expr(p, a, env, ind, 0)), "Ts.application/\u03bb"), args))), ")");
+  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Ts$expr(p, f, env, ind, 100), "("), rt.ap(rt.prims["Text.join"], ", ", lib$base$List$mapIndexed(({ "Ts.application/\u03bb": (i, a) => Print$hinted(names, i, Ts$expr(p, a, env, ind, 0)) })["Ts.application/\u03bb"], args))), ")");
   if (Ts$unitOnly(args)) {
     return rt.ap(rt.prims["append"], Ts$expr(p, f, env, ind, 100), "()");
   } else {
@@ -10950,7 +10896,7 @@ function Ts$application(p, f, args, env, ind, prec) {
       rt.ap(rt.prims["Ref.set"], Printer$supply(p), supply);
       rt.ap(rt.prims["Ref.set"], Printer$fresh(p), fresh);
       const head = Ts$expr(p, f, env, ind, 100);
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], head, "("), rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(rt.named((i_1, a_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Print$hinted(names, i_1, Ts$expr(p, a_1, env, ((ind + 2) | 0), 0))), ","), "Ts.application/\u03bb"), args))), "\n"), Print$spaces(ind)), ")");
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], head, "("), rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(({ "Ts.application/\u03bb": (i_1, a_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Print$hinted(names, i_1, Ts$expr(p, a_1, env, ((ind + 2) | 0), 0))), ",") })["Ts.application/\u03bb"], args))), "\n"), Print$spaces(ind)), ")");
     }
   }
 }
@@ -10964,7 +10910,7 @@ rt.named(Ts$infixOf, "Ts.infixOf");
 function Ts$sequence(p, opener, items, env, ind) {
   const supply = rt.ap(rt.prims["Ref.get"], Printer$supply(p));
   const fresh = rt.ap(rt.prims["Ref.get"], Printer$fresh(p));
-  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], opener, rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Ts$expr(p, x, env, ind, 0), "Ts.sequence/\u03bb"), items))), "]");
+  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], opener, rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Ts.sequence/\u03bb": (x) => Ts$expr(p, x, env, ind, 0) })["Ts.sequence/\u03bb"], items))), "]");
   let r0;
   if (Print$fits(ind, flat)) {
     r0 = true;
@@ -10976,7 +10922,7 @@ function Ts$sequence(p, opener, items, env, ind) {
   } else {
     rt.ap(rt.prims["Ref.set"], Printer$supply(p), supply);
     rt.ap(rt.prims["Ref.set"], Printer$fresh(p), fresh);
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], opener, rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Ts$expr(p, x_1, env, ((ind + 2) | 0), 0)), ","), "Ts.sequence/\u03bb"), items))), "\n"), Print$spaces(ind)), "]");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], opener, rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Ts.sequence/\u03bb": (x_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Ts$expr(p, x_1, env, ((ind + 2) | 0), 0)), ",") })["Ts.sequence/\u03bb"], items))), "\n"), Print$spaces(ind)), "]");
   }
 }
 rt.named(Ts$sequence, "Ts.sequence");
@@ -11004,7 +10950,7 @@ function Print$listItems(t) {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "app" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#List" && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[0].fields[0] === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const h = t.fields[0].fields[1].fields[1].fields[0];
       const rest = t.fields[0].fields[1].fields[1].fields[1].fields[0];
-      return lib$base$Option$map(rt.named((items) => rt.cons(h, items), "Print.listItems/\u03bb"), Print$listItems(rest));
+      return lib$base$Option$map(({ "Print.listItems/\u03bb": (items) => rt.cons(h, items) })["Print.listItems/\u03bb"], Print$listItems(rest));
     }
     if (true) {
       return rt.con0("#Option", 0);
@@ -11069,9 +11015,9 @@ function Ts$stmts(p, t, env, ind, ret) {
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "letrec" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const fns = t.fields[0].fields[1].fields[0].fields[0];
       const b_2 = t.fields[0].fields[1].fields[1].fields[0];
-      const names = lib$base$List$map(rt.named((v_1) => Print$bind(p, env), "Ts.stmts/\u03bb"), fns);
+      const names = lib$base$List$map(({ "Ts.stmts/\u03bb": (v_1) => Print$bind(p, env) })["Ts.stmts/\u03bb"], fns);
       const inner = rt.ap(rt.prims["append"], lib$base$List$reverse(names), env);
-      const defs = lib$base$List$map(rt.named((pair) => {
+      const defs = lib$base$List$map(({ "Ts.stmts/\u03bb": (pair) => {
       m2: {
         if (pair.tag === 0) {
           const name_1 = pair.fields[0];
@@ -11080,7 +11026,7 @@ function Ts$stmts(p, t, env, ind, ret) {
         }
         rt.nomatch(pair);
       }
-    }, "Ts.stmts/\u03bb"), lib$base$List$zip(names, fns));
+    } })["Ts.stmts/\u03bb"], lib$base$List$zip(names, fns));
       return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.join"], nl, defs), nl), Ts$stmts(p, b_2, inner, ind, ret));
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "match" && t.fields[0].fields[1].tag === 1) {
@@ -11121,7 +11067,7 @@ function Ts$stmts(p, t, env, ind, ret) {
         }
         if (single.tag === 0) {
           const scrutText = Ts$expr(p, scrut, env, ind, 0);
-          const arms = lib$base$List$map(rt.named((c) => {
+          const arms = lib$base$List$map(({ "Ts.stmts/\u03bb": (c) => {
           m7: {
             if (c.tag === 3 && c.fields[0].tag === 1 && c.fields[0].fields[0].tag === 1 && c.fields[0].fields[0].fields[0] === "case" && c.fields[0].fields[1].tag === 1 && c.fields[0].fields[1].fields[1].tag === 1 && c.fields[0].fields[1].fields[1].fields[1].tag === 0) {
               const pat_2 = c.fields[0].fields[1].fields[0];
@@ -11153,7 +11099,7 @@ function Ts$stmts(p, t, env, ind, ret) {
             }
             rt.nomatch(c);
           }
-        }, "Ts.stmts/\u03bb"), cases);
+        } })["Ts.stmts/\u03bb"], cases);
           return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "switch (", scrutText), ") {"), rt.ap(rt.prims["Text.concat"], arms)), nl), "}");
         }
         rt.nomatch(single);
@@ -11163,7 +11109,7 @@ function Ts$stmts(p, t, env, ind, ret) {
       const b_6 = t.fields[0].fields[1].fields[0];
       const clauses = t.fields[0].fields[1].fields[1];
       const bodyText = Ts$stmts(p, b_6, env, ((ind + 2) | 0), ret);
-      const rendered = lib$base$List$map(rt.named((c_1) => {
+      const rendered = lib$base$List$map(({ "Ts.stmts/\u03bb": (c_1) => {
       m17: {
         if (c_1.tag === 3 && c_1.fields[0].tag === 1 && c_1.fields[0].fields[0].tag === 1 && c_1.fields[0].fields[0].fields[0] === "ret" && c_1.fields[0].fields[1].tag === 1 && c_1.fields[0].fields[1].fields[1].tag === 0) {
           const rb = c_1.fields[0].fields[1].fields[0];
@@ -11189,7 +11135,6 @@ function Ts$stmts(p, t, env, ind, ret) {
               }
             }
           }
-          rt.named(args, "args");
           const t18 = rt.ap(args, arity, env, rt.NIL);
           m19: {
             if (t18.tag === 0) {
@@ -11206,7 +11151,7 @@ function Ts$stmts(p, t, env, ind, ret) {
         }
         rt.nomatch(c_1);
       }
-    }, "Ts.stmts/\u03bb"), clauses);
+    } })["Ts.stmts/\u03bb"], clauses);
       return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "try {\n", Print$spaces(((ind + 2) | 0))), bodyText), nl), "} handle {"), rt.ap(rt.prims["Text.concat"], rendered)), nl), "}");
     }
     if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "if" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
@@ -11280,7 +11225,6 @@ function View$paramNames(count, used) {
       }
     }
   }
-  rt.named(pick, "pick");
   return rt.ap(pick, 0, rt.NIL);
 }
 rt.named(View$paramNames, "View.paramNames");
@@ -11335,7 +11279,7 @@ function Resolve$tuple(items) {
     if (t0.tag === 1) {
       const last = t0.fields[0];
       const rest = t0.fields[1];
-      return lib$base$List$foldl(rt.named((acc, x) => Resolve$app(Resolve$pairCon(), rt.cons(x, rt.cons(acc, rt.NIL))), "Resolve.tuple/\u03bb"), last, rest);
+      return lib$base$List$foldl(({ "Resolve.tuple/\u03bb": (acc, x) => Resolve$app(Resolve$pairCon(), rt.cons(x, rt.cons(acc, rt.NIL))) })["Resolve.tuple/\u03bb"], last, rest);
     }
     rt.nomatch(t0);
   }
@@ -11343,10 +11287,10 @@ function Resolve$tuple(items) {
 rt.named(Resolve$tuple, "Resolve.tuple");
 
 function Print$effRow(p, effs) {
-  const tails = lib$base$List$filter(rt.named((x) => (lib$base$Sexp$head(x) === "tvar"), "Print.effRow/\u03bb"), effs);
-  const named = lib$base$List$filter(rt.named((x_1) => (lib$base$Sexp$head(x_1) !== "tvar"), "Print.effRow/\u03bb"), effs);
-  const shown = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_2) => Print$ty(p, x_2, 0), "Print.effRow/\u03bb"), named));
-  const tail = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_3) => Print$ty(p, x_3, 0), "Print.effRow/\u03bb"), tails));
+  const tails = lib$base$List$filter(({ "Print.effRow/\u03bb": (x) => (lib$base$Sexp$head(x) === "tvar") })["Print.effRow/\u03bb"], effs);
+  const named = lib$base$List$filter(({ "Print.effRow/\u03bb": (x_1) => (lib$base$Sexp$head(x_1) !== "tvar") })["Print.effRow/\u03bb"], effs);
+  const shown = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Print.effRow/\u03bb": (x_2) => Print$ty(p, x_2, 0) })["Print.effRow/\u03bb"], named));
+  const tail = rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Print.effRow/\u03bb": (x_3) => Print$ty(p, x_3, 0) })["Print.effRow/\u03bb"], tails));
   let r0;
   if (lib$base$Text$isEmpty(tail)) {
     r0 = shown;
@@ -11507,7 +11451,6 @@ function Print$patternAt(p, pat, env, prec) {
               }
             }
           }
-          rt.named(go, "go");
           const t18 = rt.ap(go, subs, env, rt.NIL);
           m19: {
             if (t18.tag === 0) {
@@ -11553,14 +11496,13 @@ function Print$lambdaHead(p, fn, env, ind) {
       }
     }
   }
-  rt.named(params, "params");
   const t1 = rt.ap(params, fn, env, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[1].tag === 0) {
       const names = t1.fields[0];
       const b_1 = t1.fields[1].fields[0];
       const env2_1 = t1.fields[1].fields[1];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x) => rt.ap(rt.prims["append"], " ", x), "Print.lambdaHead/\u03bb"), names)), " :="), Print$body(p, b_1, env2_1, ind));
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.lambdaHead/\u03bb": (x) => rt.ap(rt.prims["append"], " ", x) })["Print.lambdaHead/\u03bb"], names)), " :="), Print$body(p, b_1, env2_1, ind));
     }
     rt.nomatch(t1);
   }
@@ -11615,7 +11557,7 @@ function Print$throughNotation(p, key, term, env, ind) {
                 if (t6.tag === 0) {
                   const slices = t6.fields[0];
                   const total = t6.fields[1];
-                  const named = lib$base$List$map(rt.named((i) => {
+                  const named = lib$base$List$map(({ "Print.throughNotation/\u03bb": (i) => {
                   const t8 = lib$base$Map$lookup(i, slices);
                   m9: {
                     if (t8.tag === 1 && t8.fields[0].tag === 0) {
@@ -11628,10 +11570,10 @@ function Print$throughNotation(p, key, term, env, ind) {
                     }
                     rt.nomatch(t8);
                   }
-                }, "Print.throughNotation/\u03bb"), lib$base$List$range(0, count));
+                } })["Print.throughNotation/\u03bb"], lib$base$List$range(0, count));
                   const text = Print$notationText(p, rule, holes, named, env, ind);
                   rt.ap(rt.prims["Ref.set"], Printer$supply(p), lib$base$List$drop(total, supply));
-                  return lib$base$Option$map(rt.named((t) => new rt.Con("#Pair", 0, [t, Print$notationLevel(rule)]), "Print.throughNotation/\u03bb"), text);
+                  return lib$base$Option$map(({ "Print.throughNotation/\u03bb": (t) => new rt.Con("#Pair", 0, [t, Print$notationLevel(rule)]) })["Print.throughNotation/\u03bb"], text);
                 }
                 rt.nomatch(t6);
               }
@@ -11714,7 +11656,7 @@ function Print$application(p, f, args, env, ind, prec) {
   const supply = rt.ap(rt.prims["Ref.get"], Printer$supply(p));
   const fresh = rt.ap(rt.prims["Ref.get"], Printer$fresh(p));
   const names = Print$hintNames(p, f, args);
-  const flat = rt.ap(rt.prims["append"], Print$expr(p, f, env, ind, 90), rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(rt.named((i, a) => rt.ap(rt.prims["append"], " ", Print$hinted(names, i, Print$expr(p, a, env, ind, 100))), "Print.application/\u03bb"), args)));
+  const flat = rt.ap(rt.prims["append"], Print$expr(p, f, env, ind, 90), rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(({ "Print.application/\u03bb": (i, a) => rt.ap(rt.prims["append"], " ", Print$hinted(names, i, Print$expr(p, a, env, ind, 100))) })["Print.application/\u03bb"], args)));
   let r0;
   if (Print$fits(ind, flat)) {
     r0 = true;
@@ -11727,7 +11669,7 @@ function Print$application(p, f, args, env, ind, prec) {
     rt.ap(rt.prims["Ref.set"], Printer$supply(p), supply);
     rt.ap(rt.prims["Ref.set"], Printer$fresh(p), fresh);
     const head = Print$expr(p, f, env, ind, 90);
-    return Print$paren(90, prec, rt.ap(rt.prims["append"], head, rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(rt.named((i_1, a_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Print$hinted(names, i_1, Print$expr(p, a_1, env, ((ind + 2) | 0), 100))), "Print.application/\u03bb"), args))));
+    return Print$paren(90, prec, rt.ap(rt.prims["append"], head, rt.ap(rt.prims["Text.concat"], lib$base$List$mapIndexed(({ "Print.application/\u03bb": (i_1, a_1) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), Print$hinted(names, i_1, Print$expr(p, a_1, env, ((ind + 2) | 0), 100))) })["Print.application/\u03bb"], args))));
   }
 }
 rt.named(Print$application, "Print.application");
@@ -11788,7 +11730,7 @@ rt.named(Print$infixOf, "Print.infixOf");
 function Print$listLiteral(p, items, env, ind) {
   const supply = rt.ap(rt.prims["Ref.get"], Printer$supply(p));
   const fresh = rt.ap(rt.prims["Ref.get"], Printer$fresh(p));
-  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Print$expr(p, x, env, ind, 0), "Print.listLiteral/\u03bb"), items))), "]");
+  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(({ "Print.listLiteral/\u03bb": (x) => Print$expr(p, x, env, ind, 0) })["Print.listLiteral/\u03bb"], items))), "]");
   let r0;
   if (Print$fits(ind, flat)) {
     r0 = true;
@@ -11800,7 +11742,7 @@ function Print$listLiteral(p, items, env, ind) {
   } else {
     rt.ap(rt.prims["Ref.set"], Printer$supply(p), supply);
     rt.ap(rt.prims["Ref.set"], Printer$fresh(p), fresh);
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], rt.ap(rt.prims["append"], ",\n", Print$spaces(((ind + 2) | 0))), lib$base$List$map(rt.named((x_1) => Print$expr(p, x_1, env, ((ind + 2) | 0), 0), "Print.listLiteral/\u03bb"), items))), "]");
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], rt.ap(rt.prims["append"], ",\n", Print$spaces(((ind + 2) | 0))), lib$base$List$map(({ "Print.listLiteral/\u03bb": (x_1) => Print$expr(p, x_1, env, ((ind + 2) | 0), 0) })["Print.listLiteral/\u03bb"], items))), "]");
   }
 }
 rt.named(Print$listLiteral, "Print.listLiteral");
@@ -11903,8 +11845,7 @@ function Image$closure(fetch, roots) {
       }
     }
   }
-  rt.named(go, "go");
-  return lib$base$List$sortBy(rt.named((a, b) => rt.ap(rt.prims["compare"], lib$base$fst(a), lib$base$fst(b)), "Image.closure/\u03bb"), rt.ap(go, roots, lib$base$Set$empty(), rt.NIL));
+  return lib$base$List$sortBy(({ "Image.closure/\u03bb": (a, b) => rt.ap(rt.prims["compare"], lib$base$fst(a), lib$base$fst(b)) })["Image.closure/\u03bb"], rt.ap(go, roots, lib$base$Set$empty(), rt.NIL));
 }
 rt.named(Image$closure, "Image.closure");
 
@@ -12163,7 +12104,6 @@ function Ts$pattern(p, pat, env) {
             }
           }
         }
-        rt.named(go, "go");
         const t15 = rt.ap(go, subs, env, rt.NIL);
         m16: {
           if (t15.tag === 0) {
@@ -12241,7 +12181,6 @@ function lib$base$List$replicate(n, x) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, rt.NIL, n);
 }
 rt.named(lib$base$List$replicate, "lib.base.List.replicate");
@@ -12327,7 +12266,7 @@ function Syntax$holesOf(template, count, term) {
               if (!rt.equal(lib$base$List$length(items), lib$base$List$length(others))) {
                 return rt.ap(rt.prims["Ref.set"], fits, false);
               } else {
-                return lib$base$List$forEach(lib$base$List$zip(lib$base$List$zip(items, others), Syntax$binderCounts(items)), rt.named((triple) => {
+                return lib$base$List$forEach(lib$base$List$zip(lib$base$List$zip(items, others), Syntax$binderCounts(items)), ({ "Syntax.holesOf/\u03bb": (triple) => {
               m4: {
                 if (triple.tag === 0 && triple.fields[0].tag === 0) {
                   const a = triple.fields[0].fields[0];
@@ -12337,7 +12276,7 @@ function Syntax$holesOf(template, count, term) {
                 }
                 rt.nomatch(triple);
               }
-            }, "Syntax.holesOf/\u03bb"));
+            } })["Syntax.holesOf/\u03bb"]);
               }
             }
             if (true) {
@@ -12357,14 +12296,13 @@ function Syntax$holesOf(template, count, term) {
       }
     }
   }
-  rt.named(walk, "walk");
   rt.ap(walk, Syntax$templateBody(template, count), term, 0);
   if (lib$base$not(rt.ap(rt.prims["Ref.get"], fits))) {
     return rt.con0("#Option", 0);
   } else {
-    const holes = lib$base$List$map(rt.named((i) => lib$base$Map$lookup(i, rt.ap(rt.prims["Ref.get"], found)), "Syntax.holesOf/\u03bb"), lib$base$List$range(0, count));
+    const holes = lib$base$List$map(({ "Syntax.holesOf/\u03bb": (i) => lib$base$Map$lookup(i, rt.ap(rt.prims["Ref.get"], found)) })["Syntax.holesOf/\u03bb"], lib$base$List$range(0, count));
     if (lib$base$List$all(lib$base$Option$isSome, holes)) {
-      return new rt.Con("#Option", 1, [lib$base$List$filterMap(rt.named((x) => x, "Syntax.holesOf/\u03bb"), holes)]);
+      return new rt.Con("#Option", 1, [lib$base$List$filterMap(({ "Syntax.holesOf/\u03bb": (x) => x })["Syntax.holesOf/\u03bb"], holes)]);
     } else {
       return rt.con0("#Option", 0);
     }
@@ -12397,7 +12335,7 @@ function Syntax$holeSlices(template, count, term) {
         m1: {
           if (e.tag === 3) {
             const others = e.fields[0];
-            return lib$base$List$forEach(lib$base$List$zip(lib$base$List$zip(items, others), Syntax$binderCounts(items)), rt.named((triple) => {
+            return lib$base$List$forEach(lib$base$List$zip(lib$base$List$zip(items, others), Syntax$binderCounts(items)), ({ "Syntax.holeSlices/\u03bb": (triple) => {
           m2: {
             if (triple.tag === 0 && triple.fields[0].tag === 0) {
               const a = triple.fields[0].fields[0];
@@ -12407,7 +12345,7 @@ function Syntax$holeSlices(template, count, term) {
             }
             rt.nomatch(triple);
           }
-        }, "Syntax.holeSlices/\u03bb"));
+        } })["Syntax.holeSlices/\u03bb"]);
           }
           if (true) {
             return undefined;
@@ -12421,14 +12359,13 @@ function Syntax$holeSlices(template, count, term) {
       rt.nomatch(t);
     }
   }
-  rt.named(walk, "walk");
   rt.ap(walk, Syntax$templateBody(template, count), term, 0);
   return new rt.Con("#Pair", 0, [rt.ap(rt.prims["Ref.get"], slices), rt.ap(rt.prims["Ref.get"], used)]);
 }
 rt.named(Syntax$holeSlices, "Syntax.holeSlices");
 
 function Print$notationText(p, rule, holes, named, env, ind) {
-  const render = rt.named((at) => Print$pieces(p, rule, holes, named, env, at), "Print.notationText/\u03bb");
+  const render = ({ "Print.notationText/\u03bb": (at) => Print$pieces(p, rule, holes, named, env, at) })["Print.notationText/\u03bb"];
   const t0 = rt.ap(render, ind);
   m1: {
     if (t0.tag === 0) {
@@ -12436,8 +12373,8 @@ function Print$notationText(p, rule, holes, named, env, ind) {
     }
     if (t0.tag === 1) {
       const pieces = t0.fields[0];
-      const flat = Print$spaced(lib$base$List$map(rt.named((piece) => Print$flatPiece(piece), "Print.notationText/\u03bb"), pieces));
-      const lastRepeat = lib$base$List$last$p(lib$base$List$filterMap(rt.named((pair) => {
+      const flat = Print$spaced(lib$base$List$map(({ "Print.notationText/\u03bb": (piece) => Print$flatPiece(piece) })["Print.notationText/\u03bb"], pieces));
+      const lastRepeat = lib$base$List$last$p(lib$base$List$filterMap(({ "Print.notationText/\u03bb": (pair) => {
       const t2 = lib$base$snd(pair);
       m3: {
         if (t2.tag === 1) {
@@ -12453,7 +12390,7 @@ function Print$notationText(p, rule, holes, named, env, ind) {
         }
         rt.nomatch(t2);
       }
-    }, "Print.notationText/\u03bb"), lib$base$List$mapIndexed(rt.named((k, part) => new rt.Con("#Pair", 0, [k, part]), "Print.notationText/\u03bb"), Syntax$Loaded$ruleParts(rule))));
+    } })["Print.notationText/\u03bb"], lib$base$List$mapIndexed(({ "Print.notationText/\u03bb": (k, part) => new rt.Con("#Pair", 0, [k, part]) })["Print.notationText/\u03bb"], Syntax$Loaded$ruleParts(rule))));
       let breakable;
       m4: {
         if (lastRepeat.tag === 1) {
@@ -12496,7 +12433,7 @@ function Print$notationText(p, rule, holes, named, env, ind) {
             const before = Print$spaced(lib$base$List$map(Print$flatPiece, lib$base$List$take(k_2, pieces)));
             const after = Print$spaced(lib$base$List$map(Print$flatPiece, lib$base$List$drop(((k_2 + 1) | 0), pieces)));
             const items_1 = lib$base$Option$getOr(lib$base$List$get$p(deeper, k_2), rt.NIL);
-            return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], before, rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((item) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), item), "Print.notationText/\u03bb"), items_1))), "\n"), Print$spaces(ind)), after)]);
+            return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], before, rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Print.notationText/\u03bb": (item) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\n", Print$spaces(((ind + 2) | 0))), item) })["Print.notationText/\u03bb"], items_1))), "\n"), Print$spaces(ind)), after)]);
           }
           if (true) {
             return new rt.Con("#Option", 1, [flat]);
@@ -12551,7 +12488,6 @@ function Types$rowToSexp(r) {
       }
     }
   }
-  rt.named(items, "items");
   return lib$base$Sexp$node("eff", rt.ap(items, r, rt.NIL));
 }
 rt.named(Types$rowToSexp, "Types.rowToSexp");
@@ -12586,7 +12522,7 @@ function Image$refs(form, acc) {
     }
     if (form.tag === 3) {
       const items = form.fields[0];
-      return lib$base$List$foldl(rt.named((a, x) => Image$refs(x, a), "Image.refs/\u03bb"), acc, items);
+      return lib$base$List$foldl(({ "Image.refs/\u03bb": (a, x) => Image$refs(x, a) })["Image.refs/\u03bb"], acc, items);
     }
     if (true) {
       return acc;
@@ -12642,7 +12578,7 @@ function Syntax$usesVars(width, cut, t) {
     }
     if (t.tag === 3) {
       const items = t.fields[0];
-      return lib$base$List$any(rt.named((pair) => Syntax$usesVars(width, ((cut + lib$base$snd(pair)) | 0), lib$base$fst(pair)), "Syntax.usesVars/\u03bb"), lib$base$List$zip(items, Syntax$binderCounts(items)));
+      return lib$base$List$any(({ "Syntax.usesVars/\u03bb": (pair) => Syntax$usesVars(width, ((cut + lib$base$snd(pair)) | 0), lib$base$fst(pair)) })["Syntax.usesVars/\u03bb"], lib$base$List$zip(items, Syntax$binderCounts(items)));
     }
     if (true) {
       return false;
@@ -12664,7 +12600,7 @@ function Syntax$liftVars(amount, cut, t) {
     }
     if (t.tag === 3) {
       const items = t.fields[0];
-      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [lib$base$List$map(rt.named((pair) => Syntax$liftVars(amount, ((cut + lib$base$snd(pair)) | 0), lib$base$fst(pair)), "Syntax.liftVars/\u03bb"), lib$base$List$zip(items, Syntax$binderCounts(items)))]);
+      return new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [lib$base$List$map(({ "Syntax.liftVars/\u03bb": (pair) => Syntax$liftVars(amount, ((cut + lib$base$snd(pair)) | 0), lib$base$fst(pair)) })["Syntax.liftVars/\u03bb"], lib$base$List$zip(items, Syntax$binderCounts(items)))]);
     }
     if (true) {
       return t;
@@ -12676,13 +12612,13 @@ rt.named(Syntax$liftVars, "Syntax.liftVars");
 
 function Syntax$binderCounts(items) {
   const last = ((lib$base$List$length(items) - 1) | 0);
-  const onLast = rt.named((k) => lib$base$List$map(rt.named((i) => {
+  const onLast = ({ "Syntax.binderCounts/\u03bb": (k) => lib$base$List$map(({ "Syntax.binderCounts/\u03bb": (i) => {
     if (rt.equal(i, last)) {
       return k;
     } else {
       return 0;
     }
-  }, "Syntax.binderCounts/\u03bb"), lib$base$List$range(0, ((last + 1) | 0))), "Syntax.binderCounts/\u03bb");
+  } })["Syntax.binderCounts/\u03bb"], lib$base$List$range(0, ((last + 1) | 0))) })["Syntax.binderCounts/\u03bb"];
   m0: {
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "lam") {
       return rt.ap(onLast, 1);
@@ -12696,13 +12632,13 @@ function Syntax$binderCounts(items) {
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "letrec") {
       const fns = lib$base$Option$getOr(lib$base$List$get$p(items, ((last - 1) | 0)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL]));
       const k_1 = lib$base$List$length(lib$base$Sexp$asList(fns));
-      return lib$base$List$map(rt.named((i_1) => {
+      return lib$base$List$map(({ "Syntax.binderCounts/\u03bb": (i_1) => {
       if ((i_1 === 0)) {
         return 0;
       } else {
         return k_1;
       }
-    }, "Syntax.binderCounts/\u03bb"), lib$base$List$range(0, ((last + 1) | 0)));
+    } })["Syntax.binderCounts/\u03bb"], lib$base$List$range(0, ((last + 1) | 0)));
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "case" && items.fields[1].tag === 1) {
       const pat = items.fields[1].fields[0];
@@ -12717,7 +12653,7 @@ function Syntax$binderCounts(items) {
       return rt.ap(onLast, ((arity + 1) | 0));
     }
     if (true) {
-      return lib$base$List$map(rt.named((v) => 0, "Syntax.binderCounts/\u03bb"), items);
+      return lib$base$List$map(({ "Syntax.binderCounts/\u03bb": (v) => 0 })["Syntax.binderCounts/\u03bb"], items);
     }
     rt.nomatch(items);
   }
@@ -12803,7 +12739,7 @@ rt.named(Syntax$ownBinders, "Syntax.ownBinders");
 function Print$pieces(p, rule, holes, named, env, ind) {
   const parts = Syntax$Loaded$ruleParts(rule);
   const firstText = rt.ap(rt.prims["Ref.new"], lib$base$Set$empty());
-  const rendered = lib$base$List$map(rt.named((part) => {
+  const rendered = lib$base$List$map(({ "Print.pieces/\u03bb": (part) => {
   m0: {
     if (part.tag === 0) {
       const text = part.fields[0];
@@ -12811,7 +12747,7 @@ function Print$pieces(p, rule, holes, named, env, ind) {
     }
     if (part.tag === 2) {
       const i = part.fields[0];
-      return lib$base$Option$map(rt.named((t) => rt.cons(t, rt.NIL), "Print.pieces/\u03bb"), lib$base$Map$lookup(i, rt.ap(rt.prims["Ref.get"], firstText)));
+      return lib$base$Option$map(({ "Print.pieces/\u03bb": (t) => rt.cons(t, rt.NIL) })["Print.pieces/\u03bb"], lib$base$Map$lookup(i, rt.ap(rt.prims["Ref.get"], firstText)));
     }
     if (part.tag === 1) {
       const i_1 = part.fields[0];
@@ -12839,7 +12775,7 @@ function Print$pieces(p, rule, holes, named, env, ind) {
               }
               rt.nomatch(text_1);
             }
-            return lib$base$Option$map(rt.named((t_2) => rt.cons(t_2, rt.NIL), "Print.pieces/\u03bb"), text_1);
+            return lib$base$Option$map(({ "Print.pieces/\u03bb": (t_2) => rt.cons(t_2, rt.NIL) })["Print.pieces/\u03bb"], text_1);
           } else {
             const t4 = Print$listItems(core);
             m5: {
@@ -12878,19 +12814,18 @@ function Print$pieces(p, rule, holes, named, env, ind) {
                     }
                   }
                 }
-                rt.named(each, "each");
                 const t9 = rt.ap(each, items, 0, rt.NIL);
                 m10: {
                   if (t9.tag === 1) {
                     const texts = t9.fields[0];
                     if ((repeat === ",*")) {
-                      return new rt.Con("#Option", 1, [lib$base$List$mapIndexed(rt.named((k, t_4) => {
+                      return new rt.Con("#Option", 1, [lib$base$List$mapIndexed(({ "Print.pieces/\u03bb": (k, t_4) => {
                         if (rt.ap(rt.prims["lt"], k, ((lib$base$List$length(texts) - 1) | 0))) {
                           return rt.ap(rt.prims["append"], t_4, ",");
                         } else {
                           return t_4;
                         }
-                      }, "Print.pieces/\u03bb"), texts)]);
+                      } })["Print.pieces/\u03bb"], texts)]);
                     } else {
                       return new rt.Con("#Option", 1, [texts]);
                     }
@@ -12910,9 +12845,9 @@ function Print$pieces(p, rule, holes, named, env, ind) {
     }
     rt.nomatch(part);
   }
-}, "Print.pieces/\u03bb"), parts);
+} })["Print.pieces/\u03bb"], parts);
   if (lib$base$List$all(lib$base$Option$isSome, rendered)) {
-    return new rt.Con("#Option", 1, [lib$base$List$filterMap(rt.named((x) => x, "Print.pieces/\u03bb"), rendered)]);
+    return new rt.Con("#Option", 1, [lib$base$List$filterMap(({ "Print.pieces/\u03bb": (x) => x })["Print.pieces/\u03bb"], rendered)]);
   } else {
     return rt.con0("#Option", 0);
   }
@@ -12920,7 +12855,7 @@ function Print$pieces(p, rule, holes, named, env, ind) {
 rt.named(Print$pieces, "Print.pieces");
 
 function Print$spaced(pieces) {
-  return lib$base$List$foldl(rt.named((acc, piece) => {
+  return lib$base$List$foldl(({ "Print.spaced/\u03bb": (acc, piece) => {
   let r0;
   if (lib$base$Text$isEmpty(acc)) {
     r0 = true;
@@ -12936,7 +12871,7 @@ function Print$spaced(pieces) {
       return rt.ap(rt.prims["append"], acc, piece);
     }
   }
-}, "Print.spaced/\u03bb"), "", pieces);
+} })["Print.spaced/\u03bb"], "", pieces);
 }
 rt.named(Print$spaced, "Print.spaced");
 
@@ -13110,7 +13045,7 @@ function Print$holeText(p, c, prec, core, names, env, ind) {
 rt.named(Print$holeText, "Print.holeText");
 
 function Print$needsSpace(a, b) {
-  const wordish = rt.named((c) => {
+  const wordish = ({ "Print.needsSpace/\u03bb": (c) => {
   if (lib$base$Text$isAlpha(c)) {
     return true;
   } else {
@@ -13140,7 +13075,7 @@ function Print$needsSpace(a, b) {
       }
     }
   }
-}, "Print.needsSpace/\u03bb");
+} })["Print.needsSpace/\u03bb"];
   const pair = rt.ap(rt.prims["append"], rt.ap(rt.prims["Text.fromCode"], a), rt.ap(rt.prims["Text.fromCode"], b));
   let r0;
   if (rt.ap(wordish, a)) {
@@ -13188,13 +13123,13 @@ function Syntax$isWord(v) {
 rt.named(Syntax$isWord, "Syntax.isWord");
 
 function Print$rawReadsBack(v) {
-  const t0 = lib$base$try(rt.named((v_1) => Lexer$lex(v), "Print.rawReadsBack/\u03bb"));
+  const t0 = lib$base$try(({ "Print.rawReadsBack/\u03bb": (v_1) => Lexer$lex(v) })["Print.rawReadsBack/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       const tokens = t0.fields[0];
-      const words = lib$base$List$filter(rt.named((t) => !rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8)), "Print.rawReadsBack/\u03bb"), tokens);
+      const words = lib$base$List$filter(({ "Print.rawReadsBack/\u03bb": (t) => !rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8)) })["Print.rawReadsBack/\u03bb"], tokens);
       if (lib$base$not(lib$base$List$isEmpty(words))) {
-        if (lib$base$List$all(rt.named((t_1) => {
+        if (lib$base$List$all(({ "Print.rawReadsBack/\u03bb": (t_1) => {
         if (lib$base$not(Parser$endsRaw(t_1))) {
           if (!rt.equal(Token$kind(t_1), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 4))) {
             if (!rt.equal(Token$kind(t_1), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 9))) {
@@ -13208,7 +13143,7 @@ function Print$rawReadsBack(v) {
         } else {
           return false;
         }
-      }, "Print.rawReadsBack/\u03bb"), words)) {
+      } })["Print.rawReadsBack/\u03bb"], words)) {
           if (rt.equal(rt.ap(rt.prims["Text.trim"], v), v)) {
             if (lib$base$not(lib$base$Text$contains("  ", v))) {
               if (lib$base$not(lib$base$Text$contains("\n", v))) {
@@ -13240,11 +13175,11 @@ rt.named(Print$rawReadsBack, "Print.rawReadsBack");
 const Lexer$twoCharSymbols = rt.lazy("Lexer.twoCharSymbols", () => lib$base$Set$dict(rt.cons(":=", rt.cons("=>", rt.cons("->", rt.cons("<-", rt.cons("::", rt.cons("++", rt.cons("==", rt.cons("!=", rt.cons("<=", rt.cons(">=", rt.cons("&&", rt.cons("||", rt.cons("|>", rt.cons("<|", rt.cons("@[", rt.NIL)))))))))))))))));
 
 function Syntax$tokensOf(text) {
-  const t0 = lib$base$try(rt.named((v) => Lexer$lex(text), "Syntax.tokensOf/\u03bb"));
+  const t0 = lib$base$try(({ "Syntax.tokensOf/\u03bb": (v) => Lexer$lex(text) })["Syntax.tokensOf/\u03bb"]);
   m1: {
     if (t0.tag === 0) {
       const tokens = t0.fields[0];
-      return lib$base$List$filter(rt.named((t) => !rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8)), "Syntax.tokensOf/\u03bb"), tokens);
+      return lib$base$List$filter(({ "Syntax.tokensOf/\u03bb": (t) => !rt.equal(Token$kind(t), rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8)) })["Syntax.tokensOf/\u03bb"], tokens);
     }
     if (t0.tag === 1) {
       return rt.NIL;
@@ -13288,7 +13223,7 @@ rt.named(Token$value, "Token.value");
 
 function Lexer$lex(source) {
   const n = rt.ap(rt.prims["Text.length"], source);
-  const at = rt.named((i) => rt.ap(rt.prims["Text.code"], source, i), "Lexer.lex/\u03bb");
+  const at = ({ "Lexer.lex/\u03bb": (i) => rt.ap(rt.prims["Text.code"], source, i) })["Lexer.lex/\u03bb"];
   function identEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
@@ -13312,7 +13247,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(identEnd, "identEnd");
   function digitsEnd(i_2$) {
     for (;;) {
       const i_2 = i_2$;
@@ -13330,7 +13264,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(digitsEnd, "digitsEnd");
   function hexEnd(i_3$) {
     for (;;) {
       const i_3 = i_3$;
@@ -13348,7 +13281,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(hexEnd, "hexEnd");
   function lineEnd(i_4$) {
     for (;;) {
       const i_4 = i_4$;
@@ -13366,7 +13298,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(lineEnd, "lineEnd");
   function commentEnd(i_5$, depth$, line$, lineStart$) {
     for (;;) {
       const i_5 = i_5$, depth = depth$, line = line$, lineStart = lineStart$;
@@ -13421,7 +13352,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(commentEnd, "commentEnd");
   function stringEnd(i_6$, acc$, line_1$, lineStart_1$) {
     for (;;) {
       const i_6 = i_6$, acc = acc$, line_1 = line_1$, lineStart_1 = lineStart_1$;
@@ -13452,7 +13382,6 @@ function Lexer$lex(source) {
                   }
                 }
               }
-              rt.named(digitsEnd1, "digitsEnd1");
               const close = rt.ap(digitsEnd1, ((i_6 + 3) | 0));
               let r7;
               if (rt.equal(close, ((i_6 + 3) | 0))) {
@@ -13463,7 +13392,7 @@ function Lexer$lex(source) {
               if (r7) {
                 return Lexer$fail(line_1, ((i_6 - lineStart_1) | 0), "malformed \\u{} escape");
               } else {
-                const code = lib$base$List$foldl(rt.named((v, d) => ((Math.imul(v, 16) + Lexer$hexValue(d)) | 0), "Lexer.lex/\u03bb"), 0, lib$base$List$map(at, lib$base$List$range(((i_6 + 3) | 0), close)));
+                const code = lib$base$List$foldl(({ "Lexer.lex/\u03bb": (v, d) => ((Math.imul(v, 16) + Lexer$hexValue(d)) | 0) })["Lexer.lex/\u03bb"], 0, lib$base$List$map(at, lib$base$List$range(((i_6 + 3) | 0), close)));
                 i_6$ = ((close + 1) | 0);
                 acc$ = rt.cons(code, acc);
                 line_1$ = line_1;
@@ -13496,12 +13425,11 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(stringEnd, "stringEnd");
   function go(i_7$, line_2$, lineStart_2$, bol$, acc_1$) {
     for (;;) {
       const i_7 = i_7$, line_2 = line_2$, lineStart_2 = lineStart_2$, bol = bol$, acc_1 = acc_1$;
-      const spelled = rt.named((kind, value, spelling, start) => rt.cons(new rt.Con("b0d10dbd9f533e473e76eddc55de28a33c048d1bd676d9e8b365a2a8f2fc8a5c", 0, [kind, value, line_2, ((start - lineStart_2) | 0), bol, spelling]), acc_1), "Lexer.lex/\u03bb");
-      const tok = rt.named((kind_1, value_1, start_1) => rt.ap(spelled, kind_1, value_1, "", start_1), "Lexer.lex/\u03bb");
+      const spelled = ({ "Lexer.lex/\u03bb": (kind, value, spelling, start) => rt.cons(new rt.Con("b0d10dbd9f533e473e76eddc55de28a33c048d1bd676d9e8b365a2a8f2fc8a5c", 0, [kind, value, line_2, ((start - lineStart_2) | 0), bol, spelling]), acc_1) })["Lexer.lex/\u03bb"];
+      const tok = ({ "Lexer.lex/\u03bb": (kind_1, value_1, start_1) => rt.ap(spelled, kind_1, value_1, "", start_1) })["Lexer.lex/\u03bb"];
       if (rt.ap(rt.prims["ge"], i_7, n)) {
         return lib$base$List$reverse(rt.cons(new rt.Con("b0d10dbd9f533e473e76eddc55de28a33c048d1bd676d9e8b365a2a8f2fc8a5c", 0, [rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8), "", line_2, 0, true, ""]), acc_1));
       } else {
@@ -13642,8 +13570,8 @@ function Lexer$lex(source) {
                       }
                       if (r15) {
                         const j_4 = rt.ap(hexEnd, ((i_7 + 2) | 0));
-                        const digits = lib$base$List$filter(rt.named((d_1) => (d_1 !== 95), "Lexer.lex/\u03bb"), lib$base$List$map(at, lib$base$List$range(((i_7 + 2) | 0), j_4)));
-                        const value_3 = lib$base$List$foldl(rt.named((v_1, d_2) => ((Math.imul(v_1, 16) + Lexer$hexValue(d_2)) | 0), "Lexer.lex/\u03bb"), 0, digits);
+                        const digits = lib$base$List$filter(({ "Lexer.lex/\u03bb": (d_1) => (d_1 !== 95) })["Lexer.lex/\u03bb"], lib$base$List$map(at, lib$base$List$range(((i_7 + 2) | 0), j_4)));
+                        const value_3 = lib$base$List$foldl(({ "Lexer.lex/\u03bb": (v_1, d_2) => ((Math.imul(v_1, 16) + Lexer$hexValue(d_2)) | 0) })["Lexer.lex/\u03bb"], 0, digits);
                         i_7$ = j_4;
                         line_2$ = line_2;
                         lineStart_2$ = lineStart_2;
@@ -13780,7 +13708,6 @@ function Lexer$lex(source) {
       }
     }
   }
-  rt.named(go, "go");
   return rt.ap(go, 0, 1, 0, true, rt.NIL);
 }
 rt.named(Lexer$lex, "Lexer.lex");
@@ -13807,7 +13734,7 @@ function Parser$endsRaw(t) {
 rt.named(Parser$endsRaw, "Parser.endsRaw");
 
 function lib$base$Set$dict(xs) {
-  return rt.ap(rt.prims["Dict.fromList"], lib$base$List$map(rt.named((x) => new rt.Con("#Pair", 0, [x, undefined]), "lib.base.Set.dict/\u03bb"), xs));
+  return rt.ap(rt.prims["Dict.fromList"], lib$base$List$map(({ "lib.base.Set.dict/\u03bb": (x) => new rt.Con("#Pair", 0, [x, undefined]) })["lib.base.Set.dict/\u03bb"], xs));
 }
 rt.named(lib$base$Set$dict, "lib.base.Set.dict");
 
