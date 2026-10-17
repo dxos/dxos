@@ -598,6 +598,15 @@ describe('replication API', () => {
     expect(ranged.status).toBe(206);
     expect(ranged.headers.get('content-range')).toBe(`bytes 0-6/${pack.text.length}`);
     expect(await ranged.text()).toBe('DEUSLN1');
+    const rest = await call(`/v1/toolchain/packs/${bundle.name}`, { headers: { range: 'bytes=4-' } });
+    expect([rest.status, rest.headers.get('content-range')]).toEqual([
+      206,
+      `bytes 4-${pack.text.length - 1}/${pack.text.length}`,
+    ]);
+    const whole = await call(`/v1/toolchain/packs/${bundle.name}`, { headers: { range: 'lines=1' } });
+    expect([whole.status, (await whole.arrayBuffer()).byteLength]).toEqual([200, pack.text.length]);
+    const misnamed = await call(`/v1/toolchain/packs/${bundle.name}.txt`);
+    expect([misnamed.status, (await misnamed.json()).error]).toEqual([404, 'not a pack name']);
 
     // Metadata is rewritten in place, so a later pack's copy is the one served (D196).
     const later = await bundleOf('(bundle later)');

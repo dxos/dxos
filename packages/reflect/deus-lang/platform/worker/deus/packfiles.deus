@@ -1,0 +1,103 @@
+-- context: @dxos/worker/Worker
+/-
+  A project's packs as files (task 41714c0d, D180): `/v1/<project>/packs/`, a bundle's lines (`<bundle>`) and their
+  index (`<bundle>.idx`), listed, read by byte range and written under the `push` scope. platform/worker/packs.mjs
+  keeps the combined index and the lookups that read packs.
+-/
+
+namespace Worker.PackFiles
+
+/-- The bundle a pack file belongs to and whether it is the index; none for any other name. -/
+def parseName (name : Text) : Option (Text, Bool) :=
+  let index := endsWith ".idx" name
+  let bundle := if index then Text.take (Text.length name - 4) name else name
+  if Worker.Paths.isBundle bundle then Option.some (bundle, index) else Option.none
+
+/-- The bundles whose index is listed among `names`. -/
+def indexed (names : List Text) : List Text :=
+  filterMap (fun name =>
+    match parseName name with
+    | Option.some (bundle, true) => Option.some bundle
+    | _ => Option.none) names
+
+/-- Reads `key` whole, or the range a `Range` header asks for, as a 206 that says which bytes it holds. -/
+def read (bucket : Js) (key : Text) (rangeHeader : Text) : {Js.Async} Js :=
+  let range := Worker.Packs.parseRange rangeHeader
+  let options :=
+    match range with
+    | Option.some r =>
+        let bounds := ("offset", Js.int r.offset) :: Option.getOr (Option.map (fun n => [("length", Js.int n)]) r.length) []
+        [Js.obj [("range", Js.obj bounds)]]
+    | Option.none => []
+  match Js.toOption (Js.Async.await (Js.method bucket "get" (Js.text key :: options))) with
+  | Option.none => Worker.Http.problem 404 "no such pack"
+  | Option.some object =>
+      -- A pack never changes once its index is listed, so a cached copy is always right.
+      let headers := [("content-type", Worker.R2.contentType object), ("cache-control", "public, max-age=31536000, immutable"), ("accept-ranges", "bytes")]
+      match range with
+      | Option.none => Worker.Http.response (Js.get object "body") 200 headers
+      | Option.some r =>
+          let size := Js.toInt (Js.get object "size")
+          let held := Js.toOption (Js.get object "range")
+          let offset := Option.getOr (Option.map (fun h => Js.toInt (Js.get h "offset")) held) r.offset
+          let length := Option.getOr (Option.bind held (fun h => Option.map Js.toInt (Js.toOption (Js.get h "length")))) (Option.getOr r.length (size - offset))
+          let span := "bytes " ++ Int.toText offset ++ "-" ++ Int.toText (offset + length - 1) ++ "/" ++ Int.toText size
+          Worker.Http.response (Js.get object "body") 206 (headers ++ [("content-range", span)])
+
+/-- `{"pack": name, "stored": stored}`, how the API reports a write. -/
+def report (name : Text) (stored : Bool) (status : Int) : Js :=
+  Worker.Http.json (Js.obj [("pack", Js.text name), ("stored", Js.bool stored)]) status
+
+/-- Answers `/v1/<project>/packs/<rest>` for `request`, on the R2 `bucket`. `authorize scope` is remote.mjs's key
+  check; `merge bundles` adds packs to the combined index, a promise of how many it holds; `indexed ()` is called
+  once a pack's index is stored, so the head's explorer is drawn before its first visitor asks (D192). -/
+def serve (request : Js) (bucket : Js) (project : Text) (rest : List Text) (authorize : Text -> Js) (merge : List Text -> Js) (completed : Unit -> Unit) : {Js.Async} Js :=
+  let folder := project ++ "/packs/"
+  let verb := Worker.Http.method request
+  if rest == [] || rest == [""] then
+    if verb == "POST" then
+      -- Adds every listed pack to the combined index: for packs written before it existed.
+      let logged := Js.Async.await (authorize "push")
+      let merged := Js.Async.await (merge (indexed (Worker.R2.listAll bucket folder)))
+      Js.call logged [Worker.Http.json (Js.obj [("packs", merged)]) 200]
+    else if verb == "GET" then Worker.Http.lines (Worker.R2.listAll bucket folder)
+    else Worker.Http.problem 405 "method not allowed"
+  else
+    match (rest, Option.bind (head? rest) parseName) with
+    | ([name], Option.some (bundle, index)) =>
+        let key := folder ++ name
+        if verb == "GET" then read bucket key (Option.getOr (Worker.Http.header request "range") "")
+        else if verb == "PUT" then
+          let logged := Js.Async.await (authorize "push")
+          -- A pack only ever describes a bundle the remote holds, so bundles stay the remote's record.
+          if not (Worker.R2.exists bucket (project ++ "/bundles/" ++ bundle)) then Worker.Http.problem 409 ("no bundle " ++ bundle ++ " for this pack")
+          else
+            let bytes := Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))
+            let problem :=
+              if index then
+                if not (Worker.R2.exists bucket (folder ++ bundle)) then Option.some (409, "the pack goes up before its index")
+                else Option.map (fun message => (400, message)) (Worker.Packs.checkIndex bytes)
+              else if Js.toText (Js.method (Js.construct (Js.global "TextDecoder") []) "decode" [Js.method bytes "subarray" [Js.int 0, Js.int 8]]) != "DEUSLN1\n" then
+                Option.some (400, "a pack is line text starting DEUSLN1")
+              else Option.none
+            match problem with
+            | Option.some (status, message) => Worker.Http.problem status message
+            | Option.none =>
+                if Worker.R2.exists bucket key then Js.call logged [report name false 200]
+                else
+                  let _ := Worker.R2.put bucket key bytes (if index then "application/octet-stream" else "text/plain; charset=utf-8")
+                  let _ := if index then
+                      let _ := Js.Async.await (merge [bundle])
+                      completed ()
+                    else ()
+                  Js.call logged [report name true 201]
+        else Worker.Http.problem 405 "method not allowed"
+    | _ => Worker.Http.problem 404 "not a pack name"
+
+test packNames :=
+  parseName ("0-" ++ Worker.Heads.headA) == Option.some ("0-" ++ Worker.Heads.headA, false)
+    && parseName ("12-" ++ Worker.Heads.headA ++ ".idx") == Option.some ("12-" ++ Worker.Heads.headA, true)
+    && parseName ("0-" ++ Worker.Heads.headA ++ ".txt") == Option.none && parseName ".idx" == Option.none
+    && indexed ["a", "0-" ++ Worker.Heads.headA, "0-" ++ Worker.Heads.headB ++ ".idx"] == ["0-" ++ Worker.Heads.headB]
+
+end Worker.PackFiles

@@ -190,6 +190,11 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
       );
       execFileSync(
         'node',
+        [join(root, 'bin/deus.mjs'), 'build', 'Worker.PackFiles.serve', '-o', join(gen, 'packfiles.js'), '--js'],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
+      execFileSync(
+        'node',
         [
           join(root, 'bin/deus.mjs'),
           'build',

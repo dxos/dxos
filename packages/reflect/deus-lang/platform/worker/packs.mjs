@@ -9,12 +9,10 @@
 
 import * as nameRules from './gen/names.js';
 import * as objectsApi from './gen/objects.js';
+import * as packFiles from './gen/packfiles.js';
 import * as deus from './gen/packs.js';
 import { warmLive } from './live.mjs';
-import { HttpError, authorize, json, listAll, readHead } from './remote.mjs';
-
-/** `<bundle>` or `<bundle>.idx`. */
-const PACK = /^([0-9]{1,3}-[0-9a-f]{64})(\.idx)?$/;
+import { HttpError, authorize, listAll, readHead } from './remote.mjs';
 
 const HASH = /^[0-9a-f]{64}$/;
 
@@ -37,105 +35,19 @@ const stateOf = (bucket) => {
   return entry;
 };
 
-/** `/v1/<project>/packs/…`: list, read with ranges, and write under the `push` scope. */
-export const packs = async (request, env, ctx, project, rest) => {
-  const folder = `${project}/packs/`;
-  if (rest.length === 0 || (rest.length === 1 && rest[0] === '')) {
-    if (request.method === 'POST') {
-      // Adds every listed pack to the combined index: for packs written before it existed.
-      const logged = await authorize(request, env, ctx, 'push', project);
-      const names = (await listAll(env.BUCKET, folder))
-        .filter((name) => name.endsWith('.idx'))
-        .map((name) => name.slice(0, -4));
-      return logged(json({ packs: await mergeCombined(env.BUCKET, project, names) }));
-    }
-    if (request.method !== 'GET') {
-      throw new HttpError(405, 'method not allowed');
-    }
-    return listing(await listAll(env.BUCKET, folder));
-  }
-  const match = rest.length === 1 ? PACK.exec(rest[0]) : null;
-  if (!match) {
-    throw new HttpError(404, 'not a pack name');
-  }
-  const key = folder + rest[0];
-  if (request.method === 'GET') {
-    return read(env.BUCKET, key, request.headers.get('range'));
-  }
-  if (request.method === 'PUT') {
-    const logged = await authorize(request, env, ctx, 'push', project);
-    const [, bundle, index] = match;
-    // A pack only ever describes a bundle the remote holds, so bundles stay the remote's record.
-    if (!(await env.BUCKET.head(`${project}/bundles/${bundle}`))) {
-      throw new HttpError(409, `no bundle ${bundle} for this pack`);
-    }
-    const bytes = new Uint8Array(await request.arrayBuffer());
-    if (index) {
-      if (!(await env.BUCKET.head(folder + bundle))) {
-        throw new HttpError(409, 'the pack goes up before its index');
-      }
-      checkIndex(bytes);
-    } else if (new TextDecoder().decode(bytes.subarray(0, 8)) !== 'DEUSLN1\n') {
-      throw new HttpError(400, 'a pack is line text starting DEUSLN1');
-    }
-    if (await env.BUCKET.head(key)) {
-      return logged(json({ pack: rest[0], stored: false }, 200));
-    }
-    await env.BUCKET.put(key, bytes, {
-      httpMetadata: { contentType: index ? 'application/octet-stream' : 'text/plain; charset=utf-8' },
-    });
-    if (index) {
-      await mergeCombined(env.BUCKET, project, [bundle]);
-      // The pack completes a push: drawing the head's explorer now spares its first visitor the wait (D192).
-      // A queue consumer has minutes for it; without the queue (tests, local runs) the response's waitUntil tries.
-      ctx.waitUntil(env.LIVE_QUEUE ? env.LIVE_QUEUE.send({ project }) : warmLive(env, ctx, project));
-    }
-    return logged(json({ pack: rest[0], stored: true }, 201));
-  }
-  throw new HttpError(405, 'method not allowed');
-};
-
-/** Rejects an index whose fanout is not a non-decreasing count of its records (`Worker.Packs.checkIndex`, in DEUS). */
-const checkIndex = (bytes) => {
-  const problem = deus.checkIndex(bytes);
-  if (problem !== undefined) {
-    throw new HttpError(400, problem);
-  }
-};
-
-/** Parses `bytes=<first>-[<last>]`; other forms read the whole file (`Worker.Packs.parseRange`, in DEUS). */
-const parseRange = (header) => {
-  const range = deus.parseRange(header ?? '');
-  return range && (range.length === undefined ? { offset: range.offset } : range);
-};
-
-const read = async (bucket, key, rangeHeader) => {
-  const range = parseRange(rangeHeader);
-  const object = await bucket.get(key, range ? { range } : undefined);
-  if (!object) {
-    throw new HttpError(404, 'no such pack');
-  }
-  const headers = {
-    'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
-    // A pack never changes once its index is listed, so a cached copy is always right.
-    'cache-control': 'public, max-age=31536000, immutable',
-    'accept-ranges': 'bytes',
-  };
-  if (!range) {
-    return new Response(object.body, { headers });
-  }
-  const offset = object.range?.offset ?? range.offset;
-  const length = object.range?.length ?? range.length ?? object.size - offset;
-  return new Response(object.body, {
-    status: 206,
-    headers: { ...headers, 'content-range': `bytes ${offset}-${offset + length - 1}/${object.size}` },
-  });
-};
-
-const listing = (names) =>
-  new Response(names.map((name) => `${name}\n`).join(''), {
-    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
-  });
+/** `/v1/<project>/packs/…`: list, read with ranges, and write under the `push` scope (`Worker.PackFiles.serve`). */
+export const packs = (request, env, ctx, project, rest) =>
+  packFiles.serve(
+    request,
+    env.BUCKET,
+    project,
+    rest,
+    (scope) => authorize(request, env, ctx, scope, project),
+    (bundles) => mergeCombined(env.BUCKET, project, bundles),
+    // The pack completes a push: drawing the head's explorer now spares its first visitor the wait (D192). A queue
+    // consumer has minutes for it; without the queue (tests, local runs) the response's waitUntil tries.
+    () => ctx.waitUntil(env.LIVE_QUEUE ? env.LIVE_QUEUE.send({ project }) : warmLive(env, ctx, project)),
+  );
 
 /** The bytes `[offset, offset + length)` of `key`. */
 const bytesAt = async (bucket, key, offset, length) => {
