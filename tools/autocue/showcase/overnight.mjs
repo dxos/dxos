@@ -97,6 +97,8 @@ const serve = async () => {
     }
     await new Promise((resolve) => setTimeout(resolve, 5_000));
   }
+  // The server runs in its own process group; left behind, it would hold :4173 for the next run.
+  process.kill(-server.pid, 'SIGTERM');
   throw new Error('Composer did not answer on :4173 within 20 minutes');
 };
 
@@ -188,7 +190,19 @@ if (!(await up())) {
 const started = Date.now();
 const results = [];
 for (const [index, file] of flows.entries()) {
-  const module = await import(pathToFileURL(file).href);
+  let module;
+  try {
+    module = await import(pathToFileURL(file).href);
+    if (!Array.isArray(module.steps)) {
+      throw new Error('exports no `steps` array');
+    }
+  } catch (error) {
+    // A flow that does not load is one failed row, not the end of the night's run.
+    const name = path.basename(path.dirname(path.dirname(file)));
+    log(`${name}: FAILED to load — ${error.message}`);
+    results.push({ name, theme: '—', flow: path.relative(ROOT, file), attempts: 0, ok: false, error: error.message });
+    continue;
+  }
   const clipStep = module.steps.find((step) => step.name.startsWith('clip: '));
   const name = clipStep?.name.slice('clip: '.length) ?? path.basename(path.dirname(path.dirname(file)));
   const ms = module.CLIP_MS ?? 10_000;
