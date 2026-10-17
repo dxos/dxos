@@ -1,12 +1,6 @@
 /-
   Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
   current names (so a rename shows up everywhere at once); locals print under the author's
-  names, kept as metadata in binder order (see `Resolve.strip`).
--/
-
-/-
-  Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
-  current names (so a rename shows up everywhere at once); locals print under the author's
   names, kept as metadata in binder order (see `Resolve.strip`). `rules` are the notations the
   definition was written with, by hash (Syntax.Spec R-5).
 -/
@@ -626,12 +620,15 @@ def patternColumns (p : Printer) (pat : Sexp) (env : List Text) (count : Int) : 
 
 def plainDefinition (p : Printer) (name : Text) (docText : Text) (names : List Text) (b : Sexp) (env : List Text) (sig : Option Sexp) : Text :=
   let count := List.length names
-  let header :=
+  let parts :=
     match Option.map (fun s => splitSig s count) sig with
-    | Option.some (types, Option.some result) => if List.length types == count then Text.concat (List.map (fun pair =>
+    | Option.some (types, Option.some result) => if List.length types == count then List.map (fun pair =>
         let (x, t) := pair
-        if head t == "tvar" && Sexp.args t == [Sexp.str "?"] then " " ++ x else " (" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (zip names types)) ++ (if Sexp.args result == [Sexp.str "?"] then "" else " : " ++ Print.ty p result 0) else Text.concat (List.map (fun x => " " ++ x) names)
-    | _ => Text.concat (List.map (fun x => " " ++ x) names)
+        if head t == "tvar" && Sexp.args t == [Sexp.str "?"] then x else "(" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (zip names types) ++ (if Sexp.args result == [Sexp.str "?"] then [] else [": " ++ Print.ty p result 0]) else names
+    | _ => names
+  let flat := Text.concat (List.map (fun part => " " ++ part) parts)
+  -- Past the width, each parameter and the result type take a line of their own, so the signature is never cut off.
+  let header := if fits 0 ("def " ++ name ++ flat ++ " :=") || List.length parts < 2 then flat else Text.concat (List.map (fun part => "\n    " ++ part) parts)
   -- A declaration prints without a body only when it compiles back to this hash (D93).
   let declared :=
     match (stubOf b, sig) with

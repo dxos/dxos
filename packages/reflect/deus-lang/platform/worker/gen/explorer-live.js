@@ -9983,14 +9983,14 @@ rt.named(Print$patternColumns, "Print.patternColumns");
 
 function Print$plainDefinition(p, name, docText, names, b, env, sig) {
   const count = lib$base$List$length(names);
-  let header;
+  let parts;
   const t0 = lib$base$Option$map(rt.named((s) => Print$splitSig(s, count), "Print.plainDefinition/\u03bb"), sig);
   m1: {
     if (t0.tag === 1 && t0.fields[0].tag === 0 && t0.fields[0].fields[1].tag === 1) {
       const types = t0.fields[0].fields[0];
       const result = t0.fields[0].fields[1].fields[0];
       if (rt.equal(lib$base$List$length(types), count)) {
-        const t4 = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((pair) => {
+        const t4 = lib$base$List$map(rt.named((pair) => {
         m2: {
           if (pair.tag === 0) {
             const x = pair.fields[0];
@@ -10002,60 +10002,73 @@ function Print$plainDefinition(p, name, docText, names, b, env, sig) {
               r3 = false;
             }
             if (r3) {
-              return rt.ap(rt.prims["append"], " ", x);
+              return x;
             } else {
-              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], " (", x), " : "), Print$ty(p, t, 0)), ")");
+              return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "(", x), " : "), Print$ty(p, t, 0)), ")");
             }
           }
           rt.nomatch(pair);
         }
-      }, "Print.plainDefinition/\u03bb"), lib$base$List$zip(names, types)));
+      }, "Print.plainDefinition/\u03bb"), lib$base$List$zip(names, types));
         let r5;
         if (rt.equal(lib$base$Sexp$args(result), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["?"]), rt.NIL))) {
-          r5 = "";
+          r5 = rt.NIL;
         } else {
-          r5 = rt.ap(rt.prims["append"], " : ", Print$ty(p, result, 0));
+          r5 = rt.cons(rt.ap(rt.prims["append"], ": ", Print$ty(p, result, 0)), rt.NIL);
         }
-        header = rt.ap(rt.prims["append"], t4, r5);
+        parts = rt.ap(rt.prims["append"], t4, r5);
       } else {
-        header = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x_1) => rt.ap(rt.prims["append"], " ", x_1), "Print.plainDefinition/\u03bb"), names));
+        parts = names;
       }
       break m1;
     }
     if (true) {
-      header = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((x_2) => rt.ap(rt.prims["append"], " ", x_2), "Print.plainDefinition/\u03bb"), names));
+      parts = names;
       break m1;
     }
     rt.nomatch(t0);
   }
+  const flat = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((part) => rt.ap(rt.prims["append"], " ", part), "Print.plainDefinition/\u03bb"), parts));
+  let header;
+  let r6;
+  if (Print$fits(0, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "def ", name), flat), " :="))) {
+    r6 = true;
+  } else {
+    r6 = (lib$base$List$length(parts) < 2);
+  }
+  if (r6) {
+    header = flat;
+  } else {
+    header = rt.ap(rt.prims["Text.concat"], lib$base$List$map(rt.named((part_1) => rt.ap(rt.prims["append"], "\n    ", part_1), "Print.plainDefinition/\u03bb"), parts));
+  }
   let declared;
-  const t6 = new rt.Con("#Pair", 0, [Resolve$stubOf(b), sig]);
-  m7: {
-    if (t6.tag === 0 && t6.fields[0].tag === 1 && t6.fields[0].fields[0].tag === 0 && t6.fields[1].tag === 1) {
-      const stubName = t6.fields[0].fields[0].fields[0];
-      const sigText = t6.fields[0].fields[0].fields[1];
-      const s_1 = t6.fields[1].fields[0];
+  const t7 = new rt.Con("#Pair", 0, [Resolve$stubOf(b), sig]);
+  m8: {
+    if (t7.tag === 0 && t7.fields[0].tag === 1 && t7.fields[0].fields[0].tag === 0 && t7.fields[1].tag === 1) {
+      const stubName = t7.fields[0].fields[0].fields[0];
+      const sigText = t7.fields[0].fields[0].fields[1];
+      const s_1 = t7.fields[1].fields[0];
       if (rt.equal(stubName, name)) {
         declared = rt.equal(sigText, lib$base$Sexp$print(s_1));
       } else {
         declared = false;
       }
-      break m7;
+      break m8;
     }
     if (true) {
       declared = false;
-      break m7;
+      break m8;
     }
-    rt.nomatch(t6);
+    rt.nomatch(t7);
   }
-  const t8 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], docText, "def "), name), header);
-  let r9;
+  const t9 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], docText, "def "), name), header);
+  let r10;
   if (declared) {
-    r9 = "";
+    r10 = "";
   } else {
-    r9 = rt.ap(rt.prims["append"], " :=", Print$body(p, b, env, 0));
+    r10 = rt.ap(rt.prims["append"], " :=", Print$body(p, b, env, 0));
   }
-  return rt.ap(rt.prims["append"], t8, r9);
+  return rt.ap(rt.prims["append"], t9, r10);
 }
 rt.named(Print$plainDefinition, "Print.plainDefinition");
 

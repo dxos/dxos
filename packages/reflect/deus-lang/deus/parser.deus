@@ -3,13 +3,6 @@
 
   `stop` is the offside column: a token that starts a line at or left of it ends the current
   expression. A body that starts on a new line is a block whose statements share a column.
--/
-
-/-
-  Parser: tokens to declarations, with Lean's offside rule.
-
-  `stop` is the offside column: a token that starts a line at or left of it ends the current
-  expression. A body that starts on a new line is a block whose statements share a column.
   `ruleTable` holds the codebase's notations by namespace and `activeRules` the ones in scope here
   (Syntax.Spec R-3); `frames` saves the namespace and opens at each `namespace`.
 -/

@@ -1108,7 +1108,11 @@ const verdictHtml = (def) => {
   }
   if (pass) {
     const cases = pass[2] ? ` · ${pass[2]} case${pass[2] === '1' ? '' : 's'}` : '';
-    return `<p class="verdict pass">✓ ${def.kind === 'theorem' ? 'Proved' : 'Passes'} <span class="muted">${escape(pass[1])}${cases}</span></p>`;
+    // `by test` checks a theorem on random cases, which is evidence, not a proof.
+    const tested = def.kind === 'theorem' && pass[1] === 'test';
+    return tested
+      ? `<p class="verdict pass">✓ Holds <span class="muted">on ${pass[2] ?? 'some'} random case${pass[2] === '1' ? '' : 's'}</span></p>`
+      : `<p class="verdict pass">✓ ${def.kind === 'theorem' ? 'Proved' : 'Passes'} <span class="muted">${escape(pass[1])}${cases}</span></p>`;
   }
   const fail = def.verdict.match(/^\(fail "((?:[^"\\]|\\.)*)"/);
   const reason = fail ? fail[1].replace(/\\(.)/g, (_, char) => (char === 'n' ? '\n' : char)) : def.verdict;
@@ -1116,10 +1120,36 @@ const verdictHtml = (def) => {
 };
 
 /** The source in the chosen dialect, without its leading doc comment, which the card renders as prose above it. */
+/** A source's leading comment as the generator highlights it: a doc comment, or a type's `/- … -/` block. */
+const LEAD = /^<span class=cm>(\/--?[\s\S]*?-\/|\/\*\*?[\s\S]*?\*\/)<\/span>\n*/;
+
+/** The text of a type's leading block comment, when the page has no doc of its own: it is the type's documentation. */
+const leadDoc = (def) => {
+  const found = def.doc ? undefined : LEAD.exec(def.html ?? '');
+  if (!found) {
+    return undefined;
+  }
+  const holder = document.createElement('div');
+  holder.innerHTML = found[1];
+  const lines = holder.textContent
+    .replace(/^\/--?|-\/$/g, '')
+    .split('\n')
+    .filter((line, at, all) => line.trim() !== '' || (at > 0 && at < all.length - 1));
+  const indent = Math.min(...lines.filter((line) => line.trim()).map((line) => line.length - line.trimStart().length));
+  return lines
+    .map((line) => line.slice(indent))
+    .join('\n')
+    .trim();
+};
+
 const sourceHtml = (def) => {
   const html = ui.dialect === 'ts' && def.ts ? def.ts : def.html;
-  return def.doc ? html.replace(/^<span class=cm>(?:\/--[\s\S]*?-\/|\/\*\*[\s\S]*?\*\/)<\/span>\n?/, '') : html;
+  return def.doc || leadDoc(def) !== undefined ? html.replace(LEAD, '') : html;
 };
+
+/** What a definition's other names are: an ability's operations, a type's constructors, else names of its own. */
+const aliasLabel = (def) =>
+  def.kind === 'ability' ? 'Operations' : def.kind === 'type' ? 'Constructors' : 'Also named';
 
 const definitionCard = (key, def, events) => {
   const namespace = namespaceOf(def.name);
@@ -1132,7 +1162,11 @@ const definitionCard = (key, def, events) => {
     meta: hashChip(def.hash),
     actions: consoleButton(def),
     body:
-      (def.doc ? `<div class="doc">${docHtml(def.doc, namespace)}</div>` : '') +
+      (def.doc
+        ? `<div class="doc">${docHtml(def.doc, namespace)}</div>`
+        : leadDoc(def)
+          ? `<div class="doc">${docHtml(leadDoc(def), namespace)}</div>`
+          : '') +
       (specOf(def.name)
         ? `<p class="aliases"><span class="label">Specified in</span>${docLink(specOf(def.name))}</p>`
         : '') +
@@ -1145,7 +1179,12 @@ const definitionCard = (key, def, events) => {
         ? `<p class="aliases"><span class="label">Namespace</span><a data-open="n:${escape(def.name)}">${folderIcon} ${escape(def.name)}.*</a> <span class="count">${nodeAt(def.name).count} definitions</span></p>`
         : '') +
       (def.aliases.length > 0
-        ? `<p class="aliases"><span class="label">Also named</span> ${def.aliases.map((alias) => `<code>${escape(alias)}</code>`).join(' ')}</p>`
+        ? `<p class="aliases"><span class="label">${escape(aliasLabel(def))}</span> ${def.aliases
+            .map((alias) => {
+              const entry = index.byName.get(alias);
+              return entry ? defLink(alias, entry.hash) : `<code>${escape(alias)}</code>`;
+            })
+            .join(' ')}</p>`
         : '') +
       (def.tasks.length > 0
         ? section(
@@ -4476,7 +4515,11 @@ const main = async () => {
       hideTooltip();
     }
   });
-  window.addEventListener('hashchange', render);
+  // A link followed while the finder is open (Back, or one pasted in) shows its card, not the finder over it.
+  window.addEventListener('hashchange', () => {
+    element('finder').hidden = true;
+    void render();
+  });
   element('skip').addEventListener('click', () => element('main').focus());
   element('tree').addEventListener('keydown', onTreeKey);
   rememberScroll();

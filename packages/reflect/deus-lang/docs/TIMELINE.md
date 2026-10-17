@@ -302,6 +302,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 292 | 10-18 13:30 | 45m 00s | 24d7139787 | Fixes from an adversarial review of D251–D263: decisions D1–D99 open, queue batches fit Cloudflare's cap, hash-named assets are checked, scroll positions no longer block a new card (D264) |
 | 293 | 10-18 14:00 | 30m 00s | b8da565bcf | The getting-started guide lives in the codebase and opens as a card from the overview (D265) |
 | 294 | 10-18 14:30 | 30m 00s | b899b50fd3 | The explorer's write requests are printed and read by the toolchain's Sexp in DEUS (D266) |
-| 295 | 10-18 15:00 | 30m 00s | this commit | What the explorer may write is checked in DEUS (Worker.Writes) (D267) |
+| 295 | 10-18 15:00 | 30m 00s | a29ce2a00c | What the explorer may write is checked in DEUS (Worker.Writes) (D267) |
+| 296 | 10-18 16:00 | 1h 00m | this commit | Definition cards: dark contrast, Operations/Constructors labels, test verdict wording, type docs as prose, long headers one parameter per line (D268) |
 
-Total from stage 1 to stage 295: 114h 50m.
+Total from stage 1 to stage 296: 115h 50m.

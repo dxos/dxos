@@ -39,7 +39,7 @@
     --sidebar: #16171b;
     --fg: #e6e8ec;
     --muted: #9ba1ad;
-    --faint: #6d7380;
+    --faint: #8b92a0;
     --line: #2b2e36;
     --hover: #23262d;
     --accent: #8ea4ff;
@@ -48,8 +48,13 @@
     --kw: #f783ac;
     --str: #8ce99a;
     --ty: #74c0fc;
-    --cm: #7c828d;
+    --cm: #8b92a0;
     --pass: #51cf66;
+    /* Task states: the light theme's darker greens and oranges are unreadable on these backgrounds. */
+    --todo: #868e96;
+    --doing: #ffa94d;
+    --done: #51cf66;
+    --canceled: #868e96;
     --fail: #ff6b6b;
     --k-term: #748ffc;
     --k-type: #9775fa;
@@ -652,11 +657,16 @@ a.ref .ty {
 }
 
 .inferred,
-.aliases,
 .parents {
   margin: 6px 0;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+/* An ability's operations or a type's constructors can number in the dozens, so they wrap rather than scroll. */
+.aliases {
+  margin: 6px 0;
+  line-height: 1.9;
 }
 
 .sig-name {
