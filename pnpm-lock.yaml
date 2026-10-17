@@ -25731,6 +25731,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-canvas
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme

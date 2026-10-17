@@ -10,9 +10,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FrameHeader, type FrameHeaderProps } from './FrameHeader.tsx';
 
 const SCENES = [
-  { title: 'The Silo Problem', caption: 'Each application keeps its own data, fed only by its own source.' },
-  { title: 'Monolithic Agents', caption: 'One agent reaches into every source at once, beside the apps.' },
-  { title: 'A shared ECHO', caption: 'The sources feed one ECHO space, and the apps sync from it.' },
+  {
+    title: 'The Silo Problem',
+    caption: 'Each application keeps its own data, fed only by its own source.',
+  },
+  {
+    title: 'ECHO',
+    caption: 'The sources feed one ECHO space, and the apps sync from it.',
+  },
+  {
+    title: 'Monolithic Agents',
+    caption: 'One agent reaches into every source at once, beside the apps.',
+  },
 ];
 
 /** Steps through a few scenes' titles, so previous, next and play can be tried. */

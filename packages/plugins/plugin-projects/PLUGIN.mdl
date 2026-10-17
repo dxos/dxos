@@ -195,4 +195,25 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
       expect: the two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+
+test QA-5: Showcase clip
+  desc: |
+    The 20s showcase clip: Open a task of the Chess MCP on Workers project, then tick it and send it to the agent. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: projects` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-debug, plugin-projects enabled
+  steps:
+    - name: Create the space from its template
+      do: Enable plugin-debug, create the Chess MCP on Workers space, and open its project on Tasks.
+      expect: the task tree shows
+    - name: Open a task
+      do: Click the first task.
+      expect: the task's properties open
+    - name: Send it to the agent
+      do: Tick the first task and click Send to agent.
+      expect: the Gantt panel opens
 ```

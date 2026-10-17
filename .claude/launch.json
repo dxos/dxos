@@ -9,10 +9,31 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
+      ],
       "port": 5180,
       "autoPort": true
+    },
+    {
+      "name": "storybook-autocue",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=../tools/autocue,plugins/plugin-navtree,ui/react-ui-editor moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "composer-autocue",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_PWA=false moon run composer-app:serve -- --port 4173 --strictPort"
+      ],
+      "port": 4173
     },
     {
       "name": "composer-agent-debug",

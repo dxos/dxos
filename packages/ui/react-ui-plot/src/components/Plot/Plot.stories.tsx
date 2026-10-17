@@ -41,6 +41,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Pie: Story = { args: { type: 'pie' } };
+export const Pie: Story = {
+  args: {
+    type: 'pie',
+  },
+};
 
-export const XY: Story = { args: { type: 'xy' } };
+export const XY: Story = {
+  args: {
+    type: 'xy',
+  },
+};

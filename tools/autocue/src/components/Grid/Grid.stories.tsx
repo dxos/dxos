@@ -5,20 +5,25 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  type Bounds,
+  type Camera,
+  easeInOut,
+  fitBounds,
+  interpolateCamera,
+  screenBounds,
+  useViewport,
+} from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { useViewport } from '../../hooks/index.ts';
-import { type Bounds, type Camera } from '../../model/types.ts';
-import { easeInOut, fitBounds, interpolateCamera, screenBounds } from '../../utils/camera.ts';
-
 /** Clips are read from the gitignored `temp/grid-zoom/clip-NN.mp4` at the repo root; missing ones show a placeholder. */
-const CLIPS_DIR = '../../../../../../temp/grid-zoom/';
+const CLIPS_DIR = '../../../../../temp/grid-zoom/';
 
 const TILE = { width: 960, height: 540 };
 
-type GridZoomProps = {
+type GridProps = {
   cols: number;
   rows: number;
   /** Scene-unit gap between tiles. */
@@ -37,7 +42,7 @@ type GridZoomProps = {
   /** Shows the replay button and timing readout; off for a recording, which must carry no overlay. */
   controls?: boolean;
   /**
-   * Renders one frame at a time instead of in real time: the clips pause, and `window.gridZoom.seek(ms)` moves the
+   * Renders one frame at a time instead of in real time: the clips pause, and `window.grid.seek(ms)` moves the
    * camera and every visible clip to `ms`, so a recorder can screenshot exact frames at any rate.
    */
   stepped?: boolean;
@@ -45,7 +50,7 @@ type GridZoomProps = {
 
 declare global {
   interface Window {
-    gridZoom?: { total: number; seek: (ms: number) => Promise<void> };
+    grid?: { total: number; seek: (ms: number) => Promise<void> };
   }
 }
 
@@ -128,7 +133,7 @@ const DefaultStory = ({
   duration,
   controls = true,
   stepped = false,
-}: GridZoomProps) => {
+}: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
@@ -230,7 +235,7 @@ const DefaultStory = ({
       }
       return start + shot.ms;
     }, 0);
-    window.gridZoom = {
+    window.grid = {
       total,
       seek: async (ms) => {
         setElapsed(ms);
@@ -271,7 +276,7 @@ const DefaultStory = ({
       },
     };
     return () => {
-      delete window.gridZoom;
+      delete window.grid;
     };
   }, [ready, shots, total, stepped, cells, viewport]);
 
@@ -330,16 +335,25 @@ const shotAt = (shots: Shot[], time: number): { shot: Shot; t: number } => {
   return { shot: shots[shots.length - 1], t: 1 };
 };
 
-const meta: Meta<GridZoomProps> = {
-  title: 'ui/react-ui-canvas/GridZoom',
+const meta: Meta<GridProps> = {
+  title: 'tools/autocue/Grid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };
 
 export default meta;
 
-type Story = StoryObj<GridZoomProps>;
+type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: { cols: 6, rows: 6, gap: 32, hold: 10_000, pan: 1_500, duration: 12_000, controls: true, stepped: false },
+  args: {
+    cols: 6,
+    rows: 6,
+    gap: 32,
+    hold: 10_000,
+    pan: 1_500,
+    duration: 12_000,
+    controls: true,
+    stepped: false,
+  },
 };

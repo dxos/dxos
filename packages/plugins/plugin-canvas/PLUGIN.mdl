@@ -93,6 +93,27 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+
+test QA-3: Showcase clip
+  desc: |
+    The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: canvas` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-canvas enabled
+  steps:
+    - name: Create the space from its template
+      do: Open the app menu, choose Create space, pick DXOS Architecture, and open the Composer drawing.
+      expect: the drawing opens
+    - name: Read a shape
+      do: Select the React UI box and scroll its Properties panel.
+      expect: the box is selected and its properties show
+    - name: Rename it
+      do: Turn off read-only, double-click the box, and type React components.
+      expect: the box shows its new label
 ```
 
 ```mdl

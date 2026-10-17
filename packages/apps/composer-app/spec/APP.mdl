@@ -756,11 +756,12 @@ test QA-11: Composer basics tour
 ```mdl
 test QA-13: Plugin showcase
   desc: |
-    One short, wordless beat per visually distinct plugin, recorded for the GridZoom montage (react-ui-canvas
-    SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture for about
-    five seconds. Its value is that every plugin it touches still creates and renders from a fresh profile.
+    One short, wordless beat per visually distinct plugin, recorded for the Grid montage (tools/autocue/showcase
+    SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture. Its value is
+    that every plugin it touches still creates and renders from a fresh profile. Each plugin's beat is now its own
+    `autocue/showcase.mjs` and its own "Showcase clip" test; `tools/autocue/showcase/overnight.mjs` records them all.
   actors: human
-  status: unverified        # 2026-10-16, driven end to end by autocue/showcase/flow.mjs
+  status: unverified        # driven per plugin by tools/autocue/showcase/overnight.mjs
   given:
     - a fresh identity whose default space is open
     - the showcase plugins enabled (the flow enables them with org.dxos.operation.registry.enablePlugins)
@@ -903,6 +904,24 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: neither "QA:" space remains on either profile
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+
+test QA-14: Showcase clip
+  desc: |
+    The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: composer` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-onboarding enabled
+  steps:
+    - name: Create the space from its template
+      do: Open the app menu, choose Create space, pick Bramble Coffee Roasters, and click Create.
+      expect: the space opens and its tree fills with projects, documents and mail
+    - name: Walk the space
+      do: Open the Spring Blend Launch project and its Tasks, then the Roastery Handbook, and scroll.
+      expect: the project, its tasks and the handbook each render
 ```
 
 ```mdl
