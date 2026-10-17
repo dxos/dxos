@@ -29,7 +29,7 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **Chess flow** — `play-the-opening.mjs` (QA-1, published video).
 - [x] **Spacetime flow** — `build-a-scene.mjs` (QA-2).
 - [x] **GridZoom empty tour** — falls back to the default tour.
-- [x] **Open the follow-up PR** — #14027.
+- [x] **Open the follow-up PR** — #14027 (merged).
 - [x] **Record and upload the Terra views and Spacetime videos** — light clip (60 fps) and dark demo (30 fps, ident,
       captions) each, linked from `dx.config.ts` and SHOWCASE.md. R2 keys resolve from `~/.env.tpl` via `op run`.
 - [x] **SHOWCASE.md table** — plugin and file columns; Light and Dark video columns.
