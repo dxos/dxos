@@ -11,6 +11,22 @@ namespace Worker.Bundles
 def report (name : Text) (field : Text) (value : Bool) (status : Int) : Js :=
   Worker.Http.json (Js.obj [("bundle", Js.text name), (field, Js.bool value)]) status
 
+/-- Why the Worker refuses a bundle sent as `name`, given the SHA-256 of its text gunzipped (none when it was not
+  gzip): the status and message, or none to keep it. Kept apart from `serve` so the rule runs without R2 or a
+  request, in the simulator and in tests (task 019e7afe). -/
+def pushProblem (name : Text) (digest : Option Text) : Option (Int, Text) :=
+  match digest with
+  | Option.none => Option.some (400, "a bundle is sent gzipped")
+  | Option.some digest =>
+      if Option.some digest == List.get? (Text.split name "-") 1 then Option.none
+      else Option.some (400, "the bundle does not hash to its name")
+
+test pushRefusesWhatIsNotGzip := pushProblem "0-abc" Option.none == Option.some (400, "a bundle is sent gzipped")
+
+test pushRefusesAMisnamedBundle := pushProblem "0-abc" (Option.some "def") == Option.some (400, "the bundle does not hash to its name")
+
+test pushKeepsABundleNamedByItsHash := pushProblem "0-abc" (Option.some "abc") == Option.none
+
 /-- Answers `/v1/<project>/bundles/<rest>` for `request`, on the R2 `bucket`. `verify` checks that a bundle sent is
   gzip and hashes to its name. `authorize scope` is remote.mjs's key check (as for `Worker.Files.serve`), and
   `moveHead logged` moves the branch head the push claims, giving a promise of the response that refuses the push, or
@@ -42,13 +58,12 @@ def serve (request : Js) (bucket : Js) (project : Text) (rest : List Text) (veri
             let problem :=
               if not verify then Option.none
               else
+                -- Matched, not mapped: on the js target a function that waits cannot be passed where none is expected.
                 match Worker.Crypto.gunzip bytes with
-                | Option.none => Option.some (Worker.Http.problem 400 "a bundle is sent gzipped")
-                | Option.some text =>
-                    if Option.some (Worker.Crypto.sha256 text) == List.get? (Text.split name "-") 1 then Option.none
-                    else Option.some (Worker.Http.problem 400 "the bundle does not hash to its name")
+                | Option.none => pushProblem name Option.none
+                | Option.some inflated => pushProblem name (Option.some (Worker.Crypto.sha256 inflated))
             match problem with
-            | Option.some answer => answer
+            | Option.some (status, message) => Worker.Http.problem status message
             | Option.none =>
                 match Js.toOption (Js.Async.await (moveHead logged)) with
                 | Option.some refused => Js.call logged [refused]

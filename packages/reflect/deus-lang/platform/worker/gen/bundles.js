@@ -53,25 +53,22 @@ async function Worker$Bundles$serve(request, bucket, project, rest, verify, auth
                 const t3 = rt.resumed($stack, await Worker$Crypto$gunzip(bytes));
                 m4: {
                   if (t3.tag === 0) {
-                    problem = new rt.Con("#Option", 1, [Worker$Http$problem(400, "a bundle is sent gzipped")]);
+                    problem = Worker$Bundles$pushProblem(name, rt.con0("#Option", 0));
                     break m4;
                   }
                   if (t3.tag === 1) {
-                    const text = t3.fields[0];
-                    if (rt.equal(new rt.Con("#Option", 1, [rt.resumed($stack, await Worker$Crypto$sha256(text))]), List$get$p(rt.ap(rt.prims["Text.split"], name, "-"), 1))) {
-                      problem = rt.con0("#Option", 0);
-                    } else {
-                      problem = new rt.Con("#Option", 1, [Worker$Http$problem(400, "the bundle does not hash to its name")]);
-                    }
+                    const inflated = t3.fields[0];
+                    problem = Worker$Bundles$pushProblem(name, new rt.Con("#Option", 1, [rt.resumed($stack, await Worker$Crypto$sha256(inflated))]));
                     break m4;
                   }
                   rt.nomatch(t3);
                 }
               }
               m5: {
-                if (problem.tag === 1) {
-                  const answer = problem.fields[0];
-                  return answer;
+                if (problem.tag === 1 && problem.fields[0].tag === 0) {
+                  const status = problem.fields[0].fields[0];
+                  const message = problem.fields[0].fields[1];
+                  return Worker$Http$problem(status, message);
                 }
                 if (problem.tag === 0) {
                   const t6 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(moveHead, logged))));
@@ -211,36 +208,30 @@ async function Worker$Crypto$gunzip(bytes) {
 }
 rt.named(Worker$Crypto$gunzip, "Worker.Crypto.gunzip");
 
+function Worker$Bundles$pushProblem(name, digest) {
+  m0: {
+    if (digest.tag === 0) {
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "a bundle is sent gzipped"])]);
+    }
+    if (digest.tag === 1) {
+      const digest_1 = digest.fields[0];
+      if (rt.equal(new rt.Con("#Option", 1, [digest_1]), List$get$p(rt.ap(rt.prims["Text.split"], name, "-"), 1))) {
+        return rt.con0("#Option", 0);
+      } else {
+        return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "the bundle does not hash to its name"])]);
+      }
+    }
+    rt.nomatch(digest);
+  }
+}
+rt.named(Worker$Bundles$pushProblem, "Worker.Bundles.pushProblem");
+
 async function Worker$Crypto$sha256(bytes) {
   const $stack = rt.handlers();
   const digest = rt.resumed($stack, await lib$web$Js$method(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("crypto", rt.cons("subtle", rt.NIL))), "digest", rt.cons(lib$web$Js$text("SHA-256"), rt.cons(bytes, rt.NIL))));
   return Worker$Crypto$hex(Worker$R2$bytes(digest));
 }
 rt.named(Worker$Crypto$sha256, "Worker.Crypto.sha256");
-
-function List$get$p(xs$, i$) {
-  for (;;) {
-    const xs = xs$, i = i$;
-    m0: {
-      if (xs.tag === 0) {
-        return rt.con0("#Option", 0);
-      }
-      if (xs.tag === 1) {
-        const x = xs.fields[0];
-        const rest = xs.fields[1];
-        if ((i === 0)) {
-          return new rt.Con("#Option", 1, [x]);
-        } else {
-          xs$ = rest;
-          i$ = ((i - 1) | 0);
-          continue;
-        }
-      }
-      rt.nomatch(xs);
-    }
-  }
-}
-rt.named(List$get$p, "List.get?");
 
 const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
@@ -428,6 +419,30 @@ function Option$map(f, v) {
   }
 }
 rt.named(Option$map, "Option.map");
+
+function List$get$p(xs$, i$) {
+  for (;;) {
+    const xs = xs$, i = i$;
+    m0: {
+      if (xs.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        if ((i === 0)) {
+          return new rt.Con("#Option", 1, [x]);
+        } else {
+          xs$ = rest;
+          i$ = ((i - 1) | 0);
+          continue;
+        }
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$get$p, "List.get?");
 
 function lib$web$Js$path(o, keys) {
   return List$foldl(lib$web$Js$get, o, keys);
