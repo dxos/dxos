@@ -17,14 +17,19 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
 
 - [ ] **Run Composer** from this worktree: `moon run composer-app:serve` (http://localhost:5173), signed in, light
       theme (Settings › Appearance), the notices dismissed, and the plugins in the shot list enabled.
-- [ ] **Pin the page size**: `node tools/autocue/showcase/pin.mjs --url <composer url>` starts Chrome in its own
-      persistent profile (`~/.dxos/showcase-chrome`) and pins the page to exactly **1920x1080 at 2x**, the same as the
-      automated recordings, without opening DevTools. The page sits in a larger window, so the window's rounded
-      corners and 1 px edge fall outside it. Leave it running while you record; Ctrl-C releases the pin. The profile
-      is separate from your everyday Chrome, so set up (or create from a template) the spaces you record in it once.
+- [ ] **Pin the page size** to exactly **1920x1080 at 2x**, the same as the automated recordings, in your usual
+      Chrome profile (your signed-in Composer and its spaces), without opening DevTools:
+  - Once: open `chrome://extensions`, turn on Developer mode, _Load unpacked_ and pick
+    `tools/autocue/showcase/pin-extension`; pin its button to the toolbar.
+  - On the Composer tab, click **Showcase Pin**: the badge reads ON and the page lays out at 1920x1080 in the top-left
+    of the window, so the window's rounded corners and edge fall outside it. Click again to release.
+  - Chrome shows a "started debugging this browser" banner above the page while it is pinned; it sits outside the
+    page but moves it down, so set the crop's top from the page's top edge with the banner showing.
+  - Without the extension, `node tools/autocue/showcase/pin.mjs --url <composer url>` does the same in a separate,
+    persistent profile (`~/.dxos/showcase-chrome`) with no banner.
 - [ ] **Set up Screen Studio** (once per session):
-  - Record the window and crop to **1920x1080 at the page's top-left**: (0, 87) in window points, below the tab strip
-    and address bar. On a 2x display that captures the page at 3840x2160, as autocue does.
+  - Record the window and crop to **1920x1080 at the page's top-left** (below the tab strip, address bar and, with
+    the extension, its banner). On a 2x display that captures the page at 3840x2160, as autocue does.
   - Background: _None_ (no wallpaper), padding 0, corner radius 0, shadow off, inset 0, so the export is the app only.
   - Cursor: small size, click effects off; hide it for screenshots. Auto-zoom: off for grid shots (a tile is too small
     to read a zoom); optional and subtle for the tour shots.
