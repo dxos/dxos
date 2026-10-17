@@ -1,5 +1,13 @@
 # @dxos/react-ui-virtual
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

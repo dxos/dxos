@@ -1,5 +1,38 @@
 # @dxos/blade-runner
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-host@0.15.1
+  - @dxos/echo-protocol@0.15.1
+  - @dxos/echo-client@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/plugin-script@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/edge-compute@0.15.1
+  - @dxos/echo-doc@0.15.1
+  - @dxos/client-protocol@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/debug@0.15.1
+  - @dxos/esbuild-plugins@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/random@0.15.1
+  - @dxos/tracing@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/messaging@0.15.1
+  - @dxos/network-manager@0.15.1
+  - @dxos/rpc@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @dxos/halo
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/link@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

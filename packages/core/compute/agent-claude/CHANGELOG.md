@@ -1,5 +1,15 @@
 # @dxos/agent-claude
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/log@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

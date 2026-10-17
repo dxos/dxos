@@ -1,5 +1,19 @@
 # @dxos/hypercore
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/async@0.15.1
+  - @dxos/crypto@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/random-access-storage@0.15.1
+  - @dxos/typings@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/vendor-hypercore@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

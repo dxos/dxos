@@ -1,5 +1,20 @@
 # @dxos/pipeline-rdf
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/ai@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/sql-sqlite@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/pipeline@0.15.1
+  - @dxos/sparql-sqlite@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

@@ -1,5 +1,26 @@
 # @dxos/plugin-bluesky
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/plugin-client@0.15.1
+  - @dxos/plugin-connector@0.15.1
+  - @dxos/plugin-magazine@0.15.1
+  - @dxos/plugin-thread@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/protocols@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @dxos/ui-template
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-list@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

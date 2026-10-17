@@ -1,5 +1,22 @@
 # @dxos/compute
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/schema@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/protocols@0.15.1
+  - @dxos/vendor-kbn-handlebars@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

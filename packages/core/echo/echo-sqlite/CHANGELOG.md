@@ -1,5 +1,18 @@
 # @dxos/echo-sqlite
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/sql-sqlite@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

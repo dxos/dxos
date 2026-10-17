@@ -1,5 +1,22 @@
 # @dxos/stories-compute
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/storybook-testing@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-masonry@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/compute-runtime@0.15.1
+  - @dxos/debug@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/log@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

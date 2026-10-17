@@ -1,5 +1,13 @@
 # @dxos/discord-bot
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/config@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/node-std@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

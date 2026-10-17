@@ -1,5 +1,18 @@
 # @dxos/protocols
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/async@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/timeframe@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

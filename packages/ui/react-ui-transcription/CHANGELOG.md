@@ -1,5 +1,23 @@
 # @dxos/react-ui-transcription
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/react-ui-editor@0.15.1
+  - @dxos/pipeline-transcription@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ui-editor@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/av@0.15.1
+  - @dxos/context@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

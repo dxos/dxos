@@ -1,5 +1,12 @@
 # @dxos/echo-solid
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/effect-atom-solid@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

@@ -1,5 +1,33 @@
 # @dxos/plugin-sandbox
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/plugin-client@0.15.1
+  - @dxos/plugin-projects@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-list@0.15.1
+  - @dxos/react-ui-syntax-highlighter@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/config@0.15.1
+  - @dxos/halo@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/edge-client@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

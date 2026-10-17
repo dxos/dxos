@@ -1,5 +1,45 @@
 # @dxos/stories-assistant
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/client-services@0.15.1
+  - @dxos/assistant@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/plugin-agent@0.15.1
+  - @dxos/plugin-assistant@0.15.1
+  - @dxos/plugin-explorer@0.15.1
+  - @dxos/plugin-markdown@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/storybook-testing@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-chat@0.15.1
+  - @dxos/react-ui-editor@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-masonry@0.15.1
+  - @dxos/react-ui-menu@0.15.1
+  - @dxos/react-ui-query@0.15.1
+  - @dxos/react-ui-syntax-highlighter@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/echo-doc@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ui-editor@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/echo-query@0.15.1
+  - @dxos/async@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/sql-sqlite@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

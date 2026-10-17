@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-progress",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "private": true,
   "description": "Progress monitor plugin",
   "homepage": "https://dxos.org",

@@ -1,5 +1,19 @@
 # @dxos/plugin-graph
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-list@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

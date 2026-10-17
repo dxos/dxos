@@ -1,5 +1,19 @@
 # @dxos/plugin-settings
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

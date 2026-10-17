@@ -1,5 +1,18 @@
 # @dxos/echo-generator
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo-client@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/client@0.15.1
+  - @dxos/echo-doc@0.15.1
+  - @dxos/invariant@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/random@0.15.1
+  - @dxos/util@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

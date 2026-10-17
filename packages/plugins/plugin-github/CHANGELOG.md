@@ -1,5 +1,47 @@
 # @dxos/plugin-github
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.15.1
+  - @dxos/echo@0.15.1
+  - @dxos/plugin-space@0.15.1
+  - @dxos/react-client@0.15.1
+  - @dxos/plugin-connector@0.15.1
+  - @dxos/plugin-crx@0.15.1
+  - @dxos/plugin-markdown@0.15.1
+  - @dxos/plugin-preview@0.15.1
+  - @dxos/app-framework@0.15.1
+  - @dxos/app-graph@0.15.1
+  - @dxos/app-toolkit@0.15.1
+  - @dxos/react-ui-attention@0.15.1
+  - @dxos/react-ui-components@0.15.1
+  - @dxos/react-ui-editor@0.15.1
+  - @dxos/react-ui-form@0.15.1
+  - @dxos/react-ui-list@0.15.1
+  - @dxos/react-ui-markdown@0.15.1
+  - @dxos/react-ui-masonry@0.15.1
+  - @dxos/react-ui-menu@0.15.1
+  - @dxos/react-ui-query@0.15.1
+  - @dxos/compute@0.15.1
+  - @dxos/link@0.15.1
+  - @dxos/echo-react@0.15.1
+  - @dxos/types@0.15.1
+  - @dxos/ui-editor@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/echo-query@0.15.1
+  - @dxos/effect@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/graph@0.15.1
+  - @dxos/keys@0.15.1
+  - @dxos/log@0.15.1
+  - @dxos/util@0.15.1
+  - @dxos/protocols@0.15.1
+  - @dxos/lit-ui@0.15.1
+  - @dxos/ui-types@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

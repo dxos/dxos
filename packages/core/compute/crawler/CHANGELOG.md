@@ -1,5 +1,16 @@
 # @dxos/crawler
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/echo@0.15.1
+  - @dxos/ai@0.15.1
+  - @dxos/pipeline-rdf@0.15.1
+  - @dxos/errors@0.15.1
+  - @dxos/sql-sqlite@0.15.1
+  - @dxos/pipeline@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes

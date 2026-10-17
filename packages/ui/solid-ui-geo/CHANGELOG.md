@@ -1,5 +1,13 @@
 # @dxos/solid-ui-geo
 
+## 0.15.1
+
+### Patch Changes
+
+- @dxos/debug@0.15.1
+  - @dxos/node-std@0.15.1
+  - @dxos/ui-theme@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes
