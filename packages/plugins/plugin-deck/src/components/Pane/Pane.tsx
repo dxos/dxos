@@ -62,7 +62,8 @@ const PaneToolbar = Util.slottable<HTMLDivElement>(({ children, asChild, ...prop
       {...Util.composableProps(props, {
         style: iconSize(5),
         // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
-        classNames: 'dx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        // A filled leading control starts on the edge line of the toolbar below; the trailing close Button's cell insets it.
+        classNames: 'dx-scope flex items-center gap-1 ps-2 pe-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
       data-size='lg'
       ref={forwardedRef}
