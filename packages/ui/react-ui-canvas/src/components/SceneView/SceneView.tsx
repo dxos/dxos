@@ -169,7 +169,7 @@ import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
 import { TimelineBar } from '../Timeline/Timeline.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
 import { Dock, DockProvider } from './Dock.tsx';
-import { INSPECTOR_CLASSES, type InspectorDef, useInspector } from './Inspector.tsx';
+import { type InspectorDef, useInspector } from './Inspector.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
@@ -1633,7 +1633,13 @@ const SceneViewRoot = ({
           {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-          <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
+          {/* Edged at the top like the dock's side, so the canvas reads apart from the header above it. */}
+          <div
+            className={mx(
+              'relative flex dx-fill overflow-clip bg-base-surface border-t border-separator-subtle',
+              classNames,
+            )}
+          >
             <div
               ref={rootRef}
               tabIndex={0}
@@ -1659,7 +1665,10 @@ const SceneViewRoot = ({
             >
               {children}
             </div>
-            <Dock onClose={onInspectorsChange && (() => onInspectorsChange('floating'))} />
+            <Dock
+              floating={readonly || inspectors !== 'docked'}
+              onDockedChange={onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))}
+            />
           </div>
         </DockProvider>
       </SceneLookContext.Provider>
@@ -2078,22 +2087,13 @@ SceneViewPalette.displayName = 'SceneView.Palette';
 // Properties
 //
 
-export type SceneViewPropertiesProps = Util.ThemedClassName<
-  Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
-    /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
-    sceneFilter?: (id: SceneId) => boolean;
-  }
->;
+export type SceneViewPropertiesProps = Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+  /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
+  sceneFilter?: (id: SceneId) => boolean;
+};
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
-const SceneViewProperties = ({
-  classNames = INSPECTOR_CLASSES,
-  fields,
-  db,
-  getOptions,
-  overrides,
-  sceneFilter,
-}: SceneViewPropertiesProps) => {
+const SceneViewProperties = ({ fields, db, getOptions, overrides, sceneFilter }: SceneViewPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useSceneViewContext('SceneView.Properties');
   const registry = useRegistry();
@@ -2125,28 +2125,24 @@ const SceneViewProperties = ({
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   // Docked, the panel stays in its section whatever is selected (it says when nothing is).
-  return useInspector(
-    PROPERTIES_INSPECTOR,
-    ({ docked, classNames: chrome, onDockedChange }) => (
-      <Properties
-        classNames={chrome}
-        docked={docked}
-        onDockedChange={onDockedChange}
-        projection={projection}
-        atoms={atoms}
-        nodes={nodeRegistry}
-        fields={fields}
-        db={db}
-        getOptions={getOptions}
-        overrides={overrides}
-        sceneOptions={options}
-        styles={store.styles}
-        onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
-        readonly={!capabilities.update}
-      />
-    ),
-    classNames,
-  );
+  return useInspector(PROPERTIES_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
+    <Properties
+      classNames={chrome}
+      docked={docked}
+      onDockedChange={onDockedChange}
+      projection={projection}
+      atoms={atoms}
+      nodes={nodeRegistry}
+      fields={fields}
+      db={db}
+      getOptions={getOptions}
+      overrides={overrides}
+      sceneOptions={options}
+      styles={store.styles}
+      onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
+      readonly={!capabilities.update}
+    />
+  ));
 };
 
 SceneViewProperties.displayName = 'SceneView.Properties';
@@ -2194,13 +2190,11 @@ const ABOUT_INSPECTOR: InspectorDef = {
 // Layers
 //
 
-export type SceneViewLayersProps = Util.ThemedClassName<{}>;
-
 /**
  * The current scene's layers: an inspector that floats where the properties go while nothing is selected (the two take
  * turns). Each edit is one intent, so one undo step.
  */
-const SceneViewLayers = ({ classNames = INSPECTOR_CLASSES }: SceneViewLayersProps) => {
+const SceneViewLayers = () => {
   const { projection, atoms, capabilities } = useSceneViewContext('SceneView.Layers');
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -2224,54 +2218,50 @@ const SceneViewLayers = ({ classNames = INSPECTOR_CLASSES }: SceneViewLayersProp
     },
     [layers, registry, atoms],
   );
-  return useInspector(
-    LAYERS_INSPECTOR,
-    ({ docked, classNames: chrome, onDockedChange }) => (
-      <LayersPanel
-        classNames={chrome}
-        docked={docked}
-        onDockedChange={onDockedChange}
-        layers={layers}
-        selected={selected}
-        readonly={readonly}
-        onSelectedChange={select}
-        onToggle={(id) => {
-          const layer = byId(id);
-          layer && setLayer({ ...layer, hidden: !layer.hidden });
-        }}
-        onRename={(id, name) => {
-          const layer = byId(id);
-          layer && setLayer({ ...layer, name });
-        }}
-        onMove={(id, index) => {
-          const layer = moveLayer(scene, id, index);
-          layer && setLayer(layer);
-        }}
-        onCreate={() => {
-          const layer = createLayer(scene, createId('layer'));
-          setLayer(layer);
-          select([layer.id]);
-          return layer.id;
-        }}
-        onDelete={
-          capabilities.delete
-            ? (ids) => {
-                projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
-                setPicked([]);
-              }
-            : undefined
+  return useInspector(LAYERS_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
+    <LayersPanel
+      classNames={chrome}
+      docked={docked}
+      onDockedChange={onDockedChange}
+      layers={layers}
+      selected={selected}
+      readonly={readonly}
+      onSelectedChange={select}
+      onToggle={(id) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, hidden: !layer.hidden });
+      }}
+      onRename={(id, name) => {
+        const layer = byId(id);
+        layer && setLayer({ ...layer, name });
+      }}
+      onMove={(id, index) => {
+        const layer = moveLayer(scene, id, index);
+        layer && setLayer(layer);
+      }}
+      onCreate={() => {
+        const layer = createLayer(scene, createId('layer'));
+        setLayer(layer);
+        select([layer.id]);
+        return layer.id;
+      }}
+      onDelete={
+        capabilities.delete
+          ? (ids) => {
+              projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+              setPicked([]);
+            }
+          : undefined
+      }
+      onMerge={(ids, into) => {
+        const merge = mergeLayersIntent(scene, ids, into);
+        if (merge) {
+          projection.apply(merge);
+          select([into]);
         }
-        onMerge={(ids, into) => {
-          const merge = mergeLayersIntent(scene, ids, into);
-          if (merge) {
-            projection.apply(merge);
-            select([into]);
-          }
-        }}
-      />
-    ),
-    classNames,
-  );
+      }}
+    />
+  ));
 };
 
 SceneViewLayers.displayName = 'SceneView.Layers';
@@ -2304,10 +2294,8 @@ const ObjectThumbnail = ({ id }: { id: SceneId }) => {
   );
 };
 
-export type SceneViewObjectsProps = Util.ThemedClassName<{}>;
-
 /** The drawing's composite objects: a docked inspector beside the layers. */
-const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsProps) => {
+const SceneViewObjects = () => {
   const {
     store,
     readonly,
@@ -2339,32 +2327,28 @@ const SceneViewObjects = ({ classNames = INSPECTOR_CLASSES }: SceneViewObjectsPr
     return node && isInstanceNode(node) ? node.composite : undefined;
   }, [isolation, selection, displayScene]);
   const editable = capabilities.create === true && capabilities.delete === true;
-  return useInspector(
-    OBJECTS_INSPECTOR,
-    ({ docked, classNames: chrome, onDockedChange }) => (
-      <ObjectsPanel
-        classNames={chrome}
-        docked={docked}
-        onDockedChange={onDockedChange}
-        objects={objects}
-        selected={selected}
-        readonly={!editable}
-        onSelect={isolate}
-        onRename={objectActions.rename}
-        onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
-        onPlace={isolation ? undefined : objectActions.place}
-        onDuplicate={objectActions.duplicate}
-        onDelete={objectActions.remove}
-        thumbnail={(id) => <ObjectThumbnail id={id} />}
-        onAnimate={
-          timeline || readonly || !capabilities.update
-            ? undefined
-            : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
-        }
-      />
-    ),
-    classNames,
-  );
+  return useInspector(OBJECTS_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
+    <ObjectsPanel
+      classNames={chrome}
+      docked={docked}
+      onDockedChange={onDockedChange}
+      objects={objects}
+      selected={selected}
+      readonly={!editable}
+      onSelect={isolate}
+      onRename={objectActions.rename}
+      onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
+      onPlace={isolation ? undefined : objectActions.place}
+      onDuplicate={objectActions.duplicate}
+      onDelete={objectActions.remove}
+      thumbnail={(id) => <ObjectThumbnail id={id} />}
+      onAnimate={
+        timeline || readonly || !capabilities.update
+          ? undefined
+          : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
+      }
+    />
+  ));
 };
 
 SceneViewObjects.displayName = 'SceneView.Objects';
