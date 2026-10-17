@@ -50,6 +50,8 @@ EMBEDDED = [
     ('platform/explorer/index.html', 'Explorer.App.html'),
     ('platform/explorer/app.js', 'Explorer.App.js'),
     ('platform/explorer/app.css', 'Explorer.App.css'),
+    ('src/bindings/deus-runtime.js', 'Bindings.runtimeJs'),
+    ('src/bindings/deus-runtime.d.ts', 'Bindings.runtimeDts'),
 ]
 
 

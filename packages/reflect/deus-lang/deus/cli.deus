@@ -2408,14 +2408,13 @@ def bindings (args : Args) : {IO, Throw Text} Unit :=
       let (js, dts, exported, skipped) := Bindings.generate dir args.positional command
       let path := out ++ "/" ++ stem ++ ".js"
       let types := out ++ "/" ++ stem ++ ".d.ts"
+      -- The runtime comes from a checkout, else from the codebase's embedded copy (D242).
+      IO.mkdirp out
+      IO.writeFile (out ++ "/deus-runtime.js") (Codebase.platformText dir "Bindings.runtimeJs" "src/bindings/deus-runtime.js")
+      IO.writeFile (out ++ "/deus-runtime.d.ts") (Codebase.platformText dir "Bindings.runtimeDts" "src/bindings/deus-runtime.d.ts")
       let copied := try (fun _ =>
-        let home := require "DEUS_HOME"
-        IO.mkdirp out
         IO.writeFile path js
         IO.writeFile types dts
-        Build.tool
-          "cp"
-          [home ++ "/src/bindings/deus-runtime.js", home ++ "/src/bindings/deus-runtime.d.ts", out ++ "/"]
         Build.tool "cp" [wasmKernel (), out ++ "/deus_kernel.wasm"]
         ())
       match copied with
