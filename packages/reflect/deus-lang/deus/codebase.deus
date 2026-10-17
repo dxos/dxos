@@ -573,8 +573,35 @@ def recordEntries (dir : Text) (h : Text) : {IO} List (Text, Text, Text) :=
       | _ => none) (Sexp.args form)
   | none => []
 
+/-- The layout this CLI writes, kept as `DEUS codebase <version>` in `<dir>/format` (D294), so a CLI refuses a store a
+  newer one wrote instead of misreading it. 2 is metadata on namespace entries (D290); a store without the file is 1. -/
+def formatVersion : Int := 2
+
+def formatMagic : Text := "DEUS codebase "
+
+/-- The layout version `dir` records: 1 without a `format` file, 0 for one that is not a version. -/
+def formatOf (dir : Text) : {IO} Int :=
+  match IO.readFile (dir ++ "/format") with
+  | Option.some text =>
+      let line := Text.trim text
+      if Text.startsWith formatMagic line then Option.getOr (Int.fromText (Text.drop (Text.length formatMagic) line)) 0 else 0
+  | Option.none => 1
+
+def writeFormat (dir : Text) : {IO} Unit := IO.writeFile (dir ++ "/format") (formatMagic ++ Int.toText formatVersion ++ "\n")
+
+/-- Refuses a store whose layout is newer than this CLI's or unreadable, and records this CLI's version on an older one,
+  whose objects this CLI reads as they are. -/
+def checkFormat (dir : Text) : {IO, Throw Text} Unit :=
+  let version := formatOf dir
+  if version == formatVersion then ()
+  else if version > formatVersion then Throw.throw ("the codebase at " ++ dir ++ " has layout " ++ Int.toText version ++
+    "; this deus reads layouts up to " ++ Int.toText formatVersion ++ ". Update deus (merge #13952's head, or rebuild the seed with scripts/sync-deus.py)")
+  else if version < 1 then Throw.throw ("the codebase at " ++ dir ++ " has a format file that is not `" ++ formatMagic ++ "<version>`")
+  else writeFormat dir
+
 def init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then Throw.throw ("a codebase already exists at " ++ dir) else
   IO.mkdirp (dir ++ "/objects")
+  writeFormat dir
   IO.mkdirp (dir ++ "/meta")
   IO.mkdirp (dir ++ "/branches")
   IO.mkdirp (dir ++ "/results")

@@ -324,6 +324,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 314 | 10-19 05:00 | 2h 00m | a536a3d0da | Metadata rides namespace entries: an update's rehashed dependents share their metadata, 11.9 MB of history instead of 292 MB; only six platform files are embedded (D289, D290) |
 | 315 | 10-19 06:00 | 1h 00m | 6384f7d96c | Review fixes for metadata on entries; the C back end compiles code that compares or shows types it only receives (D291) |
 | 316 | 10-19 07:00 | 1h 00m | 4aa84a492e | `bin/deus` starts the native CLI without node: commands take 10-60 ms instead of 60-150 ms; `deus migrate` keeps entries without metadata unchanged (D292) |
-| 317 | 10-19 08:00 | 1h 00m | this commit | A fresh pull takes 28 s, not 206 s: assets fetched, checked and moved in one batch, tools started with posix_spawnp (D293) |
+| 317 | 10-19 08:00 | 1h 00m | 9aaba5af9d | A fresh pull takes 28 s, not 206 s: assets fetched, checked and moved in one batch, tools started with posix_spawnp (D293) |
+| 318 | 10-19 09:00 | 1h 00m | this commit | Stores record their layout (`DEUS codebase 2`); a binary layout measured at 11% saved, so not taken (D294) |
 
-Total from stage 1 to stage 317: 131h 50m.
+Total from stage 1 to stage 318: 132h 50m.

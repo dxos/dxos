@@ -101,7 +101,10 @@ def codebaseDir (args : Args) : {IO} Text :=
 
 def openCodebase (args : Args) : {IO, Throw Text} Text :=
   let dir := codebaseDir args
-  if Codebase.isCodebase dir then dir else throw ("no codebase at " ++ dir ++ " (run `deus init`)")
+  if Codebase.isCodebase dir then
+    Codebase.checkFormat dir
+    dir
+  else throw ("no codebase at " ++ dir ++ " (run `deus init`)")
 
 def short (h : Text) : Text := if Text.startsWith "#" h then h else "#" ++ Text.take 10 h
 
