@@ -292,6 +292,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 282 | 10-18 07:00 | 45m 00s | 77819b18a2 | The keys API and key minting in DEUS on a typed D1 module (Worker.D1, Worker.KeyAdmin) (D254) |
 | 283 | 10-18 07:30 | 30m 00s | 3fc538c23d | The objects, meta, names and head log APIs in DEUS (Worker.Objects, Worker.Names.serve, Worker.Heads.serveLog) (D255) |
 | 284 | 10-18 08:00 | 30m 00s | 35bd71b04c | The packs API in DEUS (Worker.PackFiles): pack names, ranged reads, uploads and their checks (D256) |
-| 285 | 10-18 09:00 | 1h 00m | this commit | Third explorer audit fixes: contrast, keyboard access, finder abbreviations and typos, short hash links, folded rehashes, wrapped diffs; a feature map for @dxos/worker (D257) |
+| 285 | 10-18 09:00 | 1h 00m | 073d49feec | Third explorer audit fixes: contrast, keyboard access, finder abbreviations and typos, short hash links, folded rehashes, wrapped diffs; a feature map for @dxos/worker (D257) |
+| 286 | 10-18 10:15 | 1h 15m | this commit | The printer breaks long `else if` chains and list literals: the longest printed line falls from 42,816 to 1,026 columns, `Cli.dispatch` from 1,691 to 120, and the whole toolchain still prints back to the same hashes (D258) |
 
-Total from stage 1 to stage 285: 108h 50m.
+Total from stage 1 to stage 286: 110h 05m.

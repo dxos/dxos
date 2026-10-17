@@ -10465,7 +10465,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             m29: {
               if (t28.tag === 1) {
                 const items = t28.fields[0];
-                return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x_4) => Print$expr(p, x_4, env, ind, 0), "Print.expr/\u03bb"), items))), "]");
+                return Print$listLiteral(p, items, env, ind);
               }
               if (t28.tag === 0) {
                 return Print$paren(67, prec, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Print$expr(p, h_2, env, ind, 68), " :: "), Print$expr(p, rest, env, ind, 67)));
@@ -11660,19 +11660,40 @@ function Print$conName(p, t, tag) {
 rt.named(Print$conName, "Print.conName");
 
 function Print$ifThenElse(p, c, yes, no, env, ind, prec) {
-  let text;
-  const t0 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "if ", Print$expr(p, c, env, ind, 0)), " then"), Print$body(p, yes, env, ind));
-  let r1;
+  const head = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "if ", Print$expr(p, c, env, ind, 0)), " then"), Print$body(p, yes, env, ind));
+  const rest = rt.ap(rt.prims["append"], "else", Print$body(p, no, env, ind));
+  let flat;
+  let r0;
   if (Print$isBlock(yes)) {
-    r1 = rt.ap(rt.prims["append"], "\n", Print$spaces(ind));
+    r0 = rt.ap(rt.prims["append"], "\n", Print$spaces(ind));
   } else {
-    r1 = " ";
+    r0 = " ";
   }
-  const t2 = rt.ap(rt.prims["append"], t0, r1);
-  const t3 = rt.ap(rt.prims["append"], t2, "else");
-  const t4 = Print$body(p, no, env, ind);
-  text = rt.ap(rt.prims["append"], t3, t4);
-  return Print$paren(1, prec, text);
+  const t1 = rt.ap(rt.prims["append"], head, r0);
+  flat = rt.ap(rt.prims["append"], t1, rest);
+  let breakable;
+  if (lib$base$not(Print$isBlock(yes))) {
+    if (lib$base$not(Print$isBlock(no))) {
+      breakable = lib$base$not(lib$base$Text$contains("\n", head));
+    } else {
+      breakable = false;
+    }
+  } else {
+    breakable = false;
+  }
+  let r2;
+  let r3;
+  if (lib$base$not(breakable)) {
+    r3 = true;
+  } else {
+    r3 = Print$fits(ind, flat);
+  }
+  if (r3) {
+    r2 = flat;
+  } else {
+    r2 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], head, "\n"), Print$spaces(((ind + 2) | 0))), rest);
+  }
+  return Print$paren(1, prec, r2);
 }
 rt.named(Print$ifThenElse, "Print.ifThenElse");
 
@@ -11750,6 +11771,26 @@ function Print$infixOf(name) {
   }
 }
 rt.named(Print$infixOf, "Print.infixOf");
+
+function Print$listLiteral(p, items, env, ind) {
+  const supply = rt.ap(rt.prims["Ref.get"], Printer$supply(p));
+  const fresh = rt.ap(rt.prims["Ref.get"], Printer$fresh(p));
+  const flat = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], ", ", lib$base$List$map(rt.named((x) => Print$expr(p, x, env, ind, 0), "Print.listLiteral/\u03bb"), items))), "]");
+  let r0;
+  if (Print$fits(ind, flat)) {
+    r0 = true;
+  } else {
+    r0 = (lib$base$List$length(items) < 2);
+  }
+  if (r0) {
+    return flat;
+  } else {
+    rt.ap(rt.prims["Ref.set"], Printer$supply(p), supply);
+    rt.ap(rt.prims["Ref.set"], Printer$fresh(p), fresh);
+    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "[", rt.ap(rt.prims["Text.join"], rt.ap(rt.prims["append"], ",\n", Print$spaces(((ind + 2) | 0))), lib$base$List$map(rt.named((x_1) => Print$expr(p, x_1, env, ((ind + 2) | 0), 0), "Print.listLiteral/\u03bb"), items))), "]");
+  }
+}
+rt.named(Print$listLiteral, "Print.listLiteral");
 
 function Types$typeToSexp(t) {
   m0: {

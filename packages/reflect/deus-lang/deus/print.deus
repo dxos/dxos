@@ -444,10 +444,22 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
       | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => "(" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) (Print.tupleItems t)) ++ ")"
       | (Sexp.list (Sexp.sym "con" :: Sexp.str "#List" :: Sexp.int 1 :: Sexp.int 2 :: []), h :: rest :: []) =>
           match listItems t with
-          | Option.some items => "[" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) items) ++ "]"
+          | Option.some items => Print.listLiteral p items env ind
           | Option.none => paren 67 prec (Print.expr p h env ind 68 ++ " :: " ++ Print.expr p rest env ind 67)
       | _ => Print.application p f args env ind prec
   | _ => paren 100 prec (Sexp.print t)
+
+/-- `[a, b, c]` on one line when it fits, else one item per line after the first, indented: a list of C source lines
+  or of usage text would otherwise run to thousands of columns. Binder names are drawn as text is made, so the
+  one-line attempt is undone before the second. -/
+def listLiteral (p : Printer) (items : List Sexp) (env : List Text) (ind : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let flat := "[" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) items) ++ "]"
+  if fits ind flat || List.length items < 2 then flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    "[" ++ join (",\n" ++ spaces (ind + 2)) (List.map (fun x => Print.expr p x env (ind + 2) 0) items) ++ "]"
 
 /-- Columns a printed line may take before an application breaks its arguments onto lines of their own. -/
 def width : Int := 100
@@ -460,9 +472,14 @@ def fits (ind : Int) (text : Text) : Bool :=
 /-- `f a b` on one line when it fits, else `f` then one argument per line, indented. Binder names
   are drawn as text is made, so the one-line attempt is undone before the second. -/
 def ifThenElse (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
-  let text := "if " ++ Print.expr p c env ind 0 ++ " then" ++ Print.body p yes env ind ++
-    (if isBlock yes then "\n" ++ spaces ind else " ") ++ "else" ++ Print.body p no env ind
-  paren 1 prec text
+  -- Each part is printed once: printing the whole twice would double the work at every link of an `else if` chain.
+  let head := "if " ++ Print.expr p c env ind 0 ++ " then" ++ Print.body p yes env ind
+  let rest := "else" ++ Print.body p no env ind
+  let flat := head ++ (if isBlock yes then "\n" ++ spaces ind else " ") ++ rest
+  -- Past the width, each `else` starts a line, indented so it continues the expression rather than ending a `let`.
+  -- Only after a one-line `then` and before an inline `else`: after lines of their own it would join an inner `if`.
+  let breakable := not (isBlock yes) && not (isBlock no) && not (Text.contains "\n" head)
+  paren 1 prec (if not breakable || fits ind flat then flat else head ++ "\n" ++ spaces (ind + 2) ++ rest)
 
 def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   let supply := Ref.get p.supply
