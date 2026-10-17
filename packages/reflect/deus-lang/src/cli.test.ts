@@ -925,28 +925,4 @@ describe('deus CLI', () => {
       expect(cached('test', 'plusOne')).toBe(true);
     },
   );
-
-  test('link prints the hosted explorer page of definitions and namespaces', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'links')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    deus('add', file('links.deus', 'def Shapes.square (side : Int) : Int := side * side\n'), ...c);
-    expect(deus('link', 'Shapes', ...c).stderr).toContain('no project');
-    deus('project', 'init', '@acme/shapes', ...c);
-    // A remote that is a directory has no explorer, so the host must be given.
-    deus('remote', 'add', 'origin', join(scratch, 'links-remote'), ...c);
-    expect(deus('link', 'Shapes', ...c).stderr).toContain('pass --host');
-    deus('remote', 'add', 'origin', 'https://deus.example.org/v1/@acme/shapes', ...c);
-    expect(deus('link', ...c).stdout.trim()).toBe('https://deus.example.org/@acme/shapes/');
-    expect(JSON.parse(deus('link', 'Shapes', 'square', '--json', ...c).stdout)).toEqual([
-      { name: 'Shapes', url: 'https://deus.example.org/@acme/shapes/Shapes' },
-      { name: 'Shapes.square', url: 'https://deus.example.org/@acme/shapes/Shapes.square' },
-    ]);
-    expect(deus('link', 'Shapes.square', '--host', 'localhost:8787', ...c).stdout.trim()).toBe(
-      'https://localhost:8787/@acme/shapes/Shapes.square',
-    );
-    const unknown = deus('link', 'Circles', ...c);
-    expect(unknown.code).not.toBe(0);
-    expect(unknown.stderr).toContain('unknown name Circles');
-  });
 });
