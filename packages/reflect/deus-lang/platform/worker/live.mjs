@@ -18,16 +18,13 @@
 import { addressOfFolder } from './address.mjs';
 import * as runtime from './gen/deus-runtime.mjs';
 import * as explorer from './gen/explorer-live.js';
+import * as liveRoutes from './gen/live.js';
 import { lookupMany, parseSexp } from './packs.mjs';
 import { HttpError, headLogKey, json, listAll, listFolders, readHead } from './remote.mjs';
 
 const ROOT = '/codebase';
 const HASH = /^[0-9a-f]{64}$/;
 const BUILTIN = /^#[A-Za-z][A-Za-z0-9_.]{0,99}$/;
-const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
-const PAGE = /^(_[A-Za-z][A-Za-z0-9_.]{0,99}|[0-9a-f]{64}(\.[0-9]{1,6})?)\.json$/;
-/** A spec document is named like a namespace: `Address.Spec`, `Toolchain.Features`. */
-const DOC = /^[A-Za-z][A-Za-z0-9_]{0,99}(\.[A-Za-z][A-Za-z0-9_]{0,99}){0,9}\.json$/;
 /** A member of a recursive group: its group's hash and its position. */
 const MEMBER = /^[0-9a-f]{64}\.[0-9]{1,6}$/;
 /** Passes a run may take before it gives up: each one fetches everything the last one missed. */
@@ -38,27 +35,21 @@ export const live = async (request, env, ctx, project, rest, { drawn = false } =
   if (request.method !== 'GET') {
     throw new HttpError(405, 'method not allowed');
   }
-  const [first, ...more] = rest.map(decodeURIComponent);
-  if (!HASH.test(first ?? '')) {
-    const branch = [first, ...more].join('/');
-    if (!BRANCH.test(branch)) {
-      throw new HttpError(404, 'a live explorer is /live/<branch> or /live/<causal>/…');
-    }
-    const shown = await liveHead(env, ctx, project, branch);
+  const segments = rest.map(decodeURIComponent);
+  // Which paths name a branch, a page or nothing is `Worker.Live.route`, in DEUS (platform/worker/deus/live.deus).
+  const route = liveRoutes.route(segments);
+  if (route.kind === 'branch') {
+    const shown = await liveHead(env, ctx, project, route.branch);
     if (!shown) {
-      throw new HttpError(404, `no branch ${branch}`);
+      throw new HttpError(404, `no branch ${route.branch}`);
     }
     return json(shown);
   }
-  const causal = first;
-  const path = more.join('/');
-  if (
-    path !== 'index.json' &&
-    !(more.length === 2 && (more[0] === 'def' || more[0] === 'change') && PAGE.test(more[1])) &&
-    !(more.length === 2 && more[0] === 'doc' && DOC.test(more[1]))
-  ) {
-    throw new HttpError(404, 'not found');
+  if (route.kind !== 'page') {
+    throw new HttpError(404, route.message);
   }
+  const { causal, path } = route;
+  const more = segments.slice(1);
   const key = `${project}/live/${causal}/${path}`;
   const stored = await storedPage(env, ctx, key);
   if (stored !== undefined) {

@@ -1,0 +1,82 @@
+-- context: @dxos/worker/Worker
+/-
+  The live explorer's paths, in DEUS (task 41714c0d): which `/v1/<project>/live/…` request names a branch, which names
+  a page of a head, and which is not found. platform/worker/live.mjs draws and stores the pages.
+-/
+
+namespace Worker.Live
+
+/-- A live explorer request, routed: `kind` is `branch` (the head a branch shows), `page` (a page of history node
+  `causal`, at `path`), or "" for a 404 with `message`. -/
+structure LiveRoute @"urn:deus:worker:LiveRoute" where
+  kind : Text
+  branch : Text
+  causal : Text
+  path : Text
+  message : Text
+
+/-- A letter, then up to `most` characters that `allowed` accepts. -/
+def word (allowed : Int -> Bool) (most : Int) (t : Text) : Bool :=
+  match Text.utf8 t with
+  | first :: rest => isAlpha first && List.length rest <= most && List.all allowed rest
+  | [] => false
+
+/-- `t` without its `.json`, when it ends so. -/
+def json (t : Text) : Option Text :=
+  if Text.endsWith ".json" t then Option.some (Text.take (Text.length t - 5) t) else Option.none
+
+/-- A page of definitions or changes: `<hash>.json`, `<hash>.<member>.json` for a member of a recursive group, or
+  `_<Name>.json` for a builtin's page. -/
+def isPage (name : Text) : Bool :=
+  match json name with
+  | Option.none => false
+  | Option.some stem =>
+      if Text.startsWith "_" stem then word (fun c => isAlpha c || isDigit c || c == '_' || c == '.') 99 (Text.drop 1 stem)
+      else
+        match Text.split stem "." with
+        | [hash] => Worker.Heads.isHash hash
+        | [hash, member] => Worker.Heads.isHash hash && Text.length member >= 1 && Text.length member <= 6 && List.all isDigit (Text.utf8 member)
+        | _ => false
+
+/-- A spec document's page, named like a namespace (`Address.Spec.json`): one to ten segments. -/
+def isDocument (name : Text) : Bool :=
+  match json name with
+  | Option.none => false
+  | Option.some stem =>
+      let segments := Text.split stem "."
+      List.length segments <= 10 && List.all (word (fun c => isAlpha c || isDigit c || c == '_') 99) segments
+
+/-- Routes the decoded segments after `/live/`. -/
+def route (segments : List Text) : LiveRoute :=
+  let notFound := fun message => LiveRoute.mk "" "" "" "" message
+  match segments with
+  | first :: more =>
+      if not (Worker.Heads.isHash first) then
+        let branch := Text.join "/" segments
+        if Worker.Heads.isBranch branch then LiveRoute.mk "branch" branch "" "" ""
+        else notFound "a live explorer is /live/<branch> or /live/<causal>/…"
+      else
+        let page :=
+          match more with
+          | ["index.json"] => true
+          | [folder, name] => ((folder == "def" || folder == "change") && isPage name) || (folder == "doc" && isDocument name)
+          | _ => false
+        if page then LiveRoute.mk "page" "" first (Text.join "/" more) "" else notFound "not found"
+  | [] => notFound "a live explorer is /live/<branch> or /live/<causal>/…"
+
+test livePathsRoute :=
+  let hash := Worker.Heads.headA
+  route ["main"] == LiveRoute.mk "branch" "main" "" "" ""
+    && route ["feature", "x"] == LiveRoute.mk "branch" "feature/x" "" "" ""
+    && route [hash, "index.json"] == LiveRoute.mk "page" "" hash "index.json" ""
+    && route [hash, "def", hash ++ ".json"] == LiveRoute.mk "page" "" hash ("def/" ++ hash ++ ".json") ""
+    && route [hash, "change", hash ++ ".12.json"] == LiveRoute.mk "page" "" hash ("change/" ++ hash ++ ".12.json") ""
+    && route [hash, "def", "_Int.json"] == LiveRoute.mk "page" "" hash "def/_Int.json" ""
+    && route [hash, "doc", "Address.Spec.json"] == LiveRoute.mk "page" "" hash "doc/Address.Spec.json" ""
+    && (route [hash, "def", "x.json"]).kind == "" && (route [hash, "def", hash ++ ".1234567.json"]).kind == ""
+    && (route [hash, "doc", "1Bad.json"]).kind == "" && (route [hash, "doc", "A..B.json"]).kind == ""
+    && (route [hash, "other.json"]).kind == "" && (route [hash]).message == "not found"
+    && (route []).message == "a live explorer is /live/<branch> or /live/<causal>/…"
+    && (route [".hidden"]).kind == "" && (route [hash, "def", "_.json"]).kind == ""
+
+end Worker.Live

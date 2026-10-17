@@ -337,6 +337,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 327 | 10-19 15:10 | 20m 00s | b7c02e4abe | The `/v1` area dispatch is DEUS (D302) |
 | 328 | 10-19 15:40 | 30m 00s | 1f7828948c | A sync with nothing to do answers in 0.1 s, not 4 s (D303) |
 | 329 | 10-19 16:10 | 30m 00s | 9f5db36197 | Name resolution at a history node is DEUS (D304) |
-| 330 | 10-19 16:30 | 20m 00s | this commit | Head reads and folder listings are DEUS (D305) |
+| 330 | 10-19 16:30 | 20m 00s | 3e6e595378 | Head reads and folder listings are DEUS (D305) |
+| 331 | 10-19 16:50 | 20m 00s | this commit | The live explorer's routing is DEUS (D306) |
 
-Total from stage 1 to stage 330: 138h 50m.
+Total from stage 1 to stage 331: 139h 10m.
