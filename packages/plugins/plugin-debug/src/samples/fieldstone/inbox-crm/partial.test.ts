@@ -61,10 +61,10 @@ describe('Alien Labs inbox and CRM', () => {
       entries.filter((entry) => entry['@type']?.includes(typename));
     const feedEntries = archive.feeds.flatMap((feed) => feed.messages);
 
-    // 9 organizations (10 with team), 15 people (25 with team), 4 views.
-    expect(Object.keys(result.orgs)).toHaveLength(9);
+    // 8 organizations (9 with team), 15 people (25 with team), 4 views.
+    expect(Object.keys(result.orgs)).toHaveLength(8);
     expect(Object.keys(result.people)).toHaveLength(15);
-    expect(countOf('type.organization:')).toBe(10);
+    expect(countOf('type.organization:')).toBe(9);
     expect(countOf('type.person:')).toBe(25);
     expect(countOf('type.table:') + countOf('type.kanban:')).toBe(4);
 

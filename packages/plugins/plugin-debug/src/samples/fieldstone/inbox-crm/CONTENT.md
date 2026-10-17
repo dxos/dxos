@@ -16,8 +16,8 @@ writes in also turns up on the calendar.
 
 ### Organizations
 
-- 4 vendors, real company names, status `active`: `github` GitHub, `stripe` Stripe, `aws` Amazon Web
-  Services, `cloudflare` Cloudflare.
+- 3 vendors, real company names, status `active`: `github` GitHub, `stripe` Stripe, `cloudflare`
+  Cloudflare (the primary cloud).
 - 4 customers, fictional:
   - `northpine` Northpine Robotics, `active`, the largest customer, renewal due next month
   - `meridian` Meridian Health Data, `qualified`, enterprise trial blocked on a security review
@@ -32,7 +32,7 @@ writes in also turns up on the calendar.
   domain and `Person → Organization (organization)`. Each line gives key, name, job title,
   organization and, for contacts entered by hand, `department`:
   - `dana` Dana Whitfield, Account Executive, Stripe, Sales
-  - `elena` Elena Marsh, Solutions Architect, AWS, Sales
+  - `elena` Elena Marsh, Solutions Architect, Cloudflare, Sales
   - `sofia` Sofia Brandt, Partner Manager, GitHub, Partnerships
   - `ines` Inês Duarte, Enterprise Account Executive, Cloudflare, Sales
   - `grace` Grace Liu, VP Engineering, Northpine, Leadership
@@ -89,7 +89,7 @@ writes in also turns up on the calendar.
     - `brightwaterIntro` Brightwater intro and pricing: Leo, Mila, Lucía, Kofi, 5 messages
   - Vendors:
     - `stripeBilling` Stripe usage-based billing migration: Dana, June, 6 messages
-    - `awsCredits` AWS credits and a Savings Plan: Elena, Anika, Astrid, 4 messages
+    - `cloudflareCredits` Cloudflare credits and an annual commit: Elena, Anika, Astrid, 4 messages
     - `cloudflareR2` Cloudflare R2 egress pricing: Inês, Omar, Felix, 3 messages
     - `githubPartner` GitHub Actions integration partner program: Sofia, Kofi, 4 messages
   - Internal:
@@ -100,7 +100,7 @@ writes in also turns up on the calendar.
 - Background threads, 30 messages in 20 threads of 1 to 3: code review questions, on-call handoffs,
   time off, interview scheduling, expense approvals. All between people in the space.
 - Automated mail, 50 single messages, no contact: GitHub review requests and CI failures, Linear
-  digests, Datadog monitor alerts, Stripe payouts, AWS billing alerts, two newsletters with
+  digests, PostHog alerts, Stripe payouts, Cloudflare billing notifications, two newsletters with
   `listUnsubscribe`.
 - Tags: `inbox` on all but 30 archived messages (15 in settled background threads, the 15 oldest
   automated), `sent` on Astrid's, `starred` on 5, `important` on the customer threads, `promotions` on
@@ -132,7 +132,7 @@ writes in also turns up on the calendar.
     review (−6d), 2 interviews (−30d, −9d)
   - Upcoming: Cairn 1.8 release (all-day, +2d, all of Alien Labs plus Sofia, whose partner listing
     goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare pricing
-    call (+6d), AWS architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
+    call (+6d), Cloudflare architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
     Omar, Astrid), team offsite at Saltmarsh Lodge
     (all-day, +34d to +36d, all of Alien Labs plus Wren, location set)
 - 150 events have a description: every one-off names the thread it came from; team syncs, sprint
@@ -160,7 +160,7 @@ These must work end to end in the app.
 
 ## Checks
 
-- 9 organizations (10 with team), 15 people (25 with team), 4 views (2 Table, 2 Kanban).
+- 8 organizations (9 with team), 15 people (25 with team), 4 views (2 Table, 2 Kanban).
 - The Person Kanban holds 20 people: everyone but the 5 extracted contacts.
 - 150 messages in 90 threads. The oldest is at −60d and the newest at the reference date.
 - 300 events. Every week from −182d to +182d has at least one.

@@ -17,7 +17,9 @@ export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organiz
       {image && <Card.Poster alt={name ?? ''} src={image} />}
       {description && (
         <Card.Row>
-          <Card.Text variant='muted'>{description}</Card.Text>
+          <Card.Text variant='muted' lines={2}>
+            {description}
+          </Card.Text>
         </Card.Row>
       )}
       {website && <Card.Link label={website} href={website} />}

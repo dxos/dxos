@@ -32,7 +32,7 @@ const cellsIn = (range: string): string[] => {
 
 const DERIVED: ReadonlyArray<[SheetKey, string[]]> = [
   ['pricing', ['F2:F5']],
-  ['vendorSpend', ['N2:N5', 'B6:N6']],
+  ['vendorSpend', ['N2:N4', 'B5:N5']],
   ['cloudCost', ['D2:D8', 'B3:C8', 'B9:D9']],
   ['incidentTimeline', ['E2:E21', 'E23']],
   ['hiring', ['E2:E6']],

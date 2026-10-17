@@ -21,7 +21,7 @@ describe('Alien Labs template', () => {
         .filter(([type]) => type.includes(typename))
         .reduce((total, [, count]) => total + count, 0);
 
-    expect(countOf('type.organization')).toBe(10);
+    expect(countOf('type.organization')).toBe(9);
     expect(countOf('type.person')).toBe(25);
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);

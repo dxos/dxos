@@ -33,7 +33,7 @@ export type EventKey =
   | 'release18'
   | 'brightwaterIntro'
   | 'cloudflareCall'
-  | 'awsReview'
+  | 'cloudflareReview'
   | 'northpineQbr'
   | 'offsite';
 
@@ -323,10 +323,10 @@ export const makeCalendar = (
           minutes: 30,
         }),
       ],
-      awsReview: [
+      cloudflareReview: [
         timed(8, {
-          title: 'AWS architecture review',
-          description: 'From the thread "AWS credits and a Savings Plan": size the Savings Plan and the new region.',
+          title: 'Cloudflare architecture review',
+          description: 'From the thread "Cloudflare credits and an annual commit": size the commit and the new region.',
           attendees: ['elena', 'anika', 'astrid'],
           time: [15, 0],
           minutes: 60,

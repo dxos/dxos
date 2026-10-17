@@ -115,6 +115,11 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
 - [ ] **Reading-list flow fails at "Add rows"** — every run; the table clip is cut from the column step instead.
 - [ ] **`ScrollArea` collapses fit-content parents** — its `container-type: inline-size` gives no intrinsic width.
 - [ ] **Remotion render** — frame-lock the tiles' own clips (today only the camera is frame-exact).
+- [ ] **MessageArticle: summary above the stack** — move the conversation summary out of the `ConversationStack`
+      scroll content to the top of the article, outside the message stack.
+- [ ] **Inbox virtual list: uniform slot heights** — seen once: every tile placed at ~265px, so short tiles leave a gap
+      and tall ones are overlapped. Not reproduced over 6 scroll positions and 3 resizes; suspected stale virtualizer
+      sizes after `Stack.tsx` hot-reloaded. Needs a repro on a fresh load.
 
 ### References
 

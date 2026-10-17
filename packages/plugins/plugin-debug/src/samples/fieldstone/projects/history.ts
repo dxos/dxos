@@ -587,7 +587,11 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     summary:
       'Drafted access control in the SOC 2 policy set: roles, grant and revoke, and a quarterly review. Two gaps ' +
       'flagged: no written offboarding checklist, and two engineers with standing production admin.',
-    work: { kind: 'docs', doc: 'SOC 2 policy set', sources: ['AWS IAM export', 'GitHub organization settings'] },
+    work: {
+      kind: 'docs',
+      doc: 'SOC 2 policy set',
+      sources: ['Cloudflare Access export', 'GitHub organization settings'],
+    },
   },
   {
     key: 'incidentPolicy',
@@ -643,7 +647,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     by: 'anika',
     brief: 'Draft the vendor management policy: the vendors that hold customer data, what each holds, a yearly review.',
     summary:
-      'Drafted the vendor policy: five vendors touch customer data (AWS, Cloudflare, GitHub, Stripe and Google ' +
+      'Drafted the vendor policy: four vendors touch customer data (Cloudflare, GitHub, Stripe and Google ' +
       'Workspace), each reviewed yearly. Anika should confirm the list.',
     work: { kind: 'docs', doc: 'SOC 2 policy set', sources: ['Vendors and spend'] },
   },

@@ -32,7 +32,7 @@ so reading one leads to the next.
   - `onboarding` Engineer onboarding: links Hana, Omar, Felix, Anika and `architecture`; embeds
     `architectureDiagram`. With projects, links `artifacts.cacheDesign`.
   - `runbook` On-call runbook: links Anika; embeds `escalation` and `cloudCost`. With inbox-crm,
-    links AWS and Cloudflare.
+    links Cloudflare.
   - `architecture` Cairn architecture: links Omar and Felix; embeds `architectureDiagram` and
     `requestFlow`; one mermaid sequence diagram of a cache lookup. A "Cairn on DXOS" section says
     the dashboard is a Composer plugin and the agents run on EDGE compute, and that Cairn's edge
@@ -68,7 +68,7 @@ so reading one leads to the next.
 - 5 `Sheet`, with formulas wherever a column is derived:
   - `pricing` Plans by tier and usage, 4 tiers × 6 columns, monthly price computed from usage
   - `vendorSpend` Monthly spend per vendor over 12 months, with row and column totals
-  - `cloudCost` AWS and Cloudflare cost forecast for the next 6 months, growth by formula
+  - `cloudCost` Cloudflare cost forecast (compute and S3, Workers and R2) for the next 6 months, growth by formula
   - `incidentTimeline` The Okapi incident, 20 timestamped rows from detection (−35d) to close (−25d),
     hours since detection by formula
   - `hiring` Open roles by stage, 5 roles, with days open computed from the open date: an "As of"

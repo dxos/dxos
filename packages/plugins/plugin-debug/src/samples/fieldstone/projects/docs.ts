@@ -103,7 +103,7 @@ const SOC2_POLICIES = trim`
 
   ## Vendor management (in review, owner Anika Rao)
 
-  Five vendors touch customer data: AWS, Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
+  Four vendors touch customer data: Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
 
   ## Data retention (draft, owner Anika Rao)
 

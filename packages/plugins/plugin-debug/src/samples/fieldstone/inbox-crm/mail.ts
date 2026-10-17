@@ -22,7 +22,7 @@ export type ThreadKey =
   | 'okapiIncident'
   | 'brightwaterIntro'
   | 'stripeBilling'
-  | 'awsCredits'
+  | 'cloudflareCredits'
   | 'cloudflareR2'
   | 'githubPartner'
   | 'offsite'
@@ -249,7 +249,7 @@ Astrid`,
         time: [11, 45],
         body: `Ruth,
 
-180 seats on the annual plan comes to $86,400, which keeps your current rate of $40 a seat per month. A dedicated region in us-east-2 adds $1,500 a month with a 99.95% uptime commitment, plus a one-time setup fee of $5,000.
+180 seats on the annual plan comes to $86,400, which keeps your current rate of $40 a seat per month. A dedicated US region adds $1,500 a month with a 99.95% uptime commitment, plus a one-time setup fee of $5,000.
 
 If you sign for two years we'll hold the seat rate for both years and waive the region setup fee. Seats added mid-term are prorated at the same rate.
 
@@ -353,7 +353,7 @@ Sections 3 to 6 are filled in. The short version:
 
 - The agent uploads content-addressed build outputs and their hashes. Nothing else. I've added a captured upload request to the sheet as an example.
 - Environment variables and command lines are never sent. Request logs keep path, status code and latency only, for 30 days.
-- Encryption at rest is AES-256, keys in AWS KMS, rotated yearly. TLS 1.2 or later in transit.
+- Encryption at rest is AES-256, keys managed in Cloudflare and rotated yearly. TLS 1.2 or later in transit.
 - RPO is 24 hours and RTO is 4 hours. Cache contents can be rebuilt from your CI, so losing them costs time, not data.
 
 Astrid is finishing sections 1, 2 and 5.
@@ -752,8 +752,8 @@ Dana`,
     ],
   },
   {
-    key: 'awsCredits',
-    subject: 'AWS credits and a Savings Plan',
+    key: 'cloudflareCredits',
+    subject: 'Cloudflare credits and an annual commit',
     mail: [
       {
         from: 'elena',
@@ -763,14 +763,14 @@ Dana`,
         time: [17, 10],
         body: `Hi Astrid,
 
-Following up on our call: you qualify for $25,000 in Activate credits, valid for twelve months. They apply to most services, including EC2, Fargate and S3, but not to Marketplace purchases or support plans.
+Following up on our call: you qualify for $25,000 in Cloudflare for Startups credits, valid for twelve months. They apply to most developer platform products, including Workers, Containers and R2, but not to add-on services or support plans.
 
-Separately, your EC2 and Fargate spend has been steady for six months, so a one-year Compute Savings Plan at your current baseline would cut that bill by about 28%. Compute Savings Plans apply across instance families and regions, so they'd survive a change of instance type.
+Separately, your Workers and Containers spend has been steady for six months, so a one-year committed-use contract at your current baseline would cut that bill by about 28%. The commit applies across products and regions, so it would survive a change of instance type.
 
 I'll submit the credit application once you confirm.
 
 Elena Marsh
-Solutions Architect, AWS`,
+Solutions Architect, Cloudflare`,
       },
       {
         from: 'astrid',
@@ -780,7 +780,7 @@ Solutions Architect, AWS`,
         time: [8, 40],
         body: `Thanks Elena. Credits, yes please.
 
-On the Savings Plan: Anika is about to move the cache nodes to Graviton, which changes our baseline. Her benchmarks showed the same p99 for about 20% less, so I'd rather commit once against the new number.
+On the commit: Anika is about to move the cache nodes to arm64, which changes our baseline. Her benchmarks showed the same p99 for about 20% less, so I'd rather commit once against the new number.
 
 Anika, can you size the commitment after the move?
 
@@ -794,9 +794,9 @@ Astrid`,
         time: [15, 25],
         body: `Hi Elena,
 
-The Graviton move is done for cache nodes and baseline compute dropped about 20%, in line with the benchmarks. I'd commit to $4.10 an hour, roughly 80% of the new baseline, which leaves headroom for the spikes around customer release days.
+The arm64 move is done for cache nodes and baseline compute dropped about 20%, in line with the benchmarks. I'd commit to $4.10 an hour, roughly 80% of the new baseline, which leaves headroom for the spikes around customer release days.
 
-Could you also review the setup with us before we commit? We're adding a dedicated region in us-east-2 for one customer, and I'd like to know how that changes what we can commit to.
+Could you also review the setup with us before we commit? We're adding a dedicated US region for one customer, and I'd like to know how that changes what we can commit to.
 
 Anika`,
       },
@@ -805,9 +805,9 @@ Anika`,
         to: ['anika', 'astrid'],
         day: 7,
         time: [16, 50],
-        body: `Credits are on your account. I've set up an architecture review for the week after next to cover the Savings Plan and the new region together.
+        body: `Credits are on your account. I've set up an architecture review for the week after next to cover the commit and the new region together.
 
-If you can, bring a Cost Explorer view of the last three months grouped by service.
+If you can, bring a billing export of the last three months grouped by product.
 
 Elena`,
       },
@@ -934,10 +934,10 @@ const WEEKLY_UPDATES: Array<{ readonly day: number; readonly body: string }> = [
   {
     day: 54,
     body: `Shipped: Cairn 1.7.2 with the eviction memory fix.
-In progress: SCIM beta with two customers; Graviton benchmarks for cache nodes.
+In progress: SCIM beta with two customers; arm64 benchmarks for cache nodes.
 Hiring: backend loop for Lena Vogt is being scheduled.
 
-AWS is forecast to go over budget this month, almost all of it EC2. Anika's Graviton work is the fix, so expect the numbers next week.
+Cloudflare is forecast to go over budget this month, almost all of it compute. Anika's arm64 work is the fix, so expect the numbers next week.
 
 Please put Q4 time off in the calendar by Friday.
 
@@ -949,7 +949,7 @@ Astrid`,
 
 - Kofi applied to GitHub's Actions partner program for setup-cairn.
 - June is scoping usage-based billing on Stripe.
-- Anika's Graviton numbers look good: same p99, about 20% cheaper.
+- Anika's arm64 numbers look good: same p99, about 20% cheaper.
 - Omar's eviction worker now bounds the LRU by bytes, with a count ceiling as a backstop.
 
 One page this week, disk pressure on cache-node-03. Felix has the pager next.
@@ -991,7 +991,7 @@ Astrid`,
     day: 19,
     body: `Stripe's working session fixed prepay credits on the metered line, so the billing migration starts next week with ten customers.
 
-AWS offered $25k in credits and a Savings Plan; Anika will size it after the Graviton move.
+Cloudflare offered $25k in credits and an annual commit; Anika will size it after the arm64 move.
 
 Hana starts Wednesday. Omar is her buddy, and her first task is the flaky eviction test.
 
@@ -1005,7 +1005,7 @@ Northpine opened their renewal: 180 seats plus a dedicated region. Lucía is quo
 
 Omar is testing Cloudflare R2 as a read tier to cut our S3 egress bill. Early numbers from Felix point to a big saving.
 
-The Graviton move for cache nodes is done.
+The arm64 move for cache nodes is done.
 
 Astrid`,
   },
@@ -1471,7 +1471,7 @@ Tomás`,
 
 Quiet week. One page Tuesday night for disk pressure on cache-node-03, resolved by expanding the volume from 2 TB to 3 TB. The runbook now has the resize steps.
 
-Nothing open. Datadog warnings on cache-node-07 disk are noisy; ack them unless usage passes 90%.
+Nothing open. PostHog warnings on cache-node-07 disk are noisy; ack them unless usage passes 90%.
 
 Anika`,
       },
@@ -1679,9 +1679,9 @@ const sender = (name: string, email: string): Actor.Actor => ({ role: 'user', na
 
 const GITHUB = sender('GitHub', 'notifications@github.com');
 const LINEAR = sender('Linear', 'notifications@linear.app');
-const DATADOG = sender('Datadog', 'alert@dtdg.co');
+const POSTHOG = sender('PostHog', 'alerts@posthog.com');
 const STRIPE = sender('Stripe', 'notifications@stripe.com');
-const AWS_BUDGETS = sender('AWS Budgets', 'no-reply@budgets.amazonaws.com');
+const CLOUDFLARE_BILLING = sender('Cloudflare', 'noreply@notify.cloudflare.com');
 const CACHE_LINE = sender('Cache Line', 'editor@cacheline.news');
 const MONOREPO_NOTES = sender('Monorepo Notes', 'hello@monoreponotes.dev');
 
@@ -1740,7 +1740,7 @@ const REVIEW_REQUESTS = [
   {
     day: 19,
     author: 'anika',
-    title: 'Build cache nodes for Graviton',
+    title: 'Build cache nodes for arm64',
     summary:
       'Adds arm64 images and an arm64 leg to the CI matrix. Benchmarks are in the description of the linked issue.',
   },
@@ -1806,62 +1806,67 @@ const CI_FAILURES = [
   { workflow: 'Nightly', branch: 'main', job: 'soak', error: 'cache-node RSS above 6 GiB after 4 hours' },
 ] as const;
 
-const DATADOG_ALERTS = [
+const POSTHOG_ALERTS = [
   {
     day: 44,
     time: [3, 10],
-    title: '[Warn] Disk usage above 80% on cache-node-07',
-    query: 'avg(last_10m):avg:system.disk.in_use{host:cache-node-07} > 0.8',
+    title: '[Warning] Disk usage above 80% on cache-node-07',
+    insight: 'cache-node disk usage, cache-node-07',
+    threshold: 'above 80%',
     value: '83.4%',
     message: 'Check the eviction backlog before expanding the volume. Runbook: Disk pressure on a cache node.',
   },
   {
     day: 35,
     time: [7, 20],
-    title: '[Triggered] cairn-cache p99 read latency above 250 ms on eu-west-1',
-    query: 'avg(last_5m):p99:cairn.cache.read.latency{service:cairn-cache,region:eu-west-1} > 250',
+    title: '[Firing] cairn-cache p99 read latency above 250 ms in the EU',
+    insight: 'cairn-cache p99 read latency, EU',
+    threshold: 'above 250 ms',
     value: '412 ms',
-    message: 'Reads are slow for customers in eu-west-1. Check node CPU and the storage read path.',
+    message: 'Reads are slow for customers in the EU. Check node CPU and the storage read path.',
   },
   {
     day: 35,
     time: [10, 45],
-    title: '[Recovered] cairn-cache p99 read latency above 250 ms on eu-west-1',
-    query: 'avg(last_5m):p99:cairn.cache.read.latency{service:cairn-cache,region:eu-west-1} > 250',
+    title: '[Resolved] cairn-cache p99 read latency above 250 ms in the EU',
+    insight: 'cairn-cache p99 read latency, EU',
+    threshold: 'above 250 ms',
     value: '138 ms',
     message: 'Read latency is back under threshold.',
   },
   {
     day: 27,
     time: [6, 5],
-    title: '[Triggered] Hash-mismatch writes detected on cairn-cache',
-    query: 'sum(last_5m):sum:cairn.cache.write.hash_mismatch{service:cairn-cache}.as_count() > 0',
+    title: '[Firing] Hash-mismatch writes detected on cairn-cache',
+    insight: 'cairn-cache hash-mismatch writes',
+    threshold: 'above 0 in 5 minutes',
     value: '2',
     message: 'A write to an existing key carried different content and was rejected. Check which org and runner image.',
   },
   {
     day: 17,
     time: [14, 5],
-    title: '[Triggered] cairn-api 5xx rate above 1% on us-east-1',
-    query:
-      'sum(last_5m):sum:cairn.api.requests{status_class:5xx,region:us-east-1}.as_count() / sum:cairn.api.requests{region:us-east-1}.as_count() > 0.01',
+    title: '[Firing] cairn-api 5xx rate above 1% in the US',
+    insight: 'cairn-api 5xx rate, US',
+    threshold: 'above 1%',
     value: '3.2%',
-    message: 'API errors are elevated in us-east-1. Check for a single key retrying in a loop before scaling.',
+    message: 'API errors are elevated in the US. Check for a single key retrying in a loop before scaling.',
   },
   {
     day: 17,
     time: [14, 50],
-    title: '[Recovered] cairn-api 5xx rate above 1% on us-east-1',
-    query:
-      'sum(last_5m):sum:cairn.api.requests{status_class:5xx,region:us-east-1}.as_count() / sum:cairn.api.requests{region:us-east-1}.as_count() > 0.01',
+    title: '[Resolved] cairn-api 5xx rate above 1% in the US',
+    insight: 'cairn-api 5xx rate, US',
+    threshold: 'above 1%',
     value: '0.4%',
     message: 'API error rate is back under threshold.',
   },
   {
     day: 6,
     time: [11, 30],
-    title: '[Warn] S3 multipart upload retries above baseline',
-    query: "avg(last_15m):anomalies(sum:cairn.storage.multipart.retries{*}.as_count(), 'basic', 2) >= 1",
+    title: '[Warning] S3 multipart upload retries above baseline',
+    insight: 'Storage multipart upload retries',
+    threshold: 'more than 2 standard deviations above the 7-day mean',
     value: '47 retries/min',
     message: 'Uploads are retrying more than usual. Usually S3 throttling in one region; check 503 counts per bucket.',
   },
@@ -1906,7 +1911,7 @@ const NEWSLETTERS: Array<{
         headline: '#114: The hermeticity tax',
         summary:
           'A survey of 40 teams on what full hermeticity costs in engineering time and what it saves in cache hits and debugging.',
-        also: 'Correction: last issue overstated spot interruption rates in us-east-1.',
+        also: 'Correction: last issue overstated spot interruption rates in US regions.',
       },
       {
         headline: '#115: Cache poisoning, revisited',
@@ -2005,10 +2010,10 @@ ${GITHUB_FOOTER}`,
     });
   }
 
-  for (const alert of DATADOG_ALERTS) {
-    const monitor = random.int(100_000, 999_999);
+  for (const alert of POSTHOG_ALERTS) {
+    const alertId = random.int(100_000, 999_999);
     placed.push({
-      sender: DATADOG,
+      sender: POSTHOG,
       day: alert.day,
       time: alert.time,
       subject: alert.title,
@@ -2016,14 +2021,15 @@ ${GITHUB_FOOTER}`,
 
 ${alert.message}
 
-Metric value: ${alert.value}
-Query: ${alert.query}
-Tags: env:prod, service:${alert.query.includes('cairn.api') ? 'cairn-api' : 'cairn-cache'}
+Insight: ${alert.insight}
+Current value: ${alert.value}
+Threshold: ${alert.threshold}
+Project: cairn-prod
 
-Notified: @oncall-cairn @slack-cairn-alerts
+Notified: #cairn-alerts on Slack, Cairn on-call
 
-Monitor status: https://app.datadoghq.eu/monitors/${monitor}
-Edit monitor: https://app.datadoghq.eu/monitors/${monitor}/edit`,
+View alert: https://eu.posthog.com/project/48213/alerts/${alertId}
+Edit alert: https://eu.posthog.com/project/48213/alerts/${alertId}/edit`,
     });
   }
 
@@ -2103,42 +2109,40 @@ You're receiving this email because you're an administrator of the Alien Labs St
 
   placed.push(
     {
-      sender: AWS_BUDGETS,
+      sender: CLOUDFLARE_BILLING,
       day: 60,
       time: [4, 0],
-      subject: 'AWS Budgets: cairn-prod-monthly is forecast to exceed 100%',
-      body: `Dear AWS Customer,
+      subject: 'Cloudflare billing: cairn-prod-monthly is forecast to exceed 100% of budget',
+      body: `Hello,
 
-You requested that we alert you when the FORECASTED cost associated with your cairn-prod-monthly budget is greater than $18,000.00 for the current month. The FORECASTED cost associated with this budget is $18,940.12. You can find additional details below and in the AWS Budgets dashboard.
+You asked us to notify you when forecast usage on the Alien Labs account passes your cairn-prod-monthly budget of $18,000.00 for the current billing period. Forecast usage is now $18,940.12. Details are below and in the Billing section of the Cloudflare dashboard.
 
-Budget Name: cairn-prod-monthly
-Budget Type: Cost
-Budgeted Amount: $18,000.00
-Alert Type: FORECASTED
-Alert Threshold: > $18,000.00 (100%)
-FORECASTED Amount: $18,940.12
-Top service: Amazon EC2
+Budget name: cairn-prod-monthly
+Budgeted amount: $18,000.00
+Notification type: Forecast usage
+Threshold: > $18,000.00 (100%)
+Forecast usage: $18,940.12
+Top product: Containers
 
-https://console.aws.amazon.com/billing/home#/budgets`,
+https://dash.cloudflare.com/?to=/:account/billing`,
     },
     {
-      sender: AWS_BUDGETS,
+      sender: CLOUDFLARE_BILLING,
       day: 25,
       time: [4, 0],
-      subject: 'AWS Budgets: cairn-prod-monthly has exceeded 80%',
-      body: `Dear AWS Customer,
+      subject: 'Cloudflare billing: cairn-prod-monthly has passed 80% of budget',
+      body: `Hello,
 
-You requested that we alert you when the ACTUAL cost associated with your cairn-prod-monthly budget is greater than $14,400.00 for the current month. The ACTUAL cost associated with this budget is $14,612.55. You can find additional details below and in the AWS Budgets dashboard.
+You asked us to notify you when actual usage on the Alien Labs account passes 80% of your cairn-prod-monthly budget for the current billing period. Usage to date is $14,612.55. Details are below and in the Billing section of the Cloudflare dashboard.
 
-Budget Name: cairn-prod-monthly
-Budget Type: Cost
-Budgeted Amount: $18,000.00
-Alert Type: ACTUAL
-Alert Threshold: > $14,400.00 (80%)
-ACTUAL Amount: $14,612.55
-Top service: Amazon S3 (data transfer)
+Budget name: cairn-prod-monthly
+Budgeted amount: $18,000.00
+Notification type: Actual usage
+Threshold: > $14,400.00 (80%)
+Usage to date: $14,612.55
+Top product: R2 (Class B operations)
 
-https://console.aws.amazon.com/billing/home#/budgets`,
+https://dash.cloudflare.com/?to=/:account/billing`,
     },
   );
 
@@ -2239,7 +2243,7 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
       okapiIncident: [],
       brightwaterIntro: [],
       stripeBilling: [],
-      awsCredits: [],
+      cloudflareCredits: [],
       cloudflareR2: [],
       githubPartner: [],
       offsite: [],

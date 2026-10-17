@@ -73,7 +73,7 @@ const makeArchitectureDiagram = () =>
     })
     .rectangle({ id: 'meter', x: 520, y: 0, w: 180, h: 80, text: 'Usage meter', color: 'green', fill: 'semi' })
     .rectangle({ id: 'dashboard', x: 0, y: 0, w: 180, h: 80, text: 'Dashboard\nComposer plugin', color: 'black' })
-    .ellipse({ id: 'postgres', x: 780, y: 160, w: 170, h: 90, text: 'Postgres\nAWS RDS', color: 'blue' })
+    .ellipse({ id: 'postgres', x: 780, y: 160, w: 170, h: 90, text: 'Postgres\nvia Hyperdrive', color: 'blue' })
     .ellipse({ id: 'r2', x: 260, y: 340, w: 180, h: 90, text: 'R2\nhot blobs', color: 'orange' })
     .ellipse({ id: 's3', x: 520, y: 340, w: 180, h: 90, text: 'S3\norigin, cold blobs', color: 'yellow' })
     .ellipse({ id: 'stripe', x: 780, y: 0, w: 170, h: 80, text: 'Stripe', color: 'green' })
@@ -220,7 +220,7 @@ const makeRoadmap = (now: Date) => {
 
 const makeEscalation = () =>
   new TldrawModel.RecordBuilder()
-    .rectangle({ id: 'alert', x: 0, y: 0, w: 180, h: 80, text: 'Datadog monitor fires', color: 'red', fill: 'semi' })
+    .rectangle({ id: 'alert', x: 0, y: 0, w: 180, h: 80, text: 'PostHog alert fires', color: 'red', fill: 'semi' })
     .rectangle({
       id: 'primary',
       x: 240,
@@ -253,7 +253,7 @@ const makeEscalation = () =>
       color: 'green',
       fill: 'semi',
     })
-    .rectangle({ id: 'vendor', x: 940, y: 0, w: 180, h: 80, text: 'Vendor support\nAWS, Cloudflare', color: 'grey' })
+    .rectangle({ id: 'vendor', x: 940, y: 0, w: 180, h: 80, text: 'Vendor support\nCloudflare', color: 'grey' })
     .arrow({ from: 'alert', to: 'primary' })
     .arrow({ from: 'primary', to: 'secondary', text: '15 min', dash: 'dashed' })
     .arrow({ from: 'primary', to: 'sev' })

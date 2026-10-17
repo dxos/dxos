@@ -21,8 +21,8 @@ const CONTACT_SEEDS = [
   {
     key: 'elena',
     fullName: 'Elena Marsh',
-    email: 'elena.marsh@amazon.com',
-    org: 'aws',
+    email: 'elena.marsh@cloudflare.com',
+    org: 'cloudflare',
     jobTitle: 'Solutions Architect',
     department: 'Sales',
   },

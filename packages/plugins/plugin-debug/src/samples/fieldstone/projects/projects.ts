@@ -152,8 +152,8 @@ export const makeProjects = ({ team, taskSets, artifacts, inboxCrm }: ProjectsIn
       Database.add(
         Repo.make({
           name: seed.name,
-          owner: 'fieldstone',
-          url: `https://github.com/fieldstone/${seed.name}`,
+          owner: 'alien-labs',
+          url: `https://github.com/alien-labs/${seed.name}`,
           description: seed.description,
           defaultBranch: 'main',
           organization: Ref.make(team.orgs.fieldstone),

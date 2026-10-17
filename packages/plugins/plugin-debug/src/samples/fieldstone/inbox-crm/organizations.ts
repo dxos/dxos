@@ -24,18 +24,12 @@ const ORG_SEEDS = [
     description: 'Billing and payments. Moving Cairn plans to usage-based billing.',
   },
   {
-    key: 'aws',
-    name: 'Amazon Web Services',
-    status: 'active',
-    website: 'https://aws.amazon.com',
-    description: 'Primary cloud: cache nodes, object storage and the control plane.',
-  },
-  {
     key: 'cloudflare',
     name: 'Cloudflare',
     status: 'active',
     website: 'https://cloudflare.com',
-    description: 'DNS and CDN. Evaluating R2 as the read tier for cache artifacts.',
+    description:
+      'Primary cloud: DNS, edge Workers, cache nodes and the control plane. Evaluating R2 as the read tier for cache artifacts.',
   },
   {
     key: 'northpine',
