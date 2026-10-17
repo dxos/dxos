@@ -12,7 +12,7 @@ export type IdentTheme = 'dark' | 'light';
 /** The props every ident composition takes, from `render.mjs --theme / --logo-color` or a `Player`'s `inputProps`. */
 export type IdentProps = {
   theme?: IdentTheme;
-  /** A Tailwind hue for the logo (`sky`), shaded `-400` in dark and `-600` in light; defaults to the theme's main. */
+  /** A Tailwind hue for the logo (`sky`), shaded `-500` in dark and `-600` in light; defaults to the theme's main. */
   logoColor?: string;
 };
 

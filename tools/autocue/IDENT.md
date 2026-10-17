@@ -28,7 +28,7 @@ then the DXOS end card. Only the words change.
 | Render everything                                           | `moon run autocue:render`                                                                    |
 | Bump the file version                                       | add `--version 2`                                                                            |
 | Light theme (off-black on off-white)                        | add `--theme light` (file suffix `_light`)                                                   |
-| Logo colour, a Tailwind hue                                 | add `--logo-color sky` (suffix `_sky`; `-400` in dark, `-600` in light); the rule follows it |
+| Logo colour, a Tailwind hue                                 | add `--logo-color sky` (suffix `_sky`; `-500` in dark, `-600` in light); the rule follows it |
 | Preview every card at any size, theme and colour            | storybook `tools/autocue/Ident`                                                              |
 
 Output goes to `out/<ID>/DXOS_SI_<ID>_<length>_<ratio>_v<NN>.mp4`, e.g.

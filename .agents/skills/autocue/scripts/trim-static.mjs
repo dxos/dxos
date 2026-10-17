@@ -32,6 +32,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
 
@@ -108,14 +109,16 @@ const identFormat = (width, height) =>
  */
 const ident = (id, format) => {
   const variant = `${options.theme === 'light' ? '_light' : ''}${options['logo-color'] ? `_${options['logo-color']}` : ''}`;
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/autocue');
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../tools/autocue');
   const dir = path.join(root, 'out', id);
-  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it.
+  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it;
+  // the newest wins, since a changed duration leaves the old clip beside the new one.
   const find = () =>
     existsSync(dir)
       ? readdirSync(dir)
           .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}${variant}_v01.mp4`))
-          .map((name) => path.join(dir, name))[0]
+          .map((name) => path.join(dir, name))
+          .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0]
       : undefined;
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
   // Sources and the assets they render with (an installed or replaced font changes the clip too).
@@ -199,7 +202,7 @@ const fitDuration = async () => {
   const report = spawnSync(
     process.execPath,
     [
-      new URL(import.meta.url).pathname,
+      fileURLToPath(import.meta.url),
       ...process.argv.slice(2).filter((arg, index, all) => arg !== '--duration' && all[index - 1] !== '--duration'),
       '--report',
     ],
@@ -730,7 +733,7 @@ const voiceover = async () => {
   const narrate = spawn(
     process.execPath,
     [
-      path.join(path.dirname(new URL(import.meta.url).pathname), 'voiceover.mjs'),
+      path.join(path.dirname(fileURLToPath(import.meta.url)), 'voiceover.mjs'),
       '--in',
       inputs.join(','),
       '--cues',
@@ -789,7 +792,7 @@ const upload = async () => {
   }
   const key = `${MEDIA.folder}/${new Date().toLocaleDateString('en-CA')}-${uploadName}${path.extname(video)}`;
   const script = path.resolve(
-    path.dirname(new URL(import.meta.url).pathname),
+    path.dirname(fileURLToPath(import.meta.url)),
     '../../hosting-artifacts/scripts/upload-artifact.mjs',
   );
   const proc = spawn(process.execPath, [script, video, '--key', key], {
