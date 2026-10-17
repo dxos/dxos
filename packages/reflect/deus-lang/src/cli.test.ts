@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,12 +27,12 @@ describe('deus CLI', () => {
       expect(verdicts[`Sort.${name}`]).toMatchObject({ status: 'pass', evidence: 'proof' });
     }
     expect(verdicts['Sort.agreesWithMergeSort']).toMatchObject({ status: 'pass', evidence: 'test' });
-    // A wrong claim marked @[refuted] passes only because the prover refuses it.
+    // A wrong claim marked @[expectFail] passes only because the prover refuses it.
     expect(verdicts['Sort.wrongClaim']).toMatchObject({ status: 'pass', evidence: 'refused' });
 
     const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
     for (const row of probes) {
-      // A `wrong` probe is `@[refuted]`: it passes because the prover refuses it.
+      // A `wrong` probe is `@[expectFail]`: it passes because the prover refuses it.
       expect([row.name, row.status, row.evidence]).toEqual([
         row.name,
         'pass',
@@ -46,6 +47,35 @@ describe('deus CLI', () => {
     );
     const leaning = JSON.parse(deus('check', 'Unsound.leansOnWrong', '--json', ...c).stdout);
     expect(leaning[0].status).toBe('fail');
+
+    // A test marked @[expectFail] passes while it returns false or throws, and fails the moment it holds;
+    // `@[refuted]`, the older spelling, still works on a theorem.
+    const expecting = [
+      'namespace Expect',
+      '@[expectFail]',
+      'test returnsFalse := 1 == 2',
+      '@[expectFail]',
+      'test throws := Throw.throw "no" == ()',
+      '@[expectFail]',
+      'test holds := 1 == 1',
+      '@[refuted]',
+      'theorem oldSpelling (xs : List Int) : xs = [] := by auto',
+      'end Expect',
+    ];
+    expect(deus('add', file('expect.deus', expecting.join('\n')), ...c).code).toBe(0);
+    const rows = (command: string) =>
+      Object.fromEntries(
+        JSON.parse(deus(command, 'Expect', '--json', ...c).stdout).map((row: { name: string; status: string }) => [
+          row.name,
+          row,
+        ]),
+      );
+    const tests = rows('test');
+    expect(tests['Expect.returnsFalse']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
+    expect(tests['Expect.throws']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
+    expect(tests['Expect.holds']).toMatchObject({ status: 'fail' });
+    expect(rows('check')['Expect.oldSpelling']).toMatchObject({ status: 'pass', evidence: 'refused' });
+    expect(deus('test', 'Expect.returnsFalse', ...c).stdout).toContain('failed, as expected');
   });
 
   test(
@@ -110,6 +140,38 @@ describe('deus CLI', () => {
       expect(deus('view', 'runPoly', ...c).stdout).toContain('-- : Box {e} -> {e} Int');
     },
   );
+
+  test('export --files writes each embedded file back to the path it came from', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'files')];
+    deus('init', '--empty', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const source = join(scratch, 'files-source');
+    for (const path of ['a/.gitignore', 'b/.gitignore', 'notes/read me.md']) {
+      mkdirSync(join(source, path, '..'), { recursive: true });
+      writeFileSync(join(source, path), path.endsWith('.md') ? '# Notes\n' : 'out/\n');
+    }
+    // `deus embed` records the path as given, so it runs from the folder the paths are relative to.
+    const embed = (path: string, name: string) =>
+      expect(
+        spawnSync('node', [join(root, 'bin/deus.mjs'), 'embed', path, '--as', name, '--quiet', ...c], {
+          cwd: source,
+          encoding: 'utf8',
+        }).status,
+      ).toBe(0);
+    embed('a/.gitignore', 'Repo.A.gitignore');
+    embed('b/.gitignore', 'Repo.B.gitignore');
+    embed('notes/read me.md', 'Repo.Notes.readMe');
+    embed(join(source, 'a/.gitignore'), 'Repo.absolute');
+    const out = join(scratch, 'files-out');
+    expect(deus('export', out, '--files', ...c)).toMatchObject({
+      code: 0,
+      stdout: `Exported 3 embedded files to ${out}.\n`,
+    });
+    // Two files with the same text share a hash, and each still lands at its own path; an absolute path is not written.
+    expect(readFileSync(join(out, 'a/.gitignore'), 'utf8')).toBe('out/\n');
+    expect(readFileSync(join(out, 'b/.gitignore'), 'utf8')).toBe('out/\n');
+    expect(readFileSync(join(out, 'notes/read me.md'), 'utf8')).toBe('# Notes\n');
+  });
 
   test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
     const codebase = join(scratch, 'demo');

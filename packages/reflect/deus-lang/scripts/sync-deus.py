@@ -66,10 +66,38 @@ def doc_name(path):
     return ('Docs.Specs.' if path.parent.name == 'spec' else 'Docs.') + camel + 'Md'
 
 
+def camel(text, capital):
+    """`cli-native.test.ts` as `cliNativeTestTs` (`CliNativeTestTs` when `capital`), `README.md` as `readmeMd`; a leading
+    digit gets `file`."""
+    words = [word.lower() if word.isupper() else word for word in re.split(r'[^A-Za-z0-9]+', text) if word]
+    joined = ''.join(word[0].upper() + word[1:] for word in words)
+    if joined[:1].isdigit():
+        joined = 'File' + joined
+    return joined if capital else joined[0].lower() + joined[1:]
+
+
+def repo_name(path):
+    """`src/kernel/main.ts` as `Repo.Src.Kernel.mainTs`: folders as namespaces, the file name with its extension."""
+    return '.'.join(['Repo', *(camel(part, True) for part in path.parts[:-1]), camel(path.name, False)])
+
+
+# What git still carries alone: the package's files that are neither DEUS source (deus/, which the codebase holds as
+# definitions), generated (the seed, gen/), the documents above, nor the frozen legacy/ tree. Embedded, `deus export
+# --files` writes them back, so a checkout can be rebuilt from the codebase (task 86d7b02a, D279).
+def repo_files():
+    listed = subprocess.run(['git', 'ls-files'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    return [ROOT / path for path in listed if not re.match(r'(deus|seed|docs|legacy)/|.*/gen/', path)]
+
+
 # Every document under docs/ and docs/spec/, which the hosted explorer reads as cards (D261, D265, D272).
 EMBEDDED += [
     (str(path.relative_to(ROOT)), doc_name(path))
     for path in sorted([*(ROOT / 'docs').glob('*.md'), *(ROOT / 'docs' / 'spec').glob('*.md')])
+]
+EMBEDDED += [
+    (str(path.relative_to(ROOT)), repo_name(path.relative_to(ROOT)))
+    for path in repo_files()
+    if str(path.relative_to(ROOT)) not in {file for file, _ in EMBEDDED}
 ]
 
 
@@ -350,7 +378,8 @@ def embed_files(codebase):
     for file, name in EMBEDDED:
         sha = hashlib.sha256((ROOT / file).read_bytes()).hexdigest()
         shown = together if together.returncode == 0 else deus('view', name, codebase=codebase, check=False)
-        if sha not in shown.stdout:
+        # A definition embedded before D279 names only the file, not its path, so `deus export --files` cannot place it.
+        if sha not in shown.stdout or f'Embedded from {file} (deus embed)' not in shown.stdout:
             deus('embed', file, '--as', name, '--quiet', codebase=codebase)
             print(f'  embedded {file} as {name}')
 

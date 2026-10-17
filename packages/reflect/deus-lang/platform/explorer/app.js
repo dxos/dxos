@@ -53,15 +53,10 @@ const repoPath = (target) => {
   return /^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`;
 };
 
-/** The `Docs.*` text a document file is embedded as (`docs/spec/CLI-JSON.md` is `Docs.Specs.cliJsonMd`), as sync-deus names it. */
+/** The embedded text a repository file is kept as (D279), found by the path `deus embed` recorded. */
 const embeddedDocOf = (path) => {
-  const match = /^docs\/(spec\/)?([\w-]+)\.md$/.exec(path);
-  if (!match) {
-    return undefined;
-  }
-  const [head, ...words] = match[2].toLowerCase().split(/[-_]/);
-  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Md`;
-  return embedded(name) ? name : undefined;
+  const entry = live === undefined ? undefined : documents().find((other) => other.path === path);
+  return entry && embedded(entry.name) ? entry.name : undefined;
 };
 
 /** A link to a document: its card when the codebase embeds it, else the file on GitHub; `escaped` when `target` already is. */
@@ -1144,7 +1139,10 @@ const verdictHtml = (def) => {
   // A theorem's verdict may name its checker after the case count (task 79f72c44).
   const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?/);
   if (pass && pass[1] === 'refused') {
-    return '<p class="verdict pass">✓ Refused, as it must be <span class="muted">a <code>@[refuted]</code> probe of the prover: the claim is false</span></p>';
+    return '<p class="verdict pass">✓ Refused, as it must be <span class="muted">an <code>@[expectFail]</code> probe of the prover: the claim is false</span></p>';
+  }
+  if (pass && pass[1] === 'expected failure') {
+    return '<p class="verdict pass">✓ Fails, as expected <span class="muted">marked <code>@[expectFail]</code></span></p>';
   }
   if (pass) {
     const cases = pass[2] ? ` · ${pass[2]} case${pass[2] === '1' ? '' : 's'}` : '';
@@ -1220,7 +1218,7 @@ const definitionCard = (key, def, events) => {
       (specOf(def.name)
         ? `<p class="aliases"><span class="label">Specified in</span>${docLink(specOf(def.name))}</p>`
         : '') +
-      (def.name.startsWith('Docs.') && embedded(def.name)
+      (isEmbeddedFile(def.name) && embedded(def.name)
         ? `<p class="aliases"><span class="label">Document</span><a class="ref" data-open="k:doc:${escape(def.name)}">Read it</a></p>`
         : '') +
       verdictHtml(def) +
@@ -1753,9 +1751,18 @@ const decisionsOf = (text) =>
   );
 
 /** A document the codebase embeds (`docs/*.md` as `Docs.*`, D272), read in place; its first heading is the title. */
-const textCard = (key, text, fallback) => {
+const textCard = (key, text, fallback, path = '') => {
   if (text === undefined) {
     return missingCard(key, `${fallback} did not load`);
+  }
+  // A Markdown document reads as prose; any other file (code, configuration) as its text.
+  if (path !== '' && !path.endsWith('.md')) {
+    return card(key, {
+      iconHtml: '<span class="icon k-decision" title="file">?</span>',
+      title: escape(path),
+      prose: true,
+      body: `<pre class="source file-text">${escape(text)}</pre>`,
+    });
   }
   const [first, ...rest] = text.split('\n');
   const title = /^# (.*)$/.exec(first)?.[1] ?? fallback;
@@ -1767,30 +1774,36 @@ const textCard = (key, text, fallback) => {
   });
 };
 
-/** The documents the codebase embeds, by the file each was embedded from. */
+/** Whether a name is a file the codebase embeds from the repository: a document (`Docs.*`) or any other (`Repo.*`). */
+const isEmbeddedFile = (name) => name.startsWith('Docs.') || name.startsWith('Repo.');
+
+/** The files the codebase embeds, with the path each was embedded from and its file name. */
 const documents = () =>
   index.names
-    .filter((entry) => entry.name.startsWith('Docs.'))
-    .map((entry) => ({ ...entry, file: /Embedded from (\S+)/.exec(entry.summary ?? '')?.[1] ?? entry.name }))
-    .sort((one, other) => one.name.localeCompare(other.name));
+    .filter((entry) => isEmbeddedFile(entry.name))
+    .map((entry) => {
+      const path = /Embedded from (\S+) \(deus embed\)/.exec(entry.summary ?? '')?.[1] ?? entry.name;
+      return { ...entry, path, file: path.split('/').pop() ?? path };
+    })
+    .sort((one, other) => one.path.localeCompare(other.path));
 
 const documentsCard = (key) => {
   const row = (entry) =>
-    `<li class="entry-row"><span class="icon k-decision">?</span><a class="ref" data-open="k:doc:${escape(entry.name)}">${escape(entry.file)}</a><span class="row-summary"><code>${escape(entry.name)}</code></span></li>`;
+    `<li class="entry-row"><span class="icon k-decision">?</span><a class="ref" data-open="k:doc:${escape(entry.name)}">${escape(entry.name.startsWith('Repo.') ? entry.path : entry.file)}</a><span class="row-summary"><code>${escape(entry.name)}</code></span></li>`;
   const all = documents();
   const groups = [
-    ['Project', all.filter((entry) => !entry.name.startsWith('Docs.Specs.'))],
-    ['Specifications', all.filter((entry) => entry.name.startsWith('Docs.Specs.'))],
+    ['Project', all.filter((entry) => entry.name.startsWith('Docs.') && !entry.name.startsWith('Docs.Specs.')), true],
+    ['Specifications', all.filter((entry) => entry.name.startsWith('Docs.Specs.')), true],
+    // The rest of the repository, which `deus export --files` writes back (D279); long, so folded.
+    ['Repository files', all.filter((entry) => entry.name.startsWith('Repo.')), false],
   ].filter(([, group]) => group.length > 0);
   return card(key, {
     iconHtml: '<span class="icon k-decision">?</span>',
     title: 'Documents',
     prose: true,
     body:
-      '<p class="muted">The project\'s documents, kept in the codebase as texts (<code>deus embed</code>), so they travel with it.</p>' +
-      groups
-        .map(([title, group]) => section(title, group.length, `<ul class="rows">${group.map(row).join('')}</ul>`))
-        .join(''),
+      '<p class="muted">The project\'s documents and the rest of its files, kept in the codebase as texts (<code>deus embed</code>), so they travel with it.</p>' +
+      groups.map(([title, group, open]) => section(title, group.length, rowList(group.map(row)), open)).join(''),
   });
 };
 
@@ -1844,7 +1857,12 @@ const buildCard = async (key) => {
         : value === 'guide'
           ? textCard(key, await loadEmbedded('Docs.gettingStartedMd'), 'Getting started')
           : value.startsWith('doc:')
-            ? textCard(key, await loadEmbedded(value.slice(4)), value.slice(4))
+            ? textCard(
+                key,
+                await loadEmbedded(value.slice(4)),
+                value.slice(4),
+                documents().find((entry) => entry.name === value.slice(4))?.path,
+              )
             : value === 'docs'
               ? documentsCard(key)
               : value === 'events'
@@ -3976,7 +3994,7 @@ const choose = (hit) => {
   closeOverlays();
   // A document is found to be read, so it opens as text rather than as its `Embed.text` definition.
   const reading =
-    hit.entry?.name.startsWith('Docs.') && embedded(hit.entry.name) ? `k:doc:${hit.entry.name}` : undefined;
+    hit.entry && isEmbeddedFile(hit.entry.name) && embedded(hit.entry.name) ? `k:doc:${hit.entry.name}` : undefined;
   open(hit.task ? `t:${hit.task.id}` : hit.namespace ? `n:${hit.namespace.path}` : (reading ?? `d:${hit.entry.hash}`));
 };
 

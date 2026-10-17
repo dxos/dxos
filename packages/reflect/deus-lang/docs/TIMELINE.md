@@ -313,6 +313,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 303 | 10-18 19:45 | 15m 00s | b152c885ac | The native self-builds run in a test file of their own (D275) |
 | 304 | 10-18 20:15 | 30m 00s | d50bc55044 | Attachment rules in DEUS (Worker.Writes); review fixes for D268-D275 (D276) |
 | 305 | 10-18 20:45 | 30m 00s | 2e9562f30b | Embedded documents are named Docs.*Md so none shadows a definition; embed changes say what they embedded (D277) |
-| 306 | 10-18 21:00 | 15m 00s | this commit | sync-deus checks its embeds in one view: 7.9 s to 4.2 s when nothing changed (D278) |
+| 306 | 10-18 21:00 | 15m 00s | 81473243be | sync-deus checks its embeds in one view: 7.9 s to 4.2 s when nothing changed (D278) |
+| 307 | 10-18 22:00 | 1h 00m | this commit | Every package file is in the codebase and `deus export --files` writes it back; `@[expectFail]` for tests and theorems meant to fail; focus moves to dev speed (D279, D280) |
 
-Total from stage 1 to stage 306: 120h 50m.
+Total from stage 1 to stage 307: 121h 50m.

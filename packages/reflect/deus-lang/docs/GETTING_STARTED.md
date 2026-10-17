@@ -183,7 +183,7 @@ deus check Sort
 8 passed, 0 failed
 ```
 
-`wrongClaim` is false on purpose and marked `@[refuted]`, so its check passes while the prover refuses it.
+`wrongClaim` is false on purpose and marked `@[expectFail]`, so its check passes while the prover refuses it. The same attribute on a test makes it pass while it returns false or throws.
 Delete that line and check again to see what a failure looks like: the goal the prover could not close.
 
 ```text

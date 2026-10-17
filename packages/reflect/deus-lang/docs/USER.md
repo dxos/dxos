@@ -735,3 +735,14 @@ dont stop
 cards look too busy and lack descriptions
 
 (with a screenshot of the hub's project cards: seven count tiles per project and no description)
+
+---
+
+Shift focus away from cosebase UX to local dev performance and experience and stability and also codebase sync process only. Everything that's actually blocking you from developing faster.
+
+Focus: general performance of dev and running tests
+Caching pure tests
+Increasing the area we can cover with pure tests by introducing simulators that can handle abilities like Cloudflare or introducing fake in-memory io.
+Approach perf with critical thinking focusing on highest impact optimizations.
+Increase coverage of pure tests, especially for critical dev and codebase paths
+Sort.wrongClaim - perhaps add "expect fail" syntax

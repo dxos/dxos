@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "js", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "exact"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "js", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "files", "exact"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -1571,7 +1571,7 @@ def embed (args : Args) : {IO, Throw Text} Unit :=
       IO.mkdirp (dir ++ "/cache")
       IO.writeFile
         source
-        ("/-- Embedded from " ++ Assets.baseName file ++ " (deus embed). -/\n@[artifact]\ndef " ++
+        ("/-- Embedded from " ++ file ++ " (deus embed). -/\n@[artifact]\ndef " ++
           name ++ " : " ++ valueType ++ " := Embed." ++ kind ++ " \"" ++ sha ++ "\"\n")
       let author :=
         match option args "by" with
@@ -2710,12 +2710,19 @@ def inbox (args : Args) : {IO, Throw Text} Unit :=
     (fun _ => if List.isEmpty lines then "The inbox is empty." else join "\n" lines)
 
 /-- `deus export <dir>` (D64): the codebase as text for a git repository: source per namespace,
-  tasks, and history. `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore it. -/
+  tasks, and history. `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore it. `--files` writes
+  instead every file the codebase embeds, at the path it was embedded from (task 86d7b02a). -/
 def export (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match head? args.positional with
   | Option.none => Throw.throw "usage: deus export <dir>"
-  | Option.some out => if Cli.flag args "terms" then
+  | Option.some out => if Cli.flag args "files" then
+      let paths := writeFiles dir out
+      Cli.output
+        args
+        (fun _ => Json.arr (List.map Json.str paths))
+        (fun _ => "Exported " ++ Int.toText (List.length paths) ++ " embedded files to " ++ out ++ ".")
+    else if Cli.flag args "terms" then
       let (definitions, documents) := writeTerms dir out
       Cli.output
         args
@@ -2729,6 +2736,39 @@ def export (args : Args) : {IO, Throw Text} Unit :=
         (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
         (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++
           " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
+
+/-- The path an embedded file came from, as `deus embed` records it ("Embedded from <path> (deus embed)."), when it is
+  relative and stays inside the folder it is written to. -/
+def embeddedPath (doc : Text) : Option Text :=
+  let suffix := " (deus embed)."
+  if not (startsWith "Embedded from " doc) || not (Text.endsWith suffix doc) then Option.none
+  else
+    let path := Text.slice doc 14 (Text.length doc - Text.length suffix)
+    let segments := Text.split path "/"
+    if Text.isEmpty path || startsWith "/" path || List.contains ".." segments || List.contains "" segments then Option.none
+    else Option.some path
+
+/-- Writes each text the codebase embeds back to the path it was embedded from, under `out`; returns those paths. -/
+def writeFiles (dir : Text) (out : Text) : {IO, Throw Text} List Text :=
+  -- Two files with the same text share a hash, so each name's path is read from its own part of the metadata.
+  let embedded := fun name => fun h =>
+    let meta := Option.map (Codebase.metaFor name) (Codebase.readMeta dir h)
+    match (embeddedAsset dir h, Option.bind (Explorer.docOf meta) embeddedPath) with
+    | (Option.some ("text", sha), Option.some path) => Option.some (path, sha)
+    | _ => Option.none
+  let files := List.filterMap
+    (fun entry =>
+      match snd entry with
+      | Entry.term h => embedded (fst entry) h
+      | _ => Option.none)
+    (Map.toList (Codebase.current dir))
+  List.map
+    (fun file =>
+      let (path, sha) := file
+      IO.mkdirp (out ++ "/" ++ Export.directoryOf path)
+      IO.writeFile (out ++ "/" ++ path) (getOr (IO.readFile (Assets.path dir sha)) "")
+      path)
+    files
 
 /-- `deus history import <history.sexp>`: the history of an export, kept under the restore (D67). -/
 def history (args : Args) : {IO, Throw Text} Unit :=
@@ -2843,6 +2883,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  export <dir> --terms                 one file per definition at its namespace path (A/B/c.deus), specs as A/B.mdl",
+    "  export <dir> --files                 every embedded file (deus embed) at the path it was embedded from",
     "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",

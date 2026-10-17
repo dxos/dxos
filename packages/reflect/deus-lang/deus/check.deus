@@ -346,16 +346,21 @@ def hypothesesOf (body : Sexp) : List Sexp :=
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "implies"], hyp, rest] => hyp :: hypothesesOf rest
   | _ => []
 
-/-- A `@[refuted]` theorem's verdict from the prover's: it passes when the prover refuses it, as a probe of
-  the prover's soundness, and fails when the prover accepts it. -/
-def refutedVerdict (v : Verdict) : Verdict :=
+/-- Whether a test or theorem is meant to fail: `@[expectFail]`, or `@[refuted]`, its older spelling for theorems. -/
+def expectsFailure (dir : Text) (h : Text) : {IO} Bool := hasAttr dir h "expectFail" || hasAttr dir h "refuted"
+
+/-- The verdict of a check that is meant to fail: it passes while it fails, and fails the moment it passes. A
+  theorem's failure (`proving`) is the prover refusing it, a probe of the prover's soundness. -/
+def expectedFailure (proving : Bool) (v : Verdict) : Verdict :=
   match v with
-  | Verdict.fail _ => Verdict.pass "refused" 0
-  | Verdict.pass evidence _ => Verdict.fail ("proved (" ++ evidence ++ "), but it is @[refuted]: the prover accepts a claim it must refuse")
+  | Verdict.fail _ => Verdict.pass (if proving then "refused" else "expected failure") 0
+  | Verdict.pass evidence _ =>
+      Verdict.fail (if proving then "proved (" ++ evidence ++ "), but it is @[expectFail]: the prover accepts a claim it must refuse"
+        else "passed, but it is @[expectFail]")
   | Verdict.unchecked => Verdict.unchecked
 
-/-- A lemma's verdict, checking (and caching) it first if needed; a `@[refuted]` claim is never one. -/
-def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict := if hasAttr dir h "refuted" then Verdict.fail "it is @[refuted], a claim the prover must refuse" else
+/-- A lemma's verdict, checking (and caching) it first if needed; an `@[expectFail]` claim is never one. -/
+def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict := if expectsFailure dir h then Verdict.fail "it is @[expectFail], a claim the prover must refuse" else
   match cachedTheorem dir h with
   | Option.some v => v
   | Option.none =>
@@ -443,19 +448,21 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let h := Entry.hash e
     let integration := not wantTheorems && hasAttr dir h "integration"
     -- A kept verdict may predate the attribute, which leaves the hash as it was; these few are checked every time.
-    let refuted := wantTheorems && hasAttr dir h "refuted"
+    let expected := expectsFailure dir h
     let started := IO.time ()
     -- An integration test talks to the real world, so its result is never reused.
     let outcome :=
-      match if integration || fresh || refuted then Option.none else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
+      match if integration || fresh || expected then Option.none else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
       | Option.some v => (name, v, true)
       | Option.none =>
           Image.load (fetcher dir) [h]
           let v := if wantTheorems then
             match readObject dir h with
-            | Option.some obj => if refuted then refutedVerdict (checkTheorem dir ns h obj) else checkTheorem dir ns h obj
+            | Option.some obj => if expected then expectedFailure true (checkTheorem dir ns h obj) else checkTheorem dir ns h obj
             | Option.none => Verdict.fail "missing object"
-          else confirmed dir name integration (checkTest h integration)
+          else
+            let tested := confirmed dir name integration (checkTest h integration)
+            if expected then expectedFailure false tested else tested
           if integration then () else if wantTheorems then rememberTheorem dir h v else remember dir h v
           (name, v, false)
     match outcome with
@@ -490,7 +497,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let suffix := if wasCached then "  (cached)" else ""
     match v with
     | Verdict.pass evidence cases => if wantTheorems then "  ✓ " ++ name ++ "  " ++
-        (if evidence == "refused" then "refused, as it must be" else if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix else "  ✓ " ++ name ++ suffix
+        (if evidence == "refused" then "refused, as it must be" else if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix else "  ✓ " ++ name ++ (if evidence == "expected failure" then "  failed, as expected" else "") ++ suffix
     | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ nameTrace index reason ++ suffix
     | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
   -- A prefix that names nothing is most often a typo, which a "0 passed" would let pass as success.
