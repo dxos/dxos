@@ -218,6 +218,48 @@ describe('document retirement', () => {
     await host.updateIndexes();
     await expect.poll(() => indexedDocument('obj-retired')).toBe(interpretAsDocumentId(replacementUrl));
   });
+
+  test('ignores retirements naming a document an open space still references', async () => {
+    const { host, countChunks, createSpace, createObjectDoc, linkObjects, loadDirectory } = await setup();
+    const root = await createSpace();
+    const linkedUrl = await createObjectDoc('obj-linked', 'Linked');
+    const retiredUrl = await createObjectDoc('obj-retired', 'Retired');
+    await linkObjects(root.documentId, { 'obj-linked': linkedUrl, 'obj-retired': retiredUrl });
+
+    // Another space on this host, whose document a member of the first space names.
+    const otherSpaceId = SpaceId.random();
+    const otherRoot = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: otherSpaceId },
+      objects: {},
+      links: {},
+    });
+    await host.flush(Context.default());
+    await host.updateSpaceRoot(Context.default(), otherSpaceId, otherRoot.url);
+    const otherUrl = await createObjectDoc('obj-other', 'Other');
+    await linkObjects(otherRoot.documentId, { 'obj-other': otherUrl });
+
+    const replacementUrl = await createObjectDoc('obj-retired', 'Retired');
+    const rootHandle = await loadDirectory(root.documentId);
+    rootHandle.change((draft: DatabaseDirectory) => {
+      draft.links ??= {};
+      draft.links['obj-retired'] = new A.RawString(replacementUrl);
+      draft.retired = Object.fromEntries(
+        [retiredUrl, linkedUrl, otherUrl, root.url, otherRoot.url].map((url) => [
+          interpretAsDocumentId(url),
+          { replacedBy: new A.RawString(replacementUrl) },
+        ]),
+      );
+    });
+    await host.flush(Context.default());
+
+    // The one genuine retirement goes; every document a space still references stays.
+    await expect.poll(() => countChunks(interpretAsDocumentId(retiredUrl))).toBe(0);
+    for (const url of [linkedUrl, otherUrl, root.url, otherRoot.url]) {
+      expect(await countChunks(interpretAsDocumentId(url))).toBeGreaterThan(0);
+      expect(host['_automergeHost'].quarantinedDocuments.has(interpretAsDocumentId(url))).toBe(false);
+    }
+  });
 });
 
 describe('concurrent retirement', () => {

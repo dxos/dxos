@@ -330,13 +330,20 @@ handles it without reading it:
    one document. It re-points the objects' links and records
    `retired[<documentId>] = { replacedBy, reason }` in the space directory, the
    reason (`load-failed` or `history`) as a plain, non-CRDT string. History is
-   dropped. When the index lacks any of the objects, the document stays
+   dropped, and so is any change the index had not caught up with: the document
+   cannot be loaded, so the index is the newest state this peer can read, and
+   waiting for it to match the stored heads would leave the document stuck. When
+   the index lacks any of the objects, the document stays
    quarantined and is not retired; after a restart it fails to load once more
    before it is quarantined again.
 3. **Wipe, everywhere.** Every peer that sees a `retired` entry in a space's
    directory quarantines the document with reason `retired` and wipes its index
    rows and bytes without loading it. The directory naming the document is the
    attribution: loading it to read `access.spaceId` is what retirement avoids.
+   An entry naming a document any open space still references (a directory,
+   the space root or credentials, a link or a branch) is ignored, since any
+   member can write a directory and a genuine retirement re-points the links in
+   the same change.
 
 The space directory is the only durable record: there is no local quarantine
 table. The `retired` map is append-only and stays in the directory, so every
@@ -376,8 +383,8 @@ same way, before it stops loading:
 
 - **Attribution before deletion.** A document is only wiped when its
   `access.spaceId` matches the target space, or when the space's own directory
-  lists it under `retired` (see [Retired documents](#retired-documents)). No
-  global/cross-space sweep.
+  lists it under `retired` and no open space still references it (see
+  [Retired documents](#retired-documents)). No global/cross-space sweep.
 - **Reachability is computed from the synced directory**, so a document still
   referenced by any live object (including via branches) is never wiped.
 - **Unpositioned tombstones are never acted on** (step 4) — this is the guard

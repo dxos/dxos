@@ -1110,10 +1110,21 @@ export class EchoHost extends Resource {
    * directory is the only durable record of a retirement.
    */
   async #wipeRetiredDocuments(spaceId: SpaceId, entries: readonly Retirement[]): Promise<void> {
-    const retired = entries.filter(
+    const candidates = entries.filter(
       (entry): entry is Retirement & { documentId: DocumentId } =>
         isValidDocumentId(entry.documentId) && !this.#wipedDocuments.has(entry.documentId),
     );
+    if (candidates.length === 0) {
+      return;
+    }
+    const referenced = this.#referencedDocuments();
+    const retired = candidates.filter((entry) => !referenced.has(entry.documentId));
+    if (retired.length < candidates.length) {
+      log.warn('ignored retirements naming documents an open space still references', {
+        spaceId,
+        documentIds: candidates.filter((entry) => referenced.has(entry.documentId)).map((entry) => entry.documentId),
+      });
+    }
     if (retired.length === 0) {
       return;
     }
@@ -1132,6 +1143,32 @@ export class EchoHost extends Resource {
       this.#historyCandidates.delete(documentId);
     }
     log('wiped retired documents', { spaceId, documents: documentIds.length });
+  }
+
+  /**
+   * Documents an open space still references: its directory, the space root and credentials it hangs off, and every
+   * link and branch. A `retired` entry naming one is never acted on, since any member can write a directory and a
+   * document id may belong to another space; a genuine retirement re-points the links in the same change.
+   */
+  #referencedDocuments(): Set<DocumentId> {
+    const urls: string[] = [];
+    for (const spaceId of this._spaceStateManager.spaceIds) {
+      const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+      urls.push(...[refs?.spaceRootDocUrl, refs?.credentialsDocUrl].filter((url) => url !== undefined));
+    }
+    const referenced = new Set<DocumentId>();
+    for (const [documentId, root] of this._spaceStateManager.roots) {
+      referenced.add(documentId);
+      if (root.doc()) {
+        urls.push(...root.getAllLinkedDocuments().map((url) => url.toString()));
+      }
+    }
+    for (const url of urls) {
+      if (isValidAutomergeUrl(url)) {
+        referenced.add(interpretAsDocumentId(url));
+      }
+    }
+    return referenced;
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */
