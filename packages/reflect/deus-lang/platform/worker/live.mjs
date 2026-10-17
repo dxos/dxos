@@ -644,6 +644,9 @@ const itemsOf = (text) => {
 
 /** Metadata snapshots read in this isolate, by `<project>@<causal>`; a few heads are drawn at a time. */
 const metasByCausal = new Map();
+
+/** Snapshots from before D290, which hold every hash ever written: a hash missing from one has no metadata there. */
+const completeMetas = new WeakSet();
 const METAS_KEPT = 4;
 
 /**
@@ -712,6 +715,7 @@ const metasAt = async (files) => {
   }
   if (root) {
     metas = new Map();
+    completeMetas.add(metas);
     // A snapshot from before D290: sixteen-way nodes over leaves, two levels deep before D288 and three after.
     for (let level = [root]; level.length > 0;) {
       await fetchAll(
@@ -774,8 +778,13 @@ const provider = (files) => ({
     }
     const meta = files.metas ? /^\/codebase\/meta\/([^/]+)$/.exec(path) : null;
     // A history node's metadata (who made the change) is in no snapshot but never changes, so it is read
-    // from the packs; a definition the snapshot does not name has no metadata at this causal.
-    if (meta && (files.metas.has(meta[1]) || !files.texts.get(`o${meta[1]}`)?.startsWith('(causal'))) {
+    // from the packs; a definition an older, complete snapshot does not name has no metadata at this causal, and one
+    // a D290 head does not name (an older version, or an entry an older CLI wrote) reads its latest copy.
+    if (
+      meta &&
+      (files.metas.has(meta[1]) ||
+        (completeMetas.has(files.metas) && !files.texts.get(`o${meta[1]}`)?.startsWith('(causal')))
+    ) {
       return files.metas.get(meta[1]);
     }
     const key = keyOf(path);
@@ -891,7 +900,11 @@ const prefetchNamespace = async (files) => {
   const snapshots = ['tasks', 'comments'].map(field).filter(Boolean);
   await fetchAll(files, [
     // With a metadata snapshot (`metasAt`), metadata is read from it instead.
-    ...[...hashes].flatMap((hash) => (files.metas ? [`o${hash}`] : [`o${hash}`, `m${hash}`])),
+    ...[...hashes].flatMap((hash) =>
+      files.metas && (files.metas.has(hash) || completeMetas.has(files.metas))
+        ? [`o${hash}`]
+        : [`o${hash}`, `m${hash}`],
+    ),
     ...snapshots.map((hash) => `o${hash}`),
   ]);
   // `Tasks.current` and `Comments.current` stop at the first item they lack, so every item is read now.

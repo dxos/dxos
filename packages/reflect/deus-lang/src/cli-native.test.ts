@@ -243,7 +243,7 @@ describe('deus CLI native back ends', () => {
 
       const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
       expect(refused.code).toBe(1);
-      expect(refused.stderr).toContain('length is a primitive, not a definition the C back end compiles');
+      expect(refused.stderr).toContain('length is a constant or a primitive, which its uses inline');
 
       // A clause that resumes other than in tail position needs a captured continuation (D124).
       deus(

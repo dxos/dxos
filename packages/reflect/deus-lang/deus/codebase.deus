@@ -88,17 +88,21 @@ def dirtyMetas (dir : Text) : {IO} Map Text Unit :=
   | Option.some text => Set.fromList (List.filter (fun line => not (Text.isEmpty line)) (Text.split text "\n"))
   | Option.none => Map.empty
 
-/-- Forgets the hashes `dirtyMetas` noted, once a commit has recorded them. -/
-def clearDirtyMetas (dir : Text) : {IO} Unit :=
+/-- Forgets the hashes `dirtyMetas` noted that `ns` names, once a commit has recorded them; a hash no name owns stays
+  noted, so its metadata reaches the first snapshot that names it again. -/
+def settleDirtyMetas (dir : Text) (ns : Map Text Entry) : {IO} Unit :=
   let path := dir ++ "/metas.dirty"
-  if IO.exists path then IO.remove path else ()
+  let named := Map.foldr (fun _ e m => if Entry.ownsMeta e then Set.insert (Entry.hash e) m else m) Map.empty ns
+  let left := List.filter (fun h => not (Set.contains h named)) (Set.toList (dirtyMetas dir))
+  if List.isEmpty left then (if IO.exists path then IO.remove path else ()) else IO.writeFile path (Text.concat (List.map (fun h => h ++ "\n") left))
 
 /-- `h`'s metadata stored as an object of its own, and that object's hash; none without metadata. Identical metadata
   is one object, so a dependent an update rehashes shares its predecessor's (D290). -/
 def putMetaObject (dir : Text) (h : Text) : {IO} Option Text := Option.map (fun form => Codebase.put dir form) (readMeta dir h)
 
 /-- The metadata object of each hash `ns` names, for a snapshot: `previous`'s (hash, metadata object) pairs where the
-  metadata is unchanged since, and a new object for each hash written since the last commit or not in `previous`. -/
+  metadata is unchanged since, and a new object for each hash written since the last commit or not in `previous`. A
+  hash `previous` holds with `""` has no metadata, so its file is not read again. -/
 def metaRefs (dir : Text) (ns : Map Text Entry) (previous : Map Text Text) : {IO} Map Text Text :=
   let dirty := dirtyMetas dir
   Map.foldr (fun _ e refs =>
@@ -106,23 +110,30 @@ def metaRefs (dir : Text) (ns : Map Text Entry) (previous : Map Text Text) : {IO
     if not (Entry.ownsMeta e) || Map.contains h refs then refs
     else
       match (if Set.contains h dirty then Option.none else Map.lookup h previous) with
-      | Option.some ref => Map.insert h ref refs
+      | Option.some ref => if Text.isEmpty ref then refs else Map.insert h ref refs
       | Option.none =>
           match putMetaObject dir h with
           | Option.some ref => Map.insert h ref refs
           | Option.none => refs) Map.empty ns
 
-/-- A snapshot's (hash, metadata object) pairs, from the `(meta "<hash>")` its entries carry (D290). -/
+/-- A snapshot's (hash, metadata object) pairs, from the `(meta "<hash>")` its entries carry (D290); `""` for a hash
+  whose entry carries none. -/
 def snapshotMetaRefs (dir : Text) (snapshot : Text) : {IO, Throw Text} Map Text Text :=
   let rec go node acc := foldl (fun m item =>
     match item with
     | Sexp.list (Sexp.sym "sub" :: _ :: Sexp.str child :: []) => go child m
     | Sexp.list (Sexp.sym "n" :: _ :: entry :: []) =>
-        match Codebase.entryMetaRef entry with
-        | Option.some ref => Map.insert (Entry.hash (Entry.fromSexp entry)) ref m
-        | Option.none => m
+        let e := Entry.fromSexp entry
+        if not (Entry.ownsMeta e) then m
+        else Map.insert (Entry.hash e) (Option.getOr (Codebase.entryMetaRef entry) "") m
     | _ => m) acc (nodeItems dir node)
   if Text.isEmpty snapshot then Map.empty else go snapshot Map.empty
+
+/-- The metadata references a commit on `c` starts from: its snapshot's, or for a node from before D290, its separate
+  metadata snapshot stored as objects, so the first commit after it keeps the branch's own metadata, not the files'. -/
+def previousMetaRefs (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text :=
+  if Text.isEmpty c.metas then snapshotMetaRefs dir c.snapshot
+  else Map.mapValues (fun form => Codebase.put dir form) (readMetas dir c.metas)
 
 /-- The metadata object an entry form names: its trailing `(meta "<hash>")`. -/
 def entryMetaRef (entry : Sexp) : Option Text :=
@@ -137,9 +148,11 @@ def metasOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Sexp :=
   if not (Text.isEmpty c.metas) then readMetas dir c.metas
   else
     Map.fromList (filterMap (fun pair =>
-      match Option.orElse (readObject dir (snd pair)) (fun _ => readMeta dir (fst pair)) with
-      | Option.some form => Option.some (fst pair, form)
-      | Option.none => Option.none) (Map.toList (snapshotMetaRefs dir c.snapshot)))
+      if Text.isEmpty (snd pair) then Option.none
+      else
+        match Option.orElse (readObject dir (snd pair)) (fun _ => readMeta dir (fst pair)) with
+        | Option.some form => Option.some (fst pair, form)
+        | Option.none => Option.none) (Map.toList (snapshotMetaRefs dir c.snapshot)))
 
 /-- A metadata snapshot's (hash, metadata) pairs, as history before D290 recorded them; empty for `""`. -/
 def readMetas (dir : Text) (root : Text) : {IO, Throw Text} Map Text Sexp :=
@@ -483,14 +496,17 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
   let branch := currentBranch dir
   let parent := headOf dir branch
   let previous := readCausal dir parent
-  -- A history node from before D290 names no metadata on its entries, so the first commit after it stores every hash's.
-  let snapshot := putNamespace dir ns (metaRefs dir ns (snapshotMetaRefs dir previous.snapshot))
-  clearDirtyMetas dir
-  if snapshot == previous.snapshot && Text.isEmpty (Causal.metas previous) then parent else
+  let snapshot := putNamespace dir ns (metaRefs dir ns (previousMetaRefs dir previous))
+  if snapshot == previous.snapshot && Text.isEmpty (Causal.metas previous) then
+    settleDirtyMetas dir ns
+    parent
+  else
     let c := Codebase.put
       dir
       (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads "" (Codebase.now ())))
     setBranch dir branch c
+    -- Only once the branch names the node: a commit that fails before keeps the edits noted for the next one.
+    settleDirtyMetas dir ns
     c
 
 /-- Records a new tasks snapshot on the current branch, keeping its namespace. -/

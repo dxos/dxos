@@ -2137,14 +2137,43 @@ def builtTypes (form : Sexp) : List Text :=
   | Sexp.list items => List.concatMap builtTypes items
   | _ => []
 
-/-- Compiles `main` and what it calls to C exporting it as `export`. -/
-def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
+/-- `names` (type hashes) with the data types their constructors' fields hold, transitively: comparing or showing a
+  value walks its fields' types too, and a field names its type by IRI (D6), which `typeHash` resolves. -/
+def withFieldTypes (fetch : Text -> {Throw Text | r} Option Sexp) (typeHash : Text -> Option Text) (names : List Text) : {Throw Text | r} List Text :=
+  let rec go todo seen :=
+    match todo with
+    | [] => List.reverse seen
+    | t :: rest =>
+        if List.contains t seen then go rest seen
+        else
+          let fields :=
+            match fetch t with
+            | Option.some form => List.concat (Wasm.ctorFields form)
+            | Option.none => []
+          let more := List.filterMap
+            (fun n => if Text.startsWith "#" n then Option.some n else Option.orElse (typeHash n) (fun _ => Option.some n))
+            (List.concatMap typeNames fields)
+          go (more ++ rest) (t :: seen)
+  go names []
+
+/-- Every type name `t` mentions, its arguments' included. -/
+def typeNames (t : Sexp) : List Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tref", Sexp.str n] => [n]
+  | Sexp.list items => List.concatMap typeNames items
+  | _ => []
+
+/-- Compiles `main` and what it calls to C exporting it as `export`; `typeHash` gives the hash of the type an IRI
+  names, for the types reached only through signatures or other types' fields. -/
+def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (typeHash : Text -> Option Text) (main : Text) (export : Text) : {Throw Text | r} Text :=
   let gathered := gatherWith true fetch meta main
   let fns := liftAll (CGen.effects gathered)
   -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
-  let names := dedup (concatMap (fun f => patternTypes f.fnBody ++ builtTypes f.fnBody) fns)
-  -- A definition that is only a primitive is inlined at its calls and gathers to nothing.
-  if List.isEmpty fns then Throw.throw (export ++ " is a primitive, not a definition the C back end compiles") else CGen.unit
+  -- A function may compare or show a value it only receives, so the types its signature names count too.
+  let signed := filterMap (fun n => if Text.startsWith "#" n then Option.some n else typeHash n) (concatMap (fun f => typeNames f.fnType) fns)
+  let names := withFieldTypes fetch typeHash (dedup (concatMap (fun f => patternTypes f.fnBody ++ builtTypes f.fnBody) fns ++ signed))
+  -- A definition that is only a primitive or a constant is inlined at its uses and gathers to nothing.
+  if List.isEmpty fns then Throw.throw (export ++ " is a constant or a primitive, which its uses inline; build a function that uses it") else CGen.unit
     fns
     (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names)
     (abilityNames gathered)
