@@ -143,7 +143,7 @@ const finish = async (theme, take, name, ms) => {
       : await run(process.execPath, [
           path.join(ROOT, '.agents/skills/autocue/scripts/trim-static.mjs'),
           ...['--in', path.join(take, 'session.webm'), '--out', path.join(CLIPS, theme, `${name}.webm`)],
-          ...['--ident', 'composer', '--mp4', '--fps', '30', '--duration', 'off', '--upload', 'off'],
+          ...['--ident', 'composer', '--theme', 'dark', '--mp4', '--fps', '30', '--duration', 'off', '--upload', 'off'],
         ]);
   if (done.code !== 0 || !existsSync(out)) {
     return {
