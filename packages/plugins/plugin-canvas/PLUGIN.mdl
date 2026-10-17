@@ -93,4 +93,22 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+
+test QA-3: Showcase clip
+  desc: |
+    The 20s showcase clip: Create the DXOS Architecture space from its template, open a drawing and drill into a box. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: canvas` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-canvas enabled
+  steps:
+    - name: Create the space from its template
+      do: Open the app menu, choose Create space, pick DXOS Architecture, and click Create.
+      expect: the space opens with its architecture drawings
+    - name: Drill into a box
+      do: Open a drawing, pan it, and double-click a box.
+      expect: the box opens the diagram beneath it
 ```

@@ -1,6 +1,6 @@
 # Showcase — Tasks
 
-_Resume: re-record the light published demos in dark, flows for the plugins listed without one in SHOWCASE.md, then the phase 3 issues. Uncommitted: none. Last: Terra views + Spacetime light/dark videos uploaded and linked._
+_Resume: run `node tools/autocue/showcase/overnight.mjs` and fix the flows its REPORT.md frames show broken (Phase 4). Uncommitted: none. Last: per-plugin showcase flows + overnight runner._
 
 ## Phase 1: GridZoom montage (PR #14026)
 
@@ -40,6 +40,31 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [ ] **Re-record the light published demos in dark** — chess `play-the-opening`, terra `planet` and sheet
       `sales-charts` were published in light, so the Dark column has no demo for them.
 - [ ] **Re-record the showcase clips** with the Terra fixes and the markdown flow's list fix; name the mermaid document.
+
+## Phase 4: Per-plugin showcase flows, recorded overnight
+
+Every showcase clip is its own `autocue/showcase.mjs` with a "Showcase clip" test in its spec, and
+`tools/autocue/showcase/overnight.mjs` records them all unattended: 20s tour clips (composer-app, markdown, canvas,
+projects) and 10s grid clips, light, 60 fps, no ident, captions or count-in. The tooling lives in `tools/autocue/showcase`
+so it joins the `tools/autocue` package from #14028 when that lands.
+
+### Tasks
+
+- [x] **Shared steps** — `tools/autocue/showcase/steps.mjs`: prep, create (waits for the navigation to the new object),
+      fromTemplate, editor, orbit, drag, scroll, and the fixed-length clip step.
+- [x] **Overnight runner** — `overnight.mjs`: discovers flows, starts Composer if needed, retries once, cuts clips,
+      writes REPORT.md with four frames per clip. Dry run: map, markdown, chess all pass with correct frames.
+- [x] **26 flows and spec tests** — composer-app (Bramble), markdown, canvas (DXOS Architecture), projects (Chess MCP on
+      Workers) at 20s; 22 plugins at 10s. The monolithic `flow.mjs`, `pipeline.sh`, `cut.sh`, `committed.sh` are gone.
+- [ ] **First full overnight run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
+- [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
+      plank; give each a gesture that shows the plugin working.
+- [ ] **excalidraw spec** — plugin-excalidraw has no `PLUGIN.mdl`, so its flow names no test.
+- [ ] **Template for magazine and trip** — a plugin-debug sample space seeding a feed with articles and an itinerary,
+      built on #14021's partials once it lands; then their flows.
+- [ ] **Calls and inbox from Fieldstone Labs** — #14021's template seeds mail; add a meeting record for calls, then
+      their flows.
+- [ ] **GridZoom timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.
 
 ## Phase 3: Open issues
 

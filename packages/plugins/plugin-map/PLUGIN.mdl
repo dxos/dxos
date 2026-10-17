@@ -393,6 +393,24 @@ test QA-1: Create a map over a dataset, see markers, toggle to globe
       do: Right-click "QA Map" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Pan a world map across named cities. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: map` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-map enabled
+  steps:
+    - name: Create a map
+      do: Create a Map named World and zoom in.
+      expect: the map shows named cities
+    - name: Pan the map
+      do: Drag slowly across the map.
+      expect: the map pans smoothly
 ```
 
 ---

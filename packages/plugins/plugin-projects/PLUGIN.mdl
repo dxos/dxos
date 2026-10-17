@@ -195,4 +195,22 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
       expect: the two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+
+test QA-5: Showcase clip
+  desc: |
+    The 20s showcase clip: Create the Chess MCP on Workers space from its template, open its project and walk its task tree. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: projects` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-debug, plugin-projects enabled
+  steps:
+    - name: Create the space from its template
+      do: Enable plugin-debug, open the app menu, choose Create space, pick Chess MCP on Workers, and click Create.
+      expect: the space opens with its project, brief and test position
+    - name: Walk the task tree
+      do: Open the project, switch to Tasks, and scroll.
+      expect: the five-stage task tree shows
 ```

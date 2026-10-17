@@ -7,7 +7,7 @@ FLOW=$1
 OUT=$2
 PORT=${3:-7337}
 rm -rf "$OUT" && mkdir -p "$OUT"
-SHOWCASE_BATCH=${BATCH:-one,mermaid,two,three} node "$ROOT/.agents/skills/autocue/scripts/driver.mjs" --port "$PORT" --url http://localhost:4173 --out "$OUT" \
+node "$ROOT/.agents/skills/autocue/scripts/driver.mjs" --port "$PORT" --url http://localhost:4173 --out "$OUT" \
   --width 1920 --height 1080 --scale 2 --overlay off --gpu on --theme "${THEME:-light}" --fps "${FPS:-60}" --captions "${CAPTIONS:-off}" --ready-timeout 180000 > "$OUT/driver.log" 2>&1 &
 DRIVER=$!
 # A driver left running holds its port, and every later take on that port fails.
