@@ -17,6 +17,18 @@ import { objectStructureFromJson } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
+/** Ops below which a document is never retired for its history, however it grew. */
+export const HISTORY_BLOAT_MIN_OPS = 100_000;
+
+/** How many times its current state's size a document's ops must reach before its history counts as bloated. */
+const HISTORY_BLOAT_RATIO = 4;
+
+/**
+ * Object types whose documents are retired when their history bloats. Sync cursors hold only machine-written
+ * state, so rebuilding them from their current state loses nothing a user wrote.
+ */
+const HISTORY_RETIREMENT_TYPES: readonly string[] = ['dxn:org.dxos.type.cursor:'];
+
 /** A `retired` entry of a space directory, read back; see {@link DatabaseDirectory.retired}. */
 export type Retirement = { documentId: string; replacedBy: string; reason: RetirementReason };
 
@@ -77,3 +89,12 @@ export const makeReplacementDirectory = ({
     ]),
   ),
 });
+
+/** Whether a document's history has outgrown its current state, which a rebuild without history would fix. */
+export const isHistoryBloated = ({ ops, stateBytes }: { ops: number; stateBytes: number }): boolean =>
+  ops >= HISTORY_BLOAT_MIN_OPS && ops >= HISTORY_BLOAT_RATIO * stateBytes;
+
+/** Whether every object's type is one {@link HISTORY_RETIREMENT_TYPES} allows to be rebuilt. */
+export const isRetirableForHistory = (typeDXNs: readonly (string | null | undefined)[]): boolean =>
+  typeDXNs.length > 0 &&
+  typeDXNs.every((typeDXN) => HISTORY_RETIREMENT_TYPES.some((prefix) => typeDXN?.startsWith(prefix) ?? false));

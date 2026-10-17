@@ -316,52 +316,56 @@ the client's reconciliation today. Its view corrects on reload.
 
 A document that cannot be loaded (Automerge's WASM heap runs out of memory
 inflating it) would stall every start that reaches it, on every peer. The host
-retires it without reading it, and retirement is the only reason it quarantines
-anything:
+handles it without reading it:
 
-1. **Size it.** `AutomergeHost` listens for `document-load-failed` (a DXOS
+1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
    patch on automerge-repo; the repo otherwise swallows the error and leaves
-   the load waiting forever). On an out-of-memory failure it counts the
-   document's ops from its stored bytes, classical chunks and Subduction blobs
-   alike, by summing the rows of each chunk's action column in plain JS
-   (`countOps`): Automerge's own decoders would build every op inside the heap
-   that just ran out. The count is a lower bound (a snapshot or bundle may
-   repeat changes stored beside it, so they are not summed with them). Only a
-   document with at least `RETIREMENT_MIN_OPS` (500K) ops is marked unloadable:
-   once the heap is exhausted every later load fails the same way, so a small
-   document is a bystander. Other failures, and smaller documents, are only
-   logged.
-2. **Retire.** `EchoHost` rebuilds each linked, unloadable document from the
+   the load waiting forever). An out-of-memory failure quarantines the document
+   for the life of the host: loads resolve as unavailable, and nothing
+   replicates or advertises it. Other failures are only logged, since they may
+   not repeat.
+2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
    index (the last indexed JSON of each of its objects) into a replacement whose
    id is derived from the original, so peers retiring concurrently converge on
    one document. It re-points the objects' links and records
-   `retired[<documentId>] = { replacedBy, reason: 'load-failed' }` in the space
-   directory, the reason as a plain, non-CRDT string. History is dropped, and so
-   is any change the index had not caught up with: the document cannot be
-   loaded, so the index is the newest state this peer can read, and waiting for
-   it to match the stored heads would leave the document stuck. When the index
-   lacks any of the objects, the document is neither retired nor quarantined; a
-   pass after each index pass tries again. Until it is retired, a load of it
-   keeps failing.
-3. **Wipe and quarantine, everywhere.** Every peer that sees a `retired` entry
-   in a space's directory quarantines the document and wipes its index rows and
-   bytes without loading it. The quarantine keeps it out for the life of the
-   host (loads resolve as unavailable, and nothing replicates or advertises
-   it), so a peer that still holds it cannot bring it back. The directory
-   naming the document is the attribution: loading it to read `access.spaceId`
-   is what retirement avoids. An entry naming a document another space or a
-   live link still uses is ignored: the directory, space root or credentials of
-   any space this host holds, a link or branch of an open directory, or a
-   document the index holds under another space (which covers the links of
-   directories not yet opened). Any member can write a directory, and a genuine
-   retirement re-points the links in the same change.
+   `retired[<documentId>] = { replacedBy, reason }` in the space directory, the
+   reason (`load-failed` or `history`) as a plain, non-CRDT string. History is
+   dropped, and so is any change the index had not caught up with: the document
+   cannot be loaded, so the index is the newest state this peer can read, and
+   waiting for it to match the stored heads would leave the document stuck. When
+   the index lacks any of the objects, the document stays
+   quarantined and is not retired; after a restart it fails to load once more
+   before it is quarantined again.
+3. **Wipe, everywhere.** Every peer that sees a `retired` entry in a space's
+   directory quarantines the document with reason `retired` and wipes its index
+   rows and bytes without loading it. The directory naming the document is the
+   attribution: loading it to read `access.spaceId` is what retirement avoids.
+   An entry naming a document another space or a live link still uses is
+   ignored: the directory, space root or credentials of any space this host
+   holds, a link or branch of an open directory, or a document the index holds
+   under another space (which covers the links of directories not yet opened).
+   Any member can write a directory, and a genuine retirement re-points the
+   links in the same change.
 
 The space directory is the only durable record: there is no local quarantine
 table. The `retired` map is append-only and stays in the directory, so every
 open re-quarantines its documents, and a peer that syncs late, or restarts
-mid-wipe, still finishes the wipe. Directories may also carry entries with
-reason `history`, written by an earlier version that retired bloated cursors
-which still loaded; they are read and wiped like any other.
+mid-wipe, still finishes the wipe.
+
+### Documents whose history outgrew their state
+
+A document can still load and yet be mostly history: the unfixed
+`Cursor.writeSnapshot` re-inserted its whole snapshot map on every write, so a
+cursor with 660 KB of state reached 45.7M ops. Such a document is retired the
+same way, before it stops loading:
+
+- Every load from disk reports the document's op count (`documentLoaded`).
+  One with at least `HISTORY_BLOAT_MIN_OPS` ops becomes a candidate.
+- The next retirement pass rebuilds a candidate from its own current state, so
+  no change is lost, but only if it holds just the objects linked to it, every
+  one of a type in `HISTORY_RETIREMENT_TYPES` (sync cursors: machine-written
+  state), and its ops are at least `HISTORY_BLOAT_RATIO` times the size of that
+  state. Otherwise the candidate is dropped.
 
 ### Peers retiring at once
 
