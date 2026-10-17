@@ -47,6 +47,33 @@ const repoUrl = (target) => {
   return REPO_URL + (/^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`);
 };
 
+/** The repo path a relative link names, as `repoUrl` resolves it. */
+const repoPath = (target) => {
+  const path = target.replace(/^(?:\.\.?\/)+/, '').replace(/#.*$/, '');
+  return /^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`;
+};
+
+/** The `Docs.*` text a document file is embedded as (`docs/spec/CLI-JSON.md` is `Docs.Specs.cliJson`), as sync-deus names it. */
+const embeddedDocOf = (path) => {
+  const match = /^docs\/(spec\/)?([\w-]+)\.md$/.exec(path);
+  if (!match) {
+    return undefined;
+  }
+  const [head, ...words] = match[2].toLowerCase().split(/[-_]/);
+  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}`;
+  return embedded(name) ? name : undefined;
+};
+
+/** A link to a document: its card when the codebase embeds it, else the file on GitHub. */
+const fileLink = (target, label) => {
+  // A bare `DECISIONS.md` is relative to whichever folder the linking document is in: docs/spec/ or docs/.
+  const path = repoPath(target);
+  const name = embeddedDocOf(path) ?? embeddedDocOf(path.replace(/^docs\/spec\//, 'docs/'));
+  return name
+    ? `<a class="ref" data-open="k:doc:${escape(name)}">${label}</a>`
+    : `<a href="${escape(repoUrl(target))}" target="_blank" rel="noopener">${label}</a>`;
+};
+
 /** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
 const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/;
 
@@ -1193,6 +1220,9 @@ const definitionCard = (key, def, events) => {
       (specOf(def.name)
         ? `<p class="aliases"><span class="label">Specified in</span>${docLink(specOf(def.name))}</p>`
         : '') +
+      (def.name.startsWith('Docs.') && embedded(def.name)
+        ? `<p class="aliases"><span class="label">Document</span><a class="ref" data-open="k:doc:${escape(def.name)}">Read it</a></p>`
+        : '') +
       verdictHtml(def) +
       `<pre class="source" data-namespace="${escape(namespace)}" data-self="${escape(def.hash)}">${sourceHtml(def)}</pre>` +
       (def.signature && def.kind !== 'type' && def.kind !== 'ability'
@@ -1722,18 +1752,45 @@ const decisionsOf = (text) =>
       }),
   );
 
-/** The getting-started guide (`docs/GETTING_STARTED.md`, embedded as `Docs.gettingStarted`), read in place. */
-const guideCard = (key, text) => {
+/** A document the codebase embeds (`docs/*.md` as `Docs.*`, D272), read in place; its first heading is the title. */
+const textCard = (key, text, fallback) => {
   if (text === undefined) {
-    return missingCard(key, 'The guide did not load');
+    return missingCard(key, `${fallback} did not load`);
   }
   const [first, ...rest] = text.split('\n');
-  const title = /^# (.*)$/.exec(first)?.[1] ?? 'Getting started';
+  const title = /^# (.*)$/.exec(first)?.[1] ?? fallback;
   return card(key, {
-    iconHtml: '<span class="icon k-decision" title="guide">?</span>',
+    iconHtml: '<span class="icon k-decision" title="document">?</span>',
     title: inlineMd(title, ''),
     prose: true,
     body: `<div class="doc">${mdHtml(/^# /.test(first) ? rest.join('\n') : text, '')}</div>`,
+  });
+};
+
+/** The documents the codebase embeds, by the file each was embedded from. */
+const documents = () =>
+  index.names
+    .filter((entry) => entry.name.startsWith('Docs.'))
+    .map((entry) => ({ ...entry, file: /Embedded from (\S+)/.exec(entry.summary ?? '')?.[1] ?? entry.name }))
+    .sort((one, other) => one.name.localeCompare(other.name));
+
+const documentsCard = (key) => {
+  const row = (entry) =>
+    `<li class="entry-row"><span class="icon k-decision">?</span><a class="ref" data-open="k:doc:${escape(entry.name)}">${escape(entry.file)}</a><span class="row-summary"><code>${escape(entry.name)}</code></span></li>`;
+  const all = documents();
+  const groups = [
+    ['Project', all.filter((entry) => !entry.name.startsWith('Docs.Specs.'))],
+    ['Specifications', all.filter((entry) => entry.name.startsWith('Docs.Specs.'))],
+  ].filter(([, group]) => group.length > 0);
+  return card(key, {
+    iconHtml: '<span class="icon k-decision">?</span>',
+    title: 'Documents',
+    prose: true,
+    body:
+      '<p class="muted">The project\'s documents, kept in the codebase as texts (<code>deus embed</code>), so they travel with it.</p>' +
+      groups
+        .map(([title, group]) => section(title, group.length, `<ul class="rows">${group.map(row).join('')}</ul>`))
+        .join(''),
   });
 };
 
@@ -1785,14 +1842,18 @@ const buildCard = async (key) => {
       return value === 'glossary'
         ? glossaryCard(key)
         : value === 'guide'
-          ? guideCard(key, await loadEmbedded('Docs.gettingStarted'))
-          : value === 'events'
-            ? eventsCard(key, await loadEvents())
-            : value === 'features'
-              ? featuresCard(key, await loadFeatures())
-              : value === 'checks'
-                ? checksCard(key, await requirementsByEvidence())
-                : kindCard(key, value);
+          ? textCard(key, await loadEmbedded('Docs.gettingStarted'), 'Getting started')
+          : value.startsWith('doc:')
+            ? textCard(key, await loadEmbedded(value.slice(4)), value.slice(4))
+            : value === 'docs'
+              ? documentsCard(key)
+              : value === 'events'
+                ? eventsCard(key, await loadEvents())
+                : value === 'features'
+                  ? featuresCard(key, await loadFeatures())
+                  : value === 'checks'
+                    ? checksCard(key, await requirementsByEvidence())
+                    : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1943,7 +2004,7 @@ const areasOf = (maps) => {
 
 /** The legend of the kind icons, so a first visitor can read the lists. */
 const legendHtml = () =>
-  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStarted') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`} and <a class="ref" data-open="k:glossary">the glossary</a></p>`;
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStarted') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`}, <a class="ref" data-open="k:glossary">the glossary</a>${documents().length > 0 && live !== undefined ? ' and <a class="ref" data-open="k:docs">all documents</a>' : ''}</p>`;
 
 /** Words the overview and the documents use that a newcomer may not know (task 8eec6c0d). */
 const GLOSSARY = [
@@ -2066,9 +2127,7 @@ const inlineMd = (text, namespace) =>
           if (entry) {
             return `<code>${defLink(entry.name, entry.hash, code)}</code>`;
           }
-          return REPO_PATH.test(code)
-            ? `<code><a href="${escape(repoUrl(code))}" target="_blank" rel="noopener">${escape(code)}</a></code>`
-            : `<code>${escape(code)}</code>`;
+          return REPO_PATH.test(code) ? `<code>${fileLink(code, escape(code))}</code>` : `<code>${escape(code)}</code>`;
         }
         return escape(piece)
           .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
@@ -2076,13 +2135,11 @@ const inlineMd = (text, namespace) =>
             if (doc && isDocument(doc)) {
               return docLink(doc, label);
             }
-            const href = /^https?:/.test(target)
-              ? target
-              : /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
-                ? repoUrl(target)
-                : undefined;
+            if (!/^https?:/.test(target) && /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)) {
+              return fileLink(target, label);
+            }
             // `target` comes from escaped text, so it is already safe in an attribute.
-            return href ? `<a href="${href}" target="_blank" rel="noopener">${label}</a>` : label;
+            return /^https?:/.test(target) ? `<a href="${target}" target="_blank" rel="noopener">${label}</a>` : label;
           })
           .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
           .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
@@ -3217,13 +3274,17 @@ const titleOf = (key) => {
       ? 'Glossary'
       : value === 'guide'
         ? 'Getting started'
-        : value === 'checks'
-          ? 'Checks'
-          : value === 'events'
-            ? 'Events'
-            : value === 'features'
-              ? 'Features'
-              : (KINDS[value]?.plural ?? value);
+        : value.startsWith('doc:')
+          ? (documents().find((entry) => entry.name === value.slice(4))?.file ?? value.slice(4))
+          : value === 'docs'
+            ? 'Documents'
+            : value === 'checks'
+              ? 'Checks'
+              : value === 'events'
+                ? 'Events'
+                : value === 'features'
+                  ? 'Features'
+                  : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };

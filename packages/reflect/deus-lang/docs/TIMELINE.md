@@ -306,6 +306,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 296 | 10-18 16:00 | 1h 00m | a48e5d6a7a | Definition cards: dark contrast, Operations/Constructors labels, test verdict wording, type docs as prose, long headers one parameter per line (D268) |
 | 297 | 10-18 16:45 | 45m 00s | 9e8520574b | Phones keep the hash and the dialect switch; long lists page 100 rows at a time; law rows show their theorem's verdict (D269) |
 | 298 | 10-18 17:15 | 30m 00s | e5366fedef | Definition cards lift their tests out of "Used by" into "Checked by"; the explorer gets a browser test (D270) |
-| 299 | 10-18 17:45 | 30m 00s | this commit | What the Worker serves for a site path is decided in DEUS (Worker.Site) (D271) |
+| 299 | 10-18 17:45 | 30m 00s | c053d80d75 | What the Worker serves for a site path is decided in DEUS (Worker.Site) (D271) |
+| 300 | 10-18 18:30 | 45m 00s | this commit | Every document under docs/ is in the codebase and opens as a card; links between them stay in the explorer (D272) |
 
-Total from stage 1 to stage 299: 117h 35m.
+Total from stage 1 to stage 300: 118h 20m.

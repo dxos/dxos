@@ -52,10 +52,20 @@ EMBEDDED = [
     ('platform/explorer/app.css', 'Explorer.App.css'),
     ('src/bindings/deus-runtime.js', 'Bindings.runtimeJs'),
     ('src/bindings/deus-runtime.d.ts', 'Bindings.runtimeDts'),
-    # The decision log, which the hosted explorer opens decision by decision (D261).
-    ('docs/DECISIONS.md', 'Docs.decisions'),
-    # The getting-started guide, which the hosted explorer shows as a card (D265).
-    ('docs/GETTING_STARTED.md', 'Docs.gettingStarted'),
+]
+
+
+def doc_name(path):
+    """`docs/GETTING_STARTED.md` as `Docs.gettingStarted`, and `docs/spec/CLI-JSON.md` as `Docs.Specs.cliJson`."""
+    words = re.split(r'[-_]', path.stem.lower())
+    camel = words[0] + ''.join(word.capitalize() for word in words[1:])
+    return ('Docs.Specs.' if path.parent.name == 'spec' else 'Docs.') + camel
+
+
+# Every document under docs/ and docs/spec/, which the hosted explorer reads as cards (D261, D265, D272).
+EMBEDDED += [
+    (str(path.relative_to(ROOT)), doc_name(path))
+    for path in sorted([*(ROOT / 'docs').glob('*.md'), *(ROOT / 'docs' / 'spec').glob('*.md')])
 ]
 
 
