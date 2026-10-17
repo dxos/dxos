@@ -122,6 +122,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'Worker.Keys.parseKey',
           'Worker.Keys.allows',
           'Worker.Keys.mintProblem',
+          'Worker.Keys.judge',
           '-o',
           join(gen, 'keys.js'),
           '--js',

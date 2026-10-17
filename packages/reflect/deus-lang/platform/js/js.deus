@@ -80,6 +80,9 @@ def null : Js := import "deus:runtime" "js.null"
 
 def isNull : Js -> Bool := import "deus:runtime" "js.isNull"
 
+/-- `a < b` in JavaScript: numbers past the 32-bit `Int`, such as milliseconds since 1970, compare without crossing. -/
+def lessThan : Js -> Js -> Bool := import "deus:runtime" "js.lessThan"
+
 /-- `typeof`, with `null` and arrays told apart. -/
 def typeOf : Js -> Text := import "deus:runtime" "js.typeOf"
 

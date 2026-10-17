@@ -33,6 +33,35 @@ def mintProblem (label : Text) (scopes : List Text) (known : List Text) : Option
     Option.some ("scopes are some of " ++ Text.join ", " known)
   else Option.none
 
+/-- Whether two texts are equal, taking as long whichever character differs, so a guess at a secret's hash learns
+  nothing from how fast it is refused. -/
+def sameText (a : Text) (b : Text) : Bool :=
+  Text.length a == Text.length b && List.foldl (fun acc pair => Int.or acc (Int.xor (fst pair) (snd pair))) 0 (zip (Text.utf8 a) (Text.utf8 b)) == 0
+
+/-- What a key check concluded: `status` 0 to go ahead, else the HTTP status to refuse with and why. -/
+structure Verdict @"urn:deus:worker:KeyVerdict" where
+  status : Int
+  message : Text
+
+/-- Whether a key's database row lets a request act in `scope` on the project in `folder` ("" for none, as key
+  management): the row exists and its secret hashes to `secretHash`, it is neither revoked nor expired at `now`
+  (milliseconds, a JavaScript number), and its scopes and projects allow the request. -/
+def judge (row : Js) (secretHash : Text) (now : Js) (scope : Text) (folder : Text) : Verdict :=
+  if Js.isNull row || not (sameText (Js.toText (Js.get row "secret_hash")) secretHash) then Verdict.mk 401 "unknown API key"
+  else if not (Js.isNull (Js.get row "revoked_at")) then Verdict.mk 401 "this API key was revoked"
+  else
+    let expires := Js.get row "expires_at"
+    if not (Js.isNull expires) && Js.lessThan expires now then Verdict.mk 401 "this API key has expired"
+    else if not (allows (List.map Js.toText (Js.toList (Js.parse (Js.toText (Js.get row "scopes"))))) scope) then
+      Verdict.mk 403 ("this API key lacks the " ++ scope ++ " scope")
+    else
+      let projects := Js.parse (Js.toText (Js.get row "projects"))
+      let everywhere := Js.typeOf projects == "string" && Js.toText projects == "*"
+      if Text.isEmpty folder || everywhere || Address.grants (List.map Js.toText (Js.toList projects)) folder then Verdict.mk 0 ""
+      else Verdict.mk 403 ("this API key cannot write to " ++ Option.getOr (Address.addressOfFolder folder) folder)
+
+test sameTextCompares := sameText "abc" "abc" && not (sameText "abc" "abd") && not (sameText "abc" "ab") && sameText "" ""
+
 /-- A sample key secret for the tests. -/
 def secretA : Text := Text.repeat 64 "a"
 

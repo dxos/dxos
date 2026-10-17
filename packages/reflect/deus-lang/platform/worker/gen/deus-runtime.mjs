@@ -1034,6 +1034,7 @@ export const js = {
     ].map((name) => [name, (value) => value]),
   ),
   isNull: (value) => value === null || value === undefined,
+  lessThan: (a, b) => a < b,
   typeOf: (value) => (value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value),
   stringify: (value) => JSON.stringify(value) ?? 'undefined',
   parse: (source) => JSON.parse(source),

@@ -7,7 +7,7 @@
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
-import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
+import { isGrantable, projectAt } from './address.mjs';
 import * as heads from './gen/heads.js';
 import * as keys from './gen/keys.js';
 import * as paths from './gen/paths.js';
@@ -384,25 +384,13 @@ export const authorize = async (request, env, ctx, scope, project) => {
   }
   const { id, secret } = named;
   const row = await env.DB.prepare('select * from api_keys where id = ?').bind(id).first();
-  if (!row || !sameText(row.secret_hash, await sha256(new TextEncoder().encode(secret)))) {
-    throw new HttpError(401, 'unknown API key');
-  }
   const now = Date.now();
-  if (row.revoked_at) {
-    throw new HttpError(401, 'this API key was revoked');
-  }
-  if (row.expires_at && row.expires_at < now) {
-    throw new HttpError(401, 'this API key has expired');
+  // Whether the row lets this request through, and why not, is `Worker.Keys.judge`, in DEUS.
+  const verdict = keys.judge(row ?? null, await sha256(new TextEncoder().encode(secret)), now, scope, project ?? '');
+  if (verdict.status !== 0) {
+    throw new HttpError(verdict.status, verdict.message);
   }
   const scopes = JSON.parse(row.scopes);
-  if (!keys.allows(scopes, scope)) {
-    throw new HttpError(403, `this API key lacks the ${scope} scope`);
-  }
-  const projects = JSON.parse(row.projects);
-  // A key names projects by address, by owner (`@dxos/*`) or, from before addresses, by folder.
-  if (project && !grants(projects, project)) {
-    throw new HttpError(403, `this API key cannot write to ${addressOfFolder(project) ?? project}`);
-  }
   const url = new URL(request.url);
   // Written after the response, so logging never slows or fails a write. The audit log is objects in
   // the bucket, not D1 rows, so it cannot use up the key database's writes (D217); explorer files are
@@ -502,16 +490,6 @@ const gunzip = async (bytes) =>
 export const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 
 /** Compares in time independent of where the texts differ. */
-const sameText = (left, right) => {
-  if (left.length !== right.length) {
-    return false;
-  }
-  let diff = 0;
-  for (let index = 0; index < left.length; index++) {
-    diff |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return diff === 0;
-};
 
 /** A listing is one name per line, which the CLI reads without a JSON parser. */
 const lines = (names) =>

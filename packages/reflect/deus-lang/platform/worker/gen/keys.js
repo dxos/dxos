@@ -59,6 +59,61 @@ function Worker$Keys$mintProblem(label, scopes, known) {
 }
 rt.named(Worker$Keys$mintProblem, "Worker.Keys.mintProblem");
 
+function Worker$Keys$judge(row, secretHash, now, scope, folder) {
+  let r0;
+  if (lib$web$Js$isNull(row)) {
+    r0 = true;
+  } else {
+    r0 = not(Worker$Keys$sameText(lib$web$Js$toText(lib$web$Js$get(row, "secret_hash")), secretHash));
+  }
+  if (r0) {
+    return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [401, "unknown API key"]);
+  } else {
+    if (not(lib$web$Js$isNull(lib$web$Js$get(row, "revoked_at")))) {
+      return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [401, "this API key was revoked"]);
+    } else {
+      const expires = lib$web$Js$get(row, "expires_at");
+      let r1;
+      if (not(lib$web$Js$isNull(expires))) {
+        r1 = lib$web$Js$lessThan(expires, now);
+      } else {
+        r1 = false;
+      }
+      if (r1) {
+        return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [401, "this API key has expired"]);
+      } else {
+        if (not(Worker$Keys$allows(List$map(lib$web$Js$toText, lib$web$Js$toList(lib$web$Js$parse(lib$web$Js$toText(lib$web$Js$get(row, "scopes"))))), scope))) {
+          return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "this API key lacks the ", scope), " scope")]);
+        } else {
+          const projects = lib$web$Js$parse(lib$web$Js$toText(lib$web$Js$get(row, "projects")));
+          let everywhere;
+          if ((lib$web$Js$typeOf(projects) === "string")) {
+            everywhere = (lib$web$Js$toText(projects) === "*");
+          } else {
+            everywhere = false;
+          }
+          let r2;
+          if (Text$isEmpty(folder)) {
+            r2 = true;
+          } else {
+            if (everywhere) {
+              r2 = true;
+            } else {
+              r2 = lib$toolchain$Address$grants(List$map(lib$web$Js$toText, lib$web$Js$toList(projects)), folder);
+            }
+          }
+          if (r2) {
+            return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [0, ""]);
+          } else {
+            return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, rt.ap(rt.prims["append"], "this API key cannot write to ", Option$getOr(lib$toolchain$Address$addressOfFolder(folder), folder))]);
+          }
+        }
+      }
+    }
+  }
+}
+rt.named(Worker$Keys$judge, "Worker.Keys.judge");
+
 function not(b) {
   if (b) {
     return false;
@@ -148,6 +203,107 @@ function List$all(p$, v$) {
 }
 rt.named(List$all, "List.all");
 
+const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
+
+function Worker$Keys$sameText(a, b) {
+  if (rt.equal(rt.ap(rt.prims["Text.length"], a), rt.ap(rt.prims["Text.length"], b))) {
+    return (List$foldl(rt.named((acc, pair) => (acc | (fst(pair) ^ snd(pair))), "Worker.Keys.sameText/\u03bb"), 0, List$zip(rt.ap(rt.prims["Text.utf8"], a), rt.ap(rt.prims["Text.utf8"], b))) === 0);
+  } else {
+    return false;
+  }
+}
+rt.named(Worker$Keys$sameText, "Worker.Keys.sameText");
+
+const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
+
+const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
+
+const lib$web$Js$lessThan = rt.importFn(rt, "js.lessThan", [['raw'], ['raw']], ['bool'], "lib.web.Js.lessThan");
+
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
+
+const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
+
+const lib$web$Js$parse = rt.importFn(rt, "js.parse", [['text']], ['raw'], "lib.web.Js.parse");
+
+const lib$web$Js$typeOf = rt.importFn(rt, "js.typeOf", [['raw']], ['text'], "lib.web.Js.typeOf");
+
+function lib$toolchain$Address$grants(projects, folder) {
+  const address = lib$toolchain$Address$addressOfFolder(folder);
+  return List$any(rt.named((granted) => {
+  if (rt.equal(granted, folder)) {
+    return true;
+  } else {
+    if (rt.equal(new rt.Con("#Option", 1, [granted]), address)) {
+      return true;
+    } else {
+      if (Text$endsWith("/*", granted)) {
+        m0: {
+          if (address.tag === 1) {
+            const a = address.fields[0];
+            return Text$startsWith(Text$take(((rt.ap(rt.prims["Text.length"], granted) - 1) | 0), granted), a);
+          }
+          if (address.tag === 0) {
+            return false;
+          }
+          rt.nomatch(address);
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+}, "lib.toolchain.Address.grants/\u03bb"), projects);
+}
+rt.named(lib$toolchain$Address$grants, "lib.toolchain.Address.grants");
+
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+function lib$toolchain$Address$addressOfFolder(folder) {
+  return Option$orElse(lib$toolchain$Address$legacyAddress(folder), rt.named((v) => {
+  if (Text$contains("/", folder)) {
+    return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "@", folder)]);
+  } else {
+    return rt.con0("#Option", 0);
+  }
+}, "lib.toolchain.Address.addressOfFolder/\u03bb"));
+}
+rt.named(lib$toolchain$Address$addressOfFolder, "lib.toolchain.Address.addressOfFolder");
+
 function Text$isDigit(c) {
   if ((c >= 48)) {
     return (c <= 57);
@@ -181,12 +337,189 @@ function List$any(p$, v$) {
 }
 rt.named(List$any, "List.any");
 
+function List$foldl(f$, init$, xs$) {
+  for (;;) {
+    const f = f$, init = init$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return init;
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        f$ = f;
+        init$ = rt.ap(f, init, x);
+        xs$ = rest;
+        continue;
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$foldl, "List.foldl");
+
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+function List$zip(xs, ys) {
+  function go(acc$, l$, r$) {
+    for (;;) {
+      const acc = acc$, l = l$, r = r$;
+      const t0 = new rt.Con("#Pair", 0, [l, r]);
+      m1: {
+        if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[1].tag === 1) {
+          const x = t0.fields[0].fields[0];
+          const xt = t0.fields[0].fields[1];
+          const y = t0.fields[1].fields[0];
+          const yt = t0.fields[1].fields[1];
+          acc$ = rt.cons(new rt.Con("#Pair", 0, [x, y]), acc);
+          l$ = xt;
+          r$ = yt;
+          continue;
+        }
+        if (t0.tag === 0) {
+          return List$reverse(acc);
+        }
+        rt.nomatch(t0);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs, ys);
+}
+rt.named(List$zip, "List.zip");
+
+function List$reverse(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(y, acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$reverse, "List.reverse");
+
+function Text$endsWith(suffix, t) {
+  const n = rt.ap(rt.prims["Text.length"], t);
+  const m = rt.ap(rt.prims["Text.length"], suffix);
+  if (rt.ap(rt.prims["le"], m, n)) {
+    return rt.equal(rt.ap(rt.prims["Text.slice"], t, ((n - m) | 0), n), suffix);
+  } else {
+    return false;
+  }
+}
+rt.named(Text$endsWith, "Text.endsWith");
+
+function Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(Text$take, "Text.take");
+
+function Option$orElse(o, other) {
+  m0: {
+    if (o.tag === 0) {
+      return rt.ap(other, undefined);
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return new rt.Con("#Option", 1, [x]);
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$orElse, "Option.orElse");
+
+function lib$toolchain$Address$legacyAddress(folder) {
+  return Option$map(fst, List$find(rt.named((pair) => rt.equal(snd(pair), folder), "lib.toolchain.Address.legacyAddress/\u03bb"), lib$toolchain$Address$legacyFolders()));
+}
+rt.named(lib$toolchain$Address$legacyAddress, "lib.toolchain.Address.legacyAddress");
+
+function Text$contains(part, t) {
+  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+}
+rt.named(Text$contains, "Text.contains");
+
+function Option$map(f, v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Option$map, "Option.map");
+
+function List$find(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return rt.con0("#Option", 0);
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return new rt.Con("#Option", 1, [x]);
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$find, "List.find");
+
+const lib$toolchain$Address$legacyFolders = rt.lazy("lib.toolchain.Address.legacyFolders", () => rt.cons(new rt.Con("#Pair", 0, ["@dxos/toolchain", "toolchain"]), rt.NIL));
+
 export const raw = {
   parseKey: Worker$Keys$parseKey,
   allows: Worker$Keys$allows,
   mintProblem: Worker$Keys$mintProblem,
+  judge: Worker$Keys$judge,
 };
 export const parseKey = rt.exportFn(Worker$Keys$parseKey, [['text']], ['option', ['struct', "51b93a6f46e24199b8c281fb528f50b4a1bf20269a1417c2d618d17e267dacf8", ["id", "secret"], [['text'], ['text']]]]);
 export const allows = rt.exportFn(Worker$Keys$allows, [['list', ['text']], ['text']], ['bool']);
 export const mintProblem = rt.exportFn(Worker$Keys$mintProblem, [['text'], ['list', ['text']], ['list', ['text']]], ['option', ['text']]);
+export const judge = rt.exportFn(Worker$Keys$judge, [['raw'], ['text'], ['raw'], ['text'], ['text']], ['struct', "712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", ["status", "message"], [['int'], ['text']]]);
 //# sourceMappingURL=keys.js.map
