@@ -344,6 +344,15 @@ a review:
 deus link List.map Cli              # https://<host>/@owner/project/List.map, …/Cli
 ```
 
+Another project's code is mounted as a library, read-only under `lib.<name>.`, at the head you install;
+installing again upgrades it. The project can be a codebase on disk or its URL on a Worker:
+
+```bash
+deus project init @me/app
+deus lib install base https://deus.dmytro-a80.workers.dev/v1/@dxos/base
+deus eval 'Sexp.head (Sexp.read "(point 1 2)")'   # base's Sexp, found through the mount: "point"
+```
+
 ## Recipe 6: Your own syntax, and a TypeScript view
 
 A `notation` adds syntax to a namespace; the stored definition is the plain term it stands for, so writing

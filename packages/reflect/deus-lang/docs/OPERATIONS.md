@@ -134,7 +134,7 @@ about 6. Until the index is drawn, visitors see the head drawn last (D195; `live
 - Projects on the Worker: `@dxos/base`, `@dxos/toolchain` (mounts base), `@dxos/examples` (mounts base), `@dxos/web` (mounts base
   and toolchain; D206, D211) and `@dxos/worker` (mounts toolchain and web; D230), the Worker's own DEUS code from
   `platform/worker/deus/`, which `scripts/build-worker.mjs --live` compiles from `~/.deus-worker` (pull it there first). The toolchain is developed in `~/.deus`. To change a library: pull it into a scratch codebase, change it,
-  push it, then `deus lib install <name> <that codebase>` in each project that mounts it; the upgrade propagates to dependents.
+  push it, then `deus lib install <name> <that codebase or its https://<host>/v1/@owner/project URL>` in each project that mounts it; the upgrade propagates to dependents.
   `sync-deus.py` writes `lib.base.X` into deus/ as `X`. Web's code is `platform/js/` and `examples/` in git; update it into a pull of
   `@dxos/web`, not into the toolchain.
 - Edit the toolchain codebase-first: `deus update deus/<file>.deus` into `~/.deus`, then `scripts/sync-deus.py`, which

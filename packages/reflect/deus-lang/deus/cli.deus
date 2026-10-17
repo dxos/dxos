@@ -1041,7 +1041,39 @@ def project (args : Args) : {IO, Throw Text} Unit :=
                   p.libs))
   | _ => Throw.throw "usage: deus project [init <iri|@owner/project>]"
 
-/-- `deus lib install <name> <codebase> [--branch b]`: mounts that project's branch head under `lib.<name>`. -/
+/-- Whether `from` names a remote rather than a directory. -/
+def isRemoteUrl (from : Text) : Bool := startsWith "https://" from || startsWith "http://" from || startsWith "r2://" from
+
+/-- The project at the remote `url` (`https://<host>/v1/@owner/project`), pulled into `cache/libs/<name>` of the
+  codebase at `dir`, so `lib install` takes a URL as it takes a directory. A pull carries no project file, so its IRI
+  is `--iri`, else the project's address in the URL. -/
+def pullLibrary (dir : Text) (name : Text) (url : Text) (args : Args) : {IO, Throw Text} Text :=
+  let cache := dir ++ "/cache/libs/" ++ name
+  if Codebase.isCodebase cache then () else Codebase.init cache
+  let urlFile := cache ++ "/remotes/origin/url"
+  -- What the copy recorded about the remote it pulled before is not true of another.
+  if IO.readFile urlFile == Option.some (url ++ "\n") then () else
+    forEach ["packed", "assets"] (fun what =>
+      let path := Replicate.knownPath cache "origin" what
+      if IO.exists path then IO.remove path else ())
+  IO.mkdirp (cache ++ "/remotes/origin")
+  IO.writeFile urlFile (url ++ "\n")
+  let _ := withRemote cache "origin" (fun _ =>
+    let pulled := Replicate.pull cache "origin"
+    pullAssets cache
+    pulled)
+  let iri :=
+    match option args "iri" with
+    | Option.some given => given
+    | Option.none =>
+        let at := Text.indexOf url "/v1/" 0
+        if at < 0 then url else Text.drop (at + 4) url
+  match Project.read cache with
+  | Option.some _ => ()
+  | Option.none => Project.write cache (Project.mk iri [])
+  cache
+
+/-- `deus lib install <name> <codebase|url> [--branch b] [--iri i]`: mounts that project's branch head under `lib.<name>`. -/
 def lib (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -1051,7 +1083,10 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
         | Option.some p => p
         | Option.none => Throw.throw "this codebase has no project; run `deus project init <iri>`"
       let before := Codebase.current dir
-      let installed := install dir before name from (getOr (option args "branch") "main")
+      let branch := getOr (option args "branch") "main"
+      let installed :=
+        if Cli.isRemoteUrl from then install dir before name (Cli.pullLibrary dir name from args) ("origin." ++ branch)
+        else install dir before name from branch
       let (l, mounted) := installed
       -- An upgrade moves the project's code onto the release's definitions, as `update` moves dependents (D206).
       let mount := "lib." ++ name ++ "."
@@ -2683,7 +2718,7 @@ def usage : Text :=
     "",
     "projects",
     "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
-    "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
+    "  lib install <name> <codebase|url>    mount that project's head under lib.<name> (--branch b, --iri i)",
     "",
     "replication",
     "  remote add <name> <dir|url|r2://b/p> a remote: a directory, the DEUS Worker (https://<host>/v1/<project>),",
