@@ -25,7 +25,7 @@ projects:
     tasks: .agents/projects/showcase/TASKS.md
     design: .agents/projects/showcase/DESIGN.md
     prs: [14026, 14027, 14029]
-    resume: '#14026 and #14027 merged; #14029 (draft) adds light/dark Terra-views and Spacetime demos and the SHOWCASE.md light/dark rules. NEXT: mark #14029 ready; dark re-records of chess, terra planet, sales-charts; flows for the plugins listed without one.'
+    resume: 'Overnight run recorded 48/52 and rendered the composite; publish failed on masked keys. NEXT: re-cache keys with op run --no-masking, run publish.mjs --run temp/showcase/overnight, commit dx.config.ts; then real gestures for the 8 static clips.'
   - name: canvas-animation
     status: active
     user: burdon

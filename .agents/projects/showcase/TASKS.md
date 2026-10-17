@@ -70,6 +70,18 @@ so it joins the `tools/autocue` package from #14028 when that lands.
 - [x] **First full run** — 22/26; canvas never left Home, projects opened Settings, uml had no `palette-class`: fixed.
 - [ ] **illustrator** — an empty svg drawing renders blank; the clip needs a drawing with content (e.g. `dx drawing`).
 - [ ] **script** — creating a Script neither opens a dialog nor navigates; find how it is created.
+- [x] **Overnight run** (`temp/showcase/overnight`, 77 min): 48/52 videos; grid from 24 clips (closest repeat 4 cells);
+      composite rendered (`temp/composite/composite.mp4`).
+- [ ] **Publish the overnight run** — every upload failed: the cached keys were `<concealed by 1Password>` because
+      `op run` masks printed secrets. Re-cache with `op run --no-masking` (command in `publish.mjs`), then
+      `node tools/autocue/showcase/publish.mjs --run temp/showcase/overnight`; commit the 24 `dx.config.ts` changes.
+- [ ] **Real gestures for the 8 static clips** — frames show nothing happening: board (empty board), code (empty
+      project), conductor (empty circuit), kanban ("select a pivot column"), sequencer (empty grid), table (empty table),
+      voxel (empty world), spacetime (the cube does not turn: orbit drag misses or needs a modifier).
+- [ ] **script** — the Create Script dialog needs a Template; with one chosen, Create closes the dialog but no object
+      appears and nothing navigates (probe: forex template). Looks like an app bug; confirm before writing the flow.
+- [ ] **illustrator** — a new svg drawing renders blank, so the palette clicks time out; the clip needs a drawing with
+      content.
 - [ ] **Next full run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
 - [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
       plank; give each a gesture that shows the plugin working.
