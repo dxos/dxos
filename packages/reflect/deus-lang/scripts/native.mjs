@@ -97,7 +97,11 @@ const prune = (cache) => {
   }
 };
 
-/** Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. */
+/**
+ * Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. The C is written
+ * once and compiled twice: unoptimized first (about 18 s), so the native CLI replaces node within a minute of a seed
+ * change, then at `-O2` (about 100 s, twice as fast to run), which replaces it in place (D281).
+ */
 const build = (dir) => {
   const codebase = join(mkdtempSync(join(tmpdir(), 'deus-native-')), 'codebase');
   const deus = (...args) =>
@@ -108,14 +112,21 @@ const build = (dir) => {
   try {
     deus('init', '--empty');
     deus('add', join(home, 'deus'));
-    deus('build', 'Cli.main', '-o', join(dir, 'deus.tmp'), '--c');
-    renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
+    deus('build', 'Cli.main', '-o', join(dir, 'deus.c'), '--c');
+    // As `deus build --c` compiles it (Build.cExecutable), at each level in turn.
+    for (const level of ['-O0', '-O2']) {
+      execFileSync(process.env.CC ?? 'cc', [level, '-DDEUS_MAIN', '-o', join(dir, 'deus.tmp'), join(dir, 'deus.c')], {
+        stdio: ['ignore', 'ignore', 'pipe'],
+      });
+      renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
+    }
     prune(dirname(dir));
   } catch (error) {
     // Kept until the seed changes, so the launcher warns instead of rebuilding on every command.
     writeFileSync(join(dir, 'failed.log'), `${error.message}\n${error.stderr ?? ''}`);
   } finally {
-    rmSync(join(dir, 'deus.tmp.c'), { force: true });
+    rmSync(join(dir, 'deus.c'), { force: true });
+    rmSync(join(dir, 'deus.tmp'), { force: true });
     rmSync(dirname(codebase), { recursive: true, force: true });
     rmSync(join(dir, 'lock'), { force: true });
   }

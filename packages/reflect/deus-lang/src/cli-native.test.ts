@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
 
-const { root, scratch, file, deus } = cliHarness('cli-native-');
+const { root, scratch, file, deus, deusNode } = cliHarness('cli-native-');
 
 // The C, wasm and executable back ends: the slowest CLI tests, in a file of their own so they run in parallel with the rest.
 describe('deus CLI native back ends', () => {
@@ -42,7 +42,7 @@ describe('deus CLI native back ends', () => {
       ['sumTo', [1_000_000, 0]],
       ['collatz', [27, 0]],
     ] as const) {
-      expect(String(call(name, ...args))).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim());
+      expect(String(call(name, ...args))).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim());
     }
     expect([call('inRange', 7), call('inRange', 9)]).toEqual([1, 0]);
 
@@ -63,12 +63,12 @@ describe('deus CLI native back ends', () => {
       ),
       ...c,
     );
-    expect(String(call('sortedSum', 300))).toBe(deus('eval', 'sortedSum 300', ...c).stdout.trim());
+    expect(String(call('sortedSum', 300))).toBe(deusNode('eval', 'sortedSum 300', ...c).stdout.trim());
 
     // The pure `Array` (D96): compiled code copies where an old array is still read, and writes in
     // place where it is not, so every aliasing case gives the kernel's answer.
     deus('add', join(root, 'examples/aliasing.deus'), ...c);
-    expect(String(call('Aliasing.all', 3))).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout.trim());
+    expect(String(call('Aliasing.all', 3))).toBe(deusNode('eval', 'Aliasing.all 3', ...c).stdout.trim());
     expect(String(call('Aliasing.chain', 100_000))).toBe('704982704');
 
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
@@ -105,7 +105,7 @@ describe('deus CLI native back ends', () => {
       ['sameNested', [3, 4]],
     ] as const) {
       expect(call(name, ...args) === 1 ? 'true' : 'false').toBe(
-        deus('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim(),
+        deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim(),
       );
     }
     const ordered = deus('build', 'less', '-o', join(scratch, 'less.wasm'), '--wasm', ...c);
@@ -155,7 +155,7 @@ describe('deus CLI native back ends', () => {
         expect(deus('build', name, '-o', join(scratch, name), '--c', ...c).code).toBe(0);
         for (const n of [2, 5]) {
           expect(spawnSync(join(scratch, name), [String(n)], { encoding: 'utf8' }).stdout).toBe(
-            deus('eval', `${name} ${n}`, ...c).stdout,
+            deusNode('eval', `${name} ${n}`, ...c).stdout,
           );
         }
       }
@@ -193,7 +193,7 @@ describe('deus CLI native back ends', () => {
           encoding: 'utf8',
           env: { ...process.env, DEUS_HEAP_STATS: '1' },
         });
-        expect(run.stdout).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(run.stdout).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout);
         expect(run.stderr).toContain(', 0 live,');
       }
       deus('add', join(root, 'examples/aliasing.deus'), ...c);
@@ -203,12 +203,12 @@ describe('deus CLI native back ends', () => {
         encoding: 'utf8',
         env: { ...process.env, DEUS_HEAP_STATS: '1' },
       });
-      expect(aliasing.stdout).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout);
+      expect(aliasing.stdout).toBe(deusNode('eval', 'Aliasing.all 3', ...c).stdout);
       expect(aliasing.stderr).toContain(', 0 live,');
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
       expect(spawnSync(join(scratch, 'wrap'), ['3'], { encoding: 'utf8' }).stdout).toBe(
-        deus('eval', 'wrap 3', ...c).stdout,
+        deusNode('eval', 'wrap 3', ...c).stdout,
       );
 
       // A freed block over 256 words is reused, so a loop over fresh 1000-item arrays allocates one.
@@ -229,7 +229,7 @@ describe('deus CLI native back ends', () => {
         encoding: 'utf8',
         env: { ...process.env, DEUS_HEAP_STATS: '1' },
       });
-      expect(big.stdout).toBe(deus('eval', 'big 100 0', ...c).stdout);
+      expect(big.stdout).toBe(deusNode('eval', 'big 100 0', ...c).stdout);
       expect(big.stderr).toContain('heap: 1002 words bumped, 0 live');
 
       // A self tail call is a jump, so a million-deep loop runs in constant stack.
@@ -300,7 +300,7 @@ describe('deus CLI native back ends', () => {
         if (typeof run !== 'function' || typeof live !== 'function') {
           throw new Error(`${name}.wasm does not export ${name} and deus_live`);
         }
-        expect(`${run(...args)}\n`).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(`${run(...args)}\n`).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout);
         expect(live()).toBe(0);
       }
     },

@@ -257,8 +257,12 @@ describe('deus CLI', () => {
       const failing = deus('mdl', doc, ...c);
       expect(failing.code).toBe(1);
       expect(failing.stdout).toContain('line 17: block type `todo` is not in the Extensions table');
-      expect(failing.stdout).toContain('cost grew x3.72 from n=20 to n=40 (1378 -> 5138 steps); order n allows x2.50');
-      expect(failing.stdout).toContain('took 508 steps; the budget is 10');
+      // Steps are the running kernel's own count (the native interpreter's differs from node's), so only the verdict
+      // and its shape are fixed here.
+      expect(failing.stdout).toMatch(
+        /cost grew x3\.\d\d from n=20 to n=40 \(\d+ -> \d+ steps\); order n allows x2\.50/,
+      );
+      expect(failing.stdout).toMatch(/took \d+ steps; the budget is 10/);
     },
   );
 

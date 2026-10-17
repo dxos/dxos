@@ -71,6 +71,16 @@ with it.
 `deus merge origin.main` (30 s). A push takes about 10 s; the Worker draws the explorer afterwards (D192).
 `~/.deus-2026-10-14` is this container's older local codebase, kept, not deleted.
 
+## Running tests fast (D281)
+
+- The vitest suite runs the native CLI of the current seed when one is cached (`~/.cache/deus/native/<seed hash>`),
+  as `bin/deus.mjs` does: the whole suite takes about 60 s instead of about 180 s. Any `bin/deus.mjs` command starts the
+  build after a seed change; an unoptimized CLI is ready in about a minute and the `-O2` one replaces it about two
+  minutes later. Until then tests run the seed on node, as CI always does.
+- `DEUS_TEST_KERNEL=node` forces the seed on node, which is what CI tests. A test that checks a back end against the
+  reference kernel uses the harness's `deusNode` (the native interpreter's `show` differs on data, task 7f42cca0).
+- Run one file with `npx vitest run src/<file>.test.ts`; long runs go in the background.
+
 ## Usability probe
 
 `node scripts/visit.mjs <url> [--click <text>]… [--shot f.png] [--scroll <css>]` shows a page as text. A Haiku

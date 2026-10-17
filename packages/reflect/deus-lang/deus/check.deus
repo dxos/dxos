@@ -461,8 +461,10 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
             | Option.some obj => if expected then expectedFailure true (checkTheorem dir ns h obj) else checkTheorem dir ns h obj
             | Option.none => Verdict.fail "missing object"
           else
-            let tested := confirmed dir name integration (checkTest h integration)
-            if expected then expectedFailure false tested else tested
+            -- A failure is confirmed by a whole `deus test` on node, which applies `@[expectFail]` itself, so an
+            -- expected failure is not sent there.
+            if expected then expectedFailure false (checkTest h integration)
+            else confirmed dir name integration (checkTest h integration)
           if integration then () else if wantTheorems then rememberTheorem dir h v else remember dir h v
           (name, v, false)
     match outcome with

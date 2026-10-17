@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
 
-const { root, scratch, deus } = cliHarness('cli-native-self-');
+const { root, scratch, deus, deusNode } = cliHarness('cli-native-self-');
 
 // The toolchain built natively from its own source: the two slowest native tests, in a file of their own so they run
 // in parallel with the other back ends.
@@ -66,13 +66,13 @@ describe('deus built natively', () => {
         ...target,
       );
       expect(added.status).toBe(0);
-      expect(deus('view', 'Structural.structural', ...target).stdout).toBe(
+      expect(deusNode('view', 'Structural.structural', ...target).stdout).toBe(
         run('view', 'Structural.structural', ...target).stdout,
       );
       // The interpreter in the C runtime (D146) runs what the kernels run: tests, and expressions printed by their types.
       expect(run('test', ...target).stdout).toBe('  ✓ Structural.structuralSmall\n1 passed, 0 failed\n');
       for (const source of ['1 + 1', '[1 == 1, false]', 'Option.some ((), "a")', 'Structural.structural']) {
-        expect(run('eval', source, ...target).stdout).toBe(deus('eval', source, ...target).stdout);
+        expect(run('eval', source, ...target).stdout).toBe(deusNode('eval', source, ...target).stdout);
       }
       // The interpreter counts its own steps, so a perf block can run natively; only the order is comparable.
       const cost = run('eval', 'Code.cost (fun _ => List.length [1, 2, 3])', ...target);
