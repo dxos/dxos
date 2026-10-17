@@ -7,6 +7,8 @@
  * recorded page, where there is no module resolution: the file is bundled to an IIFE that assigns `globalName`.
  */
 
+import { fileURLToPath } from 'node:url';
+
 const REPO = new URL('../../../../', import.meta.url);
 
 /** `tools/autocue`'s Frame core: the title and caption bands painted over a recording. */
@@ -26,7 +28,8 @@ export const bundleModule = async (file, globalName) => {
   if (!bundles.has(key)) {
     const { build } = await import('esbuild');
     const { outputFiles } = await build({
-      entryPoints: [file.pathname],
+      // Decoded, so a checkout path with spaces resolves (a URL's `pathname` keeps them percent-encoded).
+      entryPoints: [fileURLToPath(file)],
       bundle: true,
       format: 'iife',
       globalName,

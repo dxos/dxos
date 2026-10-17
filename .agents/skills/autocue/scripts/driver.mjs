@@ -643,7 +643,10 @@ const runFlow = async (command) => {
       if (opening && command.title) {
         const open = command.title.open ?? 3_000;
         timeline.push({ ms: Date.now() - started, text: command.title.value, narration: command.title.value });
-        await interruptible(handlers.title({ ...command.title, open, hold: open + 600 }));
+        // With captions off nothing is painted, so the take must not stand still for a title nobody sees.
+        if (options.captions !== 'off') {
+          await interruptible(handlers.title({ ...command.title, open, hold: open + 600 }));
+        }
       }
       // `captions: true` captions every on-camera step with its `caption` (or name), as a `.mdl` run would.
       if (!step.setup && command.captions) {
