@@ -135,11 +135,12 @@ export const Dock = ({ onClose }: DockProps) => {
               }
             >
               {sections.map((section) => (
-                // Framed like a floating inspector, so each docked panel reads as its own card.
+                // Framed like a floating inspector, so each docked panel reads as its own card; clipped so its rows' fills
+                // and lines stay inside the rounded border.
                 <Accordion.Item
                   key={section.id}
                   value={section.id}
-                  classNames='rounded-sm border border-separator'
+                  classNames='rounded-sm border border-separator overflow-hidden'
                   data-testid={`dock-section-${section.id}`}
                 >
                   {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
