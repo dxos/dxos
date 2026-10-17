@@ -20,8 +20,10 @@ import { Context } from '@dxos/context';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
-import { SpaceId, URI } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 
+import { documentIdToSedimentreeIdHex } from '../automerge/index.ts';
+import { RETIREMENT_MIN_OPS } from '../automerge/quarantine.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
 import { buildReplacementDocument, replacementDocumentId } from './retirement.ts';
@@ -72,14 +74,20 @@ const setup = async () => {
     return root;
   };
 
-  const createObjectDoc = async (objectId: string, title: string) => {
+  /** `bloated` pads the object to {@link RETIREMENT_MIN_OPS} ops, one per character, so it is big enough to retire. */
+  const createObjectDoc = async (objectId: string, title: string, { bloated = false } = {}) => {
+    const data = bloated ? { title, padding: 'x'.repeat(RETIREMENT_MIN_OPS) } : { title };
     using doc = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceId },
-      objects: { [objectId]: { system: {}, meta: { keys: [] }, data: { title } } },
+      objects: { [objectId]: { system: {}, meta: { keys: [] }, data } },
     });
     return doc.url;
   };
+
+  /** Reports that loading the document ran out of memory, as automerge-repo does. */
+  const failToLoad = (documentId: DocumentId) =>
+    automergeHost['_repo'].emit('document-load-failed', { documentId, error: OUT_OF_MEMORY, source: 'storage' });
 
   const loadDirectory = async (documentId: DocumentId) => {
     const handle = await host.loadDoc<DatabaseDirectory>(Context.default(), documentId);
@@ -107,6 +115,7 @@ const setup = async () => {
   };
 
   return {
+    runtime,
     host,
     automergeHost,
     spaceId,
@@ -114,6 +123,7 @@ const setup = async () => {
     indexedDocument,
     createSpace,
     createObjectDoc,
+    failToLoad,
     linkObjects,
     loadDirectory,
     readDirectory,
@@ -129,17 +139,18 @@ describe('document retirement', () => {
       indexedDocument,
       createSpace,
       createObjectDoc,
+      failToLoad,
       linkObjects,
       readDirectory,
     } = await setup();
     const root = await createSpace();
-    const url = await createObjectDoc('obj-bloated', 'Bloated');
+    const url = await createObjectDoc('obj-bloated', 'Bloated', { bloated: true });
     const documentId = interpretAsDocumentId(url);
     await linkObjects(root.documentId, { 'obj-bloated': url });
     await host.updateIndexes();
     expect(await indexedDocument('obj-bloated')).toBe(documentId);
 
-    await automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    failToLoad(documentId);
 
     const replacementId = await replacementDocumentId(documentId);
     const replacementUrl = stringifyAutomergeUrl(replacementId);
@@ -158,27 +169,80 @@ describe('document retirement', () => {
 
     // The original stays out for good, its bytes gone; the index follows the replacement.
     await expect.poll(() => countChunks(documentId)).toBe(0);
-    expect(automergeHost.quarantinedDocuments.get(documentId)?.reason).toBe('retired');
+    expect(automergeHost.isQuarantined(documentId)).toBe(true);
+    expect(automergeHost.unloadableDocuments.has(documentId)).toBe(false);
     await host.updateIndexes();
     await expect.poll(() => indexedDocument('obj-bloated')).toBe(replacementId);
   });
 
-  test('keeps a document quarantined, and does not retire it, while the index lacks its objects', async () => {
-    const { automergeHost, countChunks, createSpace, createObjectDoc, linkObjects, readDirectory } = await setup();
+  test('leaves a small document that ran out of memory alone', async () => {
+    const { host, automergeHost, countChunks, createSpace, createObjectDoc, failToLoad, linkObjects, readDirectory } =
+      await setup();
     const root = await createSpace();
-    const url = await createObjectDoc('obj-unindexed', 'Unindexed');
+    const url = await createObjectDoc('obj-small', 'Small');
+    const documentId = interpretAsDocumentId(url);
+    await linkObjects(root.documentId, { 'obj-small': url });
+    await host.updateIndexes();
+
+    // Once the heap is exhausted every load fails this way, so a small document is a bystander.
+    failToLoad(documentId);
+    await sleep(200);
+
+    expect((await readDirectory(root.documentId)).retired).toBeUndefined();
+    expect(automergeHost.unloadableDocuments.has(documentId)).toBe(false);
+    expect(automergeHost.isQuarantined(documentId)).toBe(false);
+    expect(await countChunks(documentId)).toBeGreaterThan(0);
+  });
+
+  test('does not retire a document, or quarantine it, while the index lacks its objects', async () => {
+    const {
+      runtime,
+      host,
+      automergeHost,
+      spaceId,
+      countChunks,
+      createSpace,
+      createObjectDoc,
+      failToLoad,
+      linkObjects,
+      readDirectory,
+    } = await setup();
+    const root = await createSpace();
+    const url = await createObjectDoc('obj-unindexed', 'Unindexed', { bloated: true });
     const documentId = interpretAsDocumentId(url);
     await automergeHost.flush(Context.default());
+    // A bad checksum: Automerge refuses the bytes, so the indexer never reads them, but their ops still count.
+    await RuntimeProvider.runPromise(runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        // Both copies: the classical chunks and Subduction's blobs.
+        const glob = `${documentId}-*`;
+        const subductionGlob = `subduction-*-${documentIdToSedimentreeIdHex(documentId)}-*`;
+        const rows = yield* sql<{ key: string; data: Uint8Array }>`
+          SELECT key, data FROM automerge_chunks WHERE key GLOB ${glob} OR key GLOB ${subductionGlob}
+        `;
+        for (const { key, data } of rows) {
+          const corrupt = new Uint8Array(data);
+          corrupt[4] ^= 0xff;
+          yield* sql`UPDATE automerge_chunks SET data = ${corrupt} WHERE key = ${key}`;
+        }
+      }),
+    );
+    // Evicted, and dropped from the index, so every later read goes to the corrupted bytes.
+    await automergeHost['_repo'].removeFromCache(documentId);
+    await RuntimeProvider.runPromise(runtime)(
+      host.indexEngine.deleteObjects({ spaceId, documentIds: [documentId], objects: [] }),
+    );
 
-    // Quarantined before the space links it, so the indexer never reads it.
-    await automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
     await linkObjects(root.documentId, { 'obj-unindexed': url });
+    failToLoad(documentId);
+    await expect.poll(() => automergeHost.unloadableDocuments.has(documentId)).toBe(true);
     await sleep(200);
 
     const directory = await readDirectory(root.documentId);
     expect(directory.retired).toBeUndefined();
     expect(directory.links?.['obj-unindexed']?.toString()).toBe(url);
-    expect(automergeHost.quarantinedDocuments.get(documentId)?.reason).toBe('load-failed');
+    expect(automergeHost.isQuarantined(documentId)).toBe(false);
     // Nothing to rebuild from, so the bytes are the only copy and must survive.
     expect(await countChunks(documentId)).toBeGreaterThan(0);
   });
@@ -213,7 +277,7 @@ describe('document retirement', () => {
     await host.flush(Context.default());
 
     await expect.poll(() => countChunks(documentId)).toBe(0);
-    expect(automergeHost.quarantinedDocuments.get(documentId)?.reason).toBe('retired');
+    expect(automergeHost.isQuarantined(documentId)).toBe(true);
     expect(await automergeHost.loadDoc(Context.default(), documentId)).toBeNull();
     await host.updateIndexes();
     await expect.poll(() => indexedDocument('obj-retired')).toBe(interpretAsDocumentId(replacementUrl));
@@ -277,19 +341,11 @@ describe('document retirement', () => {
 
 describe('concurrent retirement', () => {
   test('retires several documents that fail at once, and restores all their entries if a merge drops them', async () => {
-    const {
-      host,
-      automergeHost,
-      countChunks,
-      createSpace,
-      createObjectDoc,
-      linkObjects,
-      loadDirectory,
-      readDirectory,
-    } = await setup();
+    const { host, countChunks, createSpace, createObjectDoc, failToLoad, linkObjects, loadDirectory, readDirectory } =
+      await setup();
     const root = await createSpace();
     const objectIds = ['obj-a', 'obj-b', 'obj-c'];
-    const urls = await Promise.all(objectIds.map((objectId) => createObjectDoc(objectId, objectId)));
+    const urls = await Promise.all(objectIds.map((objectId) => createObjectDoc(objectId, objectId, { bloated: true })));
     await linkObjects(root.documentId, Object.fromEntries(objectIds.map((objectId, index) => [objectId, urls[index]])));
     await host.updateIndexes();
     const documentIds = urls.map((url) => interpretAsDocumentId(url));
@@ -301,12 +357,11 @@ describe('concurrent retirement', () => {
       return documentIds.map((documentId) => directory.retired?.[documentId]?.replacedBy.toString());
     };
 
-    await Promise.all(
-      documentIds.map((documentId) =>
-        automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY }),
-      ),
-    );
-    await expect.poll(retiredEntries).toEqual(replacementUrls);
+    for (const documentId of documentIds) {
+      failToLoad(documentId);
+    }
+    // Each rebuild writes a 500K-op replacement.
+    await expect.poll(retiredEntries, { timeout: 15_000 }).toEqual(replacementUrls);
     const directory = await readDirectory(root.documentId);
     expect(objectIds.map((objectId) => directory.links?.[objectId]?.toString())).toEqual(replacementUrls);
     for (const documentId of documentIds) {
@@ -322,14 +377,13 @@ describe('concurrent retirement', () => {
   });
 
   test('restores a retirement entry a concurrent change dropped from the directory', async () => {
-    const { host, automergeHost, createSpace, createObjectDoc, linkObjects, loadDirectory, readDirectory } =
-      await setup();
+    const { host, createSpace, createObjectDoc, failToLoad, linkObjects, loadDirectory, readDirectory } = await setup();
     const root = await createSpace();
-    const url = await createObjectDoc('obj-bloated', 'Bloated');
+    const url = await createObjectDoc('obj-bloated', 'Bloated', { bloated: true });
     const documentId = interpretAsDocumentId(url);
     await linkObjects(root.documentId, { 'obj-bloated': url });
     await host.updateIndexes();
-    await automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    failToLoad(documentId);
     await expect.poll(async () => (await readDirectory(root.documentId)).retired?.[documentId]).toBeDefined();
 
     // Another peer created its own `retired` map at the same time, and the merge kept that one.
@@ -345,9 +399,9 @@ describe('concurrent retirement', () => {
   });
 
   test("keeps a replacement another peer's retirement already delivered", async () => {
-    const { host, automergeHost, spaceId, createSpace, createObjectDoc, linkObjects, readDirectory } = await setup();
+    const { host, spaceId, createSpace, createObjectDoc, failToLoad, linkObjects, readDirectory } = await setup();
     const root = await createSpace();
-    const url = await createObjectDoc('obj-bloated', 'Bloated');
+    const url = await createObjectDoc('obj-bloated', 'Bloated', { bloated: true });
     const documentId = interpretAsDocumentId(url);
     await linkObjects(root.documentId, { 'obj-bloated': url });
     await host.updateIndexes();
@@ -366,7 +420,7 @@ describe('concurrent retirement', () => {
     });
     await host.flush(Context.default());
 
-    await automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY });
+    failToLoad(documentId);
     await expect.poll(async () => (await readDirectory(root.documentId)).retired?.[documentId]).toBeDefined();
 
     const replacement = await readDirectory(replacementId);
@@ -396,14 +450,8 @@ describe('concurrent retirement', () => {
   });
 });
 
-describe('history retirement', () => {
-  const CURSOR_TYPE = URI.make('dxn:org.dxos.type.cursor:0.2.0');
-
-  /**
-   * Writes a document whose history is several times its state by replacing one long string again and again,
-   * the way the unfixed `Cursor.writeSnapshot` replaced its snapshot map; then restarts, so it loads from disk.
-   */
-  const bloatAndRestart = async (type: ReturnType<typeof URI.make> | undefined) => {
+describe('retirement across restarts', () => {
+  test('the space directory alone keeps a retired document quarantined after a restart', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const spaceId = SpaceId.random();
@@ -434,63 +482,33 @@ describe('history retirement', () => {
       version: SpaceDocVersion.CURRENT,
       access: { spaceId },
       objects: {
-        'obj-cursor': { system: type ? { type: { '/': type } } : {}, meta: { keys: [] }, data: { state: '' } },
+        'obj-bloated': { system: {}, meta: { keys: [] }, data: { padding: 'x'.repeat(RETIREMENT_MIN_OPS) } },
       },
     });
-    for (let write = 0; write < 6; write++) {
-      doc.change((draft: DatabaseDirectory) => {
-        const cursor = draft.objects?.['obj-cursor'];
-        invariant(cursor, 'Cursor object is missing.');
-        cursor.data.state = `${write}`.repeat(30_000);
-      });
-    }
     root.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
-      draft.links['obj-cursor'] = new A.RawString(doc.url);
+      draft.links['obj-bloated'] = new A.RawString(doc.url);
     });
     await before.flush(Context.default());
     await sleep(120);
     await before.updateIndexes();
     const documentId = doc.documentId;
-    const rootId = root.documentId;
-    await before.close();
-
-    const rootUrl = root.url;
-    const host = await openHost(rootUrl);
-    // The load from disk is what reports the document's size.
-    expect(await host.loadDoc(Context.default(), documentId)).not.toBeNull();
+    before['_automergeHost']['_repo'].emit('document-load-failed', {
+      documentId,
+      error: OUT_OF_MEMORY,
+      source: 'storage',
+    });
     const readRoot = async () => {
-      const handle = await host.loadDoc<DatabaseDirectory>(Context.default(), rootId);
+      const handle = await before.loadDoc<DatabaseDirectory>(Context.default(), root.documentId);
       invariant(handle, 'Root is not loadable.');
       return handle.doc();
     };
-    return { host, documentId, readRoot, reopen: () => openHost(rootUrl) };
-  };
-
-  test('rebuilds a cursor whose history outgrew its state, from its own current state', async () => {
-    const { host, documentId, readRoot, reopen } = await bloatAndRestart(CURSOR_TYPE);
-    const replacementId = await replacementDocumentId(documentId);
-    await expect
-      .poll(async () => (await readRoot())?.retired?.[documentId]?.replacedBy.toString(), { timeout: 10_000 })
-      .toBe(stringifyAutomergeUrl(replacementId));
-    expect(String((await readRoot())?.retired?.[documentId]?.reason)).toBe('history');
-
-    const replacement = await host.loadDoc<DatabaseDirectory>(Context.default(), replacementId);
-    invariant(replacement, 'Replacement is not loadable.');
-    expect(replacement.doc()?.objects?.['obj-cursor']?.data).toEqual({ state: '5'.repeat(30_000) });
-    expect(A.stats(replacement.doc()).numOps).toBeLessThan(40_000);
+    await expect.poll(async () => (await readRoot())?.retired?.[documentId]).toBeDefined();
+    await before.close();
 
     // Nothing but the space directory records the retirement, and it is enough to keep the document out.
-    await host.close();
-    const after = await reopen();
-    const afterAutomergeHost = after['_automergeHost'];
-    await expect.poll(() => afterAutomergeHost.quarantinedDocuments.get(documentId)?.reason).toBe('retired');
+    const after = await openHost(root.url);
+    await expect.poll(() => after['_automergeHost'].isQuarantined(documentId)).toBe(true);
     expect(await after.loadDoc(Context.default(), documentId)).toBeNull();
-  });
-
-  test('leaves a bloated document of any other type alone', async () => {
-    const { documentId, readRoot } = await bloatAndRestart(undefined);
-    await sleep(500);
-    expect((await readRoot())?.retired?.[documentId]).toBeUndefined();
   });
 });

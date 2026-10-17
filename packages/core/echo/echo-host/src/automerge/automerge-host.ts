@@ -70,8 +70,10 @@ import {
   type DocumentSize,
   OVERSIZED_DOCUMENT_CHANGES,
   OVERSIZED_DOCUMENT_OPS,
-  type QuarantineReason,
   type QuarantineRecord,
+  RETIREMENT_MIN_OPS,
+  type UnloadableDocument,
+  countOps,
   isOutOfMemoryError,
   oversizeLevel,
 } from './quarantine.ts';
@@ -265,19 +267,25 @@ export class AutomergeHost extends Resource {
   private readonly _headsStore: SqliteHeadsStore;
 
   /**
-   * Documents this host never loads, replicates or serves; see {@link quarantineDocument}. Held in memory only: the
-   * space directories' `retired` maps are the durable record, and re-quarantine their documents on every open.
+   * Retired documents, which this host never loads, replicates or serves; see {@link quarantineDocument}. Held in
+   * memory only: the space directories' `retired` maps are the durable record, and re-quarantine them on every open.
    */
   readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
 
-  /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
+  /** Fired when a document is quarantined, so waits on it end. */
   public readonly documentQuarantined = new Event<QuarantineRecord>();
+
+  /** Documents whose load ran out of memory and that are big enough to retire, until they are. */
+  readonly #unloadable = new Map<DocumentId, UnloadableDocument>();
+
+  /** Documents being sized after running out of memory, since storage and Subduction can each report the failure. */
+  readonly #sizing = new Set<DocumentId>();
+
+  /** Fired when a document joins {@link unloadableDocuments}, so the space that links it can retire it. */
+  public readonly documentUnloadable = new Event<UnloadableDocument>();
 
   /** The oversize level last reported per document, so a growing document warns once per doubling. */
   readonly #oversizeReported = new Map<DocumentId, number>();
-
-  /** Fired for every document loaded from disk, with its size, so the space can retire one whose history bloated. */
-  public readonly documentLoaded = new Event<{ documentId: DocumentId } & DocumentSize>();
 
   private _syncTask: DeferredTask | undefined = undefined;
   /**
@@ -537,8 +545,8 @@ export class AutomergeHost extends Resource {
           log.warn('document load failed', { documentId, source, error });
           return;
         }
-        this.quarantineDocument(documentId, { reason: 'load-failed', error }).catch((err) =>
-          log.error('failed to quarantine document', { documentId, err }),
+        this.#onOutOfMemory(documentId, error, source).catch((err) =>
+          log.error('failed to size a document that ran out of memory', { documentId, err }),
         );
       },
     );
@@ -550,7 +558,6 @@ export class AutomergeHost extends Resource {
         'document-loaded',
       ).on(this._ctx, ({ documentId, numOps, numChanges }) => {
         this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps });
-        this.documentLoaded.emit({ documentId, changes: numChanges, ops: numOps });
       });
     }
 
@@ -859,34 +866,26 @@ export class AutomergeHost extends Resource {
     return this.#quarantined.has(interpretAsDocumentId(documentId));
   }
 
-  /** Documents the host refuses to load, with why. */
+  /** Retired documents, which the host refuses to load. */
   get quarantinedDocuments(): ReadonlyMap<DocumentId, QuarantineRecord> {
     return this.#quarantined;
   }
 
+  /** Documents whose load ran out of memory and that are big enough to retire, until they are. */
+  get unloadableDocuments(): ReadonlyMap<DocumentId, UnloadableDocument> {
+    return this.#unloadable;
+  }
+
   /**
-   * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
-   * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
-   * {@link removeDocument}.
+   * Stops loading, replicating and serving a retired document for the life of this host, so no peer that still holds
+   * it can bring it back. Waits on it resolve as unavailable. Its bytes stay on disk until {@link removeDocument}.
    */
-  async quarantineDocument(
-    documentId: DocumentId,
-    { reason, error }: { reason: QuarantineReason; error?: unknown },
-  ): Promise<void> {
-    const existing = this.#quarantined.get(documentId);
-    if (existing) {
-      // Retirement is terminal, so it supersedes the load failure that led to it.
-      if (reason === 'retired') {
-        this.#quarantined.set(documentId, { ...existing, reason });
-      }
+  async quarantineDocument(documentId: DocumentId): Promise<void> {
+    this.#unloadable.delete(documentId);
+    if (this.#quarantined.has(documentId)) {
       return;
     }
-    const record: QuarantineRecord = {
-      documentId,
-      reason,
-      error: error === undefined ? undefined : String(error),
-      quarantinedAt: Date.now(),
-    };
+    const record: QuarantineRecord = { documentId, quarantinedAt: Date.now() };
     this.#quarantined.set(documentId, record);
 
     this._replicationLeases.get(documentId)?.[Symbol.dispose]();
@@ -898,13 +897,59 @@ export class AutomergeHost extends Resource {
     // Detaches every source, so none retries the load.
     await this._repo.removeFromCache(documentId);
 
-    // Every open re-applies the space root's `retired` entries, so only a load failure is news.
-    if (reason === 'load-failed') {
-      log.warn('quarantined document', { documentId, reason, error: record.error });
-    } else {
-      log('quarantined document', { documentId, reason });
-    }
+    // Debug, not warn: every open re-applies the space roots' `retired` entries.
+    log('quarantined document', { documentId });
     this.documentQuarantined.emit(record);
+  }
+
+  /**
+   * Marks a document whose load ran out of memory for retirement, if its stored bytes hold at least
+   * {@link RETIREMENT_MIN_OPS} ops; a smaller one only failed because something else exhausted the heap.
+   */
+  async #onOutOfMemory(documentId: DocumentId, error: unknown, source: string): Promise<void> {
+    if (this.#quarantined.has(documentId) || this.#unloadable.has(documentId) || this.#sizing.has(documentId)) {
+      return;
+    }
+    this.#sizing.add(documentId);
+    try {
+      await this.#retireIfBigEnough(documentId, error, source);
+    } finally {
+      this.#sizing.delete(documentId);
+    }
+  }
+
+  async #retireIfBigEnough(documentId: DocumentId, error: unknown, source: string): Promise<void> {
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    const [classical, ...subduction] = await Promise.all([
+      this._storage.loadRange([documentId]),
+      this._storage.loadRange([SUBDUCTION_PREFIX, 'blobs', sedimentreeId]),
+      this._storage.loadRange([SUBDUCTION_PREFIX, 'fragment-blobs', sedimentreeId]),
+    ]);
+    const bytesOf = (records: { data?: Uint8Array }[]) => records.flatMap(({ data }) => (data ? [data] : []));
+    let ops: number;
+    try {
+      // Each store may hold the whole document, so the two are counted apart rather than summed. The classical
+      // range also holds sync states, which are not Automerge chunks.
+      ops = Math.max(
+        await countOps(bytesOf(classical.filter(({ key }) => key[1] === 'snapshot' || key[1] === 'incremental'))),
+        await countOps(bytesOf(subduction.flat())),
+      );
+    } catch (err) {
+      log.warn('document ran out of memory and its stored bytes could not be read', { documentId, source, err });
+      return;
+    }
+    if (ops < RETIREMENT_MIN_OPS) {
+      log.warn('document ran out of memory', { documentId, source, ops, error });
+      return;
+    }
+    // Retired by a peer's directory while its bytes were being read.
+    if (this.#quarantined.has(documentId)) {
+      return;
+    }
+    const unloadable: UnloadableDocument = { documentId, ops, error: String(error) };
+    this.#unloadable.set(documentId, unloadable);
+    log.warn('document ran out of memory; retiring it', { documentId, source, ops, error });
+    this.documentUnloadable.emit(unloadable);
   }
 
   /** Documents currently leased — what the host holds because something is using it. */

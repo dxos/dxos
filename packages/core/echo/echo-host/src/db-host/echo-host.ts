@@ -66,12 +66,9 @@ import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './inv
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import {
-  HISTORY_BLOAT_MIN_OPS,
   type IndexedObject,
   type Retirement,
   buildReplacementDocument,
-  isHistoryBloated,
-  isRetirableForHistory,
   makeReplacementDirectory,
   replacementDocumentId,
 } from './retirement.ts';
@@ -216,9 +213,6 @@ export class EchoHost extends Resource {
 
   /** Retirements this host wrote or saw this session, to write back an entry a concurrent change dropped. */
   readonly #knownRetirements = new Map<DocumentId, Retirement & { spaceId: SpaceId }>();
-
-  /** Op counts of loaded documents big enough to be retired for their history. */
-  readonly #historyCandidates = new Map<DocumentId, number>();
 
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
@@ -455,24 +449,13 @@ export class EchoHost extends Resource {
         }
       }
 
-      // A directory change can carry another peer's retirement, and a newly opened space can link a document
-      // quarantined on an earlier start.
+      // A directory change can carry another peer's retirement, and a newly opened space can link a document that
+      // ran out of memory before it opened.
       this.#scheduleRetirement(e.spaceId);
     });
-    this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
-      if (reason === 'load-failed') {
-        for (const spaceId of this._spaceStateManager.spaceIds) {
-          this.#scheduleRetirement(spaceId);
-        }
-      }
-    });
-    this._automergeHost.documentLoaded.on(this._ctx, ({ documentId, ops }) => {
-      if (ops >= HISTORY_BLOAT_MIN_OPS) {
-        this.#historyCandidates.set(documentId, ops);
-        // The index may already be current, in which case no index pass will bring the document up again.
-        for (const spaceId of this._spaceStateManager.spaceIds) {
-          this.#scheduleRetirement(spaceId);
-        }
+    this._automergeHost.documentUnloadable.on(this._ctx, () => {
+      for (const spaceId of this._spaceStateManager.spaceIds) {
+        this.#scheduleRetirement(spaceId);
       }
     });
     // Opened on the host's context, so the scheduler stops subscribing the moment the host starts closing.
@@ -908,8 +891,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Retirement, in every direction. Documents the space directory has retired are wiped without being read —
-   * the share of every peer. Linked documents this host could not load, or whose history outgrew their state,
+   * Retirement, in both directions. Documents the space directory has retired are wiped without being read — the
+   * share of every peer. Linked documents whose load ran out of memory here (see `AutomergeHost.unloadableDocuments`)
    * are rebuilt from the index and retired in the directory — the share of the peer that found them.
    */
   async #retireDocuments(spaceId: SpaceId): Promise<void> {
@@ -926,7 +909,6 @@ export class EchoHost extends Resource {
     this.#restoreLostRetirements(spaceId, root);
 
     const unloadable = new Map<DocumentId, string[]>();
-    const bloated = new Map<DocumentId, string[]>();
     for (const [objectId, link] of Object.entries(directory.links ?? {})) {
       const url = link.toString();
       if (!isValidAutomergeUrl(url)) {
@@ -936,17 +918,12 @@ export class EchoHost extends Resource {
       if (directory.retired?.[documentId] !== undefined) {
         continue;
       }
-      if (this._automergeHost.quarantinedDocuments.get(documentId)?.reason === 'load-failed') {
+      if (this._automergeHost.unloadableDocuments.has(documentId)) {
         defaultMap(unloadable, documentId, () => []).push(objectId);
-      } else if (this.#historyCandidates.has(documentId)) {
-        defaultMap(bloated, documentId, () => []).push(objectId);
       }
     }
     for (const [documentId, objectIds] of unloadable) {
       await this.#retireUnloadableDocument(spaceId, root, documentId, objectIds);
-    }
-    for (const [documentId, objectIds] of bloated) {
-      await this.#retireBloatedDocument(spaceId, root, documentId, objectIds);
     }
   }
 
@@ -972,8 +949,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Retires a document that cannot be loaded, rebuilt from the state the index last saw. Left quarantined, and
-   * not retired, while the index lacks any of the document's objects.
+   * Retires a document that cannot be loaded, rebuilt from the state the index last saw. Left in place, and retried
+   * after each index pass, while the index lacks any of the document's objects.
    */
   async #retireUnloadableDocument(
     spaceId: SpaceId,
@@ -999,7 +976,7 @@ export class EchoHost extends Resource {
     );
     const missing = objectIds.filter((objectId) => !indexed.some((object) => object.objectId === objectId));
     if (missing.length > 0) {
-      log.warn('unloadable document kept quarantined: the index has no state for some of its objects', {
+      log.warn('unloadable document not retired yet: the index has no state for some of its objects', {
         spaceId,
         documentId,
         missing,
@@ -1013,54 +990,8 @@ export class EchoHost extends Resource {
       documentId,
       objectIds,
       makeReplacementDirectory({ spaceId, spaceKey: root.getSpaceKey(), objects: indexed }),
-      'load-failed',
     );
     log.info('retired a document that could not be loaded', { spaceId, documentId, objects: objectIds.length });
-  }
-
-  /**
-   * Retires a loaded document whose history has outgrown its state, if it holds only the objects linked to it and
-   * all are of a type that may be rebuilt (see `HISTORY_RETIREMENT_TYPES`). Rebuilt from the document's own current
-   * state, so it keeps every change, including any the index has not caught up with.
-   */
-  async #retireBloatedDocument(
-    spaceId: SpaceId,
-    root: DatabaseRoot,
-    documentId: DocumentId,
-    objectIds: string[],
-  ): Promise<void> {
-    const ops = this.#historyCandidates.get(documentId) ?? 0;
-    this.#historyCandidates.delete(documentId);
-    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId);
-    const state = lease ? A.toJS(lease.doc()) : undefined;
-    const objects = state?.objects ?? {};
-    if (
-      !state ||
-      Object.keys(objects).length !== objectIds.length ||
-      !isRetirableForHistory(objectIds.map((objectId) => objects[objectId]?.system?.type?.['/']))
-    ) {
-      return;
-    }
-    const stateBytes = JSON.stringify(objects).length;
-    if (!isHistoryBloated({ ops, stateBytes })) {
-      return;
-    }
-
-    await this.#replaceDocument(
-      spaceId,
-      root,
-      documentId,
-      objectIds,
-      { version: state.version, access: state.access, objects },
-      'history',
-    );
-    log.info('retired a document whose history outgrew its state', {
-      spaceId,
-      documentId,
-      ops,
-      stateBytes,
-      objects: objectIds.length,
-    });
   }
 
   /**
@@ -1073,8 +1004,8 @@ export class EchoHost extends Resource {
     documentId: DocumentId,
     objectIds: string[],
     directory: DatabaseDirectory,
-    reason: RetirementReason,
   ): Promise<void> {
+    const reason: RetirementReason = 'load-failed';
     const replacementId = await replacementDocumentId(documentId);
     const replacementUrl = stringifyAutomergeUrl(replacementId);
     // Another peer's retirement may have delivered the replacement already; importing over it would start a
@@ -1137,7 +1068,7 @@ export class EchoHost extends Resource {
     }
     for (const retirement of retired) {
       this.#knownRetirements.set(retirement.documentId, { ...retirement, spaceId });
-      await this._automergeHost.quarantineDocument(retirement.documentId, { reason: 'retired' });
+      await this._automergeHost.quarantineDocument(retirement.documentId);
     }
     const documentIds = retired.map(({ documentId }) => documentId);
     // Index rows first: the indexer finds documents through them, so one outliving its bytes would be read again.
@@ -1147,7 +1078,6 @@ export class EchoHost extends Resource {
     for (const documentId of documentIds) {
       await this._automergeHost.removeDocument(documentId);
       this.#wipedDocuments.add(documentId);
-      this.#historyCandidates.delete(documentId);
     }
     log('wiped retired documents', { spaceId, documents: documentIds.length });
   }
@@ -1651,8 +1581,8 @@ export class EchoHost extends Resource {
 
       countWork('echo.indexPasses');
       countWork('echo.indexedObjects', combinedResult.updated);
-      // A document is only rebuilt for its history from index state that has caught up with it.
-      if (this.#historyCandidates.size > 0) {
+      // An unloadable document waits on the index to hold all its objects before it can be rebuilt.
+      if (this._automergeHost.unloadableDocuments.size > 0) {
         for (const spaceId of combinedResult.spaces) {
           this.#scheduleRetirement(spaceId);
         }
