@@ -4,6 +4,7 @@
 
 import poiretOne from '@fontsource/poiret-one/files/poiret-one-latin-400-normal.woff2';
 import { loadFont } from '@remotion/fonts';
+import { CameraMotionBlur } from '@remotion/motion-blur';
 import React, { useEffect, useState } from 'react';
 import {
   AbsoluteFill,
@@ -77,11 +78,10 @@ const TURN = {
 };
 
 /**
- * Rotational motion blur: each ring trails copies at the angles it held over the last `shutter` of a frame (as a
- * camera shutter open for that fraction would smear it), fading towards the oldest. A ring turning less than
- * `minDegrees` across the shutter draws no trail, so the settled mark is crisp.
+ * Motion blur on the rings only (`CameraMotionBlur` re-renders them at sub-frame times and averages the samples); the
+ * wordmark is drawn in its own layer above, so it stays crisp.
  */
-const BLUR = { samples: 10, shutter: 0.9, opacity: 0.45, minDegrees: 0.5 };
+const BLUR = { shutterAngle: 270, samples: 10 };
 
 const WORDMARK_FAMILY = 'Poiret One';
 /** Wordmark size and offset from the mark, in viewBox units (the mark is 256 square). */
@@ -119,6 +119,58 @@ const growPath = (ring: Ring, grown: number) =>
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
+/** The lockup's size, fixed to its final extent so nothing reflows while it animates. */
+type Lockup = { viewWidth: number; markSize: number };
+
+/** One `svg` per layer, sized identically and centred, so the rings and the wordmark line up. */
+const LockupLayer = ({ viewWidth, markSize, children }: Lockup & { children: React.ReactNode }) => (
+  <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <svg
+      width={(markSize * viewWidth) / 256}
+      height={markSize}
+      viewBox={`0 0 ${viewWidth} 256`}
+      style={{ overflow: 'visible' }}
+    >
+      {children}
+    </svg>
+  </AbsoluteFill>
+);
+
+/** The rings spinning in, read from the current frame so `CameraMotionBlur` can sample them between frames. */
+const Rings = (lockup: Lockup) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const ms = (frame / fps) * 1000;
+  const spin = TURN.easing(Math.min(1, ms / TURN.duration));
+  const growEnd = TURN.duration * TURN.growFinishAt;
+  return (
+    <LockupLayer {...lockup}>
+      {RINGS.map((ring, index) => {
+        // Alternate directions, inner rings turning further, so neighbours move against each other.
+        const turn = (index % 2 ? -1 : 1) * (1080 - index * 180);
+        const longest = Math.max(
+          ...ring.arms.map(([real, symmetric]) => Math.abs(parseFloat(real) - parseFloat(symmetric))),
+        );
+        const growDuration = (longest * ring.scaleX) / TURN.growRate;
+        const grown = interpolate(ms, [growEnd - growDuration, growEnd], [0, 1], clamp);
+        return (
+          <g
+            key={ring.fill}
+            style={{
+              opacity: Math.min(1, spin / 0.25),
+              transform: `rotate(${turn * (1 - spin)}deg)`,
+              transformBox: 'view-box',
+              transformOrigin: '128px 128px',
+            }}
+          >
+            <path transform={ring.transform} d={growPath(ring, grown)} style={{ fill: ring.fill }} />
+          </g>
+        );
+      })}
+    </LockupLayer>
+  );
+};
+
 const ComposerIntroCard = () => {
   const colors = usePalette();
   const frame = useCurrentFrame();
@@ -126,10 +178,6 @@ const ComposerIntroCard = () => {
   const metrics = useWordmarkMetrics();
   const ms = (frame / fps) * 1000;
 
-  const spinAt = (at: number) => TURN.easing(Math.min(1, Math.max(0, at) / TURN.duration));
-  const spin = spinAt(ms);
-  const shutterMs = (1000 / fps) * BLUR.shutter;
-  const growEnd = TURN.duration * TURN.growFinishAt;
   const wordmarkStart = TURN.duration * TURN.settledAt + TURN.wordmarkDelay;
   const wordmarkOpacity = interpolate(ms, [wordmarkStart, wordmarkStart + TURN.wordmarkFade], [0, 1], {
     ...clamp,
@@ -142,57 +190,16 @@ const ComposerIntroCard = () => {
     clamp,
   );
 
-  // The lockup is sized to its final extent so nothing reflows while it animates.
   const viewWidth = metrics ? WORDMARK_X + metrics.width : 256;
-  const markSize = Math.round(Math.min(width * 0.8 * (256 / viewWidth), height * 0.3));
+  const lockup = { viewWidth, markSize: Math.round(Math.min(width * 0.8 * (256 / viewWidth), height * 0.3)) };
 
   return (
-    <AbsoluteFill
-      style={{ backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center', opacity: fadeOut }}
-    >
-      <svg
-        width={(markSize * viewWidth) / 256}
-        height={markSize}
-        viewBox={`0 0 ${viewWidth} 256`}
-        style={{ overflow: 'visible' }}
-      >
-        {RINGS.map((ring, index) => {
-          // Alternate directions, inner rings turning further, so neighbours move against each other.
-          const turn = (index % 2 ? -1 : 1) * (1080 - index * 180);
-          const longest = Math.max(
-            ...ring.arms.map(([real, symmetric]) => Math.abs(parseFloat(real) - parseFloat(symmetric))),
-          );
-          const growDuration = (longest * ring.scaleX) / TURN.growRate;
-          const grown = interpolate(ms, [growEnd - growDuration, growEnd], [0, 1], clamp);
-          const path = growPath(ring, grown);
-          const angle = (at: number) => turn * (1 - spinAt(at));
-          const blurred = Math.abs(angle(ms) - angle(ms - shutterMs)) >= BLUR.minDegrees;
-          // Oldest first, so the ring itself is drawn on top of its trail.
-          const ghosts = blurred
-            ? Array.from({ length: BLUR.samples }, (_, sample) => BLUR.samples - sample).map((sample) => ({
-                angle: angle(ms - (shutterMs * sample) / BLUR.samples),
-                opacity: BLUR.opacity * (1 - sample / (BLUR.samples + 1)),
-              }))
-            : [];
-          return (
-            <g key={ring.fill} style={{ opacity: Math.min(1, spin / 0.25) }}>
-              {[...ghosts, { angle: angle(ms), opacity: 1 }].map(({ angle, opacity }, layer) => (
-                <g
-                  key={layer}
-                  style={{
-                    opacity,
-                    transform: `rotate(${angle}deg)`,
-                    transformBox: 'view-box',
-                    transformOrigin: '128px 128px',
-                  }}
-                >
-                  <path transform={ring.transform} d={path} style={{ fill: ring.fill }} />
-                </g>
-              ))}
-            </g>
-          );
-        })}
-        {metrics && (
+    <AbsoluteFill style={{ backgroundColor: colors.ground, opacity: fadeOut }}>
+      <CameraMotionBlur {...BLUR}>
+        <Rings {...lockup} />
+      </CameraMotionBlur>
+      {metrics && (
+        <LockupLayer {...lockup}>
           <text
             x={WORDMARK_X}
             y={metrics.baseline}
@@ -203,8 +210,8 @@ const ComposerIntroCard = () => {
           >
             composer
           </text>
-        )}
-      </svg>
+        </LockupLayer>
+      )}
     </AbsoluteFill>
   );
 };
