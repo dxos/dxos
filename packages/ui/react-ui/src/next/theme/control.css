@@ -1006,8 +1006,19 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
-  .dx-toolbar > .dx-select > .dx-control {
+  .dx-toolbar > .dx-select > .dx-control,
+  .dx-toolbar > .dx-tabs-list {
     margin-inline: var(--dx-control-inset);
+  }
+  /*
+   * A visible edge at either end of the toolbar starts one gap in, on a list's icon column; an icon-only Button's icon
+   * already sits there in its square cell, so only its hover fill reaches the inset.
+   */
+  .dx-toolbar:has(> :first-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+    padding-inline-start: calc(var(--dx-gap-size) - var(--dx-control-inset));
+  }
+  .dx-toolbar:has(> :last-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+    padding-inline-end: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
   .dx-toolbar > .dx-input {
     flex: 1;
