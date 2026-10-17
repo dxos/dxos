@@ -32,4 +32,9 @@ def lines (names : List Text) : Js :=
     200
     [("content-type", "text/plain; charset=utf-8"), ("cache-control", "no-store")]
 
+/-- Runs `body`, which waits for nothing (such as a handler over a store in memory), with no event loop: for tests. -/
+def offline (body : Unit -> {Js.Async | r} a) : {r} a :=
+  handle body () with
+  | Js.Async.await promise -> k => k promise
+
 end Worker.Http

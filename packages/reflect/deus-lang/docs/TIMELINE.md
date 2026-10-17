@@ -329,6 +329,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 319 | 10-19 10:00 | 1h 00m | d4218b5bb3 | Review fixes: read-only stores open, assets checked in batches of 500 per run folder, bin/deus through symlinks (D295) |
 | 320 | 10-19 11:00 | 30m 00s | ee7a94c764 | `deus lib update <name> <file…>` changes a mounted library in one step (D296) |
 | 321 | 10-19 12:00 | 30m 00s | 911879f65f | The Worker's bundle push rule is a pure, tested function: the first slice of the Cloudflare simulator (D297) |
-| 322 | 10-19 13:00 | 30m 00s | this commit | The Worker answers the bundles API over a storage record, tested against a store in memory (D298) |
+| 322 | 10-19 13:00 | 30m 00s | e0d02b9407 | The Worker answers the bundles API over a storage record, tested against a store in memory (D298) |
+| 323 | 10-19 13:30 | 30m 00s | this commit | Branch heads move over a storage record, with the race of two pushes tested in memory (D299) |
 
-Total from stage 1 to stage 322: 135h 20m.
+Total from stage 1 to stage 323: 135h 50m.

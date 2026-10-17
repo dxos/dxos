@@ -219,48 +219,7 @@ rt.named(Worker$Heads$epochOf, "Worker.Heads.epochOf");
 
 async function Worker$Heads$moveHead(bucket, project, claim, sent, keyId, readCurrent, epochAt) {
   const $stack = rt.handlers();
-  const current = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, Worker$Heads$Claim$branch(claim)))));
-  const causal = Option$map(rt.named((c) => lib$web$Js$toText(lib$web$Js$get(c, "causal")), "Worker.Heads.moveHead/\u03bb"), current);
-  let required;
-  m0: {
-    if (causal.tag === 1) {
-      const head = causal.fields[0];
-      if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
-        required = 0;
-      } else {
-        required = lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
-      }
-      break m0;
-    }
-    if (causal.tag === 0) {
-      required = 0;
-      break m0;
-    }
-    rt.nomatch(causal);
-  }
-  const etag = Option$bind(current, rt.named((c_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(c_1, "etag"))), "Worker.Heads.moveHead/\u03bb"));
-  const decided = Worker$Heads$verdict(causal, claim, required, sent);
-  if ((decided === "same")) {
-    return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
-  } else {
-    if ((decided === "epoch")) {
-      return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [426, required, ""]);
-    } else {
-      let r1;
-      if ((decided === "write")) {
-        r1 = rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), etag));
-      } else {
-        r1 = false;
-      }
-      if (r1) {
-        rt.resumed($stack, await Worker$Heads$logHead(bucket, project, Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), causal, keyId));
-        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
-      } else {
-        const latest = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, Worker$Heads$Claim$branch(claim)))));
-        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [409, required, Option$getOr(Option$map(rt.named((c_2) => lib$web$Js$toText(lib$web$Js$get(c_2, "causal")), "Worker.Heads.moveHead/\u03bb"), latest), "")]);
-      }
-    }
-  }
+  return rt.resumed($stack, await Worker$Heads$move(rt.resumed($stack, await Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt)), claim, sent));
 }
 rt.named(Worker$Heads$moveHead, "Worker.Heads.moveHead");
 
@@ -698,34 +657,92 @@ function lib$base$Sexp$readAll(t) {
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
-function Worker$Heads$Claim$branch(v) {
+async function Worker$Heads$move(store, claim, sent) {
+  const $stack = rt.handlers();
+  const current = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$current(store)), Worker$Heads$Claim$branch(claim)));
+  const causal = Option$map(fst, current);
+  let required;
   m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_1;
+    if (causal.tag === 1) {
+      const head = causal.fields[0];
+      if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
+        required = 0;
+      } else {
+        required = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$epochAt(store)), head));
+      }
+      break m0;
     }
-    rt.nomatch(v);
+    if (causal.tag === 0) {
+      required = 0;
+      break m0;
+    }
+    rt.nomatch(causal);
+  }
+  const tag = Option$bind(current, snd);
+  const decided = Worker$Heads$verdict(causal, claim, required, sent);
+  if ((decided === "same")) {
+    return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
+  } else {
+    if ((decided === "epoch")) {
+      return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [426, required, ""]);
+    } else {
+      let r1;
+      if ((decided === "write")) {
+        r1 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$swap(store)), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), tag));
+      } else {
+        r1 = false;
+      }
+      if (r1) {
+        rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$log(store)), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), causal));
+        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
+      } else {
+        let r2;
+        const t3 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$current(store)), Worker$Heads$Claim$branch(claim)));
+        m4: {
+          if (t3.tag === 1 && t3.fields[0].tag === 0) {
+            const head_1 = t3.fields[0].fields[0];
+            r2 = head_1;
+            break m4;
+          }
+          if (t3.tag === 0) {
+            r2 = "";
+            break m4;
+          }
+          rt.nomatch(t3);
+        }
+        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [409, required, r2]);
+      }
+    }
   }
 }
-rt.named(Worker$Heads$Claim$branch, "Worker.Heads.Claim.branch");
+rt.named(Worker$Heads$move, "Worker.Heads.move");
 
-const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
-
-function Option$bind(o, f) {
-  m0: {
-    if (o.tag === 0) {
+function Worker$Heads$r2Heads(bucket, project, keyId, readCurrent, epochAt) {
+  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [rt.named(async (branch) => {
+  const $stack = rt.handlers();
+  const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, branch))));
+  m1: {
+    if (t0.tag === 0) {
       return rt.con0("#Option", 0);
     }
-    if (o.tag === 1) {
-      const x = o.fields[0];
-      return rt.ap(f, x);
+    if (t0.tag === 1) {
+      const found = t0.fields[0];
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(found, "causal")), Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(found, "etag")))])]);
     }
-    rt.nomatch(o);
+    rt.nomatch(t0);
   }
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (head) => {
+  const $stack = rt.handlers();
+  return lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_1, head_1, tag) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, branch_1, head_1, tag));
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_2, head_2, previous) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$Heads$logHead(bucket, project, branch_2, head_2, previous, keyId));
+}, "Worker.Heads.r2Heads/\u03bb")]);
 }
-rt.named(Option$bind, "Option.bind");
+rt.named(Worker$Heads$r2Heads, "Worker.Heads.r2Heads");
 
 function Worker$Http$method(request) {
   return lib$web$Js$toText(lib$web$Js$get(request, "method"));
@@ -950,6 +967,117 @@ function lib$base$Sexp$push(form, stack, done) {
 }
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
 
+async function Worker$Heads$HeadStore$current(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$HeadStore$current, "Worker.Heads.HeadStore.current");
+
+function Worker$Heads$Claim$branch(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Claim$branch, "Worker.Heads.Claim.branch");
+
+function fst(p) {
+  m0: {
+    if (p.tag === 0) {
+      const x = p.fields[0];
+      return x;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(fst, "fst");
+
+async function Worker$Heads$HeadStore$epochAt(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$HeadStore$epochAt, "Worker.Heads.HeadStore.epochAt");
+
+function Option$bind(o, f) {
+  m0: {
+    if (o.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return rt.ap(f, x);
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$bind, "Option.bind");
+
+function snd(p) {
+  m0: {
+    if (p.tag === 0) {
+      const y = p.fields[1];
+      return y;
+    }
+    rt.nomatch(p);
+  }
+}
+rt.named(snd, "snd");
+
+async function Worker$Heads$HeadStore$swap(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$HeadStore$swap, "Worker.Heads.HeadStore.swap");
+
+async function Worker$Heads$HeadStore$log(v) {
+  const $stack = rt.handlers();
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      const v_4 = v.fields[3];
+      return v_4;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$HeadStore$log, "Worker.Heads.HeadStore.log");
+
+const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
+
 function Worker$Http$json(value, status) {
   return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
@@ -993,28 +1121,6 @@ function List$replicate(n, x) {
 }
 rt.named(List$replicate, "List.replicate");
 
-function fst(p) {
-  m0: {
-    if (p.tag === 0) {
-      const x = p.fields[0];
-      return x;
-    }
-    rt.nomatch(p);
-  }
-}
-rt.named(fst, "fst");
-
-function snd(p) {
-  m0: {
-    if (p.tag === 0) {
-      const y = p.fields[1];
-      return y;
-    }
-    rt.nomatch(p);
-  }
-}
-rt.named(snd, "snd");
-
 const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
 
 function Text$drop(n, t) {
@@ -1025,6 +1131,34 @@ rt.named(Text$drop, "Text.drop");
 const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
 
 const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
+
+async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt) {
+  const $stack = rt.handlers();
+  return new rt.Con("ec44a1184435ae490777de490eef602d345f9a4045972eb5114834797f80d190", 0, [rt.named(async (branch) => {
+  const $stack = rt.handlers();
+  const t0 = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, branch))));
+  m1: {
+    if (t0.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (t0.tag === 1) {
+      const found = t0.fields[0];
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(found, "causal")), Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(found, "etag")))])]);
+    }
+    rt.nomatch(t0);
+  }
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (head) => {
+  const $stack = rt.handlers();
+  return lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_1, head_1, tag) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, branch_1, head_1, tag));
+}, "Worker.Heads.r2Heads/\u03bb"), rt.named(async (branch_2, head_2, previous) => {
+  const $stack = rt.handlers();
+  return rt.resumed($stack, await Worker$Heads$logHead(bucket, project, branch_2, head_2, previous, keyId));
+}, "Worker.Heads.r2Heads/\u03bb")]);
+}
+rt.named(Worker$Heads$r2Heads$wait, "Worker.Heads.r2Heads");
 
 export const raw = {
   parseClaim: Worker$Heads$parseClaim,

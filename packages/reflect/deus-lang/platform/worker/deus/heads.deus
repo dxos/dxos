@@ -122,27 +122,92 @@ structure Moved @"urn:deus:worker:Moved" where
   required : Int
   head : Text
 
-/-- Moves `claim.branch` as the claim asks, if it may (D167, D181): reads the current head through `readCurrent` (in
-  JavaScript, a branch to a promise of `{causal, etag}` or `undefined`, which also reads heads older than D181), asks
-  `epochAt` (a head to a promise of the epoch it asks for) only when the head would change, decides by `verdict`, and
-  writes and logs the move by a conditional write, so of two pushes from one head exactly one moves it. -/
-def moveHead (bucket : Js) (project : Text) (claim : Claim) (sent : Int) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Moved :=
-  let current := Js.toOption (Js.Async.await (readCurrent claim.branch))
-  let causal := Option.map (fun c => Js.toText (Js.get c "causal")) current
+/-- Where a project's branch heads live: R2 at the edge, a map in tests. `current branch` is the head and the tag a
+  conditional write moves it from (none for a head with no tag, which only an unconditional write may move: one
+  read from D1); `epochAt head` is the data-safety epoch a head asks for; `swap branch head tag` moves the head from
+  the one tagged `tag` (or only where there is none), false when another push moved it first; `log branch head
+  previous` records a move. -/
+structure HeadStore where
+  current : Text -> {Js.Async} Option (Text, Option Text)
+  epochAt : Text -> {Js.Async} Int
+  swap : Text -> Text -> Option Text -> {Js.Async} Bool
+  log : Text -> Text -> Option Text -> {Js.Async} Unit
+
+/-- Moves `claim.branch` as the claim asks, if it may (D167, D181): reads the current head, asks its epoch only when
+  the head would change, decides by `verdict`, and swaps and logs the move by a conditional write, so of two pushes
+  from one head exactly one moves it. -/
+def move (store : HeadStore) (claim : Claim) (sent : Int) : {Js.Async} Moved :=
+  let current := store.current claim.branch
+  let causal := Option.map fst current
   let required :=
     match causal with
-    | Option.some head => if head == claim.head then 0 else Js.toInt (Js.Async.await (epochAt head))
+    | Option.some head => if head == claim.head then 0 else store.epochAt head
     | Option.none => 0
-  let etag := Option.bind current (fun c => Option.map Js.toText (Js.toOption (Js.get c "etag")))
+  let tag := Option.bind current snd
   let decided := verdict causal claim required sent
   if decided == "same" then Moved.mk 0 required claim.head
   else if decided == "epoch" then Moved.mk 426 required ""
-  else if decided == "write" && writeHead bucket project claim.branch claim.head etag then
-    let _ := logHead bucket project claim.branch claim.head causal keyId
+  else if decided == "write" && store.swap claim.branch claim.head tag then
+    let _ := store.log claim.branch claim.head causal
     Moved.mk 0 required claim.head
-  else
-    let latest := Js.toOption (Js.Async.await (readCurrent claim.branch))
-    Moved.mk 409 required (Option.getOr (Option.map (fun c => Js.toText (Js.get c "causal")) latest) "")
+  else Moved.mk 409 required (match store.current claim.branch with | Option.some (head, _) => head | Option.none => "")
+
+/-- The heads of `project` in the R2 `bucket`, read through `readCurrent` (in JavaScript, a branch to a promise of
+  `{causal, etag}` or `undefined`, which also reads heads older than D181) and `epochAt` (a head to a promise of
+  its epoch), logged as moved by the key `keyId`. -/
+def r2Heads (bucket : Js) (project : Text) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : HeadStore :=
+  { current := fun branch =>
+      match Js.toOption (Js.Async.await (readCurrent branch)) with
+      | Option.none => Option.none
+      | Option.some found => Option.some (Js.toText (Js.get found "causal"), Option.map Js.toText (Js.toOption (Js.get found "etag"))),
+    epochAt := fun head => Js.toInt (Js.Async.await (epochAt head)),
+    swap := fun branch head tag => writeHead bucket project branch head tag,
+    log := fun branch head previous => logHead bucket project branch head previous keyId }
+
+/-- `move` on the R2 `bucket` (`r2Heads`), as remote.mjs calls it. -/
+def moveHead (bucket : Js) (project : Text) (claim : Claim) (sent : Int) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Moved :=
+  move (r2Heads bucket project keyId readCurrent epochAt) claim sent
+
+/-- Heads held in `heads` (a branch to its head and tag, the tag counting the writes) and moves logged in `moves`;
+  every head asks for the epoch `epochs` gives it, or 0. `move` in tests, with no R2. -/
+def memoryHeads (heads : Ref (Map Text (Text, Text))) (moves : Ref (List (Text, Text, Option Text))) (epochs : List (Text, Int)) : HeadStore :=
+  { current := fun branch => Option.map (fun held => (fst held, Option.some (snd held))) (Map.lookup branch (Ref.get heads)),
+    epochAt := fun head => Option.getOr (List.lookup head epochs) 0,
+    swap := fun branch head tag =>
+      if tag == Option.map snd (Map.lookup branch (Ref.get heads)) then
+        let _ := Ref.set heads (Map.insert branch (head, Int.toText (List.length (Ref.get moves))) (Ref.get heads))
+        true
+      else false,
+    log := fun branch head previous => Ref.set moves (Ref.get moves ++ [(branch, head, previous)]) }
+
+test headsMoveOnlyFromWhereThePushPulled :=
+  Worker.Http.offline (fun _ =>
+    let heads := Ref.new Map.empty
+    let moves := Ref.new []
+    let store := memoryHeads heads moves [(headB, 2)]
+    let first := move store (Claim.mk "main" headA []) 0
+    let retried := move store (Claim.mk "main" headA []) 0
+    let built := move store (Claim.mk "main" headB [headA]) 0
+    let stale := move store (Claim.mk "main" headA [headA]) 5
+    let old := move store (Claim.mk "main" (Text.repeat 64 "c") [headB]) 1
+    first == Moved.mk 0 0 headA
+      && retried == Moved.mk 0 0 headA
+      && built == Moved.mk 0 0 headB
+      && stale == Moved.mk 409 2 headB
+      && old == Moved.mk 426 2 ""
+      && Ref.get moves == [("main", headA, Option.none), ("main", headB, Option.some headA)])
+
+test ofTwoPushesFromOneHeadOneMovesIt :=
+  Worker.Http.offline (fun _ =>
+    let heads := Ref.new (Map.insert "main" (headA, "t") Map.empty)
+    let moves := Ref.new []
+    let store := memoryHeads heads moves []
+    -- The second push read the head before the first moved it.
+    let raced := { store with current := fun _ => Option.some (headA, Option.some "t") }
+    let won := move store (Claim.mk "main" headB [headA]) 0
+    let lost := move raced (Claim.mk "main" (Text.repeat 64 "c") [headA]) 0
+    won == Moved.mk 0 0 headB && lost.status == 409 && Map.lookup "main" (Ref.get heads) == Option.some (headB, "0")
+      && List.length (Ref.get moves) == 1)
 
 /-- Answers `/v1/<project>/headlog/<branch>` for `request`: every head the branch had, oldest first, one
   `<ms>-<causal>` per line. Only pushes write the log. -/

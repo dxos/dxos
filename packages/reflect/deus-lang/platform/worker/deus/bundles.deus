@@ -97,13 +97,8 @@ def memoryStore (held : Ref (Map Text Text)) : Store Text :=
     trash := fun name => Ref.set held (Map.remove name (Ref.get held)),
     digest := fun body => if Text.startsWith "gz:" body then Option.some (Text.sha256 (Text.drop 3 body)) else Option.none }
 
-/-- Runs `body` with nothing to wait for, as `answer` over `memoryStore` has. -/
-def offline (body : Unit -> {Js.Async | r} a) : {r} a :=
-  handle body () with
-  | Js.Async.await promise -> k => k promise
-
 test bundlesArePushedReadListedAndTrashed :=
-  offline (fun _ =>
+  Worker.Http.offline (fun _ =>
     let held := Ref.new Map.empty
     let scopes := Ref.new []
     let store := memoryStore held
@@ -133,7 +128,7 @@ test bundlesArePushedReadListedAndTrashed :=
       && Ref.get scopes == ["push", "push", "push", "push", "push", "compact"])
 
 test bundlesRefuseOtherPathsAndVerbs :=
-  offline (fun _ =>
+  Worker.Http.offline (fun _ =>
     let store := memoryStore (Ref.new Map.empty)
     let send := fun verb rest =>
       answer store verb rest true (fun _ => "") (fun _ => ()) (fun _ => Option.none)
