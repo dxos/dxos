@@ -372,14 +372,13 @@ const rows = results.map(
       .replace(/\|/g, '\\|')
       .slice(0, 160)} | \`${result.flow}\` |`,
 );
-const frames = results
-  .filter((result) => result.frames)
-  .flatMap((result) => [
-    `### ${result.name} (${result.theme})`,
-    '',
-    `![${result.name} ${result.theme}](${result.frames})`,
-    '',
-  ]);
+// One entry per flow, light then dark, with a Notes checklist for review.
+const frames = [...new Set(results.map((result) => result.name))].flatMap((name) => {
+  const rows = results.filter((result) => result.name === name);
+  const images = rows.filter((result) => result.frames).map((result) => `![${name} ${result.theme}](${result.frames})`);
+  const error = rows.find((result) => result.error)?.error ?? 'no frames';
+  return [`### ${name}`, '', ...(images.length > 0 ? images : [`_No frames: ${error}_`]), '', 'Notes', '', '- [ ]', ''];
+});
 writeFileSync(
   path.join(OUT, 'REPORT.md'),
   [
@@ -419,12 +418,6 @@ writeFileSync(
     'Four frames from each video, evenly spaced: check each shows its plugin working, not a blank or wrong plank.',
     '',
     ...frames,
-    '## Review',
-    '',
-    'One entry per flow (light and dark together); add comments under each.',
-    '',
-    ...[...new Set(results.map((result) => result.name))].sort().flatMap((name) => [`- **${name}**`, '  - ']),
-    '',
   ].join('\n'),
 );
 log(

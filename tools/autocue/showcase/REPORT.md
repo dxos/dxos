@@ -79,255 +79,240 @@ conductor    handpan      kanban       map          mermaid      sequencer
 
 ![composite](../../../temp/showcase/overnight/composite.png)
 
+Notes
+
 ## Frames
 
 Four frames from each video, evenly spaced: check each shows its plugin working, not a blank or wrong plank.
 
-### composer (light)
+### composer
 
 ![composer light](../../../temp/showcase/overnight/clips/light/composer.png)
-
-### composer (dark)
-
 ![composer dark](../../../temp/showcase/overnight/clips/dark/composer.png)
 
-### board (light)
+Notes
+
+- [ ]
+
+### board
 
 ![board light](../../../temp/showcase/overnight/clips/light/board.png)
-
-### board (dark)
-
 ![board dark](../../../temp/showcase/overnight/clips/dark/board.png)
 
-### canvas (light)
+Notes
+
+- [ ]
+
+### canvas
 
 ![canvas light](../../../temp/showcase/overnight/clips/light/canvas.png)
-
-### canvas (dark)
-
 ![canvas dark](../../../temp/showcase/overnight/clips/dark/canvas.png)
 
-### chess (light)
+Notes
+
+- [ ]
+
+### chess
 
 ![chess light](../../../temp/showcase/overnight/clips/light/chess.png)
-
-### chess (dark)
-
 ![chess dark](../../../temp/showcase/overnight/clips/dark/chess.png)
 
-### code (light)
+Notes
+
+- [ ]
+
+### code
 
 ![code light](../../../temp/showcase/overnight/clips/light/code.png)
-
-### code (dark)
-
 ![code dark](../../../temp/showcase/overnight/clips/dark/code.png)
 
-### conductor (light)
+Notes
+
+- [ ]
+
+### conductor
 
 ![conductor light](../../../temp/showcase/overnight/clips/light/conductor.png)
-
-### conductor (dark)
-
 ![conductor dark](../../../temp/showcase/overnight/clips/dark/conductor.png)
 
-### excalidraw (light)
+Notes
+
+- [ ]
+
+### excalidraw
 
 ![excalidraw light](../../../temp/showcase/overnight/clips/light/excalidraw.png)
-
-### excalidraw (dark)
-
 ![excalidraw dark](../../../temp/showcase/overnight/clips/dark/excalidraw.png)
 
-### explorer (light)
+Notes
+
+- [ ]
+
+### explorer
 
 ![explorer light](../../../temp/showcase/overnight/clips/light/explorer.png)
-
-### explorer (dark)
-
 ![explorer dark](../../../temp/showcase/overnight/clips/dark/explorer.png)
 
-### handpan (light)
+Notes
+
+- [ ]
+
+### handpan
 
 ![handpan light](../../../temp/showcase/overnight/clips/light/handpan.png)
-
-### handpan (dark)
-
 ![handpan dark](../../../temp/showcase/overnight/clips/dark/handpan.png)
 
-### kanban (light)
+Notes
+
+- [ ]
+
+### illustrator
+
+_No frames: clip: illustrator locator.click: Timeout 5000ms exceeded._
+
+Notes
+
+- [ ]
+
+### kanban
 
 ![kanban light](../../../temp/showcase/overnight/clips/light/kanban.png)
-
-### kanban (dark)
-
 ![kanban dark](../../../temp/showcase/overnight/clips/dark/kanban.png)
 
-### map (light)
+Notes
+
+- [ ]
+
+### map
 
 ![map light](../../../temp/showcase/overnight/clips/light/map.png)
-
-### map (dark)
-
 ![map dark](../../../temp/showcase/overnight/clips/dark/map.png)
 
-### markdown (light)
+Notes
+
+- [ ]
+
+### markdown
 
 ![markdown light](../../../temp/showcase/overnight/clips/light/markdown.png)
-
-### markdown (dark)
-
 ![markdown dark](../../../temp/showcase/overnight/clips/dark/markdown.png)
 
-### mermaid (light)
+Notes
+
+- [ ]
+
+### mermaid
 
 ![mermaid light](../../../temp/showcase/overnight/clips/light/mermaid.png)
-
-### mermaid (dark)
-
 ![mermaid dark](../../../temp/showcase/overnight/clips/dark/mermaid.png)
 
-### presenter (light)
+Notes
+
+- [ ]
+
+### presenter
 
 ![presenter light](../../../temp/showcase/overnight/clips/light/presenter.png)
-
-### presenter (dark)
-
 ![presenter dark](../../../temp/showcase/overnight/clips/dark/presenter.png)
 
-### projects (light)
+Notes
+
+- [ ]
+
+### projects
 
 ![projects light](../../../temp/showcase/overnight/clips/light/projects.png)
-
-### projects (dark)
-
 ![projects dark](../../../temp/showcase/overnight/clips/dark/projects.png)
 
-### sequencer (light)
+Notes
+
+- [ ]
+
+### script
+
+_No frames: setup: script page.waitForURL: Timeout 30000ms exceeded._
+
+Notes
+
+- [ ]
+
+### sequencer
 
 ![sequencer light](../../../temp/showcase/overnight/clips/light/sequencer.png)
-
-### sequencer (dark)
-
 ![sequencer dark](../../../temp/showcase/overnight/clips/dark/sequencer.png)
 
-### sheet (light)
+Notes
+
+- [ ]
+
+### sheet
 
 ![sheet light](../../../temp/showcase/overnight/clips/light/sheet.png)
-
-### sheet (dark)
-
 ![sheet dark](../../../temp/showcase/overnight/clips/dark/sheet.png)
 
-### spacetime (light)
+Notes
+
+- [ ]
+
+### spacetime
 
 ![spacetime light](../../../temp/showcase/overnight/clips/light/spacetime.png)
-
-### spacetime (dark)
-
 ![spacetime dark](../../../temp/showcase/overnight/clips/dark/spacetime.png)
 
-### table (light)
+Notes
+
+- [ ]
+
+### table
 
 ![table light](../../../temp/showcase/overnight/clips/light/table.png)
-
-### table (dark)
-
 ![table dark](../../../temp/showcase/overnight/clips/dark/table.png)
 
-### tasks (light)
+Notes
+
+- [ ]
+
+### tasks
 
 ![tasks light](../../../temp/showcase/overnight/clips/light/tasks.png)
-
-### tasks (dark)
-
 ![tasks dark](../../../temp/showcase/overnight/clips/dark/tasks.png)
 
-### terra (light)
+Notes
+
+- [ ]
+
+### terra
 
 ![terra light](../../../temp/showcase/overnight/clips/light/terra.png)
-
-### terra (dark)
-
 ![terra dark](../../../temp/showcase/overnight/clips/dark/terra.png)
 
-### tldraw (light)
+Notes
+
+- [ ]
+
+### tldraw
 
 ![tldraw light](../../../temp/showcase/overnight/clips/light/tldraw.png)
-
-### tldraw (dark)
-
 ![tldraw dark](../../../temp/showcase/overnight/clips/dark/tldraw.png)
 
-### uml (light)
+Notes
+
+- [ ]
+
+### uml
 
 ![uml light](../../../temp/showcase/overnight/clips/light/uml.png)
-
-### uml (dark)
-
 ![uml dark](../../../temp/showcase/overnight/clips/dark/uml.png)
 
-### voxel (light)
+Notes
+
+- [ ]
+
+### voxel
 
 ![voxel light](../../../temp/showcase/overnight/clips/light/voxel.png)
-
-### voxel (dark)
-
 ![voxel dark](../../../temp/showcase/overnight/clips/dark/voxel.png)
 
-## Review
+Notes
 
-One entry per flow (light and dark together); add comments under each.
-
-- **board**
-  -
-- **canvas**
-  -
-- **chess**
-  -
-- **code**
-  -
-- **composer**
-  -
-- **conductor**
-  -
-- **excalidraw**
-  -
-- **explorer**
-  -
-- **handpan**
-  -
-- **illustrator**
-  -
-- **kanban**
-  -
-- **map**
-  -
-- **markdown**
-  -
-- **mermaid**
-  -
-- **presenter**
-  -
-- **projects**
-  -
-- **script**
-  -
-- **sequencer**
-  -
-- **sheet**
-  -
-- **spacetime**
-  -
-- **table**
-  -
-- **tasks**
-  -
-- **terra**
-  -
-- **tldraw**
-  -
-- **uml**
-  -
-- **voxel**
-  -
+- [ ]
