@@ -635,15 +635,17 @@ const ConversationMessageRow = ({
       classNames='items-start'
       leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
     >
-      <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
-        <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
+      {/* Text, not buttons: the tile is the stack's one focus stop, so the arrows move between tiles; a click still opens
+          this message. */}
+      <div className='flex flex-col cursor-pointer' onClick={(event) => onMessageClick(event, message.id)}>
+        <div className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-        </button>
+        </div>
         {snippet && (
-          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
+          <div className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-          </button>
+          </div>
         )}
       </div>
     </Card.Row>
