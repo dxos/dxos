@@ -48,23 +48,22 @@ export const extractFactsStage = (
 > => {
   const namespace = options?.sourceNamespace ?? 'discord';
   const extractOptions = options?.rules ? { rules: options.rules } : {};
-  const extract = (events: readonly MessageEvent[]) =>
-    Effect.gen(function* () {
-      const docs: RDF.ExtractDocument[] = [];
-      for (const event of events) {
-        const agent = yield* AgentRegistry.resolve(
-          AgentRegistry.identifiersForUser(event.message.author),
-          AgentRegistry.labelForUser(event.message.author),
-        );
-        docs.push({
-          text: event.message.text,
-          source: `${namespace}:${event.message.id}`,
-          author: agent.id,
-          date: event.message.createdAt,
-        });
-      }
-      yield* indexFactsBatch(docs, extractOptions);
-    });
+  const extract = Effect.fnUntraced(function* (events: readonly MessageEvent[]) {
+    const docs: RDF.ExtractDocument[] = [];
+    for (const event of events) {
+      const agent = yield* AgentRegistry.resolve(
+        AgentRegistry.identifiersForUser(event.message.author),
+        AgentRegistry.labelForUser(event.message.author),
+      );
+      docs.push({
+        text: event.message.text,
+        source: `${namespace}:${event.message.id}`,
+        author: agent.id,
+        date: event.message.createdAt,
+      });
+    }
+    yield* indexFactsBatch(docs, extractOptions);
+  });
 
   return Stage.batch(
     'extract-facts',

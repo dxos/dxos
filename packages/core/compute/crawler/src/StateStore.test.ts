@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, expect } from 'vitest';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import * as CrawlState from './CrawlState.ts';
@@ -199,11 +199,13 @@ describe('StateStore', () => {
 
     it('reconcileChannels drops removed channels, adds new ones and reopens finished ones', ({ expect }) => {
       const state = CrawlState.make();
-      CrawlState.pushTargets(state, [target('chan-1'), target('chan-2'), target('thread-1', { depth: 1 })]);
-      CrawlState.setStatus(state, 'chan-1', 'done');
-      CrawlState.setCursor(state, 'chan-1', '7', '2026-01-01T00:00:00.000Z');
-      CrawlState.setStatus(state, 'thread-1', 'done');
-      CrawlState.reconcileChannels(state, ['chan-1', 'chan-3']);
+      Obj.update(state, (state) => {
+        CrawlState.pushTargets(state, [target('chan-1'), target('chan-2'), target('thread-1', { depth: 1 })]);
+        CrawlState.setStatus(state, 'chan-1', 'done');
+        CrawlState.setCursor(state, 'chan-1', '7', '2026-01-01T00:00:00.000Z');
+        CrawlState.setStatus(state, 'thread-1', 'done');
+      });
+      Obj.update(state, (state) => CrawlState.reconcileChannels(state, ['chan-1', 'chan-3']));
       expect(CrawlState.listTargets(state)).toEqual([
         { ...target('chan-1'), cursor: '7', lastRunAt: '2026-01-01T00:00:00.000Z' },
         target('thread-1', { depth: 1, status: 'done' }),
@@ -213,11 +215,13 @@ describe('StateStore', () => {
 
     it('keeps source hashes across a reset', ({ expect }) => {
       const state = CrawlState.make();
-      CrawlState.pushTargets(state, [target('chan-1')]);
-      CrawlState.setSourceHash(state, 'discord:1', 'abc');
-      CrawlState.resetTargets(state);
+      Obj.update(state, (state) => {
+        CrawlState.pushTargets(state, [target('chan-1')]);
+        CrawlState.setSourceHash(state, 'discord:1', 'abc');
+      });
+      Obj.update(state, (state) => CrawlState.resetTargets(state));
       expect(CrawlState.sourceHash(state, 'discord:1')).toBe('abc');
-      CrawlState.clearSourceHashes(state);
+      Obj.update(state, (state) => CrawlState.clearSourceHashes(state));
       expect(CrawlState.sourceHash(state, 'discord:1')).toBeUndefined();
     });
   });

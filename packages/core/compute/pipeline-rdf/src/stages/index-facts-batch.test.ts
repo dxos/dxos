@@ -13,7 +13,7 @@ import { FactStore, FactStoreLive } from '../store/index.ts';
 import { queuedAiService } from '../testing/index.ts';
 import { type ExtractDocument } from '../types/index.ts';
 import { extractTranscriptFacts, normalizeEntityId } from './extract-facts.ts';
-import { indexFactsBatch } from './index-facts.ts';
+import { DEFAULT_INDEX_BATCH_SIZE, indexFactsBatch } from './index-facts.ts';
 
 const fact = (subject: string, predicate: string, object: string, extra: Record<string, unknown> = {}) => ({
   subject,
@@ -123,7 +123,7 @@ describe('batched extraction', () => {
         expect(String(prompts[1])).not.toContain('<message');
 
         // Nothing changed: no request at all.
-        const third = yield* FactPipeline.runBatch(DOCS);
+        const third = yield* FactPipeline.run(DOCS, { batchSize: DEFAULT_INDEX_BATCH_SIZE });
         expect(third).toHaveLength(0);
         expect(prompts).toHaveLength(2);
 
@@ -145,10 +145,10 @@ describe('batched extraction', () => {
   );
 
   it.effect(
-    'runBatch makes one request per batch',
+    'run with batchSize makes one request per batch',
     Effect.fnUntraced(function* () {
       const prompts: unknown[] = [];
-      const facts = yield* FactPipeline.runBatch(DOCS, { batchSize: 2 }).pipe(
+      const facts = yield* FactPipeline.run(DOCS, { batchSize: 2 }).pipe(
         Effect.provide(
           layer(
             [

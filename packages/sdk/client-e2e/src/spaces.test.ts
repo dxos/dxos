@@ -852,12 +852,12 @@ describe('Spaces', () => {
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
   });
 
-  test('a feed exported alone merges into an existing space, once', { timeout: 10_000, retry: 1 }, async () => {
+  test('a feed exported alone merges into an existing space, once', { timeout: 10_000 }, async () => {
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
 
     const source = await client1.spaces.create();
-    source.db.add(createDocument());
+    const document = source.db.add(createDocument());
     const facts = source.db.add(Feed.make({ name: 'facts' }));
     const other = source.db.add(Feed.make({ name: 'other' }));
     await source.db.flush();
@@ -867,7 +867,8 @@ describe('Spaces', () => {
     ]);
     await source.db.appendToFeed(other, [Obj.make(TestSchema$.Expando, { name: 'not-exported' })]);
 
-    const archive = await source.internal.export({ feedIds: [facts.id] });
+    // A listed id that names no feed does not pull its object in.
+    const archive = await source.internal.export({ feedIds: [facts.id, document.id] });
     expect(archive.format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
     const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
     expect(parsed.objects.map((obj: { id: string }) => obj.id)).toEqual([facts.id]);
@@ -890,6 +891,27 @@ describe('Spaces', () => {
           .sort(),
       )
       .toEqual(['fact-1', 'fact-2']);
+  });
+
+  test('merging a feed into the space that already holds it adds no duplicate', { timeout: 10_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    const facts = space.db.add(Feed.make({ name: 'facts' }));
+    await space.db.flush();
+    await space.db.appendToFeed(facts, [Obj.make(TestSchema$.Expando, { name: 'fact-1' })]);
+
+    const archive = await space.internal.export({ feedIds: [facts.id] });
+    await client.spaces.import(archive, { into: space.id });
+    await space.db.flush();
+
+    // The space's own export lists every object structure it stores, so a second copy of the feed would show twice.
+    const stored = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
+    const { objects } = JSON.parse(new TextDecoder().decode(stored.contents));
+    expect(objects.filter((obj: { id: string }) => obj.id === facts.id)).toHaveLength(1);
+    const items = await space.db.query(Query.type(TestSchema$.Expando).from(facts)).run();
+    expect(items.map((item: any) => item.name)).toEqual(['fact-1']);
   });
 
   test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {

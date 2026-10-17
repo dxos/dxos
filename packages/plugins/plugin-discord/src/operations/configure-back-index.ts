@@ -13,16 +13,15 @@ import * as FactFeed from '@dxos/plugin-agent/FactFeed';
 import { DiscordOperation } from '#types';
 
 /** Loads the object a trigger input field references, when it is a `type` object. */
-const loadInput = <S extends Type.AnyObj>(type: S, value: unknown) =>
-  Effect.gen(function* () {
-    if (!Ref.isRef(value)) {
-      return undefined;
-    }
-    const target = yield* Database.load(value).pipe(
-      Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)),
-    );
-    return Obj.instanceOf(type, target) ? target : undefined;
-  });
+const loadInput = Effect.fnUntraced(function* <S extends Type.AnyObj>(type: S, value: unknown) {
+  if (!Ref.isRef(value)) {
+    return undefined;
+  }
+  const target = yield* Database.load(value).pipe(
+    Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)),
+  );
+  return Obj.instanceOf(type, target) ? target : undefined;
+});
 
 const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex> =
   DiscordOperation.ConfigureBackIndex.pipe(
@@ -62,7 +61,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex>
           });
         }
         // The frontier shows the configured channels at once, before the first run.
-        CrawlState.reconcileChannels(state, input.channels);
+        Obj.update(state, (state) => CrawlState.reconcileChannels(state, input.channels));
         return { trigger: Ref.make(trigger), state: Ref.make(state), facts: Ref.make(facts) };
       }),
     ),

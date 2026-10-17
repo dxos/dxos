@@ -59,6 +59,11 @@ const setup = Effect.gen(function* () {
   return { connection, state, feed };
 });
 
+const directEndpoint = Layer.succeed(DiscordEndpoint, { baseUrl: FAKE_API_BASE, via: 'direct' });
+
+/** Parameterized per test: the AI stand-in records the prompts it is sent into `prompts`. */
+const crawlLayer = (prompts: string[]) => Layer.mergeAll(credentials, deterministicAiService(prompts), directEndpoint);
+
 const factItems = (feed: Feed.Feed) => Feed.query(feed, Filter.type(FactFeed.FactItem)).run;
 
 describe('CrawlDiscordChannels', () => {
@@ -82,10 +87,7 @@ describe('CrawlDiscordChannels', () => {
             state: Ref.make(state),
             facts: Ref.make(feed),
           })
-          .pipe(
-            Effect.provide(Layer.merge(credentials, deterministicAiService(prompts))),
-            Effect.provideService(DiscordEndpoint, { baseUrl: FAKE_API_BASE, via: 'direct' }),
-          );
+          .pipe(Effect.provide(crawlLayer(prompts)));
 
       const first = yield* run();
       expect(first).toEqual({ done: true, errored: 0, steps: 2, messages: HISTORY.length });
@@ -111,7 +113,7 @@ describe('CrawlDiscordChannels', () => {
 
       // A reset re-reads the whole channel, and the unchanged messages cost no model request.
       const extracted = (yield* factItems(feed)).length;
-      CrawlState.resetTargets(state);
+      Obj.update(state, (state) => CrawlState.resetTargets(state));
       expect(yield* run()).toMatchObject({ done: true, messages: HISTORY.length + 1 });
       expect(prompts).toHaveLength(2);
       expect((yield* factItems(feed)).length).toBe(extracted);
@@ -135,10 +137,7 @@ describe('CrawlDiscordChannels', () => {
           state: Ref.make(state),
           facts: Ref.make(feed),
         })
-        .pipe(
-          Effect.provide(Layer.merge(credentials, deterministicAiService(prompts))),
-          Effect.provideService(DiscordEndpoint, { baseUrl: FAKE_API_BASE, via: 'direct' }),
-        );
+        .pipe(Effect.provide(crawlLayer(prompts)));
 
       // One step is one page of 25 messages.
       expect(yield* run).toMatchObject({ done: false, steps: 1, messages: 25 });

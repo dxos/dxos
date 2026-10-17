@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CrawlState } from '@dxos/crawler';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { FactStore, type FactStoreApi, SemanticIndexError } from '@dxos/pipeline-rdf';
 import * as FactFeed from '@dxos/plugin-agent/FactFeed';
 
@@ -46,7 +46,10 @@ export const factFeedStoreLayer = ({
         query: () => unsupported('query'),
         select: () => unsupported('select'),
         cursor: (source) => Effect.sync(() => CrawlState.sourceHash(state, source)),
-        setCursor: (source, hash) => Effect.sync(() => CrawlState.setSourceHash(state, source, hash)),
+        setCursor: (source, hash) =>
+          Effect.sync(() => {
+            Obj.update(state, (state) => CrawlState.setSourceHash(state, source, hash));
+          }),
         clear: () => unsupported('clear'),
       };
       return store;

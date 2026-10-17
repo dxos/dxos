@@ -60,36 +60,40 @@ export const startFakeBackIndexRunner = (db: Database.Database): (() => void) =>
       .reverse()
       .find(({ status }) => status === 'pending' || status === 'active');
     if (!target) {
-      CrawlState.setRunStatus(state, 'done');
+      Obj.update(state, (state) => CrawlState.setRunStatus(state, 'done'));
       return;
     }
     step++;
-    CrawlState.setRunStatus(state, 'running');
-    CrawlState.setCursor(state, target.id, `m${step}`, new Date().toISOString());
-    CrawlState.setStatus(state, target.id, target.status === 'pending' ? 'active' : 'done');
-    if (target.status === 'active' && target.depth === 0 && input.descendThreads !== false) {
-      CrawlState.pushTargets(state, [
-        {
-          id: `${target.channelId}1`,
-          channelId: `${target.channelId}1`,
-          threadId: `${target.channelId}1`,
-          parentMessageId: `${target.channelId}-m1`,
-          depth: 1,
-          status: 'pending',
-        },
-      ]);
-    }
+    Obj.update(state, (state) => {
+      CrawlState.setRunStatus(state, 'running');
+      CrawlState.setCursor(state, target.id, `m${step}`, new Date().toISOString());
+      CrawlState.setStatus(state, target.id, target.status === 'pending' ? 'active' : 'done');
+      if (target.status === 'active' && target.depth === 0 && input.descendThreads !== false) {
+        CrawlState.pushTargets(state, [
+          {
+            id: `${target.channelId}1`,
+            channelId: `${target.channelId}1`,
+            threadId: `${target.channelId}1`,
+            parentMessageId: `${target.channelId}-m1`,
+            depth: 1,
+            status: 'pending',
+          },
+        ]);
+      }
+    });
     await db.appendToFeed(
       feed,
       Array.from({ length: FACTS_PER_STEP }, () => FactFeed.makeItem(fakeFact(target.id, step))),
     );
-    CrawlState.recordRun(state, {
-      at: new Date().toISOString(),
-      steps: 1,
-      messages: MESSAGES_PER_STEP,
-      done: false,
-      errored: 0,
-    });
+    Obj.update(state, (state) =>
+      CrawlState.recordRun(state, {
+        at: new Date().toISOString(),
+        steps: 1,
+        messages: MESSAGES_PER_STEP,
+        done: false,
+        errored: 0,
+      }),
+    );
   };
   const interval = setInterval(() => {
     // One step at a time: a slow append must not overlap the next tick.

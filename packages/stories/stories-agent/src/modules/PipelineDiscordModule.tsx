@@ -295,7 +295,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   const handleReset = useCallback(
     (targets?: string[]) => {
       if (state) {
-        CrawlState.resetTargets(state, targets);
+        Obj.update(state, (state) => CrawlState.resetTargets(state, targets));
       }
     },
     [state],

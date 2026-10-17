@@ -507,8 +507,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         doc.objects = {};
       }
       for (const obj of serialized.objects) {
-        // Merging into a live space keeps its own copy of an object the archive also holds.
-        if (merge && doc.objects[obj.id]) {
+        // Merging into a live space keeps its own copy of an object the archive also holds, whether it is inline in
+        // the root document or in a linked document of its own.
+        if (merge && (doc.objects[obj.id] || doc.links?.[obj.id])) {
           continue;
         }
         doc.objects[obj.id] = objJsonToObjectStructure(obj);
@@ -545,6 +546,10 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           }).pipe(Effect.scoped),
         );
       } catch (err) {
+        // A merge into an existing space must fail rather than report success with messages missing.
+        if (merge) {
+          throw err;
+        }
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
       }
     }

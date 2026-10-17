@@ -130,7 +130,8 @@ export const writeSerializedSpaceArchive = async (
 
   if (feedIds) {
     const selected = new Set(feedIds);
-    objects.splice(0, objects.length, ...objects.filter((obj) => selected.has(obj.id)));
+    // Only `Feed` objects: an id naming any other object must not pull it into a feeds-only archive.
+    objects.splice(0, objects.length, ...objects.filter((obj) => selected.has(obj.id) && isFeedObject(obj)));
   }
 
   // Export queue/feed messages for every Feed object in the space.
@@ -208,6 +209,11 @@ export const objectStructureToObjJson = (objectId: string, structure: EntityStru
   return result as Obj.JSON;
 };
 
+const isFeedObject = (obj: Obj.JSON): boolean => {
+  const typeDxn = obj[ATTR_TYPE];
+  return typeDxn != null && DXN.isDXN(typeDxn) && DXN.getName(typeDxn) === FEED_TYPENAME;
+};
+
 const exportFeedData = async (
   space: ExportableSpace,
   echoHost: EchoHost,
@@ -217,13 +223,7 @@ const exportFeedData = async (
   const spaceId: SpaceId = space.id;
 
   for (const obj of objects) {
-    if (obj[ATTR_TYPE] == null) {
-      continue;
-    }
-
-    const typeDxn = obj[ATTR_TYPE];
-    const typeDxnNsid = DXN.isDXN(typeDxn) ? DXN.getName(typeDxn) : undefined;
-    if (typeDxnNsid !== FEED_TYPENAME) {
+    if (!isFeedObject(obj)) {
       continue;
     }
 

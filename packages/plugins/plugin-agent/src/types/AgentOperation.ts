@@ -336,10 +336,6 @@ export const ReadSource = Operation.make({
 // Fact feeds: an agent's brain on EDGE indexes the fact feeds registered with it (`/compute/brain/:spaceId/:agentId/fact-feeds`).
 //
 
-const FactFeedAgent = Ref.Ref(Agent.Agent).annotate({
-  description: 'The agent whose brain indexes the fact feed.',
-});
-
 const FactFeeds = Schema.Struct({
   feeds: Schema.Array(Schema.String).annotate({ description: 'EIDs of the fact feeds the brain indexes.' }),
 });
@@ -354,7 +350,7 @@ export const AddFactFeed = Operation.make({
   },
   services: [Database.Service, EdgeHttpClientService],
   input: Schema.Struct({
-    agent: FactFeedAgent,
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to index the fact feed.' }),
     feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to index.' }),
   }),
   output: FactFeeds,
@@ -370,7 +366,7 @@ export const RemoveFactFeed = Operation.make({
   },
   services: [Database.Service, EdgeHttpClientService],
   input: Schema.Struct({
-    agent: FactFeedAgent,
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to stop indexing the fact feed.' }),
     feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to stop indexing.' }),
   }),
   output: FactFeeds,
@@ -385,6 +381,8 @@ export const ListFactFeeds = Operation.make({
     icon: 'ph--brain--regular',
   },
   services: [Database.Service, EdgeHttpClientService],
-  input: Schema.Struct({ agent: FactFeedAgent }),
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain indexes the fact feeds.' }),
+  }),
   output: FactFeeds,
 });

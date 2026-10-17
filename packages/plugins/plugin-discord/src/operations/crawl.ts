@@ -11,7 +11,7 @@ import * as EffectRef from 'effect/Ref';
 
 import * as Operation from '@dxos/compute/Operation';
 import { AgentRegistry, Crawler, CrawlState, StateStore, extractFactsStage } from '@dxos/crawler';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Pipeline } from '@dxos/pipeline';
 
 import { DiscordOperation } from '#types';
@@ -38,8 +38,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
       }) {
         const state = yield* Database.load(stateRef);
         const feed = yield* Database.load(factsRef);
-        CrawlState.reconcileChannels(state, channels);
-        CrawlState.setRunStatus(state, 'running');
+        Obj.update(state, (state) => {
+          CrawlState.reconcileChannels(state, channels);
+          CrawlState.setRunStatus(state, 'running');
+        });
 
         const steps = yield* EffectRef.make(0);
         let messages = 0;
@@ -90,8 +92,11 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
           messages,
           ...(error !== undefined ? { error } : {}),
         };
-        CrawlState.recordRun(state, { at: new Date(yield* Clock.currentTimeMillis).toISOString(), ...result });
-        CrawlState.setRunStatus(state, error !== undefined ? 'error' : summary.done ? 'done' : 'running');
+        const at = new Date(yield* Clock.currentTimeMillis).toISOString();
+        Obj.update(state, (state) => {
+          CrawlState.recordRun(state, { at, ...result });
+          CrawlState.setRunStatus(state, error !== undefined ? 'error' : summary.done ? 'done' : 'running');
+        });
         return result;
       }),
     ),

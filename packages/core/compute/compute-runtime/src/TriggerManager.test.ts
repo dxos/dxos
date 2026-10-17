@@ -72,29 +72,29 @@ const TestLayer = (
     Layer.provideMerge(Trace.layerNoop),
   );
 
-/** Trigger ids the remote manager was handed — reset per test that uses {@link recordingRemoteManager}. */
-const remoteInvocations: string[] = [];
-const remoteResets: string[] = [];
-
 /**
  * Stands in for `EdgeTriggerManager` (in `@dxos/edge-compute`, which cannot be imported here without a
- * dependency cycle), recording what the monitor routes to EDGE instead of POSTing it.
+ * dependency cycle), recording what the monitor routes to EDGE instead of POSTing it. Made per test, so each
+ * test reads only its own records.
  */
-const recordingRemoteManager: Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry> = Layer.effect(
-  RemoteTriggerManager.Service,
-  Effect.gen(function* () {
-    const registry = yield* Registry.AtomRegistry;
-    const triggers = Atom.make<readonly Trigger.State[]>([]);
-    registry.mount(triggers);
-    remoteInvocations.length = 0;
-    remoteResets.length = 0;
-    return {
-      triggers,
-      invokeTrigger: ({ trigger }) => Effect.sync(() => void remoteInvocations.push(trigger.id)),
-      resetTrigger: ({ trigger }) => Effect.sync(() => void remoteResets.push(trigger.id)),
-    } satisfies RemoteTriggerManager.Manager;
-  }),
-);
+const recordingRemoteManager = () => {
+  const invocations: string[] = [];
+  const resets: string[] = [];
+  const layer: Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry> = Layer.effect(
+    RemoteTriggerManager.Service,
+    Effect.gen(function* () {
+      const registry = yield* Registry.AtomRegistry;
+      const triggers = Atom.make<readonly Trigger.State[]>([]);
+      registry.mount(triggers);
+      return {
+        triggers,
+        invokeTrigger: ({ trigger }) => Effect.sync(() => void invocations.push(trigger.id)),
+        resetTrigger: ({ trigger }) => Effect.sync(() => void resets.push(trigger.id)),
+      } satisfies RemoteTriggerManager.Manager;
+    }),
+  );
+  return { invocations, resets, layer };
+};
 
 /**
  * Store an operation definition in the in-process registry so a trigger's runnable ref resolves.
@@ -264,104 +264,96 @@ describe('TriggerManager', () => {
     }, Effect.provide(TestLayer())),
   );
 
-  it.effect(
-    'invokeTrigger sends a remote trigger to the remote manager, not the local dispatcher',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const functionObj = yield* registerOperation(Reply);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          remote: true,
-          spec: Trigger.specDirect(),
-        });
-        yield* Database.add(trigger);
+  it.effect('invokeTrigger sends a remote trigger to the remote manager, not the local dispatcher', ({ expect }) => {
+    const recorder = recordingRemoteManager();
+    return Effect.gen(function* () {
+      const functionObj = yield* registerOperation(Reply);
+      const trigger = Trigger.make({
+        runnable: Ref.make(functionObj),
+        enabled: true,
+        remote: true,
+        spec: Trigger.specDirect(),
+      });
+      yield* Database.add(trigger);
 
-        const dispatcher = yield* TriggerDispatcher;
-        const registry = yield* Registry.AtomRegistry;
-        yield* withMonitor((monitor) =>
-          Effect.gen(function* () {
-            yield* monitor.invokeTrigger({
-              trigger,
-              event: { data: { tick: 7 } } satisfies TriggerEvent.DirectEvent,
-            });
+      const dispatcher = yield* TriggerDispatcher;
+      const registry = yield* Registry.AtomRegistry;
+      yield* withMonitor((monitor) =>
+        Effect.gen(function* () {
+          yield* monitor.invokeTrigger({
+            trigger,
+            event: { data: { tick: 7 } } satisfies TriggerEvent.DirectEvent,
+          });
 
-            // `EdgeTriggerManager` implements this seam as a `forceRunCronTrigger` POST, so reaching it
-            // is what sends the run to EDGE; the local dispatcher must not have run the operation.
-            expect(remoteInvocations).toEqual([trigger.id]);
-            expect(registry.get(dispatcher.state).invocations).toEqual([]);
-          }),
-        );
-      },
-      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
-    ),
-  );
+          // `EdgeTriggerManager` implements this seam as a `forceRunCronTrigger` POST, so reaching it
+          // is what sends the run to EDGE; the local dispatcher must not have run the operation.
+          expect(recorder.invocations).toEqual([trigger.id]);
+          expect(registry.get(dispatcher.state).invocations).toEqual([]);
+        }),
+      );
+    }).pipe(Effect.provide(TestLayer({ remote: recorder.layer })));
+  });
 
-  it.effect(
-    'invokeTrigger refuses a disabled trigger without dispatching it',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const functionObj = yield* registerOperation(Reply);
-        const local = Trigger.make({ runnable: Ref.make(functionObj), enabled: false, spec: Trigger.specDirect() });
-        const remote = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: false,
-          remote: true,
-          spec: Trigger.specDirect(),
-        });
-        yield* Database.add(local);
-        yield* Database.add(remote);
+  it.effect('invokeTrigger refuses a disabled trigger without dispatching it', ({ expect }) => {
+    const recorder = recordingRemoteManager();
+    return Effect.gen(function* () {
+      const functionObj = yield* registerOperation(Reply);
+      const local = Trigger.make({ runnable: Ref.make(functionObj), enabled: false, spec: Trigger.specDirect() });
+      const remote = Trigger.make({
+        runnable: Ref.make(functionObj),
+        enabled: false,
+        remote: true,
+        spec: Trigger.specDirect(),
+      });
+      yield* Database.add(local);
+      yield* Database.add(remote);
 
-        const dispatcher = yield* TriggerDispatcher;
-        const registry = yield* Registry.AtomRegistry;
-        yield* withMonitor((monitor) =>
-          Effect.gen(function* () {
-            for (const trigger of [local, remote]) {
-              const error = yield* Effect.flip(monitor.invokeTrigger({ trigger, event: { data: {} } }));
-              expect(error).toBeInstanceOf(Trigger.TriggerDisabledError);
-            }
+      const dispatcher = yield* TriggerDispatcher;
+      const registry = yield* Registry.AtomRegistry;
+      yield* withMonitor((monitor) =>
+        Effect.gen(function* () {
+          for (const trigger of [local, remote]) {
+            const error = yield* Effect.flip(monitor.invokeTrigger({ trigger, event: { data: {} } }));
+            expect(error).toBeInstanceOf(Trigger.TriggerDisabledError);
+          }
 
-            expect(remoteInvocations).toEqual([]);
-            expect(registry.get(dispatcher.state).invocations).toEqual([]);
-          }),
-        );
-      },
-      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
-    ),
-  );
+          expect(recorder.invocations).toEqual([]);
+          expect(registry.get(dispatcher.state).invocations).toEqual([]);
+        }),
+      );
+    }).pipe(Effect.provide(TestLayer({ remote: recorder.layer })));
+  });
 
-  it.effect(
-    'resetTrigger rewinds a local feed trigger to the start of its feed',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const functionObj = yield* registerOperation(Reply);
-        const feed = yield* Database.add(Feed.make({ name: 'source' }));
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: Trigger.specFeed(feed),
-        });
-        yield* Database.add(trigger);
-        Obj.update(trigger, (trigger) => {
-          Annotation.set(trigger, Feed.CursorAnnotation, Feed.Cursor.make('7'));
-        });
+  it.effect('resetTrigger rewinds a local feed trigger to the start of its feed', ({ expect }) => {
+    const recorder = recordingRemoteManager();
+    return Effect.gen(function* () {
+      const functionObj = yield* registerOperation(Reply);
+      const feed = yield* Database.add(Feed.make({ name: 'source' }));
+      const trigger = Trigger.make({
+        runnable: Ref.make(functionObj),
+        enabled: true,
+        spec: Trigger.specFeed(feed),
+      });
+      yield* Database.add(trigger);
+      Obj.update(trigger, (trigger) => {
+        Annotation.set(trigger, Feed.CursorAnnotation, Feed.Cursor.make('7'));
+      });
 
-        yield* withMonitor((monitor) =>
-          Effect.gen(function* () {
-            yield* monitor.resetTrigger({ trigger });
-            expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
-            expect(remoteResets).toEqual([]);
-          }),
-        );
-      },
-      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
-    ),
-  );
+      yield* withMonitor((monitor) =>
+        Effect.gen(function* () {
+          yield* monitor.resetTrigger({ trigger });
+          expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
+          expect(recorder.resets).toEqual([]);
+        }),
+      );
+    }).pipe(Effect.provide(TestLayer({ remote: recorder.layer })));
+  });
 
   it.effect(
     'resetTrigger sends a remote feed trigger to the remote manager and refuses a non-feed trigger',
-    Effect.fnUntraced(
-      function* ({ expect }) {
+    ({ expect }) => {
+      const recorder = recordingRemoteManager();
+      return Effect.gen(function* () {
         const functionObj = yield* registerOperation(Reply);
         const feed = yield* Database.add(Feed.make({ name: 'source' }));
         const remote = Trigger.make({
@@ -384,12 +376,11 @@ describe('TriggerManager', () => {
             yield* monitor.resetTrigger({ trigger: remote });
             const error = yield* Effect.flip(monitor.resetTrigger({ trigger: timer }));
             expect(error).toBeInstanceOf(Trigger.TriggerNotResettableError);
-            expect(remoteResets).toEqual([remote.id]);
+            expect(recorder.resets).toEqual([remote.id]);
           }),
         );
-      },
-      Effect.provide(TestLayer({ remote: recordingRemoteManager })),
-    ),
+      }).pipe(Effect.provide(TestLayer({ remote: recorder.layer })));
+    },
   );
 
   it.effect(

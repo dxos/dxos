@@ -232,22 +232,19 @@ export const parseTranscriptPayload = (raw: string): TranscriptPayload => ({
   facts: salvageFacts(raw, decodeTranscriptFact),
 });
 
+/** A span that parses as JSON with a `facts` array; its entries stay unknown so each one is decoded on its own. */
+const decodeFactsSpan = Schema.decodeUnknownOption(
+  Schema.fromJsonString(Schema.Struct({ facts: Schema.Array(Schema.Unknown) })),
+);
+
 const salvageFacts = <F>(raw: string, decode: (entry: unknown) => Option.Option<F>): F[] => {
   for (const span of jsonObjectSpans(raw)) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(span);
-    } catch {
-      continue;
+    const payload = decodeFactsSpan(span);
+    if (Option.isSome(payload)) {
+      return payload.value.facts.flatMap((entry) =>
+        Option.match(decode(entry), { onNone: () => [], onSome: (fact) => [fact] }),
+      );
     }
-    if (typeof parsed !== 'object' || parsed === null) {
-      continue;
-    }
-    const factsValue = Reflect.get(parsed, 'facts');
-    if (!Array.isArray(factsValue)) {
-      continue;
-    }
-    return factsValue.flatMap((entry) => Option.match(decode(entry), { onNone: () => [], onSome: (fact) => [fact] }));
   }
   return [];
 };

@@ -18,10 +18,30 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AgentRegistry": {
+      "source": "./src/AgentRegistry.ts",
+      "types": "./dist/types/src/AgentRegistry.d.ts",
+      "import": "./dist/lib/AgentRegistry.mjs"
+    },
     "./CrawlState": {
       "source": "./src/CrawlState.ts",
       "types": "./dist/types/src/CrawlState.d.ts",
       "import": "./dist/lib/CrawlState.mjs"
+    },
+    "./Crawler": {
+      "source": "./src/Crawler.ts",
+      "types": "./dist/types/src/Crawler.d.ts",
+      "import": "./dist/lib/Crawler.mjs"
+    },
+    "./StateStore": {
+      "source": "./src/StateStore.ts",
+      "types": "./dist/types/src/StateStore.d.ts",
+      "import": "./dist/lib/StateStore.mjs"
+    },
+    "./Type": {
+      "source": "./src/types.ts",
+      "types": "./dist/types/src/types.d.ts",
+      "import": "./dist/lib/Type.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

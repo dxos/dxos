@@ -121,6 +121,14 @@ const PriorityOp = Operation.make({
   output: Schema.Void,
 });
 
+/** Rewinds every feed trigger in the space when invoked, so a test can land a reset while a batch runs. */
+const ResetFeedTriggersOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.resetFeedTriggers'), name: 'Reset feed triggers' },
+  input: Schema.Any,
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
 /** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
 const TracedOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
@@ -142,6 +150,14 @@ const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   PriorityOp.pipe(Operation.withHandler(() => Effect.void)),
+  ResetFeedTriggersOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run;
+        triggers.filter((trigger) => trigger.spec?.kind === 'feed').forEach(resetFeedCursor);
+      }),
+    ),
+  ),
   SubjectProbeOp.pipe(
     Operation.withHandler(
       Effect.fn(function* (event: TriggerEvent.SubscriptionEvent) {
@@ -996,6 +1012,26 @@ describe('TriggerDispatcher', () => {
         resetFeedCursor(trigger);
         yield* Database.flush();
         expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset during the first batch is not overwritten by that batch',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(ResetFeedTriggersOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Alice' })]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const [result] = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+        expect(Exit.isSuccess(result.result)).toBe(true);
+        expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
       }, Effect.provide(TestLayer())),
     );
 
