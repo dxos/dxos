@@ -58,6 +58,9 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       Workers) at 20s; 22 plugins at 10s. The monolithic `flow.mjs`, `pipeline.sh`, `cut.sh`, `committed.sh` are gone.
 - [x] **Light and dark variants** — each flow records a light clip (60 fps, cut) and a dark demo (30 fps, caption,
       ident and end card, not uploaded); each clip step carries the caption the dark demo shows.
+- [x] **Grid layout** — `layout.mjs` places the light clips so a repeat is never near itself (swap pass on a greedy
+      fill; 3 cells is the floor in a 6x6 grid's centre) and fails under 3; the runner calls it and maps the grid in
+      REPORT.md.
 - [ ] **First full overnight run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
 - [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
       plank; give each a gesture that shows the plugin working.

@@ -228,6 +228,11 @@ for (const [index, file] of flows.entries()) {
   }
 }
 
+// The light clips become the GridZoom grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
+const layout = THEMES.includes('light')
+  ? await run(process.execPath, [path.join(HERE, 'layout.mjs'), '--run', path.relative(ROOT, OUT)])
+  : undefined;
+
 const minutes = ((Date.now() - started) / 60_000).toFixed(1);
 const passed = results.filter((result) => result.ok).length;
 const rows = results.map(
@@ -257,6 +262,18 @@ writeFileSync(
     '| ---- | ----- | ------ | ------ | -------- | ----- | ----- | ---- |',
     ...rows,
     '',
+    ...(layout
+      ? [
+          '## Grid',
+          '',
+          `\`layout.mjs\` ${layout.code === 0 ? 'laid out' : 'could not lay out'} \`temp/grid-zoom\` (\`*\` marks a tour cell):`,
+          '',
+          '```',
+          layout.output.trim(),
+          '```',
+          '',
+        ]
+      : []),
     '## Frames',
     '',
     'Four frames from each video, evenly spaced: check each shows its plugin working, not a blank or wrong plank.',

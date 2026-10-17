@@ -28,7 +28,13 @@ It starts Composer on :4173 if nothing answers there and records each flow twice
 2. **Dark**, the demo: the whole take at 30 fps with the clip's caption, trimmed of dead air and bookended by the
    Composer ident and end card, to `clips/dark/<name>.mp4`. It is not uploaded; upload the ones you keep.
 
-`REPORT.md` has a pass/fail row and four frames per video. A step can pass on a blank plank, so check the frames,
+At the end it lays the light clips out as the grid in `temp/grid-zoom` with
+[`layout.mjs`](../../../../../../tools/autocue/showcase/layout.mjs): markdown, canvas and projects on the tour cells
+(`--tour` to change them), and every other cell taking the clip whose nearest copy is farthest away, so a clip never
+repeats beside or near itself. It fails when two copies land closer than 3 cells. Run it on its own with
+`node tools/autocue/showcase/layout.mjs --run temp/showcase/<run>`.
+
+`REPORT.md` has a pass/fail row and four frames per video, and the grid's map. A step can pass on a blank plank, so check the frames,
 not just the result. `--only map,chess` records a subset, `--themes light` one variant, and `--no-serve` uses the
 running server only.
 
