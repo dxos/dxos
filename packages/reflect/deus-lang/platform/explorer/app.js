@@ -2516,12 +2516,17 @@ const filterTasks = (label) => {
 };
 
 const renderTasks = () => {
+  // A canceled task whose title another task also has was filed twice; it says which one is kept.
+  const kept = new Map(
+    index.tasks.filter((task) => task.state !== 'canceled').map((task) => [task.title.trim().toLowerCase(), task]),
+  );
+  const duplicateOf = (task) => (task.state === 'canceled' ? kept.get(task.title.trim().toLowerCase()) : undefined);
   const columns = STATES.map((state) => {
     const tasks = index.tasks.filter((task) => task.state === state && taskShown(task));
     const cards = tasks.map(
       (task) =>
         `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title" title="${escape(task.title)}">${escape(task.title)}</span>` +
-        `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
+        `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${duplicateOf(task) ? `<span class="chip" title="The same task as ${escape(duplicateOf(task).id)}, which is kept">duplicate of ${escape(duplicateOf(task).id)}</span>` : ''}${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
           .map(
             (label) =>
               `<span class="chip" data-task-label="${escape(label)}" title="Show only ${escape(label)} tasks">${escape(label)}</span>`,
