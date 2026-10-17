@@ -3059,3 +3059,30 @@ button:focus-visible,
 .skip-link:focus {
   transform: none;
 }
+
+/* The task board's filter: a text box over a row of label chips. */
+.task-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.task-filter input {
+  width: min(420px, 100%);
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+}
+
+.task-card .chip[data-task-label] {
+  cursor: pointer;
+}
+
+.task-card .chip[data-task-label]:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

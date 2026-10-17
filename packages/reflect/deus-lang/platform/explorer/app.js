@@ -625,7 +625,15 @@ const onWriteEvents = () => {
 // Workspace state: the open cards are the URL fragment; the focused card and folds are local.
 //
 
-const ui = { focus: undefined, folded: new Set(), view: 'code', expanded: new Set(), dialect: 'deus' };
+const ui = {
+  focus: undefined,
+  folded: new Set(),
+  view: 'code',
+  expanded: new Set(),
+  dialect: 'deus',
+  /** What the task board shows: tasks whose title, id, labels or assignee hold `text`, and that carry `label`. */
+  taskFilter: { text: '', label: '', allLabels: false },
+};
 
 /** The dialect sources are shown in (D70): DEUS, or TypeScript-like where a page has it; kept per viewer. */
 const DIALECT_KEY = 'deus.dialect';
@@ -2405,14 +2413,59 @@ const taskCode = (task) => {
 /** Cards a closed column (done, canceled) shows before "Show all": the open work is what a visitor came for. */
 const CLOSED_SHOWN = 8;
 
+/** Whether `task` passes the board's filter. */
+const taskShown = (task) => {
+  const { text, label } = ui.taskFilter;
+  const wanted = text.trim().toLowerCase().replace(/^@/, '');
+  const haystack = [task.title, task.id, task.assignee ?? '', ...task.labels].join(' ').toLowerCase();
+  return (label === '' || task.labels.includes(label)) && (wanted === '' || haystack.includes(wanted));
+};
+
+/** The filter above the board: a text box and a chip per label, with how many tasks carry it. */
+const taskFilterHtml = () => {
+  const counts = new Map();
+  for (const task of index.tasks) {
+    for (const label of task.labels) {
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+  }
+  const sorted = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  // The most used labels, and the one in use, unless the reader asks for all: there are dozens.
+  const labels = ui.taskFilter.allLabels
+    ? sorted
+    : sorted.filter(([label], at) => at < TOP_LABELS || label === ui.taskFilter.label);
+  const hidden = sorted.length - labels.length;
+  return (
+    `<div class="task-filter"><input id="task-filter-text" type="search" placeholder="Filter by title, id, label or @assignee" aria-label="Filter tasks" autocomplete="off" value="${escape(ui.taskFilter.text)}">` +
+    `<div class="tag-chips">${labels
+      .map(
+        ([label, count]) =>
+          `<button class="tag-chip${label === ui.taskFilter.label ? ' active' : ''}" data-task-label="${escape(label)}">${escape(label)} <span class="count">${count}</span></button>`,
+      )
+      .join('')}${hidden > 0 ? `<button class="link-button" data-more-labels>${hidden} more</button>` : ''}</div></div>`
+  );
+};
+
+/** How many labels the task board's filter offers before "more". */
+const TOP_LABELS = 10;
+
+/** Sets the board's label filter (a second click on the same label clears it) and draws the board again. */
+const filterTasks = (label) => {
+  ui.taskFilter.label = ui.taskFilter.label === label ? '' : label;
+  renderTasks();
+};
+
 const renderTasks = () => {
   const columns = STATES.map((state) => {
-    const tasks = index.tasks.filter((task) => task.state === state);
+    const tasks = index.tasks.filter((task) => task.state === state && taskShown(task));
     const cards = tasks.map(
       (task) =>
         `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title" title="${escape(task.title)}">${escape(task.title)}</span>` +
         `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
-          .map((label) => `<span class="chip">${escape(label)}</span>`)
+          .map(
+            (label) =>
+              `<span class="chip" data-task-label="${escape(label)}" title="Show only ${escape(label)} tasks">${escape(label)}</span>`,
+          )
           .join('')}</span>${taskCode(task)}</a>`,
     );
     const closed = state === 'done' || state === 'canceled';
@@ -2441,7 +2494,17 @@ const renderTasks = () => {
       : '';
   const action = canWrite() ? '<button class="primary-button" data-new-task>New task</button>' : '';
   element('tasks-view').innerHTML =
-    `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${waiting}<div class="board">${columns.join('')}</div>`;
+    `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${taskFilterHtml()}${waiting}<div class="board">${columns.join('')}</div>`;
+  // Typing redraws the board, so the box the reader types in is focused again where they were.
+  const input = element('task-filter-text');
+  input.addEventListener('input', () => {
+    const at = input.selectionStart;
+    ui.taskFilter.text = input.value;
+    renderTasks();
+    const again = element('task-filter-text');
+    again.focus();
+    again.setSelectionRange(at, at);
+  });
 };
 
 /** A change's message, with the title of the task a `task: comment on <id>` or `task: set <id> state` change names. */
@@ -3742,7 +3805,7 @@ const setDialect = (dialect) => {
 
 const onClick = (event) => {
   const target = event.target.closest(
-    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history], [data-close-overlay]',
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history], [data-task-label], [data-more-labels], [data-close-overlay]',
   );
   if (!target) {
     const cardNode = event.target.closest('.card');
@@ -3762,6 +3825,11 @@ const onClick = (event) => {
     filterAreas(target.closest('.home') ?? document, data.areaTag);
   } else if (data.history !== undefined) {
     filterHistory(data.history);
+  } else if (data.taskLabel !== undefined) {
+    filterTasks(data.taskLabel);
+  } else if (data.moreLabels !== undefined) {
+    ui.taskFilter.allLabels = true;
+    renderTasks();
   } else if (data.closeOverlay !== undefined) {
     closeOverlays();
   } else if (data.index !== undefined) {
