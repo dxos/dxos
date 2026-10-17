@@ -36,6 +36,8 @@ export type FormFieldOverride = {
    */
   indeterminate?: boolean;
   label?: string;
+  /** Draw no label: the control names itself, or the section heading above it already does. */
+  hideLabel?: boolean;
   description?: string;
   placeholder?: string;
   readonly?: boolean;
