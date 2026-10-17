@@ -133,7 +133,7 @@ Project → Milestone → Task is the "when/who" axis. `Implements` is the only 
    or a new plugin-features? Proposal: types in `@dxos/types` next to `Task`, the
    view in plugin-projects.
 2. Is `stage` the right maturity vocabulary, or should a feature reuse the plugin
-   tags in `dx.config.ts` (`labs` ×64, `alpha` ×20, `beta` ×5)? Proposal: reuse
+   tags in `dx.config.ts` (`labs` ×66, `alpha` ×21, `beta` ×5)? Proposal: reuse
    them — `labs | alpha | beta | stable | deprecated` — so a feature can never
    claim more maturity than the plugin that ships it.
 3. Do `test QA-n` blocks need to be objects too, so a map can show pass/fail from
