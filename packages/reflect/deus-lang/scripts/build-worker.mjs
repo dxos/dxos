@@ -223,7 +223,18 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
       );
       execFileSync(
         'node',
-        [join(root, 'bin/deus.mjs'), 'build', 'Worker.Writes.request', '-o', join(gen, 'writes.js'), '--js'],
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
+          'Worker.Writes.request',
+          'Worker.Writes.upload',
+          'Worker.Writes.attachment',
+          'Worker.Writes.attachmentName',
+          'Worker.Writes.servedType',
+          '-o',
+          join(gen, 'writes.js'),
+          '--js',
+        ],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
       execFileSync(

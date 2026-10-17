@@ -60,18 +60,18 @@ const embeddedDocOf = (path) => {
     return undefined;
   }
   const [head, ...words] = match[2].toLowerCase().split(/[-_]/);
-  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word[0].toUpperCase() + word.slice(1)).join('')}`;
+  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}`;
   return embedded(name) ? name : undefined;
 };
 
-/** A link to a document: its card when the codebase embeds it, else the file on GitHub. */
-const fileLink = (target, label) => {
+/** A link to a document: its card when the codebase embeds it, else the file on GitHub; `escaped` when `target` already is. */
+const fileLink = (target, label, escaped = false) => {
   // A bare `DECISIONS.md` is relative to whichever folder the linking document is in: docs/spec/ or docs/.
   const path = repoPath(target);
   const name = embeddedDocOf(path) ?? embeddedDocOf(path.replace(/^docs\/spec\//, 'docs/'));
   return name
     ? `<a class="ref" data-open="k:doc:${escape(name)}">${label}</a>`
-    : `<a href="${escape(repoUrl(target))}" target="_blank" rel="noopener">${label}</a>`;
+    : `<a href="${escaped ? repoUrl(target) : escape(repoUrl(target))}" target="_blank" rel="noopener">${label}</a>`;
 };
 
 /** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
@@ -2160,7 +2160,7 @@ const inlineMd = (text, namespace) =>
               return docLink(doc, label);
             }
             if (!/^https?:/.test(target) && /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)) {
-              return fileLink(target, label);
+              return fileLink(target, label, true);
             }
             // `target` comes from escaped text, so it is already safe in an attribute.
             return /^https?:/.test(target) ? `<a href="${target}" target="_blank" rel="noopener">${label}</a>` : label;

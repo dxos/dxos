@@ -24,8 +24,6 @@ import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
 const SESSION_DAYS = 7;
-const MAX_ASSET_BYTES = 10 * 1024 * 1024;
-const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
 const SESSION_COOKIE = 'deus_session';
 const STATE_COOKIE = 'deus_oauth_state';
 
@@ -96,14 +94,16 @@ const site = async (env, ctx, url, version, base, request) => {
       return new Response(demoFiles[step.name], {
         headers: { 'content-type': DEMO_TYPES[step.name], 'cache-control': 'public, max-age=300' },
       });
+  }
+  if (!env.BUCKET) {
+    return notFound();
+  }
+  switch (step.kind) {
     case 'hub':
       return hubPage(step.name);
     // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish.
     case 'app':
       return appAsset(step.name);
-  }
-  if (!env.BUCKET) {
-    return notFound();
   }
   const path = step.name;
   if (step.kind === 'page') {
@@ -239,10 +239,9 @@ const asset = async (env, url) => {
   if (!object) {
     return new Response('not found', { status: 404 });
   }
-  const type = object.httpMetadata?.contentType ?? 'application/octet-stream';
   return new Response(object.body, {
     headers: {
-      'content-type': ASSET_TYPES.includes(type) ? type : 'application/octet-stream',
+      'content-type': writes.servedType(object.httpMetadata?.contentType ?? ''),
       'cache-control': 'public, max-age=31536000, immutable',
       'x-content-type-options': 'nosniff',
     },
@@ -427,39 +426,34 @@ const api = async (request, env, url) => {
   return json(await enqueue(env, made));
 };
 
-/** `value` when it is a string, cut to `limit` characters; anything else is "". */
-const text = (value, limit) => (typeof value === 'string' ? value.slice(0, limit) : '');
-
 const checkAssets = async (env, value) => {
   const list = Array.isArray(value) ? value.slice(0, 10) : [];
   return Promise.all(
     list.map(async (item) => {
-      const hash = text(item?.hash, 64);
-      if (!/^[0-9a-f]{64}$/.test(hash) || !(await env.BUCKET.head(`${prefix(env)}/assets/${hash}`))) {
+      // What an attachment may say is `Worker.Writes.attachment`, in DEUS; that it was uploaded is a read.
+      const checked = writes.attachment(item ?? {});
+      if (checked.error !== undefined || !(await env.BUCKET.head(`${prefix(env)}/assets/${checked.hash}`))) {
         throw new HttpError(400, 'an attachment was not uploaded');
       }
-      return { hash, type: text(item.type, 100), name: text(item.name, 200).replace(/[/\\]/g, '_') };
+      return checked;
     }),
   );
 };
 
 const storeAsset = async (request, env) => {
-  const type = (request.headers.get('content-type') ?? '').split(';')[0].trim();
-  if (!ASSET_TYPES.includes(type)) {
-    throw new HttpError(415, 'attach a PNG, JPEG, GIF, WebP image or a PDF');
-  }
   const bytes = new Uint8Array(await request.arrayBuffer());
-  if (bytes.length === 0 || bytes.length > MAX_ASSET_BYTES) {
-    throw new HttpError(413, 'an attachment must be under 10 MB');
+  // Which uploads are kept is `Worker.Writes.upload`, in DEUS.
+  const upload = writes.upload(request.headers.get('content-type') ?? '', bytes.length);
+  if (upload.error !== undefined) {
+    throw new HttpError(upload.status, upload.error);
   }
   const hash = hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
   const key = `${prefix(env)}/assets/${hash}`;
   if (!(await env.BUCKET.head(key))) {
-    await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: type } });
+    await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: upload.type } });
   }
-  const name =
-    decodeURIComponent(request.headers.get('x-file-name') ?? '') || `${hash.slice(0, 10)}.${type.split('/')[1]}`;
-  return { hash, type, name: name.slice(0, 200).replace(/[/\\]/g, '_') };
+  const name = writes.attachmentName(decodeURIComponent(request.headers.get('x-file-name') ?? ''), hash, upload.type);
+  return { hash, type: upload.type, name };
 };
 
 /** Stores a request for `deus inbox`; names start with the time, so the inbox applies them in order. */

@@ -72,6 +72,53 @@ function Worker$Writes$request(path, body, author, assets) {
 }
 rt.named(Worker$Writes$request, "Worker.Writes.request");
 
+function Worker$Writes$upload(contentType, size) {
+  const type = Worker$Writes$mediaType(contentType);
+  const t0 = Worker$Writes$uploadProblem(type, size);
+  m1: {
+    if (t0.tag === 1 && t0.fields[0].tag === 0) {
+      const status = t0.fields[0].fields[0];
+      const message = t0.fields[0].fields[1];
+      return Worker$Writes$refuse(status, message);
+    }
+    if (t0.tag === 0) {
+      return lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["type", lib$web$Js$text(type)]), rt.NIL));
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Writes$upload, "Worker.Writes.upload");
+
+function Worker$Writes$attachment(item) {
+  const hash = Worker$Writes$text(lib$web$Js$get(item, "hash"), 64);
+  if (not(Worker$Heads$isHash(hash))) {
+    return Worker$Writes$refuse(400, "an attachment was not uploaded");
+  } else {
+    return lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["hash", lib$web$Js$text(hash)]), rt.cons(new rt.Con("#Pair", 0, ["type", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(item, "type"), 100))]), rt.cons(new rt.Con("#Pair", 0, ["name", lib$web$Js$text(Worker$Writes$safeName(Worker$Writes$text(lib$web$Js$get(item, "name"), 200)))]), rt.NIL))));
+  }
+}
+rt.named(Worker$Writes$attachment, "Worker.Writes.attachment");
+
+function Worker$Writes$attachmentName(given, hash, type) {
+  let r0;
+  if (Text$isEmpty(given)) {
+    r0 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Text$take(10, hash), "."), Text$drop(((rt.ap(rt.prims["Text.indexOf"], type, "/", 0) + 1) | 0), type));
+  } else {
+    r0 = given;
+  }
+  return Worker$Writes$safeName(r0);
+}
+rt.named(Worker$Writes$attachmentName, "Worker.Writes.attachmentName");
+
+function Worker$Writes$servedType(type) {
+  if (List$contains(type, Worker$Writes$assetTypes())) {
+    return type;
+  } else {
+    return "application/octet-stream";
+  }
+}
+rt.named(Worker$Writes$servedType, "Worker.Writes.servedType");
+
 function List$length(xs) {
   function go(acc$, ys$) {
     for (;;) {
@@ -226,28 +273,29 @@ function Worker$Writes$isTaskId(id) {
 }
 rt.named(Worker$Writes$isTaskId, "Worker.Writes.isTaskId");
 
-const lib$web$Js$typeOf = rt.importFn(rt, "js.typeOf", [['raw']], ['text'], "lib.web.Js.typeOf");
-
-function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+function Worker$Writes$mediaType(contentType) {
+  return rt.ap(rt.prims["Text.trim"], Option$getOr(List$head$p(rt.ap(rt.prims["Text.split"], contentType, ";")), ""));
 }
-rt.named(Text$take, "Text.take");
+rt.named(Worker$Writes$mediaType, "Worker.Writes.mediaType");
 
-const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
-
-function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+function Worker$Writes$uploadProblem(type, size) {
+  if (not(List$contains(type, Worker$Writes$assetTypes()))) {
+    return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [415, "attach a PNG, JPEG, GIF, WebP image or a PDF"])]);
   } else {
-    return false;
+    let r0;
+    if ((size === 0)) {
+      r0 = true;
+    } else {
+      r0 = rt.ap(rt.prims["gt"], size, Worker$Writes$maxAssetBytes());
+    }
+    if (r0) {
+      return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [413, "an attachment must be under 10 MB"])]);
+    } else {
+      return rt.con0("#Option", 0);
+    }
   }
 }
-rt.named(Text$startsWith, "Text.startsWith");
-
-function Text$contains(part, t) {
-  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
-}
-rt.named(Text$contains, "Text.contains");
+rt.named(Worker$Writes$uploadProblem, "Worker.Writes.uploadProblem");
 
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
@@ -268,10 +316,45 @@ function Worker$Heads$isHash(t) {
 }
 rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
+function Worker$Writes$safeName(name) {
+  return Text$replace("\\", "_", Text$replace("/", "_", Text$take(200, name)));
+}
+rt.named(Worker$Writes$safeName, "Worker.Writes.safeName");
+
+function Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(Text$take, "Text.take");
+
 function Text$drop(n, t) {
   return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
 }
 rt.named(Text$drop, "Text.drop");
+
+function List$contains(x, xs) {
+  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+}
+rt.named(List$contains, "List.contains");
+
+const Worker$Writes$assetTypes = rt.lazy("Worker.Writes.assetTypes", () => rt.cons("image/png", rt.cons("image/jpeg", rt.cons("image/gif", rt.cons("image/webp", rt.cons("application/pdf", rt.NIL))))));
+
+const lib$web$Js$typeOf = rt.importFn(rt, "js.typeOf", [['raw']], ['text'], "lib.web.Js.typeOf");
+
+const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
+
+function Text$startsWith(prefix, t) {
+  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
+    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  } else {
+    return false;
+  }
+}
+rt.named(Text$startsWith, "Text.startsWith");
+
+function Text$contains(part, t) {
+  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+}
+rt.named(Text$contains, "Text.contains");
 
 const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
 
@@ -405,6 +488,65 @@ function Text$isDigit(c) {
 }
 rt.named(Text$isDigit, "Text.isDigit");
 
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+function List$head$p(v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [x]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(List$head$p, "List.head?");
+
+const Worker$Writes$maxAssetBytes = rt.lazy("Worker.Writes.maxAssetBytes", () => Math.imul(Math.imul(10, 1024), 1024));
+
+function Text$replace(old, _new, t) {
+  return rt.ap(rt.prims["Text.join"], _new, rt.ap(rt.prims["Text.split"], t, old));
+}
+rt.named(Text$replace, "Text.replace");
+
+function List$any(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return false;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return true;
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$any, "List.any");
+
 function List$reverse(xs) {
   function go(acc$, ys$) {
     for (;;) {
@@ -431,6 +573,14 @@ rt.named(List$reverse, "List.reverse");
 
 export const raw = {
   request: Worker$Writes$request,
+  upload: Worker$Writes$upload,
+  attachment: Worker$Writes$attachment,
+  attachmentName: Worker$Writes$attachmentName,
+  servedType: Worker$Writes$servedType,
 };
 export const request = rt.exportFn(Worker$Writes$request, [['text'], ['raw'], ['text'], ['raw']], ['raw']);
+export const upload = rt.exportFn(Worker$Writes$upload, [['text'], ['int']], ['raw']);
+export const attachment = rt.exportFn(Worker$Writes$attachment, [['raw']], ['raw']);
+export const attachmentName = rt.exportFn(Worker$Writes$attachmentName, [['text'], ['text'], ['text']], ['text']);
+export const servedType = rt.exportFn(Worker$Writes$servedType, [['text']], ['text']);
 //# sourceMappingURL=writes.js.map

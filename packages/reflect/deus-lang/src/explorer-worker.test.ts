@@ -154,6 +154,19 @@ describe('explorer worker', () => {
     const served = await call(`/assets/${asset.hash}`);
     expect(served.headers.get('content-type')).toBe('image/png');
     expect(new Uint8Array(await served.arrayBuffer())).toEqual(png);
+    // Only images and PDFs under 10 MB are kept; a name loses its path separators, and no name gets one from the hash.
+    expect((await post('/api/asset', session, png, { 'content-type': 'text/html' })).status).toBe(415);
+    expect((await post('/api/asset', session, new Uint8Array(), { 'content-type': 'image/png' })).status).toBe(413);
+    const named = await post('/api/asset', session, png, {
+      'content-type': 'image/png; charset=binary',
+      'x-file-name': encodeURIComponent('../a\\b.png'),
+    });
+    expect(await named.json()).toMatchObject({ type: 'image/png', name: '.._a_b.png' });
+    const unnamed = await post('/api/asset', session, png, { 'content-type': 'image/png' });
+    expect(await unnamed.json()).toMatchObject({ name: `${asset.hash.slice(0, 10)}.png` });
+    expect((await post('/api/comment', session, { subject: 'def:A', note: 'n', assets: [{ hash: 'x' }] })).status).toBe(
+      400,
+    );
 
     const comment = await post('/api/comment', session, {
       subject: 'def:List.map',

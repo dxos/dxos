@@ -70,6 +70,52 @@ def request (path : Text) (body : Js) (author : Text) (assets : Js) : Js :=
       | Option.some given => made (base "task-comment" ++ [("task", Js.text task), ("note", Js.text given)])
   else refuse 404 "not found"
 
+/-- What may be attached: images and PDFs, which the explorer shows or links. -/
+def assetTypes : List Text := ["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf"]
+
+/-- The largest attachment, in bytes. -/
+def maxAssetBytes : Int := 10 * 1024 * 1024
+
+/-- The media type of a `content-type` header, without its parameters. -/
+def mediaType (contentType : Text) : Text := Text.trim (Option.getOr (List.head? (Text.split contentType ";")) "")
+
+/-- Why an upload of `size` bytes of `type` is refused, with its status; none when it may be stored. -/
+def uploadProblem (type : Text) (size : Int) : Option (Int, Text) :=
+  if not (List.contains type assetTypes) then Option.some (415, "attach a PNG, JPEG, GIF, WebP image or a PDF")
+  else if size == 0 || size > maxAssetBytes then Option.some (413, "an attachment must be under 10 MB")
+  else Option.none
+
+/-- An upload of `size` bytes with header `contentType`: `{type}` with the media type alone, or `{status, error}`. -/
+def upload (contentType : Text) (size : Int) : Js :=
+  let type := mediaType contentType
+  match uploadProblem type size with
+  | Option.some (status, message) => refuse status message
+  | Option.none => Js.obj [("type", Js.text type)]
+
+/-- A file name cut to 200 characters with its path separators made `_`, so it names no folder. -/
+def safeName (name : Text) : Text := Text.replace "\\" "_" (Text.replace "/" "_" (Text.take 200 name))
+
+/-- An uploaded file's name: the one it was given, else one made from its hash and type. -/
+def attachmentName (given : Text) (hash : Text) (type : Text) : Text :=
+  safeName (if Text.isEmpty given then Text.take 10 hash ++ "." ++ Text.drop (Text.indexOf type "/" 0 + 1) type else given)
+
+/-- An attachment a write names (`{hash, type, name}`), cut to size; `{status, error}` when its hash is not one. -/
+def attachment (item : Js) : Js :=
+  let hash := text (Js.get item "hash") 64
+  if not (Worker.Heads.isHash hash) then refuse 400 "an attachment was not uploaded"
+  else Js.obj [("hash", Js.text hash), ("type", Js.text (text (Js.get item "type") 100)), ("name", Js.text (safeName (text (Js.get item "name") 200)))]
+
+/-- The type an asset is served as: its own when it may be attached, else bytes, so a browser never renders it. -/
+def servedType (type : Text) : Text := if List.contains type assetTypes then type else "application/octet-stream"
+
+test uploadsAndNames :=
+  mediaType "image/png; charset=x" == "image/png" && uploadProblem "image/png" 3 == Option.none
+    && Option.map fst (uploadProblem "text/html" 3) == Option.some 415 && Option.map fst (uploadProblem "image/png" 0) == Option.some 413
+    && Option.map fst (uploadProblem "image/png" (maxAssetBytes + 1)) == Option.some 413
+    && attachmentName "a/b\\c.png" "0123456789abcdef" "image/png" == "a_b_c.png"
+    && attachmentName "" "0123456789abcdef" "image/png" == "0123456789.png" && safeName "" == ""
+    && servedType "image/svg+xml" == "application/octet-stream" && servedType "application/pdf" == "application/pdf"
+
 test labelsAreSlugs :=
   isLabel "explorer" && isLabel "a-1" && not (isLabel "-a") && not (isLabel "Explorer") && not (isLabel "")
     && not (isLabel (Text.repeat 33 "a")) && isLabel (Text.repeat 32 "a")

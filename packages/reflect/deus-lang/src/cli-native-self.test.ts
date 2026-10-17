@@ -43,11 +43,16 @@ describe('deus built natively', () => {
       expect(deus('add', join(root, 'deus'), ...c).code).toBe(0);
       const native = join(scratch, 'deus-native');
       // Unoptimized C builds the whole CLI in a fifth of the time, and this test only needs it to run.
+      const level = process.env.DEUS_CC_OPT;
       process.env.DEUS_CC_OPT = '-O0';
       try {
         expect(deus('build', 'Cli.main', '-o', native, '--c', ...c).code).toBe(0);
       } finally {
-        delete process.env.DEUS_CC_OPT;
+        if (level === undefined) {
+          delete process.env.DEUS_CC_OPT;
+        } else {
+          process.env.DEUS_CC_OPT = level;
+        }
       }
       const target = ['--codebase', join(scratch, 'cli-target')];
       const run = (...args: string[]) =>
