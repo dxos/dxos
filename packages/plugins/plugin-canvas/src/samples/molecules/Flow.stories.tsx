@@ -144,8 +144,9 @@ const EXTENDED: DataFlowSpec = {
 };
 
 /**
- * A universal inbox: mail, Discord and chat feed one ECHO space of three buckets, read by an inbox API and an agent.
- * Molecules take their thread's colour rather than their source's, and each thread collects in a bucket of its own.
+ * A universal inbox: mail, Discord and chat feed one ECHO space of four buckets. Molecules take their
+ * thread's colour rather than their source's, each thread collects in a bucket of its own, and each bucket has an agent
+ * of its own beneath it that reads and writes only that thread.
  */
 const INBOX: DataFlowSpec = {
   sources: [
@@ -153,12 +154,18 @@ const INBOX: DataFlowSpec = {
     { id: 'discord', label: 'Discord', hue: 'neutral' },
     { id: 'chat', label: 'Chat', hue: 'neutral' },
   ],
-  hub: { label: '', partitions: 3 },
-  sinks: [{ label: 'Inbox API', app: 'list' }, { label: 'Agent' }],
+  hub: { label: '', partitions: 4 },
+  sinks: [{ label: 'Agent 1' }, { label: 'Agent 2' }, { label: 'Agent 3' }, { label: 'Agent 4' }],
 };
 
 /** One hue per thread; the sources and their channels are neutral, so colour reads as the thread alone. */
-const THREADS = ['amber', 'sky', 'green'];
+const THREADS = ['amber', 'sky', 'green', 'fuchsia'];
+
+/**
+ * Molecules leave ECHO after 15 seconds, decaying at the full rate from the start rather than once ECHO is half full, so
+ * each thread's cluster stays small as it turns over; the agents keep what they take for longer, so they stay busy.
+ */
+const INBOX_DECAY: SimulationOptions = { hubLifetime: 15, fullDecayAt: 0, sinkLifetime: 40 };
 
 /** Busier apps than the simulation's defaults: they write up about every second and a half, and half of what settles in
  * ECHO syncs down to them, rather than a third. */
@@ -228,7 +235,7 @@ const CHAPTERS: readonly Scene[] = [
     title: 'Universal Inbox',
     caption: 'Conversations from every channel, gathered by thread.',
     spec: INBOX,
-    options: { ...APP_ACTIVITY, warmup: 16, prefill: true, threads: THREADS },
+    options: { ...APP_ACTIVITY, ...INBOX_DECAY, warmup: 16, prefill: true, threads: THREADS, threadSinks: true },
     grid: 'none',
     stage: 'inbox',
     duration: 10,
@@ -311,7 +318,7 @@ export const Chapter5Growth: Story = {
   render: (args) => <GrowsIn {...args} before={CHAPTERS[3].spec} />,
 };
 
-/** Gmail, Discord and chat feed ECHO; each thread's molecules, in its own colour, collect in one bucket. */
+/** Gmail, Discord and chat feed ECHO's four buckets, one per thread, each with an agent that serves that thread alone. */
 export const Chapter6Inbox: Story = chapter(5);
 
 /**

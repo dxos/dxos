@@ -134,6 +134,8 @@ export type SimulationOptions = {
   hubCapacity?: number;
   /** Seconds a molecule stays cached in the hub before it may decay. */
   hubLifetime?: number;
+  /** How full the hub is (0 to 1) when it starts decaying at its full rate; until then it decays slowly, to build up. */
+  fullDecayAt?: number;
   /** Seconds a molecule stays cached in the sink before it may decay. */
   sinkLifetime?: number;
   /** Seconds between decays in one lattice. */
@@ -160,10 +162,15 @@ export type SimulationOptions = {
    * its hue, and collects in the hub bucket of the same index, so a bucket gathers one thread from every source.
    */
   threads?: readonly string[];
+  /**
+   * With `threads`, sink `n` serves thread `n` alone: it takes copies only from that thread's bucket, and what it writes
+   * joins that thread and rises back into the same bucket.
+   */
+  threadSinks?: boolean;
 };
 
 const DEFAULTS: Required<
-  Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup' | 'threads'>
+  Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup' | 'threads' | 'threadSinks'>
 > = {
   interval: 1.4,
   perSource: 2,
@@ -172,6 +179,7 @@ const DEFAULTS: Required<
   fadeOut: 1.6,
   hubCapacity: 160,
   hubLifetime: 30,
+  fullDecayAt: 0.5,
   sinkLifetime: 20,
   decayInterval: 0.25,
   upInterval: 5,
@@ -288,9 +296,6 @@ const FLICKER_RATE = 8;
 
 /** Blinks a molecule gives as it attaches. */
 const BLINKS = 3;
-
-/** How full the hub is when it starts decaying at its full rate. */
-const HUB_HALF = 0.5;
 
 /** Until then the hub decays on one tick in this many. */
 const SLOW_DECAY = 16;
@@ -487,15 +492,25 @@ class Crystal {
    * The best place for `molecule` on a free edge site (or a fresh seed, while nothing is near one). A molecule never
    * turns and keeps its bonds: it lands in its own shape, or bends at its bonds (each still joining lattice neighbours)
    * to fill a gap. Scored by the lattice's shape, by closeness to `aim` (the section the molecule is headed for), by how
-   * snugly it fits among its neighbours, and by how far its atoms had to move.
+   * snugly it fits among its neighbours, and by how far its atoms had to move. With `within`, every atom stays inside it.
    */
-  place(molecule: Molecule, aim: Point, random: Random): Placement | undefined {
+  place(molecule: Molecule, aim: Point, random: Random, within?: Rect): Placement | undefined {
     const seed = this.#seed(aim);
+    const inside = (site: Hex) => {
+      const point = this.position(site);
+      return (
+        !within ||
+        (point.x >= within.x &&
+          point.x <= within.x + within.width &&
+          point.y >= within.y &&
+          point.y <= within.y + within.height)
+      );
+    };
     const anchors = [...(seed ? [seed] : []), ...this.#frontier()];
     const { spacing } = this.grid;
     let best: { placement: Placement; score: number } | undefined;
     const consider = (sites: Hex[], anchor: Hex, pivot: number) => {
-      if (!sites.every((site) => this.#free(site))) {
+      if (!sites.every((site) => this.#free(site) && inside(site))) {
         return;
       }
       const bond = this.#attachment(sites);
@@ -791,6 +806,7 @@ export class DataFlowSimulation {
   /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
   #hubCapacity = 0;
   #threads?: readonly string[];
+  #threadSinks = false;
   /** When each source a relayout added came into play, by source; the first sources have none. */
   readonly #sourceSince: (number | undefined)[] = [];
 
@@ -1047,10 +1063,11 @@ export class DataFlowSimulation {
 
   constructor(
     layout: DataFlowLayout,
-    { seed, subset, spawnAgents, prefill, warmup = 0, threads, ...options }: SimulationOptions = {},
+    { seed, subset, spawnAgents, prefill, warmup = 0, threads, threadSinks, ...options }: SimulationOptions = {},
   ) {
     this.#layout = layout;
     this.#threads = threads;
+    this.#threadSinks = threadSinks === true && threads !== undefined;
     this.#options = { ...DEFAULTS, ...options };
     this.#hubCapacity = this.#options.hubCapacity;
     this.#spawnAgents = spawnAgents;
@@ -1413,7 +1430,7 @@ export class DataFlowSimulation {
     this.#nextDecay = this.#time + this.#options.decayInterval;
     this.#decays++;
     // The hub decays slowly until it is half full, so its lattice has time to build up before it starts wearing away.
-    if (this.#hub.fill >= HUB_HALF || this.#decays % SLOW_DECAY === 0) {
+    if (this.#hub.fill >= this.#options.fullDecayAt || this.#decays % SLOW_DECAY === 0) {
       this.#evictEdge('hub', this.#options.hubLifetime);
     }
     for (let agent = 0; agent < this.#agents; agent++) {
@@ -1455,7 +1472,7 @@ export class DataFlowSimulation {
       id: `m${serial}`,
       serial,
       molecule: generateMolecule(this.#random),
-      ...this.#colour(source),
+      ...(this.#threadSinks ? this.#threadColour(agent, source) : this.#colour(source)),
       zone: 'source',
       phase: 'forming',
       position: snap(sinkGrid, this.#freeSpot(sink.well)),
@@ -1521,20 +1538,35 @@ export class DataFlowSimulation {
     return { hue: this.#threads[thread], source, thread };
   }
 
+  /** A molecule of thread `thread`, as an agent serving it writes. */
+  #threadColour(thread: number, source: number): { hue: string; source: number; thread?: number } {
+    const hue = this.#threads?.[thread];
+    return hue === undefined ? { hue: this.#layout.sources[source].hue, source } : { hue, source, thread };
+  }
+
+  /** The agent serving `thread`, if it is present and on screen. */
+  #threadAgent(thread: number | undefined): number | undefined {
+    if (thread === undefined || thread >= this.#agents || this.#agentSince[thread] > this.#time) {
+      return undefined;
+    }
+    return this.#focused(this.#layout.sinks[thread]) ? thread : undefined;
+  }
+
   /** The hub bucket a threaded molecule collects in: one bucket per thread, in order. */
   #threadBucket(body: Body): Rect | undefined {
     const { buckets } = this.#layout.hub;
     return body.thread === undefined || !buckets?.length ? undefined : buckets[body.thread % buckets.length];
   }
 
-  /** `aim` moved over a threaded molecule's bucket, so a write rising into the hub lands with the rest of its thread. */
+  /** `aim` moved into a threaded molecule's bucket, so a write rising into the hub lands with the rest of its thread. */
   #threadAim(body: Body, aim: Point): Point {
     const bucket = this.#threadBucket(body);
     if (!bucket) {
       return aim;
     }
     const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
-    return { x: bucket.x + bucket.width * (0.5 + spread / 2), y: aim.y };
+    // Inside the bucket, not on the lane beside it: a placement aimed at the lane can settle in a neighbour.
+    return { x: bucket.x + bucket.width * (0.5 + spread / 2), y: bucket.y + bucket.height / 2 };
   }
 
   /**
@@ -1632,9 +1664,11 @@ export class DataFlowSimulation {
         this.#evictEdge('hub');
       }
     }
-    let placement = crystal.place(body.molecule, aim, this.#random);
+    // A thread's molecules bond only within its own bucket, never onto a neighbour's lattice across the wall.
+    const within = zone === 'hub' ? this.#threadBucket(body) : undefined;
+    let placement = crystal.place(body.molecule, aim, this.#random, within);
     while (!placement && this.#evictEdge(zone, 0, agent)) {
-      placement = crystal.place(body.molecule, aim, this.#random);
+      placement = crystal.place(body.molecule, aim, this.#random, within);
     }
     if (!placement) {
       return false;
@@ -1789,7 +1823,7 @@ export class DataFlowSimulation {
       }
     } else if (body.zone === 'hub' && this.#inFocus(body.position.x)) {
       // Only what settles in a bucket on screen syncs on.
-      const agent = body.syncTo ?? this.#anyAgent();
+      const agent = body.syncTo ?? (this.#threadSinks ? this.#threadAgent(body.thread) : this.#anyAgent());
       body.syncTo = undefined;
       if (agent !== undefined && !body.synced) {
         if (this.#layout.sinks[agent]?.app) {
