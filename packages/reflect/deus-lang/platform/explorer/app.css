@@ -1947,6 +1947,21 @@ ul.rows {
     white-space: normal;
   }
 
+  /* A row's signature goes under its name, with the card's width to wrap in. */
+  .entry-row {
+    flex-wrap: wrap;
+  }
+
+  .entry-row > .row-sig {
+    flex: 1 0 100%;
+    padding-left: 26px;
+    white-space: normal;
+  }
+
+  .row-sig::before {
+    content: '';
+  }
+
   /* A phone shows the whole name, which is what was matched, and the signature under it. */
   .result {
     flex-wrap: wrap;
