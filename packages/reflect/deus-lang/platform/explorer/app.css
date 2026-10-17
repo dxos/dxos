@@ -1868,6 +1868,8 @@ ul.rows {
     padding: 0 8px;
   }
 
+  /* A force-directed graph is not legible at phone width, so the list is the only layout offered there. */
+  #layouts,
   #project,
   #branch,
   #help,
