@@ -22,6 +22,9 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
       the size given. On an external monitor use the default 1920x1080; on a laptop use `1280 720` (Screen Studio
       captures Retina at 2x, so 2560x1440 scales cleanly to 1080p). Check it in the console:
       `innerWidth + 'x' + innerHeight`; if the height is off, re-run with `TITLE_BAR=<n>`. Keep the zoom at 100% (⌘0).
+      macOS rounds a window's bottom corners, which show in a window capture: run with `PAD=16` for 16 extra rows
+      below the frame, then crop each clip in Screen Studio to the top 1920x1080 of the page. Content pinned to the
+      bottom (the assistant prompt, the canvas toolbar) sits 16pt lower and loses that sliver.
 - [ ] **Set up Screen Studio** (once per session):
   - Recording the page only (no title bar), one of: _Area_ mode drawn over the page below the title bar (keep the
     window still between shots); _Window_ mode, then crop the title bar off in the editor (the same crop on every

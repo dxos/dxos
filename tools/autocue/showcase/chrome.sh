@@ -10,11 +10,14 @@ WIDTH=${2:-1920}
 HEIGHT=${3:-1080}
 PROFILE=${TMPDIR:-/tmp}/showcase-chrome
 TITLE_BAR=${TITLE_BAR:-28}
+# Extra rows below the frame: macOS rounds a window's bottom corners, so crop the page back to WIDTHxHEIGHT from the top
+# in Screen Studio and the curves fall in the rows cut off.
+PAD=${PAD:-0}
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --user-data-dir="$PROFILE" \
   --app="$URL" \
   --window-position=0,0 \
-  --window-size=$WIDTH,$((HEIGHT + TITLE_BAR)) \
+  --window-size=$WIDTH,$((HEIGHT + PAD + TITLE_BAR)) \
   --hide-scrollbars \
   --no-first-run \
   --no-default-browser-check \
@@ -22,4 +25,7 @@ TITLE_BAR=${TITLE_BAR:-28}
   >/dev/null 2>&1 &
 echo "Composer at $URL in a ${WIDTH}x${HEIGHT} app window (profile $PROFILE)."
 echo "Check the size in DevTools (View > Developer > JavaScript Console): innerWidth + 'x' + innerHeight"
-echo "should print ${WIDTH}x${HEIGHT}; if the height is off, re-run with TITLE_BAR set to the difference added or removed."
+echo "should print ${WIDTH}x$((HEIGHT + PAD)); if the height is off, re-run with TITLE_BAR set to the difference added or removed."
+if [ "$PAD" -gt 0 ]; then
+  echo "In Screen Studio, crop to the top ${WIDTH}x${HEIGHT} of the page (drop the ${PAD} bottom rows with the rounded corners)."
+fi
