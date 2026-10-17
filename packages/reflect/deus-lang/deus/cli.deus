@@ -2841,7 +2841,40 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
 def main (u : Unit) : {IO} Unit :=
   match try (fun _ => dispatch (IO.args ())) with
   | Result.ok _ => ()
-  | Result.err message => die message
+  | Result.err message => die (message ++ Cli.notationHint (IO.args ()) message)
+
+/-- For "unknown name times!", most often a notation used outside its namespace or with a hole it does not match: the
+  notation's pattern and the namespace it is in scope in; else "". -/
+def notationHint (argv : List Text) (message : Text) : {IO} Text :=
+  let marker := "unknown name "
+  let at := Text.indexOf message marker 0
+  let token := if at < 0 then "" else Text.trim (Option.getOr (List.head? (Text.split (Text.drop (at + Text.length marker) message) " ")) "")
+  if not (Text.endsWith "!" token) then "" else
+    match try (fun _ =>
+      let dir := openCodebase (parseArgs (List.drop 1 argv))
+      let ns := Codebase.current dir
+      let stem := Text.take (Text.length token - 1) token
+      let types := notationTypes ns
+      let found := List.filterMap (fun pair =>
+        if Names.lastSegment (fst pair) != stem then Option.none else
+          match loadRuleWith types dir ns (fst pair) with
+          | Option.some rule =>
+              (match rule.ruleParts with
+               | Part.lit first :: _ => if Text.startsWith token first then Option.some rule else Option.none
+               | _ => Option.none)
+          | Option.none => Option.none) (Map.toList ns)
+      match found with
+      | rule :: _ =>
+          let shape := Text.concat (List.map (fun part =>
+            match part with
+            | Part.lit text => text
+            | Part.hole _ category _ _ => "<" ++ category ++ ">"
+            | Part.again _ => "…") rule.ruleParts)
+          "\n" ++ token ++ " is the notation " ++ rule.ruleName ++ ", written " ++ shape ++ ", in scope inside `namespace " ++
+            documentOf rule.ruleName ++ "` (or a file that opens it)"
+      | [] => "") with
+    | Result.ok hint => hint
+    | Result.err _ => ""
 
 /-- The definitions whose source our branch edited since `base`, as one file's text, or none when
   an edit cannot be replayed over theirs: theirs edited the same definition differently, or the
