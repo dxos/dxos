@@ -36,7 +36,7 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **SHOWCASE.md rules** — light showcase clips (60 fps, no ident, no captions); dark demos (30 fps, ident and
       outro, captions).
 - [ ] **Write flows for the plugins without one** — board, calls, conductor, explorer, inbox, kanban, magazine, map,
-      mermaid, sequencer, studio, trip, voxel (rows in SHOWCASE.md with no file).
+      mermaid, sequencer, trip, voxel (rows in SHOWCASE.md with no file).
 - [ ] **Re-record the light published demos in dark** — chess `play-the-opening`, terra `planet` and sheet
       `sales-charts` were published in light, so the Dark column has no demo for them.
 - [ ] **Re-record the showcase clips** with the Terra fixes and the markdown flow's list fix; name the mermaid document.
