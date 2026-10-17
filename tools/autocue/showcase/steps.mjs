@@ -122,12 +122,63 @@ export const fromTemplate = async (page, space, { waitFor, timeout = 60_000 } = 
   if (waitFor) {
     await page.locator(branch(waitFor)).first().waitFor({ timeout });
   }
-  // A template space opens its Help companion; the clip is about the space, not the welcome video.
-  const close = page.locator('role=button[name="Close companion"]');
-  if (await visible(close, 2_000)) {
-    await close.first().click();
-  }
+  await closeCompanion(page);
   await page.waitForTimeout(1_500);
+};
+
+/**
+ * Closes a companion (a new space's Help opens one) and waits for it to go. Call it only in an off-camera setup step:
+ * a companion opening and closing on camera reads as a flicker.
+ */
+export const closeCompanion = async (page) => {
+  const close = page.locator('[data-testid="plankHeading.closeCompanion"]');
+  if (await visible(close, 6_000)) {
+    await close.first().click();
+    await close
+      .first()
+      .waitFor({ state: 'hidden', timeout: 5_000 })
+      .catch(() => {});
+  }
+};
+
+/** Expands navtree branches in order (e.g. `['Collections', 'Architecture']`) so the items under them show. */
+export const reveal = async (page, branches) => {
+  for (const label of branches) {
+    const row = page.locator(`${branch(label)}[data-state="closed"]`).first();
+    if (await visible(row, 3_000)) {
+      await row.locator('> *').first().click();
+      await page.waitForTimeout(800);
+    }
+  }
+};
+
+/**
+ * The open plank's Leaflet map. react-leaflet keeps no global, so it is read from the map container's React context;
+ * clips then move it with the map's own animations (`flyTo`) rather than simulated drags, which judder.
+ */
+export const leaflet = async (page) =>
+  page.evaluate(() => {
+    const element = [...document.querySelectorAll('[data-testid="deck.plank"] .leaflet-container')].pop();
+    let fiber = element?.[Object.keys(element).find((key) => key.startsWith('__reactFiber'))];
+    for (let depth = 0; fiber && depth < 200; depth++, fiber = fiber.return) {
+      for (const value of [fiber.memoizedProps?.value, fiber.memoizedState?.memoizedState]) {
+        const map = value?.map ?? value;
+        if (map && typeof map.flyTo === 'function') {
+          window.__showcaseMap = map;
+          return true;
+        }
+      }
+    }
+    return false;
+  });
+
+/** Flies the open map to `[lat, lng]` at `zoom` over `seconds`, and waits for the flight to land. */
+export const flyTo = async (page, center, zoom, seconds) => {
+  await page.evaluate(
+    ([center, zoom, seconds]) => window.__showcaseMap.flyTo(center, zoom, { duration: seconds }),
+    [center, zoom, seconds],
+  );
+  await page.waitForTimeout(seconds * 1_000 + 300);
 };
 
 /** Dismisses notices, closes the companion, and enables the plugins the clip needs (`org.dxos.plugin.<id>`). */

@@ -96,7 +96,7 @@ test QA-2: Draw a nested architecture diagram of composer-app
 
 test QA-3: Showcase clip
   desc: |
-    The 20s showcase clip: Create the DXOS Architecture space from its template, open a drawing and drill into a box. Recorded light at 60 fps with no ident, captions or
+    The 20s showcase clip: Open the Composer architecture drawing from the DXOS Architecture space and drill into a box. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: canvas` step.
   actors: human
   status: unverified        # driven by autocue/showcase.mjs
@@ -109,8 +109,8 @@ test QA-3: Showcase clip
       do: Open the app menu, choose Create space, pick DXOS Architecture, and click Create.
       expect: the space opens with its architecture drawings
     - name: Drill into a box
-      do: Open a drawing, pan it, and double-click a box.
-      expect: the box opens the diagram beneath it
+      do: Open the Composer drawing, pan it, and double-click the Framework box.
+      expect: the box opens the App Framework diagram beneath it
 ```
 
 ```mdl

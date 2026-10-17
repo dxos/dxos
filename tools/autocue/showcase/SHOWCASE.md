@@ -39,7 +39,8 @@ to `<run>/composite.mp4` and `temp/composite/composite.mp4`. It serves the story
 `tools/autocue` on :9009 (the one storybook, reused when it is up), starting one if nothing answers there and stopping it afterwards; `--no-composite`
 skips the render.
 
-With `--publish` (run under `op run --env-file ~/.env.tpl --` so the R2 keys are set), each flow whose two videos
+With `--publish` (R2 keys from the environment, or cached once per session from 1Password into the gitignored
+`.secrets/r2.env`; the runner's header has the command), each flow whose two videos
 pass is uploaded and set as its plugin's showcase entry in `dx.config.ts` `screenshots`, replacing the previous run's.
 
 `REPORT.md` has a pass/fail row and four frames per video, the grid's map, and frames from the composite. A step can pass on a blank plank, so check the frames,

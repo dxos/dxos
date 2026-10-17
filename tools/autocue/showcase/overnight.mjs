@@ -13,22 +13,27 @@
  * A failed take is retried, then logged and skipped; it never ends the run.
  *
  *   node tools/autocue/showcase/overnight.mjs [--only map,chess] [--themes light,dark] [--out temp/showcase/run]
- *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9009]
+ *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9009] [--grid-min 3]
+ *
+ * `--grid-min` is the closest a clip may repeat in the grid; a subset run (`--only`) has too few clips for 3, so lower it.
  *
  * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the Grid composite is rendered to
  * `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
  * `tools/autocue` on :9009 that the runner starts if nothing answers there and stops afterwards.
  *
  * `--publish` uploads each flow's light and dark videos once both pass and sets them as the plugin's showcase entry in
- * its `dx.config.ts` `screenshots`. It needs R2 keys in the environment; run it under 1Password so one approval
- * covers the night: `op run --env-file ~/.env.tpl -- node tools/autocue/showcase/overnight.mjs --publish`.
+ * its `dx.config.ts` `screenshots`. It needs R2 keys: from the environment, or from the gitignored `.secrets/r2.env`,
+ * which one 1Password approval fills for the rest of a session (mode 600, values never printed):
+ *
+ *   umask 077; op run --env-file ~/.env.tpl -- sh -c 'printf "R2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\n" \
+ *     "$DX_CLOUDFLARE_R2_ACCESS_KEY_ID" "$DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY"' > .secrets/r2.env
  *
  * Composer must answer on :4173; without `--no-serve` the runner starts it if it does not, and stops it at the end.
  * Recording rules: SHOWCASE.md beside it.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -48,6 +53,7 @@ const { values: options } = parseArgs({
     'no-serve': { type: 'boolean', default: false },
     'publish': { type: 'boolean', default: false },
     'no-composite': { type: 'boolean', default: false },
+    'grid-min': { type: 'string', default: '3' },
     'storybook': { type: 'string', default: 'http://localhost:9009' },
     'port': { type: 'string', default: '7400' },
   },
@@ -200,11 +206,18 @@ const flows = discover().filter((file) => {
   return options.only.split(',').some((name) => name.trim() === pkg || name.trim() === `plugin-${pkg}`);
 });
 
+// Keys cached from 1Password into the gitignored `.secrets/r2.env` (mode 600) spare a second approval in a session.
+const cached = path.join(ROOT, '.secrets', 'r2.env');
+if (existsSync(cached)) {
+  for (const [, name, value] of readFileSync(cached, 'utf8').matchAll(/^(?:export )?(R2_[A-Z_]+)=(.*)$/gm)) {
+    env[name] ||= value.trim().replace(/^"(.*)"$/, '$1');
+  }
+}
 // `~/.env.tpl` names the keys with a DX_CLOUDFLARE_ prefix; the uploader reads R2_*.
 env.R2_ACCESS_KEY_ID ||= env.DX_CLOUDFLARE_R2_ACCESS_KEY_ID ?? env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
 env.R2_SECRET_ACCESS_KEY ||= env.DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
 if (options.publish && (!env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY)) {
-  console.error('--publish needs R2 keys: run under `op run --env-file ~/.env.tpl --` (see the header)');
+  console.error('--publish needs R2 keys: cache them in .secrets/r2.env or run under `op run` (see the header)');
   process.exit(2);
 }
 if (options.publish && !(THEMES.includes('light') && THEMES.includes('dark'))) {
@@ -300,7 +313,10 @@ for (const [index, file] of flows.entries()) {
 
 // The light clips become the Grid grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
 const layout = THEMES.includes('light')
-  ? await run(process.execPath, [path.join(HERE, 'layout.mjs'), '--run', path.relative(ROOT, OUT)])
+  ? await run(process.execPath, [
+      path.join(HERE, 'layout.mjs'),
+      ...['--run', path.relative(ROOT, OUT), '--min', options['grid-min']],
+    ])
   : undefined;
 
 /** Starts a storybook scoped to tools/autocue, where the Grid story lives; the shared :9009 one serves another worktree. */

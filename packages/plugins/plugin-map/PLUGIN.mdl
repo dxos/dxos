@@ -396,7 +396,7 @@ test QA-1: Create a map over a dataset, see markers, toggle to globe
 
 test QA-2: Showcase clip
   desc: |
-    The 10s showcase clip: Pan a world map across named cities. Recorded light at 60 fps with no ident, captions or
+    The 10s showcase clip: Fly into London to street level, on to Tokyo, then spin the globe. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: map` step.
   actors: human
   status: unverified        # driven by autocue/showcase.mjs
@@ -406,11 +406,14 @@ test QA-2: Showcase clip
     - plugin-map enabled
   steps:
     - name: Create a map
-      do: Create a Map named World and zoom in.
-      expect: the map shows named cities
-    - name: Pan the map
-      do: Drag slowly across the map.
-      expect: the map pans smoothly
+      do: Create a Map named World.
+      expect: the map shows Europe
+    - name: Fly to London and Tokyo
+      do: Zoom into London to street level, then fly to Tokyo.
+      expect: the map animates smoothly to street level in each city
+    - name: Spin the globe
+      do: Click Toggle, then Start.
+      expect: the globe shows and rotates
 ```
 
 ---

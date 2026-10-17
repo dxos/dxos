@@ -198,7 +198,7 @@ test QA-4: Plan a project and hand its tasks to an agent
 
 test QA-5: Showcase clip
   desc: |
-    The 20s showcase clip: Create the Chess MCP on Workers space from its template, open its project and walk its task tree. Recorded light at 60 fps with no ident, captions or
+    The 20s showcase clip: Open the Chess MCP on Workers project and walk its task tree. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: projects` step.
   actors: human
   status: unverified        # driven by autocue/showcase.mjs

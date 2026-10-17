@@ -907,7 +907,7 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
 
 test QA-14: Showcase clip
   desc: |
-    The 20s showcase clip: Create the Bramble Coffee Roasters space from its template and walk its projects, documents and mail. Recorded light at 60 fps with no ident, captions or
+    The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: composer` step.
   actors: human
   status: unverified        # driven by autocue/showcase.mjs
@@ -920,8 +920,8 @@ test QA-14: Showcase clip
       do: Open the app menu, choose Create space, pick Bramble Coffee Roasters, and click Create.
       expect: the space opens and its tree fills with projects, documents and mail
     - name: Walk the space
-      do: Expand Projects, Documents and Mail, then open an item and scroll it.
-      expect: each branch lists its seeded items, and the opened item renders
+      do: Open the Spring Blend Launch project and its Tasks, then the Roastery Handbook, and scroll.
+      expect: the project, its tasks and the handbook each render
 ```
 
 ```mdl
