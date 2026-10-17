@@ -340,6 +340,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 330 | 10-19 16:30 | 20m 00s | 3e6e595378 | Head reads and folder listings are DEUS (D305) |
 | 331 | 10-19 16:50 | 20m 00s | 9e1ceb2748 | The live explorer's routing is DEUS (D306) |
 | 332 | 10-19 17:30 | 40m 00s | 5884b02229 | The hub's per-head summary is DEUS, byte-identical to the JavaScript (D307) |
-| 333 | 10-19 18:40 | 1h 10m | this commit | The js target names lambdas at parse time, not per closure (D308); history-node links and queue batching are DEUS (D309) |
+| 333 | 10-19 18:40 | 1h 10m | 5a856aa80b | The js target names lambdas at parse time, not per closure (D308); history-node links and queue batching are DEUS (D309) |
+| 334 | 10-19 19:40 | 20m 00s | this commit | The Worker's build list lives in its codebase (D310) |
 
-Total from stage 1 to stage 333: 141h 00m.
+Total from stage 1 to stage 334: 141h 20m.

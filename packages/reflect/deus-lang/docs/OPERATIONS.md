@@ -142,8 +142,8 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
 2026-10-18 UTC, version 507867a8 (D277: documents named Docs.*Md, embed changes name their file; D276: attachment rules in DEUS, review fixes; D274: all checks pass on the overview, the finder opens documents, CommonMark code spans; D272: every document in the codebase, read as cards; D271: site routing in DEUS; D270: Checked by, the explorer browser test; D269: phone hash and dialect, paged lists; D268: definition-card audit fixes; D267: explorer writes checked in DEUS; D266: inbox requests by Sexp in DEUS; D265: the guide as a card; D264: review fixes; D263: results cached a minute; D262: the tree is one Tab stop; D261: decisions in the codebase, opened as cards; D260: task board filters, History counts on a phone; D259: fresh pages drawn first after a push; D258: the printer breaks long lines; D257: third explorer audit fixes; D256: the packs API in DEUS; D255: the objects, meta, names and head log APIs; D254: the keys API; D253: the bundles API; D252: the files API).
-`scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and `gen/packs.js`, `gen/heads.js`, `gen/keys.js`, `gen/names.js`, `gen/paths.js`, `gen/routes.js` and `gen/files.js` from the
-`@dxos/worker` codebase (`DEUS_WORKER_CODEBASE`, default `~/.deus-worker`). Run it after changing `examples/react`,
+`scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and the modules `Worker.Build.modules` lists from the
+`@dxos/worker` codebase (`DEUS_WORKER_CODEBASE`, default `~/.deus-worker`); to export another definition, change that list (D310). Run it after changing `examples/react`,
 `platform/js`, `deus/address.deus` or `platform/worker/deus/`, with `DEUS_CODEBASE` the toolchain codebase.
 
 A `deus push origin` takes about 10 s; the `deus-live` queue then draws the index in about a minute and every page in

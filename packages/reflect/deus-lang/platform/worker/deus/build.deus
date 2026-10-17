@@ -1,0 +1,37 @@
+-- context: @dxos/worker/Worker
+/-
+  What scripts/build-worker.mjs compiles from this codebase into platform/worker/gen/ (task 41714c0d): each module and
+  the definitions it exports. Kept in the codebase, so exporting another definition is a change to the codebase, not to
+  a script in git (task 86d7b02a).
+-/
+
+namespace Worker.Build
+
+/-- Each module the Worker imports from `gen/`, and the definitions it exports, in the order they are built. -/
+def modules : List (Text, List Text) :=
+  [("packs.js", ["Worker.Packs.parseRange", "Worker.Packs.checkIndex", "Worker.Packs.checkCombined", "Worker.Packs.combinedFanout", "Worker.Packs.search", "Worker.Packs.newestAt"]),
+    ("heads.js", ["Worker.Heads.readHead", "Worker.Heads.headLogKey", "Worker.Heads.epochOf", "Worker.Heads.gate", "Worker.Heads.serveLog"]),
+    ("keys.js", ["Worker.Keys.parseKey", "Worker.Keys.allows", "Worker.Keys.mintProblem", "Worker.Keys.judge"]),
+    ("names.js", ["Worker.Names.resolve", "Worker.Names.serve"]),
+    ("paths.js", ["Worker.Paths.isBundle", "Worker.Paths.isSegment", "Worker.Paths.isFolder", "Worker.Paths.scopeOf", "Worker.Paths.dispatch"]),
+    ("routes.js", ["Worker.Routes.route"]),
+    ("site.js", ["Worker.Site.plan", "Worker.Site.key", "Worker.Site.cacheControl", "Worker.Site.pageOnMiss"]),
+    ("files.js", ["Worker.Files.serve", "Worker.R2.listAll", "Worker.R2.listFolders", "Worker.R2.toTrash"]),
+    ("bundles.js", ["Worker.Bundles.serve"]),
+    ("live.js", ["Worker.Live.route", "Worker.Live.summaryOf", "Worker.Live.causalFields", "Worker.Live.batchLengths"]),
+    ("objects.js", ["Worker.Objects.serve"]),
+    ("packfiles.js", ["Worker.PackFiles.serve"]),
+    ("inbox.js", ["Worker.Inbox.text", "Worker.Inbox.request"]),
+    ("writes.js", ["Worker.Writes.request", "Worker.Writes.upload", "Worker.Writes.attachment", "Worker.Writes.attachmentName", "Worker.Writes.servedType"]),
+    ("keyadmin.js", ["Worker.KeyAdmin.serve", "Worker.KeyAdmin.mint"])]
+
+/-- `modules` as build-worker.mjs reads it: one line per module, its file and then its definitions. -/
+def manifest : Text := Text.join "\n" (List.map (fun module => Text.join " " (fst module :: snd module)) modules)
+
+test modulesAreWellFormed :=
+  let files := List.map fst modules
+  List.length (dedup (List.sort files)) == List.length files
+    && List.all (fun module => Text.endsWith ".js" (fst module) && not (List.isEmpty (snd module))) modules
+    && List.all (fun module => List.all (fun name => Text.startsWith "Worker." name && not (Text.contains " " name)) (snd module)) modules
+
+end Worker.Build
