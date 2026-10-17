@@ -85,6 +85,8 @@ export const formattingStyles = EditorView.theme({
   // so constrain them to the target 24px height.
   '& .cm-code-inline': {
     fontFamily: fontMono,
+    // A step below the body text: a monospace face runs wider and taller than the prose at the same size.
+    fontSize: '0.9em',
     height: '24px',
     alignItems: 'center',
     overflow: 'hidden',
