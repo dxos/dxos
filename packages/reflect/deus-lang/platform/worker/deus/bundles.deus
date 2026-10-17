@@ -1,0 +1,67 @@
+-- context: @dxos/worker/Worker
+/-
+  A project's bundles (task 41714c0d, D50, D164): the history a push sends, one gzipped file per bundle, named by
+  its level and the SHA-256 of its text. Reads are open; a push writes one and moves the branch head with it, and only
+  compaction deletes one, into the trash (DataSafety.Spec).
+-/
+
+namespace Worker.Bundles
+
+/-- `{"bundle": name, <field>: true or false}`, how the API reports a write. -/
+def report (name : Text) (field : Text) (value : Bool) (status : Int) : Js :=
+  Worker.Http.json (Js.obj [("bundle", Js.text name), (field, Js.bool value)]) status
+
+/-- Answers `/v1/<project>/bundles/<rest>` for `request`, on the R2 `bucket`. `verify` checks that a bundle sent is
+  gzip and hashes to its name. `authorize scope` is remote.mjs's key check (as for `Worker.Files.serve`), and
+  `moveHead logged` moves the branch head the push claims, giving a promise of the response that refuses the push, or
+  of `undefined` when the head moved. -/
+def serve (request : Js) (bucket : Js) (project : Text) (rest : List Text) (verify : Bool) (authorize : Text -> Js) (moveHead : Js -> Js) : {Js.Async} Js :=
+  let folder := project ++ "/bundles/"
+  let verb := Worker.Http.method request
+  match rest with
+  | [] => if verb == "GET" then Worker.Http.lines (Worker.R2.listAll bucket folder) else Worker.Http.problem 405 "method not allowed"
+  | [""] => if verb == "GET" then Worker.Http.lines (Worker.R2.listAll bucket folder) else Worker.Http.problem 405 "method not allowed"
+  | [name] =>
+      if not (Worker.Paths.isBundle name) then Worker.Http.problem 404 "not a bundle name"
+      else
+        let key := folder ++ name
+        if verb == "GET" then
+          match Worker.R2.get bucket key with
+          | Option.none => Worker.Http.problem 404 "no such bundle"
+          -- A bundle never changes, so a cached copy is always right.
+          | Option.some object =>
+              Worker.Http.response
+                (Js.get object "body")
+                200
+                [("content-type", "application/gzip"), ("cache-control", "public, max-age=31536000, immutable")]
+        else if verb == "PUT" then
+          let logged := Js.Async.await (authorize "push")
+          let bytes := Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))
+          if Worker.R2.exists bucket key then Js.call logged [report name "stored" false 200]
+          else
+            let problem :=
+              if not verify then Option.none
+              else
+                match Worker.Crypto.gunzip bytes with
+                | Option.none => Option.some (Worker.Http.problem 400 "a bundle is sent gzipped")
+                | Option.some text =>
+                    if Option.some (Worker.Crypto.sha256 text) == List.get? (Text.split name "-") 1 then Option.none
+                    else Option.some (Worker.Http.problem 400 "the bundle does not hash to its name")
+            match problem with
+            | Option.some answer => answer
+            | Option.none =>
+                match Js.toOption (Js.Async.await (moveHead logged)) with
+                | Option.some refused => Js.call logged [refused]
+                | Option.none =>
+                    let _ := Worker.R2.put bucket key bytes "application/gzip"
+                    Js.call logged [report name "stored" true 201]
+        else if verb == "DELETE" then
+          -- Only compaction deletes a bundle, once strata hold everything it lists (D73), and into the trash, so a
+          -- compaction bug costs storage, never history.
+          let logged := Js.Async.await (authorize "compact")
+          let _ := Worker.R2.toTrash bucket project "bundles" name
+          Js.call logged [report name "deleted" true 200]
+        else Worker.Http.problem 405 "method not allowed"
+  | _ => Worker.Http.problem 404 "not a bundle name"
+
+end Worker.Bundles

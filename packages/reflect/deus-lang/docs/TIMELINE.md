@@ -287,6 +287,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 277 | 10-18 02:00 | 50m 00s | 449a9de25c | Key checks and the push compare-and-swap in DEUS (D248, D249); DX tasks 8e8dc961, 39a9ba5e and f4c07825 done (unknown types placed, notation hints, readable proof variables) |
 | 278 | 10-18 03:30 | 1h 00m | 2a1c772c50 | Second explorer audit fixes; `--help` runs nothing; bindings runtime embedded (D250, D242) |
 | 279 | 10-18 04:30 | 1h 00m | 4fe4494ebd | Explorer: Back restores the reading position, the graph says it is drawing, a project's prelude groups apart from its own namespaces, the hub's phone header, counts grouped by thousands (D251) |
-| 280 | 10-18 05:30 | 1h 00m | this commit | The files API in DEUS on typed R2 and HTTP modules (Worker.R2, Worker.Http, Worker.Files); an async call made whole in an argument no longer counts as passing a waiting function (D252) |
+| 280 | 10-18 05:30 | 1h 00m | f49ce02cbb | The files API in DEUS on typed R2 and HTTP modules (Worker.R2, Worker.Http, Worker.Files); an async call made whole in an argument no longer counts as passing a waiting function (D252) |
+| 281 | 10-18 06:15 | 45m 00s | this commit | The bundles API in DEUS (Worker.Bundles, Worker.Crypto); `deus build --js` refuses two roots with one last name (D253) |
 
-Total from stage 1 to stage 280: 105h 20m.
+Total from stage 1 to stage 281: 106h 05m.

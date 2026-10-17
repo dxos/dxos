@@ -1,0 +1,34 @@
+-- context: @dxos/worker/Worker
+/-
+  The Web Crypto and compression calls the Worker's DEUS handlers make (task 41714c0d): SHA-256 as hex, and gzip
+  decompression, over `Js` and `Js.Async` (D237). Bytes are JavaScript `Uint8Array`s (`Worker.Bytes`).
+-/
+
+namespace Worker.Crypto
+
+/-- The two lower-case hex digits of a byte. -/
+def hexByte (byte : Int) : Text :=
+  let digit := fun n => Text.slice "0123456789abcdef" n (n + 1)
+  digit (byte / 16) ++ digit (byte % 16)
+
+/-- `bytes` as lower-case hex. -/
+def hex (bytes : Js) : Text :=
+  Text.concat (List.map (fun at => hexByte (Worker.Bytes.u8 bytes at)) (range 0 (Worker.Bytes.length bytes)))
+
+/-- The SHA-256 of `bytes`, as 64 lower-case hex digits. -/
+def sha256 (bytes : Js) : {Js.Async} Text :=
+  let digest := Js.Async.await (Js.method (Js.path Js.globalThis ["crypto", "subtle"]) "digest" [Js.text "SHA-256", bytes])
+  hex (Worker.R2.bytes digest)
+
+/-- `bytes` gunzipped, or none when they are not gzip. -/
+def gunzip (bytes : Js) : {Js.Async} Option Js :=
+  let stream := Js.method (Js.method (Js.construct (Js.global "Blob") [Js.list [bytes]]) "stream" []) "pipeThrough"
+    [Js.construct (Js.global "DecompressionStream") [Js.text "gzip"]]
+  let read := Js.method (Js.construct (Js.global "Response") [stream]) "arrayBuffer" []
+  -- A stream that is not gzip rejects; the rejection becomes none, so the caller answers 400 rather than failing.
+  let buffer := Js.Async.await (Js.method read "then" [Js.fn (fun value => value), Js.fn (fun _ => Js.null)])
+  Option.map Worker.R2.bytes (Js.toOption buffer)
+
+test hexDigits := hexByte 0 == "00" && hexByte 171 == "ab" && hexByte 255 == "ff" && hexByte 16 == "10"
+
+end Worker.Crypto

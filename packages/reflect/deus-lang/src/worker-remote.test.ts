@@ -227,14 +227,13 @@ describe('replication API', () => {
     const key = await insertKey(db, ['push']);
     const bundle = await bundleOf('(bundle a)');
     const other = await bundleOf('(bundle b)');
-    const response = await call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: other.body, key });
-    expect(response.status).toBe(400);
-    expect((await call(`/v1/toolchain/bundles/${bundle.name}`, { method: 'PUT', body: 'plain', key })).status).toBe(
-      400,
-    );
-    expect((await call('/v1/toolchain/bundles/not-a-bundle', { method: 'PUT', body: other.body, key })).status).toBe(
-      404,
-    );
+    const answer = async (name: string, body: RequestInit['body']) => {
+      const response = await call(`/v1/toolchain/bundles/${name}`, { method: 'PUT', body, key });
+      return [response.status, (await response.json()).error];
+    };
+    expect(await answer(bundle.name, other.body)).toEqual([400, 'the bundle does not hash to its name']);
+    expect(await answer(bundle.name, 'plain')).toEqual([400, 'a bundle is sent gzipped']);
+    expect(await answer('not-a-bundle', other.body)).toEqual([404, 'not a bundle name']);
     expect(bucket.keys()).toEqual([]);
   });
 

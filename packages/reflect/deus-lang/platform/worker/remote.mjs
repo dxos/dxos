@@ -8,6 +8,7 @@
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
 import { isGrantable, projectAt } from './address.mjs';
+import * as bundlesApi from './gen/bundles.js';
 import * as filesApi from './gen/files.js';
 import * as heads from './gen/heads.js';
 import * as keys from './gen/keys.js';
@@ -87,59 +88,17 @@ export const remoteApi = async (request, env, ctx, url) => {
 // Bundles.
 //
 
-const bundles = async (request, env, ctx, project, rest) => {
-  const folder = `${project}/bundles/`;
-  if (rest.length === 0 || (rest.length === 1 && rest[0] === '')) {
-    if (request.method !== 'GET') {
-      throw new HttpError(405, 'method not allowed');
-    }
-    return lines(await listAll(env.BUCKET, folder));
-  }
-  const [name] = rest;
-  if (rest.length !== 1 || !paths.isBundle(name)) {
-    throw new HttpError(404, 'not a bundle name');
-  }
-  const key = folder + name;
-  if (request.method === 'GET') {
-    const object = await env.BUCKET.get(key);
-    if (!object) {
-      throw new HttpError(404, 'no such bundle');
-    }
-    // A bundle never changes, so a cached copy is always right.
-    return new Response(object.body, {
-      headers: { 'content-type': 'application/gzip', 'cache-control': 'public, max-age=31536000, immutable' },
-    });
-  }
-  if (request.method === 'PUT') {
-    const logged = await authorize(request, env, ctx, 'push', project);
-    const bytes = new Uint8Array(await request.arrayBuffer());
-    if (await env.BUCKET.head(key)) {
-      return logged(json({ bundle: name, stored: false }, 200));
-    }
-    if (env.VERIFY_BUNDLES !== '0') {
-      const text = await gunzip(bytes).catch(() => {
-        throw new HttpError(400, 'a bundle is sent gzipped');
-      });
-      if ((await sha256(text)) !== name.slice(name.indexOf('-') + 1)) {
-        throw new HttpError(400, 'the bundle does not hash to its name');
-      }
-    }
-    const refused = await moveHead(request, env, project, logged);
-    if (refused) {
-      return logged(refused);
-    }
-    await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: 'application/gzip' } });
-    return logged(json({ bundle: name, stored: true }, 201));
-  }
-  if (request.method === 'DELETE') {
-    // Only compaction deletes a bundle, once strata hold everything it lists (D73). The bundle moves to
-    // the trash rather than vanishing, so a compaction bug costs storage, never history (DataSafety.Spec).
-    const logged = await authorize(request, env, ctx, 'compact', project);
-    await toTrash(env.BUCKET, project, 'bundles', name);
-    return logged(json({ bundle: name, deleted: true }));
-  }
-  throw new HttpError(405, 'method not allowed');
-};
+/** `/v1/<project>/bundles/…` is `Worker.Bundles.serve`, in DEUS (platform/worker/deus/bundles.deus). */
+const bundles = (request, env, ctx, project, rest) =>
+  bundlesApi.serve(
+    request,
+    env.BUCKET,
+    project,
+    rest,
+    env.VERIFY_BUNDLES !== '0',
+    (scope) => authorize(request, env, ctx, scope, project),
+    (logged) => moveHead(request, env, project, logged),
+  );
 
 /**
  * A branch's head and the etag that moves it, from the bucket (`Worker.Heads.readStored`, in DEUS). Heads moved
@@ -421,11 +380,6 @@ export const mintKey = async () => {
 //
 // Helpers.
 //
-
-const gunzip = async (bytes) =>
-  new Uint8Array(
-    await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(),
-  );
 
 export const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 

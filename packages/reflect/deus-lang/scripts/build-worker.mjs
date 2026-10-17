@@ -169,6 +169,11 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         ],
         { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
       );
+      execFileSync(
+        'node',
+        [join(root, 'bin/deus.mjs'), 'build', 'Worker.Bundles.serve', '-o', join(gen, 'bundles.js'), '--js'],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
     } else {
       console.warn(`no @dxos/worker codebase at ${workerCodebase}, so the gen/ modules it builds are left as they are`);
     }

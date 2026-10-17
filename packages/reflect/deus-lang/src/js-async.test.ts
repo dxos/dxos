@@ -126,6 +126,10 @@ describe('Js.Async on the js target', () => {
     const refused = deus('build', 'Wait.partial', '-o', join(scratch, 'partial.mjs'), '--js', ...c);
     expect(refused.code).not.toBe(0);
     expect(refused.stderr).toContain('passes a function that may wait to List.map');
+
+    // Two roots with one last name would make a module JavaScript refuses to load.
+    const clash = deus('build', 'Wait.sum', 'Wait.sum', '-o', join(scratch, 'clash.mjs'), '--js', ...c);
+    expect(clash.stderr).toContain('Wait.sum and Wait.sum would both be exported as sum');
   });
 
   // Task 86d7b02a: with no checkout under $DEUS_HOME, the codebase's embedded copy of the runtime is written out.

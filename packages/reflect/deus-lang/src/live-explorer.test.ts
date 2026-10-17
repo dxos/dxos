@@ -200,7 +200,9 @@ describe('live explorer (D192)', () => {
       const bucket = join(scratch, 'bucket');
       const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
       rmSync(join(bucket, 'toolchain', 'live', head), { recursive: true, force: true });
-      const sent: { body: { project: string; causal?: string } }[] = [];
+      // A queued message draws an index, a chunk of definition pages (`from`, `count`) or recent changes.
+      const sent: { body: { project: string; causal?: string; from?: number; count?: number; changes?: string[] } }[] =
+        [];
       const env: Env = {
         BUCKET: directoryBucket(bucket),
         PREFIX: 'toolchain',
