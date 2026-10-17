@@ -1,5 +1,34 @@
 # @dxos/index-core
 
+## 0.15.0
+
+### Patch Changes
+
+- 1e9c017: `IndexEngine` writes each batch over transactions of at most 250 objects or 50 ms, set with the new `transactionLimits` option, and calls an optional `yieldBetweenTransactions` hook between them; a document's cursor advances only with its last object. The OPFS SQLite client now hands its connection to the longest waiter when a transaction ends, so a statement queued behind a transaction runs before the same writer's next one. `EchoHost` pauses between index transactions and full-text batches with the new `yieldBehindQueuedTasks`, which lets messages already queued in the worker run first, unlike `scheduler.yield`. A query issued during a large index pass now waits behind one bounded transaction instead of the whole pass.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [cd70a43]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ce8f092]
+- Updated dependencies [6d8c4ee]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

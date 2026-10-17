@@ -1,5 +1,49 @@
 # @dxos/compute-runtime
 
+## 0.15.0
+
+### Patch Changes
+
+- 5490cbc: A remote agent process that EDGE no longer hosts now fails in place instead of retrying its input forever, so the agent's next turn starts a new process; the agent Discord bot is now reached at EDGE's `/discord/bots` routes (served by discord-service), and the agent knowledge panel can show each fact as the RDF it is stored as.
+- b82150a: An operation invoked with `on: 'edge'` now runs as one request to EDGE's operation host (`POST /functions/dxn:<key>`) instead of spawning a process there, so a call such as the Brain panel's `InspectBrain` poll no longer creates a Durable Object per invocation. `RemoteOperationInvoker.invoke` takes the space per call and carries input and output in their wire form, which the invoker encodes and decodes with the operation's schemas. `@dxos/plugin-routine` provides the EDGE invoker once for the application instead of per space, and `EdgeOperationInvoker` presents the current identity on every call.
+- 5e3e00c: Types defined through `space.addType` now hold objects without declaring `id`, can be relation types, and store a new definition for a new version; `space.queryObjects` finds objects of such types by typename, and a remote caller can pass references to `space.addRelation`.
+- e398906: A trigger whose operation has no handler, or whose target object is gone, is now parked as a stale reference in production builds. Before, the check compared against the error class's own name, which minification renames, so the trigger failed and re-ran every 30 seconds.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [45ab961]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/operation@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

@@ -1,5 +1,24 @@
 # @dxos/echo-protocol
 
+## 0.15.0
+
+### Minor Changes
+
+- d0728d8: `EscapedPropPath` and `referenceIndexKey` move from `@dxos/index-core` to `@dxos/echo-protocol`, and `QueryPlanner` no longer compiles plans to SQL: its `executor` and `sql` options are gone, `QueryExecutor` compiles under the `sql` executor, and `QueryExecutorMode` is no longer exported from `@dxos/echo-host/query` (it remains on the `@dxos/echo-host` root). An app that bundles the ECHO client no longer pulls `@dxos/index-core` or the SQL compiler into the tab.
+
+### Patch Changes
+
+- ce8f092: `QueryAST.visit` matches each node with a matcher built once rather than a `Match.value` pipeline built per call, which allocated every clause and its predicate on every node: ~45 KB per walk of a six-node query, against 312 B now. The client walks every live query three times on each result update; in Composer that was ~67 MiB of allocation in the first five minutes after boot.
+- Updated dependencies [0420f87]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
