@@ -28,7 +28,7 @@ export type Requires = {
   readonly architecture?: ArchitectureLinks;
 };
 
-/** Fieldstone's handbook, planning, incident, customer and meeting documents, with the sheets and drawings they embed. Spec: `CONTENT.md`. */
+/** Alien Labs' handbook, planning, incident, customer and meeting documents, with the sheets and drawings they embed. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.partial('fieldstoneDocs', {
   schemas: [Markdown.Document, Sheet.Sheet, Drawing.Drawing, Drawing.Canvas],
   run: ({ team, inboxCrm, projects, architecture }) =>

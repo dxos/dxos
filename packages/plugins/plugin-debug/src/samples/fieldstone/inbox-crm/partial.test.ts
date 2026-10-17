@@ -38,10 +38,10 @@ const DAY = 24 * 60 * 60 * 1000;
 const dayOf = (iso: string) => Math.floor((Date.parse(iso) - Date.parse(REFERENCE.slice(0, 10))) / DAY);
 const uri = (id: string) => `echo:///${id}`;
 
-describe('Fieldstone inbox and CRM', () => {
+describe('Alien Labs inbox and CRM', () => {
   test('seeds mail, contacts and a year of calendar', { timeout: 120_000 }, async ({ expect }) => {
     const definition = SampleSpace.make({
-      space: { name: 'Fieldstone inbox and CRM' },
+      space: { name: 'Alien Labs inbox and CRM' },
       reference: REFERENCE,
       partials: { team: Team.Partial, inboxCrm: Partial },
       build: (partials) =>

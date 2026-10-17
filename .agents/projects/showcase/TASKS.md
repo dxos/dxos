@@ -88,7 +88,7 @@ so it joins the `tools/autocue` package from #14028 when that lands.
 - [ ] **excalidraw spec** — plugin-excalidraw has no `PLUGIN.mdl`, so its flow names no test.
 - [ ] **Template for magazine and trip** — a plugin-debug sample space seeding a feed with articles and an itinerary,
       built on #14021's partials once it lands; then their flows.
-- [ ] **Calls and inbox from Fieldstone Labs** — #14021's template seeds mail; add a meeting record for calls, then
+- [ ] **Calls and inbox from Alien Labs** — #14021's template seeds mail; add a meeting record for calls, then
       their flows.
 - [ ] **Grid timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.
 

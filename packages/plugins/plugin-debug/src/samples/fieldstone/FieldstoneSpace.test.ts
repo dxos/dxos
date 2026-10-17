@@ -12,7 +12,7 @@ import * as FieldstoneSpace from './FieldstoneSpace.ts';
 const LINK = /echo:\/\/\/([0-9A-Z]{26})/g;
 
 /** The partials' own suites assert their content; this asserts what holds only once they are composed. */
-describe('Fieldstone template', () => {
+describe('Alien Labs template', () => {
   test('applies every partial into one space', { timeout: 300_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(FieldstoneSpace.make()));
     const counts = histogram(json);
@@ -26,9 +26,9 @@ describe('Fieldstone template', () => {
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);
     expect(countOf('type.event')).toBe(300);
-    // 15 Fieldstone documents, 5 project artifacts, 3 architecture guides.
+    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides.
     expect(countOf('type.document')).toBe(23);
-    // 5 Fieldstone drawings and 12 architecture diagrams.
+    // 5 Alien Labs drawings and 12 architecture diagrams.
     expect(countOf('type.drawing')).toBe(17);
     expect(Object.keys(result.docs.docs)).toHaveLength(15);
 

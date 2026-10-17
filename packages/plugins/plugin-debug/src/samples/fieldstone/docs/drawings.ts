@@ -270,7 +270,7 @@ export const makeDrawings = Effect.fnUntraced(function* () {
   const { now } = yield* SampleSpace.Clock;
   const quarter = Math.floor(now.getUTCMonth() / 3) + 1;
   const drawings: Drawings = {
-    orgChart: drawing('Fieldstone org chart', makeOrgChart()),
+    orgChart: drawing('Alien Labs org chart', makeOrgChart()),
     architectureDiagram: drawing('Cairn architecture', makeArchitectureDiagram()),
     requestFlow: drawing('Cache request flow', makeRequestFlow()),
     roadmap: drawing(`Q${quarter} roadmap timeline`, makeRoadmap(now)),

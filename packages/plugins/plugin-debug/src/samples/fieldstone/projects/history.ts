@@ -468,7 +468,7 @@ export const RUN_SEEDS: ReadonlyArray<RunSeed> = [
     minutes: 160,
     by: 'june',
     brief:
-      'Do “Map Fieldstone tenants to Stripe customers”: a customer and a usage subscription for every tenant. Ask ' +
+      'Do “Map Alien Labs tenants to Stripe customers”: a customer and a usage subscription for every tenant. Ask ' +
       'June if an organization with several tenants is unclear.',
     summary:
       '#397 creates one Stripe customer per organization and one usage subscription per tenant, as June decided. A ' +
@@ -1076,7 +1076,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
       steps.push({
         tool: 'searchCode',
         say: `Finding where \`${work.query}\` lives before changing anything.`,
-        input: { query: work.query, repo: 'fieldstone/cairn' },
+        input: { query: work.query, repo: 'alien-labs/cairn' },
         result: `${between(random, 3, 18)} matches in ${between(random, 2, 6)} files\n${files
           .map((file) => `${file}:${between(random, 12, 300)}`)
           .join('\n')}`,
@@ -1131,7 +1131,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
             {
               tool: 'searchCode' as const,
               say: 'Checking for other callers.',
-              input: { query: file.slice(file.lastIndexOf('/') + 1), repo: 'fieldstone/cairn' },
+              input: { query: file.slice(file.lastIndexOf('/') + 1), repo: 'alien-labs/cairn' },
               result: `${between(random, 1, 7)} matches`,
             },
           ]),
@@ -1157,7 +1157,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
               tool: 'openPullRequest',
               say: `Opening the pull request.`,
               input: {
-                repo: 'fieldstone/cairn',
+                repo: 'alien-labs/cairn',
                 head: branch,
                 base: 'main',
                 title: seedFor(seed.tasks[0]).title,
@@ -1174,7 +1174,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
       steps.push({
         tool: 'readPullRequest',
         say: `Reading #${work.pr}.`,
-        input: { repo: 'fieldstone/cairn', number: work.pr },
+        input: { repo: 'alien-labs/cairn', number: work.pr },
         result: `#${work.pr}: ${between(random, 8, 24)} files changed, +${between(random, 600, 1400)} −${between(random, 100, 400)}`,
       });
       for (const file of work.files) {
@@ -1247,7 +1247,7 @@ const workSteps = (seed: RunSeed, random: Random, count: number, failing: string
         {
           tool: 'searchIssues',
           say: 'Checking open issues without a task.',
-          input: { repo: 'fieldstone/cairn', query: 'is:open no:project' },
+          input: { repo: 'alien-labs/cairn', query: 'is:open no:project' },
           result: `${between(random, 2, 12)} issues`,
         },
       );

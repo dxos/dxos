@@ -369,7 +369,7 @@ Anika`,
         body: `Thanks Anika, this is clear. Two follow-ups:
 
 1. Do you have a SOC 2 Type II report, or only Type I?
-2. Who at Fieldstone can access customer cache buckets, and is that access logged? I'd like to know how access is granted and how long it lasts, not only who holds it.
+2. Who at Alien Labs can access customer cache buckets, and is that access logged? I'd like to know how access is granted and how long it lasts, not only who holds it.
 
 Ted Kowalski
 Security Engineer, Meridian Health Data`,
@@ -386,7 +386,7 @@ Ted,
 
 Type I for now. Our auditor finishes fieldwork this month and the report is due a few weeks after; I'll send it under NDA as soon as it lands. The Type II observation window starts right after, so expect that report next year.
 
-Bucket access is limited to Anika and Omar, and neither has standing access. Each session is a short-lived role, granted for at most an hour through an approval in our access tool, and every session and API call goes to CloudTrail. We review the log monthly. Nobody else at Fieldstone, me included, can read a customer bucket.
+Bucket access is limited to Anika and Omar, and neither has standing access. Each session is a short-lived role, granted for at most an hour through an approval in our access tool, and every session and API call goes to CloudTrail. We review the log monthly. Nobody else at Alien Labs, me included, can read a customer bucket.
 
 Astrid`,
       },
@@ -680,7 +680,7 @@ We're moving Cairn from flat per-seat plans to per-seat plus metered cache stora
 2. Is there a rate limit on meter events? We'd report storage hourly per customer, about 300 customers, so roughly 7,200 events a day.
 
 June Okonkwo
-Fieldstone Labs`,
+Alien Labs`,
       },
       {
         from: 'dana',
@@ -834,7 +834,7 @@ Two questions:
 Felix is building the cost model and is copied here.
 
 Omar Haddad
-Fieldstone Labs`,
+Alien Labs`,
       },
       {
         from: 'ines',
@@ -897,7 +897,7 @@ Partner Manager, GitHub`,
         time: [15, 15],
         body: `Hi Sofia,
 
-The action is published under fieldstone-labs, and security@fieldstone.dev is our contact; it reaches Anika and Omar.
+The action is published under alien-labs, and security@alienlabs.dev is our contact; it reaches Anika and Omar.
 
 Self-hosted runner docs are the gap. They'll be up within two weeks, including how to keep the cache volume warm on ephemeral runners, which is the question we get most.
 
@@ -1038,7 +1038,7 @@ We're a team of ten planning a three-day offsite about two months from now, idea
 Do you have availability, and could you send rates for full board?
 
 Astrid Holm
-Engineering Manager, Fieldstone Labs`,
+Engineering Manager, Alien Labs`,
       },
       {
         from: 'wren',
@@ -1122,7 +1122,7 @@ Lucía`,
         cc: ['omar'],
         day: 14,
         time: [12, 15],
-        body: `Hana, welcome to Fieldstone!
+        body: `Hana, welcome to Alien Labs!
 
 Today is mostly setup: laptop, accounts, and a walkthrough of the cache engine with Omar at 13:00. He's your onboarding buddy for the first month, so ask him anything, including the questions that feel too small to ask.
 
@@ -1974,13 +1974,13 @@ const makeAutomated = (clock: Clock, people: Directory, coveredDays: Set<number>
     const number = 1401 + index * 7 + random.int(0, 5);
     const files = random.int(2, 14);
     const commits = random.int(1, 6);
-    const url = `https://github.com/fieldstone-labs/cairn/pull/${number}`;
+    const url = `https://github.com/alien-labs/cairn/pull/${number}`;
     placed.push({
       sender: GITHUB,
       day: request.day,
       time: hourOf(),
-      subject: `[fieldstone-labs/cairn] ${request.title} (PR #${number})`,
-      body: `@${loginOf(people[request.author])} requested your review on: fieldstone-labs/cairn#${number} ${request.title}.
+      subject: `[alien-labs/cairn] ${request.title} (PR #${number})`,
+      body: `@${loginOf(people[request.author])} requested your review on: alien-labs/cairn#${number} ${request.title}.
 
 ${request.summary}
 
@@ -2051,7 +2051,7 @@ Top of the backlog:
 
 Assigned to you: ${random.int(1, 4)} open, ${random.int(0, 2)} due this week.
 
-View cycle: https://linear.app/fieldstone/team/CAI/cycle/${cycle}
+View cycle: https://linear.app/alien-labs/team/CAI/cycle/${cycle}
 
 You're receiving the weekly digest for teams you're a member of. Change this in Settings > Notifications.`,
     });
@@ -2090,14 +2090,14 @@ You're receiving this because you subscribed at ${newsletter.from.email?.split('
       subject: `Your payout of $${amount} is on the way`,
       body: `Your payout of $${amount} is on the way
 
-A payout of $${amount} USD to your Fieldstone Labs bank account ending in 4821 is expected to arrive in 2 business days.
+A payout of $${amount} USD to your Alien Labs bank account ending in 4821 is expected to arrive in 2 business days.
 
 Payout ID: ${payout}
 Includes: ${random.int(120, 190)} charges, ${random.int(0, 4)} refunds, less Stripe fees
 
 View it in the Dashboard: https://dashboard.stripe.com/payouts/${payout}
 
-You're receiving this email because you're an administrator of the Fieldstone Labs Stripe account.`,
+You're receiving this email because you're an administrator of the Alien Labs Stripe account.`,
     });
   }
 
@@ -2159,7 +2159,7 @@ https://console.aws.amazon.com/billing/home#/budgets`,
       sender: GITHUB,
       day,
       time: hourOf(),
-      subject: `[fieldstone-labs/cairn] Run failed: ${failure.workflow} - ${failure.branch} (${sha})`,
+      subject: `[alien-labs/cairn] Run failed: ${failure.workflow} - ${failure.branch} (${sha})`,
       body: `${failure.workflow}: Some jobs were not successful
 
 Workflow: ${failure.workflow}
@@ -2173,9 +2173,9 @@ Annotations
 1 error
 ${failure.error}
 
-View workflow run: https://github.com/fieldstone-labs/cairn/actions/runs/${random.int(10_000_000, 99_999_999)}
+View workflow run: https://github.com/alien-labs/cairn/actions/runs/${random.int(10_000_000, 99_999_999)}
 
-You are receiving this because this workflow ran on a branch in fieldstone-labs/cairn you watch.`,
+You are receiving this because this workflow ran on a branch in alien-labs/cairn you watch.`,
     });
   }
 
@@ -2223,7 +2223,7 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     const scribe: Actor.Actor = {
       role: 'assistant',
       name: agents.scribe.name,
-      email: 'scribe@agents.fieldstone.dev',
+      email: 'scribe@agents.alienlabs.dev',
       identityDid: agents.scribe.did,
     };
     const actorFor = (who: Who | 'scribe'): Actor.Actor => (who === 'scribe' ? scribe : personActor(people[who]));

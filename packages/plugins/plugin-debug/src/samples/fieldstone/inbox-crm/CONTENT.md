@@ -1,4 +1,4 @@
-# Fieldstone inbox and CRM
+# Alien Labs inbox and CRM
 
 Astrid's inbox, contacts and calendar. Two months of mail, a year of calendar, and every contact who
 writes in also turns up on the calendar.
@@ -10,7 +10,7 @@ writes in also turns up on the calendar.
   `threads.<key>`, `events.<key>`
 - Clock: every timed event falls on a weekday. Mail runs from −60d to the reference date. The calendar runs from −182d to +182d. The
   reference date should fall on a Wednesday.
-- Used by: Fieldstone Labs (`../FieldstoneSpace.ts`)
+- Used by: Alien Labs (`../FieldstoneSpace.ts`)
 
 ## Contents
 
@@ -28,7 +28,7 @@ writes in also turns up on the calendar.
 
 ### Contacts
 
-- 15 `Person.Person` outside Fieldstone, fictional, each with a work email on its organization's
+- 15 `Person.Person` outside Alien Labs, fictional, each with a work email on its organization's
   domain and `Person → Organization (organization)`. Each line gives key, name, job title,
   organization and, for contacts entered by hand, `department`:
   - `dana` Dana Whitfield, Account Executive, Stripe, Sales
@@ -110,7 +110,7 @@ writes in also turns up on the calendar.
 
 ### Calendar
 
-- 1 `Calendar` "Fieldstone", the only calendar in the space. `Calendar` has no owner field: every
+- 1 `Calendar` "Alien Labs", the only calendar in the space. `Calendar` has no owner field: every
   `Event.owner` is Astrid. 300 `Event`s from −182d to +182d, so the calendar
   scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`.
 - `Event` has no recurrence field, so each repeating series is stored as one `Event` per
@@ -118,23 +118,23 @@ writes in also turns up on the calendar.
   the on-call handoff's incoming engineer rotates weekly. Monthly series repeat every 30 days, moved
   off weekends.
 - Repeating series, 283 events:
-  - `teamSync` Team sync, weekly on Monday at 10:00, all of Fieldstone, 52
+  - `teamSync` Team sync, weekly on Monday at 10:00, all of Alien Labs, 52
   - `sprintPlanning` Sprint planning, every other Tuesday, 26
   - `retro` Retro, every other Friday, 26
   - `oneOnOne.<key>` Astrid's monthly 1:1 with each of her 9 reports, 103. Hana's start at her join
     date.
   - `oncall` On-call handoff, weekly on Friday at 15:00, Anika and the incoming engineer, 52
-  - `productReview` Product review, monthly, all of Fieldstone, 12
+  - `productReview` Product review, monthly, all of Alien Labs, 12
   - `northpineSync` Northpine sync, monthly, Grace, Marcus, Astrid, June, 12
 - One-off events, 17:
   - Past: Cairn 1.7 release (all-day, −75d), Northpine SSO kickoff (−40d), Okapi postmortem review
     (−26d), Stripe billing working session (−20d), Hana onboarding day one (−14d), Meridian security
     review (−6d), 2 interviews (−30d, −9d)
-  - Upcoming: Cairn 1.8 release (all-day, +2d, all of Fieldstone plus Sofia, whose partner listing
+  - Upcoming: Cairn 1.8 release (all-day, +2d, all of Alien Labs plus Sofia, whose partner listing
     goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare pricing
     call (+6d), AWS architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
     Omar, Astrid), team offsite at Saltmarsh Lodge
-    (all-day, +34d to +36d, all of Fieldstone plus Wren, location set)
+    (all-day, +34d to +36d, all of Alien Labs plus Wren, location set)
 - 150 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
   occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the

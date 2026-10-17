@@ -1,6 +1,6 @@
-# Fieldstone projects
+# Alien Labs projects
 
-Fieldstone's work in flight, done mostly by agents. Agents hold most of the tasks, humans review
+Alien Labs' work in flight, done mostly by agents. Agents hold most of the tasks, humans review
 them, and every agent task that has run has the chat and trace behind it. That history is what the
 project Gantt and the trace panel draw.
 
@@ -11,7 +11,7 @@ project Gantt and the trace panel draw.
   threads and customers listed under Links.
 - Provides: `projects.<key>`, `taskSets.<key>`, `tasks.<key>`, `chats.<key>`, `artifacts.<key>`
 - Clock: work runs from −60d to +30d. Every agent run is finished by the reference date.
-- Used by: a Fieldstone Labs template, not written yet
+- Used by: a Alien Labs template, not written yet
 
 ## Contents
 

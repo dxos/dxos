@@ -361,7 +361,7 @@ export const makeCalendar = (
       list.sort((left, right) => left.startDate.localeCompare(right.startDate));
     }
 
-    const calendar = yield* Database.add(Calendar.make({ name: 'Fieldstone' }));
+    const calendar = yield* Database.add(Calendar.make({ name: 'Alien Labs' }));
     const feed = calendar.feed.target;
     if (!feed) {
       return yield* Effect.fail(new SampleSpace.SampleSpaceError({ context: { reason: 'calendar-feed-missing' } }));

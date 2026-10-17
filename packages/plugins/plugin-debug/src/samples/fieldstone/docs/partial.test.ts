@@ -38,13 +38,13 @@ const DERIVED: ReadonlyArray<[SheetKey, string[]]> = [
   ['hiring', ['E2:E6']],
 ];
 
-describe('Fieldstone docs', () => {
+describe('Alien Labs docs', () => {
   test(
     'builds linked documents, sheets and drawings without the optional partials',
     { timeout: 120_000 },
     async ({ expect }) => {
       const definition = SampleSpace.make({
-        space: { name: 'Fieldstone docs' },
+        space: { name: 'Alien Labs docs' },
         reference: REFERENCE,
         partials: { team: Team.Partial, docs: Partial },
         build: (partials) =>

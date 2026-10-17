@@ -1,10 +1,10 @@
-# Fieldstone team
+# Alien Labs team
 
-The people and agents of Fieldstone Labs, a fictional 10-person company that builds Cairn, a hosted
+The people and agents of Alien Labs, a fictional 10-person company that builds Cairn, a hosted
 build cache for monorepos. Cairn is built on DXOS: its dashboard is a Composer plugin, and its
 Builder, Reviewer, Triage and Scribe agents run on EDGE compute, so their chats and traces are DXOS
 objects in the team's space. Astrid Holm, engineering manager, is the main character. The other
-Fieldstone partials build on this one.
+Alien Labs partials build on this one.
 
 - Code: `partial.ts`, with `organization.ts`, `people.ts` and `agents.ts`
 - Requires: nothing
@@ -16,14 +16,14 @@ Fieldstone partials build on this one.
 
 ### Organization
 
-- 1 `Organization.Organization` `fieldstone`: Fieldstone Labs, status `active`, website
-  `https://fieldstone.dev`, description "Builds Cairn, a hosted build cache for monorepos, on DXOS:
+- 1 `Organization.Organization` `fieldstone`: Alien Labs, status `active`, website
+  `https://alienlabs.dev`, description "Builds Cairn, a hosted build cache for monorepos, on DXOS:
   the dashboard is a Composer plugin and the agents run on EDGE. Remote team, Lisbon and Toronto."
 
 ### People
 
 - 10 `Person.Person`, each with `fullName`, `jobTitle`, `department`, a work email
-  `<first>@fieldstone.dev`, a location, and `Person → Organization (organization)` to `fieldstone`.
+  `<first>@alienlabs.dev`, a location, and `Person → Organization (organization)` to `fieldstone`.
   Department is Engineering unless noted:
   - `astrid` Astrid Holm, Engineering Manager
   - `omar` Omar Haddad, Staff Engineer, cache engine

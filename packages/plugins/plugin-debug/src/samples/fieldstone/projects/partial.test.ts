@@ -47,10 +47,10 @@ const idOf = (ref: Ref | string | undefined) => (typeof ref === 'string' ? ref :
 
 const typed = (objects: ArchiveObject[], type: string) => objects.filter((object) => object['@type']?.includes(type));
 
-describe('Fieldstone projects', () => {
+describe('Alien Labs projects', () => {
   test('seeds four projects and the agent runs behind their tasks', { timeout: 120_000 }, async ({ expect }) => {
     const definition = SampleSpace.make({
-      space: { name: 'Fieldstone projects' },
+      space: { name: 'Alien Labs projects' },
       reference: REFERENCE,
       partials: { team: Team.Partial, projects: Partial },
       build: (partials) => Effect.flatMap(partials.team(), (team) => partials.projects({ team })),

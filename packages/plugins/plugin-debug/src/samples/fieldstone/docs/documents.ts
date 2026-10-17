@@ -658,7 +658,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '## Local setup',
       '',
       `${FENCE}sh`,
-      'git clone git@github.com:fieldstone/cairn.git',
+      'git clone git@github.com:alien-labs/cairn.git',
       'cd cairn && make dev',
       'cairn --endpoint http://localhost:8787 build //...',
       FENCE,
@@ -681,11 +681,11 @@ export const makeDocuments = Effect.fnUntraced(function* ({
   ];
   doc(
     'handbook',
-    'Fieldstone handbook',
+    'Alien Labs handbook',
     md(
-      '# Fieldstone handbook',
+      '# Alien Labs handbook',
       '',
-      'Fieldstone Labs builds Cairn, a hosted build cache for monorepos. Ten people in Lisbon and Toronto. The shared hours are 14:00 to 17:00 UTC, and meetings stay inside them.',
+      'Alien Labs builds Cairn, a hosted build cache for monorepos. Ten people in Lisbon and Toronto. The shared hours are 14:00 to 17:00 UTC, and meetings stay inside them.',
       '',
       embed('Org chart', drawings.orgChart),
       '',
