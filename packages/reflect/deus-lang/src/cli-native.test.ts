@@ -399,7 +399,13 @@ describe('deus CLI native back ends', () => {
       deus('init', '--empty', ...c);
       expect(deus('add', join(root, 'deus'), ...c).code).toBe(0);
       const native = join(scratch, 'deus-native');
-      expect(deus('build', 'Cli.main', '-o', native, '--c', ...c).code).toBe(0);
+      // Unoptimized C builds the whole CLI in a fifth of the time, and this test only needs it to run.
+      process.env.DEUS_CC_OPT = '-O0';
+      try {
+        expect(deus('build', 'Cli.main', '-o', native, '--c', ...c).code).toBe(0);
+      } finally {
+        delete process.env.DEUS_CC_OPT;
+      }
       const target = ['--codebase', join(scratch, 'cli-target')];
       const run = (...args: string[]) =>
         spawnSync(native, args, { encoding: 'utf8', env: { ...process.env, DEUS_HOME: root } });

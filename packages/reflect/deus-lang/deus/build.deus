@@ -97,15 +97,17 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended im
 
 /--
   Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
-  `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result.
-  For `out` ending in `.wasm`, `$WASM_CC` (default `clang`) compiles it to a wasm32 module instead.
+  `out.c`, compiled with `$CC` (default `cc`) at `$DEUS_CC_OPT` (default `-O2`) to an executable that prints its
+  result. For `out` ending in `.wasm`, `$WASM_CC` (default `clang`) compiles it to a wasm32 module instead. `-O0`
+  compiles the whole CLI in 18 s rather than 100 s, for a test that only needs it to run.
 -/
 def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
   if Text.endsWith ".c" out then IO.writeFile out source
   else
     IO.writeFile (out ++ ".c") source
-    let _ := if Text.endsWith ".wasm" out then tool (Option.getOr (IO.getEnv "WASM_CC") "clang") ["--target=wasm32", "-O2", "-mtail-call", "-nostdlib", "-Wl,--no-entry", "-o", out, out ++ ".c"]
-      else tool (Option.getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
+    let level := Option.getOr (IO.getEnv "DEUS_CC_OPT") "-O2"
+    let _ := if Text.endsWith ".wasm" out then tool (Option.getOr (IO.getEnv "WASM_CC") "clang") ["--target=wasm32", level, "-mtail-call", "-nostdlib", "-Wl,--no-entry", "-o", out, out ++ ".c"]
+      else tool (Option.getOr (IO.getEnv "CC") "cc") [level, "-DDEUS_MAIN", "-o", out, out ++ ".c"]
     ()
 
 /--

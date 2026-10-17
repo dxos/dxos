@@ -307,6 +307,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 297 | 10-18 16:45 | 45m 00s | 9e8520574b | Phones keep the hash and the dialect switch; long lists page 100 rows at a time; law rows show their theorem's verdict (D269) |
 | 298 | 10-18 17:15 | 30m 00s | e5366fedef | Definition cards lift their tests out of "Used by" into "Checked by"; the explorer gets a browser test (D270) |
 | 299 | 10-18 17:45 | 30m 00s | c053d80d75 | What the Worker serves for a site path is decided in DEUS (Worker.Site) (D271) |
-| 300 | 10-18 18:30 | 45m 00s | this commit | Every document under docs/ is in the codebase and opens as a card; links between them stay in the explorer (D272) |
+| 300 | 10-18 18:30 | 45m 00s | 526b6f07cd | Every document under docs/ is in the codebase and opens as a card; links between them stay in the explorer (D272) |
+| 301 | 10-18 19:00 | 30m 00s | this commit | The native CLI test builds its C at -O0: 170 s to 76 s (D273) |
 
-Total from stage 1 to stage 300: 118h 20m.
+Total from stage 1 to stage 301: 118h 50m.
