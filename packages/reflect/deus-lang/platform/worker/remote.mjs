@@ -7,10 +7,11 @@
 // bucket binding, so no client needs R2 credentials. Reads are open; every write carries an API
 // key whose row in the `DB` binding (D1) grants it a scope for the project.
 
-import { isGrantable, projectAt } from './address.mjs';
+import { projectAt } from './address.mjs';
 import * as bundlesApi from './gen/bundles.js';
 import * as filesApi from './gen/files.js';
 import * as heads from './gen/heads.js';
+import * as keyAdminApi from './gen/keyadmin.js';
 import * as keys from './gen/keys.js';
 import * as paths from './gen/paths.js';
 import { live, projectSummaries } from './live.mjs';
@@ -316,66 +317,15 @@ export const authorize = async (request, env, ctx, scope, project) => {
   return Object.assign(logged, { keyId: id, scopes: scopes.includes('admin') ? SCOPES : scopes });
 };
 
-/** `/v1/keys`: list, mint and revoke keys; only an `admin` key may. */
-const keysApi = async (request, env, ctx, rest) => {
-  const logged = await authorize(request, env, ctx, 'admin');
-  if (rest.length === 0 && request.method === 'GET') {
-    const { results } = await env.DB.prepare(
-      'select id, label, scopes, projects, created_at, expires_at, revoked_at, last_used_at from api_keys order by created_at',
-    ).all();
-    return json(results.map((row) => ({ ...row, scopes: JSON.parse(row.scopes), projects: JSON.parse(row.projects) })));
-  }
-  if (rest.length === 0 && request.method === 'POST') {
-    const body = await request.json().catch(() => ({}));
-    const label = typeof body.label === 'string' ? body.label.trim().slice(0, 200) : '';
-    const scopes = Array.isArray(body.scopes) ? body.scopes : [];
-    const projects = body.projects === undefined ? '*' : body.projects;
-    // The DEUS rule reads scopes as text, which would turn `["push"]` into "push", so anything else is refused here.
-    const problem = scopes.every((scope) => typeof scope === 'string')
-      ? keys.mintProblem(label, scopes, SCOPES)
-      : `scopes are some of ${SCOPES.join(', ')}`;
-    if (problem !== undefined) {
-      throw new HttpError(400, problem);
-    }
-    if (projects !== '*' && !(Array.isArray(projects) && projects.every(isGrantable))) {
-      throw new HttpError(400, 'projects is "*" or a list of project addresses (@owner/project or @owner/*)');
-    }
-    const days = Number(body.expiresInDays);
-    const minted = await mintKey();
-    const now = Date.now();
-    await env.DB.prepare(
-      'insert into api_keys (id, secret_hash, label, scopes, projects, created_at, expires_at) values (?, ?, ?, ?, ?, ?, ?)',
-    )
-      .bind(
-        minted.id,
-        minted.secretHash,
-        label,
-        JSON.stringify(scopes),
-        JSON.stringify(projects),
-        now,
-        days > 0 ? now + days * 24 * 3600 * 1000 : null,
-      )
-      .run();
-    return logged(json({ id: minted.id, key: minted.key, label, scopes, projects }, 201));
-  }
-  if (rest.length === 1 && request.method === 'DELETE') {
-    const { meta } = await env.DB.prepare('update api_keys set revoked_at = ? where id = ? and revoked_at is null')
-      .bind(Date.now(), rest[0])
-      .run();
-    if (!meta?.changes) {
-      throw new HttpError(404, 'no such active key');
-    }
-    return logged(json({ id: rest[0], revoked: true }));
-  }
-  throw new HttpError(405, 'method not allowed');
-};
+/** `/v1/keys`: list, mint and revoke keys; only an `admin` key may (`Worker.KeyAdmin.serve`, in DEUS). */
+const keysApi = (request, env, ctx, rest) =>
+  keyAdminApi.serve(request, env.DB, rest, SCOPES, (scope) => authorize(request, env, ctx, scope));
 
-/** A new key: the secret is shown once and only its SHA-256 is kept (it is random, not a password). */
-export const mintKey = async () => {
-  const id = hex(crypto.getRandomValues(new Uint8Array(8)));
-  const secret = hex(crypto.getRandomValues(new Uint8Array(32)));
-  return { id, key: `deus_${id}_${secret}`, secretHash: await sha256(new TextEncoder().encode(secret)) };
-};
+/**
+ * A new key: the secret is shown once and only its SHA-256 is kept (it is random, not a password)
+ * (`Worker.KeyAdmin.mint`).
+ */
+export const mintKey = () => keyAdminApi.mint();
 
 //
 // Helpers.

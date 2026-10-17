@@ -8,7 +8,7 @@ import { gunzipSync, gzipSync } from 'node:zlib';
 import { beforeEach, describe, test } from 'vitest';
 
 import { appFiles } from '../platform/worker/gen/explorer-app.mjs';
-import { listAll, mintKey, sha256 } from '../platform/worker/remote.mjs';
+import { SCOPES, listAll, mintKey, sha256 } from '../platform/worker/remote.mjs';
 import worker, { type Bucket, type Database, type Env, type Statement } from '../platform/worker/worker.mjs';
 
 /** An R2 binding in memory; `list` pages by two, so callers must follow the cursor. */
@@ -476,6 +476,36 @@ describe('replication API', () => {
       body: JSON.stringify({ label: 'x', scopes: ['everything'] }),
     });
     expect(invalid.status).toBe(400);
+
+    // An expiry is days after minting; anything but a positive number of days sets none.
+    const minted = async (body: object | string) => {
+      const response = await call('/v1/keys', {
+        method: 'POST',
+        key: admin,
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+      });
+      return [response.status, await response.json()];
+    };
+    const [, lasting] = await minted({ label: 'day', scopes: ['push'], expiresInDays: 1.5 });
+    const [, forever] = await minted({ label: 'ever', scopes: ['push'], expiresInDays: 'soon' });
+    const rows: { id: string; created_at: number; expires_at: number | null }[] = await (
+      await call('/v1/keys', { key: admin })
+    ).json();
+    const rowOf = (key: string) => rows.find((row) => row.id === key);
+    expect(rowOf(lasting.id)?.expires_at).toBe((rowOf(lasting.id)?.created_at ?? 0) + 1.5 * 24 * 3600 * 1000);
+    expect(rowOf(forever.id)?.expires_at).toBeNull();
+    expect(await minted({ label: 'n', scopes: [1] })).toEqual([
+      400,
+      { error: 'scopes are some of ' + SCOPES.join(', ') },
+    ]);
+    expect(await minted('not json')).toEqual([400, { error: 'a key needs a label' }]);
+    expect(await minted({ label: 'p', scopes: ['push'], projects: 'toolchain' })).toEqual([
+      400,
+      { error: 'projects is "*" or a list of project addresses (@owner/project or @owner/*)' },
+    ]);
+    const missing = await call('/v1/keys/0000000000000000', { method: 'DELETE', key: admin });
+    expect([missing.status, (await missing.json()).error]).toEqual([404, 'no such active key']);
+    expect((await call('/v1/keys', { method: 'PUT', key: admin })).status).toBe(405);
   });
 
   test('finds objects and names through pack indexes (D180)', async ({ expect }) => {

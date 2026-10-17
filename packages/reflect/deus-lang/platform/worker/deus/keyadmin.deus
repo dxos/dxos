@@ -1,0 +1,101 @@
+-- context: @dxos/worker/Worker
+/-
+  `/v1/keys` (task 41714c0d, D164): an admin lists, mints and revokes the API keys that writes need. Keys are rows
+  of the `DB` binding (D1); a key's secret is shown once, when it is minted, and only its SHA-256 is stored.
+-/
+
+namespace Worker.KeyAdmin
+
+/-- A key as it is minted: its id, the whole key a client sends, and the hash of its secret, which is stored. -/
+structure Minted @"urn:deus:worker:MintedKey" where
+  id : Text
+  key : Text
+  secretHash : Text
+
+/-- `count` random bytes as hex. -/
+def randomHex (count : Int) : Text :=
+  Worker.Crypto.hex (Js.method (Js.global "crypto") "getRandomValues" [Js.construct (Js.global "Uint8Array") [Js.int count]])
+
+/-- A new key: an 8-byte id and a 32-byte secret, from the platform's random source. -/
+def mint (u : Unit) : {Js.Async} Minted :=
+  let id := randomHex 8
+  let secret := randomHex 32
+  let encoded := Js.method (Js.construct (Js.global "TextEncoder") []) "encode" [Js.text secret]
+  Minted.mk id ("deus_" ++ id ++ "_" ++ secret) (Worker.Crypto.sha256 encoded)
+
+/-- Whether `value` is a JavaScript array. -/
+def isArray (value : Js) : Bool := Js.toBool (Js.call (Js.path Js.globalThis ["Array", "isArray"]) [value])
+
+/-- Whether `value` is a JavaScript string. -/
+def isText (value : Js) : Bool := Js.typeOf value == "string"
+
+/-- The milliseconds since 1970, a JavaScript number: they pass the 32-bit `Int`. -/
+def now (u : Unit) : Js := Js.call (Js.path Js.globalThis ["Date", "now"]) []
+
+/-- The request's body as JSON, or `{}` when it is not JSON. -/
+def body (request : Js) : {Js.Async} Js :=
+  Js.Async.await (Js.method (Js.method request "json" []) "then" [Js.fn (fun value => value), Js.fn (fun _ => Js.obj [])])
+
+/-- A key's row as the listing shows it: its scopes and projects read from their stored JSON. -/
+def listed (row : Js) : Js :=
+  let parsed := Js.obj [("scopes", Js.parse (Js.toText (Js.get row "scopes"))), ("projects", Js.parse (Js.toText (Js.get row "projects")))]
+  Js.method (Js.global "Object") "assign" [Js.obj [], row, parsed]
+
+/-- Mints the key a `POST` body asks for, or answers what is wrong with it. `known` is every scope a key can hold. -/
+def create (db : Js) (request : Js) (known : List Text) (logged : Js) : {Js.Async} Js :=
+  let asked := body request
+  let labelValue := Js.get asked "label"
+  let label := if isText labelValue then Text.take 200 (Text.trim (Js.toText labelValue)) else ""
+  let scopesValue := Js.get asked "scopes"
+  let scopes := if isArray scopesValue then Js.toList scopesValue else []
+  let projectsValue := Js.get asked "projects"
+  let projects := if Js.typeOf projectsValue == "undefined" then Js.text "*" else projectsValue
+  -- Scopes are read as text below, which would turn `["push"]` into "push", so anything else is refused first.
+  let problem :=
+    if List.all isText scopes then Worker.Keys.mintProblem label (List.map Js.toText scopes) known
+    else Option.some ("scopes are some of " ++ Text.join ", " known)
+  let everywhere := isText projects && Js.toText projects == "*"
+  let grantable := isArray projects && List.all (fun project => isText project && Address.isGrantable (Js.toText project)) (Js.toList projects)
+  match problem with
+  | Option.some message => Worker.Http.problem 400 message
+  | Option.none =>
+      if not everywhere && not grantable then
+        Worker.Http.problem 400 "projects is \"*\" or a list of project addresses (@owner/project or @owner/*)"
+      else
+        let days := Js.call (Js.global "Number") [Js.get asked "expiresInDays"]
+        -- Milliseconds pass the 32-bit `Int`, so the expiry is summed by the database; a null `days` (none asked, or
+        -- not a positive number) makes it null.
+        let lasting := if Js.lessThan (Js.int 0) days then days else Js.null
+        let minted := mint ()
+        let at := now ()
+        let _ := Worker.D1.run
+          db
+          "insert into api_keys (id, secret_hash, label, scopes, projects, created_at, expires_at) values (?, ?, ?, ?, ?, ?, ? + ? * 86400000)"
+          [Js.text minted.id, Js.text minted.secretHash, Js.text label, Js.text (Js.stringify (Js.list scopes)), Js.text (Js.stringify projects), at, at, lasting]
+        let answer := Js.obj [("id", Js.text minted.id), ("key", Js.text minted.key), ("label", Js.text label), ("scopes", Js.list scopes), ("projects", projects)]
+        Js.call logged [Worker.Http.json answer 201]
+
+/-- Answers `/v1/keys/<rest>` for `request` on the key database `db`. `authorize scope` is remote.mjs's key check;
+  only an `admin` key may list, mint or revoke. -/
+def serve (request : Js) (db : Js) (rest : List Text) (known : List Text) (authorize : Text -> Js) : {Js.Async} Js :=
+  let logged := Js.Async.await (authorize "admin")
+  let verb := Worker.Http.method request
+  match rest with
+  | [] =>
+      if verb == "GET" then
+        let rows := Worker.D1.all
+          db
+          "select id, label, scopes, projects, created_at, expires_at, revoked_at, last_used_at from api_keys order by created_at"
+          []
+        Worker.Http.json (Js.list (List.map listed rows)) 200
+      else if verb == "POST" then create db request known logged
+      else Worker.Http.problem 405 "method not allowed"
+  | [id] =>
+      if verb == "DELETE" then
+        let changed := Worker.D1.run db "update api_keys set revoked_at = ? where id = ? and revoked_at is null" [now (), Js.text id]
+        if changed == 0 then Worker.Http.problem 404 "no such active key"
+        else Js.call logged [Worker.Http.json (Js.obj [("id", Js.text id), ("revoked", Js.bool true)]) 200]
+      else Worker.Http.problem 405 "method not allowed"
+  | _ => Worker.Http.problem 405 "method not allowed"
+
+end Worker.KeyAdmin
