@@ -128,6 +128,9 @@ export const lineStyleFields = {
 export const LineStyle = Schema.Struct(lineStyleFields);
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
+/** A shape's text size in scene units when its style sets none. */
+export const DEFAULT_FONT_SIZE = 24;
+
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
  * (`Schema.Struct({ ...styleFields, … })`).
@@ -143,7 +146,7 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** The face of the shape's text; unset is the theme's body face. */
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
-  /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
+  /** Text size in scene units; unset is `DEFAULT_FONT_SIZE` (stored values outside the editor's range are kept). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),

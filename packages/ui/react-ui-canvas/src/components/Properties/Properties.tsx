@@ -66,6 +66,7 @@ import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
+import { LineStyleField } from './LineStyleField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
@@ -104,6 +105,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
+  'style.lineStyle': LineStyleField,
   'scene': SceneField,
   'layer': LayerClassField,
 };

@@ -941,7 +941,8 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       'whitespace-pre-wrap',
       LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
-      sizeClass(node, 'text-lg'),
+      // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
+      sizeClass(node, 'text-[24px]'),
     )}
   >
     {label}

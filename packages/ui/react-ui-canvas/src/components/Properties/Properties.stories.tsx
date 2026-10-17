@@ -111,5 +111,7 @@ export const Test: Story = {
     await expect(await canvas.findByRole('combobox', { name: 'Font' })).toHaveTextContent('Default');
     // 4. Opacity is a shape property.
     await expect(await canvas.findByLabelText('Opacity')).toBeInTheDocument();
+    // 5. An unset line style reads as the style set's default, as the font does.
+    await expect(await canvas.findByRole('combobox', { name: 'Line style' })).toHaveTextContent('Default');
   },
 };
