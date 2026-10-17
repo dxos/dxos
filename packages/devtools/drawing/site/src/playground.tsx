@@ -3,7 +3,7 @@
 //
 
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { Compartment } from '@codemirror/state';
+import { Compartment, type Extension } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
 import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
@@ -16,8 +16,9 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 
 import initialSource from '../diagrams/arch.dx?raw';
+import initialMermaid from '../diagrams/arch.mmd?raw';
 import { OPEN_IN_COMPOSER } from './composer.ts';
-import { type Drawing } from './drawing.ts';
+import { type Drawing, type Language } from './drawing.ts';
 import { HERO, escapeHtml, fileName } from './markup.ts';
 
 /** Long enough that a burst of typing lays out once, short enough to feel live. */
@@ -46,9 +47,39 @@ const highlightStyle = HighlightStyle.define([
   { tag: tags.lineComment, color: 'var(--muted)', fontStyle: 'italic' },
 ]);
 
-type SourceEditorProps = { readonly initialValue: string; readonly onChange: (text: string) => void };
+/** Each language's extensions load after first paint: the `.dx` lint carries the whole layout engine. */
+const loadLanguage = async (language: Language): Promise<Extension> => {
+  if (language === 'dx') {
+    const { diagram } = await import('@dxos/diagram/extension');
+    return diagram();
+  }
+  // The Mermaid grammar tags its tokens with its own tags, which no generic highlight style matches.
+  const { flowchartTags, mermaid, mermaidTags } = await import('codemirror-lang-mermaid');
+  return [
+    mermaid(),
+    syntaxHighlighting(
+      HighlightStyle.define([
+        {
+          tag: [mermaidTags.diagramName, flowchartTags.diagramName, flowchartTags.keyword, flowchartTags.orientation],
+          color: 'var(--route)',
+        },
+        { tag: [flowchartTags.nodeText, flowchartTags.nodeEdgeText, flowchartTags.string], color: 'var(--string)' },
+        { tag: [flowchartTags.link, flowchartTags.nodeEdge, flowchartTags.number], color: 'var(--muted)' },
+        { tag: flowchartTags.lineComment, color: 'var(--muted)', fontStyle: 'italic' },
+      ]),
+    ),
+  ];
+};
 
-const SourceEditor = ({ initialValue, onChange }: SourceEditorProps) => {
+const EXTENSION: Record<Language, string> = { dx: 'dx', mermaid: 'mmd' };
+
+type SourceEditorProps = {
+  readonly language: Language;
+  readonly initialValue: string;
+  readonly onChange: (text: string) => void;
+};
+
+const SourceEditor = ({ language: sourceLanguage, initialValue, onChange }: SourceEditorProps) => {
   const scheme = useColorScheme();
   // The editor is rebuilt when the scheme flips, and must come back with what the user typed, not the sample.
   const text = useRef(initialValue);
@@ -71,23 +102,22 @@ const SourceEditor = ({ initialValue, onChange }: SourceEditorProps) => {
     }),
     [scheme],
   );
-  // The language's lint lays the source out, so it carries the whole engine and joins the editor after first paint.
   useEffect(() => {
     if (!view) {
       return;
     }
     let live = true;
-    void import('@dxos/diagram/extension').then(({ diagram }) => {
+    void loadLanguage(sourceLanguage).then((extension) => {
       if (live) {
-        view.dispatch({ effects: language.current.reconfigure(diagram()) });
+        view.dispatch({ effects: language.current.reconfigure(extension) });
       }
     });
     return () => {
       live = false;
     };
-  }, [view]);
+  }, [view, sourceLanguage]);
 
-  return <div {...focusAttributes} ref={parentRef} aria-label={`${HERO}.dx source`} />;
+  return <div {...focusAttributes} ref={parentRef} aria-label={`${HERO}.${EXTENSION[sourceLanguage]} source`} />;
 };
 
 type Elements = {
@@ -97,6 +127,7 @@ type Elements = {
   readonly report: HTMLElement;
   readonly download: HTMLAnchorElement;
   readonly composer: HTMLAnchorElement;
+  readonly tabs: readonly HTMLButtonElement[];
 };
 
 const find = (playground: HTMLElement): Elements | undefined => {
@@ -106,8 +137,9 @@ const find = (playground: HTMLElement): Elements | undefined => {
   const report = playground.querySelector<HTMLElement>('#report');
   const download = playground.querySelector<HTMLAnchorElement>('#download');
   const composer = playground.querySelector<HTMLAnchorElement>('#open-in-composer');
+  const tabs = [...playground.querySelectorAll<HTMLButtonElement>('[role="tab"][data-language]')];
   return editor && output && canvas && report && download && composer
-    ? { editor, output, canvas, report, download, composer }
+    ? { editor, output, canvas, report, download, composer, tabs }
     : undefined;
 };
 
@@ -131,7 +163,7 @@ const scheduler = ({ output, canvas, report, download }: Elements) => {
     }
   };
 
-  return (text: string) => {
+  return (language: Language, text: string) => {
     if (pending) {
       Effect.runFork(Fiber.interrupt(pending));
     }
@@ -140,7 +172,7 @@ const scheduler = ({ output, canvas, report, download }: Elements) => {
       Effect.sleep(DEBOUNCE).pipe(
         // The layout engine is the heavy part of the page, so it loads on the first edit.
         Effect.andThen(Effect.tryPromise(() => import('./drawing.ts'))),
-        Effect.flatMap(({ draw }) => draw(text)),
+        Effect.flatMap(({ draw, drawMermaid }) => (language === 'dx' ? draw(text) : drawMermaid(text))),
         Effect.flatMap((drawing) => Effect.sync(() => show(drawing))),
         // Defects (a throw inside `draw`) must reach the report too, or it keeps the previous render's message.
         Effect.catchCause((cause) =>
@@ -170,5 +202,34 @@ export const mount = (playground: HTMLElement) => {
     elements.composer.removeAttribute('aria-disabled');
   }
   const schedule = scheduler(elements);
-  createRoot(elements.editor).render(<SourceEditor initialValue={initialSource} onChange={schedule} />);
+  // Each language keeps its own text, so switching back and forth loses no edits.
+  const texts: Record<Language, string> = { dx: initialSource, mermaid: initialMermaid };
+  const root = createRoot(elements.editor);
+  const show = (language: Language) => {
+    for (const tab of elements.tabs) {
+      tab.setAttribute('aria-selected', String(tab.dataset.language === language));
+      tab.disabled = false;
+    }
+    root.render(
+      <SourceEditor
+        key={language}
+        language={language}
+        initialValue={texts[language]}
+        onChange={(text) => {
+          texts[language] = text;
+          schedule(language, text);
+        }}
+      />,
+    );
+  };
+  for (const tab of elements.tabs) {
+    tab.addEventListener('click', () => {
+      const language = tab.dataset.language === 'mermaid' ? 'mermaid' : 'dx';
+      if (tab.getAttribute('aria-selected') !== 'true') {
+        show(language);
+        schedule(language, texts[language]);
+      }
+    });
+  }
+  show('dx');
 };
