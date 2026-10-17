@@ -18,11 +18,11 @@ import { demoFiles } from './gen/demo-todo.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
 import * as inbox from './gen/inbox.js';
 import * as routes from './gen/routes.js';
+import * as sites from './gen/site.js';
 import * as writes from './gen/writes.js';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
-const MAX_AGE = 60;
 const SESSION_DAYS = 7;
 const MAX_ASSET_BYTES = 10 * 1024 * 1024;
 const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
@@ -85,40 +85,42 @@ export default {
 //
 
 const site = async (env, ctx, url, version, base, request) => {
-  const path = url.pathname === '/' ? '/index.html' : url.pathname;
-  // The todo app, built from examples/react, runs here so a visitor can see DEUS components work.
-  if (!base && !version && path.startsWith('/demo/todo')) {
-    return demoPage(path);
+  // What answers the path, its bucket key and cache header are `Worker.Site`, in DEUS.
+  const step = sites.plan(url.pathname, Boolean(base), Boolean(version));
+  switch (step.kind) {
+    case 'missing':
+      return notFound();
+    case 'redirect':
+      return new Response(null, { status: 301, headers: { location: step.name } });
+    case 'demo':
+      return new Response(demoFiles[step.name], {
+        headers: { 'content-type': DEMO_TYPES[step.name], 'cache-control': 'public, max-age=300' },
+      });
+    case 'hub':
+      return hubPage(step.name);
+    // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish.
+    case 'app':
+      return appAsset(step.name);
   }
-  if (path.includes('..') || !env.BUCKET) {
+  if (!env.BUCKET) {
     return notFound();
   }
-  const topLevel = path.lastIndexOf('/') === 0;
-  if (topLevel && !version) {
-    // The host's front page lists every project (D200); a project's explorer is at its own path.
-    if (!base && url.pathname === '/') {
-      return hubPage('hub.html');
-    }
-    if (!base && path === '/hub.js') {
-      return hubPage('hub.js');
-    }
-    // The app ships with the Worker and reads the codebase live (D192), so its page never waits on a publish;
-    // its files name no head, so they are served before the head is looked up.
-    if (APP_ASSETS[path.slice(1)]) {
-      return appAsset(path.slice(1));
-    }
+  const path = step.name;
+  if (step.kind === 'page') {
     const api = await liveApi(env, ctx);
-    if (api && path === '/index.html') {
+    if (api) {
       return livePage(api, base);
     }
+  }
+  // A top-level file named without a version is the one at the head `site/HEAD` names.
+  if (step.kind === 'page' || step.kind === 'current') {
     const head = await readHead(env);
-    if (head && path === '/index.html') {
+    if (head && step.kind === 'page') {
       return page(env, head, base);
     }
     version = head;
   }
-  // A versioned file never changes once HEAD names it, so it is cached for good.
-  const key = version && topLevel ? `${prefix(env)}/site/v/${version}${path}` : `${prefix(env)}/site${path}`;
+  const key = sites.key(prefix(env), version ?? '', path);
   const cache = typeof caches === 'undefined' ? undefined : caches.default;
   const cacheKey = new Request(`${url.origin}/__r2/${key}`);
   const cached = await cache?.match(cacheKey);
@@ -127,10 +129,7 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   const object = await env.BUCKET.get(key);
   if (!object) {
-    // `/@owner/project/Name` is the page, opened at that definition by the explorer (Address.Spec R-8).
-    // A name can end like a file (`List.map`, `Json.render.js`), so a browser navigation always gets the page.
-    const navigation = request?.headers.get('sec-fetch-dest') === 'document';
-    if (!topLevel || !(navigation || !FILE.test(path))) {
+    if (!sites.pageOnMiss(path, request?.headers.get('sec-fetch-dest') === 'document')) {
       return notFound();
     }
     const api = await liveApi(env, ctx);
@@ -143,7 +142,7 @@ const site = async (env, ctx, url, version, base, request) => {
   const response = new Response(object.body, {
     headers: {
       'content-type': object.httpMetadata?.contentType ?? 'application/octet-stream',
-      'cache-control': version && topLevel ? 'public, max-age=31536000, immutable' : `public, max-age=${MAX_AGE}`,
+      'cache-control': sites.cacheControl(version ?? '', path),
     },
   });
   if (cache) {
@@ -151,9 +150,6 @@ const site = async (env, ctx, url, version, base, request) => {
   }
   return response;
 };
-
-/** A site file rather than a definition's name, which never ends in one of these. */
-const FILE = /\.(html|js|mjs|css|json|wasm|png|svg|ico|txt|map|image|deus|mdl)$/;
 
 const notFound = () => new Response('not found', { status: 404, headers: { 'cache-control': 'no-store' } });
 
@@ -226,20 +222,6 @@ const DEMO_TYPES = {
   'index.html': 'text/html; charset=utf-8',
   'app.css': 'text/css; charset=utf-8',
   'bundle.js': 'text/javascript; charset=utf-8',
-};
-
-/** A file of the todo demo; `/demo/todo` itself redirects so the page's relative links resolve. */
-const demoPage = (path) => {
-  if (path === '/demo/todo') {
-    return new Response(null, { status: 301, headers: { location: '/demo/todo/' } });
-  }
-  const name = path === '/demo/todo/' ? 'index.html' : path.slice('/demo/todo/'.length);
-  if (!DEMO_TYPES[name]) {
-    return notFound();
-  }
-  return new Response(demoFiles[name], {
-    headers: { 'content-type': DEMO_TYPES[name], 'cache-control': 'public, max-age=300' },
-  });
 };
 
 const appAsset = (name) =>

@@ -466,6 +466,13 @@ describe('replication API', () => {
     expect(await (await call('/v/0000000000000001/def/a.json')).text()).toBe('def a');
     expect(await (await call('/v/0000000000000001/api/me')).json()).toMatchObject({ signIn: false });
     expect((await call('/v/0000000000000001/missing.json')).status).toBe(404);
+    // An unpinned top-level file is the head's (read again after 5 s, so still the first); a definition's name is the
+    // page, and so is any browser navigation.
+    expect(await (await call('/meta.json')).text()).toBe('meta one');
+    expect(await (await call('/Text.split')).text()).toContain('one');
+    expect((await call('/List.map')).status).toBe(404);
+    expect(await (await call('/List.map', { headers: { 'sec-fetch-dest': 'document' } })).text()).toContain('one');
+    expect((await call('/def/List.map', { headers: { 'sec-fetch-dest': 'document' } })).status).toBe(404);
   });
 
   test('an admin key mints, lists and revokes keys', async ({ expect }) => {

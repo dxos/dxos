@@ -169,6 +169,21 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
         [
           join(root, 'bin/deus.mjs'),
           'build',
+          'Worker.Site.plan',
+          'Worker.Site.key',
+          'Worker.Site.cacheControl',
+          'Worker.Site.pageOnMiss',
+          '-o',
+          join(gen, 'site.js'),
+          '--js',
+        ],
+        { stdio: 'inherit', env: { ...process.env, DEUS_CODEBASE: workerCodebase } },
+      );
+      execFileSync(
+        'node',
+        [
+          join(root, 'bin/deus.mjs'),
+          'build',
           'Worker.Files.serve',
           'Worker.R2.listAll',
           'Worker.R2.toTrash',
