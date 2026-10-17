@@ -312,10 +312,81 @@ A remote peer applying the replicated change reclaims the storage but does not
 prune its own working set — same root url, and only a root-url change triggers
 the client's reconciliation today. Its view corrects on reload.
 
+## Retired documents
+
+A document that cannot be loaded (Automerge's WASM heap runs out of memory
+inflating it) would stall every start that reaches it, on every peer. The host
+handles it without reading it:
+
+1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
+   patch on automerge-repo; the repo otherwise swallows the error and leaves
+   the load waiting forever). An out-of-memory failure quarantines the document
+   for the life of the host: loads resolve as unavailable, and nothing
+   replicates or advertises it. Other failures are only logged, since they may
+   not repeat.
+2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
+   index (the last indexed JSON of each of its objects) into a replacement whose
+   id is derived from the original, so peers retiring concurrently converge on
+   one document. It re-points the objects' links and records
+   `retired[<documentId>] = { replacedBy, reason }` in the space directory, the
+   reason (`load-failed` or `history`) as a plain, non-CRDT string. History is
+   dropped, and so is any change the index had not caught up with: the document
+   cannot be loaded, so the index is the newest state this peer can read, and
+   waiting for it to match the stored heads would leave the document stuck. When
+   the index lacks any of the objects, the document stays
+   quarantined and is not retired; after a restart it fails to load once more
+   before it is quarantined again.
+3. **Wipe, everywhere.** Every peer that sees a `retired` entry in a space's
+   directory quarantines the document with reason `retired` and wipes its index
+   rows and bytes without loading it. The directory naming the document is the
+   attribution: loading it to read `access.spaceId` is what retirement avoids.
+   An entry naming a document another space or a live link still uses is
+   ignored: the directory, space root or credentials of any space this host
+   holds, a link or branch of an open directory, or a document the index holds
+   under another space (which covers the links of directories not yet opened).
+   Any member can write a directory, and a genuine retirement re-points the
+   links in the same change.
+
+The space directory is the only durable record: there is no local quarantine
+table. The `retired` map is append-only and stays in the directory, so every
+open re-quarantines its documents, and a peer that syncs late, or restarts
+mid-wipe, still finishes the wipe.
+
+### Documents whose history outgrew their state
+
+A document can still load and yet be mostly history: the unfixed
+`Cursor.writeSnapshot` re-inserted its whole snapshot map on every write, so a
+cursor with 660 KB of state reached 45.7M ops. Such a document is retired the
+same way, before it stops loading:
+
+- Every load from disk reports the document's op count (`documentLoaded`).
+  One with at least `HISTORY_BLOAT_MIN_OPS` ops becomes a candidate.
+- The next retirement pass rebuilds a candidate from its own current state, so
+  no change is lost, but only if it holds just the objects linked to it, every
+  one of a type in `HISTORY_RETIREMENT_TYPES` (sync cursors: machine-written
+  state), and its ops are at least `HISTORY_BLOAT_RATIO` times the size of that
+  state. Otherwise the candidate is dropped.
+
+### Peers retiring at once
+
+- **Same replacement.** The replacement's id is derived from the original, and
+  its single change uses an actor derived from its content and a fixed
+  timestamp. Peers that rebuild the same state write byte-identical changes,
+  which merge into one; peers whose index state differs write distinct changes,
+  and Automerge keeps one value per key, the same on every peer.
+- **Replacement already delivered.** A peer that already holds the replacement
+  reuses it rather than importing a second history over it.
+- **Lost entries.** Two peers that each create the `retired` map concurrently
+  leave only one map in the merge. Each host remembers the retirements it wrote
+  or saw this session, and each retirement pass (the merged change re-points
+  links, so it triggers one) writes back any entry the directory lacks.
+
 ## Safety & invariants
 
 - **Attribution before deletion.** A document is only wiped when its
-  `access.spaceId` matches the target space. No global/cross-space sweep.
+  `access.spaceId` matches the target space, or when the space's own directory
+  lists it under `retired` and no other space or live link uses it (see
+  [Retired documents](#retired-documents)). No global/cross-space sweep.
 - **Reachability is computed from the synced directory**, so a document still
   referenced by any live object (including via branches) is never wiped.
 - **Unpositioned tombstones are never acted on** (step 4) — this is the guard
