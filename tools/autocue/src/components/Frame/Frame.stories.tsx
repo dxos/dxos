@@ -200,7 +200,7 @@ type IdentStoryProps = StoryProps & {
 };
 
 /** A whole cut, as `trim-static.mjs --ident` assembles it: the opening card, the take, then the end card, looped. */
-const IdentStory = ({ opening = 'dxos', size = '16:9', ...props }: IdentStoryProps) => {
+const IdentStory = ({ opening = 'dxos', size = '16:10', ...props }: IdentStoryProps) => {
   const [phase, setPhase] = useState<'open' | 'take' | 'end'>('open');
   useEffect(() => loadBrandFont(), []);
   const { component, seconds } = OPENINGS[opening];
@@ -232,7 +232,7 @@ const IdentStory = ({ opening = 'dxos', size = '16:9', ...props }: IdentStoryPro
  * 3. Default: the app alone, no panels. Header: a translucent title band over the top. Footer: a translucent caption band over
  *    the bottom, fading between steps.
  * 4. Intro captions: the title alone in the centre for 3s, then floating captions, fading between steps.
- * 5. Ident: the DXOS opening card, the intro-captions take, then the end card, all at one size, looped; in the light
+ * 5. Ident: the DXOS opening card, the intro-captions take, then the end card, all at the same 16:10 size, looped; in the light
  *    theme the cards are inverted to black on white.
  * 6. Footer: the band stays up between steps; only its text fades.
  */
@@ -276,7 +276,7 @@ export const IntroCaptions: Story = {
 /** The intro-and-captions take, between the DXOS opening card and the end card. */
 export const Ident: StoryObj<typeof IdentStory> = {
   render: (args) => <IdentStory {...args} />,
-  args: { size: '16:9', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
+  args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
   argTypes: {
     opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
   },
