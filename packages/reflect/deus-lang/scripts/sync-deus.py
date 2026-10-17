@@ -63,7 +63,7 @@ def deus(*args, codebase, seed=None, check=True):
     env = dict(os.environ, DEUS_CODEBASE=str(codebase))
     if seed:
         env['DEUS_SEED'] = str(seed)
-    result = subprocess.run(['node', str(ROOT / 'bin' / 'deus.mjs'), *args], cwd=ROOT, env=env, capture_output=True, text=True)
+    result = subprocess.run([str(ROOT / 'bin' / 'deus'), *args], cwd=ROOT, env=env, capture_output=True, text=True)
     if check and result.returncode != 0:
         sys.exit(f'deus {" ".join(args)} failed:\n{result.stderr}{result.stdout}')
     return result

@@ -322,6 +322,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 312 | 10-19 02:00 | 1h 00m | b4aa430d08 | Review fixes: kept verdicts follow @[expectFail], a safer build cache, export --files keeps the executable bit (D287) |
 | 313 | 10-19 03:00 | 1h 00m | 2cf46f4e9e | Metadata snapshots use a three-level trie: a one-doc commit writes 7.5 KB of metadata, not 22-45 KB (D288) |
 | 314 | 10-19 05:00 | 2h 00m | a536a3d0da | Metadata rides namespace entries: an update's rehashed dependents share their metadata, 11.9 MB of history instead of 292 MB; only six platform files are embedded (D289, D290) |
-| 315 | 10-19 06:00 | 1h 00m | this commit | Review fixes for metadata on entries; the C back end compiles code that compares or shows types it only receives (D291) |
+| 315 | 10-19 06:00 | 1h 00m | 6384f7d96c | Review fixes for metadata on entries; the C back end compiles code that compares or shows types it only receives (D291) |
+| 316 | 10-19 07:00 | 1h 00m | this commit | `bin/deus` starts the native CLI without node: commands take 10-60 ms instead of 60-150 ms; `deus migrate` keeps entries without metadata unchanged (D292) |
 
-Total from stage 1 to stage 315: 129h 50m.
+Total from stage 1 to stage 316: 130h 50m.

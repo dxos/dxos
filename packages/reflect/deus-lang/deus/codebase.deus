@@ -269,7 +269,7 @@ def putNamespace (dir : Text) (ns : Map Text Entry) (refs : Map Text Text) : {IO
     | Option.none => ((name, e) :: leaves, groups)) ([], Map.empty) ns
   let (leaves, groups) := split
   let withMeta := fun (e : Entry) =>
-    match (Entry.ownsMeta e, Map.lookup (Entry.hash e) refs) with
+    match (Entry.ownsMeta e, Option.bind (Map.lookup (Entry.hash e) refs) (fun ref => if Text.isEmpty ref then Option.none else Option.some ref)) with
     | (true, Option.some ref) =>
         match Entry.toSexp e with
         | Sexp.list items => Sexp.list (items ++ [Sexp.node "meta" [Sexp.str ref]])

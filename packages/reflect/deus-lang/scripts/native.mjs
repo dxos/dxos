@@ -30,10 +30,34 @@ const cacheDir = (env, hash) => join(env.XDG_CACHE_HOME ?? join(homedir(), '.cac
  * The native CLI to run for the checked-in seed, or what to build when there is none: no build when
  * `DEUS_NATIVE=0`, under CI, with `DEUS_SEED` overriding the seed, or without a C compiler.
  */
+/**
+ * Where the hash of the seed at `path` is kept as `<size> <mtime seconds> <hash>`, so a command does not hash 3 MB to
+ * find its native CLI; `bin/deus` reads the same file to start that CLI without node (D292).
+ */
+export const seedIndexPath = (env, path) =>
+  join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'deus/native/seeds', path.replaceAll('/', '%'));
+
 /** The SHA-256 of the seed image this checkout runs (of `$DEUS_SEED` when set), or undefined without one. */
 export const seedHash = (env = process.env) => {
   const path = env.DEUS_SEED ?? seedPath;
-  return existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : undefined;
+  if (!existsSync(path)) {
+    return undefined;
+  }
+  const { size, mtimeMs } = statSync(path);
+  const stamp = `${size} ${Math.floor(mtimeMs / 1000)}`;
+  const index = seedIndexPath(env, path);
+  const kept = existsSync(index) ? readFileSync(index, 'utf8').trim() : '';
+  if (kept.startsWith(`${stamp} `)) {
+    return kept.slice(stamp.length + 1);
+  }
+  const hash = createHash('sha256').update(readFileSync(path)).digest('hex');
+  try {
+    mkdirSync(dirname(index), { recursive: true });
+    writeFileSync(index, `${stamp} ${hash}\n`);
+  } catch {
+    // A read-only cache only costs the next command the hashing.
+  }
+  return hash;
 };
 
 export const nativeFor = (env) => {
@@ -41,6 +65,9 @@ export const nativeFor = (env) => {
     return {};
   }
   const hash = seedHash(env);
+  if (hash === undefined) {
+    return {};
+  }
   const dir = cacheDir(env, hash);
   const binary = join(dir, 'deus');
   if (existsSync(binary)) {

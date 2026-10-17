@@ -77,6 +77,8 @@ with it.
   as `bin/deus.mjs` does: the whole suite takes about 60 s instead of about 180 s. Any `bin/deus.mjs` command starts the
   build after a seed change; an unoptimized CLI is ready in about a minute and the `-O2` one replaces it about two
   minutes later. Until then tests run the seed on node, as CI always does.
+- Run commands as `bin/deus` (alias it): it starts the cached native CLI without node, 10-60 ms a command where
+  `bin/deus.mjs` takes 60-150 ms, and falls back to `bin/deus.mjs` when no native CLI is ready (D292).
 - `DEUS_TEST_KERNEL=node` forces the seed on node, which is what CI tests. A test that checks a back end against the
   reference kernel uses the harness's `deusNode` (the native interpreter's `show` differs on data, task 7f42cca0).
 - DEUS tests carry coverage in the dev loop: `deus test <Prefix>` runs in about a second because verdicts are cached
