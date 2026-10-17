@@ -1577,7 +1577,9 @@ def embed (args : Args) : {IO, Throw Text} Unit :=
         match option args "by" with
         | Option.some agent => ["--by", agent]
         | Option.none => []
-      addOrUpdate (parseArgs ([source, "--codebase", dir, "--quiet"] ++ author)) true
+      -- The history names what was embedded, not the scratch file the definition passes through.
+      let message := ["--message", "embed " ++ Assets.baseName file ++ " as " ++ name]
+      addOrUpdate (parseArgs ([source, "--codebase", dir, "--quiet"] ++ message ++ author)) true
       IO.remove source
       if Cli.flag args "quiet" then () else Cli.output
         args

@@ -311,6 +311,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 301 | 10-18 19:00 | 30m 00s | ec97876f91 | The native CLI test builds its C at -O0: 170 s to 76 s (D273) |
 | 302 | 10-18 19:30 | 30m 00s | 6989dd0ff6 | All 386 checks pass on the hosted overview; the finder opens documents; code spans follow CommonMark (D274) |
 | 303 | 10-18 19:45 | 15m 00s | b152c885ac | The native self-builds run in a test file of their own (D275) |
-| 304 | 10-18 20:15 | 30m 00s | this commit | Attachment rules in DEUS (Worker.Writes); review fixes for D268-D275 (D276) |
+| 304 | 10-18 20:15 | 30m 00s | d50bc55044 | Attachment rules in DEUS (Worker.Writes); review fixes for D268-D275 (D276) |
+| 305 | 10-18 20:45 | 30m 00s | this commit | Embedded documents are named Docs.*Md so none shadows a definition; embed changes say what they embedded (D277) |
 
-Total from stage 1 to stage 304: 120h 05m.
+Total from stage 1 to stage 305: 120h 35m.

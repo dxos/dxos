@@ -56,10 +56,14 @@ EMBEDDED = [
 
 
 def doc_name(path):
-    """`docs/GETTING_STARTED.md` as `Docs.gettingStarted`, and `docs/spec/CLI-JSON.md` as `Docs.Specs.cliJson`."""
+    """`docs/GETTING_STARTED.md` as `Docs.gettingStartedMd`, and `docs/spec/CLI-JSON.md` as `Docs.Specs.cliJsonMd`.
+
+    The `Md` keeps a document's last name from matching a definition's (`Build.native`), which would make that name
+    ambiguous wherever code uses it unqualified.
+    """
     words = re.split(r'[-_]', path.stem.lower())
     camel = words[0] + ''.join(word.capitalize() for word in words[1:])
-    return ('Docs.Specs.' if path.parent.name == 'spec' else 'Docs.') + camel
+    return ('Docs.Specs.' if path.parent.name == 'spec' else 'Docs.') + camel + 'Md'
 
 
 # Every document under docs/ and docs/spec/, which the hosted explorer reads as cards (D261, D265, D272).

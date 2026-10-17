@@ -53,14 +53,14 @@ const repoPath = (target) => {
   return /^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`;
 };
 
-/** The `Docs.*` text a document file is embedded as (`docs/spec/CLI-JSON.md` is `Docs.Specs.cliJson`), as sync-deus names it. */
+/** The `Docs.*` text a document file is embedded as (`docs/spec/CLI-JSON.md` is `Docs.Specs.cliJsonMd`), as sync-deus names it. */
 const embeddedDocOf = (path) => {
   const match = /^docs\/(spec\/)?([\w-]+)\.md$/.exec(path);
   if (!match) {
     return undefined;
   }
   const [head, ...words] = match[2].toLowerCase().split(/[-_]/);
-  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}`;
+  const name = `Docs.${match[1] ? 'Specs.' : ''}${head}${words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Md`;
   return embedded(name) ? name : undefined;
 };
 
@@ -80,8 +80,8 @@ const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/
 /** The task with id `id` in the loaded codebase, if any. */
 const taskById = (id) => index.tasks?.find((task) => task.id === id);
 
-/** Whether decisions open as cards: the hosted site reads the codebase's copy of the log (`Docs.decisions`). */
-const decisionsInCodebase = () => embedded('Docs.decisions');
+/** Whether decisions open as cards: the hosted site reads the codebase's copy of the log (`Docs.decisionsMd`). */
+const decisionsInCodebase = () => embedded('Docs.decisionsMd');
 
 /** HTML with each decision number (D96) and task id outside a link or code made a link; a one-digit decision is too short to tell from Cloudflare's D1. */
 const decisionLinks = (html) => {
@@ -1686,7 +1686,7 @@ const closeNames = (name) => {
   return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
 };
 
-/** Texts the codebase embeds (`Docs.decisions`, `Docs.gettingStarted`), each read once through the replication API. */
+/** Texts the codebase embeds (`Docs.decisionsMd`, `Docs.gettingStartedMd`), each read once through the replication API. */
 const embeddedTexts = new Map();
 
 /** The text the codebase embeds under `name`, or undefined; a failed read is tried again by the next caller. */
@@ -1718,7 +1718,7 @@ let decisionLog;
 
 /** The decision log by number, parsed once per text read. */
 const loadDecisions = async () => {
-  const text = await loadEmbedded('Docs.decisions');
+  const text = await loadEmbedded('Docs.decisionsMd');
   if (decisionLog?.text !== text) {
     decisionLog = { text, rows: decisionsOf(text ?? '') };
   }
@@ -1842,7 +1842,7 @@ const buildCard = async (key) => {
       return value === 'glossary'
         ? glossaryCard(key)
         : value === 'guide'
-          ? textCard(key, await loadEmbedded('Docs.gettingStarted'), 'Getting started')
+          ? textCard(key, await loadEmbedded('Docs.gettingStartedMd'), 'Getting started')
           : value.startsWith('doc:')
             ? textCard(key, await loadEmbedded(value.slice(4)), value.slice(4))
             : value === 'docs'
@@ -2004,7 +2004,7 @@ const areasOf = (maps) => {
 
 /** The legend of the kind icons, so a first visitor can read the lists. */
 const legendHtml = () =>
-  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStarted') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`}, <a class="ref" data-open="k:glossary">the glossary</a>${documents().length > 0 && live !== undefined ? ' and <a class="ref" data-open="k:docs">all documents</a>' : ''}</p>`;
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStartedMd') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`}, <a class="ref" data-open="k:glossary">the glossary</a>${documents().length > 0 && live !== undefined ? ' and <a class="ref" data-open="k:docs">all documents</a>' : ''}</p>`;
 
 /** Words the overview and the documents use that a newcomer may not know (task 8eec6c0d). */
 const GLOSSARY = [
