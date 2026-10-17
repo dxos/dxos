@@ -149,15 +149,15 @@ const EXTENDED: DataFlowSpec = {
  */
 const INBOX: DataFlowSpec = {
   sources: [
-    { id: 'gmail', label: 'Gmail', hue: 'red' },
-    { id: 'discord', label: 'Discord', hue: 'violet' },
-    { id: 'chat', label: 'Chat', hue: 'teal' },
+    { id: 'gmail', label: 'Gmail', hue: 'neutral' },
+    { id: 'discord', label: 'Discord', hue: 'neutral' },
+    { id: 'chat', label: 'Chat', hue: 'neutral' },
   ],
   hub: { label: '', partitions: 3 },
   sinks: [{ label: 'Inbox API', app: 'list' }, { label: 'Agent' }],
 };
 
-/** One hue per thread, apart from the sources' own, so a thread reads the same whichever source it came from. */
+/** One hue per thread; the sources and their channels are neutral, so colour reads as the thread alone. */
 const THREADS = ['amber', 'sky', 'green'];
 
 /** Busier apps than the simulation's defaults: they write up about every second and a half, and half of what settles in
