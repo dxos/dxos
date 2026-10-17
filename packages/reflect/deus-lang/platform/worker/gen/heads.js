@@ -2,125 +2,6 @@
 import * as rt from "./deus-runtime.mjs";
 rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "urn:deus:js:Async", ["await"]);
 
-function Worker$Heads$parseClaim(header) {
-  const t0 = rt.ap(rt.prims["Text.split"], header, " ");
-  m1: {
-    if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 1 && t0.fields[1].fields[1].fields[1].tag === 0) {
-      const branch = t0.fields[0];
-      const head = t0.fields[1].fields[0];
-      const bases = t0.fields[1].fields[1].fields[0];
-      let based;
-      if ((bases === "-")) {
-        based = rt.NIL;
-      } else {
-        based = rt.ap(rt.prims["Text.split"], bases, ",");
-      }
-      let r2;
-      if (Worker$Heads$isBranch(branch)) {
-        if (Worker$Heads$isHash(head)) {
-          r2 = List$all(Worker$Heads$isHash, based);
-        } else {
-          r2 = false;
-        }
-      } else {
-        r2 = false;
-      }
-      if (r2) {
-        return new rt.Con("#Option", 1, [new rt.Con("235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", 0, [branch, head, based])]);
-      } else {
-        return rt.con0("#Option", 0);
-      }
-    }
-    if (true) {
-      return rt.con0("#Option", 0);
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Worker$Heads$parseClaim, "Worker.Heads.parseClaim");
-
-function Worker$Heads$isBranch(t) {
-  const t0 = rt.ap(rt.prims["Text.utf8"], t);
-  m1: {
-    if (t0.tag === 1) {
-      const first = t0.fields[0];
-      const rest = t0.fields[1];
-      let r2;
-      if (Text$isDigit(first)) {
-        r2 = true;
-      } else {
-        r2 = Text$isAlpha(first);
-      }
-      if (r2) {
-        if ((List$length(rest) <= 99)) {
-          return List$all(rt.named((c) => {
-          if (Text$isDigit(c)) {
-            return true;
-          } else {
-            if (Text$isAlpha(c)) {
-              return true;
-            } else {
-              if ((c === 46)) {
-                return true;
-              } else {
-                if ((c === 95)) {
-                  return true;
-                } else {
-                  if ((c === 47)) {
-                    return true;
-                  } else {
-                    return (c === 45);
-                  }
-                }
-              }
-            }
-          }
-        }, "Worker.Heads.isBranch/\u03bb"), rest);
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }
-    if (t0.tag === 0) {
-      return false;
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Worker$Heads$isBranch, "Worker.Heads.isBranch");
-
-function Worker$Heads$verdict(current, claim, required, sent) {
-  m0: {
-    if (current.tag === 1) {
-      const head = current.fields[0];
-      if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
-        return "same";
-      } else {
-        if (rt.ap(rt.prims["lt"], sent, required)) {
-          return "epoch";
-        } else {
-          if (List$contains(head, Worker$Heads$Claim$bases(claim))) {
-            return "write";
-          } else {
-            return "moved";
-          }
-        }
-      }
-    }
-    if (current.tag === 0) {
-      if (rt.ap(rt.prims["lt"], sent, required)) {
-        return "epoch";
-      } else {
-        return "write";
-      }
-    }
-    rt.nomatch(current);
-  }
-}
-rt.named(Worker$Heads$verdict, "Worker.Heads.verdict");
-
 async function Worker$Heads$readStored(bucket, project, branch) {
   const $stack = rt.handlers();
   const t0 = lib$web$Js$toOption(rt.resumed($stack, await lib$web$Js$method(bucket, "get", rt.cons(lib$web$Js$text(Worker$Heads$headKey(project, branch)), rt.NIL))));
@@ -138,65 +19,10 @@ async function Worker$Heads$readStored(bucket, project, branch) {
 }
 rt.named(Worker$Heads$readStored, "Worker.Heads.readStored");
 
-async function Worker$Heads$writeHead(bucket, project, branch, causal, etag) {
-  const $stack = rt.handlers();
-  let onlyIf;
-  m0: {
-    if (etag.tag === 1) {
-      const tag = etag.fields[0];
-      onlyIf = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["etagMatches", lib$web$Js$text(tag)]), rt.NIL));
-      break m0;
-    }
-    if (etag.tag === 0) {
-      onlyIf = lib$web$Js$construct(lib$web$Js$global("Headers"), rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["if-none-match", lib$web$Js$text("*")]), rt.NIL)), rt.NIL));
-      break m0;
-    }
-    rt.nomatch(etag);
-  }
-  const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["onlyIf", onlyIf]), rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("text/plain")]), rt.NIL))]), rt.NIL)));
-  return not(lib$web$Js$isNull(rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(Worker$Heads$headKey(project, branch)), rt.cons(lib$web$Js$text(causal), rt.cons(options, rt.NIL)))))));
-}
-rt.named(Worker$Heads$writeHead, "Worker.Heads.writeHead");
-
 function Worker$Heads$headLogKey(project, branch) {
   return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/headlog/"), branch), "/");
 }
 rt.named(Worker$Heads$headLogKey, "Worker.Heads.headLogKey");
-
-function Worker$Heads$isLogged(name) {
-  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
-  m1: {
-    if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
-      const at = t0.fields[0];
-      const head = t0.fields[1].fields[0];
-      if ((rt.ap(rt.prims["Text.length"], at) === 13)) {
-        if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], at))) {
-          return Worker$Heads$isHash(head);
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }
-    if (true) {
-      return false;
-    }
-    rt.nomatch(t0);
-  }
-}
-rt.named(Worker$Heads$isLogged, "Worker.Heads.isLogged");
-
-async function Worker$Heads$logHead(bucket, project, branch, causal, previous, keyId) {
-  const $stack = rt.handlers();
-  const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
-  const orNull = rt.named((value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()), "Worker.Heads.logHead/\u03bb");
-  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
-  const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
-  rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
-  return undefined;
-}
-rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
 
 function Worker$Heads$epochOf(text) {
   const t0 = lib$base$Sexp$readAll(text);
@@ -217,11 +43,52 @@ function Worker$Heads$epochOf(text) {
 }
 rt.named(Worker$Heads$epochOf, "Worker.Heads.epochOf");
 
-async function Worker$Heads$moveHead(bucket, project, claim, sent, keyId, readCurrent, epochAt) {
+async function Worker$Heads$gate(request, bucket, project, logged, readCurrent, epochAt) {
+  const $stack = rt.handlers();
+  const scopes = List$map(lib$web$Js$toText, lib$web$Js$toList(lib$web$Js$get(logged, "scopes")));
+  const keyId = Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(logged, "keyId")));
+  const refused = rt.resumed($stack, await Worker$Heads$claimed(Worker$Http$header(request, "x-deus-claim"), Worker$Http$header(request, "x-deus-epoch"), scopes, rt.named(async (claim, sent) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$Heads$move(rt.resumed($stack, await Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt)), claim, sent));
+}, "Worker.Heads.gate/\u03bb")));
+  m0: {
+    if (refused.tag === 0) {
+      return lib$web$Js$undefined();
+    }
+    if (refused.tag === 1) {
+      const refusal = refused.fields[0];
+      let extra;
+      m1: {
+        if (refusal.tag === 2) {
+          const required = refusal.fields[1];
+          extra = rt.cons(new rt.Con("#Pair", 0, ["epoch", lib$web$Js$int(required)]), rt.NIL);
+          break m1;
+        }
+        if (refusal.tag === 3) {
+          const head = refusal.fields[1];
+          let r2;
+          if (Text$isEmpty(head)) {
+            r2 = lib$web$Js$null();
+          } else {
+            r2 = lib$web$Js$text(head);
+          }
+          const t3 = new rt.Con("#Pair", 0, ["head", r2]);
+          const t4 = rt.NIL;
+          extra = rt.cons(t3, t4);
+          break m1;
+        }
+        if (true) {
+          extra = rt.NIL;
+          break m1;
+        }
+        rt.nomatch(refusal);
+      }
+      return Worker$Http$json(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["error", lib$web$Js$text(Worker$Heads$refusalMessage(refusal))]), extra)), Worker$Heads$refusalStatus(refusal));
+    }
+    rt.nomatch(refused);
+  }
 }
-rt.named(Worker$Heads$moveHead, "Worker.Heads.moveHead");
+rt.named(Worker$Heads$gate, "Worker.Heads.gate");
 
 async function Worker$Heads$serveLog(request, bucket, project, rest) {
   const $stack = rt.handlers();
@@ -239,131 +106,6 @@ async function Worker$Heads$serveLog(request, bucket, project, rest) {
 }
 rt.named(Worker$Heads$serveLog, "Worker.Heads.serveLog");
 
-function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
-    return List$all(rt.named((c) => {
-    if (Text$isDigit(c)) {
-      return true;
-    } else {
-      if ((c >= 97)) {
-        return (c <= 102);
-      } else {
-        return false;
-      }
-    }
-  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
-  } else {
-    return false;
-  }
-}
-rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
-
-function List$all(p$, v$) {
-  for (;;) {
-    const p = p$, v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return true;
-      }
-      if (v.tag === 1) {
-        const x = v.fields[0];
-        const rest = v.fields[1];
-        if (rt.ap(p, x)) {
-          p$ = p;
-          v$ = rest;
-          continue;
-        } else {
-          return false;
-        }
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(List$all, "List.all");
-
-function Text$isDigit(c) {
-  if ((c >= 48)) {
-    return (c <= 57);
-  } else {
-    return false;
-  }
-}
-rt.named(Text$isDigit, "Text.isDigit");
-
-function Text$isAlpha(c) {
-  let r0;
-  if ((c >= 97)) {
-    r0 = (c <= 122);
-  } else {
-    r0 = false;
-  }
-  if (r0) {
-    return true;
-  } else {
-    if ((c >= 65)) {
-      return (c <= 90);
-    } else {
-      return false;
-    }
-  }
-}
-rt.named(Text$isAlpha, "Text.isAlpha");
-
-function List$length(xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return acc;
-        }
-        if (ys.tag === 1) {
-          const rest = ys.fields[1];
-          acc$ = ((acc + 1) | 0);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
-      }
-    }
-  }
-  rt.named(go, "go");
-  return rt.ap(go, 0, xs);
-}
-rt.named(List$length, "List.length");
-
-function Worker$Heads$Claim$head(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_2;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Worker$Heads$Claim$head, "Worker.Heads.Claim.head");
-
-function List$contains(x, xs) {
-  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
-}
-rt.named(List$contains, "List.contains");
-
-function Worker$Heads$Claim$bases(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_3;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Worker$Heads$Claim$bases, "Worker.Heads.Claim.bases");
-
 const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
 const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
@@ -378,72 +120,6 @@ rt.named(Worker$Heads$headKey, "Worker.Heads.headKey");
 const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
 
 const lib$web$Js$get = rt.importFn(rt, "js.get", [['raw'], ['text']], ['raw'], "lib.web.Js.get");
-
-const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
-
-const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
-
-function lib$web$Js$global(name) {
-  return lib$web$Js$get(lib$web$Js$globalThis(), name);
-}
-rt.named(lib$web$Js$global, "lib.web.Js.global");
-
-function not(b) {
-  if (b) {
-    return false;
-  } else {
-    return true;
-  }
-}
-rt.named(not, "not");
-
-const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
-
-const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
-
-function lib$web$Js$path(o, keys) {
-  return List$foldl(lib$web$Js$get, o, keys);
-}
-rt.named(lib$web$Js$path, "lib.web.Js.path");
-
-const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
-
-function Option$getOr(o, fallback) {
-  m0: {
-    if (o.tag === 0) {
-      return fallback;
-    }
-    if (o.tag === 1) {
-      const x = o.fields[0];
-      return x;
-    }
-    rt.nomatch(o);
-  }
-}
-rt.named(Option$getOr, "Option.getOr");
-
-function Option$map(f, v) {
-  m0: {
-    if (v.tag === 0) {
-      return rt.con0("#Option", 0);
-    }
-    if (v.tag === 1) {
-      const x = v.fields[0];
-      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Option$map, "Option.map");
-
-const lib$web$Js$null = rt.importValue(rt, "js.null", ['raw'], "lib.web.Js.null");
-
-const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
-
-function Worker$Heads$padded(width, t) {
-  return rt.ap(rt.prims["append"], Text$repeat(((width - rt.ap(rt.prims["Text.length"], t)) | 0), "0"), t);
-}
-rt.named(Worker$Heads$padded, "Worker.Heads.padded");
 
 function lib$base$Sexp$readAll(t) {
   const n = rt.ap(rt.prims["Text.length"], t);
@@ -657,6 +333,103 @@ function lib$base$Sexp$readAll(t) {
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
+function List$map(f, xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return List$reverse(acc);
+        }
+        if (ys.tag === 1) {
+          const y = ys.fields[0];
+          const rest = ys.fields[1];
+          acc$ = rt.cons(rt.ap(f, y), acc);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, rt.NIL, xs);
+}
+rt.named(List$map, "List.map");
+
+const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
+
+function Option$map(f, v) {
+  m0: {
+    if (v.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (v.tag === 1) {
+      const x = v.fields[0];
+      return new rt.Con("#Option", 1, [rt.ap(f, x)]);
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Option$map, "Option.map");
+
+async function Worker$Heads$claimed(claim, epoch, scopes, moveTo) {
+  const $stack = rt.handlers();
+  const t0 = Option$bind(claim, rt.named((header) => {
+  if (Text$isEmpty(header)) {
+    return rt.con0("#Option", 0);
+  } else {
+    return new rt.Con("#Option", 1, [header]);
+  }
+}, "Worker.Heads.claimed/\u03bb"));
+  m1: {
+    if (t0.tag === 0) {
+      let r2;
+      if (List$contains("compact", scopes)) {
+        r2 = true;
+      } else {
+        r2 = List$contains("admin", scopes);
+      }
+      if (r2) {
+        return rt.con0("#Option", 0);
+      } else {
+        return new rt.Con("#Option", 1, [rt.con0("66e7989ff8a56e8955edd2e8e128015c65b4098e14cad0d563406bf2caa46499", 0)]);
+      }
+    }
+    if (t0.tag === 1) {
+      const header_1 = t0.fields[0];
+      const t3 = Worker$Heads$parseClaim(header_1);
+      m4: {
+        if (t3.tag === 0) {
+          return new rt.Con("#Option", 1, [rt.con0("66e7989ff8a56e8955edd2e8e128015c65b4098e14cad0d563406bf2caa46499", 1)]);
+        }
+        if (t3.tag === 1) {
+          const parsed = t3.fields[0];
+          const sent = Worker$Heads$sentEpoch(epoch);
+          const moved = rt.resumed($stack, await rt.ap(moveTo, parsed, sent));
+          if ((Worker$Heads$Moved$status(moved) === 0)) {
+            return rt.con0("#Option", 0);
+          } else {
+            if ((Worker$Heads$Moved$status(moved) === 426)) {
+              return new rt.Con("#Option", 1, [new rt.Con("66e7989ff8a56e8955edd2e8e128015c65b4098e14cad0d563406bf2caa46499", 2, [Worker$Heads$Claim$branch(parsed), Worker$Heads$Moved$required(moved), sent])]);
+            } else {
+              return new rt.Con("#Option", 1, [new rt.Con("66e7989ff8a56e8955edd2e8e128015c65b4098e14cad0d563406bf2caa46499", 3, [Worker$Heads$Claim$branch(parsed), Worker$Heads$Moved$head(moved)])]);
+            }
+          }
+        }
+        rt.nomatch(t3);
+      }
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$claimed, "Worker.Heads.claimed");
+
+function Worker$Http$header(request, name) {
+  return Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$method(lib$web$Js$get(request, "headers"), "get", rt.cons(lib$web$Js$text(name), rt.NIL))));
+}
+rt.named(Worker$Http$header, "Worker.Http.header");
+
 async function Worker$Heads$move(store, claim, sent) {
   const $stack = rt.handlers();
   const current = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$current(store)), Worker$Heads$Claim$branch(claim)));
@@ -744,6 +517,67 @@ function Worker$Heads$r2Heads(bucket, project, keyId, readCurrent, epochAt) {
 }
 rt.named(Worker$Heads$r2Heads, "Worker.Heads.r2Heads");
 
+const lib$web$Js$undefined = rt.importValue(rt, "js.undefined", ['raw'], "lib.web.Js.undefined");
+
+const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
+
+function Text$isEmpty(t) {
+  return (rt.ap(rt.prims["Text.length"], t) === 0);
+}
+rt.named(Text$isEmpty, "Text.isEmpty");
+
+const lib$web$Js$null = rt.importValue(rt, "js.null", ['raw'], "lib.web.Js.null");
+
+function Worker$Http$json(value, status) {
+  return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+}
+rt.named(Worker$Http$json, "Worker.Http.json");
+
+const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
+
+function Worker$Heads$refusalMessage(refusal) {
+  m0: {
+    if (refusal.tag === 0) {
+      return "a push must name the head it builds on (x-deus-claim); update deus by merging #13952";
+    }
+    if (refusal.tag === 1) {
+      return "x-deus-claim is `<branch> <head> <base>[,<base>\u2026]`";
+    }
+    if (refusal.tag === 2) {
+      const branch = refusal.fields[0];
+      const required = refusal.fields[1];
+      const sent = refusal.fields[2];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], branch, " needs a deus with data-safety epoch "), rt.ap(rt.prims["Int.toText"], required)), " (Safety.epoch) or newer, and this one has "), rt.ap(rt.prims["Int.toText"], sent)), ": its merge or push may lose data; update deus by merging #13952, then push again");
+    }
+    if (refusal.tag === 3) {
+      const branch_1 = refusal.fields[0];
+      const head = refusal.fields[1];
+      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], branch_1, " moved to #"), Text$take(10, head)), " since you pulled; run `deus pull` and `deus merge`, then push again");
+    }
+    rt.nomatch(refusal);
+  }
+}
+rt.named(Worker$Heads$refusalMessage, "Worker.Heads.refusalMessage");
+
+function Worker$Heads$refusalStatus(refusal) {
+  m0: {
+    if (refusal.tag === 0) {
+      return 428;
+    }
+    if (refusal.tag === 1) {
+      return 400;
+    }
+    if (refusal.tag === 2) {
+      return 426;
+    }
+    if (refusal.tag === 3) {
+      return 409;
+    }
+    rt.nomatch(refusal);
+  }
+}
+rt.named(Worker$Heads$refusalStatus, "Worker.Heads.refusalStatus");
+
 function Worker$Http$method(request) {
   return lib$web$Js$toText(lib$web$Js$get(request, "method"));
 }
@@ -784,95 +618,108 @@ function List$filter(p, xs) {
 }
 rt.named(List$filter, "List.filter");
 
-function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+function not(b) {
+  if (b) {
+    return false;
+  } else {
+    return true;
+  }
 }
-rt.named(Text$isEmpty, "Text.isEmpty");
+rt.named(not, "not");
 
-function List$map(f, xs) {
-  function go(acc$, ys$) {
-    for (;;) {
-      const acc = acc$, ys = ys$;
-      m0: {
-        if (ys.tag === 0) {
-          return List$reverse(acc);
+const lib$web$Js$call = rt.importFn(rt, "js.call", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.call");
+
+function lib$web$Js$global(name) {
+  return lib$web$Js$get(lib$web$Js$globalThis(), name);
+}
+rt.named(lib$web$Js$global, "lib.web.Js.global");
+
+function Worker$Heads$isBranch(t) {
+  const t0 = rt.ap(rt.prims["Text.utf8"], t);
+  m1: {
+    if (t0.tag === 1) {
+      const first = t0.fields[0];
+      const rest = t0.fields[1];
+      let r2;
+      if (Text$isDigit(first)) {
+        r2 = true;
+      } else {
+        r2 = Text$isAlpha(first);
+      }
+      if (r2) {
+        if ((List$length(rest) <= 99)) {
+          return List$all(rt.named((c) => {
+          if (Text$isDigit(c)) {
+            return true;
+          } else {
+            if (Text$isAlpha(c)) {
+              return true;
+            } else {
+              if ((c === 46)) {
+                return true;
+              } else {
+                if ((c === 95)) {
+                  return true;
+                } else {
+                  if ((c === 47)) {
+                    return true;
+                  } else {
+                    return (c === 45);
+                  }
+                }
+              }
+            }
+          }
+        }, "Worker.Heads.isBranch/\u03bb"), rest);
+        } else {
+          return false;
         }
-        if (ys.tag === 1) {
-          const y = ys.fields[0];
-          const rest = ys.fields[1];
-          acc$ = rt.cons(rt.ap(f, y), acc);
-          ys$ = rest;
-          continue;
-        }
-        rt.nomatch(ys);
+      } else {
+        return false;
       }
     }
+    if (t0.tag === 0) {
+      return false;
+    }
+    rt.nomatch(t0);
   }
-  rt.named(go, "go");
-  return rt.ap(go, rt.NIL, xs);
 }
-rt.named(List$map, "List.map");
+rt.named(Worker$Heads$isBranch, "Worker.Heads.isBranch");
 
 function Worker$Http$lines(names) {
   return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(rt.named((name) => rt.ap(rt.prims["append"], name, "\n"), "Worker.Http.lines/\u03bb"), names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
+function Worker$Heads$isLogged(name) {
+  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
+  m1: {
+    if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
+      const at = t0.fields[0];
+      const head = t0.fields[1].fields[0];
+      if ((rt.ap(rt.prims["Text.length"], at) === 13)) {
+        if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], at))) {
+          return Worker$Heads$isHash(head);
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    if (true) {
+      return false;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$isLogged, "Worker.Heads.isLogged");
+
 async function Worker$R2$listAll(bucket, prefix) {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, rt.con0("#Option", 0)));
 }
 rt.named(Worker$R2$listAll, "Worker.R2.listAll");
-
-function List$any(p$, v$) {
-  for (;;) {
-    const p = p$, v = v$;
-    m0: {
-      if (v.tag === 0) {
-        return false;
-      }
-      if (v.tag === 1) {
-        const x = v.fields[0];
-        const rest = v.fields[1];
-        if (rt.ap(p, x)) {
-          return true;
-        } else {
-          p$ = p;
-          v$ = rest;
-          continue;
-        }
-      }
-      rt.nomatch(v);
-    }
-  }
-}
-rt.named(List$any, "List.any");
-
-function List$foldl(f$, init$, xs$) {
-  for (;;) {
-    const f = f$, init = init$, xs = xs$;
-    m0: {
-      if (xs.tag === 0) {
-        return init;
-      }
-      if (xs.tag === 1) {
-        const x = xs.fields[0];
-        const rest = xs.fields[1];
-        f$ = f;
-        init$ = rt.ap(f, init, x);
-        xs$ = rest;
-        continue;
-      }
-      rt.nomatch(xs);
-    }
-  }
-}
-rt.named(List$foldl, "List.foldl");
-
-function Text$repeat(n, t) {
-  return rt.ap(rt.prims["Text.concat"], List$replicate(n, t));
-}
-rt.named(Text$repeat, "Text.repeat");
 
 function List$reverse(xs) {
   function go(acc$, ys$) {
@@ -967,6 +814,143 @@ function lib$base$Sexp$push(form, stack, done) {
 }
 rt.named(lib$base$Sexp$push, "lib.base.Sexp.push");
 
+function Option$bind(o, f) {
+  m0: {
+    if (o.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return rt.ap(f, x);
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$bind, "Option.bind");
+
+function List$contains(x, xs) {
+  return List$any(rt.named((y) => rt.equal(y, x), "List.contains/\u03bb"), xs);
+}
+rt.named(List$contains, "List.contains");
+
+function Worker$Heads$parseClaim(header) {
+  const t0 = rt.ap(rt.prims["Text.split"], header, " ");
+  m1: {
+    if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 1 && t0.fields[1].fields[1].fields[1].tag === 0) {
+      const branch = t0.fields[0];
+      const head = t0.fields[1].fields[0];
+      const bases = t0.fields[1].fields[1].fields[0];
+      let based;
+      if ((bases === "-")) {
+        based = rt.NIL;
+      } else {
+        based = rt.ap(rt.prims["Text.split"], bases, ",");
+      }
+      let r2;
+      if (Worker$Heads$isBranch(branch)) {
+        if (Worker$Heads$isHash(head)) {
+          r2 = List$all(Worker$Heads$isHash, based);
+        } else {
+          r2 = false;
+        }
+      } else {
+        r2 = false;
+      }
+      if (r2) {
+        return new rt.Con("#Option", 1, [new rt.Con("235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", 0, [branch, head, based])]);
+      } else {
+        return rt.con0("#Option", 0);
+      }
+    }
+    if (true) {
+      return rt.con0("#Option", 0);
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$parseClaim, "Worker.Heads.parseClaim");
+
+function Worker$Heads$sentEpoch(header) {
+  const t0 = Option$map(rt.prims["Text.trim"], header);
+  m1: {
+    if (t0.tag === 1) {
+      const digits = t0.fields[0];
+      let r2;
+      if ((rt.ap(rt.prims["Text.length"], digits) >= 1)) {
+        if ((rt.ap(rt.prims["Text.length"], digits) <= 9)) {
+          r2 = List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], digits));
+        } else {
+          r2 = false;
+        }
+      } else {
+        r2 = false;
+      }
+      if (r2) {
+        return Option$getOr(rt.ap(rt.prims["Int.fromText"], digits), 0);
+      } else {
+        return 0;
+      }
+    }
+    if (t0.tag === 0) {
+      return 0;
+    }
+    rt.nomatch(t0);
+  }
+}
+rt.named(Worker$Heads$sentEpoch, "Worker.Heads.sentEpoch");
+
+function Worker$Heads$Moved$status(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Moved$status, "Worker.Heads.Moved.status");
+
+function Worker$Heads$Claim$branch(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Claim$branch, "Worker.Heads.Claim.branch");
+
+function Worker$Heads$Moved$required(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Moved$required, "Worker.Heads.Moved.required");
+
+function Worker$Heads$Moved$head(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Moved$head, "Worker.Heads.Moved.head");
+
 async function Worker$Heads$HeadStore$current(v) {
   const $stack = rt.handlers();
   m0: {
@@ -982,19 +966,6 @@ async function Worker$Heads$HeadStore$current(v) {
 }
 rt.named(Worker$Heads$HeadStore$current, "Worker.Heads.HeadStore.current");
 
-function Worker$Heads$Claim$branch(v) {
-  m0: {
-    if (v.tag === 0) {
-      const v_1 = v.fields[0];
-      const v_2 = v.fields[1];
-      const v_3 = v.fields[2];
-      return v_1;
-    }
-    rt.nomatch(v);
-  }
-}
-rt.named(Worker$Heads$Claim$branch, "Worker.Heads.Claim.branch");
-
 function fst(p) {
   m0: {
     if (p.tag === 0) {
@@ -1005,6 +976,19 @@ function fst(p) {
   }
 }
 rt.named(fst, "fst");
+
+function Worker$Heads$Claim$head(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_2;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Claim$head, "Worker.Heads.Claim.head");
 
 async function Worker$Heads$HeadStore$epochAt(v) {
   const $stack = rt.handlers();
@@ -1021,20 +1005,6 @@ async function Worker$Heads$HeadStore$epochAt(v) {
 }
 rt.named(Worker$Heads$HeadStore$epochAt, "Worker.Heads.HeadStore.epochAt");
 
-function Option$bind(o, f) {
-  m0: {
-    if (o.tag === 0) {
-      return rt.con0("#Option", 0);
-    }
-    if (o.tag === 1) {
-      const x = o.fields[0];
-      return rt.ap(f, x);
-    }
-    rt.nomatch(o);
-  }
-}
-rt.named(Option$bind, "Option.bind");
-
 function snd(p) {
   m0: {
     if (p.tag === 0) {
@@ -1045,6 +1015,36 @@ function snd(p) {
   }
 }
 rt.named(snd, "snd");
+
+function Worker$Heads$verdict(current, claim, required, sent) {
+  m0: {
+    if (current.tag === 1) {
+      const head = current.fields[0];
+      if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
+        return "same";
+      } else {
+        if (rt.ap(rt.prims["lt"], sent, required)) {
+          return "epoch";
+        } else {
+          if (List$contains(head, Worker$Heads$Claim$bases(claim))) {
+            return "write";
+          } else {
+            return "moved";
+          }
+        }
+      }
+    }
+    if (current.tag === 0) {
+      if (rt.ap(rt.prims["lt"], sent, required)) {
+        return "epoch";
+      } else {
+        return "write";
+      }
+    }
+    rt.nomatch(current);
+  }
+}
+rt.named(Worker$Heads$verdict, "Worker.Heads.verdict");
 
 async function Worker$Heads$HeadStore$swap(v) {
   const $stack = rt.handlers();
@@ -1078,16 +1078,145 @@ rt.named(Worker$Heads$HeadStore$log, "Worker.Heads.HeadStore.log");
 
 const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
 
-function Worker$Http$json(value, status) {
-  return Worker$Http$response(lib$web$Js$text(lib$web$Js$stringify(value)), status, rt.cons(new rt.Con("#Pair", 0, ["content-type", "application/json"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+async function Worker$Heads$writeHead(bucket, project, branch, causal, etag) {
+  const $stack = rt.handlers();
+  let onlyIf;
+  m0: {
+    if (etag.tag === 1) {
+      const tag = etag.fields[0];
+      onlyIf = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["etagMatches", lib$web$Js$text(tag)]), rt.NIL));
+      break m0;
+    }
+    if (etag.tag === 0) {
+      onlyIf = lib$web$Js$construct(lib$web$Js$global("Headers"), rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["if-none-match", lib$web$Js$text("*")]), rt.NIL)), rt.NIL));
+      break m0;
+    }
+    rt.nomatch(etag);
+  }
+  const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["onlyIf", onlyIf]), rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("text/plain")]), rt.NIL))]), rt.NIL)));
+  return not(lib$web$Js$isNull(rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(Worker$Heads$headKey(project, branch)), rt.cons(lib$web$Js$text(causal), rt.cons(options, rt.NIL)))))));
 }
-rt.named(Worker$Http$json, "Worker.Http.json");
+rt.named(Worker$Heads$writeHead, "Worker.Heads.writeHead");
+
+async function Worker$Heads$logHead(bucket, project, branch, causal, previous, keyId) {
+  const $stack = rt.handlers();
+  const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
+  const orNull = rt.named((value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()), "Worker.Heads.logHead/\u03bb");
+  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
+  const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
+  rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
+  return undefined;
+}
+rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
 
 function Worker$Http$response(body, status, headers) {
   const named = lib$web$Js$obj(List$map(rt.named((pair) => new rt.Con("#Pair", 0, [fst(pair), lib$web$Js$text(snd(pair))]), "Worker.Http.response/\u03bb"), headers));
   return lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(body, rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["status", lib$web$Js$int(status)]), rt.cons(new rt.Con("#Pair", 0, ["headers", named]), rt.NIL))), rt.NIL)));
 }
 rt.named(Worker$Http$response, "Worker.Http.response");
+
+const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
+
+function Text$take(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+}
+rt.named(Text$take, "Text.take");
+
+const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
+
+function Text$isDigit(c) {
+  if ((c >= 48)) {
+    return (c <= 57);
+  } else {
+    return false;
+  }
+}
+rt.named(Text$isDigit, "Text.isDigit");
+
+function Text$isAlpha(c) {
+  let r0;
+  if ((c >= 97)) {
+    r0 = (c <= 122);
+  } else {
+    r0 = false;
+  }
+  if (r0) {
+    return true;
+  } else {
+    if ((c >= 65)) {
+      return (c <= 90);
+    } else {
+      return false;
+    }
+  }
+}
+rt.named(Text$isAlpha, "Text.isAlpha");
+
+function List$length(xs) {
+  function go(acc$, ys$) {
+    for (;;) {
+      const acc = acc$, ys = ys$;
+      m0: {
+        if (ys.tag === 0) {
+          return acc;
+        }
+        if (ys.tag === 1) {
+          const rest = ys.fields[1];
+          acc$ = ((acc + 1) | 0);
+          ys$ = rest;
+          continue;
+        }
+        rt.nomatch(ys);
+      }
+    }
+  }
+  rt.named(go, "go");
+  return rt.ap(go, 0, xs);
+}
+rt.named(List$length, "List.length");
+
+function List$all(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return true;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          p$ = p;
+          v$ = rest;
+          continue;
+        } else {
+          return false;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$all, "List.all");
+
+function Worker$Heads$isHash(t) {
+  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+    return List$all(rt.named((c) => {
+    if (Text$isDigit(c)) {
+      return true;
+    } else {
+      if ((c >= 97)) {
+        return (c <= 102);
+      } else {
+        return false;
+      }
+    }
+  }, "Worker.Heads.isHash/\u03bb"), rt.ap(rt.prims["Text.utf8"], t));
+  } else {
+    return false;
+  }
+}
+rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
 async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
@@ -1102,6 +1231,104 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
   }
 }
 rt.named(Worker$R2$listFrom, "Worker.R2.listFrom");
+
+function List$any(p$, v$) {
+  for (;;) {
+    const p = p$, v = v$;
+    m0: {
+      if (v.tag === 0) {
+        return false;
+      }
+      if (v.tag === 1) {
+        const x = v.fields[0];
+        const rest = v.fields[1];
+        if (rt.ap(p, x)) {
+          return true;
+        } else {
+          p$ = p;
+          v$ = rest;
+          continue;
+        }
+      }
+      rt.nomatch(v);
+    }
+  }
+}
+rt.named(List$any, "List.any");
+
+function Option$getOr(o, fallback) {
+  m0: {
+    if (o.tag === 0) {
+      return fallback;
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return x;
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$getOr, "Option.getOr");
+
+function Worker$Heads$Claim$bases(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_3;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Claim$bases, "Worker.Heads.Claim.bases");
+
+const lib$web$Js$construct = rt.importFn(rt, "js.construct", [['raw'], ['list', ['raw']]], ['raw'], "lib.web.Js.construct");
+
+const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
+
+function lib$web$Js$path(o, keys) {
+  return List$foldl(lib$web$Js$get, o, keys);
+}
+rt.named(lib$web$Js$path, "lib.web.Js.path");
+
+function Worker$Heads$padded(width, t) {
+  return rt.ap(rt.prims["append"], Text$repeat(((width - rt.ap(rt.prims["Text.length"], t)) | 0), "0"), t);
+}
+rt.named(Worker$Heads$padded, "Worker.Heads.padded");
+
+function Text$drop(n, t) {
+  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+}
+rt.named(Text$drop, "Text.drop");
+
+const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
+
+function List$foldl(f$, init$, xs$) {
+  for (;;) {
+    const f = f$, init = init$, xs = xs$;
+    m0: {
+      if (xs.tag === 0) {
+        return init;
+      }
+      if (xs.tag === 1) {
+        const x = xs.fields[0];
+        const rest = xs.fields[1];
+        f$ = f;
+        init$ = rt.ap(f, init, x);
+        xs$ = rest;
+        continue;
+      }
+      rt.nomatch(xs);
+    }
+  }
+}
+rt.named(List$foldl, "List.foldl");
+
+function Text$repeat(n, t) {
+  return rt.ap(rt.prims["Text.concat"], List$replicate(n, t));
+}
+rt.named(Text$repeat, "Text.repeat");
 
 function List$replicate(n, x) {
   function go(acc$, k$) {
@@ -1120,17 +1347,6 @@ function List$replicate(n, x) {
   return rt.ap(go, rt.NIL, n);
 }
 rt.named(List$replicate, "List.replicate");
-
-const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
-
-function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
-}
-rt.named(Text$drop, "Text.drop");
-
-const lib$web$Js$toList = rt.importFn(rt, "js.as.toList", [['raw']], ['list', ['raw']], "lib.web.Js.toList");
-
-const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
 
 async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, epochAt) {
   const $stack = rt.handlers();
@@ -1161,27 +1377,15 @@ async function Worker$Heads$r2Heads$wait(bucket, project, keyId, readCurrent, ep
 rt.named(Worker$Heads$r2Heads$wait, "Worker.Heads.r2Heads");
 
 export const raw = {
-  parseClaim: Worker$Heads$parseClaim,
-  isBranch: Worker$Heads$isBranch,
-  verdict: Worker$Heads$verdict,
   readStored: Worker$Heads$readStored,
-  writeHead: Worker$Heads$writeHead,
   headLogKey: Worker$Heads$headLogKey,
-  isLogged: Worker$Heads$isLogged,
-  logHead: Worker$Heads$logHead,
   epochOf: Worker$Heads$epochOf,
-  moveHead: Worker$Heads$moveHead,
+  gate: Worker$Heads$gate,
   serveLog: Worker$Heads$serveLog,
 };
-export const parseClaim = rt.exportFn(Worker$Heads$parseClaim, [['text']], ['option', ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]]]);
-export const isBranch = rt.exportFn(Worker$Heads$isBranch, [['text']], ['bool']);
-export const verdict = rt.exportFn(Worker$Heads$verdict, [['option', ['text']], ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]], ['int'], ['int']], ['text']);
 export const readStored = rt.exportAsync(Worker$Heads$readStored, [['raw'], ['text'], ['text']], ['option', ['struct', "caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", ["causal", "etag", "uploaded"], [['text'], ['text'], ['raw']]]]);
-export const writeHead = rt.exportAsync(Worker$Heads$writeHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']]], ['bool']);
 export const headLogKey = rt.exportFn(Worker$Heads$headLogKey, [['text'], ['text']], ['text']);
-export const isLogged = rt.exportFn(Worker$Heads$isLogged, [['text']], ['bool']);
-export const logHead = rt.exportAsync(Worker$Heads$logHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']], ['option', ['text']]], ['unit']);
 export const epochOf = rt.exportFn(Worker$Heads$epochOf, [['text']], ['int']);
-export const moveHead = rt.exportAsync(Worker$Heads$moveHead, [['raw'], ['text'], ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]], ['int'], ['option', ['text']], ['fn', [['text']], ['raw']], ['fn', [['text']], ['raw']]], ['struct', "c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", ["status", "required", "head"], [['int'], ['int'], ['text']]]);
+export const gate = rt.exportAsync(Worker$Heads$gate, [['raw'], ['raw'], ['text'], ['raw'], ['fn', [['text']], ['raw']], ['fn', [['text']], ['raw']]], ['raw']);
 export const serveLog = rt.exportAsync(Worker$Heads$serveLog, [['raw'], ['raw'], ['text'], ['list', ['text']]], ['raw']);
 //# sourceMappingURL=heads.js.map

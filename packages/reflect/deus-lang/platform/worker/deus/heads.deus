@@ -164,9 +164,108 @@ def r2Heads (bucket : Js) (project : Text) (keyId : Option Text) (readCurrent : 
     swap := fun branch head tag => writeHead bucket project branch head tag,
     log := fun branch head previous => logHead bucket project branch head previous keyId }
 
-/-- `move` on the R2 `bucket` (`r2Heads`), as remote.mjs calls it. -/
-def moveHead (bucket : Js) (project : Text) (claim : Claim) (sent : Int) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Moved :=
-  move (r2Heads bucket project keyId readCurrent epochAt) claim sent
+/-- Why a push may not move its branch: it names no claim (only a key that may compact, which re-claims existing
+  heads, may omit one), the claim is malformed, the pushing CLI is older than the epoch the head asks for, or the
+  head moved since the push's pull. -/
+inductive Refusal @"urn:deus:worker:Refusal" where
+  | unclaimed
+  | malformed
+  | outdated (branch : Text) (required : Int) (sent : Int)
+  | overtaken (branch : Text) (head : Text)
+
+/-- The HTTP status of a refusal. -/
+def refusalStatus (refusal : Refusal) : Int :=
+  match refusal with
+  | Refusal.unclaimed => 428
+  | Refusal.malformed => 400
+  | Refusal.outdated _ _ _ => 426
+  | Refusal.overtaken _ _ => 409
+
+/-- What a refusal tells the pusher to do. -/
+def refusalMessage (refusal : Refusal) : Text :=
+  match refusal with
+  | Refusal.unclaimed => "a push must name the head it builds on (x-deus-claim); update deus by merging #13952"
+  | Refusal.malformed => "x-deus-claim is `<branch> <head> <base>[,<base>…]`"
+  | Refusal.outdated branch required sent =>
+      branch ++ " needs a deus with data-safety epoch " ++ Int.toText required ++ " (Safety.epoch) or newer, and this one has "
+        ++ Int.toText sent ++ ": its merge or push may lose data; update deus by merging #13952, then push again"
+  | Refusal.overtaken branch head =>
+      branch ++ " moved to #" ++ Text.take 10 head ++ " since you pulled; run `deus pull` and `deus merge`, then push again"
+
+/-- The epoch the pushing CLI has, from `x-deus-epoch`: up to nine decimal digits, so it stays an `Int`; anything
+  else counts as none. -/
+def sentEpoch (header : Option Text) : Int :=
+  match Option.map Text.trim header with
+  | Option.some digits =>
+      if Text.length digits >= 1 && Text.length digits <= 9 && List.all isDigit (Text.utf8 digits) then Option.getOr (Int.fromText digits) 0
+      else 0
+  | Option.none => 0
+
+/-- Moves the branch a push claims (header `claim`, the CLI's epoch header `epoch`), by `moveTo`, for a key holding
+  `scopes`; none when the head is where the push needs it, else why not. -/
+def claimed (claim : Option Text) (epoch : Option Text) (scopes : List Text) (moveTo : Claim -> Int -> {Js.Async} Moved) : {Js.Async} Option Refusal :=
+  match Option.bind claim (fun header => if Text.isEmpty header then Option.none else Option.some header) with
+  | Option.none => if List.contains "compact" scopes || List.contains "admin" scopes then Option.none else Option.some Refusal.unclaimed
+  | Option.some header =>
+      match parseClaim header with
+      | Option.none => Option.some Refusal.malformed
+      | Option.some parsed =>
+          let sent := sentEpoch epoch
+          let moved := moveTo parsed sent
+          if moved.status == 0 then Option.none
+          else if moved.status == 426 then Option.some (Refusal.outdated parsed.branch moved.required sent)
+          else Option.some (Refusal.overtaken parsed.branch moved.head)
+
+/-- Moves the branch head a push to `project` claims (D167), as remote.mjs asks before a bundle is stored: a promise
+  of `undefined` when the head is where the push needs it, else of the response that refuses it. `logged` is the
+  key's audit callback, carrying its `keyId` and `scopes`; `readCurrent` and `epochAt` are as for `r2Heads`. -/
+def gate (request : Js) (bucket : Js) (project : Text) (logged : Js) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Js :=
+  let scopes := List.map Js.toText (Js.toList (Js.get logged "scopes"))
+  let keyId := Option.map Js.toText (Js.toOption (Js.get logged "keyId"))
+  let refused :=
+    claimed
+      (Worker.Http.header request "x-deus-claim")
+      (Worker.Http.header request "x-deus-epoch")
+      scopes
+      (fun claim sent => move (r2Heads bucket project keyId readCurrent epochAt) claim sent)
+  match refused with
+  | Option.none => Js.undefined
+  | Option.some refusal =>
+      let extra :=
+        match refusal with
+        | Refusal.outdated _ required _ => [("epoch", Js.int required)]
+        | Refusal.overtaken _ head => [("head", if Text.isEmpty head then Js.null else Js.text head)]
+        | _ => []
+      Worker.Http.json (Js.obj (("error", Js.text (refusalMessage refusal)) :: extra)) (refusalStatus refusal)
+
+test claimsGateThePush :=
+  Worker.Http.offline (fun _ =>
+    let tried := Ref.new []
+    let moveTo := fun status => fun claim sent =>
+      let _ := Ref.set tried (Ref.get tried ++ [(claim.branch, sent)])
+      Moved.mk status 3 (if status == 409 then headB else "")
+    let claim := Option.some ("main " ++ headA ++ " -")
+    claimed Option.none Option.none ["push"] (moveTo 0) == Option.some Refusal.unclaimed
+      && claimed (Option.some "") Option.none ["push"] (moveTo 0) == Option.some Refusal.unclaimed
+      && claimed Option.none Option.none ["compact"] (moveTo 0) == Option.none
+      && claimed Option.none Option.none ["admin"] (moveTo 0) == Option.none
+      && claimed (Option.some "main x -") Option.none ["push"] (moveTo 0) == Option.some Refusal.malformed
+      && claimed claim (Option.some "2") ["push"] (moveTo 0) == Option.none
+      && claimed claim (Option.some "2") ["push"] (moveTo 426) == Option.some (Refusal.outdated "main" 3 2)
+      && claimed claim Option.none ["push"] (moveTo 409) == Option.some (Refusal.overtaken "main" headB)
+      && Ref.get tried == [("main", 2), ("main", 2), ("main", 0)])
+
+test epochsAreSmallWholeNumbers :=
+  sentEpoch (Option.some "3") == 3 && sentEpoch (Option.some " 12 ") == 12 && sentEpoch Option.none == 0
+    && sentEpoch (Option.some "-1") == 0 && sentEpoch (Option.some "1.5") == 0 && sentEpoch (Option.some "1234567890") == 0
+    && sentEpoch (Option.some "") == 0
+
+test refusalsSayWhatToDo :=
+  refusalStatus Refusal.unclaimed == 428 && refusalStatus Refusal.malformed == 400
+    && refusalStatus (Refusal.outdated "main" 3 2) == 426 && refusalStatus (Refusal.overtaken "main" headB) == 409
+    && refusalMessage (Refusal.outdated "main" 3 2)
+      == "main needs a deus with data-safety epoch 3 (Safety.epoch) or newer, and this one has 2: its merge or push may lose data; update deus by merging #13952, then push again"
+    && refusalMessage (Refusal.overtaken "main" headB) == "main moved to #bbbbbbbbbb since you pulled; run `deus pull` and `deus merge`, then push again"
 
 /-- Heads held in `heads` (a branch to its head and tag, the tag counting the writes) and moves logged in `moves`;
   every head asks for the epoch `epochs` gives it, or 0. `move` in tests, with no R2. -/

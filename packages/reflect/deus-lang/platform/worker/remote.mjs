@@ -116,64 +116,22 @@ export const readHead = async (env, project, branch) => {
   return row ? { causal: row.causal } : undefined;
 };
 
-/** Moves the head from `current` (or creates it), or returns false when another push moved it first (`Worker.Heads.writeHead`). */
-const writeHead = (env, project, branch, causal, current) =>
-  heads.writeHead(env.BUCKET, project, branch, causal, current?.etag);
-
 /**
- * Moves the branch head a push claims, or answers why not (D167). The bundle is stored only after
- * the head moves, and a retry of the same push finds the head already there, so a failed store
- * never blocks the branch. Only compaction, which re-claims existing heads, may omit the claim.
- * The compare-and-swap is an R2 conditional write (D181): D1's Free plan allows 100,000 row writes
- * a day, which explorer uploads used up, and a push then could not move its head.
+ * Moves the branch head a push claims, or answers why not (D167): `Worker.Heads.gate`, in DEUS
+ * (platform/worker/deus/heads.deus). The bundle is stored only after the head moves, and a retry of the same push
+ * finds the head already there, so a failed store never blocks the branch. The compare-and-swap is an R2 conditional
+ * write (D181); heads are read through `readHead` (which knows the D1 heads from before D181) and epochs through
+ * `requiredEpoch` (which caches).
  */
-const moveHead = async (request, env, project, logged) => {
-  const header = request.headers.get('x-deus-claim');
-  if (!header) {
-    return logged.scopes.includes('compact') || logged.scopes.includes('admin')
-      ? undefined
-      : json({ error: 'a push must name the head it builds on (x-deus-claim); update deus by merging #13952' }, 428);
-  }
-  // The claim and what it may do are `Worker.Heads.parseClaim` and `verdict`, in DEUS (platform/worker/deus/heads.deus).
-  const claim = heads.parseClaim(header);
-  if (!claim) {
-    throw new HttpError(400, 'x-deus-claim is `<branch> <head> <base>[,<base>…]`');
-  }
-  const { branch } = claim;
-  // A DEUS `Int` is 32 bits, so a number past it would wrap; such an epoch counts as none.
-  const claimed = Number(request.headers.get('x-deus-epoch') ?? '0');
-  const sent = Number.isInteger(claimed) && claimed >= 0 && claimed < 2 ** 31 ? claimed : 0;
-  // The read, the decision, the conditional write and the log are `Worker.Heads.moveHead`, in DEUS; it reads heads
-  // through `readHead` (which knows the D1 heads from before D181) and epochs through `requiredEpoch` (which caches).
-  const moved = await heads.moveHead(
+const moveHead = (request, env, project, logged) =>
+  heads.gate(
+    request,
     env.BUCKET,
     project,
-    claim,
-    sent,
-    logged.keyId,
+    logged,
     (name) => readHead(env, project, name),
     (causal) => requiredEpoch(env.BUCKET, project, causal),
   );
-  if (moved.status === 0) {
-    return undefined;
-  }
-  if (moved.status === 426) {
-    return json(
-      {
-        error: `${branch} needs a deus with data-safety epoch ${moved.required} (Safety.epoch) or newer, and this one has ${sent}: its merge or push may lose data; update deus by merging #13952, then push again`,
-        epoch: moved.required,
-      },
-      426,
-    );
-  }
-  return json(
-    {
-      error: `${branch} moved to #${moved.head.slice(0, 10)} since you pulled; run \`deus pull\` and \`deus merge\`, then push again`,
-      head: moved.head || null,
-    },
-    409,
-  );
-};
 
 //
 // Data safety (DataSafety.Spec): the epoch a codebase asks of the CLIs that push to it, and the log of every head a branch had.
@@ -212,10 +170,6 @@ export const requiredEpoch = async (bucket, project, causal) => {
 
 /** Where the log of a branch's heads lives: one immutable object per move, named by time and head (`Worker.Heads`). */
 export const headLogKey = (project, branch) => heads.headLogKey(project, branch);
-
-/** Records that `branch` moved to `causal`, so every head it ever had stays findable even after compaction. */
-const logHead = (env, project, branch, causal, previous, keyId) =>
-  heads.logHead(env.BUCKET, project, branch, causal, previous, keyId);
 
 /** `/v1/<project>/headlog/<branch>`: every head the branch had, oldest first (`Worker.Heads.serveLog`). */
 const headLog = (request, env, project, rest) => heads.serveLog(request, env.BUCKET, project, rest);

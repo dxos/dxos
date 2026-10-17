@@ -34,7 +34,7 @@ feature W-1: Replication API
 feature W-2: Branch heads move by compare-and-swap, and every move is logged
   status: shipped
   parent: W-1
-  defs: Worker.Heads.moveHead | Worker.Heads.verdict | Worker.Heads.serveLog
+  defs: Worker.Heads.gate | Worker.Heads.move | Worker.Heads.verdict | Worker.Heads.serveLog
 ```
 
 ```mdl
