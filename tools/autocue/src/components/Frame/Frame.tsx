@@ -21,10 +21,10 @@ export type FrameProps = PropsWithChildren<{
   size?: FrameSize;
   /** Floating `panel` (default) or full-width `band`. */
   captionStyle?: BandStyle;
-  /** On, the header also shows as a translucent band over the top; off (default), only as the intro. */
+  /** On, the header also shows as a translucent band over the top; off (default), only as the open title. */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel on mount; remount (a new `key`) to replay it. */
-  intro?: number;
+  open?: number;
   /** Overrides for the `--autocue-*` custom properties, which reach into the shadow root. */
   style?: CSSProperties;
 }>;
@@ -40,7 +40,7 @@ export const Frame = ({
   size,
   captionStyle = 'panel',
   headerBand = false,
-  intro,
+  open,
   style,
   children,
 }: FrameProps) => {
@@ -79,12 +79,12 @@ export const Frame = ({
   useEffect(() => {
     handle.current?.setHeaderBand(headerBand);
   }, [mode, headerBand]);
-  // After the header effect, so the intro shows the current title.
+  // After the header effect, so the open title shows the current title.
   useEffect(() => {
-    if (intro) {
-      void handle.current?.playIntro(intro);
+    if (open) {
+      void handle.current?.playOpen(open);
     }
-  }, [mode, intro]);
+  }, [mode, open]);
 
   return (
     <div ref={ref} className='flex flex-col dx-fill' style={style}>

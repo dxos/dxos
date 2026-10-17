@@ -20,7 +20,7 @@
  * spinner moves a few pixels every frame), while a mean over the frame is dominated by frame area and
  * reads a small moving object — a dragged chess piece — as stillness.
  *
- * `--intro <video>` / `--outro <video>` bookend the trimmed demo with another clip (scaled and letterboxed
+ * `--open <video>` / `--close <video>` bookend the trimmed demo with another clip (scaled and letterboxed
  * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
  * `--ident` uses the DXOS ident from `tools/autocue`, rendering it on first use.
  *
@@ -88,7 +88,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--theme dark|light] [--logo-color <tailwind>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --open <video> --close <video>] [--theme dark|light] [--logo-color <tailwind>] [--voiceover steps|<cues.json>] [--voice <name>] [--open-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
   );
   process.exit(1);
 }
@@ -172,10 +172,10 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
 if (options.ident) {
   // `--ident composer` opens on the Composer logo instead of the DXOS title.
   const format = identFormat(width, height);
-  options.intro ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN', format);
-  options.outro ??= ident('END', format);
+  options.open ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN', format);
+  options.close ??= ident('CLOSE', format);
 }
-for (const clip of [options.intro, options.outro]) {
+for (const clip of [options.open, options.close]) {
   if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
     console.error(`no such clip: ${clip}`);
     process.exit(1);
@@ -193,7 +193,7 @@ const fitDuration = async () => {
     .map(Number);
   const bookends = (
     await Promise.all(
-      [options.intro, options.outro].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
+      [options.open, options.close].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
     )
   ).reduce((total, value) => total + value, 0);
   const report = spawnSync(
@@ -414,7 +414,7 @@ encoder.stderr.pipe(process.stderr);
 
 /**
  * Pipes a whole clip into the encoder at the demo's size and rate. The ident is rendered at the recording's aspect
- * ratio; any other clip (`--intro` / `--outro`) is letterboxed rather than cropped. Video only, since the recording
+ * ratio; any other clip (`--open` / `--close`) is letterboxed rather than cropped. Video only, since the recording
  * has no audio.
  */
 const bookend = async (clip) => {
@@ -454,7 +454,7 @@ const bookend = async (clip) => {
   return frames / frameBytes;
 };
 
-const introFrames = options.intro ? await bookend(options.intro) : 0;
+const openFrames = options.open ? await bookend(options.open) : 0;
 
 let pending = Buffer.alloc(0);
 let previous;
@@ -511,7 +511,7 @@ for await (const chunk of decoder.stdout) {
   }
 }
 
-const outroFrames = options.outro ? await bookend(options.outro) : 0;
+const closeFrames = options.close ? await bookend(options.close) : 0;
 encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
 const [decodeStatus] = await decoderClosed;
@@ -534,10 +534,10 @@ const annotate = async () => {
     for (let frame = sourceFrame; frame < read; frame++) {
       const output = outputFrameOf.get(frame);
       if (output !== undefined) {
-        return (introFrames + output) / options.fps;
+        return (openFrames + output) / options.fps;
       }
     }
-    return (introFrames + kept) / options.fps;
+    return (openFrames + kept) / options.fps;
   };
 
   // Two captions issued back to back describe the same instant — the earlier one was never really on
@@ -562,7 +562,7 @@ const annotate = async () => {
     return `${hours}:${minutes}:${secs}`;
   };
 
-  const end = (introFrames + kept) / options.fps;
+  const end = (openFrames + kept) / options.fps;
   const metadata = [';FFMETADATA1'];
   const vtt = ['WEBVTT', ''];
   marks.forEach((mark, index) => {
@@ -704,12 +704,12 @@ const toMp4 = async () => {
 
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
-/** Spoken as the intro opens; `--intro-line <text>` replaces it and `--intro-line off` drops it. */
-const INTRO_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
+/** Spoken as the open clip starts; `--open-line <text>` replaces it and `--open-line off` drops it. */
+const OPEN_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
 
 /**
  * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
- * takes hand-written lines timed against the final video. With an intro, the intro line opens either. Both
+ * takes hand-written lines timed against the final video. With an open clip, the open line starts either. Both
  * run `voiceover.mjs` once over every output.
  */
 const voiceover = async () => {
@@ -719,10 +719,10 @@ const voiceover = async () => {
     console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
     return undefined;
   }
-  const introLine = typeof options['intro-line'] === 'string' ? options['intro-line'] : INTRO_LINE;
-  const introSeconds = introFrames / options.fps;
-  if (introFrames && options['intro-line'] !== 'off' && !cues.some((cue) => cue.at < introSeconds)) {
-    cues.unshift({ at: 0.3, text: introLine });
+  const openLine = typeof options['open-line'] === 'string' ? options['open-line'] : OPEN_LINE;
+  const openSeconds = openFrames / options.fps;
+  if (openFrames && options['open-line'] !== 'off' && !cues.some((cue) => cue.at < openSeconds)) {
+    cues.unshift({ at: 0.3, text: openLine });
   }
   const cuesFile = `${output.replace(/\.webm$/, '')}.cues.json`;
   writeFileSync(cuesFile, JSON.stringify(cues, null, 2));
@@ -855,7 +855,7 @@ console.log(
       voiced,
       uploaded,
       screenshot,
-      frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
+      frames: { read, kept, dropped: read - kept, open: openFrames, close: closeFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,

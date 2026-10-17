@@ -23,7 +23,7 @@ export const TOKENS = `
     /* Follows the theme, like the ident cards a take is cut between. */
     --autocue-letterbox: #fff;
     /* Read by script as milliseconds, so keep the unit. */
-    --autocue-intro-fade: 600ms;
+    --autocue-open-fade: 600ms;
     --autocue-caption-fade: 300ms;
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
     /* The caption panel lets the app show through a little, since it sits over the content for the whole take. */

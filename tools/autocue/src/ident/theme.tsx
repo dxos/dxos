@@ -17,6 +17,9 @@ export type IdentProps = {
 };
 
 export type Palette = {
+  theme: IdentTheme;
+  /** Whether `logoColor` chose the logo's colour, rather than the theme's main. */
+  tinted: boolean;
   ground: string;
   main: string;
   second: string;
@@ -25,7 +28,7 @@ export type Palette = {
   logo: string;
 };
 
-const PALETTES: Record<IdentTheme, Omit<Palette, 'logo'>> = {
+const PALETTES: Record<IdentTheme, Omit<Palette, 'theme' | 'tinted' | 'logo'>> = {
   dark: { ...COLORS, muted: '#B8B8B8' },
   // Off-black on off-white: pure black on pure white reads harsher than the dark cards do.
   light: {
@@ -50,7 +53,7 @@ export const TAILWIND_HUES: string[] = [...SCALES.keys()];
 export const palette = ({ theme = 'dark', logoColor }: IdentProps = {}): Palette => {
   const base = PALETTES[theme];
   if (!logoColor) {
-    return { ...base, logo: base.main };
+    return { ...base, theme, tinted: false, logo: base.main };
   }
   const scale = SCALES.get(logoColor);
   // Thrown rather than ignored, so a misspelt hue fails the render instead of drawing the default.
@@ -59,7 +62,7 @@ export const palette = ({ theme = 'dark', logoColor }: IdentProps = {}): Palette
   }
   // The end card's rule is the logo's accent, so a coloured logo takes it along.
   const logo = scale[HUE_SHADE[theme]];
-  return { ...base, logo, accent: logo };
+  return { ...base, theme, tinted: true, logo, accent: logo };
 };
 
 const PaletteContext = createContext<Palette>(palette());

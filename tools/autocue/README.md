@@ -14,6 +14,6 @@ module resolution. A core may import only other cores and `tokens.ts`.
 Styles read `--autocue-*` custom properties (`src/tokens.ts`), which a host can override from outside the shadow root.
 
 The ident renders with `moon run autocue:render` (clips in `out/`) and previews with `moon run autocue:studio`;
-`trim-static.mjs --ident` renders the opening and end cards on first use, at the recording's aspect ratio.
+`trim-static.mjs --ident` renders the open and close cards on first use, at the recording's aspect ratio.
 
 Design and roadmap: [`.agents/projects/autocue-ui`](../../.agents/projects/autocue-ui/DESIGN.md).

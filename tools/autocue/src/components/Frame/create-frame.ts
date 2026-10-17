@@ -16,7 +16,7 @@ export type FrameMode = 'overlay' | 'layout';
 
 /**
  * The caption's style: `band` spans the frame's width at its edge; `panel` floats over the content, centred and as
- * wide as its text. The header is always a band; its only floating form is the intro.
+ * wide as its text. The header is always a band; its only floating form is the open title.
  */
 export type BandStyle = 'band' | 'panel';
 
@@ -38,8 +38,8 @@ export type FrameOptions = {
   captionStyle?: BandStyle;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;
-  /** Milliseconds to hold the header as a centred panel when the frame opens (see `playIntro`); 0 or unset skips it. */
-  intro?: number;
+  /** Milliseconds to hold the header as a centred panel when the frame opens (see `playOpen`); 0 or unset skips it. */
+  open?: number;
 };
 
 export type FrameSize = {
@@ -57,7 +57,7 @@ export type FrameHandle = {
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
    * caption fade in. Resolves once the hand-off is done; a later call or `dispose` cuts it short.
    */
-  playIntro: (ms?: number) => Promise<void>;
+  playOpen: (ms?: number) => Promise<void>;
   dispose: () => void;
 };
 
@@ -102,15 +102,15 @@ export const FRAME_STYLES = `
   .caption .subtitle { font: 400 19px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
   /* The opening title: the header's text, larger, centred in the frame, alone; the header and caption fade in as it
      fades out. */
-  .header, .intro { transition: opacity var(--autocue-intro-fade) ease; }
+  .header, .open-title { transition: opacity var(--autocue-open-fade) ease; }
   /* Each caption fades out before the next fades in, so a step change reads as a cut between lines: a panel fades
      whole, while a band stays up and only its text fades. */
   .caption, .caption > * { transition: opacity var(--autocue-caption-fade) ease; }
   .caption:not(.panel)[hidden] { display: flex; }
-  .held, .caption.panel.fading, .caption:not(.panel).fading > *, .intro.out { opacity: 0; }
-  .header.panel.intro { top: 50%; transform: translate(-50%, -50%); padding: 24px 48px; }
-  .intro .title { font-size: 48px; }
-  .intro .subtitle { font-size: 24px; margin-top: 8px; }
+  .held, .caption.panel.fading, .caption:not(.panel).fading > *, .open-title.out { opacity: 0; }
+  .header.panel.open-title { top: 50%; transform: translate(-50%, -50%); padding: 24px 48px; }
+  .open-title .title { font-size: 48px; }
+  .open-title .subtitle { font-size: 24px; margin-top: 8px; }
 `;
 
 const renderBand = (band: HTMLElement, text?: FrameText) => {
@@ -145,7 +145,7 @@ export const createFrame = (
     size,
     captionStyle = 'panel',
     headerBand: showHeaderBand = false,
-    intro,
+    open,
   }: FrameOptions = {},
 ): FrameHandle => {
   const style = document.createElement('style');
@@ -169,12 +169,12 @@ export const createFrame = (
   content.className = 'content';
   content.appendChild(document.createElement('slot'));
 
-  const introBand = document.createElement('div');
-  introBand.className = 'band header panel intro';
-  introBand.dataset.testid = 'autocue-frame-intro';
-  introBand.hidden = true;
+  const openBand = document.createElement('div');
+  openBand.className = 'band header panel open-title';
+  openBand.dataset.testid = 'autocue-frame-open';
+  openBand.hidden = true;
 
-  frame.append(headerBand, content, captionBand, introBand);
+  frame.append(headerBand, content, captionBand, openBand);
 
   const stage = document.createElement('div');
   stage.className = `stage ${mode}`;
@@ -255,28 +255,28 @@ export const createFrame = (
   };
   setHeaderBand(showHeaderBand);
 
-  let cancelIntro = () => {};
+  let cancelOpen = () => {};
   // The title opens alone: the header and caption wait for it.
   const held = [headerBand, captionBand];
   const release = () => held.forEach((band) => band.classList.remove('held'));
-  const playIntro = (ms = 3_000) => {
-    cancelIntro();
+  const playOpen = (ms = 3_000) => {
+    cancelOpen();
     if (!headerText?.title) {
       return Promise.resolve();
     }
 
-    const fade = duration('--autocue-intro-fade');
+    const fade = duration('--autocue-open-fade');
     const timers: ReturnType<typeof setTimeout>[] = [];
     const finish = () => {
       timers.forEach(clearTimeout);
-      introBand.hidden = true;
-      introBand.classList.remove('out');
+      openBand.hidden = true;
+      openBand.classList.remove('out');
       release();
     };
 
-    // The header leaves at once and the intro fades in from transparent: the reflow commits each start state.
-    renderBand(introBand, headerText);
-    introBand.classList.add('out');
+    // The header leaves at once and the open title fades in from transparent: the reflow commits each start state.
+    renderBand(openBand, headerText);
+    openBand.classList.add('out');
     for (const band of held) {
       band.style.transition = 'none';
       band.classList.add('held');
@@ -285,23 +285,23 @@ export const createFrame = (
     for (const band of held) {
       band.style.transition = '';
     }
-    introBand.classList.remove('out');
+    openBand.classList.remove('out');
     return new Promise<void>((resolve) => {
-      cancelIntro = () => {
+      cancelOpen = () => {
         finish();
         resolve();
       };
       timers.push(
         setTimeout(() => {
-          introBand.classList.add('out');
+          openBand.classList.add('out');
           release();
         }, ms),
-        setTimeout(() => cancelIntro(), ms + fade),
+        setTimeout(() => cancelOpen(), ms + fade),
       );
     });
   };
-  if (intro) {
-    void playIntro(intro);
+  if (open) {
+    void playOpen(open);
   }
 
   return {
@@ -310,10 +310,10 @@ export const createFrame = (
     setSize,
     setCaptionStyle,
     setHeaderBand,
-    playIntro,
+    playOpen,
     dispose: () => {
       clearTimeout(captionTimer);
-      cancelIntro();
+      cancelOpen();
       observer.disconnect();
       style.remove();
       stage.remove();

@@ -511,7 +511,7 @@ came from. A viewer then sees the spec and the app agreeing, which is the whole 
 
 `title` puts the take's name on screen. By default it opens alone as a large panel centred on the page for 3s, then
 fades out as the caption fades in. `"band": true` keeps it as a translucent band over the top for the rest of the
-take, `"intro": 0` skips the opening, and `"hold": 3600` waits out the opening before the next op. A `cut` clears
+take, `"open": 0` skips the open title, and `"hold": 3600` waits out the open title before the next op. A `cut` clears
 the title and caption, like any caption shown before it, so issue `title` after the last `cut`:
 
 ```bash
@@ -577,9 +577,9 @@ decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back
 `apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
 sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
 
-### Intro and outro: `--ident`
+### Open and close: `--ident`
 
-`--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
+`--ident` opens the trimmed demo with the DXOS open title and closes it with the close card, both from
 `tools/autocue` (Remotion, `src/ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
 and the licensed Sharp Sans font in `tools/autocue/public/fonts/` (without it they render in a fallback face).
 The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800 viewport,
@@ -587,16 +587,16 @@ The ident is rendered in the format nearest the recording's aspect ratio (`16x10
 recording, and `--logo-color <hue>` colours the logo and the end card's rule with a Tailwind hue (`sky`, `rose`, …),
 shaded `-400` in dark and `-600` in light; preview both in storybook `tools/autocue/Ident`. `--ident composer` opens
 on the Composer logo instead.
-`--intro <video>` / `--outro <video>` bookend with any other clip, letterboxed to the recording's frame. Their
-audio is dropped, and chapters and captions are shifted past the intro.
+`--open <video>` / `--close <video>` bookend with any other clip, letterboxed to the recording's frame. Their
+audio is dropped, and chapters and captions are shifted past the open clip.
 
 ### Voice-over: `--voiceover`
 
 `--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
 timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
-hand-written lines instead; `--voice <name>` picks the voice. With an intro, the narration opens on "This is
-Composer … by DXOS." (a pause after "Composer") as the intro starts (`--intro-line <text>` to change it,
-`--intro-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
+hand-written lines instead; `--voice <name>` picks the voice. With an open clip, the narration opens on "This is
+Composer … by DXOS." (a pause after "Composer") as the open clip starts (`--open-line <text>` to change it,
+`--open-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
 
 ```bash
 node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \

@@ -9,15 +9,15 @@ import fs from 'node:fs';
 //
 //   moon run autocue:render                          # everything (14 provocations x 2 lengths x 5 formats)
 //   moon run autocue:render -- --id P03              # one provocation, all lengths and formats
-//   moon run autocue:render -- --id OPEN,COMPOSER,END # several ids, comma-separated
+//   moon run autocue:render -- --id OPEN,COMPOSER,CLOSE # several ids, comma-separated
 //   moon run autocue:render -- --id P03 --length 10s --format 16x9
-//   moon run autocue:render -- --id OPEN             # opening title only, all formats
+//   moon run autocue:render -- --id OPEN             # open title only, all formats
 //   moon run autocue:render -- --id TRAIL            # DXOS trail only, all formats
-//   moon run autocue:render -- --id END              # end card only, all formats
+//   moon run autocue:render -- --id CLOSE              # close card only, all formats
 //   moon run autocue:render-first-run                # only provocations marked firstRun
 //   moon run autocue:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
 //   moon run autocue:render -- --version 2           # file suffix _v02
-//   moon run autocue:render -- --id END --theme light --logo-color sky   # file suffix _light_sky
+//   moon run autocue:render -- --id CLOSE --theme light --logo-color sky   # file suffix _light_sky
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
 import path from 'node:path';

@@ -70,7 +70,7 @@ const SIZES = {
 
 type Size = keyof typeof SIZES;
 
-type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'intro'> & {
+type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'open'> & {
   /** The recording's aspect ratio, which every view keeps, letterboxed. */
   size?: Size;
   /** Off, the script still steps the app but shows no captions. */
@@ -86,13 +86,13 @@ const TakeStory = ({
   size = '16:10',
   captionStyle,
   headerBand,
-  intro,
+  open,
   captions = true,
   interval = 2_500,
   onDone,
 }: StoryProps) => {
   const [step, setStep] = useState(0);
-  // Each pass through the script is a new take, so the frame remounts and replays its intro.
+  // Each pass through the script is a new take, so the frame remounts and replays its open title.
   const [take, setTake] = useState(0);
   const previous = useRef(step);
   useEffect(() => {
@@ -121,7 +121,7 @@ const TakeStory = ({
         size={SIZES[size]}
         captionStyle={captionStyle}
         headerBand={headerBand}
-        intro={intro}
+        open={open}
       >
         <MockApp step={step} />
       </Frame>
@@ -152,37 +152,37 @@ const TakeStory = ({
   );
 };
 
-const OPENINGS = {
+const OPENS = {
   dxos: { component: OpenOnly, seconds: TIMING.open.duration },
   composer: { component: ComposerIntro, seconds: TIMING.composer.duration },
 };
 
 type IdentStoryProps = StoryProps & {
-  /** The opening card: the DXOS title, or the Composer logo (`--ident composer`). */
-  opening?: keyof typeof OPENINGS;
-  /** A Tailwind hue for the ident's logo (and the outro's rule), as `trim-static.mjs --logo-color` takes. */
+  /** The open card: the DXOS title, or the Composer logo (`--ident composer`). */
+  openCard?: keyof typeof OPENS;
+  /** A Tailwind hue for the ident's logo (and the close card's rule), as `trim-static.mjs --logo-color` takes. */
   logoColor?: string;
 };
 
-/** A whole cut, as `trim-static.mjs --ident` assembles it: the opening card, the take, then the end card, looped. */
-const IdentStory = ({ opening = 'dxos', size = '16:10', logoColor, ...props }: IdentStoryProps) => {
-  const [phase, setPhase] = useState<'open' | 'take' | 'end'>('open');
+/** A whole cut, as `trim-static.mjs --ident` assembles it: the open card, the take, then the close card, looped. */
+const IdentStory = ({ openCard = 'dxos', size = '16:10', logoColor, ...props }: IdentStoryProps) => {
+  const [phase, setPhase] = useState<'open' | 'take' | 'close'>('open');
   // The cards are drawn in the page's theme, as `trim-static.mjs --theme` renders them for a recording.
   const { themeMode } = useThemeContext();
   useEffect(() => loadBrandFont(), []);
   const card = { ...SIZES[size], inputProps: {}, theme: themeMode, logoColor: logoColor || undefined };
-  const { component, seconds } = OPENINGS[opening];
+  const { component, seconds } = OPENS[openCard];
   switch (phase) {
     case 'open':
       return (
         <IdentPlayer key='open' {...card} component={component} seconds={seconds} onEnded={() => setPhase('take')} />
       );
     case 'take':
-      return <TakeStory {...props} size={size} onDone={() => setPhase('end')} />;
-    case 'end':
+      return <TakeStory {...props} size={size} onDone={() => setPhase('close')} />;
+    case 'close':
       return (
         <IdentPlayer
-          key='end'
+          key='close'
           {...card}
           component={EndOnly}
           seconds={TIMING.spot10.endCard}
@@ -201,9 +201,9 @@ const IdentStory = ({ opening = 'dxos', size = '16:10', logoColor, ...props }: I
  * 2. The panel at the bottom left: pause stops the script; next steps it by hand.
  * 3. Default: the app alone, no panels. Header: a translucent title band over the top. Footer: a translucent caption band over
  *    the bottom, fading between steps.
- * 4. Intro captions: the title alone in the centre for 3s, then floating captions, fading between steps.
- * 5. Ident: the DXOS opening card, the intro-captions take, then the end card, all at the same 16:10 size, looped; in the light
- *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the outro's rule.
+ * 4. Open captions: the title alone in the centre for 3s, then floating captions, fading between steps.
+ * 5. Ident: the DXOS open card, the open-captions take, then the close card, all at the same 16:10 size, looped; in the light
+ *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the close card's rule.
  * 6. Footer: the band stays up between steps; only its text fades.
  */
 const meta: Meta<typeof TakeStory> = {
@@ -239,16 +239,16 @@ export const Footer: Story = {
 };
 
 /** The title opens alone in the centre, then the step captions float over the bottom. */
-export const IntroCaptions: Story = {
-  args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 4_000 },
+export const OpenCaptions: Story = {
+  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 4_000 },
 };
 
-/** The intro-and-captions take, between the DXOS opening card and the end card. */
+/** The open-and-captions take, between the DXOS open and close cards. */
 export const Ident: StoryObj<typeof IdentStory> = {
   render: (args) => <IdentStory {...args} />,
-  args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
+  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 3_000, openCard: 'dxos' },
   argTypes: {
-    opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
+    openCard: { control: 'inline-radio', options: Object.keys(OPENS) },
     logoColor: { control: 'select', options: ['', ...TAILWIND_HUES] },
   },
 };

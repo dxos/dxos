@@ -295,7 +295,7 @@ const speedChanges = [];
 
 /**
  * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
- * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `intro` (ms to
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `open` (ms to
  * hold the title as a centred panel before it moves to the header).
  */
 const updateFrame = async (update) => {
@@ -320,8 +320,8 @@ const updateFrame = async (update) => {
       if ('caption' in update) {
         frame.setCaption(update.caption ?? undefined);
       }
-      if (update.intro) {
-        void frame.playIntro(update.intro);
+      if (update.open) {
+        void frame.playOpen(update.open);
       }
     },
     { id: CAPTION_ID, update },
@@ -638,12 +638,12 @@ const runFlow = async (command) => {
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
       }
-      // `title` opens the take with the Frame's intro: the title alone, centred, held until it hands off. It is a
+      // `title` opens the take with the Frame's open: the title alone, centred, held until it hands off. It is a
       // chapter too, so the trimmer gives its still frames the caption hold rather than cutting them.
       if (opening && command.title) {
-        const intro = command.title.intro ?? 3_000;
+        const open = command.title.open ?? 3_000;
         timeline.push({ ms: Date.now() - started, text: command.title.value, narration: command.title.value });
-        await interruptible(handlers.title({ ...command.title, intro, hold: intro + 600 }));
+        await interruptible(handlers.title({ ...command.title, open, hold: open + 600 }));
       }
       // `captions: true` captions every on-camera step with its `caption` (or name), as a `.mdl` run would.
       if (!step.setup && command.captions) {
@@ -920,17 +920,17 @@ const handlers = {
     return {};
   },
   /**
-   * The take's title (`band: true` also keeps it as a band over the top after the intro): `value` / `subtitle`, and `intro`
+   * The take's title (`band: true` also keeps it as a band over the top after the open title): `value` / `subtitle`, and `open`
    * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
-   * out the intro before returning. An empty `value` clears it.
+   * out the open title before returning. An empty `value` clears it.
    */
   title: async (command) => {
-    const intro = command.intro ?? 3_000;
+    const open = command.open ?? 3_000;
     if (options.captions !== 'off') {
       await updateFrame({
         header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
         headerBand: command.band ?? false,
-        intro: command.value ? intro : 0,
+        open: command.value ? open : 0,
       });
     }
     if (command.hold) {

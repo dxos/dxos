@@ -190,6 +190,9 @@ const ComposerIntroCard = () => {
     clamp,
   );
 
+  // On the light ground the wordmark takes the second ring from the outside (rings are innermost first), so the
+  // lockup reads as one mark; a chosen logo colour still wins.
+  const wordmark = colors.theme === 'light' && !colors.tinted ? RINGS[RINGS.length - 2].fill : colors.logo;
   const viewWidth = metrics ? WORDMARK_X + metrics.width : 256;
   const lockup = { viewWidth, markSize: Math.round(Math.min(width * 0.8 * (256 / viewWidth), height * 0.3)) };
 
@@ -203,7 +206,7 @@ const ComposerIntroCard = () => {
           <text
             x={WORDMARK_X}
             y={metrics.baseline}
-            fill={colors.logo}
+            fill={wordmark}
             fontFamily={`"${WORDMARK_FAMILY}", sans-serif`}
             fontSize={WORDMARK_SIZE}
             opacity={wordmarkOpacity}
