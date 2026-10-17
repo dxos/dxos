@@ -13,6 +13,9 @@ const METRICS = {
 };
 const PROTOCOL = '1.3';
 
+const MARK = "document.documentElement.setAttribute('data-window-pinned', '')";
+const UNMARK = "document.documentElement.removeAttribute('data-window-pinned')";
+
 /** Tabs this extension has pinned; the override lives as long as the debugger stays attached to the tab. */
 const pinned = new Set();
 
@@ -28,6 +31,7 @@ const show = (tabId, on) => {
 chrome.action.onClicked.addListener(async (tab) => {
   const target = { tabId: tab.id };
   if (pinned.has(tab.id)) {
+    await chrome.debugger.sendCommand(target, 'Runtime.evaluate', { expression: UNMARK }).catch(() => {});
     await chrome.debugger.detach(target).catch(() => {});
     pinned.delete(tab.id);
     show(tab.id, false);
@@ -36,6 +40,9 @@ chrome.action.onClicked.addListener(async (tab) => {
   try {
     await chrome.debugger.attach(target, PROTOCOL);
     await chrome.debugger.sendCommand(target, 'Emulation.setDeviceMetricsOverride', METRICS);
+    // Tells the page it is pinned (Composer then keeps its edge rails square), now and on every reload while pinned.
+    await chrome.debugger.sendCommand(target, 'Page.addScriptToEvaluateOnNewDocument', { source: MARK });
+    await chrome.debugger.sendCommand(target, 'Runtime.evaluate', { expression: MARK });
     pinned.add(tab.id);
     show(tab.id, true);
   } catch (error) {

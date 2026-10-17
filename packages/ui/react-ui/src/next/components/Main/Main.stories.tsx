@@ -199,11 +199,16 @@ export const FocusAreas: Story = {
     }
     await expect(reached.size).toBe(areas.length);
 
-    // On a focused area, ArrowRight and ArrowLeft move between areas as Tab and Shift+Tab do.
+    // On a focused area, ArrowRight and ArrowLeft move between areas as Tab and Shift+Tab do, but stop at the ends.
     areas[0].focus();
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(areas[1]).toHaveFocus());
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => expect(areas[0]).toHaveFocus());
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(areas[0]).toHaveFocus());
+    areas[areas.length - 1].focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(areas[areas.length - 1]).toHaveFocus());
   },
 };
