@@ -1,8 +1,9 @@
 /-
   Deterministic simulation: the abilities a program uses, implemented in memory.
 
-  Tests run under `Sim.run` by default: `IO` reads and writes an in-memory file system, time is
-  a counter, output is captured, and `Random` is seeded. The same seed gives the same run, so a
+  Tests run under `Sim.run` by default: `IO` reads and writes an in-memory file system, the file tools the CLI
+  runs (`cp`, `mv`, `rm`, `install`, `gzip`) act on it, time is a counter, output is captured, and `Random` is
+  seeded. The same seed gives the same run, so a
   result can be cached by the hash of what ran. A test marked `@[integration]` runs against the
   real host instead (`deus test --integration`), and its result is never cached.
 -/
@@ -52,6 +53,66 @@ def children (w : World) (dir : Text) : List Text :=
     else none
   List.dedup (List.sort (List.filterMap direct (Map.keys (Ref.get w.files) ++ Map.keys (Ref.get w.dirs))))
 
+/-- What `gzip` writes in a simulated run: the text behind a marker, so `gzip -d` gives it back and nothing else can. -/
+def gzipped : Text := "\u{1f}\u{8b}sim\n"
+
+/-- Removes `path` and everything under it. -/
+def removeAll (w : World) (path : Text) : Unit :=
+  Ref.set w.files (Map.filter (fun key _ => key != path && not (Text.startsWith (path ++ "/") key)) (Ref.get w.files))
+  Ref.set w.dirs (Map.filter (fun key _ => key != path && not (Text.startsWith (path ++ "/") key)) (Ref.get w.dirs))
+
+/-- The file tools the CLI runs, on the simulated file system (D283): `cp`, `mv`, `rm`, `install -m <mode> /dev/null`
+  and `gzip` (`-n -9 -f` to compress beside, `-dcf` to print); any other program cannot start (127), as a missing one. -/
+def tool (w : World) (program : Text) (arguments : List Text) : (Int, Text, Text) :=
+  let files := fun u => Ref.get w.files
+  let missing := fun path => (1, "", program ++ ": " ++ path ++ ": No such file or directory")
+  let write := fun path text =>
+    mkdirs w (parent path)
+    Ref.set w.files (Map.insert path text (files ()))
+  let paths := List.filter (fun a => not (Text.startsWith "-" a)) arguments
+  if program == "cp" then
+    match paths with
+    | [from, to] =>
+        match Map.lookup from (files ()) with
+        | Option.some text =>
+            write to text
+            (0, "", "")
+        | Option.none => missing from
+    | _ => (64, "", "cp: expected two paths")
+  else if program == "mv" then
+    match paths with
+    | [from, to] =>
+        match Map.lookup from (files ()) with
+        | Option.some text =>
+            removeAll w from
+            write to text
+            (0, "", "")
+        | Option.none => missing from
+    | _ => (64, "", "mv: expected two paths")
+  else if program == "rm" then
+    forEach paths (fun path => removeAll w path)
+    (0, "", "")
+  else if program == "install" then
+    match List.reverse paths with
+    | to :: _ =>
+        write to ""
+        (0, "", "")
+    | [] => (64, "", "install: expected a path")
+  else if program == "gzip" then
+    match paths with
+    | [path] =>
+        match Map.lookup path (files ()) with
+        | Option.some text =>
+            if List.contains "-dcf" arguments then
+              (0, if Text.startsWith gzipped text then Text.drop (Text.length gzipped) text else text, "")
+            else
+              removeAll w path
+              write (path ++ ".gz") (gzipped ++ text)
+              (0, "", "")
+        | Option.none => missing path
+    | _ => (64, "", "gzip: expected one path")
+  else (127, "", program ++ ": processes are not simulated")
+
 /-- Runs `body` against a simulated world; returns its result and everything it printed. -/
 def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
   let w := newWorld seed
@@ -74,8 +135,7 @@ def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
       mkdirs w p
       k ()
     | IO.remove p -> k =>
-      Ref.set w.files (Map.filter (fun key _ => key != p && not (Text.startsWith (p ++ "/") key)) (Ref.get w.files))
-      Ref.set w.dirs (Map.filter (fun key _ => key != p && not (Text.startsWith (p ++ "/") key)) (Ref.get w.dirs))
+      removeAll w p
       k ()
     | IO.args _ -> k => k []
     | IO.exit code -> _ => defect ("exit " ++ Int.toText code ++ " inside a simulated run")
@@ -95,7 +155,7 @@ def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
     | IO.wallClock _ -> k =>
       Ref.set w.clock (Ref.get w.clock + 1)
       k (Int.toText (Ref.get w.clock))
-    | IO.exec program _ -> k => k (127, "", program ++ ": processes are not simulated")
+    | IO.exec program arguments -> k => k (tool w program arguments)
     | IO.appendFile p t -> k =>
       mkdirs w (parent p)
       Ref.set w.files (Map.insert p (Option.getOr (Map.lookup p (Ref.get w.files)) "" ++ t) (Ref.get w.files))

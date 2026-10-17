@@ -55,11 +55,11 @@ test observeNestsSpans :=
   | (_, events) => events == [Event.log "info" "hi" [] 2 "3", Event.span 2 1 "inner" [("k", "v")] "2" "4", Event.span 1 0 "outer" [] "1" "5"]
 
 test simulatedAppend :=
-  match Sim.run 1 (fun _ =>
+  let (result, _) := Sim.run 1 (fun _ =>
     IO.appendFile "log/a.txt" "x"
     IO.appendFile "log/a.txt" "y"
-    IO.readFile "log/a.txt") with
-  | (result, _) => result == some "xy"
+    IO.readFile "log/a.txt")
+  result == Option.some "xy"
 
 test failureContextChains :=
   let load := fun (u : Unit) => Failure.context "loading config" [("path", "a.toml")] (fun _ =>
@@ -173,19 +173,17 @@ test mdlValidatesDeclarations :=
   Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
 
 test simulatedFileSystem :=
-  match Sim.run 7 (fun _ =>
+  let (result, out) := Sim.run 7 (fun _ =>
     IO.writeFile "a/b.txt" "hello"
     let back := IO.readFile "a/b.txt"
     let listed := IO.listDir "a"
     IO.print "done"
-    (back, listed, IO.isDir "a")) with
-  | (result, out) => result == (some "hello", ["b.txt"], true) && out == "done"
+    (back, listed, IO.isDir "a"))
+  result == (Option.some "hello", ["b.txt"], true) && out == "done"
 
 test seededRandomRepeats :=
-  let draw := fun (u : Unit) => List.map (fun _ => Random.nextInt 1000) (List.range 0 5)
+  let draw := fun u => List.map (fun _ => Random.nextInt 1000) (range 0 5)
   fst (Sim.run 42 draw) == fst (Sim.run 42 draw) && fst (Sim.run 42 draw) != fst (Sim.run 43 draw)
-
-@[integration]
 test realFileSystem :=
   IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
   IO.readFile "/tmp/deus-integration-probe.txt" == some "ok"

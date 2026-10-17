@@ -1408,13 +1408,15 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   | Option.some h => requireEpoch dir h "push to"
   | Option.none => ()
   -- A mounted library's documents are checked where they are written, against that project's tasks.
-  let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then List.filter (fun d => not (startsWith "lib." d)) (touchedSpecs dir name branch) else []
+  let checked := if branch == currentBranch dir && not (Cli.flag args "no-check") then List.filter (fun d => not (startsWith "lib." d)) (touchedSpecs dir name branch)
+    else []
   let failed := if List.isEmpty checked then [] else
     let ns := Codebase.current dir
     List.filter
       (fun o => o.verdict == "fail")
       (checkSpecs dir ns (mdlFacts ns) (extensions dir ns) checked)
-  if List.isEmpty failed then () else Throw.throw ("these spec blocks fail `deus mdl` and the push touches their documents: " ++
+  if List.isEmpty failed then ()
+    else Throw.throw ("these spec blocks fail `deus mdl` and the push touches their documents: " ++
     join ", " (List.map (fun o => o.place) failed) ++ "; fix them, or push with --no-check")
   let pushed := pushing 3
   -- The remote now holds this head, so the next push checks only what changes after it.
@@ -1424,12 +1426,15 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let siteOf := fun target =>
     let out := dir ++ "/cache/site-" ++ target
     -- A site published with its console keeps it, on the codebase as pushed (D84).
-    if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir target)) "") then console dir out else 0
+    if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir target)) "") then console dir out
+      else 0
     Explorer.generate dir out
     snd (publishSite dir target out false)
   let onMain := branch == currentBranch dir && branch == "main"
-  let targets := if (IO.exists (siteManifest dir name) || onMain && isToolchainRemote dir name) && not (drawsLive dir name) then [name] else []
-  let site := if branch == currentBranch dir && not (List.isEmpty targets) then Option.some (sum (List.map siteOf targets)) else Option.none
+  let targets := if (IO.exists (siteManifest dir name) || onMain && isToolchainRemote dir name) && not (drawsLive dir name) then [name]
+    else []
+  let site := if branch == currentBranch dir && not (List.isEmpty targets) then Option.some (sum (List.map siteOf targets))
+    else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
   let siteText := getOr
     (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site)
@@ -1719,7 +1724,11 @@ def evaluate (dir : Text) (passed : List Text) (source : Text) : {IO, Throw Text
     0
 
 /-- Runs `body` with `Workspace` handled against `dir`; `passed` goes to every command it runs. -/
-def withWorkspace (dir : Text) (passed : List Text) (body : Unit -> {Workspace, IO, Throw Text} a) : {IO, Throw Text} a :=
+def withWorkspace
+    (dir : Text)
+    (passed : List Text)
+    (body : Unit -> {Workspace, IO, Throw Text} a)
+    : {IO, Throw Text} a :=
   handle body () with
   | Workspace.names prefix -> k => k (List.filter (fun name => startsWith prefix name) (Map.keys (Codebase.current dir)))
   | Workspace.view name -> k =>
@@ -1749,7 +1758,12 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
 
 /-- What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
   source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
-def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+def describeName
+    (dir : Text)
+    (ns : Map Text Entry)
+    (facts : MdlFacts)
+    (name : Text)
+    : {IO, Throw Text} List (Text, Text) :=
   let printer := MdlFacts.printer facts
   match lookupMounted ns name with
   | Option.none => Throw.throw (name ++ " is not in the codebase")
@@ -1790,10 +1804,9 @@ def describeName (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (name : T
               (if stop < 0 then decl else Text.take stop decl)))]
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => if isStub core then [("implemented", "false")] else []
         | _ => []
-      [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (withLocals printer []) dir ns name e "deus"))] ++
-        typed ++
-        statement ++
-        verdict
+      [("kind", Entry.kind e),
+        ("hash", h),
+        ("view", snd (viewParts (withLocals printer []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
 
 /--
   What every block of a `deus mdl` run reads from the namespace, built once: each lookup walked the
@@ -1815,7 +1828,12 @@ def mdlFacts (ns : Map Text Entry) : MdlFacts :=
 
 /-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
   `facts` are `ns`'s, built once per run: its name tables cost more than describing a name. -/
-def withHost (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+def withHost
+    (dir : Text)
+    (ns : Map Text Entry)
+    (facts : MdlFacts)
+    (body : Unit -> {MdlHost, IO} a)
+    : {IO} a :=
   let tasks := Ref.new Option.none
   let compiled := fun source => try (fun _ => compileExpr dir ns source)
   handle body () with
@@ -1882,7 +1900,15 @@ structure Outcome where
   problems : List Text
 
 /-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
-def checkBlock (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+def checkBlock
+    (dir : Text)
+    (ns : Map Text Entry)
+    (facts : MdlFacts)
+    (byUri : Map Text Text)
+    (place : Text)
+    (uri : Option Text)
+    (b : Block)
+    : {IO, Throw Text} Outcome :=
   match Option.bind uri (fun u => Map.lookup u byUri) with
   | Option.none => Outcome.mk place "unchecked" []
   | Option.some h =>
@@ -1899,7 +1925,13 @@ def checkBlock (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Ma
       | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
-def checkDoc (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+def checkDoc
+    (dir : Text)
+    (ns : Map Text Entry)
+    (facts : MdlFacts)
+    (byUri : Map Text Text)
+    (path : Text)
+    : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := validate doc
   let declared := Mdl.declared doc
@@ -1914,9 +1946,16 @@ def checkDoc (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map 
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
 /-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
-def checkSpecs (dir : Text) (ns : Map Text Entry) (facts : MdlFacts) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+def checkSpecs
+    (dir : Text)
+    (ns : Map Text Entry)
+    (facts : MdlFacts)
+    (byUri : Map Text Text)
+    (documents : List Text)
+    : {IO, Throw Text} List Outcome :=
   -- A mounted library's documents are checked in its own project, against its own tasks; naming one still checks it.
-  let wanted := if List.isEmpty documents then List.filter (fun d => not (startsWith "lib." d)) facts.documents else documents
+  let wanted := if List.isEmpty documents then List.filter (fun d => not (startsWith "lib." d)) facts.documents
+    else documents
   let orderOf := fun h =>
     match metaField (readMeta dir h) "order" with
     | Option.some (Sexp.int k) => k
@@ -2071,12 +2110,13 @@ def checkMdl (args : Args) : {IO, Throw Text} Unit :=
   let documents := List.filter (fun a => List.contains a facts.documents && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths files)
-  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns facts byUri documents else []
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns facts byUri documents
+    else []
   let outcomes := fromCodebase ++ concatMap (fun path => checkDoc dir ns facts byUri path) paths
   let count := fun v => List.length (List.filter (fun o => o.verdict == v) outcomes)
-  Cli.output args (fun _ => Json.arr (List.map
-    (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))])
-    outcomes)) (fun _ => join "\n" (List.map (fun o => padRight 10 o.verdict ++ o.place ++
+  Cli.output args (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place),
+    ("status", Json.str o.verdict),
+    ("problems", Json.arr (List.map Json.str o.problems))]) outcomes)) (fun _ => join "\n" (List.map (fun o => padRight 10 o.verdict ++ o.place ++
     Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++ [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++
     Int.toText (count "unchecked") ++ " unchecked" ++ (if count "gap" > 0 then ", " ++ Int.toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
@@ -2897,17 +2937,44 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | command :: rest =>
       let args := parseArgs rest
       -- `--help` shows the command's usage and runs nothing (a `push --help` must not push); `run` passes its own on.
-      if command != "run" && Cli.flag args "help" then IO.print (Cli.commandHelp command ++ "\n")
-      else if command == "help" && not (List.isEmpty rest) then IO.print (Cli.commandHelp (getOr (head? rest) "") ++ "\n")
-      else if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then Cli.branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args else if command == "remote" then remote args else if command == "link" then explorerLinks args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args else if command == "heads" then heads args else if command == "run" then
+      if command != "run" && Cli.flag args "help" then IO.print (commandHelp command ++ "\n")
+        else if command == "help" && not (List.isEmpty rest) then IO.print (commandHelp (getOr (head? rest) "") ++ "\n")
+        else if command == "compile" then Cli.compile args
+        else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false
+        else if command == "update" then addOrUpdate args true else if command == "ls" then ls args
+        else if command == "find" then Cli.find args else if command == "view" then Cli.view args
+        else if command == "names" then Cli.names args else if command == "deps" then deps args false
+        else if command == "dependents" then deps args true else if command == "mv" then mv args false
+        else if command == "alias" then mv args true else if command == "rm" then rm args
+        else if command == "branch" then Cli.branch args else if command == "switch" then switch args
+        else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args
+        else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args
+        else if command == "project" then Cli.project args else if command == "lib" then Cli.lib args
+        else if command == "remote" then remote args else if command == "link" then explorerLinks args
+        else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args
+        else if command == "compact" then Cli.compact args else if command == "undo" then undo args
+        else if command == "audit" then Cli.audit args else if command == "restore" then Cli.restore args
+        else if command == "heads" then heads args else if command == "run" then
         let (options, program) := leadingOptions rest
         Cli.run (parseArgs options) program
-      else if command == "eval" then eval args else if command == "artifact" then artifact args else if command == "embed" then embed args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "key" then keyCommand args else if command == "help" then IO.print Cli.usage else die (Cli.unknownCommand command)
+      else if command == "eval" then eval args else if command == "artifact" then artifact args
+        else if command == "embed" then embed args else if command == "mdl" then mdl args
+        else if command == "features" then features args else if command == "test" then tests args
+        else if command == "check" then theorems args else if command == "image" then Cli.image args
+        else if command == "build" then Cli.build args else if command == "bindings" then bindings args
+        else if command == "serve" then Cli.serve args else if command == "explore" then explore args
+        else if command == "task" then Cli.task args else if command == "comment" then Cli.comment args
+        else if command == "comments" then Cli.comments args
+        else if command == "asset" then asset args else if command == "inbox" then inbox args
+        else if command == "export" then export args else if command == "history" then Cli.history args
+        else if command == "event" then Analytics.command args
+        else if command == "key" then keyCommand args
+        else if command == "help" then IO.print Cli.usage else die (unknownCommand command)
 
 def main (u : Unit) : {IO} Unit :=
   match try (fun _ => dispatch (IO.args ())) with
   | Result.ok _ => ()
-  | Result.err message => die (message ++ Cli.notationHint (IO.args ()) message)
+  | Result.err message => die (message ++ notationHint (IO.args ()) message)
 
 /-- For "unknown name times!", most often a notation used outside its namespace or with a hole it does not match: the
   notation's pattern and the namespace it is in scope in; else "". -/

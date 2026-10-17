@@ -42,21 +42,31 @@ def executableInputs (home : Text) (node : Text) : {IO, Throw Failure} Text :=
 
 /--
   Writes `out`, an executable that runs the image's main with its command-line arguments. The
-  result is kept in the artifacts layer under the hash of its inputs, so rebuilding unchanged code
-  is a copy.
+  result is kept in the artifacts layer and the machine's build cache under the hash of its inputs, so rebuilding
+  unchanged code is a copy.
 -/
 def executable (image : Text) (out : Text) (artifacts : Text) : {IO, Throw Failure} Unit :=
   let home := require "DEUS_HOME"
   let node := require "DEUS_NODE"
   let key := Text.sha256 (image ++ "\n" ++ executableInputs home node)
   let cached := artifacts ++ "/" ++ key
+  -- Beside the codebase's own copy, the machine's build cache (D282) serves any codebase built from the same inputs.
+  let shared := ccCacheDir () ++ "/executable-" ++ key
   if IO.exists cached then
     let _ := tool "cp" [cached, out]
+    ()
+  else if IO.exists shared then
+    let _ := tool "cp" [shared, out]
+    IO.mkdirp artifacts
+    let _ := tool "cp" [out, cached]
     ()
   else
     buildExecutable image out home node
     IO.mkdirp artifacts
     let _ := tool "cp" [out, cached]
+    IO.mkdirp (ccCacheDir ())
+    let _ := tool "cp" [out, shared ++ ".tmp"]
+    let _ := tool "mv" [shared ++ ".tmp", shared]
     ()
 
 def buildExecutable (image : Text) (out : Text) (home : Text) (node : Text) : {IO, Throw Failure} Unit :=
@@ -99,7 +109,8 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended im
   Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
   `out.c`, compiled with `$CC` (default `cc`) at `$DEUS_CC_OPT` (default `-O2`) to an executable that prints its
   result. For `out` ending in `.wasm`, `$WASM_CC` (default `clang`) compiles it to a wasm32 module instead. `-O0`
-  compiles the whole CLI in 18 s rather than 100 s, for a test that only needs it to run.
+  compiles the whole CLI in 18 s rather than 100 s, for a test that only needs it to run. A program already compiled
+  from the same C, compiler and flags is copied from the cache instead (`ccCacheDir`, D282).
 -/
 def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
   if Text.endsWith ".c" out then IO.writeFile out source
@@ -109,9 +120,34 @@ def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
       match IO.getEnv "DEUS_CC_OPT" with
       | Option.some given => if Text.isEmpty given then "-O2" else given
       | Option.none => "-O2"
-    let _ := if Text.endsWith ".wasm" out then tool (Option.getOr (IO.getEnv "WASM_CC") "clang") ["--target=wasm32", level, "-mtail-call", "-nostdlib", "-Wl,--no-entry", "-o", out, out ++ ".c"]
-      else tool (Option.getOr (IO.getEnv "CC") "cc") [level, "-DDEUS_MAIN", "-o", out, out ++ ".c"]
-    ()
+    let (program, flags) := if Text.endsWith ".wasm" out then (Option.getOr (IO.getEnv "WASM_CC") "clang", ["--target=wasm32", level, "-mtail-call", "-nostdlib", "-Wl,--no-entry"])
+      else (Option.getOr (IO.getEnv "CC") "cc", [level, "-DDEUS_MAIN"])
+    -- The same C, compiler (and its version) and flags give the same program, so a build of unchanged code copies the one made before.
+    let version :=
+      match IO.exec program ["--version"] with
+      | (0, text, _) => text
+      | _ => ""
+    let cached := ccCacheDir () ++ "/" ++ Text.sha256 (Text.join "\n" (program :: version :: flags) ++ "\n" ++ source)
+    if IO.exists cached then
+      let _ := tool "cp" [cached, out]
+      ()
+    else
+      let _ := tool program (flags ++ ["-o", out, out ++ ".c"])
+      IO.mkdirp (ccCacheDir ())
+      -- Copied under a temporary name and renamed, so a concurrent build never copies half a program.
+      let _ := tool "cp" [out, cached ++ ".tmp"]
+      let _ := tool "mv" [cached ++ ".tmp", cached]
+      ()
+
+/-- Where built programs (compiled C, standalone executables) are kept by the hash of what made them: `$DEUS_CC_CACHE`,
+  else `$XDG_CACHE_HOME/deus/cc` or `~/.cache/deus/cc`. -/
+def ccCacheDir (u : Unit) : {IO} Text :=
+  match IO.getEnv "DEUS_CC_CACHE" with
+  | Option.some dir => dir
+  | Option.none =>
+      match IO.getEnv "XDG_CACHE_HOME" with
+      | Option.some dir => dir ++ "/deus/cc"
+      | Option.none => Option.getOr (IO.getEnv "HOME") "/tmp" ++ "/.cache/deus/cc"
 
 /--
   Writes `out`: a standalone web server for a handler (D57). It serves HTTP on `$PORT` (8080)

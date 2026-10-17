@@ -315,6 +315,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 305 | 10-18 20:45 | 30m 00s | 2e9562f30b | Embedded documents are named Docs.*Md so none shadows a definition; embed changes say what they embedded (D277) |
 | 306 | 10-18 21:00 | 15m 00s | 81473243be | sync-deus checks its embeds in one view: 7.9 s to 4.2 s when nothing changed (D278) |
 | 307 | 10-18 22:00 | 1h 00m | f4cb759055 | Every package file is in the codebase and `deus export --files` writes it back; `@[expectFail]` for tests and theorems meant to fail; focus moves to dev speed (D279, D280) |
-| 308 | 10-18 23:00 | 1h 00m | this commit | The test suite runs the native CLI: 178 s to 60 s; the native CLI is back a minute after a seed change; a native show bug found (D281) |
+| 308 | 10-18 23:00 | 1h 00m | 05c8799b1b | The test suite runs the native CLI: 178 s to 60 s; the native CLI is back a minute after a seed change; a native show bug found (D281) |
+| 309 | 10-19 00:00 | 1h 00m | this commit | Built programs are kept by hash; the simulator runs the CLI's file tools, so push, pull and merge are pure tests (D282, D283) |
 
-Total from stage 1 to stage 308: 122h 50m.
+Total from stage 1 to stage 309: 123h 50m.

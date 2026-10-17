@@ -376,14 +376,13 @@ def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
 
 /-- A test, by default in a deterministic simulation seeded from its hash; integration tests run for real. -/
 def checkTest (h : Text) (integration : Bool) : {IO} Verdict :=
-  let outcome := if integration then fst (Observe.collect (fun _ => guarded h))
-    else
-      match Sim.run (seedOf h) (fun _ => fst (Observe.collect (fun _ => guarded h))) with
-      | (r, _) => r
+  let outcome := if integration then fst (Observe.collect (fun _ => guarded h)) else
+    let (r, _) := Sim.run (seedOf h) (fun _ => fst (Observe.collect (fun _ => guarded h)))
+    r
   match outcome with
   | Result.ok true => Verdict.pass (if integration then "integration" else "test") 1
   | Result.ok _ => Verdict.fail "returned false"
-  | Result.err message => Verdict.fail (if Text.startsWith "threw " message then message else "defect: " ++ message)
+  | Result.err message => Verdict.fail (if startsWith "threw " message then message else "defect: " ++ message)
 
 /-- Whether a definition carries an attribute, e.g. `@[integration]`. -/
 def hasAttr (dir : Text) (h : Text) (name : Text) : {IO} Bool :=
@@ -452,20 +451,23 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let started := IO.time ()
     -- An integration test talks to the real world, so its result is never reused.
     let outcome :=
-      match if integration || fresh || expected then Option.none else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
+      match if integration || fresh || expected then Option.none
+        else if wantTheorems then cachedTheorem dir h else Check.cached dir h with
       | Option.some v => (name, v, true)
       | Option.none =>
           Image.load (fetcher dir) [h]
           let v := if wantTheorems then
             match readObject dir h with
-            | Option.some obj => if expected then expectedFailure true (checkTheorem dir ns h obj) else checkTheorem dir ns h obj
+            | Option.some obj => if expected then expectedFailure true (checkTheorem dir ns h obj)
+                else checkTheorem dir ns h obj
             | Option.none => Verdict.fail "missing object"
           else
             -- A failure is confirmed by a whole `deus test` on node, which applies `@[expectFail]` itself, so an
             -- expected failure is not sent there.
             if expected then expectedFailure false (checkTest h integration)
-            else confirmed dir name integration (checkTest h integration)
-          if integration then () else if wantTheorems then rememberTheorem dir h v else remember dir h v
+              else confirmed dir name integration (checkTest h integration)
+          if integration then ()
+            else if wantTheorems then rememberTheorem dir h v else remember dir h v
           (name, v, false)
     match outcome with
     | (_, v, wasCached) =>
@@ -498,14 +500,16 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     let (name, v, wasCached) := r
     let suffix := if wasCached then "  (cached)" else ""
     match v with
-    | Verdict.pass evidence cases => if wantTheorems then "  ✓ " ++ name ++ "  " ++
-        (if evidence == "refused" then "refused, as it must be" else if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix else "  ✓ " ++ name ++ (if evidence == "expected failure" then "  failed, as expected" else "") ++ suffix
+    | Verdict.pass evidence cases => if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "refused" then "refused, as it must be"
+        else if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases"
+        else if startsWith "proof" evidence then "proved (" ++ evidence ++ ")"
+        else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix else "  ✓ " ++ name ++ (if evidence == "expected failure" then "  failed, as expected" else "") ++
+        suffix
     | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ nameTrace index reason ++ suffix
     | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
   -- A prefix that names nothing is most often a typo, which a "0 passed" would let pass as success.
-  if List.isEmpty results && not (Text.isEmpty prefix) then
-    Throw.throw ("no " ++ (if wantTheorems then "theorems" else "tests") ++ " under " ++ prefix ++ "; `deus ls " ++ prefix ++ "` shows what is there")
-  else ()
+  if List.isEmpty results && not (Text.isEmpty prefix) then Throw.throw ("no " ++ (if wantTheorems then "theorems" else "tests") ++ " under " ++ prefix ++ "; `deus ls " ++
+    prefix ++ "` shows what is there") else ()
   Cli.output args (fun _ => Json.arr (List.map (fun r =>
     let (name, v, wasCached) := r
     let status :=
