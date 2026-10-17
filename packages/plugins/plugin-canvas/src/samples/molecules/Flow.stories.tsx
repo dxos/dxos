@@ -143,6 +143,23 @@ const EXTENDED: DataFlowSpec = {
   },
 };
 
+/**
+ * A universal inbox: mail, Discord and chat feed one ECHO space of three buckets, read by an inbox API and an agent.
+ * Molecules take their thread's colour rather than their source's, and each thread collects in a bucket of its own.
+ */
+const INBOX: DataFlowSpec = {
+  sources: [
+    { id: 'gmail', label: 'Gmail', hue: 'red' },
+    { id: 'discord', label: 'Discord', hue: 'violet' },
+    { id: 'chat', label: 'Chat', hue: 'teal' },
+  ],
+  hub: { label: '', partitions: 3 },
+  sinks: [{ label: 'Inbox API', app: 'list' }, { label: 'Agent' }],
+};
+
+/** One hue per thread, apart from the sources' own, so a thread reads the same whichever source it came from. */
+const THREADS = ['amber', 'sky', 'green'];
+
 /** Busier apps than the simulation's defaults: they write up about every second and a half, and half of what settles in
  * ECHO syncs down to them, rather than a third. */
 const APP_ACTIVITY: SimulationOptions = { upInterval: 1.5, subset: (body) => body.serial % 2 === 0 };
@@ -206,6 +223,15 @@ const CHAPTERS: readonly Scene[] = [
     grid: 'none',
     stage: 'echo',
     duration: 20,
+  },
+  {
+    title: 'Universal Inbox',
+    caption: 'Conversations from every channel, gathered by thread.',
+    spec: INBOX,
+    options: { ...APP_ACTIVITY, warmup: 16, prefill: true, threads: THREADS },
+    grid: 'none',
+    stage: 'inbox',
+    duration: 10,
   },
 ];
 
@@ -284,6 +310,9 @@ export const Chapter5Growth: Story = {
   ...chapter(4),
   render: (args) => <GrowsIn {...args} before={CHAPTERS[3].spec} />,
 };
+
+/** Gmail, Discord and chat feed ECHO; each thread's molecules, in its own colour, collect in one bucket. */
+export const Chapter6Inbox: Story = chapter(5);
 
 /**
  * Chapters 1 and 2 on one stage: the silos run, then the monolithic agent fades in over them and the camera widens.

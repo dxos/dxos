@@ -511,3 +511,27 @@ describe('simulation', () => {
     expect(simulation.time).toBeCloseTo(1 / 20);
   });
 });
+
+describe('threads', () => {
+  test('colours molecules by thread and collects each thread in its own bucket', ({ expect }) => {
+    const threads = ['amber', 'sky', 'green'];
+    const layout = layoutDataFlow({ ...SPEC, hub: { label: 'Hub', partitions: 3 } });
+    const buckets = layout.hub.buckets ?? [];
+    expect(buckets).toHaveLength(3);
+    const simulation = new DataFlowSimulation(layout, { seed: 5, threads });
+    run(simulation, 30);
+    const docked = simulation.bodies.filter((body) => body.zone === 'hub' && body.phase === 'docked');
+    expect(docked.length).toBeGreaterThan(10);
+    for (const body of docked) {
+      invariant(body.thread !== undefined);
+      expect(body.hue).toBe(threads[body.thread]);
+      // Molecules keep their thread's colour in the hub rather than fading to the hub's own.
+      expect(body.tint ?? 0).toBe(0);
+      const bucket = buckets[body.thread];
+      expect(body.position.x).toBeGreaterThanOrEqual(bucket.x);
+      expect(body.position.x).toBeLessThanOrEqual(bucket.x + bucket.width);
+    }
+    // Every thread is in play.
+    expect(new Set(docked.map((body) => body.thread)).size).toBe(3);
+  });
+});
