@@ -30,6 +30,8 @@ export type CanvasDrawingProps = {
   readonly?: boolean;
 };
 
+/** The tone the reference diagrams' boxes take: the style set's second (index 1). */
+const DIAGRAM_BOX_TONE = 1;
 /** Adds a canvas drawing built from scene commands to `db`. */
 export const addCanvasDrawing = (
   db: Database.Database,
@@ -66,6 +68,31 @@ export const loadDiagramDrawings = async (
     // routes links square along the gutters between the boxes.
     // Reference diagrams: they open read-only until a viewer chooses to edit.
     drawings.set(id, addCanvasDrawing(db, { name: set.names[id] ?? id, commands, lattice: true, readonly: true }));
+  }
+
+  // The reference diagrams draw their boxes in the style set's second tone, lighter than the default, so the coloured
+  // boxes and the group backdrops carry the emphasis; a box that sets a tone of its own keeps it.
+  for (const drawing of drawings.values()) {
+    const canvas = drawing.canvas.target;
+    if (!canvas) {
+      continue;
+    }
+    Obj.update(canvas, (canvas) => {
+      for (const [key, record] of Object.entries(canvas.content)) {
+        if (
+          !isNodeRecord(record) ||
+          record.node.type !== 'box' ||
+          record.node.style?.guide ||
+          record.node.style?.tone !== undefined
+        ) {
+          continue;
+        }
+        canvas.content[key] = {
+          ...record,
+          node: { ...record.node, style: { ...record.node.style, tone: DIAGRAM_BOX_TONE } },
+        };
+      }
+    });
   }
 
   for (const [id, drills] of Object.entries(set.drills)) {
