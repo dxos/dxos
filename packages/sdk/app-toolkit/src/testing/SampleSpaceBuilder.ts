@@ -44,11 +44,11 @@ export type SampleSpaceArchive<A> = {
  * Builds a sample space headlessly and exports it as a JSON archive: no live client, no network.
  * Drop the archive into Composer (`client.spaces.import(...)`) to get the content as real data.
  */
-export const buildArchive = <Phases extends SampleSpace.PhaseMap, A>(
-  definition: SampleSpace.Definition<Phases, A>,
+export const buildArchive = <Partials extends SampleSpace.PartialMap, A>(
+  definition: SampleSpace.Definition<Partials, A>,
   options: {
     readonly identity?: string;
-    /** Extra types to register beyond those the definition's phases declare. */
+    /** Extra types to register beyond those the definition's partials declare. */
     readonly schemas?: ReadonlyArray<Type.AnyEntity>;
   } = {},
 ): Effect.Effect<SampleSpaceArchive<A>, SampleSpace.SampleSpaceError> =>
@@ -77,7 +77,7 @@ export const buildArchive = <Phases extends SampleSpace.PhaseMap, A>(
  * Object count per typename, for asserting a rebuilt snapshot still carries what it used to.
  *
  * Counts the archive's feed messages alongside its database objects — an archive keeps them in
- * separate sections, and a phase that authors a mailbox or a calendar puts most of its content in
+ * separate sections, and a partial that authors a mailbox or a calendar puts most of its content in
  * the feeds one.
  */
 export const histogram = (json: string): Record<string, number> => {

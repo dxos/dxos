@@ -3,7 +3,7 @@
 The Composer and EDGE architectures as nested canvas drawings, with three reading guides that embed
 and link them.
 
-- Code: `partial.ts`, exported as `Architecture.Partial` from `@dxos/plugin-canvas/samples`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
+- Code: `partial.ts`, exported as `Architecture.Partial` from `@dxos/plugin-canvas/Architecture`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
   precompiled to `compiled.json`.
 - Requires: nothing
 - Provides: `drawings.<id>` for each diagram below, `docs.composer`, `docs.dxos`, `docs.edge`

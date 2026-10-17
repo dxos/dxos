@@ -17,8 +17,8 @@ describe('Fieldstone team', () => {
     const definition = SampleSpace.make({
       space: { name: 'Fieldstone team' },
       reference: REFERENCE,
-      phases: { team: Partial },
-      build: (phases) => phases.team(),
+      partials: { team: Partial },
+      build: (partials) => partials.team(),
     });
     const { result } = await EffectEx.runPromise(buildArchive(definition));
 

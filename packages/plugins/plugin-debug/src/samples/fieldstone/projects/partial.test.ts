@@ -52,8 +52,8 @@ describe('Fieldstone projects', () => {
     const definition = SampleSpace.make({
       space: { name: 'Fieldstone projects' },
       reference: REFERENCE,
-      phases: { team: Team.Partial, projects: Partial },
-      build: (phases) => Effect.flatMap(phases.team(), (team) => phases.projects({ team })),
+      partials: { team: Team.Partial, projects: Partial },
+      build: (partials) => Effect.flatMap(partials.team(), (team) => partials.projects({ team })),
     });
     const { result, json } = await EffectEx.runPromise(buildArchive(definition));
     const archive: Archive = JSON.parse(json);

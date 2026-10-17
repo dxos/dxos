@@ -43,11 +43,11 @@ describe('Fieldstone inbox and CRM', () => {
     const definition = SampleSpace.make({
       space: { name: 'Fieldstone inbox and CRM' },
       reference: REFERENCE,
-      phases: { team: Team.Partial, inboxCrm: Partial },
-      build: (phases) =>
+      partials: { team: Team.Partial, inboxCrm: Partial },
+      build: (partials) =>
         Effect.gen(function* () {
-          const team = yield* phases.team();
-          return yield* phases.inboxCrm({ team });
+          const team = yield* partials.team();
+          return yield* partials.inboxCrm({ team });
         }),
     });
     const { result, json } = await EffectEx.runPromise(buildArchive(definition));

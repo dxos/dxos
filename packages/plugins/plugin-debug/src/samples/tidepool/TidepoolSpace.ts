@@ -11,17 +11,17 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
 import { Docs } from './docs.ts';
-import { ProjectPhase } from './project.ts';
+import { ProjectPartial } from './project.ts';
 import { Tasks } from './tasks.ts';
 import { People, Team } from './team.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = {
+const partials = {
   team: Team,
   people: People,
   docs: Docs,
   tasks: Tasks,
-  project: ProjectPhase,
+  project: ProjectPartial,
 };
 
 /**
@@ -29,23 +29,23 @@ const phases = {
  * documents a project accumulates — a `.mdl` spec with rule and QA-flow blocks, an architecture note
  * carrying a mermaid diagram, and a decision log.
  *
- * The second `SpaceTemplate` definition, and the reason the phase machinery exists: nothing here is
- * shared with the Bramble space except the builder itself — the seeds, the phases and the world are
+ * The second `SpaceTemplate` definition, and the reason the partial machinery exists: nothing here is
+ * shared with the Bramble space except the builder itself — the seeds, the partials and the world are
  * this space's own.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'Tidepool — Offline sync v2', icon: 'flask', hue: 'cyan' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const organizations = yield* phases.team();
-        const people = yield* phases.people(organizations);
+        const organizations = yield* partials.team();
+        const people = yield* partials.people(organizations);
 
-        const docs = yield* phases.docs();
-        const tasks = yield* phases.tasks(people);
-        yield* phases.project({ docs, tasks });
+        const docs = yield* partials.docs();
+        const tasks = yield* partials.tasks(people);
+        yield* partials.project({ docs, tasks });
 
         // The root holds collections only. Project/Repo/TaskSet/Task are not collection-item types,
         // so they live directly in the space DB and surface through the project's own containers.

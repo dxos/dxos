@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Architecture } from '@dxos/plugin-canvas/samples';
+import * as Architecture from '@dxos/plugin-canvas/Architecture';
 
 import * as Docs from './docs/index.ts';
 import * as InboxCrm from './inbox-crm/index.ts';
@@ -16,7 +16,7 @@ import * as Projects from './projects/index.ts';
 import * as Team from './team/index.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = {
+const partials = {
   team: Team.Partial,
   inboxCrm: InboxCrm.Partial,
   projects: Projects.Partial,
@@ -33,18 +33,18 @@ export type Result = {
   readonly architecture: Architecture.Provides;
 };
 
-export const make = (): SampleSpace.Definition<typeof phases, Result> =>
+export const make = (): SampleSpace.Definition<typeof partials, Result> =>
   SampleSpace.make({
     space: { name: 'Fieldstone Labs', icon: 'users-three', hue: 'teal' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const team = yield* phases.team();
-        const inboxCrm = yield* phases.inboxCrm({ team });
-        const projects = yield* phases.projects({ team, inboxCrm });
-        const architecture = yield* phases.architecture();
-        const docs = yield* phases.docs({ team, inboxCrm, projects, architecture });
+        const team = yield* partials.team();
+        const inboxCrm = yield* partials.inboxCrm({ team });
+        const projects = yield* partials.projects({ team, inboxCrm });
+        const architecture = yield* partials.architecture();
+        const docs = yield* partials.docs({ team, inboxCrm, projects, architecture });
         return { team, inboxCrm, projects, docs, architecture };
       }),
   });

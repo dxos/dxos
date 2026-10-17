@@ -888,7 +888,7 @@ export const seedFor = (key: string): TaskSeed => {
 /** A status move a run made, timed on the reference clock. */
 export type RunMove = { readonly at: number; readonly from?: Task.Status; readonly to: Task.Status };
 
-/** What the history phase tells the tasks phase: each agent run's moves, and when Triage filed what. */
+/** What the history partial tells the tasks partial: each agent run's moves, and when Triage filed what. */
 export type TaskTimeline = {
   readonly moves: ReadonlyMap<string, ReadonlyArray<RunMove & { readonly agent: AgentKey }>>;
   readonly filed: ReadonlyMap<string, number>;

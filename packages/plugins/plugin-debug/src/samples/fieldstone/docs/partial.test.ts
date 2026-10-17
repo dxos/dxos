@@ -46,11 +46,11 @@ describe('Fieldstone docs', () => {
       const definition = SampleSpace.make({
         space: { name: 'Fieldstone docs' },
         reference: REFERENCE,
-        phases: { team: Team.Partial, docs: Partial },
-        build: (phases) =>
+        partials: { team: Team.Partial, docs: Partial },
+        build: (partials) =>
           Effect.gen(function* () {
-            const team = yield* phases.team();
-            const docs = yield* phases.docs({ team });
+            const team = yield* partials.team();
+            const docs = yield* partials.docs({ team });
             return { team, docs };
           }),
       });

@@ -73,6 +73,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Architecture": {
+      "source": "./src/samples/architecture/index.ts",
+      "types": "./dist/types/src/samples/architecture/index.d.ts",
+      "import": "./dist/lib/Architecture.mjs"
+    },
     "./Canvas": {
       "source": "./src/types/Canvas.ts",
       "types": "./dist/types/src/types/Canvas.d.ts",
@@ -87,11 +92,6 @@
       "source": "./src/CanvasPlugin.ts",
       "types": "./dist/types/src/CanvasPlugin.d.ts",
       "import": "./dist/lib/CanvasPlugin.mjs"
-    },
-    "./samples": {
-      "source": "./src/samples/index.ts",
-      "types": "./dist/types/src/samples/index.d.ts",
-      "import": "./dist/lib/samples.mjs"
     },
     "./Settings": {
       "source": "./src/types/Settings.ts",

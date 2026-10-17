@@ -36,7 +36,7 @@ export type Provides = {
  * Bramble world-fact; update it when the world changes.
  */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('bramble', {
-  phases: {
+  partials: {
     docs: Docs,
     organizations: Organizations,
     people: People,
@@ -50,27 +50,27 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('bramb
     roastLogs: RoastLogs,
     projects: Projects,
   },
-  run: (_: void, phases) =>
+  run: (_: void, partials) =>
     Effect.gen(function* () {
-      const docs = yield* phases.docs({ tourMd: TOUR_MD, aboutMd: ABOUT_MD });
+      const docs = yield* partials.docs({ tourMd: TOUR_MD, aboutMd: ABOUT_MD });
       // The root only ever holds collections, so every collection-item object belongs to a themed
       // collection or a project rather than sitting loose on the root.
       yield* SampleSpace.collection('Welcome', [Ref.make(docs.tour), Ref.make(docs.about)]);
 
       // Contacts — organizations, people and the views over them live directly in the space DB.
       // They are not collection-item types; the database viewer surfaces them.
-      const organizations = yield* phases.organizations();
-      const people = yield* phases.people(organizations);
-      yield* phases.contactsViews();
+      const organizations = yield* partials.organizations();
+      const people = yield* partials.people(organizations);
+      yield* partials.contactsViews();
 
-      const { mailbox } = yield* phases.inbox(people);
-      yield* phases.schedule({ people, organizations });
-      const taskSets = yield* phases.taskSets(people);
+      const { mailbox } = yield* partials.inbox(people);
+      yield* partials.schedule({ people, organizations });
+      const taskSets = yield* partials.taskSets(people);
 
-      const notes = yield* phases.notes({ people, organizations, taskSet: taskSets.springBlend.taskSet });
-      const drawings = yield* phases.drawings();
-      const sheets = yield* phases.sheets();
-      yield* phases.roastLogs(people);
+      const notes = yield* partials.notes({ people, organizations, taskSet: taskSets.springBlend.taskSet });
+      const drawings = yield* partials.drawings();
+      const sheets = yield* partials.sheets();
+      yield* partials.roastLogs(people);
 
       // A collection and a project can both hold an object; the first to reference it owns it, and
       // deleting the owner deletes the object. Reference is filled before the projects so it owns
@@ -83,7 +83,14 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('bramb
         Ref.make(sheets.priceList),
         Ref.make(sheets.salesReport),
       ]);
-      const projects = yield* phases.projects({ taskSets, notes, drawings, about: docs.about, mailbox, organizations });
+      const projects = yield* partials.projects({
+        taskSets,
+        notes,
+        drawings,
+        about: docs.about,
+        mailbox,
+        organizations,
+      });
       yield* SampleSpace.collection('Roastery Handbook', [
         Ref.make(drawings.floorPlan),
         Ref.make(notes.tastingProtocol),

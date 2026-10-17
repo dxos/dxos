@@ -11,14 +11,14 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { Partial } from './partial.ts';
 
-const phases = { architecture: Partial };
+const partials = { architecture: Partial };
 
 /** Composer and EDGE as nested canvas drawings: each overview's boxes open the diagrams beneath them. */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'DXOS Architecture', icon: 'graph', hue: 'indigo' },
-    phases,
-    build: (phases) => Effect.asVoid(phases.architecture()),
+    partials,
+    build: (partials) => Effect.asVoid(partials.architecture()),
   });
 
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>

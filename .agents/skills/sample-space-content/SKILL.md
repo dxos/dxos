@@ -19,8 +19,8 @@ Bramble (`plugin-onboarding/src/samples/bramble/`) and Architecture
 (`plugin-canvas/src/samples/architecture/`) are each one partial with a template that applies only
 it. The Fieldstone template (`plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`) applies the
 four partials in `team/`, `inbox-crm/`, `projects/` and `docs/`, plus Architecture. A partial used
-outside its package is exported through a `samples` subpath (`@dxos/plugin-canvas/samples`), and
-its package must be public, since `scripts/check-public-dependencies.mjs` fails a public package
+outside its package is exported as a PascalCase namespace subpath (`@dxos/plugin-canvas/Architecture`),
+which the subpath lint requires, and its package must be public, since `scripts/check-public-dependencies.mjs` fails a public package
 that depends on a private one.
 
 The builder API is `@dxos/app-toolkit/SampleSpace` (`packages/sdk/app-toolkit/src/sample/SampleSpace.ts`).
@@ -68,9 +68,9 @@ Run these steps in order whenever a spec is new or its `## Contents` changes.
 2. **Seeds.** For each `## Contents` subsection, write one file of seed tables keyed by the spec's
    keys, plus the effect that builds them. Import the required partials' `Provides` types; their
    seeds stay theirs. Done when every key in the spec appears in a seed table.
-3. **The partial.** In `partial.ts`, export `Partial` made with `SampleSpace.partial(name, { phases,
+3. **The partial.** In `partial.ts`, export `Partial` made with `SampleSpace.partial(name, { partials,
 schemas, run })`, and re-export it with `Provides` from `index.ts`. Its `schemas` cover every type
-   the spec names; types of its internal `phases` are added for it. `Requires` holds the required
+   the spec names; types of the smaller partials it composes are added for it. `Requires` holds the required
    partials' `Provides`, and optional partials as optional fields typed structurally with only what
    the partial reads. `Provides` holds exactly the header's keys. Read time from the
    `SampleSpace.Clock` service, never a module-level clock, because the template sets the reference
@@ -80,7 +80,7 @@ schemas, run })`, and re-export it with `Provides` from `index.ts`. Its `schemas
    counts. Archives keep feed content under a separate `feeds` key; `histogram` counts both. Checks
    that need an optional partial belong in the template's test. Done when each Check bullet maps to
    an assertion.
-5. **The template.** Add the partial to its template's phase map, in `Requires` order. In `build`,
+5. **The template.** Add the partial to its template's partial map, in `Requires` order. In `build`,
    pass each partial's `Provides` into the next one's `Requires`. A new template gets `make`,
    `makeTemplate`, a test, and an entry in the plugin's `capabilities/space-templates.ts`. Keep the
    content lazy: `composer-app:check-boot-budget` must not move.

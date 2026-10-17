@@ -3,7 +3,7 @@
 A small Oakland coffee roastery in the middle of a spring blend launch. Kai Chen, head roaster, is
 the main character.
 
-- Code: `partial.ts`, built from the phase files beside it. World facts are in `ABOUT.md`, the space tour
+- Code: `partial.ts`, built from the smaller partials beside it. World facts are in `ABOUT.md`, the space tour
   in `README.md`.
 - Requires: nothing
 - Provides: `orgs.*`, `people.*`, `taskSets.*`, `projects.*` (keys below)

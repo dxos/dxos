@@ -13,18 +13,18 @@ import { BRAMBLE_TEMPLATE_ID } from '../../constants.ts';
 import { Partial } from './partial.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = { bramble: Partial };
+const partials = { bramble: Partial };
 
 /**
  * The Bramble Coffee Roasters space template — the content every new identity gets on first launch,
  * and the template anyone can pick again from the create-space dialog.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' },
     reference: REFERENCE,
-    phases,
-    build: (phases) => Effect.asVoid(phases.bramble()),
+    partials,
+    build: (partials) => Effect.asVoid(partials.bramble()),
   });
 
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
