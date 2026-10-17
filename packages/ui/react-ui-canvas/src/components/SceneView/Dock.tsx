@@ -126,8 +126,8 @@ export const Dock = ({ floating = false, onDockedChange }: DockProps) => {
               <Button.Root
                 variant='ghost'
                 iconOnly
-                icon='ph--x--regular'
-                label='Close the dock (float the inspectors)'
+                icon='ph--arrow-square-out--regular'
+                label='Float the inspectors over the canvas'
                 data-testid='dock-close'
                 onClick={() => onDockedChange(false)}
               />
