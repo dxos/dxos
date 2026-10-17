@@ -316,7 +316,41 @@ the client's reconciliation today. Its view corrects on reload.
 
 A document that cannot be loaded (Automerge's WASM heap runs out of memory
 inflating it) would stall every start that reaches it, on every peer. The host
-handles it without reading it:
+handles it without reading it. Quarantine lasts one session; retirement is
+permanent. Retirement replaces a whole linked document, never one object, and
+objects inline in the space root are never retired.
+
+```
+        TRIGGER                      QUARANTINED                     RETIRED
+                              (in memory, cleared on restart)   (permanent, in the space root)
+
+ ┌────────────────────┐        ┌─────────────────────┐   index has  ┌──────────────────────┐
+ │ load runs out of   │───────►│ reason: load-failed │─────────────►│ rebuilt from index   │
+ │ memory             │        └─────────────────────┘ all objects  │ reason: load-failed  │
+ └────────────────────┘                  │                          └──────────┬───────────┘
+                                         │ index lacks objects                 │
+                                         ▼                                     │
+                                 restart → load again                          │
+                                 → out of memory again → retry                 │
+                                                                               │
+ ┌────────────────────┐                                             ┌──────────┴───────────┐
+ │ cursor loads with  │                                             │ rebuilt from its     │
+ │ ≥100K ops, ≥4×     │────────────────────────────────────────────►│ current state        │
+ │ state, cursors only│                                             │ reason: history      │
+ └────────────────────┘                                             └──────────┬───────────┘
+                                                                               │
+ ┌────────────────────┐                                                        │
+ │ peer's retirement  │───────────────────────────────────────────────────────►│
+ │ arrives            │                                                        │
+ └────────────────────┘                                                        ▼
+                                                                 ┌───────────────────────────┐
+                                                                 │ every peer, every open:   │
+                                                                 │ wipe bytes + index rows,  │
+                                                                 │ quarantine (retired)      │
+                                                                 │ unless still linked or    │
+                                                                 │ indexed by another space  │
+                                                                 └───────────────────────────┘
+```
 
 1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
    patch on automerge-repo; the repo otherwise swallows the error and leaves
