@@ -1,5 +1,5 @@
 {
-  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user; the others are simulated participants. heygen.mjs casts stock avatars and voices into <out>/cast.json unless a participant sets avatarId/voiceId.",
+  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user; the others are simulated participants. heygen.mjs generates each participant from `prompt` and records the look in <out>/cast.json unless a participant sets avatarId.",
   "leadIn": 3,
   "gap": 0.4,
   "tail": 3,
@@ -7,26 +7,34 @@
     "astrid": {
       "name": "Astrid Holm",
       "role": "Engineering Manager",
-      "look": "woman, late 30s, short dark hair, navy sweater, home office with bookshelves",
-      "voice": "female"
+      "prompt": "Woman in her mid 20s, Scandinavian, short dark bob, round tortoiseshell glasses, cream knit sweater, big warm smile, clearly enjoying the conversation. Sitting in a cozy busy coffee shop, espresso machine and warm bokeh lights behind her, latte cup on the table. Daylight from the window. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "voiceId": "41f17b4ebd334ac99a91c2aada5f86d7",
+      "expressiveness": "medium",
+      "motion": "Talking warmly on a video call, relaxed, smiling, an occasional small hand gesture."
     },
     "lucia": {
       "name": "Lucía Ferreira",
       "role": "Product Manager",
-      "look": "woman, early 30s, long dark hair, mustard cardigan, studio with posters",
-      "voice": "female"
+      "prompt": "Woman in her mid 20s, Latina, long dark wavy hair, thin gold-rimmed glasses, mustard cardigan over a white tee, laughing, lively and animated. Sitting outside on a park bench, green trees and a path behind her, bright sunny afternoon. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "voiceId": "16cae89929d94c25bc28b5af6f04822a",
+      "expressiveness": "high",
+      "motion": "Animated and enthusiastic on a video call: expressive hand gestures, open palms, counting on her fingers, laughing, leaning in."
     },
     "ben": {
       "name": "Ben Achterberg",
       "role": "Product Designer",
-      "look": "man, late 20s, curly hair, glasses, grey hoodie, room with whiteboard",
-      "voice": "male"
+      "prompt": "Japanese man in his mid 20s, short black hair, black rectangular glasses, charcoal hoodie, grinning, relaxed and having fun. Late at night in his small Tokyo apartment: the room is dark, lit only by a warm desk lamp and the cool glow of his monitor on his face; a large window behind him shows a dark night sky and glittering city lights and neon. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "voiceId": "26776342fd0247d8aa4055ce1060b948",
+      "expressiveness": "medium",
+      "motion": "Relaxed and cheerful on a video call, grinning, a light shrug and a small gesture toward the screen."
     },
     "tomas": {
       "name": "Tomás Vidal",
       "role": "Frontend Engineer",
-      "look": "man, 40s, short beard, light blue shirt, office meeting pod",
-      "voice": "male"
+      "prompt": "Man in his late 20s, Spanish, short curly hair and short trimmed beard, clear-framed glasses, light blue denim shirt, smiling broadly, cheerful. Bright modern co-working space, whiteboard with sketches and plants behind him, daylight. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "voiceId": "7bb4df56d7714d33bb88ed1dde8128f6",
+      "expressiveness": "medium",
+      "motion": "Upbeat on a video call, nodding while he talks, one confident hand gesture."
     }
   },
   "lines": [
@@ -50,7 +58,10 @@
       "speaker": "lucia",
       "text": "Can we flag the slowest misses? That's the conversation we want to have with customers."
     },
-    { "speaker": "ben", "text": "Sure. A red badge on any miss over a minute, linking straight to its trace." },
+    {
+      "speaker": "ben",
+      "text": "Sure. A red badge on any miss over a minute, linking straight to its trace."
+    },
     {
       "speaker": "tomas",
       "text": "I'll have Builder draft the query, and I can show a first cut in storybook on Thursday."
