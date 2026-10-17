@@ -1,5 +1,92 @@
 # @dxos/plugin-client
 
+## 0.15.0
+
+### Minor Changes
+
+- 2b6a93a: Edits the client worker has not saved are no longer lost without warning. The new `EchoDatabase.hasUnsavedChanges()` reports changes still in flight, documents not yet created and unsent feed appends, and the save-state event counts them too. Composer shows "Error saving changes." while sends fail. The browser, the desktop app's tray Quit and window close, and the updater's relaunch save those changes first, or ask before leaving; on macOS, Cmd+Q and the Dock's Quit are not held yet. After a leader handover, a tab's ECHO client reconnects to the new worker and hands it every change the old worker had not taken. A worker whose SQLite connection stops answering for two minutes is replaced, and a worker shutdown no longer waits indefinitely on a teardown that hangs.
+
+  Breaking: `EchoDatabase` gains the required `hasUnsavedChanges()` method, and `SaveStateChangedEvent` gains the required `pendingCreations` and `failing` fields, so code that implements the interface or constructs the event must add them.
+
+### Patch Changes
+
+- 0d81167: Hand-built agent panels follow the form's layout, and the entity browser slots into its host.
+
+  - `@dxos/react-ui-components`: **Breaking:** `Section` is removed; build a labelled group with react-ui's `Fieldset.Root` and `Fieldset.Legend` (the form's label row) instead.
+  - `@dxos/plugin-agent`: the Activity panel lays out its groups in the form's frame (`Form.Viewport`, `Fieldset`). `AgentKnowledge.Browser` (`EntityBrowser`) is composable, its horizontal scroll frame the root, so a host's `Panel.Body asChild` slots onto it instead of nesting a second panel. Predicate cards title each predicate in kebab case, as the entity cards key it. The email channel's settings are a panel whose header toolbar reads "Email" with one connect/disconnect toggle, as Activity's, and the form scrolls beneath it.
+  - `@dxos/plugin-discord`: the Discord setup panel uses the same form frame and `Fieldset` groups. Its toolbar links to the hub console's Discord page for the EDGE environment the client is configured with.
+  - `@dxos/plugin-client`: recovery credentials show when each was issued to the minute on a 24-hour clock, and a revoked one is marked by its strikethrough alone.
+  - `@dxos/react-ui`: `Layout.Columns` lays out a horizontal run of columns sized to whole shares of the space (as many as fit at a minimum width, each an exact fraction), scrolling a column at a time and following the newest. `Status.Empty` reads at the label's size (`text-sm` by default), so every empty state is the same secondary text. Overlay scroll thumbs sit flush with the ends of their track, as they already did with its side. A tag in a start-aligned card row centres on the first line, as text does.
+
+- d250ed2: `AppSpace.AGENT_SPACE_TAG` marks the space an agent's own identity owns, and `AppSpace.agentsNotAdministeredBy` lists the agents in those spaces that an identity may not add elsewhere. A space's "Add from contacts" picker leaves those agents out, so it offers only the agents you administer, as ordinary contacts.
+- ed1039a: An idle app stops redoing work while nothing changes. Presence's offline sweep fires `updated` only when a peer has aged out since it was reported online; it fired on every sweep, every 20 s per space, and each one made the client re-serialize every space for the app. The replication progress meter re-reads a space's sync state only while that space has a monitor open; the re-read ran every 10 s per space for the app's whole life, and each read had the ECHO worker diff the space's whole collection.
+- Updated dependencies [5490cbc]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [55bdf55]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/client-services@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/plugin-observability@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/shell@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-pickers@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/halo-adapter-client@0.15.0
+  - @dxos/halo@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/halo-react@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

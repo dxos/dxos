@@ -1,5 +1,12 @@
 # @dxos/nlp
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [cd70a43]
+  - @dxos/ai@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

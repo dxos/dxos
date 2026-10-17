@@ -1,5 +1,25 @@
 # @dxos/teleport-extension-gossip
 
+## 0.15.0
+
+### Patch Changes
+
+- ed1039a: An idle app stops redoing work while nothing changes. Presence's offline sweep fires `updated` only when a peer has aged out since it was reported online; it fired on every sweep, every 20 s per space, and each one made the client re-serialize every space for the app. The replication progress meter re-reads a space's sync state only while that space has a monitor open; the re-read ran every 10 s per space for the app's whole life, and each read had the ECHO worker diff the space's whole collection.
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

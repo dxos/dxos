@@ -1,5 +1,59 @@
 # @dxos/echo-host
 
+## 0.15.0
+
+### Patch Changes
+
+- ad1686c: A head EDGE lists beyond the local ones is confirmed from storage, before the document is loaded to check it, when storage holds that commit or fragment and its whole history; any other head is still loaded and checked. Confirmations lived only in memory, so every boot loaded and synced each in-sync document whose EDGE heads include a fragment head: on a 3,400-document profile, 40 documents and ~30 MB of reads per boot, which set the ECHO worker's Automerge and Subduction wasm memories at ~40 MiB each. An unchanged collection state from an in-sync peer also no longer copies the collection to compare it; EDGE answers each space's poll every 10 s with every document's heads, and each reply was copied and diffed twice.
+- 0858217: Past 50 released documents the host evicts the oldest at once instead of waiting out the 30 s idle delay, so a reindex no longer holds most of a profile loaded together and sizes the worker's Automerge wasm memory, which never shrinks, by it.
+- b7d83c9: A one-shot lookup by id, such as `Ref.load` or `db.query(Filter.id(...)).run()`, no longer queries the worker's index for objects the working set can load, and asks it only for the ids the working set did not return. Lookups the worker does answer run as soon as they arrive instead of waiting for the query batch in flight.
+
+  When two clients of one worker write the same document at the same time, each now receives the other's change. Previously the worker could record the other client's change as already delivered to the writer and never send it.
+
+- 1e9c017: `IndexEngine` writes each batch over transactions of at most 250 objects or 50 ms, set with the new `transactionLimits` option, and calls an optional `yieldBetweenTransactions` hook between them; a document's cursor advances only with its last object. The OPFS SQLite client now hands its connection to the longest waiter when a transaction ends, so a statement queued behind a transaction runs before the same writer's next one. `EchoHost` pauses between index transactions and full-text batches with the new `yieldBehindQueuedTasks`, which lets messages already queued in the worker run first, unlike `scheduler.yield`. A query issued during a large index pass now waits behind one bounded transaction instead of the whole pass.
+- d98e8b9: A Subduction sync round asks only the peers the share policy would serve the document to, instead of every connected peer. When the policy would serve it to none, as for a document whose space is not known locally yet, the round still asks every connected peer. With one EDGE peer per space, every round used to ask each space's peer, and all but one refused; on a reindex that was ~13 requests per document and set the worker's Subduction wasm memory, which never shrinks.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [6d8c4ee]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/index-core@0.15.0
+  - @dxos/feed@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/teleport-extension-automerge-replicator@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/typings@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

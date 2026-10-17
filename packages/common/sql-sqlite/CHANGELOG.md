@@ -1,5 +1,22 @@
 # @dxos/sql-sqlite
 
+## 0.15.0
+
+### Patch Changes
+
+- cd70a43: Move Effect from 4.0.0 to 4.0.4. In 4.0.0, `PartitionedSemaphore` lost its only permit once about a thousand waiters were queued, because each release resumed the next waiter on the same stack until it overflowed. The OPFS SQLite client guards its connection with that semaphore, so a statement backlog behind one index transaction left every later statement and query waiting forever.
+
+  Effect 4.0.4 follows the current OpenTelemetry GenAI conventions, so model-call spans carry the serving product as `gen_ai.provider.name` instead of `gen_ai.system`. `ChatCompletionsAdapter` reports it under the new key, and `AiObservability` reads it from there, so `$ai_provider` on PostHog events keeps its value. `ChatCompletionsClientConfig.provider` is now required: it no longer falls back to the API format, which named an OpenAI-compatible server `openai`.
+
+  The `effect` patch is dropped: 4.0.4 ships the `DecisionModel` image support it added.
+
+- 1e9c017: `IndexEngine` writes each batch over transactions of at most 250 objects or 50 ms, set with the new `transactionLimits` option, and calls an optional `yieldBetweenTransactions` hook between them; a document's cursor advances only with its last object. The OPFS SQLite client now hands its connection to the longest waiter when a transaction ends, so a statement queued behind a transaction runs before the same writer's next one. `EchoHost` pauses between index transactions and full-text batches with the new `yieldBehindQueuedTasks`, which lets messages already queued in the worker run first, unlike `scheduler.yield`. A query issued during a large index pass now waits behind one bounded transaction instead of the whole pass.
+- 6d8c4ee: `@dxos/sql-sqlite/SqlStorage` gains a `workerd` variant, so a Cloudflare Worker bundle no longer carries wa-sqlite (about 190 KB of a bundle that imports `@dxos/pipeline-rdf`). wa-sqlite could not run there anyway, because a Worker bundle has no way to ship its wasm. In workerd, `makeMemory` and `makeFile` fail with a `SqlError` that names a Durable Object's `ctx.storage.sql` as the database to pass instead.
+- @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
