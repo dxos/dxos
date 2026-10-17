@@ -13,7 +13,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
@@ -258,6 +258,47 @@ describe('EchoHost index transactions', () => {
     await answer;
     expect(events.indexOf('answer')).toBeGreaterThan(-1);
     expect(events.indexOf('answer')).toBeLessThan(events.lastIndexOf('commit'));
+  });
+});
+
+// A profile whose stored feed cursor carried a token the store did not issue failed every index pass,
+// and the failure put the host into ERROR, so no space on that device ever opened again.
+describe('EchoHost index failures', () => {
+  test('a feed cursor with another token is read again and leaves the host open', async () => {
+    const { host, runtime, spaceId, saveObject } = await setup();
+    const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+    await RuntimeProvider.runPromise(runtime)(
+      sql`
+        INSERT INTO indexCursor (indexName, spaceId, sourceName, resourceId, cursor)
+        VALUES ('objectSnapshot', ${spaceId}, 'queue', ${FeedProtocol.WellKnownNamespaces.data}, 'foreign|5')
+      `,
+    );
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        },
+      ]),
+    );
+
+    const objectId = EntityId.random();
+    await saveObject(objectId);
+    await host.updateIndexes();
+    // The failure reaches the host's context on a microtask.
+    await Promise.resolve();
+
+    expect(host.isOpen).toBe(true);
+    const rows = await RuntimeProvider.runPromise(runtime)(
+      host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
+    expect(rows.map((row) => row.objectId)).toEqual([objectId]);
+    const cursors = await RuntimeProvider.runPromise(runtime)(
+      sql<{ cursor: string }>`SELECT cursor FROM indexCursor WHERE sourceName = 'queue' AND spaceId = ${spaceId}`,
+    );
+    expect(cursors.map(({ cursor }) => cursor)).not.toContain('foreign|5');
   });
 });
 

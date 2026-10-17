@@ -208,6 +208,16 @@ export class FeedStore {
     this.#ensureCursorToken(spaceId);
 
   /**
+   * Whether this store issued `cursor` for the space. {@link query} rejects any other cursor, since its
+   * insertion id numbers another store's blocks.
+   */
+  isCursorCurrent = (
+    spaceId: string,
+    cursor: FeedCursor,
+  ): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.map(this.#ensureCursorToken(spaceId), (token) => decodeCursor(cursor).token === token);
+
+  /**
    * Highest insertion id per `spaceId|feedNamespace`, so a reader polling a caught-up cursor is
    * answered without touching the database. It may only ever run ahead of the table (a rolled-back
    * append, a deleted block), which costs a query that finds nothing; it can never fall behind,

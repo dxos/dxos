@@ -1701,7 +1701,6 @@ export class EchoHost extends Resource {
       if (this._ctx.disposed || !this.isOpen) {
         return undefined;
       }
-      log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
       throw err;
