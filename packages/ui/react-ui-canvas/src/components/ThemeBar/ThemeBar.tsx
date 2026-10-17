@@ -175,19 +175,17 @@ export const ThemeBar = ({
         onClick={() => onGridChange?.(option.grid === themeGrid ? undefined : option.grid)}
       />
     ))}
+    {/* A guide is drawn on the grid, so the toggle sits with the grid options. */}
     {onGuidesToggle && (
-      <>
-        <Toolbar.Separator variant='line' />
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--frame-corners--regular'
-          label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
-          classNames={mx(guides && 'bg-primary-500/20')}
-          data-testid='toolbar-guides'
-          onClick={onGuidesToggle}
-        />
-      </>
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--frame-corners--regular'
+        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+        classNames={mx(guides && 'bg-primary-500/20')}
+        data-testid='toolbar-guides'
+        onClick={onGuidesToggle}
+      />
     )}
   </Toolbar.Root>
 );
