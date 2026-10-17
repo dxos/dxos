@@ -37,7 +37,8 @@ Feature  (org.dxos.type.feature — NEW; parent = Spec)
   key:    string            block id, e.g. F-3      (global id: <spec.key>#F-3)
   name:   string            the block title
   description?: Text        inline prose
-  stage?: planned | labs | alpha | beta | stable | deprecated
+  stage?: planned | labs | alpha | beta | stable   (ordered)
+  deprecated?: boolean
   requirements: Requirement[]   embedded { key: 'F-3.1', text }
   scenarios:    Scenario[]      embedded { key: 'T-1', given, when, then }
   uses?:  Ref<Feature>[]    cross-spec composition (product-level features)
@@ -97,8 +98,12 @@ Project → Milestone → Task is the "when/who" axis. `Implements` is the only 
    | in flight   | any open `Task` with `Implements` → feature  |
    | shipping in | the milestones of those tasks                |
    | covered     | every `req` appears in some `test … covers:` |
-   | orphan      | stage ≥ beta, no test covers it              |
+   | orphan      | stage ≥ beta, no `req` of it is covered      |
    | unplanned   | stage = planned, no task implements it       |
+
+   Coverage is counted per requirement. A `covers:` entry naming the feature
+   (`F-3`) or a scenario does not count, because neither says which requirement
+   was checked.
 
 5. **No `Plugin` type.** A plugin on the map is a `Spec` with `kind: plugin`; its
    key equals `dx.config.ts` `plugin.key` (e.g. `org.dxos.plugin.inbox`), which is
@@ -120,7 +125,9 @@ Project → Milestone → Task is the "when/who" axis. `Implements` is the only 
 
 1. Add `key`/`kind`/`repo`/`path` to `Spec`; add `Feature` and `Implements`.
 2. Importer: mdl → `Spec` + `Feature` upsert by meta key; deleted feats are removed
-   and a dangling `Implements` reads as unlinked (the milestone-delete rule).
+   and their `Implements` relations need no sweep: ECHO treats a relation with a
+   deleted endpoint as deleted at read time, so default queries drop it (unlike
+   milestone delete, which clears `task.milestone` explicitly).
 3. A seed that imports the repo's 96 `PLUGIN.mdl` files into a sample space.
 4. One map view: plugins as columns, features as cards coloured by derived signal,
    with the project's milestones as a filter.
@@ -134,7 +141,9 @@ Project → Milestone → Task is the "when/who" axis. `Implements` is the only 
    view in plugin-projects.
 2. Is `stage` the right maturity vocabulary, or should a feature reuse the plugin
    tags in `dx.config.ts` (`labs` ×66, `alpha` ×21, `beta` ×5)? Proposal: reuse
-   them — `labs | alpha | beta | stable | deprecated` — so a feature can never
-   claim more maturity than the plugin that ships it.
+   them, ordered `planned < labs < alpha < beta < stable`, so a feature can never
+   claim more maturity than the plugin that ships it (`planned` is feature-only).
+   `deprecated` is a flag, not a rung: it marks any stage as on its way out and
+   takes no part in the comparison.
 3. Do `test QA-n` blocks need to be objects too, so a map can show pass/fail from
    the last QA run? Proposal: not for the prototype — coverage only.
