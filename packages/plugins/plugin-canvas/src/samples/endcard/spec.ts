@@ -3,7 +3,7 @@
 //
 
 //
-// The DXOS end card (tools/ident `EndCard`) as a canvas document: the logo is a composite object of path nodes, the
+// The DXOS end card (tools/autocue `EndCard`) as a canvas document: the logo is a composite object of path nodes, the
 // tagline, rule and call to action are nodes, and their entrances are timeline keys. Scene units are the 1920x1080
 // video's pixels with the origin at the frame's centre, so `EndCard`'s sizes and offsets carry over as they are.
 //

@@ -259,6 +259,15 @@
       ],
       "port": 5282,
       "autoPort": true
+    },
+    {
+      "name": "composer-app-bundle-preview",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd packages/apps/composer-app && DX_ENVIRONMENT=dev DX_PWA=false pnpm exec vite preview --configLoader native --port 4175 --strictPort"
+      ],
+      "port": 4175
     }
   ]
 }

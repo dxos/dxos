@@ -1,8 +1,9 @@
-layer: application
+layer: tool
 language: typescript
 tags:
   - typecheck
 
+# The ident (src/components/Ident) is a Remotion project: `studio` previews it, `render` writes its clips to out/.
 tasks:
   studio:
     command: pnpm exec remotion studio

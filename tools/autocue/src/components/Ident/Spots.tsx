@@ -5,10 +5,11 @@
 import React from 'react';
 import { AbsoluteFill, Sequence, useVideoConfig } from 'remotion';
 
-import { COLORS, DEFAULT_TURN, TIMING } from './brand.ts';
+import { DEFAULT_TURN, TIMING } from './brand.ts';
 import { EndCard, OpenTitle, WordBuild } from './components.tsx';
 import { loadBrandFont } from './fonts.ts';
 import { PROVOCATIONS } from './provocations.ts';
+import { usePalette, withIdent } from './theme.tsx';
 
 loadBrandFont();
 
@@ -23,12 +24,13 @@ const find = (id: string) => {
 };
 
 /** 10s: provocation (build, hold, cut to black) then the end card. */
-export const Spot10: React.FC<SpotProps> = ({ provocationId }) => {
+export const Spot10 = withIdent(({ provocationId }: SpotProps) => {
+  const colors = usePalette();
   const { fps } = useVideoConfig();
   const p = find(provocationId);
   const s = TIMING.spot10;
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.ground }}>
+    <AbsoluteFill style={{ backgroundColor: colors.ground }}>
       <Sequence durationInFrames={s.provocation * fps}>
         <WordBuild lines={p.lines} cutAt={s.cutToBlack} />
       </Sequence>
@@ -37,10 +39,11 @@ export const Spot10: React.FC<SpotProps> = ({ provocationId }) => {
       </Sequence>
     </AbsoluteFill>
   );
-};
+});
 
 /** 30s: provocation, beat, the turn, the resolve line, then the end card. */
-export const Spot30: React.FC<SpotProps> = ({ provocationId }) => {
+export const Spot30 = withIdent(({ provocationId }: SpotProps) => {
+  const colors = usePalette();
   const { fps } = useVideoConfig();
   const p = find(provocationId);
   const s = TIMING.spot30;
@@ -48,7 +51,7 @@ export const Spot30: React.FC<SpotProps> = ({ provocationId }) => {
   const resolveAt = turnAt + s.turn;
   const endAt = resolveAt + s.resolve;
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.ground }}>
+    <AbsoluteFill style={{ backgroundColor: colors.ground }}>
       <Sequence durationInFrames={s.provocation * fps}>
         <WordBuild lines={p.lines} cutAt={s.provocationCut} />
       </Sequence>
@@ -63,14 +66,10 @@ export const Spot30: React.FC<SpotProps> = ({ provocationId }) => {
       </Sequence>
     </AbsoluteFill>
   );
-};
+});
 
 /** End card only: the last 3s of the 10s spot (from 7s). */
-export const EndOnly: React.FC = () => (
-  <AbsoluteFill style={{ backgroundColor: COLORS.ground }}>
-    <EndCard />
-  </AbsoluteFill>
-);
+export const EndOnly = withIdent(() => <EndCard />);
 
 /** Opening title on its own: the logotype fades in and holds. */
-export const OpenOnly: React.FC = () => <OpenTitle />;
+export const OpenOnly = withIdent(() => <OpenTitle />);

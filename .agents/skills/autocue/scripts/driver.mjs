@@ -47,6 +47,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
+import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
@@ -292,35 +293,38 @@ const SPEED_ID = '__demo_speed__';
 /** `speed` ops in recording time, for the trimmer to play those stretches faster. */
 const speedChanges = [];
 
-const showCaption = async (text, subtitle) => {
+/**
+ * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `open` (ms to
+ * hold the title as a centred panel before it moves to the header).
+ */
+const updateFrame = async (update) => {
+  await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
-    ({ id, text, subtitle }) => {
-      document.getElementById(id)?.remove();
-      const banner = document.createElement('div');
-      banner.id = id;
-      banner.style.cssText = [
-        'position:fixed',
-        'left:0',
-        'right:0',
-        'bottom:0',
-        'z-index:2147483647',
-        'padding:16px 24px 18px',
-        'background:rgba(17,17,17,0.92)',
-        'color:#fff',
-        'font:600 20px/1.35 ui-sans-serif,system-ui,sans-serif',
-        'pointer-events:none',
-        'text-align:center',
-      ].join(';');
-      banner.textContent = text;
-      if (subtitle) {
-        const line = document.createElement('div');
-        line.style.cssText = 'opacity:0.7;font-weight:400;font-size:15px;margin-top:4px';
-        line.textContent = subtitle;
-        banner.appendChild(line);
+    ({ id, update }) => {
+      let host = document.getElementById(id);
+      if (!host) {
+        host = document.createElement('div');
+        host.id = id;
+        host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
+        document.body.appendChild(host);
+        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
       }
-      document.body.appendChild(banner);
+      const frame = host.__frame;
+      if ('headerBand' in update) {
+        frame.setHeaderBand(update.headerBand);
+      }
+      if ('header' in update) {
+        frame.setHeader(update.header ?? undefined);
+      }
+      if ('caption' in update) {
+        frame.setCaption(update.caption ?? undefined);
+      }
+      if (update.open) {
+        void frame.playOpen(update.open);
+      }
     },
-    { id: CAPTION_ID, text, subtitle },
+    { id: CAPTION_ID, update },
   );
 };
 
@@ -578,7 +582,7 @@ const runFlow = async (command) => {
         .filter(([op]) => !['run', 'abort', 'steps', 'status', 'stop'].includes(op))
         .map(([op, handler]) => [
           op,
-          quiet && op === 'caption'
+          quiet && (op === 'caption' || op === 'title')
             ? async () => ({})
             : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
         ]),
@@ -628,10 +632,25 @@ const runFlow = async (command) => {
     try {
       // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
       // the moment everything before it stops being preparation.
-      if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+      const opening = !step.setup && (index === 0 || steps[index - 1].setup);
+      if (opening && index > 0 && command.countdown !== false) {
         flow.state = 'cued';
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
+      }
+      // `title` opens the take with the Frame's open: the title alone, centred, held until it hands off. It is a
+      // chapter too, so the trimmer gives its still frames the caption hold rather than cutting them.
+      if (opening && command.title) {
+        const open = command.title.open ?? 3_000;
+        timeline.push({ ms: Date.now() - started, text: command.title.value, narration: command.title.value });
+        // With captions off nothing is painted, so the take must not stand still for a title nobody sees.
+        if (options.captions !== 'off') {
+          await interruptible(handlers.title({ ...command.title, open, hold: open + 600 }));
+        }
+      }
+      // `captions: true` captions every on-camera step with its `caption` (or name), as a `.mdl` run would.
+      if (!step.setup && command.captions) {
+        await handlers.caption({ value: step.caption ?? step.name, subtitle: step.subtitle });
       }
       // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
       // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.
@@ -834,7 +853,7 @@ const handlers = {
   },
   caption: async (command) => {
     if (options.captions !== 'off') {
-      await showCaption(command.value, command.subtitle);
+      await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
     }
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
@@ -900,8 +919,27 @@ const handlers = {
     };
   },
   clearCaption: async () => {
-    await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
+    await updateFrame({ caption: null });
     return {};
+  },
+  /**
+   * The take's title (`band: true` also keeps it as a band over the top after the open title): `value` / `subtitle`, and `open`
+   * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
+   * out the open title before returning. An empty `value` clears it.
+   */
+  title: async (command) => {
+    const open = command.open ?? 3_000;
+    if (options.captions !== 'off') {
+      await updateFrame({
+        header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
+        headerBand: command.band ?? false,
+        open: command.value ? open : 0,
+      });
+    }
+    if (command.hold) {
+      await page.waitForTimeout(command.hold);
+    }
+    return { at: (Date.now() - started) / 1000 };
   },
   /**
    * Plays what follows at `factor` times speed in the cut (`factor: 1` returns to normal), for stretches
