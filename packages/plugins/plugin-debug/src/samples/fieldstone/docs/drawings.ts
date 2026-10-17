@@ -6,13 +6,63 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
-import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
+import * as Architecture from '@dxos/plugin-canvas/Architecture';
+import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 export type DrawingKey = 'orgChart' | 'architectureDiagram' | 'requestFlow' | 'roadmap' | 'escalation';
 
 export type Drawings = Record<DrawingKey, Drawing.Drawing>;
+
+type Commands = Architecture.CompiledDiagrams[string];
+type Element = Extract<Commands[number], { op: 'upsert-object' }>['object']['elements'][number];
+type Box = Extract<Element, { kind: 'rect' | 'ellipse' | 'diamond' | 'triangle' }>;
+type Arrow = Extract<Element, { kind: 'arrow' }>;
+type Style = Pick<Box, 'color' | 'fill' | 'stroke' | 'weight'>;
+
+const rect = (id: string, x: number, y: number, w: number, h: number, text: string, style: Style = {}): Element => ({
+  kind: 'rect',
+  id,
+  x,
+  y,
+  w,
+  h,
+  text,
+  ...style,
+});
+
+const ellipse = (id: string, x: number, y: number, w: number, h: number, text: string, style: Style = {}): Element => ({
+  kind: 'ellipse',
+  id,
+  x,
+  y,
+  w,
+  h,
+  text,
+  ...style,
+});
+
+const arrow = (from: string, to: string, options: Pick<Arrow, 'text' | 'stroke' | 'color'> = {}): Element => ({
+  kind: 'arrow',
+  id: `${from}-${to}`,
+  from,
+  to,
+  ...options,
+});
+
+const label = (id: string, x: number, y: number, text: string, w?: number): Element => ({
+  kind: 'text',
+  id,
+  x,
+  y,
+  text,
+  weight: 's',
+  ...(w ? { w } : {}),
+});
+
+/** A drawing is one scene object at the canvas origin; arrows bind to its boxes by element id. */
+const scene = (elements: Element[]): Commands => [
+  { op: 'upsert-object', object: { id: 'drawing', origin: { x: 0, y: 0 }, scale: 1, elements } },
+];
 
 const ORG_CHART_REPORTS = [
   ['omar', 'Omar Haddad\nStaff Engineer, cache engine', 'blue'],
@@ -26,109 +76,60 @@ const ORG_CHART_REPORTS = [
   ['kofi', 'Kofi Mensah\nDeveloper Relations', 'green'],
 ] as const;
 
-const makeOrgChart = () => {
-  const builder = new TldrawModel.RecordBuilder().rectangle({
-    id: 'astrid',
-    x: 720,
-    y: 0,
-    w: 200,
-    h: 90,
-    text: 'Astrid Holm\nEngineering Manager',
-    color: 'violet',
-    fill: 'semi',
-  });
-  ORG_CHART_REPORTS.forEach(([id, text, color], index) => {
-    builder.rectangle({ id, x: index * 180, y: 220, w: 160, h: 90, text, color, fill: 'semi', size: 's' });
-    builder.arrow({ from: 'astrid', to: id });
-  });
-  return builder
-    .arrow({ from: 'omar', to: 'hana', text: 'onboarding buddy', dash: 'dashed', color: 'grey' })
-    .text({ id: 'note', x: 0, y: 360, w: 600, text: 'Everyone reports to Astrid. Engineering in blue.', size: 's' })
-    .build();
-};
+const makeOrgChart = () =>
+  scene([
+    rect('astrid', 720, 0, 200, 90, 'Astrid Holm\nEngineering Manager', { color: 'violet' }),
+    ...ORG_CHART_REPORTS.flatMap(([id, text, color], index) => [
+      rect(id, index * 180, 220, 160, 90, text, { color }),
+      arrow('astrid', id),
+    ]),
+    arrow('omar', 'hana', { text: 'onboarding buddy', stroke: 'dashed', color: 'grey' }),
+    label('note', 0, 360, 'Everyone reports to Astrid. Engineering in blue.', 600),
+  ]);
 
 const makeArchitectureDiagram = () =>
-  new TldrawModel.RecordBuilder()
-    .rectangle({ id: 'cli', x: 0, y: 160, w: 180, h: 90, text: 'Cairn CLI\n(CI runners, laptops)', color: 'black' })
-    .rectangle({
-      id: 'edge',
-      x: 260,
-      y: 160,
-      w: 180,
-      h: 90,
-      text: 'Edge gateway\nCloudflare Workers',
-      color: 'orange',
-      fill: 'semi',
-    })
-    .rectangle({ id: 'auth', x: 260, y: 0, w: 180, h: 80, text: 'Auth\ntokens, SSO', color: 'violet', fill: 'semi' })
-    .rectangle({
-      id: 'index',
-      x: 520,
-      y: 160,
-      w: 180,
-      h: 90,
-      text: 'Index service\nkey → digest',
-      color: 'blue',
-      fill: 'semi',
-    })
-    .rectangle({ id: 'meter', x: 520, y: 0, w: 180, h: 80, text: 'Usage meter', color: 'green', fill: 'semi' })
-    .rectangle({ id: 'dashboard', x: 0, y: 0, w: 180, h: 80, text: 'Dashboard\nComposer plugin', color: 'black' })
-    .ellipse({ id: 'postgres', x: 780, y: 160, w: 170, h: 90, text: 'Postgres\nvia Hyperdrive', color: 'blue' })
-    .ellipse({ id: 'r2', x: 260, y: 340, w: 180, h: 90, text: 'R2\nhot blobs', color: 'orange' })
-    .ellipse({ id: 's3', x: 520, y: 340, w: 180, h: 90, text: 'S3\norigin, cold blobs', color: 'yellow' })
-    .ellipse({ id: 'stripe', x: 780, y: 0, w: 170, h: 80, text: 'Stripe', color: 'green' })
-    .arrow({ from: 'cli', to: 'edge', text: 'HTTPS' })
-    .arrow({ from: 'dashboard', to: 'edge' })
-    .arrow({ from: 'edge', to: 'auth' })
-    .arrow({ from: 'edge', to: 'index' })
-    .arrow({ from: 'index', to: 'postgres' })
-    .arrow({ from: 'edge', to: 'r2', text: 'presigned GET/PUT' })
-    .arrow({ from: 'r2', to: 's3', text: 'miss fill', dash: 'dashed' })
-    .arrow({ from: 'index', to: 'meter', text: 'bytes served' })
-    .arrow({ from: 'meter', to: 'stripe', text: 'metered usage' })
-    .build();
+  scene([
+    rect('cli', 0, 160, 180, 90, 'Cairn CLI\n(CI runners, laptops)', { color: 'black' }),
+    rect('edge', 260, 160, 180, 90, 'Edge gateway\nCloudflare Workers', { color: 'orange' }),
+    rect('auth', 260, 0, 180, 80, 'Auth\ntokens, SSO', { color: 'violet' }),
+    rect('index', 520, 160, 180, 90, 'Index service\nkey → digest', { color: 'blue' }),
+    rect('meter', 520, 0, 180, 80, 'Usage meter', { color: 'green' }),
+    rect('dashboard', 0, 0, 180, 80, 'Dashboard\nComposer plugin', { color: 'black' }),
+    ellipse('postgres', 780, 160, 170, 90, 'Postgres\nvia Hyperdrive', { color: 'blue' }),
+    ellipse('r2', 260, 340, 180, 90, 'R2\nhot blobs', { color: 'orange' }),
+    ellipse('s3', 520, 340, 180, 90, 'S3\norigin, cold blobs', { color: 'yellow' }),
+    ellipse('stripe', 780, 0, 170, 80, 'Stripe', { color: 'green' }),
+    arrow('cli', 'edge', { text: 'HTTPS' }),
+    arrow('dashboard', 'edge'),
+    arrow('edge', 'auth'),
+    arrow('edge', 'index'),
+    arrow('index', 'postgres'),
+    arrow('edge', 'r2', { text: 'presigned GET/PUT' }),
+    arrow('r2', 's3', { text: 'miss fill', stroke: 'dashed' }),
+    arrow('index', 'meter', { text: 'bytes served' }),
+    arrow('meter', 'stripe', { text: 'metered usage' }),
+  ]);
 
-const makeRequestFlow = () => {
-  const steps = [
-    ['cli', 'Cairn CLI\nhash inputs → action key', 'black'],
-    ['edge', 'Edge worker\nverify token', 'orange'],
-    ['index', 'Index\nlook up key', 'blue'],
-    ['r2', 'R2\nserve blob', 'orange'],
-    ['verify', 'CLI\nverify digest, restore', 'black'],
-  ] as const;
-  const builder = new TldrawModel.RecordBuilder();
-  steps.forEach(([id, text, color], index) => {
-    builder.rectangle({ id, x: index * 230, y: 0, w: 180, h: 90, text, color, fill: 'semi' });
-  });
-  return builder
-    .arrow({ from: 'cli', to: 'edge', text: '1 GET /v2/cache/:key' })
-    .arrow({ from: 'edge', to: 'index', text: '2 lookup' })
-    .arrow({ from: 'index', to: 'r2', text: '3 hit: presign' })
-    .arrow({ from: 'r2', to: 'verify', text: '4 bytes' })
-    .rectangle({
-      id: 'build',
-      x: 230,
-      y: 200,
-      w: 180,
-      h: 90,
-      text: 'Miss: CLI builds\nlocally',
-      color: 'red',
-      fill: 'semi',
-    })
-    .rectangle({
-      id: 'commit',
-      x: 460,
-      y: 200,
-      w: 180,
-      h: 90,
-      text: 'PUT blob, then\ncompare-and-set key',
-      color: 'red',
-      fill: 'semi',
-    })
-    .arrow({ from: 'index', to: 'build', text: 'miss', dash: 'dashed' })
-    .arrow({ from: 'build', to: 'commit' })
-    .build();
-};
+const REQUEST_STEPS = [
+  ['cli', 'Cairn CLI\nhash inputs → action key', 'black'],
+  ['edge', 'Edge worker\nverify token', 'orange'],
+  ['index', 'Index\nlook up key', 'blue'],
+  ['r2', 'R2\nserve blob', 'orange'],
+  ['verify', 'CLI\nverify digest, restore', 'black'],
+] as const;
+
+const makeRequestFlow = () =>
+  scene([
+    ...REQUEST_STEPS.map(([id, text, color], index) => rect(id, index * 230, 0, 180, 90, text, { color })),
+    arrow('cli', 'edge', { text: '1 GET /v2/cache/:key' }),
+    arrow('edge', 'index', { text: '2 lookup' }),
+    arrow('index', 'r2', { text: '3 hit: presign' }),
+    arrow('r2', 'verify', { text: '4 bytes' }),
+    rect('build', 230, 200, 180, 90, 'Miss: CLI builds\nlocally', { color: 'red' }),
+    rect('commit', 460, 200, 180, 90, 'PUT blob, then\ncompare-and-set key', { color: 'red' }),
+    arrow('index', 'build', { text: 'miss', stroke: 'dashed' }),
+    arrow('build', 'commit'),
+  ]);
 
 // Bars are [label, start, end] in days from the reference date, clipped to the quarter.
 const ROADMAP_LANES = [
@@ -179,96 +180,55 @@ const makeRoadmap = (now: Date) => {
   const start = Date.UTC(now.getUTCFullYear(), quarter, 1);
   const end = Date.UTC(now.getUTCFullYear(), quarter + 3, 1);
   const x = (time: number) => 180 + ((Math.min(Math.max(time, start), end) - start) / DAY_MS) * DAY_W;
-  const builder = new TldrawModel.RecordBuilder();
-  for (let index = 0; index < 3; index++) {
+  const months = [0, 1, 2].map((index) => {
     const month = new Date(Date.UTC(now.getUTCFullYear(), quarter + index, 1));
-    builder.text({
-      id: `month-${index}`,
-      x: x(month.getTime()),
-      y: 0,
-      w: 200,
-      text: month.toLocaleDateString('en-GB', { timeZone: 'UTC', month: 'long' }),
-    });
-  }
-  builder.line({
-    id: 'today',
-    start: { x: x(now.getTime()), y: 40 },
-    end: { x: x(now.getTime()), y: 520 },
-    color: 'red',
-    dash: 'dashed',
+    return label(
+      `month-${index}`,
+      x(month.getTime()),
+      0,
+      month.toLocaleDateString('en-GB', { timeZone: 'UTC', month: 'long' }),
+      200,
+    );
   });
-  ROADMAP_LANES.forEach(([id, label, color, bars], lane) => {
+  // The canvas has no free lines, so the reference date is a hairline box.
+  const today = rect('today', x(now.getTime()) - 1, 40, 2, 480, '', { color: 'red', fill: 'solid', stroke: 'dashed' });
+  const lanes = ROADMAP_LANES.flatMap(([id, name, color, bars], lane) => {
     const y = 60 + lane * (LANE_H + 20);
-    builder.rectangle({ id: `lane-${id}`, x: 0, y, w: 160, h: LANE_H, text: label, color: 'grey', fill: 'semi' });
-    bars.forEach(([text, from, to], bar) => {
-      const left = x(now.getTime() + from * DAY_MS);
-      builder.rectangle({
-        id: `${id}-${bar}`,
-        x: left,
-        y: y + 15,
-        w: Math.max(x(now.getTime() + to * DAY_MS) - left, 40),
-        h: LANE_H - 30,
-        text,
-        color,
-        fill: 'solid',
-        size: 's',
-      });
-    });
+    return [
+      rect(`lane-${id}`, 0, y, 160, LANE_H, name, { color: 'grey' }),
+      ...bars.map(([text, from, to], bar) => {
+        const left = x(now.getTime() + from * DAY_MS);
+        const width = Math.max(x(now.getTime() + to * DAY_MS) - left, 40);
+        return rect(`${id}-${bar}`, left, y + 15, width, LANE_H - 30, text, { color, fill: 'solid', weight: 's' });
+      }),
+    ];
   });
-  return builder.build();
+  return scene([...months, ...lanes, today]);
 };
 
 const makeEscalation = () =>
-  new TldrawModel.RecordBuilder()
-    .rectangle({ id: 'alert', x: 0, y: 0, w: 180, h: 80, text: 'PostHog alert fires', color: 'red', fill: 'semi' })
-    .rectangle({
-      id: 'primary',
-      x: 240,
-      y: 0,
-      w: 180,
-      h: 80,
-      text: 'Primary on-call\nack in 15 min',
-      color: 'orange',
-      fill: 'semi',
-    })
-    .geo('diamond', { id: 'sev', x: 480, y: -20, w: 160, h: 120, text: 'SEV1?', color: 'black' })
-    .rectangle({ id: 'secondary', x: 240, y: 180, w: 180, h: 80, text: 'Secondary: Omar\nif no ack', color: 'orange' })
-    .rectangle({
-      id: 'ic',
-      x: 700,
-      y: 0,
-      w: 180,
-      h: 80,
-      text: 'Astrid takes\nincident command',
-      color: 'violet',
-      fill: 'semi',
-    })
-    .rectangle({
-      id: 'comms',
-      x: 700,
-      y: 180,
-      w: 180,
-      h: 80,
-      text: 'Lucía: status page,\ncustomer email',
-      color: 'green',
-      fill: 'semi',
-    })
-    .rectangle({ id: 'vendor', x: 940, y: 0, w: 180, h: 80, text: 'Vendor support\nCloudflare', color: 'grey' })
-    .arrow({ from: 'alert', to: 'primary' })
-    .arrow({ from: 'primary', to: 'secondary', text: '15 min', dash: 'dashed' })
-    .arrow({ from: 'primary', to: 'sev' })
-    .arrow({ from: 'sev', to: 'ic', text: 'yes' })
-    .arrow({ from: 'ic', to: 'comms' })
-    .arrow({ from: 'ic', to: 'vendor', text: 'provider fault' })
-    .build();
+  scene([
+    rect('alert', 0, 0, 180, 80, 'PostHog alert fires', { color: 'red' }),
+    rect('primary', 240, 0, 180, 80, 'Primary on-call\nack in 15 min', { color: 'orange' }),
+    { kind: 'diamond', id: 'sev', x: 480, y: -20, w: 160, h: 120, text: 'SEV1?', color: 'black' },
+    rect('secondary', 240, 180, 180, 80, 'Secondary: Omar\nif no ack', { color: 'orange' }),
+    rect('ic', 700, 0, 180, 80, 'Astrid takes\nincident command', { color: 'violet' }),
+    rect('comms', 700, 180, 180, 80, 'Lucía: status page,\ncustomer email', { color: 'green' }),
+    rect('vendor', 940, 0, 180, 80, 'Vendor support\nCloudflare', { color: 'grey' }),
+    arrow('alert', 'primary'),
+    arrow('primary', 'secondary', { text: '15 min', stroke: 'dashed' }),
+    arrow('primary', 'sev'),
+    arrow('sev', 'ic', { text: 'yes' }),
+    arrow('ic', 'comms'),
+    arrow('ic', 'vendor', { text: 'provider fault' }),
+  ]);
 
-const drawing = (name: string, content: TldrawModel.CanvasContent) =>
-  Drawing.make({ name, canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content }) });
-
-/** The five tldraw drawings the handbook and planning documents embed. Spec: `CONTENT.md` § Drawings. */
+/** The five canvas drawings the handbook and planning documents embed. Spec: `CONTENT.md` § Drawings. */
 export const makeDrawings = Effect.fnUntraced(function* () {
+  const { db } = yield* Database.Service;
   const { now } = yield* SampleSpace.Clock;
   const quarter = Math.floor(now.getUTCMonth() / 3) + 1;
+  const drawing = (name: string, commands: Commands) => Architecture.addCanvasDrawing(db, { name, commands });
   const drawings: Drawings = {
     orgChart: drawing('Alien Labs org chart', makeOrgChart()),
     architectureDiagram: drawing('Cairn architecture', makeArchitectureDiagram()),
@@ -276,8 +236,5 @@ export const makeDrawings = Effect.fnUntraced(function* () {
     roadmap: drawing(`Q${quarter} roadmap timeline`, makeRoadmap(now)),
     escalation: drawing('On-call escalation', makeEscalation()),
   };
-  for (const object of Object.values(drawings)) {
-    yield* Database.add(object);
-  }
   return drawings;
 });

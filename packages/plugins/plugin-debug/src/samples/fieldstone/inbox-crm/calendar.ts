@@ -41,7 +41,17 @@ export type Events = Record<EventKey, Event.Event[]>;
 
 type Who = keyof Directory;
 
-const FIELDSTONE: PersonKey[] = ['astrid', 'omar', 'felix', 'june', 'tomas', 'anika', 'ben', 'lucia', 'kofi', 'hana'];
+// No meeting has more than 5 attendees, so each series invites the people it is for, not the whole team.
+/** Engineering leads and product, who run the weekly sync. */
+const TEAM_SYNC: PersonKey[] = ['astrid', 'omar', 'june', 'anika', 'lucia'];
+/** The engineers who plan sprints. */
+const ENGINEERING: PersonKey[] = ['astrid', 'omar', 'felix', 'june', 'tomas'];
+/** The cache team, who shipped the 1.8 work the retros look back on. */
+const RETRO: PersonKey[] = ['astrid', 'omar', 'felix', 'hana', 'anika'];
+/** Product, design, developer relations and billing. */
+const PRODUCT: PersonKey[] = ['astrid', 'lucia', 'ben', 'kofi', 'june'];
+/** Release owners: the cache engineers, SRE and developer relations for the announcement. */
+const RELEASE: PersonKey[] = ['astrid', 'omar', 'felix', 'anika', 'kofi'];
 
 /** Astrid's reports, each with the time of day of their monthly 1:1. */
 const REPORTS: Array<{ readonly key: PersonKey; readonly time: readonly [number, number] }> = [
@@ -172,17 +182,17 @@ export const makeCalendar = (
     const events: Events = {
       teamSync: rotating(
         weekly(clock, { weekday: 1, from: FIRST, count: 52 }),
-        { title: 'Team sync', attendees: FIELDSTONE, time: [10, 0], minutes: 30 },
+        { title: 'Team sync', attendees: TEAM_SYNC, time: [10, 0], minutes: 30 },
         TEAM_SYNC_NOTES,
       ),
       sprintPlanning: rotating(
         weekly(clock, { weekday: 2, from: FIRST, count: 26, everyWeeks: 2 }),
-        { title: 'Sprint planning', attendees: FIELDSTONE, time: [14, 0], minutes: 60 },
+        { title: 'Sprint planning', attendees: ENGINEERING, time: [14, 0], minutes: 60 },
         SPRINT_NOTES,
       ),
       retro: rotating(
         weekly(clock, { weekday: 5, from: FIRST, count: 26, everyWeeks: 2 }),
-        { title: 'Retro', attendees: FIELDSTONE, time: [14, 0], minutes: 45 },
+        { title: 'Retro', attendees: RETRO, time: [14, 0], minutes: 45 },
         RETRO_NOTES,
       ),
       oncall: weekly(clock, { weekday: 5, from: FIRST, count: 52 }).map((offset, week) => {
@@ -196,7 +206,7 @@ export const makeCalendar = (
       }),
       productReview: rotating(
         monthly(clock, { from: -170, count: 12 }),
-        { title: 'Product review', attendees: FIELDSTONE, time: [15, 0], minutes: 60 },
+        { title: 'Product review', attendees: PRODUCT, time: [15, 0], minutes: 60 },
         PRODUCT_REVIEW_NOTES,
       ),
       northpineSync: rotating(
@@ -223,7 +233,7 @@ export const makeCalendar = (
         allDay(-75, -75, {
           title: 'Cairn 1.7 release',
           description: 'Release day for Cairn 1.7.',
-          attendees: FIELDSTONE,
+          attendees: RELEASE,
         }),
       ],
       northpineKickoff: [
@@ -302,7 +312,7 @@ export const makeCalendar = (
           title: 'Cairn 1.8 release',
           description:
             'From the threads "Cairn 1.8 release notes draft" and "GitHub Actions integration partner program": the verified setup-cairn listing goes live with the release.',
-          attendees: [...FIELDSTONE, 'sofia'],
+          attendees: ['astrid', 'omar', 'felix', 'kofi', 'sofia'],
         }),
       ],
       brightwaterIntro: [
@@ -345,7 +355,7 @@ export const makeCalendar = (
         allDay(34, 36, {
           title: 'Team offsite at Saltmarsh Lodge',
           description: 'From the thread "Q4 offsite planning": three days of working sessions by the coast.',
-          attendees: [...FIELDSTONE, 'wren'],
+          attendees: ['astrid', 'lucia', 'ben', 'wren'],
           location: {
             street: 'Estrada da Lagoa 12',
             locality: 'Comporta',

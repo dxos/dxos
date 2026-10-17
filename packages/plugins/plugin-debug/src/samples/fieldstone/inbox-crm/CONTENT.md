@@ -112,29 +112,29 @@ writes in also turns up on the calendar.
 
 - 1 `Calendar` "Alien Labs", the only calendar in the space. `Calendar` has no owner field: every
   `Event.owner` is Astrid. 300 `Event`s from −182d to +182d, so the calendar
-  scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`.
+  scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`; no event has more than 5.
 - `Event` has no recurrence field, so each repeating series is stored as one `Event` per
   occurrence. Occurrences of a series share title, time of day, duration and attendees, except that
   the on-call handoff's incoming engineer rotates weekly. Monthly series repeat every 30 days, moved
   off weekends.
 - Repeating series, 283 events:
-  - `teamSync` Team sync, weekly on Monday at 10:00, all of Alien Labs, 52
-  - `sprintPlanning` Sprint planning, every other Tuesday, 26
-  - `retro` Retro, every other Friday, 26
+  - `teamSync` Team sync, weekly on Monday at 10:00, Astrid, Omar, June, Anika, Lucía, 52
+  - `sprintPlanning` Sprint planning, every other Tuesday, Astrid, Omar, Felix, June, Tomás, 26
+  - `retro` Retro, every other Friday, Astrid, Omar, Felix, Hana, Anika, 26
   - `oneOnOne.<key>` Astrid's monthly 1:1 with each of her 9 reports, 103. Hana's start at her join
     date.
   - `oncall` On-call handoff, weekly on Friday at 15:00, Anika and the incoming engineer, 52
-  - `productReview` Product review, monthly, all of Alien Labs, 12
+  - `productReview` Product review, monthly, Astrid, Lucía, Ben, Kofi, June, 12
   - `northpineSync` Northpine sync, monthly, Grace, Marcus, Astrid, June, 12
 - One-off events, 17:
-  - Past: Cairn 1.7 release (all-day, −75d), Northpine SSO kickoff (−40d), Okapi postmortem review
+  - Past: Cairn 1.7 release (all-day, −75d, Astrid, Omar, Felix, Anika, Kofi), Northpine SSO kickoff (−40d), Okapi postmortem review
     (−26d), Stripe billing working session (−20d), Hana onboarding day one (−14d), Meridian security
     review (−6d), 2 interviews (−30d, −9d)
-  - Upcoming: Cairn 1.8 release (all-day, +2d, all of Alien Labs plus Sofia, whose partner listing
-    goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare pricing
+  - Upcoming: Cairn 1.8 release (all-day, +2d, Astrid, Omar, Felix, Kofi and Sofia, whose partner
+    listing goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare pricing
     call (+6d), Cloudflare architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
     Omar, Astrid), team offsite at Saltmarsh Lodge
-    (all-day, +34d to +36d, all of Alien Labs plus Wren, location set)
+    (all-day, +34d to +36d, Astrid, Lucía, Ben and Wren, location set)
 - 150 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
   occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
@@ -168,5 +168,6 @@ These must work end to end in the app.
 - Every external contact with a thread attends at least one event.
 - Nadia attends an event after the reference date: the Okapi alerting follow-up.
 - Every event attendee who is a person in the space has `contact` set.
+- No event has more than 5 attendees.
 - No automated sender links to a contact.
 - The 5 extracted contacts look like extractions and the other 10 do not.

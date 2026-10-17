@@ -76,9 +76,9 @@ so reading one leads to the next.
 
 ### Drawings
 
-- 5 `Drawing.Drawing`, each a tldraw canvas (`Tldraw.TLDRAW_SCHEMA`) built with
-  `TldrawModel.RecordBuilder` from shapes and bound arrows. Canvas-renderer drawings, like the
-  architecture content, need plugin-canvas internals that are not exported:
+- 5 `Drawing.Drawing`, each a plugin-canvas canvas (`Canvas.SCENE_SCHEMA`) built with
+  `Architecture.addCanvasDrawing` from scene commands: boxes, ellipses, labels and arrows bound to
+  the boxes they join. They stay editable, off the lattice:
   - `orgChart` Alien Labs' 10 people and who reports to whom
   - `architectureDiagram` Cairn's services and stores; the dashboard box is the Composer plugin
   - `requestFlow` One cache request, client to storage and back

@@ -20,6 +20,29 @@ export type DiagramSet = {
   drills: Readonly<Record<string, Readonly<Record<string, string>>>>;
 };
 
+export type CanvasDrawingProps = {
+  name: string;
+  /** Scene commands the canvas is built from. */
+  commands: CompiledDiagrams[string];
+  /** Shapes snap to the canvas lattice and links route along its gutters. */
+  lattice?: boolean;
+  /** Opens read-only until a viewer chooses to edit. */
+  readonly?: boolean;
+};
+
+/** Adds a canvas drawing built from scene commands to `db`. */
+export const addCanvasDrawing = (
+  db: Database.Database,
+  { name, commands, lattice, readonly }: CanvasDrawingProps,
+): Drawing.Drawing => {
+  const canvas = db.add(createCanvas());
+  CanvasBuilder.apply(canvas, commands);
+  if (lattice || readonly) {
+    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice, readonly }));
+  }
+  return db.add(Drawing.make({ name, canvas }));
+};
+
 /**
  * Adds one canvas drawing per diagram of the set to `db`, each built from its compiled commands, and
  * turns every drill-down box into a frame onto the diagram it names; answers the root drawing.
@@ -39,13 +62,10 @@ export const loadDiagramDrawings = async (
 ): Promise<ReadonlyMap<string, Drawing.Drawing>> => {
   const drawings = new Map<string, Drawing.Drawing>();
   for (const [id, commands] of Object.entries(set.diagrams)) {
-    const canvas = db.add(createCanvas());
-    CanvasBuilder.apply(canvas, commands);
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
     // routes links square along the gutters between the boxes.
     // Reference diagrams: they open read-only until a viewer chooses to edit.
-    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true, readonly: true }));
-    drawings.set(id, db.add(Drawing.make({ name: set.names[id] ?? id, canvas })));
+    drawings.set(id, addCanvasDrawing(db, { name: set.names[id] ?? id, commands, lattice: true, readonly: true }));
   }
 
   for (const [id, drills] of Object.entries(set.drills)) {

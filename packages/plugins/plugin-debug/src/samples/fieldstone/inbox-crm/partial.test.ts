@@ -104,6 +104,10 @@ describe('Alien Labs inbox and CRM', () => {
       expect(message.sender?.contact?.['/']).toBe(person ? uri(person.id) : undefined);
     }
 
+    for (const event of events) {
+      expect(event.attendees?.length ?? 0).toBeLessThanOrEqual(5);
+    }
+
     // Every attendee in the space links to their contact.
     for (const attendee of events.flatMap((event) => event.attendees ?? [])) {
       const person = personByEmail.get(attendee.email);
