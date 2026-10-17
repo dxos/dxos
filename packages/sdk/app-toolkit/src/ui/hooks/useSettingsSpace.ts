@@ -11,6 +11,7 @@ import {
   useSpaceProperties,
   useSpaces,
 } from '@dxos/react-client/echo';
+import { useCredentials } from '@dxos/react-client/halo';
 
 import * as AppSpace from '../../echo/AppSpace.ts';
 
@@ -18,12 +19,14 @@ import * as AppSpace from '../../echo/AppSpace.ts';
  * Reactive lookup of the settings space, where app-wide configuration lives.
  *
  * `undefined` until the space resolves: a profile may not have one on first load (it arrives via
- * identity setup or the migration), which is why this subscribes to the space list rather than
- * reading it once — {@link AppSpace.getSettingsSpace} on its own never re-renders the caller.
+ * identity setup or the migration), which is why this subscribes to the space list and to the HALO
+ * credential naming the space rather than reading once — {@link AppSpace.getSettingsSpace} on its
+ * own never re-renders the caller.
  */
 export const useSettingsSpace = (): Space | undefined => {
   const client = useClient();
   const spaces = useSpaces();
+  useCredentials();
 
   return spaces.length ? AppSpace.getSettingsSpace(client) : undefined;
 };

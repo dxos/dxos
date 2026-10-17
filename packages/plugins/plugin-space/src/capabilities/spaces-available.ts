@@ -31,7 +31,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
-import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
+import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceConvergence } from '../util/settings-space.ts';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -63,26 +63,26 @@ const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client) {
 });
 
 /**
- * The next space-list change or settings-space property write, the two events that can supply a
- * default space. The space list replays on subscribe, which would resolve this before anything has
- * changed, so the replay is skipped. Properties are only subscribable on a ready space; when it is
- * absent or unready, the transition that changes that arrives through the space list instead.
+ * The next space-list change, HALO credential change (which can name another settings space), or
+ * settings-space property write: the events that can supply a default space. The space list and
+ * credentials replay on subscribe, which would resolve this before anything has changed, so the
+ * replays are skipped. Properties are only subscribable on a ready space; when it is absent or
+ * unready, the transition that changes that arrives through the space list instead.
  */
 const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
-    let replayed = false;
-    const spacesSub = client.spaces.subscribe(() => {
-      if (replayed) {
-        resume(Effect.void);
-      }
-      replayed = true;
-    });
+    let armed = false;
+    const wake = () => armed && resume(Effect.void);
+    const spacesSub = client.spaces.subscribe(wake);
+    const credentialsSub = client.halo.credentials.subscribe(wake);
+    armed = true;
     const unsubscribe =
       settingsSpace?.state.get() === SpaceState.SPACE_READY
         ? Obj.subscribe(settingsSpace.properties, () => resume(Effect.void))
         : undefined;
     return Effect.sync(() => {
       spacesSub.unsubscribe();
+      credentialsSub.unsubscribe();
       unsubscribe?.();
     });
   });
@@ -118,8 +118,8 @@ export default Capability.makeModule(
       }
     });
 
-    // Concurrent healing can tombstone a space a pass is mid-write on; the raced state is gone, so
-    // rerunning converges. Interruption passes through so cleanup still stops the fiber.
+    // Healing can delete a space a pass is mid-write on; the raced state is gone, so rerunning
+    // converges. Interruption passes through so cleanup still stops the fiber.
     const initSettingsSpaceSupervised = Effect.gen(function* () {
       while (true) {
         const done = yield* initSettingsSpace.pipe(
@@ -133,12 +133,10 @@ export default Capability.makeModule(
       }
     });
 
-    // Converges duplicate settings spaces; self-gated (no-ops without tagged spaces), so it does
-    // not wait on the bootstrap — welding it to that fiber's fate would silently disable healing
-    // whenever bootstrap stalls or dies.
-    const healFiber = Effect.runFork(
-      runSettingsSpaceHealing(client).pipe(catchNonInterrupt('settings space healing stopped')),
-    );
+    // Names the canonical settings space once the HALO syncs with EDGE, creating it for a legacy
+    // profile, then converges duplicates. Independent of the bootstrap, which waits on it only when
+    // there is no settings space to read yet; welding the two would stall both.
+    let convergeFiber: Fiber.Fiber<void, unknown> | undefined;
 
     // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
     // settings space created for it. `subscribe` replays, so this covers the initial pass too.
@@ -147,6 +145,9 @@ export default Capability.makeModule(
         return;
       }
       initFiber = Effect.runFork(initSettingsSpaceSupervised);
+      convergeFiber = Effect.runFork(
+        runSettingsSpaceConvergence(client).pipe(catchNonInterrupt('settings space convergence stopped')),
+      );
     });
     subscriptions.add(() => spacesSub.unsubscribe());
 
@@ -357,7 +358,9 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
-        yield* Fiber.interrupt(healFiber);
+        if (convergeFiber) {
+          yield* Fiber.interrupt(convergeFiber);
+        }
         if (initFiber) {
           yield* Fiber.interrupt(initFiber);
         }

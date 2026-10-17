@@ -37,6 +37,15 @@ export const SpaceTemplateAnnotation = Annotation.make({
 });
 
 /**
+ * Marks a settings space healing has merged into the canonical one, and when it first did. A marked
+ * space is kept and merged again on later passes until it is old enough, and empty enough, to delete.
+ */
+export const MergedIntoAnnotation = Annotation.make({
+  id: 'org.dxos.space.mergedInto',
+  schema: Schema.Struct({ spaceId: Schema.String, mergedAt: Schema.Number }),
+});
+
+/**
  * Id of the space the user has designated as their default space. Stored on the settings space's
  * `properties` so the choice replicates across devices and can be repointed at any space.
  */

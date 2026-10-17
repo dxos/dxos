@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { create } from '@bufbuild/protobuf';
 import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -14,14 +15,18 @@ import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { anyPackBare, fromDate, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
+  CredentialSchema,
   DefaultSpaceSchema,
   MembershipPolicy,
+  SettingsSpaceSchema,
+  SpaceDeletedSchema,
   SpaceMember_Role,
+  SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { AppCapabilities } from '../app-framework/index.ts';
@@ -56,6 +61,9 @@ export const DEFAULT_SPACE_NAME = 'My Space';
 
 /** Resolves spaces by id or in bulk; structural so callers can pass a `Client` or a stub. */
 type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefined } };
+
+/** Reads the identity's HALO credentials; structural so callers can pass a `Client` or a stub. */
+type CredentialReader = { halo: { queryCredentials(options: { type: string }): Credential[] } };
 
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
@@ -96,26 +104,127 @@ export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space
   client.spaces
     .get()
     .filter((space) => isSettingsSpace(space))
-    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    .sort((a, b) => compareIds(a.id, b.id));
+
+const compareIds = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * Find the settings space to read app configuration from.
+ * Find the settings space to read app configuration from: the one a `SettingsSpace` HALO credential
+ * names, once this device has it.
  *
- * On a profile carrying duplicates this is a device-local read heuristic while healing converges;
- * deletion decisions must instead use the {@link getSettingsSpaces} order, which is a pure function
- * of replicated state.
+ * Until then, a device-local heuristic picks among the tagged spaces, so a device that has not seen
+ * the credential (offline, or its HALO still syncing) still boots with its settings. Nothing
+ * irreversible may be decided from that fallback; healing reads {@link getCanonicalSettingsSpaceId}.
  */
-export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
+export const getSettingsSpace = (client: {
+  spaces: { get(): Space[] };
+  halo?: CredentialReader['halo'];
+}): Space | undefined => {
   const tagged = getSettingsSpaces(client);
-  if (tagged.length <= 1) {
-    return tagged[0];
+  const canonicalId = client.halo && getCanonicalSettingsSpaceId({ halo: client.halo });
+  const canonical = canonicalId && tagged.find((space) => space.id === canonicalId);
+  if (canonical) {
+    return canonical;
+  }
+
+  const candidates = tagged.filter((space) => !isMergedSettingsSpace(space));
+  if (candidates.length <= 1) {
+    return candidates[0] ?? tagged[0];
   }
 
   // Properties are unreadable until a space is ready, so among the readable duplicates the
   // designation-holder wins — and any readable one beats waiting on an unopened one.
-  const ready = tagged.filter((space) => space.state.get() === SpaceState.SPACE_READY);
-  return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? tagged[0];
+  const ready = candidates.filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? candidates[0];
 };
+
+/**
+ * The settings spaces `SettingsSpace` HALO credentials name, lowest id first, leaving out any a
+ * `SpaceDeleted` credential tombstoned. More than one only after two devices canonicalized at once.
+ */
+export const getCredentialedSettingsSpaceIds = (client: CredentialReader): string[] => {
+  const deleted = getDeletedSpaceKeys(client);
+  const named = client.halo
+    .queryCredentials({ type: 'dxos.halo.credentials.SettingsSpace' })
+    .flatMap((credential) => {
+      const assertion = credential.subject?.assertion;
+      return (assertion && anyUnpack(assertion, SettingsSpaceSchema)) ?? [];
+    })
+    .filter(({ spaceKey }) => {
+      const key = toPublicKey(spaceKey);
+      return !key || !deleted.some((deletedKey) => deletedKey.equals(key));
+    })
+    .map(({ spaceId }) => spaceId);
+  return [...new Set(named)].sort(compareIds);
+};
+
+/** Keys of the spaces `SpaceDeleted` HALO credentials tombstoned, on this device or another. */
+export const getDeletedSpaceKeys = (client: CredentialReader): PublicKey[] =>
+  client.halo.queryCredentials({ type: 'dxos.halo.credentials.SpaceDeleted' }).flatMap((credential) => {
+    const assertion = credential.subject?.assertion;
+    return toPublicKey(assertion && anyUnpack(assertion, SpaceDeletedSchema)?.spaceKey) ?? [];
+  });
+
+/**
+ * Keys of every settings space this identity's HALO records a membership for, leaving out any a
+ * `SpaceDeleted` credential tombstoned. Read from credentials rather than the space list, so a space
+ * still opening on this device counts too.
+ */
+export const getSettingsSpaceKeysInHalo = (client: CredentialReader): PublicKey[] => {
+  const deleted = getDeletedSpaceKeys(client);
+  const keys = client.halo
+    .queryCredentials({ type: 'dxos.halo.credentials.SpaceMember' })
+    .flatMap((credential) => {
+      const assertion = credential.subject?.assertion && anyUnpack(credential.subject.assertion, SpaceMemberSchema);
+      const key = toPublicKey(assertion?.spaceKey);
+      return key && assertion?.tags.includes(SETTINGS_SPACE_TAG) ? [key] : [];
+    })
+    .filter((key) => !deleted.some((deletedKey) => deletedKey.equals(key)));
+  return keys.filter((key, index) => keys.findIndex((other) => other.equals(key)) === index);
+};
+
+/**
+ * Id of the canonical settings space: the lowest one a live credential names, so every device that
+ * holds the same credentials reads the same answer. `undefined` until some device has written one.
+ */
+export const getCanonicalSettingsSpaceId = (client: CredentialReader): string | undefined =>
+  getCredentialedSettingsSpaceIds(client)[0];
+
+/**
+ * Record `space` as the identity's settings space in the HALO. The host signs the credential; it
+ * reaches {@link getCanonicalSettingsSpaceId} once the credential stream delivers it.
+ */
+export const writeSettingsSpaceCredential = async (
+  client: Client,
+  space: { id: string; key: PublicKey },
+): Promise<void> => {
+  const identityKey = client.halo.identity.get()?.identityKey;
+  if (!identityKey) {
+    throw new Error('No identity.');
+  }
+
+  await client.halo.writeCredentials([
+    create(CredentialSchema, {
+      issuer: identityKey,
+      issuanceDate: fromDate(new Date()),
+      subject: {
+        id: identityKey,
+        assertion: anyPackBare(
+          SettingsSpaceSchema,
+          create(SettingsSpaceSchema, { spaceId: space.id, spaceKey: fromPublicKey(space.key) }),
+        ),
+      },
+    }),
+  ]);
+};
+
+/**
+ * Whether healing has merged this settings space into the canonical one. Unknown until the space is
+ * ready, since its properties are unreadable before then.
+ */
+export const isMergedSettingsSpace = (space: Space): boolean =>
+  space.state.get() === SpaceState.SPACE_READY &&
+  Option.isSome(Annotation.get(space.properties, AppAnnotation.MergedIntoAnnotation));
 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
@@ -247,6 +356,8 @@ export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) 
   yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
 
   setDefaultSpaceId(settingsSpace, defaultSpace.id);
+  // A new identity has nothing on EDGE to be behind, so it names its settings space without waiting.
+  yield* Effect.promise(() => writeSettingsSpaceCredential(client, settingsSpace));
 
   return { settingsSpace, defaultSpace };
 });

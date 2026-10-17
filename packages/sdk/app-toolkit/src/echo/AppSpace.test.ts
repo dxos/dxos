@@ -2,14 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { anyIs } from '@bufbuild/protobuf/wkt';
 import { describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
-import { createBuf, fromPublicKey } from '@dxos/protocols/buf';
+import { anyPackBare, createBuf, fromPublicKey } from '@dxos/protocols/buf';
 import { SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type Credential,
+  CredentialSchema,
+  SettingsSpaceSchema,
+  SpaceDeletedSchema,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Expando } from '@dxos/schema';
 
 import * as AppSpace from './AppSpace.ts';
@@ -102,6 +110,47 @@ describe('settings space resolution', () => {
     const ready = makeReadySpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
     expect(AppSpace.getSettingsSpace({ spaces: { get: () => [closed, ready] } })?.id).toBe(ready.id);
   });
+
+  test('the space a credential names wins over the readable heuristic', ({ expect }) => {
+    const closed = makeClosedSpace('B00000000000000000000000000000002', [AppSpace.SETTINGS_SPACE_TAG]);
+    const ready = makeReadySpace('B00000000000000000000000000000001', [AppSpace.SETTINGS_SPACE_TAG]);
+    const halo = makeHalo([settingsSpaceCredential(closed.id, PublicKey.random())]);
+    expect(AppSpace.getSettingsSpace({ spaces: { get: () => [closed, ready] }, halo })?.id).toBe(closed.id);
+  });
+
+  test('the lowest live credentialed id is canonical; a deleted one is ignored', ({ expect }) => {
+    const [lowKey, highKey] = [PublicKey.random(), PublicKey.random()];
+    const low = 'B00000000000000000000000000000001';
+    const high = 'B00000000000000000000000000000002';
+    const both = [settingsSpaceCredential(high, highKey), settingsSpaceCredential(low, lowKey)];
+    expect(AppSpace.getCredentialedSettingsSpaceIds({ halo: makeHalo(both) })).toEqual([low, high]);
+    expect(AppSpace.getCanonicalSettingsSpaceId({ halo: makeHalo([...both, spaceDeletedCredential(lowKey)]) })).toBe(
+      high,
+    );
+  });
+});
+
+const settingsSpaceCredential = (spaceId: string, spaceKey: PublicKey): Credential =>
+  create(CredentialSchema, {
+    subject: {
+      assertion: anyPackBare(
+        SettingsSpaceSchema,
+        create(SettingsSpaceSchema, { spaceId, spaceKey: fromPublicKey(spaceKey) }),
+      ),
+    },
+  });
+
+const spaceDeletedCredential = (spaceKey: PublicKey): Credential =>
+  create(CredentialSchema, {
+    subject: {
+      assertion: anyPackBare(SpaceDeletedSchema, create(SpaceDeletedSchema, { spaceKey: fromPublicKey(spaceKey) })),
+    },
+  });
+
+/** A HALO holding `credentials`, filtered by type as the client filters them. */
+const makeHalo = (credentials: Credential[]) => ({
+  queryCredentials: ({ type }: { type: string }) =>
+    credentials.filter((credential) => credential.subject?.assertion && anyIs(credential.subject.assertion, type)),
 });
 
 /**

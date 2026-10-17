@@ -4,7 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import { type Context as DxosContext } from '@dxos/context';
 import {
@@ -146,6 +146,29 @@ export class Identity {
     await this._deviceStateMachine.deviceChainReady.wait();
 
     await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
+  }
+
+  /**
+   * Resolves once this device's HALO agrees with EDGE and every credential it holds has been
+   * processed. Resolves at once without EDGE replication, since there is no remote to be behind.
+   */
+  async syncToEdge({ timeout }: { timeout: number }): Promise<void> {
+    const replicator = this._edgeFeedReplicator;
+    if (!replicator) {
+      return;
+    }
+
+    await asyncTimeout(
+      (async () => {
+        // Processing a credential can admit a feed the replicator has yet to sync, so check again.
+        do {
+          await replicator.waitUntilSynced();
+          await this.controlPipeline.state.waitUntilTimeframe(this.controlPipeline.state.endTimeframe);
+        } while (!replicator.isSynced());
+      })(),
+      timeout,
+      'HALO did not sync with EDGE',
+    );
   }
 
   get profileDocument(): ProfileDocument | undefined {
