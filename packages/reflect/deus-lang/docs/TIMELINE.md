@@ -341,6 +341,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 331 | 10-19 16:50 | 20m 00s | 9e1ceb2748 | The live explorer's routing is DEUS (D306) |
 | 332 | 10-19 17:30 | 40m 00s | 5884b02229 | The hub's per-head summary is DEUS, byte-identical to the JavaScript (D307) |
 | 333 | 10-19 18:40 | 1h 10m | 5a856aa80b | The js target names lambdas at parse time, not per closure (D308); history-node links and queue batching are DEUS (D309) |
-| 334 | 10-19 19:40 | 20m 00s | this commit | The Worker's build list lives in its codebase (D310) |
+| 334 | 10-19 19:40 | 20m 00s | 9d5e464c2f | The Worker's build list lives in its codebase (D310) |
+| 335 | 10-19 20:30 | 20m 00s | this commit | Raw-hole checks move from vitest to a cached DEUS test (D311) |
 
-Total from stage 1 to stage 334: 141h 20m.
+Total from stage 1 to stage 335: 141h 40m.

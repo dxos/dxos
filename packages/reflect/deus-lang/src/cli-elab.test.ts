@@ -92,23 +92,4 @@ end Bad
     expect(refusedFor('number!(1)')).toContain('elaborator Bad.number does not return a Sexp');
     expect(refusedFor('writes!(1)')).toContain('elaborator Bad.writes performs an effect other than Throw Text');
   });
-
-  // Syntax.Spec R-11: a `raw` hole reads markup text up to `<`, `{` or `}`, as JSX text between tags.
-  test('a raw hole reads text as written', { timeout: 120_000 }, ({ expect }) => {
-    process.env.DEUS_HOME = root;
-    const c = ['--codebase', join(scratch, 'raw')];
-    expect(deus('init', ...c).code).toBe(0);
-    // `init` adds the types a notation is stored as, so any codebase can declare one.
-    const rule = 'namespace M\nnotation say := "<say>" w:raw "</say>" => w\n';
-    expect(deus('add', file('say.deus', `${rule}end M\n`), ...c).code).toBe(0);
-    const said = (text: string) => {
-      const added = deus('update', file('said.deus', `namespace M\ndef v : Text := <say>${text}</say>\nend M\n`), ...c);
-      return added.code === 0 ? deus('eval', 'M.v', ...c).stdout.trim() : added.stderr;
-    };
-    expect(said("Hello,   world!\n  it's ok.")).toBe('"Hello, world! it\'s ok."');
-    expect(said('built on .NET and (this).value')).toBe('"built on .NET and (this).value"');
-    expect(said('a <= b')).toBe('"a <= b"');
-    expect(said('costs 3.50 in v1.2')).toBe('"costs 3.50 in v1.2"');
-    expect(said('he said -- nothing')).toContain('cannot hold `--`');
-  });
 });
