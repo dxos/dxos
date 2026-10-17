@@ -7,16 +7,16 @@ import { getCompositions, renderMedia } from '@remotion/renderer';
 import fs from 'node:fs';
 // Render spots to out/ using the naming convention DXOS_SI_[ID]_[length]_[ratio]_v[NN].mp4
 //
-//   moon run ident:render                          # everything (14 provocations x 2 lengths x 5 formats)
-//   moon run ident:render -- --id P03              # one provocation, all lengths and formats
-//   moon run ident:render -- --id OPEN,COMPOSER,END # several ids, comma-separated
-//   moon run ident:render -- --id P03 --length 10s --format 16x9
-//   moon run ident:render -- --id OPEN             # opening title only, all formats
-//   moon run ident:render -- --id TRAIL            # DXOS trail only, all formats
-//   moon run ident:render -- --id END              # end card only, all formats
-//   moon run ident:render-first-run                # only provocations marked firstRun
-//   moon run ident:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
-//   moon run ident:render -- --version 2           # file suffix _v02
+//   moon run autocue:render                          # everything (14 provocations x 2 lengths x 5 formats)
+//   moon run autocue:render -- --id P03              # one provocation, all lengths and formats
+//   moon run autocue:render -- --id OPEN,COMPOSER,END # several ids, comma-separated
+//   moon run autocue:render -- --id P03 --length 10s --format 16x9
+//   moon run autocue:render -- --id OPEN             # opening title only, all formats
+//   moon run autocue:render -- --id TRAIL            # DXOS trail only, all formats
+//   moon run autocue:render -- --id END              # end card only, all formats
+//   moon run autocue:render-first-run                # only provocations marked firstRun
+//   moon run autocue:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
+//   moon run autocue:render -- --version 2           # file suffix _v02
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
 import path from 'node:path';
@@ -38,13 +38,13 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const outDir = path.join(root, 'out');
 
 // Which provocations are in the first run (read from the source so there is one list).
-const src = fs.readFileSync(path.join(root, 'src/provocations.ts'), 'utf8');
+const src = fs.readFileSync(path.join(root, 'src/ident/provocations.ts'), 'utf8');
 const firstRunIds = [...src.matchAll(/id: '(P\d+)'[\s\S]*?firstRun: (true|false)/g)]
   .filter((m) => m[2] === 'true')
   .map((m) => m[1]);
 
 console.log('Bundling…');
-const serveUrl = await bundle({ entryPoint: path.join(root, 'src/index.ts') });
+const serveUrl = await bundle({ entryPoint: path.join(root, 'src/ident/index.ts') });
 const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptions });
 
 const selected = comps.filter((c) => {

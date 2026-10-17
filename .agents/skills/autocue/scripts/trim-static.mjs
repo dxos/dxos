@@ -22,7 +22,7 @@
  *
  * `--intro <video>` / `--outro <video>` bookend the trimmed demo with another clip (scaled and letterboxed
  * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
- * `--ident` uses the DXOS ident from `tools/ident`, rendering it on first use.
+ * `--ident` uses the DXOS ident from `tools/autocue`, rendering it on first use.
  *
  * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
@@ -92,7 +92,7 @@ if (!options.in || !existsSync(options.in)) {
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
 
-/** The ident's formats (`tools/ident/src/brand.ts` `FORMATS`) by aspect ratio. */
+/** The ident's formats (`tools/autocue/src/ident/brand.ts` `FORMATS`) by aspect ratio. */
 const IDENT_FORMATS = { '16x9': 16 / 9, '16x10': 16 / 10, '9x16': 9 / 16, '1x1': 1, '4x5': 4 / 5 };
 
 /** The ident format nearest the recording's aspect ratio, so the bookends fill the frame instead of being padded. */
@@ -102,10 +102,10 @@ const identFormat = (width, height) =>
   )[0];
 
 /**
- * The DXOS ident's opening title and end card in `format`, rendered by `tools/ident` into its `out/` on first use.
+ * The DXOS ident's opening title and end card in `format`, rendered by `tools/autocue` into its `out/` on first use.
  */
 const ident = (id, format) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/ident');
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/autocue');
   const dir = path.join(root, 'out', id);
   // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it.
   const find = () =>
@@ -117,7 +117,7 @@ const ident = (id, format) => {
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
   // Sources and the assets they render with (an installed or replaced font changes the clip too).
   const newest = Math.max(
-    ...['src', 'public'].flatMap((dir) =>
+    ...['src/ident', 'public'].flatMap((dir) =>
       readdirSync(path.join(root, dir), { recursive: true }).map(
         (name) => statSync(path.join(root, dir, String(name))).mtimeMs,
       ),
@@ -132,7 +132,7 @@ const ident = (id, format) => {
     });
     file = find();
     if (render.status !== 0 || !file) {
-      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/ident/README.md)`);
+      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/autocue/IDENT.md)`);
       process.exit(1);
     }
   }

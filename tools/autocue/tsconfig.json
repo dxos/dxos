@@ -5,13 +5,13 @@
   ],
   "references": [
     {
+      "path": "../../packages/ui/brand"
+    },
+    {
       "path": "../../packages/ui/react-ui"
     },
     {
       "path": "../../packages/ui/ui-theme"
-    },
-    {
-      "path": "../ident"
     }
   ]
 }

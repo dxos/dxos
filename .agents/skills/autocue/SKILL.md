@@ -580,8 +580,8 @@ sandbox `apt-get update` first: the preinstalled index is stale and the install 
 ### Intro and outro: `--ident`
 
 `--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
-`tools/ident` (Remotion). They are rendered into `tools/ident/out/` on first use, which needs `pnpm install`
-and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they render in a fallback face).
+`tools/autocue` (Remotion, `src/ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
+and the licensed Sharp Sans font in `tools/autocue/public/fonts/` (without it they render in a fallback face).
 The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800
 viewport, `16x9` for 1920×1080), so it fills the frame. `--ident composer` opens on the Composer logo instead.
 `--intro <video>` / `--outro <video>` bookend with any other clip, letterboxed to the recording's frame. Their

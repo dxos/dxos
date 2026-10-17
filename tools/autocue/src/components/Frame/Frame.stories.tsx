@@ -6,12 +6,12 @@ import { Player, type PlayerRef } from '@remotion/player';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { ComposerIntro, EndCard, FPS, OpenTitle, TIMING, loadBrandFont } from '@dxos/ident/cards';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
+import { ComposerIntro, EndCard, FPS, OpenTitle, TIMING, loadBrandFont } from '../../ident/cards.ts';
 import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
 

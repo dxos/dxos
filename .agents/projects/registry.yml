@@ -11,7 +11,7 @@ projects:
     user: burdon
     host: Mac
     created: 2026-10-16
-    summary: 'Factor the on-screen UI of autocue (frame/title band, captions, action feed, cursor) into a private tools/autocue package: each piece a plain-DOM core the skill injects into recorded pages, plus a React wrapper with a storybook. tools/ident stays separate and shares tokens.'
+    summary: 'Factor the on-screen UI of autocue (frame/title band, captions, action feed, cursor) into a private tools/autocue package: each piece a plain-DOM core the skill injects into recorded pages, plus a React wrapper with a storybook. the DXOS ident (formerly tools/ident) lives in it too, in src/ident.'
     tasks: .agents/projects/autocue-ui/TASKS.md
     design: .agents/projects/autocue-ui/DESIGN.md
     prs: [14028]

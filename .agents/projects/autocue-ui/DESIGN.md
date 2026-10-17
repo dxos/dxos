@@ -16,7 +16,8 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
    page once. Unlike the Countdown's `transform`, bundling lets cores import shared tokens.
 4. **Styling.** Plain CSS custom properties (`--autocue-*`) in the shadow root. The app's styles cannot reach the
    shadow root, but custom properties inherit through it, so a React host can map them to theme tokens.
-5. **`tools/ident`** stays a separate Remotion package. It can consume the shared tokens later.
+5. **The ident** (formerly `tools/ident`) lives in `tools/autocue/src/ident/`: one package for everything a recording
+   shows, with the Remotion tasks (`studio`, `render`) on `autocue`. See `tools/autocue/IDENT.md`.
 6. **`FrameHeader`** (react-ui-canvas, published) stays as is. A published package cannot depend on a private one.
    autocue's `Frame` matches its layout (centred title and caption) without the counter and controls.
 
@@ -28,7 +29,7 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
 | Title band                  | `terminal/stage.html` `#title`; `compose.mjs` labels | `Frame` header                |
 | Action feed, cursor, ripple | `overlay.mjs`                                        | `Feed`, `Cursor`              |
 | Countdown                   | `react-ui-experimental`                              | stays; loaded by `inject.mjs` |
-| Ident cards                 | `tools/ident` (Remotion)                             | stays; shares tokens          |
+| Ident cards                 | `tools/ident` (Remotion)                             | `src/ident/` (merged)         |
 
 ## Frame
 

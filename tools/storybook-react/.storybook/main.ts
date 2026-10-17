@@ -47,7 +47,7 @@ const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
 const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-tldraw/dist/assets');
-const identPublicDir = resolve(rootDir, 'tools/ident/public');
+const identPublicDir = resolve(rootDir, 'tools/autocue/public');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';

@@ -528,7 +528,7 @@ generators follow in phase 2.
 
 ### 12.3 The end card
 
-`plugins/plugin-canvas/samples/EndCard` rebuilds the 3 s ident end card (`tools/ident` `EndCard`) as a canvas document.
+`plugins/plugin-canvas/samples/EndCard` rebuilds the 3 s ident end card (`tools/autocue` `EndCard`) as a canvas document.
 The logo is a composite of five path nodes (the mark and D, X, O, S from `@dxos/brand/paths`, the data
 `DXOSHorizontalType` draws); the tagline, rule and call to action are nodes; every entrance is a key written through
 `canvas.setTimelineKey`. Remotion's `Easing.out(Easing.back(1.6))` is approximated by `cubic-bezier(0.34, 1.56, 0.64,

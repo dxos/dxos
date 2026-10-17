@@ -274,9 +274,6 @@
       "path": "packages/common/i18n/tsconfig.json"
     },
     {
-      "path": "tools/ident/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
