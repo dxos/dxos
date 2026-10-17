@@ -12,7 +12,6 @@ import {
   isValidDocumentId,
   stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
-import bs58check from 'bs58check';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -21,7 +20,6 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { type Obj } from '@dxos/echo';
 import {
   DatabaseDirectory,
   EntityStructure,
@@ -32,7 +30,6 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { objectStructureFromJson } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
@@ -68,6 +65,16 @@ import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
+import {
+  HISTORY_BLOAT_MIN_OPS,
+  type IndexedObject,
+  type Retirement,
+  buildReplacementDocument,
+  isHistoryBloated,
+  isRetirableForHistory,
+  makeReplacementDirectory,
+  replacementDocumentId,
+} from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -77,88 +84,6 @@ import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManag
 const CLOSURE_YIELD_INTERVAL = 32;
 
 const AUTOMATIC_GARBAGE_COLLECTION = false;
-
-/** Ops below which a document is never retired for its history, however it grew. */
-const HISTORY_BLOAT_MIN_OPS = 100_000;
-
-/** How many times its current state's size a document's ops must reach before its history counts as bloated. */
-const HISTORY_BLOAT_RATIO = 4;
-
-/**
- * Object types whose documents are retired when their history bloats. Sync cursors hold only machine-written
- * state, so rebuilding them from their current state loses nothing a user wrote.
- */
-const HISTORY_RETIREMENT_TYPES: readonly string[] = ['dxn:org.dxos.type.cursor:'];
-
-/**
- * Id of the document that replaces `documentId` when it is retired. Derived rather than random, so peers that
- * retire the same document concurrently write into one replacement instead of linking several.
- */
-export const replacementDocumentId = async (documentId: DocumentId): Promise<DocumentId> => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`dxos:retired:${documentId}`));
-  const id = bs58check.encode(new Uint8Array(digest).subarray(0, 16));
-  invariant(isValidDocumentId(id), 'Derived replacement document id is invalid.');
-  return id;
-};
-
-/**
- * The replacement document as one deterministic change: its actor is derived from the document it replaces and the
- * content exactly as inserted, and its timestamp is fixed. Peers that rebuild the same state produce byte-identical
- * changes that merge into one; any difference yields a distinct actor, which Automerge merges as a conflict.
- */
-export const buildReplacementDocument = async (
-  documentId: DocumentId,
-  directory: DatabaseDirectory,
-): Promise<A.Doc<DatabaseDirectory>> => {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(`dxos:retired:${documentId}:${JSON.stringify(directory)}`),
-  );
-  const actor = Array.from(new Uint8Array(digest).subarray(0, 16), (byte) => byte.toString(16).padStart(2, '0')).join(
-    '',
-  );
-  return A.change(A.init<DatabaseDirectory>({ actor }), { time: 0 }, (draft) => Object.assign(draft, directory));
-};
-
-/** A `retired` entry of a space directory, read back; see {@link DatabaseDirectory.retired}. */
-type Retirement = { documentId: string; replacedBy: string; reason: RetirementReason };
-
-/** One object of a retired document, as the index last saw it. */
-type IndexedObject = {
-  objectId: string;
-  json: Obj.JSON;
-  createdAt: number | null;
-};
-
-/** The directory that replaces an unloadable document: its objects rebuilt from the index, with no history. */
-const makeReplacementDirectory = ({
-  spaceId,
-  spaceKey,
-  objects,
-}: {
-  spaceId: SpaceId;
-  /** Written alongside `spaceId` for clients that still read it, as every new document is. */
-  spaceKey: string | null;
-  objects: readonly IndexedObject[];
-}): DatabaseDirectory => ({
-  version: SpaceDocVersion.CURRENT,
-  access: spaceKey ? { spaceId, spaceKey } : { spaceId },
-  objects: Object.fromEntries(
-    objects.map(({ objectId, json, createdAt }): [string, EntityStructure] => [
-      objectId,
-      objectStructureFromJson(json, { createdAt: createdAt ?? undefined }),
-    ]),
-  ),
-});
-
-/** Whether a document's history has outgrown its current state, which a rebuild without history would fix. */
-const isHistoryBloated = ({ ops, stateBytes }: { ops: number; stateBytes: number }): boolean =>
-  ops >= HISTORY_BLOAT_MIN_OPS && ops >= HISTORY_BLOAT_RATIO * stateBytes;
-
-/** Whether every object's type is one {@link HISTORY_RETIREMENT_TYPES} allows to be rebuilt. */
-const isRetirableForHistory = (typeDXNs: readonly (string | null | undefined)[]): boolean =>
-  typeDXNs.length > 0 &&
-  typeDXNs.every((typeDXN) => HISTORY_RETIREMENT_TYPES.some((prefix) => typeDXN?.startsWith(prefix) ?? false));
 
 /**
  * Idle window before the second indexing step re-tokenizes what the first one wrote, and the

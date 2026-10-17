@@ -14,14 +14,14 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeHost } from './automerge-host.ts';
 import {
-  AutomergeHost,
   DocumentQuarantinedError,
   OVERSIZED_DOCUMENT_CHANGES,
   OVERSIZED_DOCUMENT_OPS,
   isOutOfMemoryError,
   oversizeLevel,
-} from './automerge-host.ts';
+} from './quarantine.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */

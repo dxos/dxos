@@ -23,7 +23,8 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId, URI } from '@dxos/keys';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { EchoHost, buildReplacementDocument, replacementDocumentId } from './echo-host.ts';
+import { EchoHost } from './echo-host.ts';
+import { buildReplacementDocument, replacementDocumentId } from './retirement.ts';
 
 /** The error the browser worker logged for a 45M-op document, as Automerge raises it. */
 const OUT_OF_MEMORY = new RangeError('error inflating document chunk ops: out of memory');
