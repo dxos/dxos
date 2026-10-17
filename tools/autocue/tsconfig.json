@@ -9,6 +9,9 @@
     },
     {
       "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../ident"
     }
   ]
 }

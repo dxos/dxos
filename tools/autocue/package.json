@@ -21,11 +21,14 @@
     }
   },
   "devDependencies": {
+    "@dxos/ident": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@remotion/player": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
+    "remotion": "catalog:",
     "typescript": "catalog:"
   }
 }

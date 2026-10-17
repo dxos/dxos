@@ -47,6 +47,7 @@ const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
 const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-tldraw/dist/assets');
+const identPublicDir = resolve(rootDir, 'tools/ident/public');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -314,7 +315,12 @@ export const createConfig = ({
   // Per-package storybooks point `configDir` at their own `.storybook`, so the shared manager config
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
-  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
+  staticDirs: [
+    staticDir,
+    { from: sketchAssetsDir, to: '/assets/plugin-tldraw' },
+    // The ident's logo, sound and font, which Remotion's \`staticFile\` resolves from the root (autocue's ident story).
+    { from: identPublicDir, to: '/' },
+  ],
   // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
   // "Get started" onboarding checklist (sidebar widget and menu guide page).
   core: {

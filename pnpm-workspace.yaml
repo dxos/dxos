@@ -172,6 +172,7 @@ catalog:
   '@remotion/bundler': 4.0.534
   '@remotion/cli': 4.0.534
   '@remotion/fonts': 4.0.534
+  '@remotion/player': 4.0.534
   '@remotion/renderer': 4.0.534
   '@replit/codemirror-vim': ^6.3.0
   '@replit/codemirror-vscode-keymap': ^6.0.2

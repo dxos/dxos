@@ -311,6 +311,9 @@ const updateFrame = async (update) => {
         host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
       }
       const frame = host.__frame;
+      if ('headerBand' in update) {
+        frame.setHeaderBand(update.headerBand);
+      }
       if ('header' in update) {
         frame.setHeader(update.header ?? undefined);
       }
@@ -905,7 +908,7 @@ const handlers = {
     return {};
   },
   /**
-   * The take's title in the Frame's header band: `value` / `subtitle`, and `intro`
+   * The take's title in the Frame's header band (`band: false` for the intro alone): `value` / `subtitle`, and `intro`
    * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
    * out the intro before returning. An empty `value` clears it.
    */
@@ -914,6 +917,7 @@ const handlers = {
     if (options.captions !== 'off') {
       await updateFrame({
         header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
+        headerBand: command.band ?? true,
         intro: command.value ? intro : 0,
       });
     }

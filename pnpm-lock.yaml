@@ -372,6 +372,9 @@ catalogs:
     '@remotion/fonts':
       specifier: 4.0.534
       version: 4.0.534
+    '@remotion/player':
+      specifier: 4.0.534
+      version: 4.0.534
     '@remotion/renderer':
       specifier: 4.0.534
       version: 4.0.534
@@ -25509,12 +25512,18 @@ importers:
 
   tools/autocue:
     devDependencies:
+      '@dxos/ident':
+        specifier: workspace:*
+        version: link:../ident
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
+      '@remotion/player':
+        specifier: 'catalog:'
+        version: 4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -25524,6 +25533,9 @@ importers:
       react:
         specifier: ~19.2.7
         version: 19.2.7
+      remotion:
+        specifier: 'catalog:'
+        version: 4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

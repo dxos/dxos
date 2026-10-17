@@ -66,7 +66,7 @@ const SIZES = {
   'fill': undefined,
 } satisfies Record<string, FrameSize | undefined>;
 
-type StoryProps = Pick<FrameProps, 'mode' | 'captionStyle' | 'intro'> & {
+type StoryProps = Pick<FrameProps, 'mode' | 'captionStyle' | 'headerBand' | 'intro'> & {
   /** Layout only: the recording's aspect ratio, or fill the viewport. */
   size?: keyof typeof SIZES;
   /** Milliseconds each caption holds while playing. */
@@ -74,7 +74,7 @@ type StoryProps = Pick<FrameProps, 'mode' | 'captionStyle' | 'intro'> & {
 };
 
 /** Plays the script on a loop, as a recording would, with controls to stop and step it. */
-const TakeStory = ({ mode, size = '16:10', captionStyle, intro, interval = 2_500 }: StoryProps) => {
+const TakeStory = ({ mode, size = '16:10', captionStyle, headerBand, intro, interval = 2_500 }: StoryProps) => {
   const [step, setStep] = useState(0);
   // Each pass through the script is a new take, so the frame remounts and replays its intro.
   const [take, setTake] = useState(0);
@@ -104,6 +104,7 @@ const TakeStory = ({ mode, size = '16:10', captionStyle, intro, interval = 2_500
         caption={STEPS[step]}
         size={SIZES[size]}
         captionStyle={captionStyle}
+        headerBand={headerBand}
         intro={intro}
       >
         <MockApp step={step} />
@@ -144,8 +145,9 @@ const TakeStory = ({ mode, size = '16:10', captionStyle, intro, interval = 2_500
  * 3. Size 16:10 and 16:9 keep that aspect ratio at any viewport, letterboxed; fill takes the whole viewport.
  * 4. The header is a full-width band. The caption is a floating panel as wide as its text, at a fixed height;
  *    Bands makes it span the width too.
- * 5. Intro shows the title as a large centred panel for 3s at the start of each take, then cross-fades to the
- *    header band.
+ * 5. Intro shows the title alone as a large centred panel for 3s at the start of each take; with no header band
+ *    the whole frame is the recording.
+ * The recorded app always lays out at the frame's size (the same viewport); a band scales it down to fit.
  * 6. Overlay pins the header band and floats the caption over the app, as the driver paints them into a recorded page.
  */
 const meta: Meta<typeof TakeStory> = {
@@ -174,7 +176,7 @@ export const Bands: Story = {
 };
 
 export const Intro: Story = {
-  args: { mode: 'layout', size: '16:10', intro: 3_000, interval: 4_000 },
+  args: { mode: 'layout', size: '16:10', headerBand: false, intro: 3_000, interval: 4_000 },
 };
 
 export const Overlay: Story = {

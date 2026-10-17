@@ -21,6 +21,8 @@ export type FrameProps = PropsWithChildren<{
   size?: FrameSize;
   /** Floating `panel` (default) or full-width `band`. */
   captionStyle?: BandStyle;
+  /** Off, the header shows only as the intro and the content fills the frame. */
+  headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel on mount; remount (a new `key`) to replay it. */
   intro?: number;
   /** Overrides for the `--autocue-*` custom properties, which reach into the shadow root. */
@@ -37,6 +39,7 @@ export const Frame = ({
   caption,
   size,
   captionStyle = 'panel',
+  headerBand = true,
   intro,
   style,
   children,
@@ -73,6 +76,9 @@ export const Frame = ({
   useEffect(() => {
     handle.current?.setCaptionStyle(captionStyle);
   }, [mode, captionStyle]);
+  useEffect(() => {
+    handle.current?.setHeaderBand(headerBand);
+  }, [mode, headerBand]);
   // After the header effect, so the intro shows the current title.
   useEffect(() => {
     if (intro) {

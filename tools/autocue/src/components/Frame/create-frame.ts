@@ -24,7 +24,8 @@ export type FrameOptions = {
   /**
    * `overlay` fixes the header and caption over the page, so the recorded app shows through.
    * `layout` stacks the header band and a `band` caption around the content (the host's children, through a
-   * `<slot>`); a `panel` caption floats over the content instead, which then fills the bottom of the frame.
+   * `<slot>`); a `panel` caption floats over the content instead. The content always lays out at the frame's full
+   * size, the recording's viewport, and is scaled down to fit whatever space the bands leave it.
    */
   mode?: FrameMode;
   header?: FrameText;
@@ -37,6 +38,8 @@ export type FrameOptions = {
   size?: FrameSize;
   /** The caption's style; defaults to `panel`. */
   captionStyle?: BandStyle;
+  /** Off, the header shows only as the intro, and the content fills the whole frame; defaults to on. */
+  headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel when the frame opens (see `playIntro`); 0 or unset skips it. */
   intro?: number;
 };
@@ -51,6 +54,7 @@ export type FrameHandle = {
   setCaption: (text?: FrameText) => void;
   setSize: (size?: FrameSize) => void;
   setCaptionStyle: (style: BandStyle) => void;
+  setHeaderBand: (show: boolean) => void;
   /**
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
    * caption fade in. Resolves once the hand-off is done; a later call or `dispose` cuts it short.
@@ -69,7 +73,12 @@ export const FRAME_STYLES = `
   /* Centred, then scaled about its centre by \`--autocue-scale\`, which the host's resize observer sets. */
   .frame.layout.sized { position: absolute; left: 50%; top: 50%; transform-origin: center;
     transform: translate(-50%, -50%) scale(var(--autocue-scale, 1)); }
-  .frame.layout .content { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+  .frame.layout .content { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+  /* The recording's viewport: the frame's full size, scaled by \`--autocue-content-scale\` into the space left. */
+  .frame.layout .viewport { position: absolute; left: 50%; top: 50%; display: flex; flex-direction: column;
+    transform-origin: center; transform: translate(-50%, -50%) scale(var(--autocue-content-scale, 1)); }
+  .frame.overlay .viewport { display: contents; }
+  .header.off { display: none; }
   /* Only the bands ignore the pointer: inherited through the slot, it would disable the content too. */
   .band { flex: none; box-sizing: border-box; text-align: center; pointer-events: none;
     background: var(--autocue-band-surface); color: var(--autocue-band-fg); }
@@ -133,7 +142,15 @@ const renderBand = (band: HTMLElement, text?: FrameText) => {
  */
 export const createFrame = (
   root: ShadowRoot,
-  { mode = 'overlay', header, caption, size, captionStyle = 'panel', intro }: FrameOptions = {},
+  {
+    mode = 'overlay',
+    header,
+    caption,
+    size,
+    captionStyle = 'panel',
+    headerBand: showHeaderBand = true,
+    intro,
+  }: FrameOptions = {},
 ): FrameHandle => {
   const style = document.createElement('style');
   style.textContent = FRAME_STYLES;
@@ -152,7 +169,10 @@ export const createFrame = (
 
   const content = document.createElement('div');
   content.className = 'content';
-  content.appendChild(document.createElement('slot'));
+  const viewport = document.createElement('div');
+  viewport.className = 'viewport';
+  viewport.appendChild(document.createElement('slot'));
+  content.appendChild(viewport);
 
   const introBand = document.createElement('div');
   introBand.className = 'band header panel intro';
@@ -213,6 +233,25 @@ export const createFrame = (
     frame.style.setProperty('--autocue-scale', String(Math.min(width / current.width, height / current.height)));
   };
 
+  // Layout sizes, unaffected by the frame's own scale: the viewport is the whole frame, fitted into the content box.
+  const fitContent = () => {
+    const width = frame.offsetWidth;
+    const height = frame.offsetHeight;
+    if (!width || !height) {
+      return;
+    }
+    viewport.style.width = `${width}px`;
+    viewport.style.height = `${height}px`;
+    const scale = Math.min(content.clientWidth / width, content.clientHeight / height);
+    viewport.style.setProperty('--autocue-content-scale', String(scale));
+  };
+  // A band that changes height (a header gaining a subtitle) resizes the content box, which refits the viewport.
+  const contentObserver = new ResizeObserver(fitContent);
+  if (mode === 'layout') {
+    contentObserver.observe(frame);
+    contentObserver.observe(content);
+  }
+
   // Overlay paints over a live page at its real size, so only layout scales.
   const observer = new ResizeObserver(fit);
   const setSize = (next?: FrameSize) => {
@@ -234,6 +273,11 @@ export const createFrame = (
     captionBand.classList.toggle('panel', style === 'panel');
   };
   setCaptionStyle(captionStyle);
+
+  const setHeaderBand = (show: boolean) => {
+    headerBand.classList.toggle('off', !show);
+  };
+  setHeaderBand(showHeaderBand);
 
   let cancelIntro = () => {};
   // The title opens alone: the header and caption wait for it.
@@ -289,11 +333,13 @@ export const createFrame = (
     setCaption,
     setSize,
     setCaptionStyle,
+    setHeaderBand,
     playIntro,
     dispose: () => {
       clearTimeout(captionTimer);
       cancelIntro();
       observer.disconnect();
+      contentObserver.disconnect();
       style.remove();
       stage.remove();
     },

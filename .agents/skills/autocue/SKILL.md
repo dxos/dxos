@@ -511,7 +511,7 @@ came from. A viewer then sees the spec and the app agreeing, which is the whole 
 
 `title` puts the take's name in the Frame's header. By default it opens as a large panel centred on the page for 3s,
 then cross-fades into a full-width band at the top for the rest of the take (`"intro": 0` skips the opening,
-`"hold": 3600` waits out the opening before the next op). The caption stays hidden during the opening and fades in
+`"band": false` shows only the opening, `"hold": 3600` waits out the opening before the next op). The caption stays hidden during the opening and fades in
 with the header. A `cut` clears both, like any caption shown before it, so issue `title` after the last `cut`:
 
 ```bash

@@ -12,6 +12,13 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
+  "exports": {
+    "./cards": {
+      "source": "./src/cards.ts",
+      "types": "./src/cards.ts",
+      "import": "./src/cards.ts"
+    }
+  },
   "dependencies": {
     "@dxos/brand": "workspace:*",
     "@fontsource/poiret-one": "catalog:",

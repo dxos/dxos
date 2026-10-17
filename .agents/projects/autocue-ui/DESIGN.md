@@ -36,7 +36,10 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
   uses this.
 - `mode: 'layout'` — the header and caption sit around a `<slot>` for content. The storybook and the terminal stage
   use this.
-- The header is always a full-width band; its only floating form is the intro.
+- The header is a full-width band (`headerBand: false` drops it, leaving only the intro); its only floating form
+  is the intro.
+- The content always lays out at the frame's full size, the recording's viewport, and is scaled down to fit the
+  space the bands leave, so the app never reflows between configurations.
 - `captionStyle`: `band` spans the width at the bottom (in layout it takes space from the content); `panel`
   (default) floats over the content, centred and as wide as its text.
 - Panels invert the page theme (`:host-context(.dark)`; Composer marks dark mode with `html.dark`): dark in a light
