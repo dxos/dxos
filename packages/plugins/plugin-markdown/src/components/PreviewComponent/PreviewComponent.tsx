@@ -113,9 +113,9 @@ export const PreviewComponent = ({
   const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
-  // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
-  // instanceOf check fail, so embeds rendered nothing.
-  const [subject] = useObject(object);
+  // Subscribes so the label, icon and deleted state re-render. Surfaces get the live object, not this
+  // snapshot: they bind accessors and write to their subject.
+  useObject(object);
 
   // `object` is undefined both while the target loads and when there is nothing to load; only a
   // settled load tells them apart, and a deleted object still resolves, so both count as missing.
@@ -155,8 +155,8 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject && attendableId && available ? { subject, attendableId, extrinsic } : undefined),
-    [subject, attendableId, extrinsic, available],
+    () => (object && attendableId && available ? { subject: object, attendableId, extrinsic } : undefined),
+    [object, attendableId, extrinsic, available],
   );
   const mode = !data
     ? undefined
@@ -290,6 +290,8 @@ export const PreviewComponent = ({
   );
 
   // Shared by both previews: the container takes focus for the embed and hosts the attention id.
+  // Both frames reset `white-space`: the editor's `break-spaces` would otherwise reach the surface and
+  // lay out template whitespace as line breaks (a sheet's cell text drops out of its cell).
   const frameProps = {
     'tabIndex': 0,
     'data-testid': 'markdown.embed',
@@ -339,7 +341,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='relative grid scroll-mt-16 outline-hidden'
+          className='relative grid scroll-mt-16 outline-hidden whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -393,7 +395,7 @@ export const PreviewComponent = ({
     // Card preview.
     if (mode === 'card') {
       return (
-        <div className='outline-hidden' {...frameProps} ref={cardRef}>
+        <div className='outline-hidden whitespace-normal' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
             <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>

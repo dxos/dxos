@@ -6,12 +6,14 @@ import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
+import { type GeneratorFrames } from '../../generator/host.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
   type ControlPointRef,
   type Drag,
   type EditingPart,
   type InspectorMode,
+  type Isolation,
   type SceneViewAtoms,
 } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -27,6 +29,7 @@ import {
   type NodeId,
   type Scene,
   type SceneId,
+  type Timeline,
   type Tool,
 } from '../../model/types.ts';
 import { type Clipboard } from '../../utils/clipboard.ts';
@@ -42,6 +45,30 @@ import { type SceneNavigation } from './useSceneNavigation.ts';
  * components with state of their own, so the whole of it is here rather than threaded part by part: a
  * toolbar and the canvas act on the same camera, the same selection and the same projection.
  */
+/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
+export type TimelineKeys = {
+  active: boolean;
+  togglePlay: () => void;
+  /** Moves the playhead by whole frames. */
+  step: (frames: number) => void;
+  /** Moves the playhead to the selection's next or previous key. */
+  jumpKey: (direction: 1 | -1) => void;
+  addKey: () => void;
+  /** Removes the selection's keys at the playhead. */
+  removeKey: () => void;
+};
+
+/** The composite-object actions (ANIMATION.md §4.2); each is one undo step. */
+export type ObjectActions = {
+  compose: () => void;
+  ungroup: (id: NodeId) => void;
+  makeUnique: (id: NodeId) => void;
+  duplicate: (composite: SceneId) => void;
+  place: (composite: SceneId) => void;
+  rename: (composite: SceneId, name: string) => void;
+  remove: (composite: SceneId, instances: boolean) => void;
+};
+
 export type SceneViewContextValue = {
   registry: ReturnType<typeof useRegistry>;
   atoms: SceneViewAtoms;
@@ -115,6 +142,26 @@ export type SceneViewContextValue = {
   linkHover: LinkId | undefined;
   select: (ids: Iterable<ElementId>) => void;
   toolbarActions: ToolbarActions;
+
+  /** The projection under the animated one: what keys and timeline edits are written through. */
+  baseProjection: Projection;
+  /** The current scene's timeline, as stored. */
+  timeline: Timeline | undefined;
+  /** The clock's time and state. */
+  time: number;
+  playing: boolean;
+  fps: number;
+  /** Pauses and moves the playhead. */
+  seek: (t: number) => void;
+  timelineKeys: TimelineKeys;
+  /** Keys the current camera at the playhead. */
+  keyCamera: () => void;
+  isolation: Isolation | undefined;
+  isolate: (composite: SceneId) => void;
+  exitIsolation: () => void;
+  objectActions: ObjectActions;
+  /** What the scene's generators drew, and for which time. */
+  generated: GeneratorFrames | undefined;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
   Pick<SceneNavigation, 'drillIn'> &
   Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &

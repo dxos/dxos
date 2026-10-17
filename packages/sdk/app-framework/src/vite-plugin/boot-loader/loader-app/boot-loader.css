@@ -121,7 +121,9 @@ body {
   align-items: center;
   justify-content: center;
   filter: grayscale(100%);
-  transition: filter 1000ms ease-out;
+  transition:
+    filter 1000ms ease-out,
+    opacity 1000ms ease-out;
 }
 
 /*
@@ -133,6 +135,22 @@ body {
 #boot-loader-disc[data-host-driven] #boot-loader-mark,
 #boot-loader-mark:hover {
   filter: grayscale(0%);
+}
+
+/*
+ * On the light background a grey silhouette reads heavier than the brand colours, so the mark keeps its
+ * colours and is faded instead for the whole load; hover still shows it at full strength for inspection.
+ */
+@media (prefers-color-scheme: light) {
+  #boot-loader-mark,
+  #boot-loader-disc[data-host-driven] #boot-loader-mark {
+    filter: grayscale(0%);
+    opacity: 0.5;
+  }
+
+  #boot-loader-disc #boot-loader-mark:hover {
+    opacity: 1;
+  }
 }
 
 #boot-loader-mark svg {

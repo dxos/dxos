@@ -135,7 +135,7 @@ const INSTRUCTIONS = trim`
 export type SkillResult = { skill: Skill.Skill };
 
 /** The development-preferences skill, as a space object a project's instructions can bind. */
-export const DevelopmentSkill: SampleSpace.Phase<SkillResult> = SampleSpace.phase('skill', {
+export const DevelopmentSkill: SampleSpace.Partial<SkillResult> = SampleSpace.partial('skill', {
   schemas: [Skill.Skill, Text.Text],
   run: () =>
     Effect.gen(function* () {

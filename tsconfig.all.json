@@ -43,6 +43,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "tools/autocue/tsconfig.json"
+    },
+    {
       "path": "packages/common/av/tsconfig.json"
     },
     {
@@ -269,9 +272,6 @@
     },
     {
       "path": "packages/common/i18n/tsconfig.json"
-    },
-    {
-      "path": "tools/ident/tsconfig.json"
     },
     {
       "path": "packages/core/echo/index-core/tsconfig.json"
@@ -854,6 +854,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-plot/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-query/tsconfig.json"

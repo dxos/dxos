@@ -17,6 +17,7 @@ import { reduceLayerIntent } from '../utils/layers.ts';
 import { layoutScene } from '../utils/layout.ts';
 import { resizeNode } from '../utils/shapes.ts';
 import { type SceneStore, putScene, updateScene } from './store.ts';
+import { removeTargets } from './timeline.ts';
 import {
   type Capabilities,
   type Intent,
@@ -112,7 +113,17 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
           links[link.id] = link;
         }
       }
-      return { ...scene, nodes, links };
+      // A deleted node's tracks go with it.
+      const timeline = scene.timeline && removeTargets(scene.timeline, ids);
+      return { ...scene, nodes, links, ...(timeline ? { timeline } : {}) };
+    }
+
+    case 'timeline': {
+      if (intent.timeline === scene.timeline) {
+        return scene;
+      }
+      const { timeline: _, ...rest } = scene;
+      return intent.timeline ? { ...rest, timeline: intent.timeline } : rest;
     }
 
     case 'reorder': {

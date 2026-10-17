@@ -36,6 +36,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 
 import {
   canvasRecordOf,
+  generatorCompiler,
   isCanvasDrawing,
   objectRef,
   objectUri,
@@ -46,7 +47,7 @@ import {
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
+import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -74,6 +75,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
   const [snapshot, updateCanvas] = useObject(canvas);
@@ -198,6 +200,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               onDisplayChange={handleDisplayChange}
               inspectors={floating ? 'floating' : 'docked'}
               onInspectorsChange={handleInspectorsChange}
+              generators={generators}
+              compileGenerator={generatorCompiler}
+              createGeneratorWorker={createGeneratorWorker}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
@@ -218,7 +223,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                     overrides={overrides}
                     sceneFilter={isLocalScene}
                   />
+                  <SceneView.Timeline />
                   <SceneView.Layers />
+                  <SceneView.Objects />
                   <SceneView.About />
                 </>
               )}

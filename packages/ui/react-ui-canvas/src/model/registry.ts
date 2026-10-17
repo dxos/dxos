@@ -18,18 +18,29 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import {
+  BoxNodeView,
+  EllipseNodeView,
+  FrameNodeView,
+  GeneratorNodeView,
+  InstanceNodeView,
+  NoteNodeView,
+  PathNodeView,
+} from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
   EllipseNode,
   FrameNode,
+  GeneratorNode,
+  InstanceNode,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeType,
   NoteNode,
+  PathNode,
   type Point,
   type Port,
   RectNode,
@@ -101,6 +112,10 @@ export type NodeDef = {
   parts?: readonly PartField[];
   /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
   fields?: FormFieldMap;
+  /** The palette and the create menu offer the type; false for a type placed some other way (an instance). */
+  palette?: boolean;
+  /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
+  bare?: boolean;
 };
 
 /**
@@ -221,6 +236,46 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     defaultSize: NOMINAL_SIZES.frame,
     minSize: { width: 96, height: 60 },
     openable: true,
+  },
+  instance: {
+    name: 'Object',
+    icon: 'ph--cube--regular',
+    group: 'Objects',
+    schema: InstanceNode,
+    component: InstanceNodeView,
+    create: (props) => createNode({ type: 'instance', ...props }),
+    defaultSize: NOMINAL_SIZES.instance,
+    resizable: true,
+    minSize: { width: 16, height: 16 },
+    // Double-clicking opens the composite in isolation (ANIMATION.md §4.3).
+    openable: true,
+    palette: false,
+    bare: true,
+  },
+  generator: {
+    name: 'Generator',
+    icon: 'ph--sparkle--regular',
+    schema: GeneratorNode,
+    component: GeneratorNodeView,
+    create: (props) => createNode({ type: 'generator', ...props }),
+    defaultSize: NOMINAL_SIZES.generator,
+    resizable: true,
+    minSize: { width: 16, height: 16 },
+    // Placed by an agent (`canvas.addGenerator`) with its parameters and bindings, not drawn from the palette.
+    palette: false,
+    bare: true,
+  },
+  path: {
+    name: 'Path',
+    icon: 'ph--pen-nib--regular',
+    schema: PathNode,
+    component: PathNodeView,
+    create: (props) => createNode({ type: 'path', ...props }),
+    defaultSize: NOMINAL_SIZES.path,
+    resizable: true,
+    minSize: { width: 4, height: 4 },
+    palette: false,
+    bare: true,
   },
 };
 

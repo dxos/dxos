@@ -43,7 +43,6 @@ export const translations = [
         'scene-view.label': '3D',
         'map-view.label': 'Map',
         'camera-view.label': 'Camera',
-        'camera-target.placeholder': 'Select object',
       },
     },
   },

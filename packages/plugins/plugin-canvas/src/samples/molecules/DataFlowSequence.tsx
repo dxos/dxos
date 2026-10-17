@@ -4,7 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { SequenceHeader } from '../../components/index.ts';
+import { FrameHeader } from '@dxos/react-ui-canvas/scene';
+
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { useTween } from './tween.ts';
 
@@ -89,7 +90,7 @@ export const DataFlowSequence = ({ scenes, start = 0, autoplay = true }: DataFlo
       onPointerLeave={() => setHovered(false)}
     >
       {/* The header has a strip of its own above the diagram, so the camera's fit never puts a block under it. */}
-      <SequenceHeader
+      <FrameHeader
         title={scene.title}
         caption={scene.caption}
         index={index}
