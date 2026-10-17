@@ -19,7 +19,7 @@ export type IdentPlayerProps<P extends object> = {
   onEnded?: () => void;
 } & IdentProps;
 
-/** One ident card in Remotion's `Player`, at a recording's size and letterboxed in its theme's ground. */
+/** One ident card in Remotion's `Player`, at a recording's size, letterboxed like the Frame. */
 export const IdentPlayer = <P extends object>({
   component,
   inputProps,
@@ -49,7 +49,7 @@ export const IdentPlayer = <P extends object>({
   }, [onEnded]);
 
   return (
-    <div className='dx-fill' style={{ backgroundColor: palette({ theme }).ground }}>
+    <div className='dx-fill' style={{ backgroundColor: palette({ theme }).letterbox }}>
       <Player
         ref={ref}
         component={component}

@@ -20,6 +20,8 @@ export type Palette = {
   theme: IdentTheme;
   /** Whether `logoColor` chose the logo's colour, rather than the theme's main. */
   tinted: boolean;
+  /** The void around a letterboxed card, matching the Frame's `--autocue-letterbox`. */
+  letterbox: string;
   ground: string;
   main: string;
   second: string;
@@ -29,9 +31,10 @@ export type Palette = {
 };
 
 const PALETTES: Record<IdentTheme, Omit<Palette, 'theme' | 'tinted' | 'logo'>> = {
-  dark: { ...COLORS, muted: '#B8B8B8' },
+  dark: { ...COLORS, muted: '#B8B8B8', letterbox: '#000' },
   // Off-black on off-white: pure black on pure white reads harsher than the dark cards do.
   light: {
+    letterbox: colors.neutral[400],
     ground: colors.neutral[50],
     main: colors.neutral[900],
     second: colors.neutral[800],

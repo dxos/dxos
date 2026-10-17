@@ -20,8 +20,9 @@ export const TOKENS = `
     --autocue-caption-height: 104px;
     --autocue-panel-inset: 24px;
     --autocue-panel-radius: 12px;
-    /* Follows the theme, like the ident cards a take is cut between. */
-    --autocue-letterbox: #fff;
+    /* The void around the frame: mid grey (Tailwind neutral-400) in light, so the recording's own edges read; black in
+       dark. The ident player uses the same values. */
+    --autocue-letterbox: oklch(70.8% 0 0);
     /* Read by script as milliseconds, so keep the unit. */
     --autocue-open-fade: 600ms;
     --autocue-caption-fade: 300ms;

@@ -201,8 +201,8 @@ const IdentStory = ({ openCard = 'dxos', size = '16:10', logoColor, ...props }: 
  * 2. The panel at the bottom left: pause stops the script; next steps it by hand.
  * 3. Default: the app alone, no panels. Header: a translucent title band over the top. Footer: a translucent caption band over
  *    the bottom, fading between steps.
- * 4. Open captions: the title alone in the centre for 3s, then floating captions, fading between steps.
- * 5. Ident: the DXOS open card, the open-captions take, then the close card, all at the same 16:10 size, looped; in the light
+ * 4. Floating: the title alone in the centre for 3s, then floating captions, fading between steps.
+ * 5. Ident: the DXOS open card, the floating take, then the close card, all at the same 16:10 size, looped; in the light
  *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the close card's rule.
  * 6. Footer: the band stays up between steps; only its text fades.
  */
@@ -239,11 +239,11 @@ export const Footer: Story = {
 };
 
 /** The title opens alone in the centre, then the step captions float over the bottom. */
-export const OpenCaptions: Story = {
+export const Floating: Story = {
   args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 4_000 },
 };
 
-/** The open-and-captions take, between the DXOS open and close cards. */
+/** The floating take, between the DXOS open and close cards. */
 export const Ident: StoryObj<typeof IdentStory> = {
   render: (args) => <IdentStory {...args} />,
   args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 3_000, openCard: 'dxos', logoColor: 'cyan' },
