@@ -317,6 +317,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 307 | 10-18 22:00 | 1h 00m | f4cb759055 | Every package file is in the codebase and `deus export --files` writes it back; `@[expectFail]` for tests and theorems meant to fail; focus moves to dev speed (D279, D280) |
 | 308 | 10-18 23:00 | 1h 00m | 05c8799b1b | The test suite runs the native CLI: 178 s to 60 s; the native CLI is back a minute after a seed change; a native show bug found (D281) |
 | 309 | 10-19 00:00 | 1h 00m | 17c9915687 | Built programs are kept by hash; the simulator runs the CLI's file tools, so push, pull and merge are pure tests (D282, D283) |
-| 310 | 10-19 00:30 | 30m 00s | this commit | add/update refuse to shadow a mounted library's definition; test and check report their slowest checks (D284, D285) |
+| 310 | 10-19 00:30 | 30m 00s | e556d6bd12 | add/update refuse to shadow a mounted library's definition; test and check report their slowest checks (D284, D285) |
+| 311 | 10-19 01:00 | 30m 00s | this commit | The sync path's safety guards are pure tests: silent drops, new failures, a newer epoch (D286) |
 
-Total from stage 1 to stage 310: 124h 20m.
+Total from stage 1 to stage 311: 124h 50m.
