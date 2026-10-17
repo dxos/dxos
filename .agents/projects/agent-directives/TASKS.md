@@ -202,6 +202,58 @@ told to land a PR would still pick up adjacent fixes and poll CI between turns.
       to write its own state, which the "never set the mode yourself" rule
       forbids. Cost: a stale pin can outlive the work it named.
 
+## Phase 6: phase axis, server watcher, per-turn checklist (2026-09-05)
+
+PR: #12973 (OPEN) — https://github.com/dxos/dxos/pull/12973. Shell scripts live in `tools/storybook-react/scripts/` (serve, diagnose, diagnose.test).
+
+Spec: `agents/superpowers/specs/2026-09-05-agent-modes-design.md`. Design
+settled 1x1 with the user; order of delivery is phase → watcher → checklist.
+
+### Tasks
+
+- [x] **Brainstorm + spec** — phase is a second axis (`discuss|build|debug`, default
+      `discuss`), not a third mode value; `discuss` is about responsiveness, not
+      permissions; server status comes from one round-robin watcher per machine;
+      the foreground guard is an `ask`, never a deny, in every phase.
+- [x] **Phase axis** — `.claude/.phase` + `.claude/.debug`, `mode.sh phase set`,
+      hook branch, `focus` implies `build`, `context` emits the PHASE clause.
+  - [x] **Task 1: backend** — `mode.sh phase get|set {discuss|build|debug}` and
+        `mode.sh debug get`; the debug flag rides on the phase (`debug` sets it,
+        anything else clears it); a stale or hand-edited `.phase` canonicalises to
+        `discuss`. `reset()` in `mode.test.sh` now clears all four state files.
+        `.claude/hooks/mode.sh` untouched — hook wiring and the `context` PHASE
+        clause are later tasks.
+  - [x] Hook branch + `focus` implies `build`.
+  - [x] `context` emits the PHASE clause.
+- [x] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
+      plus 9009/5199, `~/.cache/dxos/watch/{status,watcher.pid}`, `--status`,
+      `--restart`.
+- [x] **SERVERS block** — `context` renders the status file with a `THIS` marker.
+- [x] **Checklist** — CHECKLIST lines in `context`, after SERVERS.
+- [x] **Guard** — `guard-foreground.sh` on `PreToolUse` Bash.
+- [x] **Diagnostics footer** — behind the debug flag (done in Task 3).
+- [x] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
+      `guard-foreground.test.sh`; AGENTS.md, `.claude/README.md`, `mode.md`,
+      storybook README, REPOSITORY_GUIDE.
+- [x] **Final review fixes** — SERVERS collapses idle ports to one `unbound:` line
+      and renders a worktree basename with a humanised age; `--ensure` and
+      `--restart` reap legacy per-port watchers (`--reap-legacy [PORT]` seam) and
+      `--status` points at `--restart` while one runs; the guard honours an
+      explicit Bash `timeout` over 30s and reads its input in one `jq` call.
+- [x] **Review fixes** — `--ensure` holds its lock until the spawned watcher owns
+      the pidfile (and `--watch` yields when it loses that race); status rows are
+      flattened to printable characters at both ends, and SERVERS drops split rows
+      and unknown passthrough lines; `phase set` rolls the phase back when the
+      debug marker cannot be updated.
+- [x] **Round 2 review fixes (CodeRabbit, #12973)** — `humanize_etime`, `printable`
+      and `servers_block` hoisted out of `context)` to top-level functions; a new
+      `mode.sh servers` verb calls the same validated renderer, and `mode.md`'s
+      re-orientation command now runs that instead of the watcher's raw,
+      unsanitised `--status`. `serve.sh` extracts its own forwarded `--port` and
+      registers it with `diagnose.sh --register-port`, which `known_ports` now
+      merges in, so a custom storybook port gets watched instead of only the
+      defaults and `launch.json`.
+
 ### References
 
 - `DESIGN.md` — findings, the control-point taxonomy, and the state-machine argument.

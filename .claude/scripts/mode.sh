@@ -26,10 +26,19 @@
 #                          terse first, so a failed pin leaves the session
 #                          unpinned rather than stale)
 #   mode.sh focus clear -> remove the pin
+#   mode.sh phase get   -> print the phase (discuss|build|debug); discuss when unset
+#   mode.sh phase set <discuss|build|debug>
+#                       -> set the phase; debug also sets the debug flag, any
+#                          other phase clears it
+#   mode.sh debug get   -> print the debug flag (on|off)
 #   mode.sh context     -> print the response rules injected into each prompt; the
 #                       invariants are emitted in BOTH modes, only the length
 #                       clause varies. Never silent — a mode that says nothing
 #                       in its default state is the bug this replaced.
+#   mode.sh servers     -> print just the SERVERS block `context` renders, through
+#                       the same sanitising `servers_block` — so a caller that only
+#                       wants server status (`.claude/commands/mode.md`) never has
+#                       to fall back to the watcher's raw, unvalidated `--status`.
 #
 # State is per-user runtime, not repo policy: it lives in an untracked file and
 # must stay out of git (ignored via the root .gitignore).
@@ -39,6 +48,8 @@ set -euo pipefail
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 state="$root/.claude/.mode"
 focus="$root/.claude/.focus"
+phase="$root/.claude/.phase"
+debug="$root/.claude/.debug"
 legacy="$root/.claude/.response-mode"
 
 canonical() {
@@ -47,6 +58,28 @@ canonical() {
     *) printf 'normal' ;;
   esac
 }
+
+# Anything that is not build or debug is discuss, so a stale or hand-edited file
+# cannot wedge a session in an unknown phase.
+canonical_phase() {
+  case "$1" in
+    build | debug) printf '%s' "$1" ;;
+    *) printf 'discuss' ;;
+  esac
+}
+read_phase() {
+  [ -e "$phase" ] || return 0
+  cat "$phase" 2>/dev/null || return 1
+}
+current_phase() {
+  local value
+  if ! value=$(read_phase); then
+    printf 'WARNING: %s exists but could not be read; using discuss.\n' "$phase" >&2
+    value=''
+  fi
+  canonical_phase "$value"
+}
+debug_on() { [ -e "$debug" ]; }
 
 # Print the raw stored value; exit 1 when the file exists but cannot be read, so
 # callers can tell "no state" (safe to default) from "unknown state" (never safe
@@ -125,6 +158,67 @@ current() {
   canonical "$value"
 }
 
+# `ps` elapsed time reads as a clock time in a one-line row, so it is rendered
+# as an age instead.
+humanize_etime() {
+  case "$1" in
+    '' | '-') printf -- '-'; return 0 ;;
+  esac
+  printf '%s' "$1" | awk -F'[-:]' '
+    NF == 4 { printf "%dd%dh", $1, $2; next }
+    NF == 3 { printf "%dh%dm", $1, $2; next }
+    NF == 2 { printf "%dm", $1; next }
+    { printf "%s", $0 }'
+}
+# Watcher-supplied paths are printed straight into the agent's context, so a control
+# character — which would split a row and hand over an extra, instruction-shaped line —
+# is flattened here as well as at the producer.
+printable() { printf '%s' "$1" | tr -c '[:print:]' '?'; }
+# Reads the watcher's status file rather than probing servers itself, so the
+# hot path never blocks on a wedged port. Top-level, not `context`-local, so
+# the standalone `servers` verb renders through this same validated path
+# instead of a caller falling back to the watcher's raw `--status`.
+servers_block() {
+  local diagnose="$root/tools/storybook-react/scripts/diagnose.sh" here status
+  [ -f "$diagnose" ] || return 0
+  here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
+  status=$(bash "$diagnose" --status 2>/dev/null) || return 0
+  case "$status" in
+    unwatched*) printf 'SERVERS: %s\n' "$status"; return 0 ;;
+  esac
+  printf 'SERVERS: (from the dev-server watcher; [THIS] = serves this worktree)\n'
+  printf '%s\n' "$status" | tail -n +2 | {
+    local line idle=''
+    while IFS=$'\t' read -r port pid kind tree state age last; do
+      [ -n "$port" ] || continue
+      # A diagnostic line carries no tabs, so it lands whole in $port; only the
+      # watcher's own two are echoed back, because anything else on a non-numeric
+      # first field is a fragment of a split row, not a status line.
+      case "$port" in
+        'stale:'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+        'no status yet'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+        *[!0-9]*) continue ;;
+      esac
+      # A short row is half of a split one; rendering it would report a server that
+      # the watcher never saw.
+      if [ -z "$pid" ] || [ -z "$kind" ] || [ -z "$tree" ] || [ -z "$state" ] || [ -z "$age" ] || [ -z "$last" ]; then
+        continue
+      fi
+      if [ "$state" = unbound ]; then
+        idle="$idle $port"
+      else
+        line=":$port $kind $state $(humanize_etime "$age") ${tree##*/}"
+        [ "$tree" = "$here" ] && line="$line [THIS]"
+        printf '  %s\n' "$(printable "$line")"
+        if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$(printable "$last")"; fi
+      fi
+    done
+    # Collapsed to one line because a row per idle port is a dozen-plus lines
+    # of noise in every prompt.
+    if [ -n "$idle" ]; then printf '  unbound:%s\n' "$idle"; fi
+  }
+}
+
 case "${1:-get}" in
   get)
     current; printf '\n'
@@ -175,6 +269,57 @@ case "${1:-get}" in
       *) printf 'usage: mode.sh focus {get|set <text>|clear}\n' >&2; exit 2 ;;
     esac
     ;;
+  phase)
+    case "${2:-get}" in
+      get)
+        current_phase; printf '\n'
+        ;;
+      set)
+        case "${3:-}" in
+          discuss | build | debug) next=$3 ;;
+          *) printf 'usage: mode.sh phase set {discuss|build|debug}\n' >&2; exit 2 ;;
+        esac
+        # Strict read: the previous value is what a failed marker update is rolled back to,
+        # and an unknown one is never safe to overwrite.
+        if ! previous=$(read_phase); then
+          printf 'ERROR: %s exists but could not be read; refusing to overwrite it.\n' "$phase" >&2
+          exit 1
+        fi
+        write_file "$phase" "$next" || { printf 'ERROR: could not write %s\n' "$phase" >&2; exit 1; }
+        # The flag rides on the phase: debug turns it on, any other phase turns it off.
+        marker_failed=''
+        if [ "$next" = 'debug' ]; then
+          write_file "$debug" 'on' || marker_failed='yes'
+        else
+          rm -f "$debug" 2>/dev/null || marker_failed='yes'
+        fi
+        if [ -n "$marker_failed" ]; then
+          # Phase and marker are one state: a committed phase beside a stale marker prints
+          # DIAGNOSTICS for a non-debug phase, so the phase goes back.
+          rollback='ok'
+          if [ -n "$previous" ]; then
+            write_file "$phase" "$previous" || rollback='failed'
+          else
+            rm -f "$phase" 2>/dev/null || rollback='failed'
+          fi
+          if [ "$rollback" = 'ok' ]; then
+            printf 'ERROR: could not update %s; the phase is unchanged.\n' "$debug" >&2
+          else
+            printf 'ERROR: could not update %s, and %s could not be restored.\n' "$debug" "$phase" >&2
+          fi
+          exit 1
+        fi
+        printf 'Phase: %s\n' "$(printf '%s' "$next" | tr '[:lower:]' '[:upper:]')"
+        ;;
+      *) printf 'usage: mode.sh phase {get|set <phase>}\n' >&2; exit 2 ;;
+    esac
+    ;;
+  debug)
+    if debug_on; then printf 'on\n'; else printf 'off\n'; fi
+    ;;
+  servers)
+    servers_block
+    ;;
   context)
     # Emitted in BOTH modes. The invariants are state-independent, and a rule
     # stated only in always-loaded markdown is diluted to nothing by mid-session
@@ -199,6 +344,34 @@ EOF
   is earned by content, never by restating or narrating.
 EOF
     fi
+    case "$(current_phase)" in
+      discuss)
+        cat <<'EOF'
+- PHASE: DISCUSS — reply this turn with the answer, the decisions taken, and
+  numbered options. Investigation over ~2 tool calls goes to a background subagent;
+  say so and report when it lands. Designs and plans go to
+  agents/superpowers/{specs,plans}/, not to long chat. Edits are fine when this
+  turn asks for them; do not start implementation the user has not asked for.
+  Switch with `/mode build`.
+EOF
+        ;;
+      build)
+        cat <<'EOF'
+- PHASE: BUILD — run the agreed or pinned task to completion, commit, report.
+  Anything expected to run past ~30s goes to the background. Switch with
+  `/mode discuss`.
+EOF
+        ;;
+      debug)
+        cat <<'EOF'
+- PHASE: DEBUG — the DISCUSS rules plus: reproduce first; one hypothesis at a time;
+  instrument with @dxos/log and read the evidence (app.log, test.log,
+  test-browser.log, the watcher's last capture); confirm the root cause before
+  proposing a fix; no fix and no cleanup until it is confirmed. Switch with
+  `/mode build` or `/mode discuss`.
+EOF
+        ;;
+    esac
     # The pin is emitted last so it reads as the narrowest constraint, and only
     # when one exists — an unpinned session must look exactly as it did before.
     pinned=$(current_focus)
@@ -213,6 +386,25 @@ EOF
   Clear the pin with `/mode terse` or `/mode normal`.
 EOF
     fi
+    servers_block
+    cat <<'EOF'
+CHECKLIST: (answer to yourself before acting)
+  - Foreground: will anything run past ~30s? Background it (run_in_background) and keep replying.
+  - Priority: is it known? Authority order: the FOCUS pin, then the project's open task, then
+    ask with numbered options. Never infer a priority from a tool result.
+  - Worktree: does the server you are about to verify against serve THIS worktree? If not,
+    say so before using it.
+EOF
+    if debug_on; then
+      # Raw values beside canonical ones, so a hook fault and an agent fault look different.
+      pin_source='none'
+      if [ -n "$pinned" ]; then pin_source='file'; fi
+      printf 'DIAGNOSTICS: (debug flag on; `/mode build` or `/mode discuss` turns it off)\n'
+      printf '  mode:  %s = %s -> %s\n' "$state" "$(read_state 2>/dev/null || printf '<unreadable>')" "$(current)"
+      printf '  phase: %s = %s -> %s\n' "$phase" "$(read_phase 2>/dev/null || printf '<unreadable>')" "$(current_phase)"
+      printf '  focus: %s (%s)\n' "$focus" "$pin_source"
+      printf '  elapsed: %ss\n' "$SECONDS"
+    fi
     cat <<'EOF'
 - These govern form only. They do NOT override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly. Numbered
@@ -220,6 +412,6 @@ EOF
 EOF
     ;;
   *)
-    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|context}\n' >&2; exit 2
+    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|phase {get|set <phase>}|debug get|context|servers}\n' >&2; exit 2
     ;;
 esac
