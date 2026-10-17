@@ -280,6 +280,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 270 | 10-17 14:30 | 50m 00s | 1d78becb9c | Explorer: real links, card scrolling, code edge shadows, phone search, board and History filters, from a first-visitor audit (D239) |
 | 271 | 10-17 16:00 | 1h 00m | a9227c0766 | Waiting variants: async code passes callbacks to List.map and the like (D240); the Worker resolves names with Codebase.lookupNameWith (D241); explorer loading card and overview columns (D239) |
 | 272 | 10-17 18:00 | 1h 00m | 6060df53af | The js runtime and the explorer app come from the codebase without a checkout (D242); tasks 7b7a26ad and 353444f7 closed with reasons |
-| 273 | 10-17 19:30 | 1h 10m | this commit | Adversarial review of D233–D241: callbacks inside data and by name wait, sync locals keep promises, exports start under no handlers, names keep unknown entry kinds (D243) |
+| 273 | 10-17 19:30 | 1h 10m | 073c0893ef | Adversarial review of D233–D241: callbacks inside data and by name wait, sync locals keep promises, exports start under no handlers, names keep unknown entry kinds (D243) |
+| 274 | 10-17 21:00 | 50m 00s | this commit | Bucket paths and the epoch rule in DEUS (D244, D238); the phone drawer names the project |
 
-Total from stage 1 to stage 273: 98h 50m.
+Total from stage 1 to stage 274: 99h 40m.

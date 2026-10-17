@@ -10,20 +10,13 @@
 import { addressOfFolder, grants, isGrantable, projectAt } from './address.mjs';
 import * as heads from './gen/heads.js';
 import * as keys from './gen/keys.js';
+import * as paths from './gen/paths.js';
 import { live, projectSummaries } from './live.mjs';
 import { nameAt, names, objects, packs } from './packs.mjs';
 
-/** `<level>-<sha256>`, the name of an immutable bundle (D50, D91). */
-const BUNDLE = /^[0-9]{1,3}-[0-9a-f]{64}$/;
-
-/** A key segment: no empty, dot-only or separator-bearing parts, so a key cannot leave its folder. */
-const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,199}$/;
-
-/** The folders beside the bundles, each written under the scope of the same name. */
+/** The folders beside the bundles, each written under the scope of the same name; which a request may name, and the
+ * scope that writes each, are `Worker.Paths` in DEUS (platform/worker/deus/paths.deus). */
 export const FOLDERS = ['assets', 'inbox', 'site', 'events'];
-
-/** The folder a push writes its test and theorem results to (task b160627d); writing it takes the `push` scope. */
-export const RESULTS = 'results';
 
 /** Every scope a key can hold; `admin` implies the others and also manages keys. */
 export const SCOPES = ['push', 'compact', ...FOLDERS, 'admin'];
@@ -83,7 +76,7 @@ export const remoteApi = async (request, env, ctx, url) => {
     // `Remote.keys`, `download` and `upload` reach packs through the files API the CLI already speaks.
     return packs(request, env, ctx, project, rest.slice(1));
   }
-  if (area === 'files' && (FOLDERS.includes(rest[0]) || rest[0] === RESULTS)) {
+  if (area === 'files' && paths.isFolder(rest[0] ?? '')) {
     return files(request, env, ctx, project, rest[0], rest.slice(1));
   }
   throw new HttpError(404, 'not found');
@@ -102,7 +95,7 @@ const bundles = async (request, env, ctx, project, rest) => {
     return lines(await listAll(env.BUCKET, folder));
   }
   const [name] = rest;
-  if (rest.length !== 1 || !BUNDLE.test(name)) {
+  if (rest.length !== 1 || !paths.isBundle(name)) {
     throw new HttpError(404, 'not a bundle name');
   }
   const key = folder + name;
@@ -287,7 +280,7 @@ const files = async (request, env, ctx, project, folder, rest) => {
     }
     return lines(await listAll(env.BUCKET, under));
   }
-  if (!rest.every((segment) => SEGMENT.test(segment))) {
+  if (!rest.every((segment) => paths.isSegment(segment))) {
     throw new HttpError(400, 'invalid key');
   }
   const key = under + rest.join('/');
@@ -305,13 +298,13 @@ const files = async (request, env, ctx, project, folder, rest) => {
     });
   }
   if (request.method === 'PUT') {
-    const logged = await authorize(request, env, ctx, folder === RESULTS ? 'push' : folder, project);
+    const logged = await authorize(request, env, ctx, paths.scopeOf(folder), project);
     const type = request.headers.get('content-type') ?? 'application/octet-stream';
     await env.BUCKET.put(key, new Uint8Array(await request.arrayBuffer()), { httpMetadata: { contentType: type } });
     return logged(json({ key: rest.join('/'), stored: true }, 201));
   }
   if (request.method === 'DELETE') {
-    const logged = await authorize(request, env, ctx, folder === RESULTS ? 'push' : folder, project);
+    const logged = await authorize(request, env, ctx, paths.scopeOf(folder), project);
     // Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
     if (folder === 'site') {
       await env.BUCKET.delete(key);

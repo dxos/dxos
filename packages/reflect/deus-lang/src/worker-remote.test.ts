@@ -405,6 +405,11 @@ describe('replication API', () => {
     }
     expect((await call('/v1/toolchain/files/assets/x', { method: 'PUT', body: 'x', key: site })).status).toBe(403);
     expect((await call('/v1/toolchain/files/site/.hidden', { method: 'PUT', body: 'x', key: site })).status).toBe(400);
+    // An encoded `..` is resolved by URL parsing before routing, into a folder no one writes (Worker.Paths.isFolder).
+    expect(
+      (await call('/v1/toolchain/files/site/%2e%2e/heads/main', { method: 'PUT', body: 'x', key: site })).status,
+    ).toBe(404);
+    expect(bucket.keys().filter((key) => key.includes('heads'))).toEqual([]);
     expect((await call('/v1/toolchain/files/other/x', { method: 'PUT', body: 'x', key: site })).status).toBe(404);
     expect(await (await call('/v1/toolchain/files/site/')).text()).toBe('def/a.json\nindex.html\nmeta.json\n');
     expect(await (await call('/v1/toolchain/files/site/meta.json')).text()).toBe('meta.json');
