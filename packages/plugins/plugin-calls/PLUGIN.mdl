@@ -462,6 +462,21 @@ op provisionCall
   effects: [echo:write]
 ```
 
+```mdl
+op SetSimulatedParticipants
+  key: org.dxos.operation.calls.setSimulatedParticipants
+  desc: |
+    Test seam for stories, tests and demo recordings. Fills the call with participants whose
+    camera and microphone are played from video files, with no swarm or SFU behind them. While
+    set, joining stays local (no EDGE needed): the participants appear once the local user joins,
+    their files play from the top, and their speaking state follows their audio. An empty list
+    removes them.
+  input:
+    participants: { name: string, src: string }[]   # src is a video URL (WebM in Chromium)
+  requires: [CallsCapabilities.Manager]
+  effects: [device]
+```
+
 ## Features
 
 ```mdl
@@ -775,7 +790,7 @@ scenario T-13: Resume a Call after the live session ends
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
-None of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
+Apart from `SetSimulatedParticipants`, none of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
 `leaveCall`, `toggleAudio`/`toggleVideo`/`toggleScreenshare`, `raiseHand`, `pinParticipant`, and
 `provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
 called directly from UI handlers — there is no invoker key for any of them. Every test below is
