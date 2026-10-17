@@ -10,5 +10,5 @@ export { ComposerIntro } from './ComposerIntro.tsx';
 export { loadBrandFont } from './fonts.ts';
 export { PROVOCATIONS } from './provocations.ts';
 export { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
-export { type IdentProps, type IdentTheme, palette, tailwindColor } from './theme.tsx';
+export { type IdentProps, type IdentTheme, TAILWIND_COLOR_NAMES, palette, tailwindColor } from './theme.tsx';
 export { Trail } from './Trail.tsx';

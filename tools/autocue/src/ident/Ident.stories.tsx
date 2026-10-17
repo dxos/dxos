@@ -13,21 +13,10 @@ import { loadBrandFont } from './fonts.ts';
 import { IdentPlayer } from './IdentPlayer.tsx';
 import { PROVOCATIONS } from './provocations.ts';
 import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
-import { type IdentProps } from './theme.tsx';
+import { type IdentProps, TAILWIND_COLOR_NAMES } from './theme.tsx';
 
-/** A few Tailwind colours to try; `logoColor` takes any `<hue>-<shade>` name, `white` or `black`. */
-const LOGO_COLORS = [
-  '',
-  'white',
-  'neutral-900',
-  'sky-400',
-  'blue-500',
-  'indigo-500',
-  'violet-500',
-  'emerald-500',
-  'amber-400',
-  'rose-500',
-];
+/** The theme's main colour (none), then every Tailwind colour. */
+const LOGO_COLORS = ['', ...TAILWIND_COLOR_NAMES];
 
 type CardId = 'opening' | 'composer' | 'outro' | 'provocation';
 

@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ComposerIntro, EndOnly, OpenOnly, TIMING, loadBrandFont } from '../../ident/cards.ts';
+import { ComposerIntro, EndOnly, OpenOnly, TAILWIND_COLOR_NAMES, TIMING, loadBrandFont } from '../../ident/cards.ts';
 import { IdentPlayer } from '../../ident/IdentPlayer.tsx';
 import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
@@ -249,19 +249,6 @@ export const Ident: StoryObj<typeof IdentStory> = {
   args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
   argTypes: {
     opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
-    logoColor: {
-      control: 'select',
-      options: [
-        '',
-        'white',
-        'neutral-900',
-        'sky-400',
-        'blue-500',
-        'violet-500',
-        'emerald-500',
-        'amber-400',
-        'rose-500',
-      ],
-    },
+    logoColor: { control: 'select', options: ['', ...TAILWIND_COLOR_NAMES] },
   },
 };

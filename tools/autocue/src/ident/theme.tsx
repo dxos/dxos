@@ -55,6 +55,15 @@ export const tailwindColor = (name: string): string => {
   return value;
 };
 
+/** Every Tailwind colour `tailwindColor` accepts: `white`, `black`, and each `<hue>-<shade>`. */
+export const TAILWIND_COLOR_NAMES: string[] = Object.entries(colors).flatMap(([hue, value]) =>
+  typeof value === 'string'
+    ? ['white', 'black'].includes(hue)
+      ? [hue]
+      : []
+    : Object.keys(value).map((shade) => `${hue}-${shade}`),
+);
+
 export const palette = ({ theme = 'dark', logoColor }: IdentProps = {}): Palette => {
   const base = PALETTES[theme];
   if (!logoColor) {
