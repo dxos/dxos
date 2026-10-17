@@ -1,7 +1,7 @@
-layer: application
+layer: tool
 language: typescript
 tags:
-  - typecheck
+  - ts-compile
 
 tasks:
   studio:

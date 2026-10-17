@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Player, type PlayerRef } from '@remotion/player';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
+import { ComposerIntro, EndCard, FPS, OpenTitle, TIMING, loadBrandFont } from '@dxos/ident/cards';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type FrameSize, type FrameText } from './create-frame.ts';
@@ -63,18 +66,31 @@ const PANEL = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separat
 const SIZES = {
   '16:10': { width: 1280, height: 800 },
   '16:9': { width: 1920, height: 1080 },
-  'fill': undefined,
-} satisfies Record<string, FrameSize | undefined>;
+} satisfies Record<string, FrameSize>;
 
-type StoryProps = Pick<FrameProps, 'mode' | 'captionStyle' | 'headerBand' | 'intro'> & {
-  /** Layout only: the recording's aspect ratio, or fill the viewport. */
-  size?: keyof typeof SIZES;
+type Size = keyof typeof SIZES;
+
+type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'intro'> & {
+  /** The recording's aspect ratio, which every view keeps, letterboxed. */
+  size?: Size;
+  /** Off, the script still steps the app but shows no captions. */
+  captions?: boolean;
   /** Milliseconds each caption holds while playing. */
   interval?: number;
+  /** Plays the script once and calls this after the last step, instead of looping. */
+  onDone?: () => void;
 };
 
 /** Plays the script on a loop, as a recording would, with controls to stop and step it. */
-const TakeStory = ({ mode, size = '16:10', captionStyle, headerBand, intro, interval = 2_500 }: StoryProps) => {
+const TakeStory = ({
+  size = '16:10',
+  captionStyle,
+  headerBand,
+  intro,
+  captions = true,
+  interval = 2_500,
+  onDone,
+}: StoryProps) => {
   const [step, setStep] = useState(0);
   // Each pass through the script is a new take, so the frame remounts and replays its intro.
   const [take, setTake] = useState(0);
@@ -91,17 +107,17 @@ const TakeStory = ({ mode, size = '16:10', captionStyle, headerBand, intro, inte
       return;
     }
 
-    const timer = setInterval(() => setStep((step) => (step + 1) % STEPS.length), interval);
-    return () => clearInterval(timer);
-  }, [playing, interval]);
+    const last = step === STEPS.length - 1;
+    const timer = setTimeout(() => (last && onDone ? onDone() : setStep((step + 1) % STEPS.length)), interval);
+    return () => clearTimeout(timer);
+  }, [playing, interval, step, onDone]);
 
   return (
     <>
       <Frame
         key={take}
-        mode={mode}
         header={HEADER}
-        caption={STEPS[step]}
+        caption={captions ? STEPS[step] : undefined}
         size={SIZES[size]}
         captionStyle={captionStyle}
         headerBand={headerBand}
@@ -136,19 +152,89 @@ const TakeStory = ({ mode, size = '16:10', captionStyle, headerBand, intro, inte
   );
 };
 
+type CardProps = { component: FC; seconds: number; size: Size; onEnded: () => void };
+
+/** One ident card, played once by Remotion's `Player` at the take's size, letterboxed like the take. */
+const Card = ({ component, seconds, size, onEnded }: CardProps) => {
+  const ref = useRef<PlayerRef>(null);
+  const { themeMode } = useThemeContext();
+  // The ident is drawn white on black; inverting it (and turning the hues back) gives the light theme's black on white.
+  const light = themeMode === 'light';
+  useEffect(() => {
+    const player = ref.current;
+    if (!player) {
+      return;
+    }
+
+    player.addEventListener('ended', onEnded);
+    player.play();
+    return () => player.removeEventListener('ended', onEnded);
+  }, [onEnded]);
+
+  return (
+    <div className={light ? 'dx-fill bg-white' : 'dx-fill bg-black'}>
+      <Player
+        ref={ref}
+        component={component}
+        durationInFrames={Math.round(seconds * FPS)}
+        fps={FPS}
+        compositionWidth={SIZES[size].width}
+        compositionHeight={SIZES[size].height}
+        style={{ width: '100%', height: '100%', filter: light ? 'invert(1) hue-rotate(180deg)' : undefined }}
+        // Muted, since a browser refuses to autoplay sound; the rendered ident keeps its audio.
+        initiallyMuted
+        acknowledgeRemotionLicense
+      />
+    </div>
+  );
+};
+
+const OPENINGS = {
+  dxos: { component: OpenTitle, seconds: TIMING.open.duration },
+  composer: { component: ComposerIntro, seconds: TIMING.composer.duration },
+};
+
+type IdentStoryProps = StoryProps & {
+  /** The opening card: the DXOS title, or the Composer logo (`--ident composer`). */
+  opening?: keyof typeof OPENINGS;
+};
+
+/** A whole cut, as `trim-static.mjs --ident` assembles it: the opening card, the take, then the end card, looped. */
+const IdentStory = ({ opening = 'dxos', size = '16:9', ...props }: IdentStoryProps) => {
+  const [phase, setPhase] = useState<'open' | 'take' | 'end'>('open');
+  useEffect(() => loadBrandFont(), []);
+  const { component, seconds } = OPENINGS[opening];
+  switch (phase) {
+    case 'open':
+      return <Card key='open' component={component} seconds={seconds} size={size} onEnded={() => setPhase('take')} />;
+    case 'take':
+      return <TakeStory {...props} size={size} onDone={() => setPhase('end')} />;
+    case 'end':
+      return (
+        <Card
+          key='end'
+          component={EndCard}
+          seconds={TIMING.spot10.endCard}
+          size={size}
+          onEnded={() => setPhase('open')}
+        />
+      );
+  }
+};
+
 /**
  * The frame around a mock autocue take: the title band, the recorded app, and the step captions a flow issues.
  *
  * Test:
- * 1. The caption changes every 2.5s and is gone on the last step; the title band stays.
- * 2. The floating panel (bottom left): pause stops the script; next steps it by hand.
- * 3. Size 16:10 and 16:9 keep that aspect ratio at any viewport, letterboxed; fill takes the whole viewport.
- * 4. The header is a full-width band. The caption is a floating panel as wide as its text, at a fixed height;
- *    Bands makes it span the width too.
- * 5. Intro shows the title alone as a large centred panel for 3s at the start of each take; with no header band
- *    the whole frame is the recording.
- * The recorded app always lays out at the frame's size (the same viewport); a band scales it down to fit.
- * 6. Overlay pins the header band and floats the caption over the app, as the driver paints them into a recorded page.
+ * 1. Every variant keeps the size's aspect ratio (16:10 or 16:9) at any viewport, letterboxed, and the recorded app
+ *    fills the whole frame; bands and panels lie over it.
+ * 2. The panel at the bottom left: pause stops the script; next steps it by hand.
+ * 3. Default: the app alone, no panels. Header: a translucent title band over the top. Footer: a translucent caption band over
+ *    the bottom, fading between steps.
+ * 4. Intro captions: the title alone in the centre for 3s, then floating captions, fading between steps.
+ * 5. Ident: the DXOS opening card, the intro-captions take, then the end card, all at one size, looped; in the light
+ *    theme the cards are inverted to black on white.
+ * 6. Footer: the band stays up between steps; only its text fades.
  */
 const meta: Meta<typeof TakeStory> = {
   title: 'tools/autocue/Frame',
@@ -167,18 +253,31 @@ export default meta;
 
 type Story = StoryObj<typeof TakeStory>;
 
+/** The recording alone, with no panels. */
 export const Default: Story = {
-  args: { mode: 'layout', size: '16:10' },
+  args: { size: '16:10', captions: false },
 };
 
-export const Bands: Story = {
-  args: { mode: 'layout', size: '16:10', captionStyle: 'band' },
+/** A translucent band over the top carries the take's title. */
+export const Header: Story = {
+  args: { size: '16:10', headerBand: true, captions: false },
 };
 
-export const Intro: Story = {
-  args: { mode: 'layout', size: '16:10', headerBand: false, intro: 3_000, interval: 4_000 },
+/** A translucent band over the bottom carries the step captions. */
+export const Footer: Story = {
+  args: { size: '16:10', captionStyle: 'band' },
 };
 
-export const Overlay: Story = {
-  args: { mode: 'overlay' },
+/** The title opens alone in the centre, then the step captions float over the bottom. */
+export const IntroCaptions: Story = {
+  args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 4_000 },
+};
+
+/** The intro-and-captions take, between the DXOS opening card and the end card. */
+export const Ident: StoryObj<typeof IdentStory> = {
+  render: (args) => <IdentStory {...args} />,
+  args: { size: '16:9', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
+  argTypes: {
+    opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
+  },
 };

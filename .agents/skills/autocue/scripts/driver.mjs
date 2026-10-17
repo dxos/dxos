@@ -908,7 +908,7 @@ const handlers = {
     return {};
   },
   /**
-   * The take's title in the Frame's header band (`band: false` for the intro alone): `value` / `subtitle`, and `intro`
+   * The take's title (`band: true` also keeps it as a band over the top after the intro): `value` / `subtitle`, and `intro`
    * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
    * out the intro before returning. An empty `value` clears it.
    */
@@ -917,7 +917,7 @@ const handlers = {
     if (options.captions !== 'off') {
       await updateFrame({
         header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
-        headerBand: command.band ?? true,
+        headerBand: command.band ?? false,
         intro: command.value ? intro : 0,
       });
     }

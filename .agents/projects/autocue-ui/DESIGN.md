@@ -34,14 +34,12 @@ One implementation of each piece of autocue's on-screen UI, with a storybook, us
 
 - `mode: 'overlay'` — the header and caption are fixed over the page and the recorded app shows through. The driver
   uses this.
-- `mode: 'layout'` — the header and caption sit around a `<slot>` for content. The storybook and the terminal stage
+- `mode: 'layout'` — the header and caption lie over a `<slot>` for content. The storybook and the terminal stage
   use this.
-- The header is a full-width band (`headerBand: false` drops it, leaving only the intro); its only floating form
-  is the intro.
-- The content always lays out at the frame's full size, the recording's viewport, and is scaled down to fit the
-  space the bands leave, so the app never reflows between configurations.
-- `captionStyle`: `band` spans the width at the bottom (in layout it takes space from the content); `panel`
-  (default) floats over the content, centred and as wide as its text.
+- The recording always fills the frame; nothing takes space from it or scales it. Everything else lies over it,
+  translucent:
+  - header: a band over the top (`headerBand`, default off: no panels) and/or the intro panel in the centre (`intro`);
+  - caption: a band over the bottom (`captionStyle: 'band'`) or a floating panel (`'panel'`, default).
 - Panels invert the page theme (`:host-context(.dark)`; Composer marks dark mode with `html.dark`): dark in a light
   theme, light in a dark one, so they stand out from the content. Bands stay the driver's dark band.
 - `playIntro(ms)` (option `intro`, driver op `title`) shows the header's text alone, as a large centred panel; the

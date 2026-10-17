@@ -21,7 +21,7 @@ export type FrameProps = PropsWithChildren<{
   size?: FrameSize;
   /** Floating `panel` (default) or full-width `band`. */
   captionStyle?: BandStyle;
-  /** Off, the header shows only as the intro and the content fills the frame. */
+  /** On, the header also shows as a translucent band over the top; off (default), only as the intro. */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel on mount; remount (a new `key`) to replay it. */
   intro?: number;
@@ -39,7 +39,7 @@ export const Frame = ({
   caption,
   size,
   captionStyle = 'panel',
-  headerBand = true,
+  headerBand = false,
   intro,
   style,
   children,

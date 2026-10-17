@@ -509,10 +509,10 @@ C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subt
 When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
 
-`title` puts the take's name in the Frame's header. By default it opens as a large panel centred on the page for 3s,
-then cross-fades into a full-width band at the top for the rest of the take (`"intro": 0` skips the opening,
-`"band": false` shows only the opening, `"hold": 3600` waits out the opening before the next op). The caption stays hidden during the opening and fades in
-with the header. A `cut` clears both, like any caption shown before it, so issue `title` after the last `cut`:
+`title` puts the take's name on screen. By default it opens alone as a large panel centred on the page for 3s, then
+fades out as the caption fades in. `"band": true` keeps it as a translucent band over the top for the rest of the
+take, `"intro": 0` skips the opening, and `"hold": 3600` waits out the opening before the next op. A `cut` clears
+the title and caption, like any caption shown before it, so issue `title` after the last `cut`:
 
 ```bash
 C '{"op":"title","value":"Projects","subtitle":"Track work across spaces","hold":3600}'
