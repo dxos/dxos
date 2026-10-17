@@ -69,14 +69,14 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
     .slice(0, 5);
   const now = Date.now();
-  const [recentEvents, upcomingEvents] = Function.pipe(
+  const [upcomingEvents, recentEvents] = Function.pipe(
     events,
     Array.filter(
       (event) =>
         event.attendees?.some((attendee) => contact.emails?.some((email) => email.value === attendee.email)) ||
         event.attendees?.some((attendee) => attendee.contact?.target === contact),
     ),
-    // v4's `partition` takes a `Result`-returning filter; `[excluded, satisfying]` is unchanged.
+    // v4's `partition` takes a `Result`-returning filter and returns `[passes, fails]`.
     Array.partition((event) =>
       new Date(event.startDate).getTime() > now ? Result.succeed(event) : Result.fail(event),
     ),

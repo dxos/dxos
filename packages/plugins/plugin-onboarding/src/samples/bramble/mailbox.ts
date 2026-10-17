@@ -452,7 +452,7 @@ const makeSummaries = (messages: Message.Message[]): Message.Message[] => {
  */
 export type InboxResult = { mailbox: Mailbox.Mailbox; messages: Message.Message[] };
 
-export const Inbox: SampleSpace.Phase<InboxResult, PersonMap> = SampleSpace.phase('inbox', {
+export const Inbox: SampleSpace.Partial<InboxResult, PersonMap> = SampleSpace.partial('inbox', {
   schemas: [Mailbox.Mailbox, Message.Message, TagIndex.TagIndex, Tag.Tag, Feed.Feed],
   run: (people: PersonMap) =>
     Effect.gen(function* () {

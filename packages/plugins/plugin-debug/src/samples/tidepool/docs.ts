@@ -127,7 +127,7 @@ export type DocsResult = {
 };
 
 /** The project's written artifacts, plus the outline that backs its scratch checklist. */
-export const Docs: SampleSpace.Phase<DocsResult> = SampleSpace.phase('docs', {
+export const Docs: SampleSpace.Partial<DocsResult> = SampleSpace.partial('docs', {
   schemas: [Markdown.Document, Outline.Outline],
   run: () =>
     Effect.gen(function* () {

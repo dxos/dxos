@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-canvas",
   "version": "0.14.0",
-  "private": true,
   "description": "Infinite multi-depth canvas as an illustrator drawing variant",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -73,6 +72,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./Architecture": {
+      "source": "./src/samples/architecture/index.ts",
+      "types": "./dist/types/src/samples/architecture/index.d.ts",
+      "import": "./dist/lib/Architecture.mjs"
     },
     "./Canvas": {
       "source": "./src/types/Canvas.ts",

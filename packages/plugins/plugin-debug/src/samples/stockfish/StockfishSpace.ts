@@ -12,17 +12,17 @@ import { Ref } from '@dxos/echo';
 
 import { Docs } from './docs.ts';
 import { ChessGame } from './game.ts';
-import { ProjectPhase } from './project.ts';
+import { ProjectPartial } from './project.ts';
 import { DevelopmentSkill } from './skill.ts';
 import { Tasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = {
+const partials = {
   skill: DevelopmentSkill,
   docs: Docs,
   game: ChessGame,
   tasks: Tasks,
-  project: ProjectPhase,
+  project: ProjectPartial,
 };
 
 /**
@@ -39,21 +39,21 @@ const phases = {
  * DeepSeek through the edge, the first deploy uses wrangler's unauthenticated mode, and the only two
  * consent screens are in the last stage.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     // Reaches a space only where the definition is applied directly (the generator panel, the
     // archive test): the create-space dialog takes its icon from `space-templates.ts`, which
     // overrides every template's by list index. See DESIGN.md §7.
     space: { name: 'Chess MCP on Workers', icon: 'shield-star', hue: 'amber' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const skill = yield* phases.skill();
-        const docs = yield* phases.docs();
-        const game = yield* phases.game();
-        const tasks = yield* phases.tasks();
-        yield* phases.project({ docs, tasks, skill, game });
+        const skill = yield* partials.skill();
+        const docs = yield* partials.docs();
+        const game = yield* partials.game();
+        const tasks = yield* partials.tasks();
+        yield* partials.project({ docs, tasks, skill, game });
 
         // The root holds collections only. Project/TaskSet/Task/Skill/Game are not collection-item
         // types, so they live directly in the space DB and surface through their own containers.

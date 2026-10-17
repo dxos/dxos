@@ -105,11 +105,16 @@ export const _FormTableEmpty: StoryObj<typeof DefaultStory<any>> = {
   },
 };
 
+/** The employer row shows the organization's name as text, not only the buildings icon. */
 export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
     Component: PersonCard,
     createObject: createPerson,
     image: true,
+  },
+  play: async ({ canvasElement }) => {
+    const employerRow = () => canvasElement.querySelector('[data-part="row"]:has(use[href*="buildings"])');
+    await waitFor(() => expect(employerRow()?.textContent?.trim()).toBeTruthy(), { timeout: 10_000 });
   },
 };
 

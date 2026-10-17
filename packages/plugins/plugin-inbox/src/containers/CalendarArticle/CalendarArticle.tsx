@@ -196,7 +196,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   return (
     <div role={role} className='@container dx-expand'>
-      <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
+      {/* A fixed track (seven 40px day columns): `Panel.Root` is an inline-size container, so its min-content width is 0. */}
+      <div className='grid grid-cols-1 @2xl:grid-cols-[280px_1fr] h-full'>
         <Panel.Root classNames='hidden @2xl:grid'>
           <NaturalCalendar.Root ref={calendarRef}>
             <Panel.Header>

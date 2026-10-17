@@ -23,9 +23,9 @@ export type ProjectResult = { project: Project.Project; repo: Repo.Repo };
 /**
  * The work-stream itself: it names the repository the work lands in, adopts the task set, and holds
  * the written artifacts in order. `Project.make` would create its own empty task set, so the one
- * built by the tasks phase is passed in explicitly.
+ * built by the tasks partial is passed in explicitly.
  */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   schemas: [Project.Project, Repo.Repo],
   run: ({ docs, tasks }: ProjectInput) =>
     Effect.gen(function* () {

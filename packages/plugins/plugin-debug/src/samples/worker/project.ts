@@ -37,13 +37,13 @@ This project needs no Cloudflare login and no API keys. If a step seems to need 
 wrong step.`;
 
 /**
- * The work-stream. It adopts the task set the tasks phase built (`Project.make` would otherwise
+ * The work-stream. It adopts the task set the tasks partial built (`Project.make` would otherwise
  * create its own empty one), and starts with no artifacts: the URL and the response are what the
  * run produces, and seeding either would name something that does not exist.
  */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   // Neither `Outline.Outline` nor `Text.Text` is created here directly: `Project.make` builds an
-  // outline for the project, and the instructions' prose is stored as a Text. A phase has to declare
+  // outline for the project, and the instructions' prose is stored as a Text. A partial has to declare
   // every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline, Text.Text],
   run: ({ tasks }: ProjectInput) =>

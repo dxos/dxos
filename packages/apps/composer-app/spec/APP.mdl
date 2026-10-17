@@ -968,3 +968,40 @@ suite editor: The markdown plugin's own contract, run at app level
   tags: [nightly]
   tests: [markdown:QA-1, markdown:QA-2]
 ```
+
+```mdl
+test QA-14: Bramble — Kai locks the Spring Blend
+  desc: |
+    A story demo of the Bramble template: Kai Chen, head roaster, is six weeks from launching a new
+    espresso blend, and every step answers one question, whether the Spring Blend is ready. A
+    wholesale customer's feedback leads to her contact, the cupping on the calendar, the launch
+    project, the roasts, and the protocol the blend is judged by. Recorded by
+    plugin-onboarding/autocue/bramble-spring-blend.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - space: a space created from the "Bramble Coffee Roasters" template, open, with the navtree expanded
+  steps:
+    - name: The ask
+      do: In the Inbox, open "Spring blend v1 — feedback" and read its summary.
+      expect: the thread opens in the conversation view; Priya Shah of Hatch Bakery asks for a standing 20 lb a week
+    - name: Who is asking
+      do: Hover Priya's avatar on her message, then open her contact from the card.
+      expect: the card names Hatch Bakery and lists her mail and the upcoming cupping; her contact opens
+    - name: When we will know
+      do: From her contact, open "Spring Blend cupping — Hatch" under upcoming events.
+      expect: the cupping eight days out, with Kai and Priya attending
+    - name: What has to happen first
+      do: Open the Spring Blend Launch project's tasks.
+      expect: done, started and to-do tasks, and the product-page brief waiting for an agent
+    - name: The roasts
+      do: Open the Roast Log board.
+      expect: Spring Blend v2 under cupped and v3 under planned
+    - name: How it will be judged
+      do: Open "Spring blend tasting protocol".
+      expect: the protocol, with the launch task list embedded in it
+    - name: Close
+      do: Return to the Inbox and hold.
+      expect: the inbox, as the take began
+```
