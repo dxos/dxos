@@ -22,23 +22,20 @@
  * `tools/autocue` on :9009 that the runner starts if nothing answers there and stops afterwards.
  *
  * `--publish` uploads each flow's light and dark videos once both pass and sets them as the plugin's showcase entry in
- * its `dx.config.ts` `screenshots`. It needs R2 keys: from the environment, or from the gitignored `.secrets/r2.env`,
- * which one 1Password approval fills for the rest of a session (mode 600, values never printed):
- *
- *   umask 077; op run --env-file ~/.env.tpl -- sh -c 'printf "R2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\n" \
- *     "$DX_CLOUDFLARE_R2_ACCESS_KEY_ID" "$DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY"' > .secrets/r2.env
+ * its `dx.config.ts` `screenshots` (`publish.mjs`, whose header has the one-approval command that caches the R2 keys
+ * in `.secrets/r2.env`). A run recorded without `--publish` is published later with `publish.mjs --run <out>`.
  *
  * Composer must answer on :4173; without `--no-serve` the runner starts it if it does not, and stops it at the end.
  * Recording rules: SHOWCASE.md beside it.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { setShowcaseScreenshot } from './screenshots.mjs';
+import { publishFlow, r2Keys } from './publish.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -206,53 +203,15 @@ const flows = discover().filter((file) => {
   return options.only.split(',').some((name) => name.trim() === pkg || name.trim() === `plugin-${pkg}`);
 });
 
-// Keys cached from 1Password into the gitignored `.secrets/r2.env` (mode 600) spare a second approval in a session.
-const cached = path.join(ROOT, '.secrets', 'r2.env');
-if (existsSync(cached)) {
-  for (const [, name, value] of readFileSync(cached, 'utf8').matchAll(/^(?:export )?(R2_[A-Z_]+)=(.*)$/gm)) {
-    env[name] ||= value.trim().replace(/^"(.*)"$/, '$1');
-  }
-}
-// `~/.env.tpl` names the keys with a DX_CLOUDFLARE_ prefix; the uploader reads R2_*.
-env.R2_ACCESS_KEY_ID ||= env.DX_CLOUDFLARE_R2_ACCESS_KEY_ID ?? env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
-env.R2_SECRET_ACCESS_KEY ||= env.DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
-if (options.publish && (!env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY)) {
-  console.error('--publish needs R2 keys: cache them in .secrets/r2.env or run under `op run` (see the header)');
+const keys = options.publish ? r2Keys(env) : undefined;
+if (options.publish && !keys) {
+  console.error('--publish needs R2 keys: fill .secrets/r2.env with the command in publish.mjs (see its header)');
   process.exit(2);
 }
 if (options.publish && !(THEMES.includes('light') && THEMES.includes('dark'))) {
   console.error('--publish sets light and dark together; drop --themes');
   process.exit(2);
 }
-
-/** Uploads one video to the Composer media bucket and returns its public URL (with its cache-busting `?v=`). */
-const upload = async (file, key) => {
-  const { code, output } = await run(
-    process.execPath,
-    [path.join(ROOT, '.agents/skills/hosting-artifacts/scripts/upload-artifact.mjs'), file, '--key', key],
-    { env: { ...env, R2_BUCKET: 'composer', R2_PUBLIC_BASE: 'https://assets.composer.space' } },
-  );
-  const url = output.trim().split('\n').pop();
-  return code === 0 && url.startsWith('https://') ? url : undefined;
-};
-
-/** Uploads a flow's two videos and points its plugin's showcase screenshot at them. */
-const publish = async (file, variants) => {
-  const pkgDir = path.dirname(path.dirname(file));
-  const pkg = path.basename(pkgDir);
-  const date = new Date().toLocaleDateString('en-CA');
-  const light = await upload(path.join(ROOT, variants.light.video), `demos/${date}-${pkg}-showcase-light.mp4`);
-  const dark = await upload(path.join(ROOT, variants.dark.video), `demos/${date}-${pkg}-showcase.mp4`);
-  if (!light || !dark) {
-    return { published: 'upload failed' };
-  }
-  const config = path.join(pkgDir, 'dx.config.ts');
-  const set = setShowcaseScreenshot(config, pkg, { light, dark });
-  if (set) {
-    await run('npx', ['oxfmt', '--write', config]);
-  }
-  return { published: set ? path.relative(ROOT, config) : 'uploaded; no dx.config.ts', light, dark };
-};
 
 log(`${flows.length} flows → ${path.relative(ROOT, OUT)}`);
 const server = !(await up()) && !options['no-serve'] ? await serve() : undefined;
@@ -304,7 +263,11 @@ for (const [index, file] of flows.entries()) {
     results.filter((result) => result.flow === path.relative(ROOT, file)).map((result) => [result.theme, result]),
   );
   if (options.publish && variants.light?.ok && variants.dark?.ok) {
-    const outcome = await publish(file, variants);
+    const outcome = await publishFlow(
+      path.relative(ROOT, file),
+      { light: variants.light.video, dark: variants.dark.video },
+      keys,
+    );
     log(`${name}: published → ${outcome.published}`);
     Object.assign(variants.dark, outcome);
     writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(results, null, 2));

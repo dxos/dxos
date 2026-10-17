@@ -40,8 +40,9 @@ to `<run>/composite.mp4` and `temp/composite/composite.mp4`. It serves the story
 skips the render.
 
 With `--publish` (R2 keys from the environment, or cached once per session from 1Password into the gitignored
-`.secrets/r2.env`; the runner's header has the command), each flow whose two videos
+`.secrets/r2.env`; `publish.mjs`'s header has the command, which needs `op run --no-masking`), each flow whose two videos
 pass is uploaded and set as its plugin's showcase entry in `dx.config.ts` `screenshots`, replacing the previous run's.
+A finished run is published later, without re-recording, by `node tools/autocue/showcase/publish.mjs --run temp/showcase/<run>`.
 
 `REPORT.md` has a pass/fail row and four frames per video, the grid's map, and frames from the composite. A step can pass on a blank plank, so check the frames,
 not just the result. `--only map,chess` records a subset, `--themes light` one variant, and `--no-serve` uses the
