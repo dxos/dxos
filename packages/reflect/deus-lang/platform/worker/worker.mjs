@@ -18,6 +18,7 @@ import { demoFiles } from './gen/demo-todo.mjs';
 import { appFiles, hubFiles } from './gen/explorer-app.mjs';
 import * as inbox from './gen/inbox.js';
 import * as routes from './gen/routes.js';
+import * as writes from './gen/writes.js';
 import { liveHead, warmLive, warmPages } from './live.mjs';
 import { HttpError, hex, json, remoteApi } from './remote.mjs';
 
@@ -436,66 +437,16 @@ const api = async (request, env, url) => {
     throw new HttpError(400, 'the body must be JSON');
   });
   const assets = await checkAssets(env, body.assets);
-  if (url.pathname === '/api/comment') {
-    const subject = text(body.subject, 500);
-    if (!/^(def:.+|change:[0-9a-f]{64})$/.test(subject)) {
-      throw new HttpError(400, 'a comment needs a subject: def:<name> or change:<causal>');
-    }
-    return json(
-      await enqueue(env, { kind: 'comment', by, subject, note: required(body.note, 'note', assets), assets }),
-    );
+  // What may be written, and the request it makes, is `Worker.Writes.request`, in DEUS.
+  const made = writes.request(url.pathname, body, by, assets);
+  if (made.error !== undefined) {
+    throw new HttpError(made.status, made.error);
   }
-  if (url.pathname === '/api/task') {
-    const title = text(body.title, 300).trim();
-    if (!title) {
-      throw new HttpError(400, 'a task needs a title');
-    }
-    return json(
-      await enqueue(env, {
-        kind: 'task',
-        by,
-        title,
-        details: text(body.details, 20000),
-        link: text(body.link, 500),
-        ...labelsOf(body.labels),
-        assets,
-      }),
-    );
-  }
-  if (url.pathname === '/api/task-comment') {
-    const task = text(body.task, 64);
-    if (!/^[0-9a-f]{1,64}$/.test(task)) {
-      throw new HttpError(400, 'a task comment needs a task id');
-    }
-    return json(
-      await enqueue(env, { kind: 'task-comment', by, task, note: required(body.note, 'note', assets), assets }),
-    );
-  }
-  throw new HttpError(404, 'not found');
+  return json(await enqueue(env, made));
 };
 
-/** A task's labels, comma-separated slugs (at most five), such as `explorer,report` from the report tool (D93). */
-const labelsOf = (value) => {
-  const labels = text(value, 200)
-    .split(',')
-    .map((label) => label.trim())
-    .filter(Boolean);
-  if (labels.length > 5 || labels.some((label) => !/^[a-z0-9][a-z0-9-]{0,31}$/.test(label))) {
-    throw new HttpError(400, 'labels are up to five lowercase slugs');
-  }
-  return labels.length > 0 ? { labels: labels.join(',') } : {};
-};
-
+/** `value` when it is a string, cut to `limit` characters; anything else is "". */
 const text = (value, limit) => (typeof value === 'string' ? value.slice(0, limit) : '');
-
-/** A note may be empty only when the comment attaches something. */
-const required = (value, name, assets) => {
-  const note = text(value, 20000);
-  if (!note.trim() && assets.length === 0) {
-    throw new HttpError(400, `a comment needs a ${name} or an image`);
-  }
-  return note;
-};
 
 const checkAssets = async (env, value) => {
   const list = Array.isArray(value) ? value.slice(0, 10) : [];

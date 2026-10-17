@@ -189,6 +189,27 @@ describe('explorer worker', () => {
     expect((await post('/api/comment', member, { subject: 'nothing', note: 'hi' })).status).toBe(400);
     expect((await post('/api/task', member, { title: ' ' })).status).toBe(400);
     expect((await post('/api/task', member, { title: 'x', labels: 'Not A Slug' })).status).toBe(400);
+    const refusal = async (path: string, body: object) => {
+      const response = await post(path, member, body);
+      return [response.status, (await response.json()).error];
+    };
+    expect(await refusal('/api/task', { title: 'x', labels: 'a,b,c,d,e,f' })).toEqual([
+      400,
+      'labels are up to five lowercase slugs',
+    ]);
+    expect(await refusal('/api/task-comment', { task: 'XYZ', note: 'n' })).toEqual([
+      400,
+      'a task comment needs a task id',
+    ]);
+    expect(await refusal('/api/task-comment', { task: '86d7b02a', note: ' ' })).toEqual([
+      400,
+      'a comment needs a note or an image',
+    ]);
+    expect(await refusal('/api/comment', { subject: 'def:a\nb', note: 'n' })).toEqual([
+      400,
+      'a comment needs a subject: def:<name> or change:<causal>',
+    ]);
+    expect(await refusal('/api/nothing', {})).toEqual([404, 'not found']);
     expect(
       (await post('/api/comment', member, { subject: 'def:List.map', note: 'x', assets: [{ hash: '0'.repeat(64) }] }))
         .status,

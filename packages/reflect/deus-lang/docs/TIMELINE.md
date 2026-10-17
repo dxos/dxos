@@ -301,6 +301,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 291 | 10-18 12:45 | 15m 00s | 6492938c92 | Pushed test results may be a minute old in a browser, so a repeat visit skips 150 kB (D263) |
 | 292 | 10-18 13:30 | 45m 00s | 24d7139787 | Fixes from an adversarial review of D251–D263: decisions D1–D99 open, queue batches fit Cloudflare's cap, hash-named assets are checked, scroll positions no longer block a new card (D264) |
 | 293 | 10-18 14:00 | 30m 00s | b8da565bcf | The getting-started guide lives in the codebase and opens as a card from the overview (D265) |
-| 294 | 10-18 14:30 | 30m 00s | this commit | The explorer's write requests are printed and read by the toolchain's Sexp in DEUS (D266) |
+| 294 | 10-18 14:30 | 30m 00s | b899b50fd3 | The explorer's write requests are printed and read by the toolchain's Sexp in DEUS (D266) |
+| 295 | 10-18 15:00 | 30m 00s | this commit | What the explorer may write is checked in DEUS (Worker.Writes) (D267) |
 
-Total from stage 1 to stage 294: 114h 20m.
+Total from stage 1 to stage 295: 114h 50m.

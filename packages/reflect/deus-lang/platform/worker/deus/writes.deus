@@ -1,0 +1,81 @@
+-- context: @dxos/worker/Worker
+/-
+  What the explorer may write (task 41714c0d, D85, D93): a comment on a definition or a change, a task, or a comment
+  on a task, each checked here and turned into the request `deus inbox` applies. platform/worker/worker.mjs checks
+  who is writing, and that each attachment was uploaded, before it asks.
+-/
+
+namespace Worker.Writes
+
+/-- `value` when it is a string, cut to `limit` characters; anything else is "". -/
+def text (value : Js) (limit : Int) : Text := if Js.typeOf value == "string" then Text.take limit (Js.toText value) else ""
+
+/-- A label: a lowercase letter or digit, then up to 31 lowercase letters, digits or `-`. -/
+def isLabel (label : Text) : Bool :=
+  let lowerOrDigit := fun c => (c >= 'a' && c <= 'z') || isDigit c
+  match Text.utf8 label with
+  | first :: rest => lowerOrDigit first && List.length rest <= 31 && List.all (fun c => lowerOrDigit c || c == '-') rest
+  | [] => false
+
+/-- A task's labels from comma-separated text, at most five (the report tool sends `explorer,report`); none when one
+  is not a label. -/
+def labels (value : Js) : Option (List Text) :=
+  let given := List.filter (fun label => not (Text.isEmpty label)) (List.map Text.trim (Text.split (text value 200) ","))
+  if List.length given > 5 || not (List.all isLabel given) then Option.none else Option.some given
+
+/-- What a comment is on: `def:<name>` (one line) or `change:<causal>`. -/
+def isSubject (subject : Text) : Bool :=
+  (startsWith "def:" subject && Text.length subject > 4 && not (Text.contains "\n" subject) && not (Text.contains "\r" subject))
+    || (startsWith "change:" subject && Worker.Heads.isHash (Text.drop 7 subject))
+
+/-- A task id: one to 64 lowercase hex digits, so a prefix names a task too. -/
+def isTaskId (id : Text) : Bool :=
+  Text.length id >= 1 && Text.length id <= 64 && List.all (fun c => isDigit c || (c >= 'a' && c <= 'f')) (Text.utf8 id)
+
+/-- A refusal: the status and why. -/
+def refuse (status : Int) (message : Text) : Js := Js.obj [("status", Js.int status), ("error", Js.text message)]
+
+/-- The note of a comment, which may be empty only when the comment attaches something. -/
+def note (body : Js) (attached : Int) : Option Text :=
+  let given := text (Js.get body "note") 20000
+  if Text.isEmpty (Text.trim given) && attached == 0 then Option.none else Option.some given
+
+/-- The request a write to `path` with JSON `body` makes, by `author`, with the checked `assets`; or `{status, error}`. -/
+def request (path : Text) (body : Js) (author : Text) (assets : Js) : Js :=
+  let attached := List.length (Js.toList assets)
+  let base := fun kind => [("kind", Js.text kind), ("by", Js.text author)]
+  let made := fun pairs => Js.obj (pairs ++ [("assets", assets)])
+  if path == "/api/comment" then
+    let subject := text (Js.get body "subject") 500
+    if not (isSubject subject) then refuse 400 "a comment needs a subject: def:<name> or change:<causal>"
+    else
+      match note body attached with
+      | Option.none => refuse 400 "a comment needs a note or an image"
+      | Option.some given => made (base "comment" ++ [("subject", Js.text subject), ("note", Js.text given)])
+  else if path == "/api/task" then
+    let title := Text.trim (text (Js.get body "title") 300)
+    if Text.isEmpty title then refuse 400 "a task needs a title"
+    else
+      match labels (Js.get body "labels") with
+      | Option.none => refuse 400 "labels are up to five lowercase slugs"
+      | Option.some given =>
+          let labelled := if List.isEmpty given then [] else [("labels", Js.text (Text.join "," given))]
+          made (base "task" ++ [("title", Js.text title), ("details", Js.text (text (Js.get body "details") 20000)), ("link", Js.text (text (Js.get body "link") 500))] ++ labelled)
+  else if path == "/api/task-comment" then
+    let task := text (Js.get body "task") 64
+    if not (isTaskId task) then refuse 400 "a task comment needs a task id"
+    else
+      match note body attached with
+      | Option.none => refuse 400 "a comment needs a note or an image"
+      | Option.some given => made (base "task-comment" ++ [("task", Js.text task), ("note", Js.text given)])
+  else refuse 404 "not found"
+
+test labelsAreSlugs :=
+  isLabel "explorer" && isLabel "a-1" && not (isLabel "-a") && not (isLabel "Explorer") && not (isLabel "")
+    && not (isLabel (Text.repeat 33 "a")) && isLabel (Text.repeat 32 "a")
+
+test subjectsAndIds :=
+  isSubject "def:Cli.main" && not (isSubject "def:") && isSubject ("change:" ++ Worker.Heads.headA) && not (isSubject "change:abc")
+    && isTaskId "86d7b02a" && not (isTaskId "") && not (isTaskId "XYZ") && not (isTaskId (Text.repeat 65 "a"))
+
+end Worker.Writes
