@@ -170,6 +170,20 @@
       .install button:hover {
         background: var(--accent-hover);
       }
+      /* Every label shares one grid cell, so the button is as wide as its widest label in every state. */
+      .install button {
+        display: grid;
+        place-items: center;
+      }
+      .install button span {
+        grid-area: 1 / 1;
+        visibility: hidden;
+      }
+      .install button[data-state='idle'] [data-label='idle'],
+      .install button[data-state='copied'] [data-label='copied'],
+      .install button[data-state='failed'] [data-label='failed'] {
+        visibility: visible;
+      }
       .alt {
         margin: 14px 0 0;
         font-size: 15px;
@@ -535,6 +549,8 @@
         gap: 1px;
       }
       .relation {
+        display: flex;
+        flex-direction: column;
         background: var(--sheet);
         padding: 20px 22px 14px;
       }
@@ -547,10 +563,12 @@
         color: var(--muted);
         font-size: 15px;
       }
+      /* Pinned to the bottom so drawings line up across a row whatever the caption length. */
       .relation svg {
         width: 100%;
         height: auto;
         display: block;
+        margin-top: auto;
       }
       .file {
         display: grid;
@@ -654,7 +672,10 @@
           </p>
           <div class="install">
             <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
-            <button type="button" id="copy">Copy</button>
+            <button type="button" id="copy" data-state="idle" aria-live="polite">
+              <span data-label="idle">Copy</span><span data-label="copied">Copied</span
+              ><span data-label="failed">Failed</span>
+            </button>
           </div>
           <p class="alt">
             Works with Claude Code, Cursor, Codex and any agent that reads <code>SKILL.md</code>. Without an agent:
