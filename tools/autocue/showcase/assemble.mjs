@@ -53,9 +53,11 @@ const run = (command, args) =>
     child.on('close', (code) => resolve({ code, output }));
   });
 
-// Letterboxed rather than stretched, so a recording that is not exactly 16:9 keeps its proportions.
+// Letterboxed rather than stretched, so a recording that is not exactly 16:9 keeps its proportions. The outermost pixel
+// on each edge is replaced by the one inside it: Screen Studio's export bleeds its background colour 1px into the frame.
 const FRAME =
-  'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x101010,fps=60';
+  'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x101010,fps=60,' +
+  'fillborders=left=1:right=1:top=1:bottom=1:mode=smear';
 const ENCODE = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-an'];
 
 const inputs = readdirSync(SOURCE)
