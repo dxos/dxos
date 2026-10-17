@@ -218,6 +218,51 @@ describe('document retirement', () => {
 });
 
 describe('concurrent retirement', () => {
+  test('retires several documents that fail at once, and restores all their entries if a merge drops them', async () => {
+    const {
+      host,
+      automergeHost,
+      countChunks,
+      createSpace,
+      createObjectDoc,
+      linkObjects,
+      loadDirectory,
+      readDirectory,
+    } = await setup();
+    const root = await createSpace();
+    const objectIds = ['obj-a', 'obj-b', 'obj-c'];
+    const urls = await Promise.all(objectIds.map((objectId) => createObjectDoc(objectId, objectId)));
+    await linkObjects(root.documentId, Object.fromEntries(objectIds.map((objectId, index) => [objectId, urls[index]])));
+    await host.updateIndexes();
+    const documentIds = urls.map((url) => interpretAsDocumentId(url));
+    const replacementUrls = await Promise.all(
+      documentIds.map(async (documentId) => stringifyAutomergeUrl(await replacementDocumentId(documentId))),
+    );
+    const retiredEntries = async () => {
+      const directory = await readDirectory(root.documentId);
+      return documentIds.map((documentId) => directory.retired?.[documentId]?.replacedBy.toString());
+    };
+
+    await Promise.all(
+      documentIds.map((documentId) =>
+        automergeHost.quarantineDocument(documentId, { reason: 'load-failed', error: OUT_OF_MEMORY }),
+      ),
+    );
+    await expect.poll(retiredEntries).toEqual(replacementUrls);
+    const directory = await readDirectory(root.documentId);
+    expect(objectIds.map((objectId) => directory.links?.[objectId]?.toString())).toEqual(replacementUrls);
+    for (const documentId of documentIds) {
+      await expect.poll(() => countChunks(documentId)).toBe(0);
+    }
+
+    // Peers that each created the `retired` map concurrently: the merge kept a map without these entries.
+    (await loadDirectory(root.documentId)).change((draft: DatabaseDirectory) => {
+      delete draft.retired;
+    });
+    await linkObjects(root.documentId, { 'obj-other': await createObjectDoc('obj-other', 'Other') });
+    await expect.poll(retiredEntries).toEqual(replacementUrls);
+  });
+
   test('restores a retirement entry a concurrent change dropped from the directory', async () => {
     const { host, automergeHost, createSpace, createObjectDoc, linkObjects, loadDirectory, readDirectory } =
       await setup();
