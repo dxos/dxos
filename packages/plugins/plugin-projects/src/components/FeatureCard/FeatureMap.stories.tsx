@@ -37,8 +37,11 @@ const card = (canvasElement: HTMLElement, id: string) => {
 /** One column per spec. Click a card to see what it needs and what needs it, across plugins. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByText('Provider sync'));
+    const sync = 'org.dxos.plugin.inbox#F-3';
+    // The name also labels dependency rows on other cards, so click the card's own title.
+    const title = () => within(card(canvasElement, sync)).getByRole('heading', { name: 'Provider sync' });
+    await waitFor(async () => expect(title()).toBeInTheDocument());
+    await userEvent.click(title());
     await waitFor(async () =>
       expect(card(canvasElement, 'org.dxos.plugin.connector#F-2').dataset.relation).toBe('dependency'),
     );
@@ -47,7 +50,7 @@ export const Default: Story = {
     await expect(card(canvasElement, 'org.dxos.plugin.projects#F-5').dataset.relation).toBeUndefined();
 
     // Clicking the selected card again clears the selection.
-    await userEvent.click(canvas.getByText('Provider sync'));
+    await userEvent.click(title());
     await waitFor(async () =>
       expect(card(canvasElement, 'org.dxos.plugin.connector#F-2').dataset.relation).toBeUndefined(),
     );
