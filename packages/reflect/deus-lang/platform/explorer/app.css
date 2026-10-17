@@ -2255,6 +2255,17 @@ body.with-console #sidebar {
   font-size: 12px;
 }
 
+.graph-loading {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--bg);
+}
+
 .graph-empty {
   max-width: 460px;
   margin: 18vh auto 0;

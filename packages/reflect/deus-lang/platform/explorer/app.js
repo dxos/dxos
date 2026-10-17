@@ -182,6 +182,8 @@ const index = {
   byName: new Map(),
   /** The mounted libraries' prefixes (`lib.base.`): a name the project lacks is looked up under each (D206). */
   mounts: [],
+  /** The hashes the mounted libraries define: a project's name for one is that library's definition, copied in. */
+  libraryHashes: new Set(),
   tree: undefined,
   /** The feature map's areas (D196), which order the overview and the sidebar. */
   areas: [],
@@ -216,6 +218,27 @@ const nodeAt = (path) => {
 };
 
 const sortedChildren = (node) => [...node.children.values()].sort((a, b) => a.segment.localeCompare(b.segment));
+
+/** Whether every definition under `node` is a mounted library's, as the prelude a new codebase starts with is. */
+const fromLibrary = (node) =>
+  (node.entry === undefined || index.libraryHashes.has(node.entry.hash)) &&
+  [...node.children.values()].every(fromLibrary);
+
+/**
+ * The tree's top level apart from `lib`, split into the project's own nodes and the prelude: nodes whose definitions
+ * are all a mounted library's. With nothing of its own, a project's nodes all count as its own.
+ */
+const topLevel = () => {
+  const all = sortedChildren(index.tree).filter((child) => child.path !== 'lib');
+  const prelude = all.filter(fromLibrary);
+  return prelude.length < all.length
+    ? { own: all.filter((child) => !prelude.includes(child)), prelude }
+    : { own: all, prelude: [] };
+};
+
+/** The definitions of a list of tree nodes and everything under them. */
+const entriesUnder = (nodes) =>
+  nodes.flatMap((node) => [...(node.entry ? [node.entry] : []), ...entriesUnder([...node.children.values()])]);
 
 /** The definition `name` names in the project, or else in exactly one mounted library (D206). */
 const named = (name) => {
@@ -2194,17 +2217,19 @@ const docRow = (name) => {
 
 const homeHtml = () => {
   const meta = index.meta;
-  // A project's counts and checks are its own; a mounted library's are counted in its own project (D206).
-  const own = index.names.filter((entry) => !entry.name.startsWith('lib.'));
+  // A project's counts and checks are its own; a mounted library's, and its prelude's, are counted in the library's
+  // own project (D206).
+  const { own: top, prelude } = topLevel();
+  const own = entriesUnder(top);
   const counts = KIND_ORDER.map((kind) => [kind, own.filter((entry) => entry.kind === kind).length]).filter(
     ([, count]) => count > 0,
   );
   const checked = own.filter((entry) => entry.status);
   const failing = checked.filter((entry) => entry.status === 'fail');
-  const top = sortedChildren(index.tree);
-  const namespaces = top.filter((node) => node.children.size > 0 && node.path !== 'lib');
+  const namespaces = top.filter((node) => node.children.size > 0);
+  const preludeSpaces = prelude.filter((node) => node.children.size > 0);
   const libs = libraries();
-  const mounted = libs.reduce((sum, node) => sum + node.count, 0);
+  const mounted = libs.reduce((sum, node) => sum + node.count, 0) + entriesUnder(prelude).length;
   const roots = top.filter((node) => node.entry && node.children.size === 0).map((node) => node.entry);
   const open = index.tasks.filter((task) => task.state === 'todo' || task.state === 'doing');
   const areas = index.areas ?? [];
@@ -2212,7 +2237,7 @@ const homeHtml = () => {
   const placed = new Set(areas.flatMap((area) => area.namespaces));
   const unplaced = namespaces.filter((node) => !placed.has(node.path));
   const grouped =
-    areas.length > 0
+    (areas.length > 0
       ? areas
           .filter((area) => area.namespaces.length > 0)
           .map(
@@ -2225,7 +2250,10 @@ const homeHtml = () => {
         (unplaced.length > 0
           ? `<details class="unplaced"><summary><h4 class="group-title">Everything else <span class="count">${unplaced.length}</span></h4></summary><ul class="namespace-grid">${unplaced.map(namespaceTile).join('')}</ul></details>`
           : '')
-      : `<ul class="namespace-grid">${namespaces.map(namespaceTile).join('')}</ul>`;
+      : `<ul class="namespace-grid">${namespaces.map(namespaceTile).join('')}</ul>`) +
+    (preludeSpaces.length > 0
+      ? `<details class="unplaced"><summary><h4 class="group-title" title="Namespaces a mounted library also holds, as a new codebase starts with">Prelude <span class="count">${preludeSpaces.length}</span></h4></summary><ul class="namespace-grid">${preludeSpaces.map(namespaceTile).join('')}</ul></details>`
+      : '');
   return (
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
@@ -2301,7 +2329,9 @@ const homeHtml = () => {
           `<ul class="rows">${failing.map((entry) => entryRow(entry)).join('')}</ul>`,
         )
       : '') +
-    section('Top-level definitions', roots.length, rowList(roots.map((entry) => entryRow(entry))), false) +
+    (roots.length > 0
+      ? section('Top-level definitions', roots.length, rowList(roots.map((entry) => entryRow(entry))), false)
+      : '') +
     '<p class="hint muted">Press <kbd>/</kbd> to find a definition by name or by type.</p>' +
     '</article>'
   );
@@ -2506,12 +2536,20 @@ const libraryHref = (node) => `/${addressOf(index.meta.project).split('/')[0]}/$
 const libraryRows = () =>
   libraries().length > 0 ? '<div class="tree-group">Libraries</div>' + rowsOf(libraries(), 0) : '';
 
-/** The tree's top level, grouped under the areas of the feature map (D196); the rest after them, then the libraries. */
+/**
+ * The tree's top level, grouped under the areas of the feature map (D196); the rest after them, then the prelude
+ * and the libraries.
+ */
 const topRows = () => {
   const areas = (index.areas ?? []).filter((area) => area.namespaces.length > 0);
-  const own = sortedChildren(index.tree).filter((child) => child.path !== 'lib');
+  const { own, prelude } = topLevel();
+  const preludeRows =
+    prelude.length > 0
+      ? '<div class="tree-group" title="Definitions a mounted library also holds, as a new codebase starts with">Prelude</div>' +
+        rowsOf(prelude, 0)
+      : '';
   if (areas.length === 0) {
-    return rowsOf(own, 0) + libraryRows();
+    return rowsOf(own, 0) + preludeRows + libraryRows();
   }
   const placed = new Set(areas.flatMap((area) => area.namespaces));
   return (
@@ -2530,6 +2568,7 @@ const topRows = () => {
       own.filter((child) => !placed.has(child.path)),
       0,
     ) +
+    preludeRows +
     libraryRows()
   );
 };
@@ -2638,6 +2677,24 @@ const setFocus = (key, scroll = true) => {
   reveal(key);
 };
 
+/** The reading position of each history entry, by an id kept in its state, so Back returns the reader to it; a
+ * link opens a new entry, which has no position yet. */
+const scrolls = new Map();
+// Ids survive a reload in the entries' state, so new ones start past any an earlier page load gave.
+let entries = Date.now();
+
+const entryId = () => {
+  if (typeof history.state?.entry !== 'number') {
+    history.replaceState({ ...history.state, entry: ++entries }, '');
+  }
+  return history.state.entry;
+};
+
+const rememberScroll = () => {
+  const main = element('main');
+  main.addEventListener('scroll', () => scrolls.set(entryId(), main.scrollTop), { passive: true });
+};
+
 let rendering = Promise.resolve();
 
 const render = () => {
@@ -2739,7 +2796,11 @@ const renderNow = async () => {
     void fillHome(workspace);
   }
   const focus = keys.includes(ui.focus) ? ui.focus : keys[0];
-  setFocus(focus, view === 'code' && focus !== undefined);
+  const saved = scrolls.get(entryId());
+  setFocus(focus, view === 'code' && focus !== undefined && saved === undefined);
+  if (saved !== undefined) {
+    element('main').scrollTop = saved;
+  }
   showAnchor();
   const project = addressOf(index.meta.project);
   document.title = focus ? `${titleOf(focus)} · ${project}` : project;
@@ -2986,7 +3047,17 @@ const animateGraph = () => {
 const renderGraph = async (keys) => {
   const view = element('graph-view');
   const signature = keys.join(',');
+  // The pages behind a new graph can take seconds after a push; past a moment the reader sees that it loads.
+  const loading =
+    signature === graph.shownKeys
+      ? undefined
+      : setTimeout(() => {
+          view.querySelector('.graph-loading')?.remove();
+          view.insertAdjacentHTML('beforeend', '<p class="graph-loading muted">Drawing the graph…</p>');
+        }, 300);
   const data = await graphData(keys);
+  clearTimeout(loading);
+  view.querySelector('.graph-loading')?.remove();
   if (parseFragment().view !== 'graph') {
     return;
   }
@@ -3969,6 +4040,7 @@ const main = async () => {
     }
   }
   index.mounts = [...new Set(names.map((entry) => /^lib\.[^.]+\./.exec(entry.name)?.[0]).filter(Boolean))];
+  index.libraryHashes = new Set(names.filter((entry) => entry.name.startsWith('lib.')).map((entry) => entry.hash));
   index.tree = buildTree(names);
   element('project').textContent = addressOf(meta.project);
   element('project').title = meta.project;
@@ -4025,6 +4097,7 @@ const main = async () => {
     }
   });
   window.addEventListener('hashchange', render);
+  rememberScroll();
   // The finder opens on ⌘K or Ctrl+K; the help names the one this keyboard has.
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
     for (const label of document.querySelectorAll('.mod-k')) {
