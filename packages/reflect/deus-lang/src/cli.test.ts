@@ -403,8 +403,14 @@ describe('deus CLI', () => {
     const shown = deus('view', 'Box.useArea', ...app).stdout;
     expect(shown).toContain(':= lib.std.area s');
     expect(JSON.parse(deus('update', file('use2.deus', shown), '--json', ...app).stdout).updated).toEqual([]);
-    // A name the project binds otherwise is the project's to edit, even to the library's definition.
-    deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), ...app);
+    // Defining a name a library has needs --shadow (D284); then it is the project's to edit, even to the library's
+    // definition.
+    const unasked = deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), ...app);
+    expect([unasked.code, unasked.stderr]).toEqual([
+      1,
+      expect.stringContaining('area  (lib.std, https://dxos.org/deus/std)'),
+    ]);
+    deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), '--shadow', ...app);
     expect(JSON.parse(deus('update', file('own2.deus', area4), '--json', ...app).stdout).updated).toHaveLength(1);
     expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
 

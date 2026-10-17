@@ -477,6 +477,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
           | Verdict.fail reason => (false, "", 0, reason)
           | Verdict.unchecked => (false, "sorry", 0, "unchecked")
         let (passed, evidence, cases, failure) := fields
+        let elapsed := IO.time () - started
         recordRun
           dir
           eventTypes
@@ -489,15 +490,15 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
           evidence
           cases
           failure
-          (IO.time () - started)
-    outcome) selected
+          elapsed
+        (name, v, wasCached, elapsed)) selected
   let failed := List.filter (fun r =>
     match r with
-    | (_, Verdict.fail _, _) => true
+    | (_, Verdict.fail _, _, _) => true
     | _ => false) results
   let index := nameIndex ns
   let line := fun r =>
-    let (name, v, wasCached) := r
+    let (name, v, wasCached, _) := r
     let suffix := if wasCached then "  (cached)" else ""
     match v with
     | Verdict.pass evidence cases => if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "refused" then "refused, as it must be"
@@ -510,17 +511,22 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   -- A prefix that names nothing is most often a typo, which a "0 passed" would let pass as success.
   if List.isEmpty results && not (Text.isEmpty prefix) then Throw.throw ("no " ++ (if wantTheorems then "theorems" else "tests") ++ " under " ++ prefix ++ "; `deus ls " ++
     prefix ++ "` shows what is there") else ()
+  -- The checks that ran for over a second, slowest first: where a run's time went.
+  let slow := List.take 3 (List.sortBy (fun one other => snd (snd (snd other)) - snd (snd (snd one))) (List.filter (fun r => snd (snd (snd r)) > 1000) results))
+  let seconds := fun ms => Int.toText (ms / 1000) ++ "." ++ Int.toText (ms % 1000 / 100) ++ " s"
   Cli.output args (fun _ => Json.arr (List.map (fun r =>
-    let (name, v, wasCached) := r
+    let (name, v, wasCached, ms) := r
     let status :=
       match v with
       | Verdict.pass evidence cases => [("status", Json.str "pass"), ("evidence", Json.str evidence), ("cases", Json.num cases)]
       | Verdict.fail reason => [("status", Json.str "fail"), ("reason", Json.str (nameTrace index reason))]
       | Verdict.unchecked => [("status", Json.str "unchecked")]
-    Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached)] ++ status)) results)) (fun _ =>
+    Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached), ("ms", Json.num ms)] ++ status)) results)) (fun _ =>
     let summary := Int.toText (List.length results - List.length failed) ++ " passed, " ++
       Int.toText (List.length failed) ++ " failed"
-    join "\n" (List.map line results ++ [summary]))
+    let slowest := if List.isEmpty slow then [] else
+      ["slowest: " ++ join ", " (List.map (fun r => fst r ++ " " ++ seconds (snd (snd (snd r)))) slow)]
+    join "\n" (List.map line results ++ [summary] ++ slowest))
   if List.isEmpty failed then () else IO.exit 1
 
 def tests (args : Args) : {IO, Throw Text} Unit := Check.run args false

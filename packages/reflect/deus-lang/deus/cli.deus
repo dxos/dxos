@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "js", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "files", "exact"]
+def booleanFlags : Map Text Unit := Set.fromList ["allow-drop", "allow-failing", "no-merge", "no-check", "json", "core", "all", "force", "empty", "help", "integration", "wasm", "js", "c", "native", "worker", "server", "browser", "console", "coverage", "quiet", "bytes", "fresh", "terms", "files", "exact", "shadow"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -410,6 +410,10 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     (fun pair => not (mountedCopy libs ns (fst pair) (snd pair)))
     (Batch.entries batch ++ specEntries dir args.positional reworded)
   let replaced := changes ns entries
+  -- A changed copy of a library's definition would become the project's own beside it, which is rarely meant (D284).
+  let shadowing := if Cli.flag args "shadow" then [] else List.filterMap
+    (fun pair => Option.map (fun l => fst pair ++ "  (lib." ++ l.libName ++ ", " ++ l.libIri ++ ")") (Project.shadowedLibrary libs ns (fst pair)))
+    entries
   let crossings := layerCrossings dir batch
   let trespasses :=
     match Project.read dir with
@@ -419,7 +423,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     dir
     (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns (Batch.entries batch))
     batch
-  if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty shared) then Throw.throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++
+  if not (List.isEmpty shadowing) then Throw.throw ("these names belong to a mounted library; change them there (pull it into its own codebase, update, push, then `deus lib install`), or pass --shadow to give this project its own:\n  " ++ join "\n  " shadowing) else if not (List.isEmpty crossings) then Throw.throw ("a layer may not depend on these:\n  " ++ join "\n  " crossings) else if not (List.isEmpty shared) then Throw.throw ("these bindings share one object, so they would share one codec; give each its own path or one type:\n  " ++
     join "\n  " shared) else if not (List.isEmpty trespasses) then Throw.throw ("only a library may mint types under its IRI:\n  " ++ join "\n  " trespasses) else if not isUpdate && not (List.isEmpty replaced) then Throw.throw ("these names already exist; use `deus update`:\n  " ++ join "\n  " (List.map (fun c =>
     let (name, _, _) := c
     name) replaced)) else

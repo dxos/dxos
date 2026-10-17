@@ -131,4 +131,17 @@ def mountedCopy (libs : List Lib) (ns : Map Text Entry) (name : Text) (e : Entry
     | Option.some m => Entry.hash m == Entry.hash e
     | Option.none => false) libs
 
+/-- The mounted library a new definition named `name` would shadow: one whose release defines `name` while the project
+  does not (D284). Such a definition is usually a library edit made in the wrong codebase. -/
+def shadowedLibrary (libs : List Lib) (ns : Map Text Entry) (name : Text) : Option Lib :=
+  if Map.contains name ns then Option.none
+  else List.find (fun l => Map.contains ("lib." ++ l.libName ++ "." ++ name) ns) libs
+
+test shadowingIsFound :=
+  let base := Lib.mk "base" "https://dxos.org/deus/base" "r"
+  let ns := Map.fromList [("lib.base.Sim.run", Entry.term "a"), ("Task.id", Entry.term "b"), ("lib.base.Task.id", Entry.term "c")]
+  Option.map (fun l => l.libName) (shadowedLibrary [base] ns "Sim.run") == Option.some "base"
+    && Option.isNone (shadowedLibrary [base] ns "Task.id") && Option.isNone (shadowedLibrary [base] ns "Cli.main")
+    && Option.isNone (shadowedLibrary [] ns "Sim.run")
+
 end Project
