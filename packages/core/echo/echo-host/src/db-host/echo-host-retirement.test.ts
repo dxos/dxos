@@ -219,7 +219,7 @@ describe('document retirement', () => {
     await expect.poll(() => indexedDocument('obj-retired')).toBe(interpretAsDocumentId(replacementUrl));
   });
 
-  test('ignores retirements naming a document an open space still references', async () => {
+  test('ignores retirements naming a document another space or a live link still uses', async () => {
     const { host, countChunks, createSpace, createObjectDoc, linkObjects, loadDirectory } = await setup();
     const root = await createSpace();
     const linkedUrl = await createObjectDoc('obj-linked', 'Linked');
@@ -237,7 +237,20 @@ describe('document retirement', () => {
     await host.flush(Context.default());
     await host.updateSpaceRoot(Context.default(), otherSpaceId, otherRoot.url);
     const otherUrl = await createObjectDoc('obj-other', 'Other');
-    await linkObjects(otherRoot.documentId, { 'obj-other': otherUrl });
+    // Indexed under the other space, then unlinked: how a document of a directory this host has not opened looks.
+    using indexedDoc = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: otherSpaceId },
+      objects: { 'obj-indexed': { system: {}, meta: { keys: [] }, data: { title: 'Indexed' } } },
+    });
+    const indexedUrl = indexedDoc.url;
+    await linkObjects(otherRoot.documentId, { 'obj-other': otherUrl, 'obj-indexed': indexedUrl });
+    await host.updateIndexes();
+    const otherHandle = await loadDirectory(otherRoot.documentId);
+    otherHandle.change((draft: DatabaseDirectory) => {
+      delete draft.links?.['obj-indexed'];
+    });
+    await host.flush(Context.default());
 
     const replacementUrl = await createObjectDoc('obj-retired', 'Retired');
     const rootHandle = await loadDirectory(root.documentId);
@@ -245,7 +258,7 @@ describe('document retirement', () => {
       draft.links ??= {};
       draft.links['obj-retired'] = new A.RawString(replacementUrl);
       draft.retired = Object.fromEntries(
-        [retiredUrl, linkedUrl, otherUrl, root.url, otherRoot.url].map((url) => [
+        [retiredUrl, linkedUrl, otherUrl, indexedUrl, root.url, otherRoot.url].map((url) => [
           interpretAsDocumentId(url),
           { replacedBy: new A.RawString(replacementUrl) },
         ]),
@@ -253,9 +266,9 @@ describe('document retirement', () => {
     });
     await host.flush(Context.default());
 
-    // The one genuine retirement goes; every document a space still references stays.
+    // The one genuine retirement goes; every document another space or a live link uses stays.
     await expect.poll(() => countChunks(interpretAsDocumentId(retiredUrl))).toBe(0);
-    for (const url of [linkedUrl, otherUrl, root.url, otherRoot.url]) {
+    for (const url of [linkedUrl, otherUrl, indexedUrl, root.url, otherRoot.url]) {
       expect(await countChunks(interpretAsDocumentId(url))).toBeGreaterThan(0);
       expect(host['_automergeHost'].quarantinedDocuments.has(interpretAsDocumentId(url))).toBe(false);
     }

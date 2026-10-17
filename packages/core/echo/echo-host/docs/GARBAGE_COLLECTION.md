@@ -340,10 +340,12 @@ handles it without reading it:
    directory quarantines the document with reason `retired` and wipes its index
    rows and bytes without loading it. The directory naming the document is the
    attribution: loading it to read `access.spaceId` is what retirement avoids.
-   An entry naming a document any open space still references (a directory,
-   the space root or credentials, a link or a branch) is ignored, since any
-   member can write a directory and a genuine retirement re-points the links in
-   the same change.
+   An entry naming a document another space or a live link still uses is
+   ignored: the directory, space root or credentials of any space this host
+   holds, a link or branch of an open directory, or a document the index holds
+   under another space (which covers the links of directories not yet opened).
+   Any member can write a directory, and a genuine retirement re-points the
+   links in the same change.
 
 The space directory is the only durable record: there is no local quarantine
 table. The `retired` map is append-only and stays in the directory, so every
@@ -383,7 +385,7 @@ same way, before it stops loading:
 
 - **Attribution before deletion.** A document is only wiped when its
   `access.spaceId` matches the target space, or when the space's own directory
-  lists it under `retired` and no open space still references it (see
+  lists it under `retired` and no other space or live link uses it (see
   [Retired documents](#retired-documents)). No global/cross-space sweep.
 - **Reachability is computed from the synced directory**, so a document still
   referenced by any live object (including via branches) is never wiped.

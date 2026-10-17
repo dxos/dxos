@@ -1118,11 +1118,18 @@ export class EchoHost extends Resource {
       return;
     }
     const referenced = this.#referencedDocuments();
-    const retired = candidates.filter((entry) => !referenced.has(entry.documentId));
-    if (retired.length < candidates.length) {
-      log.warn('ignored retirements naming documents an open space still references', {
+    const indexedElsewhere = await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.queryDocumentsIndexedElsewhere({
         spaceId,
-        documentIds: candidates.filter((entry) => referenced.has(entry.documentId)).map((entry) => entry.documentId),
+        documentIds: candidates.map((entry) => entry.documentId),
+      }),
+    );
+    const isProtected = (documentId: DocumentId) => referenced.has(documentId) || indexedElsewhere.has(documentId);
+    const retired = candidates.filter((entry) => !isProtected(entry.documentId));
+    if (retired.length < candidates.length) {
+      log.warn('ignored retirements naming documents another space or a live link still uses', {
+        spaceId,
+        documentIds: candidates.filter((entry) => isProtected(entry.documentId)).map((entry) => entry.documentId),
       });
     }
     if (retired.length === 0) {
@@ -1146,17 +1153,22 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Documents an open space still references: its directory, the space root and credentials it hangs off, and every
-   * link and branch. A `retired` entry naming one is never acted on, since any member can write a directory and a
-   * document id may belong to another space; a genuine retirement re-points the links in the same change.
+   * Documents a space on this host still references: the directory, space root and credentials of every persisted
+   * space, opened or not, and every link and branch of an open directory. A `retired` entry naming one is never acted
+   * on, since any member can write a directory and a document id may belong to another space; a genuine retirement
+   * re-points the links in the same change. Links of an unopened directory are covered by the index instead.
    */
   #referencedDocuments(): Set<DocumentId> {
     const urls: string[] = [];
+    const referenced = new Set<DocumentId>();
     for (const spaceId of this._spaceStateManager.spaceIds) {
+      const directoryId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+      if (directoryId) {
+        referenced.add(directoryId);
+      }
       const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
       urls.push(...[refs?.spaceRootDocUrl, refs?.credentialsDocUrl].filter((url) => url !== undefined));
     }
-    const referenced = new Set<DocumentId>();
     for (const [documentId, root] of this._spaceStateManager.roots) {
       referenced.add(documentId);
       if (root.doc()) {

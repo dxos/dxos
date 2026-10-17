@@ -474,6 +474,17 @@ export class IndexEngine {
    *
    * @returns Number of `objectMeta` rows deleted.
    */
+  /**
+   * The ids among `documentIds` the index holds under a space other than `spaceId`: the indexer attributes a document
+   * to the spaces whose directories link it, so these belong to another space too.
+   */
+  queryDocumentsIndexedElsewhere(query: {
+    spaceId: SpaceId;
+    documentIds: readonly string[];
+  }): Effect.Effect<Set<string>, SqlError.SqlError> {
+    return this.#objectMetaIndex.queryDocumentsIndexedElsewhere(query);
+  }
+
   deleteObjects(opts: {
     spaceId: SpaceId;
     documentIds: readonly string[];
