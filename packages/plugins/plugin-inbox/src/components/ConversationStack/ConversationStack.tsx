@@ -568,7 +568,11 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           <h2 className='text-lg min-w-0'>
             {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
             <Collapsible.Trigger
-              classNames='text-lg flex-row-reverse justify-end'
+              // A conversation of one has nothing to fold, so it shows no caret.
+              classNames={mx(
+                'text-lg flex-row-reverse justify-end',
+                !onExpandedChange && '[&>[data-part=indicator]]:hidden',
+              )}
               data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
             >
               <span className='line-clamp-2'>{sender}</span>

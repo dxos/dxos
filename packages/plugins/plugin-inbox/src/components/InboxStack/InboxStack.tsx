@@ -285,7 +285,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root>
+          <ScrollArea.Root width='regular'>
             <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
@@ -294,7 +294,8 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 getId={getItemId}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
-                gap={4}
+                gap={8}
+                inset={false}
                 pagination={pagination}
               />
               {loading && (
@@ -535,10 +536,12 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
+        // Stopped so the tile does not also open the whole conversation; the tile's current/selected update is made here.
         event.stopPropagation();
+        handleCurrentChange();
         onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
-      [onAction],
+      [handleCurrentChange, onAction],
     );
 
     const handleToggleStar = useCallback(

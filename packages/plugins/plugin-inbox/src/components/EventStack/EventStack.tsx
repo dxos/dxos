@@ -92,7 +92,8 @@ export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
-                gap={4}
+                gap={8}
+                inset={false}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
