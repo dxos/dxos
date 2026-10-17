@@ -7,7 +7,7 @@
  * screenshots it into ffmpeg. A live screencast delivers about 25 frames a second at 1080p, which makes a camera
  * move judder however the result is re-encoded.
  *
- *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9015] [--theme light]
+ *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light]
  */
 
 import { chromium } from '@playwright/test';
@@ -19,7 +19,7 @@ const { values } = parseArgs({
   options: {
     out: { type: 'string', default: 'composite.mp4' },
     fps: { type: 'string', default: '60' },
-    url: { type: 'string', default: 'http://localhost:9015' },
+    url: { type: 'string', default: 'http://localhost:9009' },
     theme: { type: 'string', default: 'light' },
     width: { type: 'string', default: '1920' },
     height: { type: 'string', default: '1080' },

@@ -36,7 +36,7 @@ repeats beside or near itself. It fails when two copies land closer than 3 cells
 
 Then it renders the GridZoom composite from the laid-out grid with [`render.mjs`](render.mjs), frame by frame at 60 fps,
 to `<run>/composite.mp4` and `temp/composite/composite.mp4`. It serves the story from a storybook scoped to
-`tools/autocue` on :9015, starting one if nothing answers there and stopping it afterwards; `--no-composite`
+`tools/autocue` on :9009 (the one storybook, reused when it is up), starting one if nothing answers there and stopping it afterwards; `--no-composite`
 skips the render.
 
 With `--publish` (run under `op run --env-file ~/.env.tpl --` so the R2 keys are set), each flow whose two videos

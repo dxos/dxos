@@ -13,11 +13,11 @@
  * A failed take is retried, then logged and skipped; it never ends the run.
  *
  *   node tools/autocue/showcase/overnight.mjs [--only map,chess] [--themes light,dark] [--out temp/showcase/run]
- *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9015]
+ *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9009]
  *
  * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the GridZoom composite is rendered to
  * `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
- * `tools/autocue` on :9015 that the runner starts if nothing answers there and stops afterwards.
+ * `tools/autocue` on :9009 that the runner starts if nothing answers there and stops afterwards.
  *
  * `--publish` uploads each flow's light and dark videos once both pass and sets them as the plugin's showcase entry in
  * its `dx.config.ts` `screenshots`. It needs R2 keys in the environment; run it under 1Password so one approval
@@ -48,7 +48,7 @@ const { values: options } = parseArgs({
     'no-serve': { type: 'boolean', default: false },
     'publish': { type: 'boolean', default: false },
     'no-composite': { type: 'boolean', default: false },
-    'storybook': { type: 'string', default: 'http://localhost:9015' },
+    'storybook': { type: 'string', default: 'http://localhost:9009' },
     'port': { type: 'string', default: '7400' },
   },
 });

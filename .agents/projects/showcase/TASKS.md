@@ -63,7 +63,7 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       REPORT.md.
 - [x] **Publish** — `--publish` uploads each flow's light and dark videos and sets the plugin's showcase entry in
       `dx.config.ts` `screenshots` (`screenshots.mjs`); one 1Password approval via `op run`.
-- [x] **Composite** — after the layout, the runner renders GridZoom from a scoped storybook on :9015 (retrying once).
+- [x] **Composite** — after the layout, the runner renders GridZoom from the storybook on :9009 (starting one scoped to tools/autocue if none answers) (retrying once).
 - [x] **SHOWCASE.md** moved to `tools/autocue/showcase`.
 - [x] **GridZoom story** moved to `tools/autocue/src/components/GridZoom` (story id `tools-autocue-gridzoom--default`);
       react-ui-canvas keeps `interpolateCamera` and the camera utilities it imports.
