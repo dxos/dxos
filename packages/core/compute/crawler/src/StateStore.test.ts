@@ -197,10 +197,17 @@ describe('StateStore', () => {
       }),
     );
 
-    it('reconcileChannels drops removed channels, adds new ones and reopens finished ones', ({ expect }) => {
+    it('reconcileChannels drops removed channels with their threads, adds new ones and reopens finished ones', ({
+      expect,
+    }) => {
       const state = CrawlState.make();
       Obj.update(state, (state) => {
-        CrawlState.pushTargets(state, [target('chan-1'), target('chan-2'), target('thread-1', { depth: 1 })]);
+        CrawlState.pushTargets(state, [
+          target('chan-1'),
+          target('chan-2'),
+          target('thread-1', { depth: 1, rootId: 'chan-1' }),
+          target('thread-2', { depth: 1, rootId: 'chan-2' }),
+        ]);
         CrawlState.setStatus(state, 'chan-1', 'done');
         CrawlState.setCursor(state, 'chan-1', '7', '2026-01-01T00:00:00.000Z');
         CrawlState.setStatus(state, 'thread-1', 'done');
@@ -208,7 +215,7 @@ describe('StateStore', () => {
       Obj.update(state, (state) => CrawlState.reconcileChannels(state, ['chan-1', 'chan-3']));
       expect(CrawlState.listTargets(state)).toEqual([
         { ...target('chan-1'), cursor: '7', lastRunAt: '2026-01-01T00:00:00.000Z' },
-        target('thread-1', { depth: 1, status: 'done' }),
+        target('thread-1', { depth: 1, rootId: 'chan-1', status: 'done' }),
         target('chan-3'),
       ]);
     });

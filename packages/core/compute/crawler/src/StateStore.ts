@@ -158,6 +158,7 @@ const makeMemory = (): Service => {
               channelId: target.channelId,
               ...(target.threadId !== undefined ? { threadId: target.threadId } : {}),
               ...(target.parentMessageId !== undefined ? { parentMessageId: target.parentMessageId } : {}),
+              ...(target.rootId !== undefined ? { rootId: target.rootId } : {}),
               depth: target.depth,
               status: 'pending',
             });

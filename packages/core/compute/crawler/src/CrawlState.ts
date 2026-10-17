@@ -25,6 +25,8 @@ export const TargetRecord = Schema.Struct({
   channelId: Schema.String,
   threadId: Schema.optional(Schema.String),
   parentMessageId: Schema.optional(Schema.String),
+  /** The top-level channel a thread descends from. */
+  rootId: Schema.optional(Schema.String),
   depth: Schema.Number,
   /** Push order: the frontier is a stack, so the highest actionable position is read next. */
   position: Schema.Number,
@@ -85,6 +87,7 @@ const toTarget = (id: string, record: TargetRecord): CrawlType.Target => ({
   channelId: record.channelId,
   ...(record.threadId !== undefined ? { threadId: record.threadId } : {}),
   ...(record.parentMessageId !== undefined ? { parentMessageId: record.parentMessageId } : {}),
+  ...(record.rootId !== undefined ? { rootId: record.rootId } : {}),
   depth: record.depth,
   status: record.status,
   ...(record.cursor !== undefined ? { cursor: record.cursor } : {}),
@@ -116,6 +119,7 @@ export const pushTargets = (state: Draft, targets: readonly CrawlType.Target[]):
       channelId: target.channelId,
       ...(target.threadId !== undefined ? { threadId: target.threadId } : {}),
       ...(target.parentMessageId !== undefined ? { parentMessageId: target.parentMessageId } : {}),
+      ...(target.rootId !== undefined ? { rootId: target.rootId } : {}),
       depth: target.depth,
       position,
       status: target.status,
@@ -156,12 +160,13 @@ export const resetTargets = (state: Draft, targetIds?: readonly string[]): void 
     if (targetIds !== undefined && !targetIds.includes(id)) {
       continue;
     }
-    const { channelId, threadId, parentMessageId, depth, position } = state.targets[id];
+    const { channelId, threadId, parentMessageId, rootId, depth, position } = state.targets[id];
     // Replaced whole rather than field by field, so the optional fields are dropped rather than set to undefined.
     state.targets[id] = {
       channelId,
       ...(threadId !== undefined ? { threadId } : {}),
       ...(parentMessageId !== undefined ? { parentMessageId } : {}),
+      ...(rootId !== undefined ? { rootId } : {}),
       depth,
       position,
       status: 'pending',
@@ -204,13 +209,15 @@ export const clearSourceHashes = (state: Draft): void => {
 /**
  * Applies a channel set: channels no longer listed leave the frontier, new ones join it, and those crawled before
  * are reopened so what was posted since is read; their cursors are kept, so nothing is read twice. Run before each
- * invocation, so every run checks its channels for new messages. Threads found under a dropped channel stay, since a
- * target does not record the channel it came from; a finished thread is not reopened, so replies posted to it later
- * are read only after a reset.
+ * invocation, so every run checks its channels for new messages. Threads found under a dropped channel leave with it;
+ * a finished thread is not reopened, so replies posted to it later are read only after a reset.
  */
 export const reconcileChannels = (state: Draft, channels: readonly string[]): void => {
+  const isDropped = (id: string) => !channels.includes(id);
   const dropped = listTargets(state)
-    .filter((target) => target.depth === 0 && !channels.includes(target.id))
+    .filter((target) =>
+      target.depth === 0 ? isDropped(target.id) : target.rootId !== undefined && isDropped(target.rootId),
+    )
     .map((target) => target.id);
   removeTargets(state, dropped);
   pushTargets(
