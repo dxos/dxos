@@ -108,6 +108,7 @@ if (import.meta.main ?? process.argv[1] === import.meta.filename) {
           'Worker.Heads.isLogged',
           'Worker.Heads.logHead',
           'Worker.Heads.epochOf',
+          'Worker.Heads.moveHead',
           '-o',
           join(gen, 'heads.js'),
           '--js',

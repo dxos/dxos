@@ -217,6 +217,53 @@ function Worker$Heads$epochOf(text) {
 }
 rt.named(Worker$Heads$epochOf, "Worker.Heads.epochOf");
 
+async function Worker$Heads$moveHead(bucket, project, claim, sent, keyId, readCurrent, epochAt) {
+  const $stack = rt.handlers();
+  const current = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, Worker$Heads$Claim$branch(claim)))));
+  const causal = Option$map(rt.named((c) => lib$web$Js$toText(lib$web$Js$get(c, "causal")), "Worker.Heads.moveHead/\u03bb"), current);
+  let required;
+  m0: {
+    if (causal.tag === 1) {
+      const head = causal.fields[0];
+      if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
+        required = 0;
+      } else {
+        required = lib$web$Js$toInt(rt.resumed($stack, await rt.resumed($stack, await rt.ap(epochAt, head))));
+      }
+      break m0;
+    }
+    if (causal.tag === 0) {
+      required = 0;
+      break m0;
+    }
+    rt.nomatch(causal);
+  }
+  const etag = Option$bind(current, rt.named((c_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(c_1, "etag"))), "Worker.Heads.moveHead/\u03bb"));
+  const decided = Worker$Heads$verdict(causal, claim, required, sent);
+  if ((decided === "same")) {
+    return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
+  } else {
+    if ((decided === "epoch")) {
+      return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [426, required, ""]);
+    } else {
+      let r1;
+      if ((decided === "write")) {
+        r1 = rt.resumed($stack, await Worker$Heads$writeHead(bucket, project, Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), etag));
+      } else {
+        r1 = false;
+      }
+      if (r1) {
+        rt.resumed($stack, await Worker$Heads$logHead(bucket, project, Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), causal, keyId));
+        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
+      } else {
+        const latest = lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(readCurrent, Worker$Heads$Claim$branch(claim)))));
+        return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [409, required, Option$getOr(Option$map(rt.named((c_2) => lib$web$Js$toText(lib$web$Js$get(c_2, "causal")), "Worker.Heads.moveHead/\u03bb"), latest), "")]);
+      }
+    }
+  }
+}
+rt.named(Worker$Heads$moveHead, "Worker.Heads.moveHead");
+
 function Worker$Heads$isHash(t) {
   if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
     return List$all(rt.named((c) => {
@@ -635,6 +682,35 @@ function lib$base$Sexp$readAll(t) {
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
+function Worker$Heads$Claim$branch(v) {
+  m0: {
+    if (v.tag === 0) {
+      const v_1 = v.fields[0];
+      const v_2 = v.fields[1];
+      const v_3 = v.fields[2];
+      return v_1;
+    }
+    rt.nomatch(v);
+  }
+}
+rt.named(Worker$Heads$Claim$branch, "Worker.Heads.Claim.branch");
+
+const lib$web$Js$toInt = rt.importFn(rt, "js.as.toInt", [['raw']], ['int'], "lib.web.Js.toInt");
+
+function Option$bind(o, f) {
+  m0: {
+    if (o.tag === 0) {
+      return rt.con0("#Option", 0);
+    }
+    if (o.tag === 1) {
+      const x = o.fields[0];
+      return rt.ap(f, x);
+    }
+    rt.nomatch(o);
+  }
+}
+rt.named(Option$bind, "Option.bind");
+
 function List$any(p$, v$) {
   for (;;) {
     const p = p$, v = v$;
@@ -806,6 +882,7 @@ export const raw = {
   isLogged: Worker$Heads$isLogged,
   logHead: Worker$Heads$logHead,
   epochOf: Worker$Heads$epochOf,
+  moveHead: Worker$Heads$moveHead,
 };
 export const parseClaim = rt.exportFn(Worker$Heads$parseClaim, [['text']], ['option', ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]]]);
 export const isBranch = rt.exportFn(Worker$Heads$isBranch, [['text']], ['bool']);
@@ -816,4 +893,5 @@ export const headLogKey = rt.exportFn(Worker$Heads$headLogKey, [['text'], ['text
 export const isLogged = rt.exportFn(Worker$Heads$isLogged, [['text']], ['bool']);
 export const logHead = rt.exportAsync(Worker$Heads$logHead, [['raw'], ['text'], ['text'], ['text'], ['option', ['text']], ['option', ['text']]], ['unit']);
 export const epochOf = rt.exportFn(Worker$Heads$epochOf, [['text']], ['int']);
+export const moveHead = rt.exportAsync(Worker$Heads$moveHead, [['raw'], ['text'], ['struct', "235c859770365e6dd08bd1de9cd305aaf18ca8186e02aad6f45008b14e5edf73", ["branch", "head", "bases"], [['text'], ['text'], ['list', ['text']]]], ['int'], ['option', ['text']], ['fn', [['text']], ['raw']], ['fn', [['text']], ['raw']]], ['struct', "c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", ["status", "required", "head"], [['int'], ['int'], ['text']]]);
 //# sourceMappingURL=heads.js.map

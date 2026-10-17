@@ -114,6 +114,36 @@ test epochsRead :=
   epochOf "(term (int 3))" == 3 && epochOf "(term (text \"3\"))" == 0 && epochOf "" == 0 && epochOf "(term (int -2))" == 0
     && epochOf "(term (int 3)) (x)" == 0
 
+/-- What a claim did to its branch: `status` 0 when the head is where the claim put it (moved now or already), 426
+  when the pushing CLI is older than the codebase's epoch (`required`), or 409 when the head moved since the pull
+  (`head`, the head it moved to, or ""). -/
+structure Moved @"urn:deus:worker:Moved" where
+  status : Int
+  required : Int
+  head : Text
+
+/-- Moves `claim.branch` as the claim asks, if it may (D167, D181): reads the current head through `readCurrent` (in
+  JavaScript, a branch to a promise of `{causal, etag}` or `undefined`, which also reads heads older than D181), asks
+  `epochAt` (a head to a promise of the epoch it asks for) only when the head would change, decides by `verdict`, and
+  writes and logs the move by a conditional write, so of two pushes from one head exactly one moves it. -/
+def moveHead (bucket : Js) (project : Text) (claim : Claim) (sent : Int) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Moved :=
+  let current := Js.toOption (Js.Async.await (readCurrent claim.branch))
+  let causal := Option.map (fun c => Js.toText (Js.get c "causal")) current
+  let required :=
+    match causal with
+    | Option.some head => if head == claim.head then 0 else Js.toInt (Js.Async.await (epochAt head))
+    | Option.none => 0
+  let etag := Option.bind current (fun c => Option.map Js.toText (Js.toOption (Js.get c "etag")))
+  let decided := verdict causal claim required sent
+  if decided == "same" then Moved.mk 0 required claim.head
+  else if decided == "epoch" then Moved.mk 426 required ""
+  else if decided == "write" && writeHead bucket project claim.branch claim.head etag then
+    let _ := logHead bucket project claim.branch claim.head causal keyId
+    Moved.mk 0 required claim.head
+  else
+    let latest := Js.toOption (Js.Async.await (readCurrent claim.branch))
+    Moved.mk 409 required (Option.getOr (Option.map (fun c => Js.toText (Js.get c "causal")) latest) "")
+
 /-- A sample head for the tests. -/
 def headA : Text := Text.repeat 64 "a"
 

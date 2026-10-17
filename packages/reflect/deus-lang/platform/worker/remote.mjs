@@ -178,34 +178,37 @@ const moveHead = async (request, env, project, logged) => {
   if (!claim) {
     throw new HttpError(400, 'x-deus-claim is `<branch> <head> <base>[,<base>…]`');
   }
-  const { branch, head } = claim;
-  const current = await readHead(env, project, branch);
-  const required = current && current.causal !== head ? await requiredEpoch(env.BUCKET, project, current.causal) : 0;
+  const { branch } = claim;
   // A DEUS `Int` is 32 bits, so a number past it would wrap; such an epoch counts as none.
   const claimed = Number(request.headers.get('x-deus-epoch') ?? '0');
   const sent = Number.isInteger(claimed) && claimed >= 0 && claimed < 2 ** 31 ? claimed : 0;
-  const verdict = heads.verdict(current?.causal, claim, required, sent);
-  if (verdict === 'same') {
+  // The read, the decision, the conditional write and the log are `Worker.Heads.moveHead`, in DEUS; it reads heads
+  // through `readHead` (which knows the D1 heads from before D181) and epochs through `requiredEpoch` (which caches).
+  const moved = await heads.moveHead(
+    env.BUCKET,
+    project,
+    claim,
+    sent,
+    logged.keyId,
+    (name) => readHead(env, project, name),
+    (causal) => requiredEpoch(env.BUCKET, project, causal),
+  );
+  if (moved.status === 0) {
     return undefined;
   }
-  if (verdict === 'epoch') {
+  if (moved.status === 426) {
     return json(
       {
-        error: `${branch} needs a deus with data-safety epoch ${required} (Safety.epoch) or newer, and this one has ${sent}: its merge or push may lose data; update deus by merging #13952, then push again`,
-        epoch: required,
+        error: `${branch} needs a deus with data-safety epoch ${moved.required} (Safety.epoch) or newer, and this one has ${sent}: its merge or push may lose data; update deus by merging #13952, then push again`,
+        epoch: moved.required,
       },
       426,
     );
   }
-  if (verdict === 'write' && (await writeHead(env, project, branch, head, current))) {
-    await logHead(env, project, branch, head, current?.causal, logged.keyId);
-    return undefined;
-  }
-  const latest = await readHead(env, project, branch);
   return json(
     {
-      error: `${branch} moved to #${(latest?.causal ?? '').slice(0, 10)} since you pulled; run \`deus pull\` and \`deus merge\`, then push again`,
-      head: latest?.causal ?? null,
+      error: `${branch} moved to #${moved.head.slice(0, 10)} since you pulled; run \`deus pull\` and \`deus merge\`, then push again`,
+      head: moved.head || null,
     },
     409,
   );
