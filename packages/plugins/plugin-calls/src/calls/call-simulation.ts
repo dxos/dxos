@@ -108,25 +108,12 @@ export class CallSimulation extends Resource {
   }
 
   async #load(index: number, { name, src }: SimulatedParticipantProps): Promise<SimulatedParticipant> {
-    const video = document.createElement('video');
-    video.src = src;
-    video.playsInline = true;
-    video.crossOrigin = 'anonymous';
-    // Off screen rather than detached: a detached element's captured stream stops producing frames.
-    video.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;';
-    document.body.appendChild(video);
-    await new Promise<void>((resolve, reject) => {
-      video.addEventListener('loadeddata', () => resolve(), { once: true });
-      video.addEventListener('error', () => reject(new Error(`simulated participant ${name}: cannot load ${src}`)), {
-        once: true,
-      });
+    const { video, videoTrack, audioTrack } = await loadMediaFile(this.#audioContext, src);
+    // A finished player stops producing frames and its tile goes black; hold the last frame instead.
+    video.addEventListener('ended', () => {
+      video.currentTime = Math.max(0, video.duration - 0.1);
     });
-
-    // Sound goes to the track only, which the call plays like any pulled audio; the element itself stays silent.
-    const destination = this.#audioContext.createMediaStreamDestination();
-    this.#audioContext.createMediaElementSource(video).connect(destination);
-    const audioTrack = destination.stream.getAudioTracks()[0];
-    const stream = new MediaStream(video.captureStream().getVideoTracks());
+    const stream = new MediaStream([videoTrack]);
 
     const monitor = new SpeakingMonitor(audioTrack);
     monitor.speakingChanged.on(this._ctx, () => this.changed.emit());
@@ -150,3 +137,32 @@ export class CallSimulation extends Resource {
     return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor };
   }
 }
+
+/**
+ * Loads a video file into a hidden, paused player and returns its picture and sound as tracks.
+ * Sound goes to the track only, which the call plays like any other audio; the player itself stays silent.
+ */
+export const loadMediaFile = async (
+  audioContext: AudioContext,
+  src: string,
+): Promise<{ video: HTMLVideoElement; videoTrack: MediaStreamTrack; audioTrack: MediaStreamTrack }> => {
+  const video = document.createElement('video');
+  video.src = src;
+  video.playsInline = true;
+  video.crossOrigin = 'anonymous';
+  // Off screen rather than detached: a detached element's captured stream stops producing frames.
+  video.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;';
+  document.body.appendChild(video);
+  await new Promise<void>((resolve, reject) => {
+    video.addEventListener('loadeddata', () => resolve(), { once: true });
+    video.addEventListener('error', () => reject(new Error(`cannot load media file ${src}`)), { once: true });
+  });
+
+  const destination = audioContext.createMediaStreamDestination();
+  audioContext.createMediaElementSource(video).connect(destination);
+  return {
+    video,
+    videoTrack: video.captureStream().getVideoTracks()[0],
+    audioTrack: destination.stream.getAudioTracks()[0],
+  };
+};
