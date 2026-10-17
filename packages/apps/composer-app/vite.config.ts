@@ -316,6 +316,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
