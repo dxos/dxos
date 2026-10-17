@@ -304,8 +304,8 @@ const earlierPage = async (env, project, causal, page) => {
   }
   const drawn = JSON.parse(await stored.text());
   const at = drawn.indexOf(causal);
-  // Two earlier heads at most: a page absent from both is new or long unvisited, and is drawn instead.
-  for (const other of drawn.slice(at + 1, at + 3)) {
+  // Every kept head, newest first: when pushes come faster than the queue draws, the last head or two may lack pages.
+  for (const other of drawn.slice(at + 1)) {
     const found = await env.BUCKET.get(`${project}/live/${other}/def/${page}`);
     if (found) {
       return { causal: other, body: found.body };
@@ -349,8 +349,20 @@ export const warmLive = async (env, ctx, project) => {
         drawn: true,
       }).catch((error) => console.error(`drawing ${doc} failed`, error));
     }
-    // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one.
+    // Every definition's page is drawn too, in chunks a queue consumer finishes, so no visitor waits for one. Pages
+    // the last drawn head lacks go first: an earlier head stands in for every other page while the queue works.
+    const before = await previousNames(env.BUCKET, project, head.causal);
+    const fresh = names.filter((entry) => !before.has(entry.hash));
     const chunks = [];
+    for (let from = 0; from < fresh.length; from += PAGES_PER_CHUNK) {
+      chunks.push({
+        body: {
+          project,
+          causal: head.causal,
+          hashes: fresh.slice(from, from + PAGES_PER_CHUNK).map((entry) => entry.hash),
+        },
+      });
+    }
     for (let from = 0; from < names.length; from += PAGES_PER_CHUNK) {
       chunks.push({ body: { project, causal: head.causal, from, count: PAGES_PER_CHUNK } });
     }
@@ -375,6 +387,15 @@ export const warmLive = async (env, ctx, project) => {
   }
 };
 
+/** The definition hashes of the newest drawn head before `causal`, or none when there is no such head. */
+const previousNames = async (bucket, project, causal) => {
+  const stored = await bucket.get(drawnKey(project));
+  const drawn = stored ? JSON.parse(await stored.text()) : [];
+  const previous = drawn.find((other) => other !== causal);
+  const index = previous ? await bucket.get(`${project}/live/${previous}/index.json`) : null;
+  return new Set(index ? (JSON.parse(await index.text()).names ?? []).map((entry) => entry.hash) : []);
+};
+
 /** Definition pages one queue message draws: well inside a consumer's CPU time once the site is built. */
 const PAGES_PER_CHUNK = 200;
 
@@ -382,8 +403,8 @@ const PAGES_PER_CHUNK = 200;
 const RECENT_CHANGES = 30;
 const CHANGES_PER_CHUNK = 5;
 
-/** Draws the definition pages `from` to `from + count` of a causal's index, skipping those already stored. */
-export const warmPages = async (env, ctx, { project, causal, from, count, changes }) => {
+/** Draws the definition pages of `hashes`, or `from` to `from + count` of a causal's index, skipping those already stored. */
+export const warmPages = async (env, ctx, { project, causal, from, count, changes, hashes }) => {
   try {
     if (changes) {
       for (const change of changes) {
@@ -398,10 +419,9 @@ export const warmPages = async (env, ctx, { project, causal, from, count, change
     if (!index) {
       return;
     }
-    const names = (JSON.parse(await index.text()).names ?? []).slice(from, from + count);
-    const pages = [
-      ...new Set(names.map((entry) => (entry.hash.startsWith('#') ? `_${entry.hash.slice(1)}` : entry.hash))),
-    ];
+    const chosen =
+      hashes ?? (JSON.parse(await index.text()).names ?? []).slice(from, from + count).map((entry) => entry.hash);
+    const pages = [...new Set(chosen.map((hash) => (hash.startsWith('#') ? `_${hash.slice(1)}` : hash)))];
     for (const page of pages) {
       if (!(await env.BUCKET.head(`${project}/live/${causal}/def/${page}.json`))) {
         // One page at a time, each drawn here: a consumer drawing pages in parallel would exhaust its memory.

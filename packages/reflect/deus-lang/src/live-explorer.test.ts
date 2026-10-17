@@ -201,8 +201,16 @@ describe('live explorer (D192)', () => {
       const head = readFileSync(join(bucket, 'toolchain', 'heads', 'main'), 'utf8').trim();
       rmSync(join(bucket, 'toolchain', 'live', head), { recursive: true, force: true });
       // A queued message draws an index, a chunk of definition pages (`from`, `count`) or recent changes.
-      const sent: { body: { project: string; causal?: string; from?: number; count?: number; changes?: string[] } }[] =
-        [];
+      const sent: {
+        body: {
+          project: string;
+          causal?: string;
+          from?: number;
+          count?: number;
+          changes?: string[];
+          hashes?: string[];
+        };
+      }[] = [];
       const env: Env = {
         BUCKET: directoryBucket(bucket),
         PREFIX: 'toolchain',
@@ -226,6 +234,10 @@ describe('live explorer (D192)', () => {
       expect(readdirSync(join(bucket, 'toolchain', 'live', head, 'doc'))).toEqual(['Area.Spec.json']);
       const chunks = sent.filter((message) => message.body.causal === head && message.body.from !== undefined);
       expect(chunks.length).toBe(Math.ceil(index.names.length / 200));
+      // Pages no earlier head has go first (here, with no earlier head, all of them), before the sweep over the index.
+      const firstFresh = sent.findIndex((message) => message.body.causal === head && message.body.hashes !== undefined);
+      expect(firstFresh).toBeGreaterThanOrEqual(0);
+      expect(firstFresh).toBeLessThan(sent.indexOf(chunks[0]));
       for (const chunk of chunks) {
         await deliver(chunk.body);
       }
