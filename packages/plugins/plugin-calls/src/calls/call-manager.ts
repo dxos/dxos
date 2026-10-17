@@ -262,9 +262,6 @@ export class CallManager extends Resource {
       await simulation.open();
       simulation.changed.on(this._ctx, () => this._updateState());
       this.#simulation = simulation;
-      if (this.joined) {
-        await simulation.start();
-      }
     }
     this._updateState();
   }
@@ -273,8 +270,8 @@ export class CallManager extends Resource {
   @synchronized
   async join(): Promise<void> {
     if (this.#simulation) {
-      this._swarmSynchronizer.setJoined(true);
-      await this.#simulation.start();
+      await this.#simulation.join();
+      this._updateState();
       return;
     }
 
@@ -290,9 +287,11 @@ export class CallManager extends Resource {
 
   @synchronized
   async leave(): Promise<void> {
+    this.#simulation?.leave();
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
+    this._updateState();
     const roomId = this._registry.get(this._roomIdAtom);
     roomId && this.left.emit(roomId);
   }

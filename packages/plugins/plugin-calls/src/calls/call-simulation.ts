@@ -41,6 +41,8 @@ export class CallSimulation extends Resource {
   readonly #props: SimulatedParticipantProps[];
   readonly #participants: SimulatedParticipant[] = [];
   readonly #audioContext = new AudioContext();
+  /** Kept here rather than in the swarm synchronizer, whose joined state would announce this device to EDGE. */
+  #joined = false;
 
   constructor(participants: SimulatedParticipantProps[]) {
     super();
@@ -64,8 +66,9 @@ export class CallSimulation extends Resource {
     await this.#audioContext.close();
   }
 
-  /** Plays every participant's file from the top, so a scripted conversation starts on one cue. */
-  async start(): Promise<void> {
+  /** Joins the local user and plays every participant's file from the top, so a scripted conversation starts on one cue. */
+  async join(): Promise<void> {
+    this.#joined = true;
     await this.#audioContext.resume();
     await Promise.all(
       this.#participants.map(({ video }) => {
@@ -73,6 +76,10 @@ export class CallSimulation extends Resource {
         return video.play();
       }),
     );
+  }
+
+  leave(): void {
+    this.#joined = false;
   }
 
   /** Adds the participants to the call (only once the local user has joined) and their media to the pulled tracks. */
@@ -92,7 +99,10 @@ export class CallSimulation extends Resource {
     }
 
     return {
-      call: call.joined && self ? { ...call, self, users: [...users, self] } : { ...call, users: [] },
+      call:
+        this.#joined && self
+          ? { ...call, joined: true, self: { ...self, joined: true }, users: [...users, { ...self, joined: true }] }
+          : { ...call, users: [] },
       media: { ...media, pulledVideoStreams, pulledAudioTracks },
     };
   }

@@ -26,15 +26,27 @@ import { readFileSync } from 'node:fs';
 const ROUTE = '/__fake-media/';
 
 /**
+ * Serves a WebM file to the context at a same-origin path and returns that path, e.g. for the `src` of
+ * plugin-calls' `SetSimulatedParticipants`.
+ *
  * @param {import('playwright').BrowserContext} context
- * @param {{ file: string, name: string, leadIn?: number }} options `leadIn` in seconds.
+ * @param {{ file: string, name: string }} options
  */
-export const installFakeMedia = async (context, { file, name, leadIn = 3 }) => {
+export const serveMedia = async (context, { file, name }) => {
   const body = readFileSync(file);
   await context.route(`**${ROUTE}${name}`, (route) =>
     route.fulfill({ status: 200, body, headers: { 'content-type': 'video/webm', 'accept-ranges': 'none' } }),
   );
-  await context.addInitScript(fakeMediaScript, { src: `${ROUTE}${name}`, leadIn, label: name });
+  return `${ROUTE}${name}`;
+};
+
+/**
+ * @param {import('playwright').BrowserContext} context
+ * @param {{ file: string, name: string, leadIn?: number }} options `leadIn` in seconds.
+ */
+export const installFakeMedia = async (context, { file, name, leadIn = 3 }) => {
+  const src = await serveMedia(context, { file, name });
+  await context.addInitScript(fakeMediaScript, { src, leadIn, label: name });
 };
 
 /** Runs in the page before any app code; must be self-contained. */
