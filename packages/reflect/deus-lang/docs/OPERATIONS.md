@@ -107,7 +107,7 @@ The explorer is drawn live (D192): `/v1/<project>/live/<branch>` names the head,
 `def/<hash>.json` and `change/<causal>.json` are its pages, kept in the bucket under `<project>/live/`. `deus test LiveSite --integration` checks the deployed site (D193; `DEUS_SITE` for another deployment) — run it
 after every deploy. `wrangler tail
 deus` shows a `live … pass N: K missing` line for every pass that read something not prefetched. Last deploy:
-2026-10-17 UTC, version 2ca631f2 (D243: review fixes for the async js target and the Worker ports; D241: names by Codebase.lookupNameWith; D239: explorer audit fixes).
+2026-10-18 UTC, version 6811dbae (D249: the push compare-and-swap in DEUS; D248: key checks; D246: routing; D244: bucket paths).
 `scripts/build-worker.mjs --live` also builds the demo, `gen/address.js`, and `gen/packs.js`, `gen/heads.js` and `gen/keys.js` from the
 `@dxos/worker` codebase (`DEUS_WORKER_CODEBASE`, default `~/.deus-worker`). Run it after changing `examples/react`,
 `platform/js`, `deus/address.deus` or `platform/worker/deus/`, with `DEUS_CODEBASE` the toolchain codebase.
