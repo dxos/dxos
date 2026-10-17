@@ -52,8 +52,8 @@
    * dark keeps the deck's depth, while light sits higher, because near white the same ladder step
    * reads much heavier than it does near black.
    */
-  --color-l0-surface: light-dark(oklch(0.986 0.001 190), var(--dx-surface-sunken));
-  --color-r0-surface: light-dark(oklch(0.986 0.001 190), var(--dx-surface-sunken));
+  --color-l0-surface: light-dark(oklch(0.966 0.001 190), var(--dx-surface-sunken));
+  --color-r0-surface: light-dark(oklch(0.966 0.001 190), var(--dx-surface-sunken));
 
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
