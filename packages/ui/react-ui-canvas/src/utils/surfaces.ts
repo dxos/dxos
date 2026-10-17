@@ -770,9 +770,10 @@ export const RADIUS_CLASSES: Record<Radius, string> = {
 };
 
 /** A node's border width as a class, and as padding of the same width for a fading frame. */
-export const BORDER_CLASSES: Record<1 | 2, { border: string; padding: string }> = {
+export const BORDER_CLASSES: Record<1 | 2 | 4, { border: string; padding: string }> = {
   1: { border: 'border', padding: 'p-px' },
   2: { border: 'border-2', padding: 'p-0.5' },
+  4: { border: 'border-4', padding: 'p-1' },
 };
 
 /** The fill of a frame showing its child scene. */

@@ -60,7 +60,7 @@ export const StyleVariant = Schema.Struct({
   name: Schema.String,
   surface: NodeSurface,
   /** Border width in scene px. */
-  borderWidth: Schema.Literals([1, 2]),
+  borderWidth: Schema.Literals([1, 2, 4]),
   /** The border of a node that sets no line style of its own. */
   borderStyle: Schema.Literals(LINE_STYLES),
   /** Corners of a node, and of one whose style asks to be rounded. */
@@ -168,7 +168,7 @@ export const CLASSIC_STYLE_SET: StyleSet = {
 };
 
 const FLAT_SHAPE = {
-  borderWidth: 2,
+  borderWidth: 4,
   borderStyle: 'solid',
   radius: 'md',
   roundedRadius: 'xl',
