@@ -524,9 +524,10 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached), ("ms", Json.num ms)] ++ status)) results)) (fun _ =>
     let summary := Int.toText (List.length results - List.length failed) ++ " passed, " ++
       Int.toText (List.length failed) ++ " failed"
-    let slowest := if List.isEmpty slow then [] else
-      ["slowest: " ++ join ", " (List.map (fun r => fst r ++ " " ++ seconds (snd (snd (snd r)))) slow)]
-    join "\n" (List.map line results ++ [summary] ++ slowest))
+    join "\n" (List.map line results ++ [summary]))
+  -- On stderr, so the result a script reads stays the same however fast the machine is.
+  if List.isEmpty slow || Cli.flag args "json" then () else
+    IO.eprint ("slowest: " ++ join ", " (List.map (fun r => fst r ++ " " ++ seconds (snd (snd (snd r)))) slow) ++ "\n")
   if List.isEmpty failed then () else IO.exit 1
 
 def tests (args : Args) : {IO, Throw Text} Unit := Check.run args false
