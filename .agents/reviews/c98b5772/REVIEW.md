@@ -16,10 +16,10 @@ _3 error(s), 3 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- c98b5772-1 - unresolved - stable-component-for-optional-content - packages/apps/drawing-app/src/components/DrawingRoot.tsx:166
-- c98b5772-2 - unresolved - errors-extend-base-error - packages/apps/drawing-app/src/model/bootstrap.ts:24
-- c98b5772-3 - unresolved - code-not-in-strings - packages/apps/drawing-app/src/model/drawing-io.ts:12
-- c98b5772-4 - unresolved - errors-extend-base-error - packages/apps/drawing-app/src/model/drawing-io.ts:24
+- c98b5772-1 - ignored - stable-component-for-optional-content - packages/apps/drawing-app/src/components/DrawingRoot.tsx:166
+- c98b5772-2 - resolved - errors-extend-base-error - packages/apps/drawing-app/src/model/bootstrap.ts:24
+- c98b5772-3 - ignored - code-not-in-strings - packages/apps/drawing-app/src/model/drawing-io.ts:12
+- c98b5772-4 - resolved - errors-extend-base-error - packages/apps/drawing-app/src/model/drawing-io.ts:24
 - c98b5772-5 - resolved - errors-extend-base-error - packages/devtools/drawing/site/src/drawing.ts:23
 - c98b5772-6 - resolved - effect-fn-not-hand-wrapped-gen - packages/devtools/drawing/site/src/drawing.ts:33
 
@@ -65,3 +65,10 @@ estimated input tokens: 1667142
 billed input tokens: 1552823 (cost $0.0652)
 measured chars per token: 3.22
 ```
+
+### Triage
+
+- c98b5772-1: ignored. The branch is the app shell's loading state versus the opened article, not optional content inside one component; the `key` remounts the article surface on purpose when another drawing opens.
+- c98b5772-2: resolved. `LoadError` is now `BaseError.extend`.
+- c98b5772-3: ignored. `STARTER_SOURCE` is the starter diagram's `.dx` content, data compiled by `Dsl.compile`, not code that is shipped or executed.
+- c98b5772-4: resolved. `CompileError` is now `BaseError.extend`.

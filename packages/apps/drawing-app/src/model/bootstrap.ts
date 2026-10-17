@@ -8,6 +8,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, Filter, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
@@ -21,9 +22,7 @@ export const SPACE_TAG = 'org.dxos.space.drawingApp';
 const LAST_DRAWING_KEY = 'org.dxos.drawing-app.last-drawing';
 
 /** A file or URL could not be loaded as a drawing. */
-export class LoadError extends Error {
-  readonly _tag = 'LoadError';
-}
+export class LoadError extends BaseError.extend('LoadError', 'The drawing could not be loaded') {}
 
 /** Creates the identity and the drawings space on first run, and returns that space. */
 export const openSpace = Effect.fn('openSpace')(function* (client: Client) {
@@ -68,7 +67,7 @@ export const importDrawing: (
 ) {
   const drawing = yield* IllustratorModel.DrawingFile.importDxSvg(svg).pipe(
     Effect.provide(Database.layer(space.db)),
-    Effect.mapError((error) => new LoadError(error.message)),
+    Effect.mapError((error) => new LoadError({ message: error.message, cause: error })),
   );
   return yield* ensureCanvas(invoker, space, drawing);
 });
@@ -77,14 +76,16 @@ export const importDrawing: (
 export const fetchDrawing = Effect.fn('fetchDrawing')(function* (url: string) {
   const response = yield* Effect.tryPromise({
     try: () => fetch(url),
-    catch: (error) => new LoadError(`Could not fetch ${url}: ${String(error)}`),
+    catch: (error) => new LoadError({ message: `Could not fetch ${url}: ${String(error)}`, cause: error }),
   });
   if (!response.ok) {
-    return yield* Effect.fail(new LoadError(`Could not fetch ${url}: ${response.status} ${response.statusText}`));
+    return yield* Effect.fail(
+      new LoadError({ message: `Could not fetch ${url}: ${response.status} ${response.statusText}` }),
+    );
   }
   return yield* Effect.tryPromise({
     try: () => response.text(),
-    catch: (error) => new LoadError(`Could not read ${url}: ${String(error)}`),
+    catch: (error) => new LoadError({ message: `Could not read ${url}: ${String(error)}`, cause: error }),
   });
 });
 

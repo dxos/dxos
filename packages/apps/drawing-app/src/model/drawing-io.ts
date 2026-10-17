@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Dsl, SvgFile } from '@dxos/diagram';
+import { BaseError } from '@dxos/errors';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
@@ -21,16 +22,14 @@ edge Edit -> Share "download .dx.svg"
 `;
 
 /** The DSL source did not compile. */
-export class CompileError extends Error {
-  readonly _tag = 'CompileError';
-}
+export class CompileError extends BaseError.extend('CompileError', 'The DSL source did not compile') {}
 
 /** Compiles semantic DSL into an SVG drawing and its canvas, not yet added to a space. */
 export const compileDrawing = Effect.fn('compileDrawing')(function* (name: string, text: string) {
   const { commands, problems } = yield* Dsl.compile(text);
   const errors = problems.filter(({ severity }) => severity === 'error');
   if (errors.length > 0) {
-    return yield* Effect.fail(new CompileError(errors.map(({ message }) => message).join('; ')));
+    return yield* Effect.fail(new CompileError({ message: errors.map(({ message }) => message).join('; ') }));
   }
   return IllustratorModel.DrawingFile.makeDrawing({ name, commands, source: { language: 'dsl', text } });
 });
