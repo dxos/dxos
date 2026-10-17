@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, type DragEvent, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -52,6 +53,7 @@ export const DrawingRoot = () => {
   const [error, setError] = useState<string>();
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const startedRef = useRef(false);
 
   const run = useCallback(
     (effect: Effect.Effect<Opened, Error>) =>
@@ -63,10 +65,15 @@ export const DrawingRoot = () => {
               setOpened(result);
             }),
           ),
-          Effect.catch((cause) =>
+          // A rejected `Effect.promise` is a defect, not a failure, so only the full cause keeps the loading text from sticking.
+          Effect.catchCause((cause) =>
             Effect.sync(() => {
-              log.error('drawing did not open', { error: cause });
-              setError(cause.message);
+              if (Cause.hasInterruptsOnly(cause)) {
+                return;
+              }
+              const error = Cause.squash(cause);
+              log.error('drawing did not open', { error });
+              setError(error instanceof Error ? error.message : String(error));
             }),
           ),
         ),
@@ -75,13 +82,19 @@ export const DrawingRoot = () => {
   );
 
   useEffect(() => {
+    // A capability identity change reruns this effect; a second startup would race the first to create the starter.
+    if (startedRef.current) {
+      return;
+    }
+    startedRef.current = true;
+    const src = takeSourceParam();
     run(
       Effect.gen(function* () {
         // Convert needs the operation handlers (Idle) and both variants (the illustrator's start) before any surface asks.
         yield* manager.activate(ActivationEvents.Idle);
         yield* manager.activate(IllustratorEvents.Start);
         const space = yield* openSpace(client);
-        const drawing = yield* openDrawing({ invoker, space, src: takeSourceParam() });
+        const drawing = yield* openDrawing({ invoker, space, src });
         return { space, drawing };
       }),
     );

@@ -9,6 +9,7 @@ import { type Plugin, defineConfig } from 'vite';
 
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
+import { HERO, fileName } from './src/markup.ts';
 import { type Prerendered, prerender } from './src/prerender.ts';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -28,12 +29,18 @@ const PrerenderPlugin = (): Plugin => {
     },
     configureServer: (server) => {
       server.middlewares.use(async (request, response, next) => {
-        const { file } = await load();
-        if (request.url !== `/${file.fileName}`) {
+        if (request.url !== `/${fileName(HERO)}`) {
           return next();
         }
-        response.setHeader('Content-Type', 'image/svg+xml');
-        response.end(file.svg);
+        try {
+          const { file } = await load();
+          response.setHeader('Content-Type', 'image/svg+xml');
+          response.end(file.svg);
+        } catch (error) {
+          // Connect drops a rejected async middleware, so the request would hang; retry the prerender next time.
+          prerendered = undefined;
+          next(error);
+        }
       });
     },
     handleHotUpdate: ({ file }) => {

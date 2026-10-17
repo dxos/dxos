@@ -5,6 +5,7 @@
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { Compartment } from '@codemirror/state';
 import { tags } from '@lezer/highlight';
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -138,12 +139,18 @@ const scheduler = ({ output, canvas, report, download }: Elements) => {
     pending = Effect.runFork(
       Effect.sleep(DEBOUNCE).pipe(
         // The layout engine is the heavy part of the page, so it loads on the first edit.
-        Effect.andThen(Effect.promise(() => import('./drawing.ts'))),
+        Effect.andThen(Effect.tryPromise(() => import('./drawing.ts'))),
         Effect.flatMap(({ draw }) => draw(text)),
         Effect.flatMap((drawing) => Effect.sync(() => show(drawing))),
-        Effect.catch((error) =>
+        // Defects (a throw inside `draw`) must reach the report too, or it keeps the previous render's message.
+        Effect.catchCause((cause) =>
           Effect.sync(() => {
-            report.innerHTML = `<span class="note error">${escapeHtml(error.message)}</span>`;
+            if (Cause.hasInterruptsOnly(cause)) {
+              return;
+            }
+            const error = Cause.squash(cause);
+            const message = error instanceof Error ? error.message : String(error);
+            report.innerHTML = `<span class="note error">${escapeHtml(message)}</span>`;
           }),
         ),
         Effect.ensuring(Effect.sync(() => output.setAttribute('aria-busy', 'false'))),

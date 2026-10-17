@@ -41,7 +41,7 @@ export default defineConfig({
   root: dirname,
   server: {
     host: true,
-    fs: { strict: false, allow: [rootDir] },
+    fs: { allow: [rootDir] },
   },
   oxc: {
     target: [...browserTargets],
