@@ -898,7 +898,12 @@ export class AutomergeHost extends Resource {
     // Detaches every source, so none retries the load.
     await this._repo.removeFromCache(documentId);
 
-    log.warn('quarantined document', { documentId, reason, error: record.error });
+    // Every open re-applies the space root's `retired` entries, so only a load failure is news.
+    if (reason === 'load-failed') {
+      log.warn('quarantined document', { documentId, reason, error: record.error });
+    } else {
+      log('quarantined document', { documentId, reason });
+    }
     this.documentQuarantined.emit(record);
   }
 
