@@ -361,16 +361,25 @@ def pushResults (dir : Text) (remote : Text) : {Remote, IO, Throw Text} Int :=
     writeKnown dir remote "results" (Set.fromList [digest])
     List.length changed
 
-/-- The SHA-256 of each of `files` by path, from one `sha256sum` (or `shasum -a 256`) run over all of them. -/
-def sha256Files (files : List Text) : {IO} Map Text Text :=
-  let digests := fun (result : (Int, Text, Text)) =>
-    match result with
-    | (0, out, _) => Option.some (Map.fromList (List.filterMap (fun line =>
-        let i := Text.indexOf line "  " 0
-        if i == 64 then Option.some (Text.drop 66 line, Text.take 64 line) else Option.none) (Text.lines out)))
-    | _ => Option.none
-  if List.isEmpty files then Map.empty
-  else Option.getOr (Option.orElse (digests (IO.exec "sha256sum" files)) (fun _ => digests (IO.exec "shasum" (["-a", "256"] ++ files)))) Map.empty
+/-- The SHA-256 of each of `files` by path, from `sha256sum` (or `shasum -a 256`) runs over them in batches. A file
+  it could not read is left out; that neither tool runs is an error, so a pull does not take every asset for bad. -/
+def sha256Files (files : List Text) : {IO, Throw Text} Map Text Text :=
+  let parse := fun (out : Text) => List.filterMap (fun line =>
+    let i := Text.indexOf line "  " 0
+    if i == 64 then Option.some (Text.drop 66 line, Text.take 64 line) else Option.none) (Text.lines out)
+  -- Either tool exits 1 when some file was unreadable but prints the others; 127 is a tool that did not start.
+  let one := fun batch =>
+    match IO.exec "sha256sum" batch with
+    | (127, _, _) =>
+        match IO.exec "shasum" (["-a", "256"] ++ batch) with
+        | (127, _, _) => Throw.throw "neither sha256sum nor shasum ran, so the assets cannot be checked"
+        | (_, out, _) => parse out
+    | (_, out, _) => parse out
+  List.foldl (fun m batch => List.foldl (fun acc pair => Map.insert (fst pair) (snd pair) acc) m (one batch)) Map.empty (Replicate.batches files)
+
+/-- `items` in runs of at most 500, so a command line of paths stays under the system's argument limit. -/
+def batches (items : List a) : List (List a) :=
+  if List.isEmpty items then [] else List.take 500 items :: Replicate.batches (List.drop 500 items)
 
 /-- Downloads the remote's assets the store lacks; returns how many. One curl run fetches them all, one checksum run
   checks them and one `mv` keeps the good ones: three processes per asset took most of a fresh pull (D293). -/
@@ -378,18 +387,19 @@ def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
   let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")
   if List.isEmpty missing then 0
   else
-    let staged := dir ++ "/assets.pull"
+    -- A folder of its own, so a pull running beside another does not remove the files that one is about to keep.
+    let staged := dir ++ "/assets.pull-" ++ IO.wallClock ()
     IO.mkdirp staged
     IO.mkdirp (dir ++ "/assets")
     let fetched := Remote.downloadAll (List.map (fun h => ("assets/" ++ h, staged ++ "/" ++ h)) missing)
     let got := List.map snd (List.filter fst (zip fetched missing))
     let digests := sha256Files (List.map (fun h => staged ++ "/" ++ h) got)
     let good := List.filter (fun h => Map.lookup (staged ++ "/" ++ h) digests == Option.some h) got
-    if List.isEmpty good then () else
-      IO.exec "mv" (List.map (fun h => staged ++ "/" ++ h) good ++ [dir ++ "/assets/"])
-      ()
+    forEach (Replicate.batches good) (fun batch =>
+      let _ := IO.exec "mv" (List.map (fun h => staged ++ "/" ++ h) batch ++ [dir ++ "/assets/"])
+      ())
     IO.exec "rm" ["-rf", staged]
-    List.length good
+    List.length (List.filter (fun h => Assets.has dir h) good)
 
 def isBoundary (level : Int) (h : Text) : Bool := Text.startsWith (Text.repeat level "0") h
 

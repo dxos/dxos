@@ -507,6 +507,7 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
     setBranch dir branch c
     -- Only once the branch names the node: a commit that fails before keeps the edits noted for the next one.
     settleDirtyMetas dir ns
+    if formatOf dir < formatVersion then writeFormat dir else ()
     c
 
 /-- Records a new tasks snapshot on the current branch, keeping its namespace. -/
@@ -589,15 +590,14 @@ def formatOf (dir : Text) : {IO} Int :=
 
 def writeFormat (dir : Text) : {IO} Unit := IO.writeFile (dir ++ "/format") (formatMagic ++ Int.toText formatVersion ++ "\n")
 
-/-- Refuses a store whose layout is newer than this CLI's or unreadable, and records this CLI's version on an older one,
-  whose objects this CLI reads as they are. -/
+/-- Refuses a store whose layout is newer than this CLI's or unreadable. It writes nothing, so reading a store this
+  process may not write still works; `commit` records this CLI's version on an older store. -/
 def checkFormat (dir : Text) : {IO, Throw Text} Unit :=
   let version := formatOf dir
-  if version == formatVersion then ()
-  else if version > formatVersion then Throw.throw ("the codebase at " ++ dir ++ " has layout " ++ Int.toText version ++
-    "; this deus reads layouts up to " ++ Int.toText formatVersion ++ ". Update deus (merge #13952's head, or rebuild the seed with scripts/sync-deus.py)")
+  if version > formatVersion then Throw.throw ("the codebase at " ++ dir ++ " has layout " ++ Int.toText version ++
+    "; this deus reads layouts up to " ++ Int.toText formatVersion ++ ". Update deus and try again")
   else if version < 1 then Throw.throw ("the codebase at " ++ dir ++ " has a format file that is not `" ++ formatMagic ++ "<version>`")
-  else writeFormat dir
+  else ()
 
 def init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then Throw.throw ("a codebase already exists at " ++ dir) else
   IO.mkdirp (dir ++ "/objects")

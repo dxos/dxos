@@ -5,7 +5,13 @@
 
 # Starts the native CLI built for this checkout's seed without starting node, which costs most of a command's time
 # (D292); with no native CLI ready, or when one should not run, `deus.mjs` decides as before.
-here=$(cd "$(dirname "$0")/.." && pwd)
+# The checkout's physical path, through any symlink to this script or its folders, is the one deus.mjs indexes.
+script="$0"
+while [ -L "$script" ]; do
+  link=$(readlink "$script")
+  case "$link" in /*) script="$link" ;; *) script="$(dirname "$script")/$link" ;; esac
+done
+here=$(cd "$(dirname "$script")/.." && pwd -P)
 seed="$here/seed/deus.image"
 cache="${XDG_CACHE_HOME:-$HOME/.cache}/deus/native"
 if [ -z "$DEUS_SEED" ] && [ -z "$CI" ] && [ "$DEUS_NATIVE" != 0 ] && [ -f "$seed" ]; then
@@ -15,8 +21,8 @@ if [ -z "$DEUS_SEED" ] && [ -z "$CI" ] && [ "$DEUS_NATIVE" != 0 ] && [ -f "$seed
     read -r size mtime hash < "$index"
     if [ "$size $mtime" = "$stamp" ] && [ -x "$cache/$hash/deus" ]; then
       [ -t 1 ] && export DEUS_TTY="${DEUS_TTY:-1}"
-      DEUS_HOME="${DEUS_HOME:-$here}" DEUS_NODE="${DEUS_NODE:-$(command -v node)}" \
-        DEUS_IMAGE_HASH="${DEUS_IMAGE_HASH:-$hash}" DEUS_KERNEL=native exec "$cache/$hash/deus" "$@"
+      if [ -z "$DEUS_NODE" ] && node=$(command -v node); then export DEUS_NODE="$node"; fi
+      DEUS_HOME="${DEUS_HOME:-$here}" DEUS_IMAGE_HASH="${DEUS_IMAGE_HASH:-$hash}" DEUS_KERNEL=native exec "$cache/$hash/deus" "$@"
     fi
   fi
 fi

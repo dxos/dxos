@@ -24,7 +24,7 @@ const home = join(import.meta.dirname, '..');
 const seedPath = join(home, 'seed/deus.image');
 
 /** Where the native CLI for `seed`'s hash lives, under `$XDG_CACHE_HOME` or `~/.cache`. */
-const cacheDir = (env, hash) => join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'deus/native', hash);
+const cacheDir = (env, hash) => join(env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'deus/native', hash);
 
 /**
  * The native CLI to run for the checked-in seed, or what to build when there is none: no build when
@@ -35,7 +35,7 @@ const cacheDir = (env, hash) => join(env.XDG_CACHE_HOME ?? join(homedir(), '.cac
  * find its native CLI; `bin/deus` reads the same file to start that CLI without node (D292).
  */
 export const seedIndexPath = (env, path) =>
-  join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'deus/native/seeds', path.replaceAll('/', '%'));
+  join(env.XDG_CACHE_HOME || join(homedir(), '.cache'), 'deus/native/seeds', path.replaceAll('/', '%'));
 
 /** The SHA-256 of the seed image this checkout runs (of `$DEUS_SEED` when set), or undefined without one. */
 export const seedHash = (env = process.env) => {
