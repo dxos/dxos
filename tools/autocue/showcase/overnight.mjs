@@ -13,17 +13,27 @@
  * A failed take is retried, then logged and skipped; it never ends the run.
  *
  *   node tools/autocue/showcase/overnight.mjs [--only map,chess] [--themes light,dark] [--out temp/showcase/run]
- *     [--retries 1] [--no-serve]
+ *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9015]
+ *
+ * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the GridZoom composite is rendered to
+ * `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
+ * `ui/react-ui-canvas` on :9015 that the runner starts if nothing answers there and stops afterwards.
+ *
+ * `--publish` uploads each flow's light and dark videos once both pass and sets them as the plugin's showcase entry in
+ * its `dx.config.ts` `screenshots`. It needs R2 keys in the environment; run it under 1Password so one approval
+ * covers the night: `op run --env-file ~/.env.tpl -- node tools/autocue/showcase/overnight.mjs --publish`.
  *
  * Composer must answer on :4173; without `--no-serve` the runner starts it if it does not, and stops it at the end.
- * Recording rules: GridZoom/SHOWCASE.md.
+ * Recording rules: SHOWCASE.md beside it.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
+
+import { setShowcaseScreenshot } from './screenshots.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -36,6 +46,9 @@ const { values: options } = parseArgs({
     'out': { type: 'string' },
     'retries': { type: 'string', default: '1' },
     'no-serve': { type: 'boolean', default: false },
+    'publish': { type: 'boolean', default: false },
+    'no-composite': { type: 'boolean', default: false },
+    'storybook': { type: 'string', default: 'http://localhost:9015' },
     'port': { type: 'string', default: '7400' },
   },
 });
@@ -180,6 +193,47 @@ const flows = discover().filter((file) => {
   return options.only.split(',').some((name) => name.trim() === pkg || name.trim() === `plugin-${pkg}`);
 });
 
+// `~/.env.tpl` names the keys with a DX_CLOUDFLARE_ prefix; the uploader reads R2_*.
+env.R2_ACCESS_KEY_ID ||= env.DX_CLOUDFLARE_R2_ACCESS_KEY_ID ?? env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
+env.R2_SECRET_ACCESS_KEY ||= env.DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
+if (options.publish && (!env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY)) {
+  console.error('--publish needs R2 keys: run under `op run --env-file ~/.env.tpl --` (see the header)');
+  process.exit(2);
+}
+if (options.publish && !(THEMES.includes('light') && THEMES.includes('dark'))) {
+  console.error('--publish sets light and dark together; drop --themes');
+  process.exit(2);
+}
+
+/** Uploads one video to the Composer media bucket and returns its public URL (with its cache-busting `?v=`). */
+const upload = async (file, key) => {
+  const { code, output } = await run(
+    process.execPath,
+    [path.join(ROOT, '.agents/skills/hosting-artifacts/scripts/upload-artifact.mjs'), file, '--key', key],
+    { env: { ...env, R2_BUCKET: 'composer', R2_PUBLIC_BASE: 'https://assets.composer.space' } },
+  );
+  const url = output.trim().split('\n').pop();
+  return code === 0 && url.startsWith('https://') ? url : undefined;
+};
+
+/** Uploads a flow's two videos and points its plugin's showcase screenshot at them. */
+const publish = async (file, variants) => {
+  const pkgDir = path.dirname(path.dirname(file));
+  const pkg = path.basename(pkgDir);
+  const date = new Date().toLocaleDateString('en-CA');
+  const light = await upload(path.join(ROOT, variants.light.video), `demos/${date}-${pkg}-showcase-light.mp4`);
+  const dark = await upload(path.join(ROOT, variants.dark.video), `demos/${date}-${pkg}-showcase.mp4`);
+  if (!light || !dark) {
+    return { published: 'upload failed' };
+  }
+  const config = path.join(pkgDir, 'dx.config.ts');
+  const set = setShowcaseScreenshot(config, pkg, { light, dark });
+  if (set) {
+    await run('npx', ['oxfmt', '--write', config]);
+  }
+  return { published: set ? path.relative(ROOT, config) : 'uploaded; no dx.config.ts', light, dark };
+};
+
 log(`${flows.length} flows → ${path.relative(ROOT, OUT)}`);
 const server = !(await up()) && !options['no-serve'] ? await serve() : undefined;
 if (!(await up())) {
@@ -226,6 +280,15 @@ for (const [index, file] of flows.entries()) {
     results.push(result);
     writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(results, null, 2));
   }
+  const variants = Object.fromEntries(
+    results.filter((result) => result.flow === path.relative(ROOT, file)).map((result) => [result.theme, result]),
+  );
+  if (options.publish && variants.light?.ok && variants.dark?.ok) {
+    const outcome = await publish(file, variants);
+    log(`${name}: published → ${outcome.published}`);
+    Object.assign(variants.dark, outcome);
+    writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(results, null, 2));
+  }
 }
 
 // The light clips become the GridZoom grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
@@ -233,13 +296,93 @@ const layout = THEMES.includes('light')
   ? await run(process.execPath, [path.join(HERE, 'layout.mjs'), '--run', path.relative(ROOT, OUT)])
   : undefined;
 
+/** Starts a storybook scoped to the GridZoom story's package; the shared :9009 one serves another worktree. */
+const storybook = async () => {
+  const reachable = async () => {
+    try {
+      return (await fetch(`${options.storybook}/index.json`, { signal: AbortSignal.timeout(5_000) })).ok;
+    } catch {
+      return false;
+    }
+  };
+  if (await reachable()) {
+    return { ok: true };
+  }
+  const port = new globalThis.URL(options.storybook).port;
+  log(`starting a storybook for GridZoom on :${port}`);
+  const child = spawn('bash', ['serve.sh', `--port=${port}`, '--no-open'], {
+    cwd: path.join(ROOT, 'tools/storybook-react'),
+    env: { ...env, DX_STORIES: 'ui/react-ui-canvas' },
+    stdio: ['ignore', 'ignore', 'ignore'],
+    detached: true,
+  });
+  const deadline = Date.now() + 15 * 60_000;
+  while (Date.now() < deadline && child.exitCode === null) {
+    if (await reachable()) {
+      return { ok: true, child };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+  }
+  process.kill(-child.pid, 'SIGTERM');
+  return { ok: false };
+};
+
+// The composite is rendered only from a grid that laid out cleanly, so a run never renders over a stale grid.
+let composite;
+if (layout?.code === 0 && !options['no-composite']) {
+  const book = await storybook();
+  if (!book.ok) {
+    composite = { error: `no storybook answered on ${options.storybook}` };
+  } else {
+    log('rendering the composite');
+    const out = path.join(OUT, 'composite.mp4');
+    // A cold storybook can reload the story mid-render (Vite re-optimizing dependencies); the retry finds it warm.
+    let render;
+    for (let attempt = 0; attempt < 2 && !(render?.code === 0 && existsSync(out)); attempt++) {
+      render = await run(process.execPath, [
+        path.join(HERE, 'render.mjs'),
+        ...['--out', out, '--fps', '60', '--theme', 'light', '--url', options.storybook],
+      ]);
+    }
+    if (render.code === 0 && existsSync(out)) {
+      mkdirSync(path.join(ROOT, 'temp/composite'), { recursive: true });
+      copyFileSync(out, path.join(ROOT, 'temp/composite/composite.mp4'));
+      const frames = path.join(OUT, 'composite.png');
+      await run('ffmpeg', [
+        '-v',
+        'error',
+        '-y',
+        '-i',
+        out,
+        '-vf',
+        'fps=1/6,scale=480:-1,tile=4x2',
+        '-frames:v',
+        '1',
+        frames,
+      ]);
+      composite = {
+        video: path.relative(OUT, out),
+        frames: existsSync(frames) ? path.relative(OUT, frames) : undefined,
+      };
+    } else {
+      composite = { error: render.output.trim().split('\n').slice(-2).join(' | ') };
+    }
+    if (book.child) {
+      process.kill(-book.child.pid, 'SIGTERM');
+    }
+  }
+  log(`composite: ${composite.video ?? composite.error}`);
+}
+
 const minutes = ((Date.now() - started) / 60_000).toFixed(1);
 const passed = results.filter((result) => result.ok).length;
 const rows = results.map(
   (result) =>
     `| ${result.name} | ${result.theme} | ${result.seconds ? `${result.seconds}s` : '—'} | ${
       result.ok ? 'ok' : 'FAILED'
-    } | ${result.attempts} | ${result.video ? `\`${result.video}\`` : '—'} | ${(result.error ?? '')
+    } | ${result.attempts} | ${result.video ? `\`${result.video}\`` : '—'} | ${result.published ?? '—'} | ${(
+      result.error ?? ''
+    )
       .replace(/\|/g, '\\|')
       .slice(0, 160)} | \`${result.flow}\` |`,
 );
@@ -258,8 +401,8 @@ writeFileSync(
     '',
     `${passed}/${results.length} videos passed in ${minutes} min. Takes, step screenshots and app logs are under \`takes/<name>-<theme>\`.`,
     '',
-    '| Clip | Theme | Length | Result | Attempts | Video | Error | Flow |',
-    '| ---- | ----- | ------ | ------ | -------- | ----- | ----- | ---- |',
+    '| Clip | Theme | Length | Result | Attempts | Video | Published | Error | Flow |',
+    '| ---- | ----- | ------ | ------ | -------- | ----- | --------- | ----- | ---- |',
     ...rows,
     '',
     ...(layout
@@ -272,6 +415,17 @@ writeFileSync(
           layout.output.trim(),
           '```',
           '',
+        ]
+      : []),
+    ...(composite
+      ? [
+          '## Composite',
+          '',
+          composite.video
+            ? `\`${composite.video}\` (also \`temp/composite/composite.mp4\`), a frame every 6s:`
+            : `Not rendered: ${composite.error}`,
+          '',
+          ...(composite.frames ? [`![composite](${composite.frames})`, ''] : []),
         ]
       : []),
     '## Frames',

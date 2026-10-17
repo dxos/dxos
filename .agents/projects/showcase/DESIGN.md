@@ -2,7 +2,7 @@
 
 A short video that sells Composer by showing many plugins at once: it opens on one demo, tours a few at full frame,
 then pulls back to a grid of every plugin running. The recording rules live in
-`packages/ui/react-ui-canvas/src/components/GridZoom/SHOWCASE.md`; this file records why it is built the way it is.
+`tools/autocue/showcase/SHOWCASE.md`; this file records why it is built the way it is.
 
 ## Decisions
 

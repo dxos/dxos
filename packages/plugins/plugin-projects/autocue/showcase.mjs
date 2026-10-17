@@ -8,10 +8,10 @@
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-5
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
- * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in GridZoom/SHOWCASE.md.
+ * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
  */
 
-import { LONG_MS, fromTemplate, scroll, showcase } from '../../../../tools/autocue/showcase/steps.mjs';
+import { LONG_MS, branch, fromTemplate, scroll, showcase } from '../../../../tools/autocue/showcase/steps.mjs';
 
 export const CLIP_MS = LONG_MS;
 
@@ -21,8 +21,10 @@ export const steps = showcase({
   plugins: ['debug', 'projects'],
   ms: CLIP_MS,
   clip: async ({ page }) => {
-    await fromTemplate(page, 'Chess MCP on Workers');
-    await page.locator('[data-testid="treeItem.heading"]').nth(1).click();
+    await fromTemplate(page, 'Chess MCP on Workers', { waitFor: 'Projects' });
+    await page.locator(branch('Projects')).first().locator('> *').first().click();
+    await page.waitForTimeout(1_000);
+    await page.locator('[data-testid="treeItem.heading"]:text-is("Chess MCP on Workers")').first().click();
     await page.waitForTimeout(2_500);
     await page.locator('[data-testid="projectsPlugin.tab.tasks"], [role="tab"]:has-text("Tasks")').first().click();
     await page.waitForTimeout(2_000);

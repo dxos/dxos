@@ -8,7 +8,7 @@
  * @mdl packages/plugins/plugin-markdown/PLUGIN.mdl test QA-5
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
- * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in GridZoom/SHOWCASE.md.
+ * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
  */
 
 import { LONG_MS, create, editor, showcase, type } from '../../../../tools/autocue/showcase/steps.mjs';

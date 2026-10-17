@@ -756,7 +756,7 @@ test QA-11: Composer basics tour
 ```mdl
 test QA-13: Plugin showcase
   desc: |
-    One short, wordless beat per visually distinct plugin, recorded for the GridZoom montage (react-ui-canvas
+    One short, wordless beat per visually distinct plugin, recorded for the GridZoom montage (tools/autocue/showcase
     SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture. Its value is
     that every plugin it touches still creates and renders from a fresh profile. Each plugin's beat is now its own
     `autocue/showcase.mjs` and its own "Showcase clip" test; `tools/autocue/showcase/overnight.mjs` records them all.

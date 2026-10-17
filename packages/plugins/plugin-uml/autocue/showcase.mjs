@@ -8,7 +8,7 @@
  * @mdl packages/plugins/plugin-uml/PLUGIN.mdl test QA-2
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
- * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in GridZoom/SHOWCASE.md.
+ * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
  */
 
 import { SHORT_MS, create, drag, showcase } from '../../../../tools/autocue/showcase/steps.mjs';
@@ -32,7 +32,7 @@ export const steps = showcase({
         { x: 1500, y: 460 },
       ],
     ]) {
-      await page.locator('[data-testid="palette-class"], [data-testid^="palette-"][title*="Class"]').last().click();
+      await page.locator('[data-testid="palette-C"]').last().click();
       await drag(page, from, to, 25);
       await page.waitForTimeout(800);
     }

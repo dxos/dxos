@@ -61,7 +61,14 @@ so it joins the `tools/autocue` package from #14028 when that lands.
 - [x] **Grid layout** — `layout.mjs` places the light clips so a repeat is never near itself (swap pass on a greedy
       fill; 3 cells is the floor in a 6x6 grid's centre) and fails under 3; the runner calls it and maps the grid in
       REPORT.md.
-- [ ] **First full overnight run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
+- [x] **Publish** — `--publish` uploads each flow's light and dark videos and sets the plugin's showcase entry in
+      `dx.config.ts` `screenshots` (`screenshots.mjs`); one 1Password approval via `op run`.
+- [x] **Composite** — after the layout, the runner renders GridZoom from a scoped storybook on :9015 (retrying once).
+- [x] **SHOWCASE.md** moved to `tools/autocue/showcase`.
+- [x] **First full run** — 22/26; canvas never left Home, projects opened Settings, uml had no `palette-class`: fixed.
+- [ ] **illustrator** — an empty svg drawing renders blank; the clip needs a drawing with content (e.g. `dx drawing`).
+- [ ] **script** — creating a Script neither opens a dialog nor navigates; find how it is created.
+- [ ] **Next full run** — read REPORT.md frames; fix every flow whose clip is blank or wrong.
 - [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
       plank; give each a gesture that shows the plugin working.
 - [ ] **excalidraw spec** — plugin-excalidraw has no `PLUGIN.mdl`, so its flow names no test.
@@ -85,4 +92,4 @@ so it joins the `tools/autocue` package from #14028 when that lands.
 ### References
 
 - PR: https://github.com/dxos/dxos/pull/14026
-- Rules and script table: `packages/ui/react-ui-canvas/src/components/GridZoom/SHOWCASE.md`
+- Rules and script table: `tools/autocue/showcase/SHOWCASE.md`

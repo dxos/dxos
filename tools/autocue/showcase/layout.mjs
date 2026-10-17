@@ -9,7 +9,9 @@
  * the clip whose nearest copy is farthest away, so a repeat never sits beside or near itself. A tour clip counts as
  * placed on its tour cell, so it does not reappear next to the tour either.
  *
- *   node tools/autocue/showcase/layout.mjs --run temp/showcase/<run> [--tour markdown,canvas,projects] [--min 3]
+ *   node tools/autocue/showcase/layout.mjs --run temp/showcase/<run> [--tour markdown,canvas,projects,composer] [--min 3]
+ *
+ * The tour cells take the first of `--tour` that recorded, so one failed tour flow does not block the composite.
  *
  * Exits non-zero when two copies of a clip end up closer than `--min` cells (Chebyshev distance: a diagonal
  * neighbour is 1), so a run with too few clips is caught before the composite is rendered.
@@ -27,7 +29,7 @@ const ROOT = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], {
 const { values: options } = parseArgs({
   options: {
     run: { type: 'string' },
-    tour: { type: 'string', default: 'markdown,canvas,projects' },
+    tour: { type: 'string', default: 'markdown,canvas,projects,composer' },
     min: { type: 'string', default: '3' },
     cols: { type: 'string', default: '6' },
     rows: { type: 'string', default: '6' },
@@ -55,10 +57,13 @@ const available = readdirSync(CLIPS)
   .filter((file) => file.endsWith('.mp4'))
   .map((file) => file.slice(0, -'.mp4'.length))
   .sort();
-const tour = options.tour.split(',').map((name) => name.trim());
-const missing = tour.filter((name) => !available.includes(name));
-if (missing.length > 0) {
-  console.error(`no light clip for tour cell(s): ${missing.join(', ')}`);
+const tour = options.tour
+  .split(',')
+  .map((name) => name.trim())
+  .filter((name) => available.includes(name))
+  .slice(0, TOUR_CELLS.length);
+if (tour.length < TOUR_CELLS.length) {
+  console.error(`only ${tour.length} of the tour clips (${options.tour}) recorded; ${TOUR_CELLS.length} are needed`);
   process.exit(1);
 }
 const pool = available.filter((name) => !tour.includes(name));

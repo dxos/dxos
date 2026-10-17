@@ -5,7 +5,7 @@
 /**
  * Shared steps and gestures for per-plugin showcase flows (`packages/{apps,plugins}/<pkg>/autocue/showcase.mjs`).
  * Each flow is a prep step, an off-camera setup step, and one `clip: <name>` step padded to a fixed length, so
- * `overnight.mjs` beside it can cut exactly that span out of the take. Recording rules: GridZoom/SHOWCASE.md.
+ * `overnight.mjs` beside it can cut exactly that span out of the take. Recording rules: SHOWCASE.md beside it.
  */
 
 /** A grid cell's clip. */
@@ -121,6 +121,11 @@ export const fromTemplate = async (page, space, { waitFor, timeout = 60_000 } = 
   await page.locator(`text="${space}" >> visible=true`).first().waitFor({ timeout });
   if (waitFor) {
     await page.locator(branch(waitFor)).first().waitFor({ timeout });
+  }
+  // A template space opens its Help companion; the clip is about the space, not the welcome video.
+  const close = page.locator('role=button[name="Close companion"]');
+  if (await visible(close, 2_000)) {
+    await close.first().click();
   }
   await page.waitForTimeout(1_500);
 };
