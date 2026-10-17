@@ -29,6 +29,10 @@ export const SetSimulatedParticipants = Operation.make({
         src: Schema.String,
       }),
     ),
+    /** The conversation's lines, local user's included, timed in seconds from the top of the files. */
+    transcript: Schema.optional(
+      Schema.Array(Schema.Struct({ speaker: Schema.String, start: Schema.Number, text: Schema.String })),
+    ),
   }),
   output: Schema.Void,
 });

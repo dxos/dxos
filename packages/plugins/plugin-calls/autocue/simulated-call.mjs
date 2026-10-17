@@ -22,22 +22,24 @@ import path from 'node:path';
 
 const TRACKS = process.env.MEETING_TRACKS ?? '/tmp/meeting/tracks';
 const CONVERSATION = JSON.parse(
-  readFileSync(
-    new URL('../../plugin-meeting/autocue/fieldstone-dashboard.conversation.json', import.meta.url),
-    'utf8',
-  ),
+  readFileSync(new URL('../../plugin-meeting/autocue/fieldstone-dashboard.conversation.json', import.meta.url), 'utf8'),
 );
 const TIMELINE = JSON.parse(readFileSync(path.join(TRACKS, 'timeline.json'), 'utf8'));
 
-/** When the tracks started playing, in page-independent wall-clock milliseconds. */
+/** `release` lets the held track requests through; `startedAt` is when the tracks started playing (wall clock). */
 const state = {};
 
 export const steps = [
   {
-    name: 'Prep (off camera): serve the tracks at the story media path',
+    name: 'Prep (off camera): load the story with its tracks held back',
     setup: true,
-    run: async ({ page }) => {
-      await page.context().route('**/simulated-call/*.webm', (route) => {
+    run: async ({ demo, page }) => {
+      // The story joins once its tracks load, so holding them keeps the conversation for the take.
+      const released = new Promise((resolve) => {
+        state.release = resolve;
+      });
+      await page.context().route('**/simulated-call/*.webm', async (route) => {
+        await released;
         const file = path.join(TRACKS, path.basename(new URL(route.request().url()).pathname));
         return route.fulfill({
           status: 200,
@@ -45,13 +47,13 @@ export const steps = [
           headers: { 'content-type': 'video/webm', 'accept-ranges': 'none' },
         });
       });
+      await demo.goto({});
     },
   },
   {
     name: 'Join the call',
     run: async ({ demo, page }) => {
-      // The story joins on mount, so the reload is the conversation's cue.
-      await page.reload();
+      state.release();
       for (const participant of Object.values(CONVERSATION.participants)) {
         await page.getByText(participant.name, { exact: true }).first().waitFor({ timeout: 30_000 });
       }

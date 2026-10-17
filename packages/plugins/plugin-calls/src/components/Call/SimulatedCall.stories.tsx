@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
@@ -21,6 +22,8 @@ const COLLEAGUES = [
   { name: 'Tomás Vidal', track: 'tomas' },
 ];
 
+const JOIN_TIMEOUT = 10_000;
+
 type StoryProps = {
   /** Base URL of the conversation's tracks: `astrid.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`. */
   media: string;
@@ -32,7 +35,12 @@ type StoryProps = {
  */
 const SimulatedStory = ({ media }: StoryProps) => {
   const callManager = Hooks.useCapability(CallsCapabilities.Manager);
+  // Each attempt rejoins from the top; a click starts the next one where the browser refused to autoplay the last.
+  const [attempt, setAttempt] = useState(0);
+  const [blocked, setBlocked] = useState(false);
+
   useEffect(() => {
+    setBlocked(false);
     let restore: (() => void) | undefined;
     const join = async () => {
       const local = await fakeUserMedia(`${media}/astrid.webm`);
@@ -44,14 +52,41 @@ const SimulatedStory = ({ media }: StoryProps) => {
       await callManager.join();
       await local.start();
     };
-    void join().catch((err) => log.catch(err));
+    // A blocked autoplay either rejects or leaves `AudioContext.resume()` pending until a gesture, so a stall counts too.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stalled = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new DOMException('Autoplay stalled', 'NotAllowedError')), JOIN_TIMEOUT);
+    });
+    let cancelled = false;
+    void Promise.race([join(), stalled])
+      .then(() => clearTimeout(timer))
+      .catch((err) => {
+        if (cancelled) {
+          return;
+        }
+        if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          setBlocked(true);
+        } else {
+          log.catch(err);
+        }
+      });
 
     return () => {
+      cancelled = true;
+      clearTimeout(timer);
       void callManager.leave();
       void callManager.simulate(undefined);
       restore?.();
     };
-  }, [callManager, media]);
+  }, [callManager, media, attempt]);
+
+  if (blocked) {
+    return (
+      <div className='grid h-full place-items-center'>
+        <Button.Root icon='ph--phone--regular' label='Join the call' onClick={() => setAttempt((value) => value + 1)} />
+      </div>
+    );
+  }
 
   return (
     <Call.Root>
@@ -72,7 +107,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Tracks come from `.agents/skills/autocue/scripts/conversation.mjs`; serve them at `media`. The players need autoplay, which Chromium allows only after a gesture unless launched with `--autoplay-policy=no-user-gesture-required`.',
+          'Tracks come from `.agents/skills/autocue/scripts/conversation.mjs`; serve them at `media` (copy them to `tools/storybook-react/static/simulated-call/` for the default). Where the browser blocks autoplay the call waits for a click on Join.',
       },
     },
   },

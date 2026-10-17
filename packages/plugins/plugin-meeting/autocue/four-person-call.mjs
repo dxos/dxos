@@ -28,8 +28,6 @@
  *
  *   ffmpeg -i demo.webm -i /tmp/meeting/tracks/conversation.wav -filter_complex "[1]adelay=<ms>:all=1,apad[a]" \
  *     -map 0:v -map "[a]" -shortest -c:v copy -c:a libopus demo.voiced.webm
- *
- * First run end to end with stand-in clips (flite speech on name cards) in place of the HeyGen avatars.
  */
 
 import { readFileSync } from 'node:fs';
@@ -54,6 +52,7 @@ const MEETINGS = 'org.dxos.plugin.meeting';
 /** Contributes the Fieldstone Labs space template. */
 const DEBUG = 'org.dxos.plugin.debug';
 const PLANK = '[data-testid="deck.plank"]';
+const COMPANION = '[data-testid="deck.companion"]';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -193,10 +192,24 @@ export const steps = [
         await closeCompanion.click();
       }
 
+      // The active meeting receives the simulated transcript.
+      await page.evaluate(
+        async ([spaceId, meetingId]) => {
+          const db = dxos.client.spaces.get(spaceId).db;
+          const object = await db.query(dxos.Filter.id(meetingId)).first();
+          await composer.invoke('org.dxos.operation.meeting.setActive', { object });
+        },
+        [state.spaceId, state.meetingId],
+      );
       await demo.invoke({
         key: 'org.dxos.operation.calls.setSimulatedParticipants',
         input: {
           participants: COLLEAGUES.map((id) => ({ name: CONVERSATION.participants[id].name, src: state.sources[id] })),
+          transcript: TIMELINE.lines.map(({ speaker, start, text }) => ({
+            speaker: CONVERSATION.participants[speaker].name,
+            start,
+            text,
+          })),
         },
         hud: false,
       });
@@ -225,11 +238,16 @@ export const steps = [
           .first()
           .waitFor({ timeout: 15_000 });
       }
+
+      // The meeting companion exists only while its call is joined; lines spoken before it opens are already in the feed.
+      await demo.click({ selector: 'button[aria-label="Open companion side-by-side"]', label: 'Companion' });
+      await demo.click({ selector: '[data-testid="deck.companion.tab.meeting"]', label: 'Meeting' });
+      await demo.click({ selector: `${COMPANION} button[aria-label="Transcript"]`, label: 'Transcript' });
     },
   },
   {
     name: 'The conversation runs',
-    narration: 'They talk it through. Whoever is speaking is outlined.',
+    narration: 'They talk it through. Whoever is speaking is outlined, and the transcript fills in beside the call.',
     run: async ({ demo, page }) => {
       // Each line is captioned as it is spoken, from the timeline the tracks were cut to.
       for (const line of TIMELINE.lines) {
@@ -253,15 +271,16 @@ export const steps = [
       await caption(demo, 'Astrid writes the action items into the meeting notes', 'QA-2 step 5');
       // The caption banner is pinned over the bottom of the page, where the editor's last line sits.
       await demo.clearCaption();
-      await demo.click({ selector: `${PLANK} button[aria-label="Notes"]`, label: 'Notes' });
-      const editor = page.locator(`${PLANK} .cm-content`).first();
+      // Notes open in the companion, so the call stays on screen beside them.
+      await demo.click({ selector: `${COMPANION} button[aria-label="Notes"]`, label: 'Notes' });
+      const editor = page.locator(`${COMPANION} .cm-content`).first();
       await editor.click();
       // The editor continues a task list on Enter, so only the first item takes the markdown prefix.
       await page.keyboard.type(`- [ ] ${ACTION_ITEMS.join('\n')}`, { delay: 40 });
       await waitForPage(
         page,
-        ([plank, last]) => document.querySelector(`${plank} .cm-content`)?.textContent?.includes(last),
-        [PLANK, ACTION_ITEMS.at(-1)],
+        ([companion, last]) => document.querySelector(`${companion} .cm-content`)?.textContent?.includes(last),
+        [COMPANION, ACTION_ITEMS.at(-1)],
         10_000,
       );
       await page.waitForTimeout(BEAT * 2);
@@ -271,7 +290,6 @@ export const steps = [
     name: 'Leave',
     narration: 'And she leaves the call.',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: `${PLANK} button[aria-label="Call"]`, label: 'Call' });
       await demo.click({ selector: `${PLANK} button:has-text("Leave")`, label: 'Leave' });
       await page.locator(`${PLANK} button:has-text("Join")`).first().waitFor({ timeout: 15_000 });
       await page.waitForTimeout(BEAT);

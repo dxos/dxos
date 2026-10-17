@@ -12,9 +12,11 @@ import { CallOperation, CallsCapabilities } from '#types';
 const handler: Operation.WithHandler<typeof CallOperation.SetSimulatedParticipants> =
   CallOperation.SetSimulatedParticipants.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ participants }) {
+      Effect.fnUntraced(function* ({ participants, transcript }) {
         const callManager = yield* Capability.get(CallsCapabilities.Manager);
-        yield* Effect.promise(() => callManager.simulate(participants.length > 0 ? [...participants] : undefined));
+        yield* Effect.promise(() =>
+          callManager.simulate(participants.length > 0 ? [...participants] : undefined, transcript && [...transcript]),
+        );
       }),
     ),
   );

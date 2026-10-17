@@ -238,10 +238,13 @@ const timeline = (() => {
   const file = options.timeline ?? path.join(path.dirname(options.in), 'timeline.json');
   return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 })();
-const captions = (timeline.steps ?? []).map((step) => ({
-  ...step,
-  frame: Math.round((step.ms / 1000) * options.fps),
-}));
+// The driver commits a step's chapter after the step's own captions, so the entries arrive out of time order.
+const captions = (timeline.steps ?? [])
+  .toSorted((a, b) => a.ms - b.ms)
+  .map((step) => ({
+    ...step,
+    frame: Math.round((step.ms / 1000) * options.fps),
+  }));
 const frameBytes = (width * height * 3) / 2; // yuv420p
 const holdFrames = Math.max(1, Math.round(options['max-static'] * options.fps));
 

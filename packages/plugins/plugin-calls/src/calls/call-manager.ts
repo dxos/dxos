@@ -15,7 +15,7 @@ import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { CallSimulation, type SimulatedParticipantProps } from './call-simulation.ts';
+import { CallSimulation, type SimulatedParticipantProps, type SimulatedUtterance } from './call-simulation.ts';
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
 import { MediaManager, type MediaState } from './media-manager.ts';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
@@ -33,6 +33,8 @@ export class CallManager extends Resource {
   // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
   public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
   public readonly left = new Event<string>();
+  /** Each scripted line of a simulated call as it starts playing (see `simulate`). */
+  public readonly simulatedUtterance = new Event<SimulatedUtterance>();
 
   /**
    * Atom-based state. Updated via `_updateState()`.
@@ -251,16 +253,20 @@ export class CallManager extends Resource {
   /**
    * Test seam: replaces the network with participants played from video files (see `CallSimulation`).
    * While set, `join` stays local — no swarm, no SFU session — so a call renders with no EDGE reachable.
-   * Pass `undefined` to remove them.
+   * Pass `undefined` to remove them. `transcript` lines are emitted on `simulatedUtterance` as they play.
    */
   @synchronized
-  async simulate(participants: SimulatedParticipantProps[] | undefined): Promise<void> {
+  async simulate(
+    participants: SimulatedParticipantProps[] | undefined,
+    transcript?: SimulatedUtterance[],
+  ): Promise<void> {
     await this.#simulation?.close();
     this.#simulation = undefined;
     if (participants) {
-      const simulation = new CallSimulation(participants);
+      const simulation = new CallSimulation(participants, transcript);
       await simulation.open();
       simulation.changed.on(this._ctx, () => this._updateState());
+      simulation.spoke.on(this._ctx, (utterance) => this.simulatedUtterance.emit(utterance));
       this.#simulation = simulation;
     }
     this._updateState();

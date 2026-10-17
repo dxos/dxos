@@ -17,6 +17,14 @@ export type SimulatedParticipantProps = {
   src: string;
 };
 
+/** One spoken line of a scripted conversation, timed in seconds from the top of the participants' files. */
+export type SimulatedUtterance = {
+  /** Display name of whoever speaks the line, local user included. */
+  speaker: string;
+  start: number;
+  text: string;
+};
+
 type SimulatedParticipant = {
   user: UserState;
   videoTrackName: EncodedTrackName;
@@ -28,6 +36,7 @@ type SimulatedParticipant = {
 };
 
 const SESSION_ID = 'simulated';
+const CLOCK_INTERVAL = 100;
 
 /**
  * Participants with no network peer, whose camera and microphone are played from video files.
@@ -37,16 +46,21 @@ const SESSION_ID = 'simulated';
 export class CallSimulation extends Resource {
   /** Fires when a participant starts or stops speaking. */
   public readonly changed = new Event<void>();
+  /** Fires as each scripted line starts playing, standing in for live transcription. */
+  public readonly spoke = new Event<SimulatedUtterance>();
 
   readonly #props: SimulatedParticipantProps[];
+  readonly #transcript: SimulatedUtterance[];
   readonly #participants: SimulatedParticipant[] = [];
   readonly #audioContext = new AudioContext();
   /** Kept here rather than in the swarm synchronizer, whose joined state would announce this device to EDGE. */
   #joined = false;
+  #clock?: ReturnType<typeof setInterval>;
 
-  constructor(participants: SimulatedParticipantProps[]) {
+  constructor(participants: SimulatedParticipantProps[], transcript: SimulatedUtterance[] = []) {
     super();
     this.#props = participants;
+    this.#transcript = [...transcript].sort((a, b) => a.start - b.start);
   }
 
   protected override async _open(): Promise<void> {
@@ -56,6 +70,7 @@ export class CallSimulation extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    this.#stopClock();
     for (const { video, stream, monitor } of this.#participants) {
       await monitor.close();
       stream.getTracks().forEach((track) => track.stop());
@@ -76,10 +91,36 @@ export class CallSimulation extends Resource {
         return video.play();
       }),
     );
+    this.#startClock();
   }
 
   leave(): void {
     this.#joined = false;
+    this.#stopClock();
+  }
+
+  /** Emits each line once the files reach its start; the players are the clock, so lines stay on their audio. */
+  #startClock(): void {
+    this.#stopClock();
+    const clock = this.#participants[0]?.video;
+    if (!clock || this.#transcript.length === 0) {
+      return;
+    }
+
+    let next = 0;
+    this.#clock = setInterval(() => {
+      while (next < this.#transcript.length && clock.currentTime >= this.#transcript[next].start) {
+        this.spoke.emit(this.#transcript[next++]);
+      }
+      if (next >= this.#transcript.length) {
+        this.#stopClock();
+      }
+    }, CLOCK_INTERVAL);
+  }
+
+  #stopClock(): void {
+    clearInterval(this.#clock);
+    this.#clock = undefined;
   }
 
   /** Adds the participants to the call (only once the local user has joined) and their media to the pulled tracks. */
