@@ -4,7 +4,7 @@
 //
 
 /**
- * Lays out a run's light clips as the GridZoom grid in `temp/grid-zoom`: `tour-<n>.mp4` for the tour cells and
+ * Lays out a run's light clips as the Grid grid in `temp/grid-zoom`: `tour-<n>.mp4` for the tour cells and
  * `clip-NN.mp4` (row-major) for every other cell. There are fewer clips than cells, so some repeat; each cell takes
  * the clip whose nearest copy is farthest away, so a repeat never sits beside or near itself. A tour clip counts as
  * placed on its tour cell, so it does not reappear next to the tour either.
@@ -46,7 +46,7 @@ const GRID = path.join(ROOT, 'temp', 'grid-zoom');
 const COLS = Number(options.cols);
 const ROWS = Number(options.rows);
 
-/** GridZoom's DEFAULT_TOUR: three cells of row 3, the last in the bottom-left quadrant. */
+/** Grid's DEFAULT_TOUR: three cells of row 3, the last in the bottom-left quadrant. */
 const TOUR_CELLS = [
   [0, 3],
   [1, 3],

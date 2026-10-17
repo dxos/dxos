@@ -2,7 +2,7 @@
 
 _Resume: run `node tools/autocue/showcase/overnight.mjs` and fix the flows its REPORT.md frames show broken (Phase 4). Uncommitted: none. Last: per-plugin showcase flows + overnight runner._
 
-## Phase 1: GridZoom montage (PR #14026)
+## Phase 1: Grid montage (PR #14026)
 
 A 6x6 grid of Composer plugin clips under one camera: tour three demos at full frame, slide between them at constant
 zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
@@ -10,7 +10,7 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 ### Tasks
 
 - [x] **`interpolateCamera`** — pure zoom-and-pan path in `react-ui-canvas` `camera.ts`, with tests and a changeset.
-- [x] **GridZoom story** — tour cells, constant-zoom slides, zoom-out; stepped mode for frame-exact rendering.
+- [x] **Grid story** — tour cells, constant-zoom slides, zoom-out; stepped mode for frame-exact rendering.
 - [x] **Showcase flow and scripts** — `composer-app/autocue/showcase/` (`flow.mjs`, `run.sh`, `cut.sh`, `cutstep.sh`,
       `committed.sh`, `pipeline.sh`, `render.mjs`); APP.mdl QA-13.
 - [x] **Autocue `--gpu on`** — headless Chromium with the GPU, so 3D plugins render at full rate.
@@ -28,7 +28,7 @@ zoom, zoom out to the whole grid. Rendered frame by frame at 60 fps.
 - [x] **Terra flows** — `planet.mjs` (QA-1, published video) and `tour-the-views.mjs` (QA-2).
 - [x] **Chess flow** — `play-the-opening.mjs` (QA-1, published video).
 - [x] **Spacetime flow** — `build-a-scene.mjs` (QA-2).
-- [x] **GridZoom empty tour** — falls back to the default tour.
+- [x] **Grid empty tour** — falls back to the default tour.
 - [x] **Open the follow-up PR** — #14027 (merged).
 - [x] **Record and upload the Terra views and Spacetime videos** — light clip (60 fps) and dark demo (30 fps, ident,
       captions) each, linked from `dx.config.ts` and SHOWCASE.md. R2 keys resolve from `~/.env.tpl` via `op run`.
@@ -63,9 +63,9 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       REPORT.md.
 - [x] **Publish** — `--publish` uploads each flow's light and dark videos and sets the plugin's showcase entry in
       `dx.config.ts` `screenshots` (`screenshots.mjs`); one 1Password approval via `op run`.
-- [x] **Composite** — after the layout, the runner renders GridZoom from the storybook on :9009 (starting one scoped to tools/autocue if none answers) (retrying once).
+- [x] **Composite** — after the layout, the runner renders Grid from the storybook on :9009 (starting one scoped to tools/autocue if none answers) (retrying once).
 - [x] **SHOWCASE.md** moved to `tools/autocue/showcase`.
-- [x] **GridZoom story** moved to `tools/autocue/src/components/GridZoom` (story id `tools-autocue-gridzoom--default`);
+- [x] **Grid story** moved to `tools/autocue/src/components/Grid` (story id `tools-autocue-grid--default`);
       react-ui-canvas keeps `interpolateCamera` and the camera utilities it imports.
 - [x] **First full run** — 22/26; canvas never left Home, projects opened Settings, uml had no `palette-class`: fixed.
 - [ ] **illustrator** — an empty svg drawing renders blank; the clip needs a drawing with content (e.g. `dx drawing`).
@@ -78,7 +78,7 @@ so it joins the `tools/autocue` package from #14028 when that lands.
       built on #14021's partials once it lands; then their flows.
 - [ ] **Calls and inbox from Fieldstone Labs** — #14021's template seeds mail; add a meeting record for calls, then
       their flows.
-- [ ] **GridZoom timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.
+- [ ] **Grid timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.
 
 ## Phase 3: Open issues
 

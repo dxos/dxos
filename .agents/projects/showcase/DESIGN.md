@@ -8,7 +8,7 @@ then pulls back to a grid of every plugin running. The recording rules live in
 
 - **The montage is a storybook story, not a video editor.** It lives in `tools/autocue` with the rest of the
   showcase tooling, since it reads the tooling's `temp/grid-zoom`; react-ui-canvas only supplies the camera maths.
-  `GridZoom` lays clips out as tiles and drives one camera
+  `Grid` lays clips out as tiles and drives one camera
   with `react-ui-canvas`'s camera math, so the motion is code we can iterate on.
 - **The camera path is a pure function.** `interpolateCamera` returns the camera at any `t`, so the same frame always
   renders the same view. Pans between tour cells are straight slides at constant zoom; only the final pull-back uses

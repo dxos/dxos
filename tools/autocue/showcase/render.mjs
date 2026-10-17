@@ -3,7 +3,7 @@
 //
 
 /**
- * Renders the GridZoom story frame by frame at an exact rate: each frame seeks the stepped story to its time, then
+ * Renders the Grid story frame by frame at an exact rate: each frame seeks the stepped story to its time, then
  * screenshots it into ffmpeg. A live screencast delivers about 25 frames a second at 1080p, which makes a camera
  * move judder however the result is re-encoded.
  *
@@ -29,14 +29,14 @@ const { values } = parseArgs({
 const fps = Number(values.fps);
 const size = { width: Number(values.width), height: Number(values.height) };
 const url =
-  `${values.url}/iframe.html?id=tools-autocue-gridzoom--default&viewMode=story` +
+  `${values.url}/iframe.html?id=tools-autocue-grid--default&viewMode=story` +
   `&args=controls:!false;stepped:!true&globals=theme:${values.theme}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
 const page = await browser.newPage({ viewport: size, colorScheme: values.theme === 'dark' ? 'dark' : 'light' });
 await page.goto(url);
-await page.waitForFunction(() => window.gridZoom !== undefined, undefined, { timeout: 120_000 });
+await page.waitForFunction(() => window.grid !== undefined, undefined, { timeout: 120_000 });
 await page.waitForFunction(
   () => {
     const videos = [...document.querySelectorAll('video')];
@@ -45,7 +45,7 @@ await page.waitForFunction(
   undefined,
   { timeout: 120_000 },
 );
-const total = await page.evaluate(() => window.gridZoom.total);
+const total = await page.evaluate(() => window.grid.total);
 const frames = Math.ceil((total / 1_000) * fps);
 console.log(`rendering ${frames} frames (${(total / 1_000).toFixed(1)}s at ${fps} fps) to ${values.out}`);
 
@@ -72,7 +72,7 @@ try {
     if (failure) {
       throw failure;
     }
-    await page.evaluate((ms) => window.gridZoom.seek(ms), (frame * 1_000) / fps);
+    await page.evaluate((ms) => window.grid.seek(ms), (frame * 1_000) / fps);
     const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
     if (!ffmpeg.stdin.write(jpeg)) {
       await once(ffmpeg.stdin, 'drain');

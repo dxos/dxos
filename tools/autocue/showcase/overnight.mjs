@@ -15,7 +15,7 @@
  *   node tools/autocue/showcase/overnight.mjs [--only map,chess] [--themes light,dark] [--out temp/showcase/run]
  *     [--retries 1] [--no-serve] [--publish] [--no-composite] [--storybook http://localhost:9009]
  *
- * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the GridZoom composite is rendered to
+ * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the Grid composite is rendered to
  * `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
  * `tools/autocue` on :9009 that the runner starts if nothing answers there and stops afterwards.
  *
@@ -298,12 +298,12 @@ for (const [index, file] of flows.entries()) {
   }
 }
 
-// The light clips become the GridZoom grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
+// The light clips become the Grid grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
 const layout = THEMES.includes('light')
   ? await run(process.execPath, [path.join(HERE, 'layout.mjs'), '--run', path.relative(ROOT, OUT)])
   : undefined;
 
-/** Starts a storybook scoped to tools/autocue, where the GridZoom story lives; the shared :9009 one serves another worktree. */
+/** Starts a storybook scoped to tools/autocue, where the Grid story lives; the shared :9009 one serves another worktree. */
 const storybook = async () => {
   const reachable = async () => {
     try {
@@ -316,7 +316,7 @@ const storybook = async () => {
     return { ok: true };
   }
   const port = new globalThis.URL(options.storybook).port;
-  log(`starting a storybook for GridZoom on :${port}`);
+  log(`starting a storybook for Grid on :${port}`);
   const child = spawn('bash', ['serve.sh', `--port=${port}`, '--no-open'], {
     cwd: path.join(ROOT, 'tools/storybook-react'),
     env: { ...env, DX_STORIES: '../tools/autocue' },

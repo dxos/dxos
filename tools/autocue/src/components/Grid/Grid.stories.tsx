@@ -23,7 +23,7 @@ const CLIPS_DIR = '../../../../../temp/grid-zoom/';
 
 const TILE = { width: 960, height: 540 };
 
-type GridZoomProps = {
+type GridProps = {
   cols: number;
   rows: number;
   /** Scene-unit gap between tiles. */
@@ -42,7 +42,7 @@ type GridZoomProps = {
   /** Shows the replay button and timing readout; off for a recording, which must carry no overlay. */
   controls?: boolean;
   /**
-   * Renders one frame at a time instead of in real time: the clips pause, and `window.gridZoom.seek(ms)` moves the
+   * Renders one frame at a time instead of in real time: the clips pause, and `window.grid.seek(ms)` moves the
    * camera and every visible clip to `ms`, so a recorder can screenshot exact frames at any rate.
    */
   stepped?: boolean;
@@ -50,7 +50,7 @@ type GridZoomProps = {
 
 declare global {
   interface Window {
-    gridZoom?: { total: number; seek: (ms: number) => Promise<void> };
+    grid?: { total: number; seek: (ms: number) => Promise<void> };
   }
 }
 
@@ -133,7 +133,7 @@ const DefaultStory = ({
   duration,
   controls = true,
   stepped = false,
-}: GridZoomProps) => {
+}: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
@@ -235,7 +235,7 @@ const DefaultStory = ({
       }
       return start + shot.ms;
     }, 0);
-    window.gridZoom = {
+    window.grid = {
       total,
       seek: async (ms) => {
         setElapsed(ms);
@@ -276,7 +276,7 @@ const DefaultStory = ({
       },
     };
     return () => {
-      delete window.gridZoom;
+      delete window.grid;
     };
   }, [ready, shots, total, stepped, cells, viewport]);
 
@@ -335,15 +335,15 @@ const shotAt = (shots: Shot[], time: number): { shot: Shot; t: number } => {
   return { shot: shots[shots.length - 1], t: 1 };
 };
 
-const meta: Meta<GridZoomProps> = {
-  title: 'tools/autocue/GridZoom',
+const meta: Meta<GridProps> = {
+  title: 'tools/autocue/Grid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };
 
 export default meta;
 
-type Story = StoryObj<GridZoomProps>;
+type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
   args: {
