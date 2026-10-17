@@ -3,9 +3,12 @@
 //
 
 // The idents as components, without `index.ts`'s `registerRoot`, so a Remotion `Player` can play them elsewhere
-// (the Frame story bookends a take with them, as `trim-static.mjs --ident` does with the rendered clips).
+// (the Ident and Frame stories play them, as `trim-static.mjs --ident` bookends a take with the rendered clips).
 
-export { COLORS, FPS, TIMING } from './brand.ts';
-export { EndCard, OpenTitle } from './components.tsx';
+export { type FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';
 export { ComposerIntro } from './ComposerIntro.tsx';
 export { loadBrandFont } from './fonts.ts';
+export { PROVOCATIONS } from './provocations.ts';
+export { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
+export { type IdentProps, type IdentTheme, palette, tailwindColor } from './theme.tsx';
+export { Trail } from './Trail.tsx';

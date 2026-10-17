@@ -39,6 +39,8 @@ const parseArgs = () => {
   const args = process.argv.slice(2);
   const options = {
     'fps': 15,
+    // The recording's theme, which the ident is rendered in; `--logo-color <tailwind name>` recolours its logo.
+    'theme': 'dark',
     'max-static': 1.5,
     // Fraction of sampled pixels that must change materially. A mean-difference metric fails here: a
     // chess piece crossing two squares is ~0.7% of the frame, which averages down to noise, and the
@@ -86,7 +88,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--theme dark|light] [--logo-color <tailwind>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
   );
   process.exit(1);
 }
@@ -105,13 +107,14 @@ const identFormat = (width, height) =>
  * The DXOS ident's opening title and end card in `format`, rendered by `tools/autocue` into its `out/` on first use.
  */
 const ident = (id, format) => {
+  const variant = `${options.theme === 'light' ? '_light' : ''}${options['logo-color'] ? `_${options['logo-color']}` : ''}`;
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/autocue');
   const dir = path.join(root, 'out', id);
   // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it.
   const find = () =>
     existsSync(dir)
       ? readdirSync(dir)
-          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}_v01.mp4`))
+          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}${variant}_v01.mp4`))
           .map((name) => path.join(dir, name))[0]
       : undefined;
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
@@ -126,7 +129,12 @@ const ident = (id, format) => {
   let file = find();
   if (!file || statSync(file).mtimeMs < newest) {
     console.error(`rendering ${id} ident (${format})…`);
-    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', format], {
+    const palette = [
+      '--theme',
+      options.theme,
+      ...(options['logo-color'] ? ['--logo-color', options['logo-color']] : []),
+    ];
+    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', format, ...palette], {
       cwd: root,
       stdio: ['ignore', 'ignore', 'inherit'],
     });
@@ -417,7 +425,9 @@ const bookend = async (clip) => {
     '-i',
     clip,
     '-vf',
-    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1`,
+    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:${
+      options.theme === 'light' ? 'white' : 'black'
+    },setsar=1`,
     '-r',
     String(options.fps),
     '-pix_fmt',

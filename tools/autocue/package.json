@@ -31,7 +31,8 @@
     "@remotion/fonts": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "remotion": "catalog:"
+    "remotion": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -17,7 +17,8 @@ import {
 
 import { type ComposerRing, composerRingPaths } from '@dxos/brand';
 
-import { COLORS, TIMING } from './brand.ts';
+import { TIMING } from './brand.ts';
+import { usePalette, withIdent } from './theme.tsx';
 
 /**
  * What the Turn ident adds to each ring of `composerRingPaths` (innermost first): its transform's x scale, to convert
@@ -111,7 +112,8 @@ const growPath = (ring: Ring, grown: number) =>
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
-export const ComposerIntro: React.FC = () => {
+const ComposerIntroCard = () => {
+  const colors = usePalette();
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const metrics = useWordmarkMetrics();
@@ -137,7 +139,7 @@ export const ComposerIntro: React.FC = () => {
 
   return (
     <AbsoluteFill
-      style={{ backgroundColor: COLORS.ground, alignItems: 'center', justifyContent: 'center', opacity: fadeOut }}
+      style={{ backgroundColor: colors.ground, alignItems: 'center', justifyContent: 'center', opacity: fadeOut }}
     >
       <svg
         width={(markSize * viewWidth) / 256}
@@ -171,7 +173,7 @@ export const ComposerIntro: React.FC = () => {
           <text
             x={WORDMARK_X}
             y={metrics.baseline}
-            fill={COLORS.main}
+            fill={colors.logo}
             fontFamily={`"${WORDMARK_FAMILY}", sans-serif`}
             fontSize={WORDMARK_SIZE}
             opacity={wordmarkOpacity}
@@ -183,3 +185,6 @@ export const ComposerIntro: React.FC = () => {
     </AbsoluteFill>
   );
 };
+
+/** The Composer logo assembling, then its wordmark in the logo colour; the rings keep their brand colours. */
+export const ComposerIntro = withIdent(ComposerIntroCard);

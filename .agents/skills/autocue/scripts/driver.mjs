@@ -632,10 +632,22 @@ const runFlow = async (command) => {
     try {
       // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
       // the moment everything before it stops being preparation.
-      if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+      const opening = !step.setup && (index === 0 || steps[index - 1].setup);
+      if (opening && index > 0 && command.countdown !== false) {
         flow.state = 'cued';
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
+      }
+      // `title` opens the take with the Frame's intro: the title alone, centred, held until it hands off. It is a
+      // chapter too, so the trimmer gives its still frames the caption hold rather than cutting them.
+      if (opening && command.title) {
+        const intro = command.title.intro ?? 3_000;
+        timeline.push({ ms: Date.now() - started, text: command.title.value, narration: command.title.value });
+        await interruptible(handlers.title({ ...command.title, intro, hold: intro + 600 }));
+      }
+      // `captions: true` captions every on-camera step with its `caption` (or name), as a `.mdl` run would.
+      if (!step.setup && command.captions) {
+        await handlers.caption({ value: step.caption ?? step.name, subtitle: step.subtitle });
       }
       // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
       // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.

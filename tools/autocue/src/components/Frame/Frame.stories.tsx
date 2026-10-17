@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Player, type PlayerRef } from '@remotion/player';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ComposerIntro, EndCard, FPS, OpenTitle, TIMING, loadBrandFont } from '../../ident/cards.ts';
+import { ComposerIntro, EndOnly, OpenOnly, TIMING, loadBrandFont } from '../../ident/cards.ts';
+import { IdentPlayer } from '../../ident/IdentPlayer.tsx';
 import { type FrameSize, type FrameText } from './create-frame.ts';
 import { Frame, type FrameProps } from './Frame.tsx';
 
@@ -152,70 +152,40 @@ const TakeStory = ({
   );
 };
 
-type CardProps = { component: FC; seconds: number; size: Size; onEnded: () => void };
-
-/** One ident card, played once by Remotion's `Player` at the take's size, letterboxed like the take. */
-const Card = ({ component, seconds, size, onEnded }: CardProps) => {
-  const ref = useRef<PlayerRef>(null);
-  const { themeMode } = useThemeContext();
-  // The ident is drawn white on black; inverting it (and turning the hues back) gives the light theme's black on white.
-  const light = themeMode === 'light';
-  useEffect(() => {
-    const player = ref.current;
-    if (!player) {
-      return;
-    }
-
-    player.addEventListener('ended', onEnded);
-    player.play();
-    return () => player.removeEventListener('ended', onEnded);
-  }, [onEnded]);
-
-  return (
-    <div className={light ? 'dx-fill bg-white' : 'dx-fill bg-black'}>
-      <Player
-        ref={ref}
-        component={component}
-        durationInFrames={Math.round(seconds * FPS)}
-        fps={FPS}
-        compositionWidth={SIZES[size].width}
-        compositionHeight={SIZES[size].height}
-        style={{ width: '100%', height: '100%', filter: light ? 'invert(1) hue-rotate(180deg)' : undefined }}
-        // Muted, since a browser refuses to autoplay sound; the rendered ident keeps its audio.
-        initiallyMuted
-        acknowledgeRemotionLicense
-      />
-    </div>
-  );
-};
-
 const OPENINGS = {
-  dxos: { component: OpenTitle, seconds: TIMING.open.duration },
+  dxos: { component: OpenOnly, seconds: TIMING.open.duration },
   composer: { component: ComposerIntro, seconds: TIMING.composer.duration },
 };
 
 type IdentStoryProps = StoryProps & {
   /** The opening card: the DXOS title, or the Composer logo (`--ident composer`). */
   opening?: keyof typeof OPENINGS;
+  /** A Tailwind colour for the ident's logo (and the outro's rule), as `trim-static.mjs --logo-color` takes. */
+  logoColor?: string;
 };
 
 /** A whole cut, as `trim-static.mjs --ident` assembles it: the opening card, the take, then the end card, looped. */
-const IdentStory = ({ opening = 'dxos', size = '16:10', ...props }: IdentStoryProps) => {
+const IdentStory = ({ opening = 'dxos', size = '16:10', logoColor, ...props }: IdentStoryProps) => {
   const [phase, setPhase] = useState<'open' | 'take' | 'end'>('open');
+  // The cards are drawn in the page's theme, as `trim-static.mjs --theme` renders them for a recording.
+  const { themeMode } = useThemeContext();
   useEffect(() => loadBrandFont(), []);
+  const card = { ...SIZES[size], inputProps: {}, theme: themeMode, logoColor: logoColor || undefined };
   const { component, seconds } = OPENINGS[opening];
   switch (phase) {
     case 'open':
-      return <Card key='open' component={component} seconds={seconds} size={size} onEnded={() => setPhase('take')} />;
+      return (
+        <IdentPlayer key='open' {...card} component={component} seconds={seconds} onEnded={() => setPhase('take')} />
+      );
     case 'take':
       return <TakeStory {...props} size={size} onDone={() => setPhase('end')} />;
     case 'end':
       return (
-        <Card
+        <IdentPlayer
           key='end'
-          component={EndCard}
+          {...card}
+          component={EndOnly}
           seconds={TIMING.spot10.endCard}
-          size={size}
           onEnded={() => setPhase('open')}
         />
       );
@@ -233,7 +203,7 @@ const IdentStory = ({ opening = 'dxos', size = '16:10', ...props }: IdentStoryPr
  *    the bottom, fading between steps.
  * 4. Intro captions: the title alone in the centre for 3s, then floating captions, fading between steps.
  * 5. Ident: the DXOS opening card, the intro-captions take, then the end card, all at the same 16:10 size, looped; in the light
- *    theme the cards are inverted to black on white.
+ *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the outro's rule.
  * 6. Footer: the band stays up between steps; only its text fades.
  */
 const meta: Meta<typeof TakeStory> = {
@@ -279,5 +249,19 @@ export const Ident: StoryObj<typeof IdentStory> = {
   args: { size: '16:10', intro: 3_000, captionStyle: 'panel', interval: 3_000, opening: 'dxos' },
   argTypes: {
     opening: { control: 'inline-radio', options: Object.keys(OPENINGS) },
+    logoColor: {
+      control: 'select',
+      options: [
+        '',
+        'white',
+        'neutral-900',
+        'sky-400',
+        'blue-500',
+        'violet-500',
+        'emerald-500',
+        'amber-400',
+        'rose-500',
+      ],
+    },
   },
 };

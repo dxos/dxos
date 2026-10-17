@@ -17,6 +17,7 @@ import fs from 'node:fs';
 //   moon run autocue:render-first-run                # only provocations marked firstRun
 //   moon run autocue:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
 //   moon run autocue:render -- --version 2           # file suffix _v02
+//   moon run autocue:render -- --id END --theme light --logo-color sky-400   # file suffix _light_sky-400
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
 import path from 'node:path';
@@ -30,6 +31,9 @@ const firstRunOnly = args.includes('--first-run');
 const exclude = opt('exclude')?.split(',') ?? [];
 const only = { ids: opt('id')?.split(','), length: opt('length'), format: opt('format') };
 const version = String(opt('version') ?? '1').padStart(2, '0');
+// The palette (see src/ident/theme.tsx): every composition takes it as props, and the file name carries it.
+const inputProps = { theme: opt('theme') ?? 'dark', logoColor: opt('logo-color') };
+const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}`;
 const browserExecutable = process.env.REMOTION_BROWSER || null;
 // The DXOS trail is WebGL; headless Chrome's default GL backend cannot run its float-texture shaders.
 const chromiumOptions = { gl: 'angle' };
@@ -45,7 +49,7 @@ const firstRunIds = [...src.matchAll(/id: '(P\d+)'[\s\S]*?firstRun: (true|false)
 
 console.log('Bundling…');
 const serveUrl = await bundle({ entryPoint: path.join(root, 'src/ident/index.ts') });
-const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptions });
+const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptions, inputProps });
 
 const selected = comps.filter((c) => {
   const [id, length, format] = c.id.split('-');
@@ -74,7 +78,7 @@ if (!selected.length) {
 
 for (const comp of selected) {
   const [id, length, format] = comp.id.split('-');
-  const file = path.join(outDir, id, `DXOS_SI_${id}_${length}_${format}_v${version}.mp4`);
+  const file = path.join(outDir, id, `DXOS_SI_${id}_${length}_${format}${variant}_v${version}.mp4`);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   process.stdout.write(`Rendering ${comp.id} → ${path.relative(root, file)} `);
   await renderMedia({
@@ -82,6 +86,7 @@ for (const comp of selected) {
     serveUrl,
     codec: 'h264',
     outputLocation: file,
+    inputProps,
     browserExecutable,
     chromiumOptions,
     onProgress: ({ progress }) => process.stdout.write(progress === 1 ? 'done\n' : ''),
