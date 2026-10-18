@@ -23,13 +23,14 @@
 
 # 2. Inbox (Light mode: 20s)
 
-- Plugins: Inbox, Calls
+- Plugins: Inbox, Calls, CRM
 - Template: Alien Labs
 
 - Navtree => Mailbox
-- Scroll and select Message: XXX
+- Scroll and select Message: "Re: Cairn 1.8 release notes draft"
 - Hover card from companion message to Org XXX
 - Show Kanban
+- Navtree => Organizations => People
 - Navtree => Calendar
 - Scroll and select Event: XXX
 
