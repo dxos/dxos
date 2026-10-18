@@ -19,6 +19,21 @@ const MIN_SIZE = MARGIN * 2;
 // Approximate advance of Plot's default 10px sans-serif axis text.
 const LABEL_CHAR_WIDTH = 6;
 
+/** The width a label of `text` takes on an axis, with room for the tick. */
+const labelWidth = (text: string) => text.length * LABEL_CHAR_WIDTH + MARGIN / 4;
+
+/** The widest value an axis labels: the largest bar, which for stacked bars is a category's total. */
+const maxBarValue = (datums: PlotDatum[], stacked: boolean): number => {
+  if (!stacked) {
+    return Math.max(0, ...datums.map((datum) => datum.value));
+  }
+  const totals = new Map<PlotDatum['key'], number>();
+  for (const datum of datums) {
+    totals.set(datum.key, (totals.get(datum.key) ?? 0) + Math.max(0, datum.value));
+  }
+  return Math.max(0, ...totals.values());
+};
+
 // Plot's tip box defaults to a white fill, while its text follows the theme's currentColor.
 const TIP = { fill: 'var(--color-modal-surface)', stroke: 'var(--color-separator)' };
 
@@ -102,7 +117,7 @@ const createPlot = (
       const grouped = series.size > 1 && !stacked;
       if (horizontal) {
         // Category labels sit left of the frame, so the margin grows with the longest one.
-        const marginLeft = Math.max(MARGIN, ...keys.map((key) => String(key).length * LABEL_CHAR_WIDTH + MARGIN / 4));
+        const marginLeft = Math.max(MARGIN, ...keys.map((key) => labelWidth(String(key))));
         return ObservablePlot.plot({
           ...options,
           marginLeft,
@@ -120,11 +135,23 @@ const createPlot = (
         });
       }
 
+      // The value labels sit left of the frame, so the margin grows with the widest one (the axis groups thousands).
+      const marginLeft = Math.max(MARGIN, labelWidth(Math.round(maxBarValue(datums, stacked)).toLocaleString()));
+      // Category labels that would overlap side by side are tilted, and the bottom margin grows to hold them.
+      const longest = Math.max(0, ...keys.map((key) => labelWidth(String(key))));
+      const tilt = longest * keys.length > size.width - marginLeft;
+      const tickRotate = tilt ? -45 : 0;
+      const marginBottom = tilt ? Math.max(MARGIN, longest * Math.SQRT1_2 + MARGIN / 2) : MARGIN;
       return ObservablePlot.plot({
         ...options,
+        marginLeft,
+        marginBottom,
         ...(grouped
-          ? { fx: { label: null, domain: keys, axis: 'bottom' }, x: { axis: null, domain: seriesOrder } }
-          : { x: { label: null, domain: keys } }),
+          ? {
+              fx: { label: null, domain: keys, axis: 'bottom', tickRotate },
+              x: { axis: null, domain: seriesOrder },
+            }
+          : { x: { label: null, domain: keys, tickRotate } }),
         marks: [
           ObservablePlot.ruleY([0]),
           grouped
