@@ -32,7 +32,7 @@ export const translations = [
         'empty-choose-markdown-from-space.message': 'None available; try creating a new one instead?',
         'chooser-done.label': 'Add selected',
         'editor.placeholder': 'Enter text…',
-        'enable-plugin.label': 'Enable plugin',
+        'enable-plugin.label': 'Open the plugin registry',
         'enable-plugin.title': 'Find the {{plugin}} plugin in the plugin registry',
         'content-loading.placeholder': 'Loading…',
         'content-missing.title': 'Content unavailable',
