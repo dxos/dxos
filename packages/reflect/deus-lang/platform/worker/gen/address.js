@@ -305,7 +305,7 @@ function lib$base$List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(lib$base$List$length, "lib.base.List.length");
 
@@ -432,7 +432,7 @@ function lib$base$List$range(lo, hi) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+  return go(rt.NIL, ((hi - 1) | 0));
 }
 rt.named(lib$base$List$range, "lib.base.List.range");
 

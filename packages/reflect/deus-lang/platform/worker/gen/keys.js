@@ -239,7 +239,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -402,7 +402,7 @@ function List$zip(xs, ys) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs, ys);
+  return go(rt.NIL, xs, ys);
 }
 rt.named(List$zip, "List.zip");
 
@@ -425,7 +425,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 

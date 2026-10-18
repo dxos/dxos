@@ -390,7 +390,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -635,7 +635,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
@@ -711,7 +711,7 @@ rt.named(List$foldl, "List.foldl");
 
 function Worker$Crypto$hexByte(byte) {
   const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.prims["Text.slice"]("0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
-  return rt.prims["append"](rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
+  return rt.prims["append"](digit(rt.div(byte, 16)), digit(rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
 
@@ -730,7 +730,7 @@ function List$range(lo, hi) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+  return go(rt.NIL, ((hi - 1) | 0));
 }
 rt.named(List$range, "List.range");
 

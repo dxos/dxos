@@ -353,5 +353,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 343 | 10-20 06:50 | 1h 00m | 0d3ed97189 | A seed change rebuilds the native CLI in 80 s instead of 195 s: the previous native CLI writes the C, checked, and -O2 uses every core (D318) |
 | 344 | 10-20 07:30 | 40m 00s | 86ecbe93ee | The js target makes only functions that wait `async`: field accessors are plain functions again (D319) |
 | 345 | 10-20 08:20 | 50m 00s | dacf53dbe8 | The js target calls primitives directly: the hub summary of a head is twice as fast (D320) |
+| 346 | 10-20 09:00 | 40m 00s | this commit | The js target calls local functions directly: 487 `rt.ap` calls in the Worker down to 158 (D321) |
 
-Total from stage 1 to stage 345: 147h 40m.
+Total from stage 1 to stage 346: 148h 20m.

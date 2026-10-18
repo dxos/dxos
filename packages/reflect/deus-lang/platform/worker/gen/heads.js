@@ -383,7 +383,7 @@ function lib$base$Sexp$readAll(t) {
                 }
               } else {
                 if ((c_1 === 34)) {
-                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  const t6 = readString(((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
                   m7: {
                     if (t6.tag === 0) {
                       const value = t6.fields[0];
@@ -404,7 +404,7 @@ function lib$base$Sexp$readAll(t) {
                     rt.nomatch(t6);
                   }
                 } else {
-                  const j_2 = rt.ap(atomEnd, i_2);
+                  const j_2 = atomEnd(i_2);
                   const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
                   const t10 = rt.prims["Int.fromText"](atom);
@@ -440,7 +440,7 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, rt.NIL);
+  return go(0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
@@ -463,7 +463,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -707,7 +707,7 @@ function List$filter(p, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
 
@@ -845,7 +845,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
@@ -1202,7 +1202,7 @@ async function Worker$Heads$logHead(bucket, project, branch, causal, previous, k
   const $stack = rt.handlers();
   const at = lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL);
   const orNull = ({ "Worker.Heads.logHead/\u03bb": (value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()) })["Worker.Heads.logHead/\u03bb"];
-  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
+  const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", orNull(previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", orNull(keyId)]), rt.NIL))))));
   const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
   rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.prims["append"]((rt.prims["append"](Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))) + "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
   return undefined;
@@ -1270,7 +1270,7 @@ function List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(List$length, "List.length");
 
@@ -1428,7 +1428,7 @@ function List$replicate(n, x) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, n);
+  return go(rt.NIL, n);
 }
 rt.named(List$replicate, "List.replicate");
 

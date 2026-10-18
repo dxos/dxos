@@ -90,7 +90,7 @@ function List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(List$length, "List.length");
 
@@ -244,7 +244,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -347,7 +347,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 

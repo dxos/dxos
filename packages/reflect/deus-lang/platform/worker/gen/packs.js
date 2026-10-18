@@ -140,7 +140,7 @@ function Worker$Packs$search(records, first, last, key, kind) {
       }
     }
   }
-  return rt.ap(go, first, last);
+  return go(first, last);
 }
 rt.named(Worker$Packs$search, "Worker.Packs.search");
 
@@ -165,7 +165,7 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
           if (rt.prims["gt"](offset_1, Math.imul(last, Worker$Packs$record()))) {
             r0 = true;
           } else {
-            r0 = not(rt.ap(same, offset_1));
+            r0 = not(same(offset_1));
           }
         }
         if (r0) {
@@ -185,7 +185,7 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
         }
       }
     }
-    return rt.ap(walk, ((at + Worker$Packs$record()) | 0), Worker$Packs$record(), rt.ap(walk, ((at - Worker$Packs$record()) | 0), ((0 - Worker$Packs$record()) | 0), at));
+    return walk(((at + Worker$Packs$record()) | 0), Worker$Packs$record(), walk(((at - Worker$Packs$record()) | 0), ((0 - Worker$Packs$record()) | 0), at));
   }
 }
 rt.named(Worker$Packs$newestAt, "Worker.Packs.newestAt");
@@ -282,7 +282,7 @@ function Worker$Packs$fanoutProblem(bytes, start, records) {
       }
     }
   }
-  return rt.ap(walk, 0, 0);
+  return walk(0, 0);
 }
 rt.named(Worker$Packs$fanoutProblem, "Worker.Packs.fanoutProblem");
 
@@ -335,7 +335,7 @@ function List$zip(xs, ys) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs, ys);
+  return go(rt.NIL, xs, ys);
 }
 rt.named(List$zip, "List.zip");
 
@@ -352,7 +352,7 @@ function List$range(lo, hi) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+  return go(rt.NIL, ((hi - 1) | 0));
 }
 rt.named(List$range, "List.range");
 
@@ -397,7 +397,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 

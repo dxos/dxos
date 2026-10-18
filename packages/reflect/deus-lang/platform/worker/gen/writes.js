@@ -17,7 +17,7 @@ function Worker$Writes$request(path, body, author, assets) {
         }
         if (t0.tag === 1) {
           const given = t0.fields[0];
-          return rt.ap(made, rt.prims["append"](rt.ap(base, "comment"), rt.cons(new rt.Con("#Pair", 0, ["subject", lib$web$Js$text(subject)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given)]), rt.NIL))));
+          return made(rt.prims["append"](base("comment"), rt.cons(new rt.Con("#Pair", 0, ["subject", lib$web$Js$text(subject)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given)]), rt.NIL))));
         }
         rt.nomatch(t0);
       }
@@ -41,7 +41,7 @@ function Worker$Writes$request(path, body, author, assets) {
             } else {
               labelled = rt.cons(new rt.Con("#Pair", 0, ["labels", lib$web$Js$text(rt.prims["Text.join"](",", given_1))]), rt.NIL);
             }
-            return rt.ap(made, rt.prims["append"](rt.prims["append"](rt.ap(base, "task"), rt.cons(new rt.Con("#Pair", 0, ["title", lib$web$Js$text(title)]), rt.cons(new rt.Con("#Pair", 0, ["details", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "details"), 20000))]), rt.cons(new rt.Con("#Pair", 0, ["link", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "link"), 500))]), rt.NIL)))), labelled));
+            return made(rt.prims["append"](rt.prims["append"](base("task"), rt.cons(new rt.Con("#Pair", 0, ["title", lib$web$Js$text(title)]), rt.cons(new rt.Con("#Pair", 0, ["details", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "details"), 20000))]), rt.cons(new rt.Con("#Pair", 0, ["link", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "link"), 500))]), rt.NIL)))), labelled));
           }
           rt.nomatch(t2);
         }
@@ -59,7 +59,7 @@ function Worker$Writes$request(path, body, author, assets) {
             }
             if (t4.tag === 1) {
               const given_2 = t4.fields[0];
-              return rt.ap(made, rt.prims["append"](rt.ap(base, "task-comment"), rt.cons(new rt.Con("#Pair", 0, ["task", lib$web$Js$text(task)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given_2)]), rt.NIL))));
+              return made(rt.prims["append"](base("task-comment"), rt.cons(new rt.Con("#Pair", 0, ["task", lib$web$Js$text(task)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given_2)]), rt.NIL))));
             }
             rt.nomatch(t4);
           }
@@ -137,7 +137,7 @@ function List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(List$length, "List.length");
 
@@ -382,7 +382,7 @@ function List$filter(p, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
 
@@ -405,7 +405,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -452,10 +452,10 @@ function Worker$Writes$isLabel(label) {
     if (t1.tag === 1) {
       const first = t1.fields[0];
       const rest = t1.fields[1];
-      if (rt.ap(lowerOrDigit, first)) {
+      if (lowerOrDigit(first)) {
         if ((List$length(rest) <= 31)) {
           return List$all(({ "Worker.Writes.isLabel/\u03bb": (c_1) => {
-          if (rt.ap(lowerOrDigit, c_1)) {
+          if (lowerOrDigit(c_1)) {
             return true;
           } else {
             return (c_1 === 45);
@@ -563,7 +563,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 

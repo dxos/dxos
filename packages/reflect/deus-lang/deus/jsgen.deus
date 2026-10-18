@@ -359,6 +359,7 @@ structure JsCtx @"urn:deus:jsgen:JsCtx" where
   jxOwner : Text
   jxAsync : Bool
   jxSync : MutMap Text Unit
+  jxArity : MutMap Text Int
 
 def emit (ctx : JsCtx) (line : Text) : Unit := Ref.set ctx.jxLines ((Text.repeat ctx.jxDepth "  " ++ line) :: Ref.get ctx.jxLines)
 
@@ -685,6 +686,7 @@ def stmt (ctx : JsCtx) (env : List Text) (e : Sexp) (target : JsTarget) : {Throw
       forEach (zip jsNames fs) (fun pair =>
         let wait := maybeWaits ctx (snd pair)
         if wait then () else MutMap.set ctx.jxSync (fst pair) ()
+        MutMap.set ctx.jxArity (fst pair) (fst (JsGen.unlam (snd pair)))
         function ctx env2 (fst pair) (fst pair) (snd pair) wait)
       JsGen.stmt ctx env2 b target
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
@@ -714,7 +716,9 @@ else
   JsGen.emit ctx ("const " ++ name ++ " = " ++ code ++ ";")
   -- A local bound to a lambda that does not wait is called without `await`, so a promise it returns stays a value.
   match v with
-  | Sexp.list (Sexp.sym "lam" :: _) => if JsGen.maybeWaits ctx v then () else MutMap.set ctx.jxSync name ()
+  | Sexp.list (Sexp.sym "lam" :: _) =>
+      MutMap.set ctx.jxArity name (fst (JsGen.unlam v))
+      if JsGen.maybeWaits ctx v then () else MutMap.set ctx.jxSync name ()
   | _ => ()
   name
 
@@ -773,6 +777,7 @@ def function (ctx : JsCtx) (env : List Text) (jsName : Text) (display : Text) (l
     ctx.jxOwner
     wait
     ctx.jxSync
+    ctx.jxArity
   stmt inner (reverse names ++ env) body JsTarget.ret
   let lines := reverse (Ref.get inner.jxLines)
   let pad := repeat (ctx.jxDepth + 1) "  "
@@ -808,6 +813,7 @@ def arrow (ctx : JsCtx) (env : List Text) (names : List Text) (body : Sexp) (wai
     ctx.jxOwner
     wait
     ctx.jxSync
+    ctx.jxArity
   if wait then JsGen.emit inner stackLine else ()
   let head := (if wait then "async (" else "(") ++ join ", " names ++ ") =>"
   if needsStatements body then
@@ -901,7 +907,9 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
   | _ =>
       match operands ctx env (f :: args) with
       | callee :: values =>
-          let call := "rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")"
+          -- A local function given all its parameters is called directly, not through `rt.ap`'s arity check (D321).
+          let call := if MutMap.get ctx.jxArity callee == Option.some (List.length values) then JsGen.call callee values
+            else "rt.ap(" ++ callee ++ ", " ++ join ", " values ++ ")"
           if MutMap.has ctx.jxSync callee then call else JsGen.awaited ctx call
       | [] => Throw.throw "empty application"
 
@@ -1022,7 +1030,7 @@ def moduleName (mod : JsModule) (module : Text) : Text :=
 
 /-- One definition's code: its lines, outermost indentation. -/
 def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ())
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ()) (MutMap.new ())
   match d.jdKind with
   | JsKind.primitive _ => []
   | JsKind.importFn module path n =>
@@ -1052,7 +1060,7 @@ def defCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
 /-- The waiting variant of definition `d` (`f$wait`): its body compiled as an `async` function, every call it cannot
   see into awaited, for callers that pass it functions that may wait. -/
 def waitCode (mod : JsModule) (d : JsDef) : {Throw Text} List Text :=
-  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ())
+  let ctx := JsCtx.mk mod (Ref.new []) 0 (MutMap.new ()) (Ref.new 0) Option.none (Ref.new false) d.jdName false (MutMap.new ()) (MutMap.new ())
   function ctx [] (d.jdJs ++ "$wait") d.jdName d.jdBody true
   reverse (Ref.get ctx.jxLines) ++ ["rt.named(" ++ d.jdJs ++ "$wait, " ++ JsGen.quote d.jdName ++ ");"]
 

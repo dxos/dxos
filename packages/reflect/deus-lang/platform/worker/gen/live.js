@@ -12,7 +12,7 @@ function Worker$Live$route(segments) {
         if (Worker$Heads$isBranch(branch)) {
           return new rt.Con("90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", 0, ["branch", branch, "", "", ""]);
         } else {
-          return rt.ap(notFound, "a live explorer is /live/<branch> or /live/<causal>/\u2026");
+          return notFound("a live explorer is /live/<branch> or /live/<causal>/\u2026");
         }
       } else {
         let page;
@@ -56,12 +56,12 @@ function Worker$Live$route(segments) {
         if (page) {
           return new rt.Con("90c00f859c130385d20b864e22b836827a95507dedd57ef9ee805e3800dc1227", 0, ["page", "", first, rt.prims["Text.join"]("/", more), ""]);
         } else {
-          return rt.ap(notFound, "not found");
+          return notFound("not found");
         }
       }
     }
     if (segments.tag === 0) {
-      return rt.ap(notFound, "a live explorer is /live/<branch> or /live/<causal>/\u2026");
+      return notFound("a live explorer is /live/<branch> or /live/<causal>/\u2026");
     }
     rt.nomatch(segments);
   }
@@ -70,8 +70,8 @@ rt.named(Worker$Live$route, "Worker.Live.route");
 
 function Worker$Live$summaryOf(index, version) {
   const listed = ({ "Worker.Live.summaryOf/\u03bb": (field) => Option$getOr(Option$map(lib$web$Js$toList, lib$web$Js$toOption(lib$web$Js$get(index, field))), rt.NIL) })["Worker.Live.summaryOf/\u03bb"];
-  const names = List$map(({ "Worker.Live.summaryOf/\u03bb": (entry) => new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "name")), new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "kind")), lib$web$Js$toText(lib$web$Js$get(entry, "hash"))])]) })["Worker.Live.summaryOf/\u03bb"], rt.ap(listed, "names"));
-  const documents = List$filterMap(({ "Worker.Live.summaryOf/\u03bb": (entry_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(entry_1, "document"))) })["Worker.Live.summaryOf/\u03bb"], rt.ap(listed, "features"));
+  const names = List$map(({ "Worker.Live.summaryOf/\u03bb": (entry) => new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "name")), new rt.Con("#Pair", 0, [lib$web$Js$toText(lib$web$Js$get(entry, "kind")), lib$web$Js$toText(lib$web$Js$get(entry, "hash"))])]) })["Worker.Live.summaryOf/\u03bb"], listed("names"));
+  const documents = List$filterMap(({ "Worker.Live.summaryOf/\u03bb": (entry_1) => Option$map(lib$web$Js$toText, lib$web$Js$toOption(lib$web$Js$get(entry_1, "document"))) })["Worker.Live.summaryOf/\u03bb"], listed("features"));
   const meta = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(index, "meta")), lib$web$Js$obj(rt.NIL));
   const found = Worker$Live$summary(names, documents);
   const features = Option$getOr(lib$web$Js$toOption(lib$web$Js$get(meta, "features")), lib$web$Js$int(0));
@@ -359,7 +359,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -396,7 +396,7 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
 
@@ -633,7 +633,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
@@ -707,7 +707,7 @@ function List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(List$length, "List.length");
 
@@ -783,7 +783,7 @@ function List$filter(p, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
 
@@ -848,7 +848,7 @@ function List$take(n, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, n, xs);
+  return go(rt.NIL, n, xs);
 }
 rt.named(List$take, "List.take");
 
@@ -889,8 +889,8 @@ rt.named(Text$endsWith, "Text.endsWith");
 
 function lib$toolchain$Codebase$causalFromSexp(form) {
   const field = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key) => Option$getOr(List$find(({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
-  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
-  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
+  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(field(key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
+  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [first("ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(field("parents"))), first("msg"), first("tasks"), first("prior"), first("comments"), first("metas"), first("at")]);
 }
 rt.named(lib$toolchain$Codebase$causalFromSexp, "lib.toolchain.Codebase.causalFromSexp");
 
@@ -1014,7 +1014,7 @@ function List$merge(cmp, xs, ys) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs, ys);
+  return go(rt.NIL, xs, ys);
 }
 rt.named(List$merge, "List.merge");
 
@@ -1249,7 +1249,7 @@ function lib$base$Sexp$readAll(t) {
                 }
               } else {
                 if ((c_1 === 34)) {
-                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  const t6 = readString(((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
                   m7: {
                     if (t6.tag === 0) {
                       const value = t6.fields[0];
@@ -1270,7 +1270,7 @@ function lib$base$Sexp$readAll(t) {
                     rt.nomatch(t6);
                   }
                 } else {
-                  const j_2 = rt.ap(atomEnd, i_2);
+                  const j_2 = atomEnd(i_2);
                   const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
                   const t10 = rt.prims["Int.fromText"](atom);
@@ -1306,7 +1306,7 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, rt.NIL);
+  return go(0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
@@ -1426,7 +1426,7 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      return rt.ap(go, true, items, rt.cons("(", acc));
+      return go(true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
   }
@@ -1473,7 +1473,7 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    return (("\"" + rt.prims["Text.concat"](List$reverse(rt.ap(go, 0, 0, rt.NIL)))) + "\"");
+    return (("\"" + rt.prims["Text.concat"](List$reverse(go(0, 0, rt.NIL)))) + "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
@@ -1510,7 +1510,7 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  return rt.ap(go, 0);
+  return go(0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
 

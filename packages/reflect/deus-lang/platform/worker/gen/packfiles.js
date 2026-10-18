@@ -362,7 +362,7 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
 
@@ -409,7 +409,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -585,7 +585,7 @@ function Worker$Packs$fanoutProblem(bytes, start, records) {
       }
     }
   }
-  return rt.ap(walk, 0, 0);
+  return walk(0, 0);
 }
 rt.named(Worker$Packs$fanoutProblem, "Worker.Packs.fanoutProblem");
 
@@ -612,7 +612,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 

@@ -144,7 +144,7 @@ function lib$base$List$filter(p, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(lib$base$List$filter, "lib.base.List.filter");
 
@@ -206,7 +206,7 @@ function lib$base$List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(lib$base$List$map, "lib.base.List.map");
 
@@ -315,7 +315,7 @@ function Explorer$namedHashes(form) {
         const head = x.fields[0].fields[0].fields[0];
         const h = x.fields[0].fields[1].fields[0].fields[0];
         const rest = x.fields[0].fields[1].fields[1];
-        const t1 = ({ "Explorer.namedHashes/\u03bb": (a, y) => rt.ap(go, y, a) })["Explorer.namedHashes/\u03bb"];
+        const t1 = ({ "Explorer.namedHashes/\u03bb": (a, y) => go(y, a) })["Explorer.namedHashes/\u03bb"];
         let r2;
         if (lib$base$Map$contains(head, Explorer$refHeads())) {
           r2 = rt.cons(h, acc);
@@ -326,7 +326,7 @@ function Explorer$namedHashes(form) {
       }
       if (x.tag === 3) {
         const items = x.fields[0];
-        return lib$base$List$foldl(({ "Explorer.namedHashes/\u03bb": (a_1, y_1) => rt.ap(go, y_1, a_1) })["Explorer.namedHashes/\u03bb"], acc, items);
+        return lib$base$List$foldl(({ "Explorer.namedHashes/\u03bb": (a_1, y_1) => go(y_1, a_1) })["Explorer.namedHashes/\u03bb"], acc, items);
       }
       if (true) {
         return acc;
@@ -334,7 +334,7 @@ function Explorer$namedHashes(form) {
       rt.nomatch(x);
     }
   }
-  return rt.ap(go, form, rt.NIL);
+  return go(form, rt.NIL);
 }
 rt.named(Explorer$namedHashes, "Explorer.namedHashes");
 
@@ -738,8 +738,8 @@ function Tasks$order(a, b) {
   }
   return new rt.Con("#Pair", 0, [r0, r1]);
 } })["Tasks.order/\u03bb"];
-  const ra = rt.ap(rank, a);
-  const rb = rt.ap(rank, b);
+  const ra = rank(a);
+  const rb = rank(b);
   if (rt.equal(ra, rb)) {
     return rt.prims["compare"](Task$title(a), Task$title(b));
   } else {
@@ -1186,7 +1186,7 @@ function lib$base$List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(lib$base$List$reverse, "lib.base.List.reverse");
 
@@ -1432,7 +1432,7 @@ function lib$base$List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(lib$base$List$length, "lib.base.List.length");
 
@@ -1460,7 +1460,7 @@ function lib$base$List$take(n, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, n, xs);
+  return go(rt.NIL, n, xs);
 }
 rt.named(lib$base$List$take, "lib.base.List.take");
 
@@ -1539,7 +1539,7 @@ function lib$base$Map$fromAscending(pairs) {
       return new rt.Con("#Pair", 0, [rt.con0("60e4162ce0365e9b64282c589d9daba2bf335ddae673bc7a28820025ad1c3446", 0), xs]);
     } else {
       const half = rt.div(n, 2);
-      const t0 = rt.ap(build, half, xs);
+      const t0 = build(half, xs);
       m1: {
         if (t0.tag === 0) {
           const l = t0.fields[0];
@@ -1548,7 +1548,7 @@ function lib$base$Map$fromAscending(pairs) {
             if (rest.tag === 1) {
               const pair = rest.fields[0];
               const rest2 = rest.fields[1];
-              const t3 = rt.ap(build, ((((n - half) | 0) - 1) | 0), rest2);
+              const t3 = build(((((n - half) | 0) - 1) | 0), rest2);
               m4: {
                 if (t3.tag === 0) {
                   const r = t3.fields[0];
@@ -1568,7 +1568,7 @@ function lib$base$Map$fromAscending(pairs) {
       }
     }
   }
-  return lib$base$fst(rt.ap(build, lib$base$List$length(pairs), pairs));
+  return lib$base$fst(build(lib$base$List$length(pairs), pairs));
 }
 rt.named(lib$base$Map$fromAscending, "lib.base.Map.fromAscending");
 
@@ -1807,7 +1807,7 @@ function Names$build(table) {
     if (pair_1.tag === 0 && pair_1.fields[1].tag === 2) {
       const fqn_1 = pair_1.fields[0];
       const fields = pair_1.fields[1].fields[2];
-      if (rt.ap(shadowed, fqn_1)) {
+      if (shadowed(fqn_1)) {
         return rt.NIL;
       } else {
         return lib$base$List$map(({ "Names.build/\u03bb": (f) => new rt.Con("#Pair", 0, [f, fqn_1]) })["Names.build/\u03bb"], fields);
@@ -1876,7 +1876,7 @@ function Print$suffixifyAtLeast(least, all, fqn) {
       return lib$base$Text$endsWith(("." + candidate_1), other_1);
     }
   } })["Print.suffixifyAtLeast/\u03bb"], lib$base$Option$getOr(rt.prims["Dict.lookup"](Names$lastSegment(fqn), all), rt.NIL));
-        if (rt.ap(resolves, candidate_1, clashes_1)) {
+        if (resolves(candidate_1, clashes_1)) {
           return candidate_1;
         } else {
           k$ = ((k + 1) | 0);
@@ -1885,7 +1885,7 @@ function Print$suffixifyAtLeast(least, all, fqn) {
       }
     }
   }
-  return rt.ap(go, least);
+  return go(least);
 }
 rt.named(Print$suffixifyAtLeast, "Print.suffixifyAtLeast");
 
@@ -1953,7 +1953,7 @@ function lib$base$List$filterMap(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(lib$base$List$filterMap, "lib.base.List.filterMap");
 
@@ -1984,7 +1984,7 @@ function Names$lastSegment(name) {
       }
     }
   }
-  return rt.ap(go, ((rt.prims["Text.length"](name) - 1) | 0));
+  return go(((rt.prims["Text.length"](name) - 1) | 0));
 }
 rt.named(Names$lastSegment, "Names.lastSegment");
 
@@ -2089,7 +2089,7 @@ function lib$base$List$merge(cmp, xs, ys) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs, ys);
+  return go(rt.NIL, xs, ys);
 }
 rt.named(lib$base$List$merge, "lib.base.List.merge");
 
@@ -2372,7 +2372,7 @@ function Cli$featuresOf(dir, ns, d) {
             if (t3.tag === 0) {
               const b = t3.fields[1];
               if ((lib$base$Block$blockType(b) === "feature")) {
-                return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [rt.ap(orderOf, h_1), b])]);
+                return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [orderOf(h_1), b])]);
               } else {
                 return rt.con0("#Option", 0);
               }
@@ -2465,7 +2465,7 @@ function lib$base$Json$escape(t) {
       }
     }
   }
-  return (("\"" + rt.ap(go, 0, 0, rt.NIL)) + "\"");
+  return (("\"" + go(0, 0, rt.NIL)) + "\"");
 }
 rt.named(lib$base$Json$escape, "lib.base.Json.escape");
 
@@ -2617,7 +2617,7 @@ function Cli$fullLog(dir, limit) {
       }
     }
   }
-  const imported = lib$base$List$concatMap(({ "Cli.fullLog/\u03bb": (prior) => Codebase$recordEntries(dir, prior) })["Cli.fullLog/\u03bb"], rt.ap(lastOnce, lib$base$List$reverse(lib$base$List$map(({ "Cli.fullLog/\u03bb": (pair_1) => Codebase$Causal$prior(lib$base$snd(pair_1)) })["Cli.fullLog/\u03bb"], live)), lib$base$Set$empty(), rt.NIL));
+  const imported = lib$base$List$concatMap(({ "Cli.fullLog/\u03bb": (prior) => Codebase$recordEntries(dir, prior) })["Cli.fullLog/\u03bb"], lastOnce(lib$base$List$reverse(lib$base$List$map(({ "Cli.fullLog/\u03bb": (pair_1) => Codebase$Causal$prior(lib$base$snd(pair_1)) })["Cli.fullLog/\u03bb"], live)), lib$base$Set$empty(), rt.NIL));
   function unique(entries$, seen_1$, acc_1$) {
     for (;;) {
       const entries = entries$, seen_1 = seen_1$, acc_1 = acc_1$;
@@ -2650,7 +2650,7 @@ function Cli$fullLog(dir, limit) {
       }
     }
   }
-  return lib$base$List$take(limit, lib$base$List$reverse(rt.ap(unique, lib$base$List$reverse(rt.prims["append"](own, imported)), lib$base$Set$empty(), rt.NIL)));
+  return lib$base$List$take(limit, lib$base$List$reverse(unique(lib$base$List$reverse(rt.prims["append"](own, imported)), lib$base$Set$empty(), rt.NIL)));
 }
 rt.named(Cli$fullLog, "Cli.fullLog");
 
@@ -2764,7 +2764,7 @@ function Tasks$histories(dir, limit) {
             const parent_1 = Codebase$readCausal(dir, p);
             h$ = p;
             n$ = ((n - 1) | 0);
-            acc$ = rt.cons(new rt.Con("#Pair", 0, [new rt.Con("#Pair", 0, [h, node_1]), rt.ap(touched, parent_1, node_1)]), acc);
+            acc$ = rt.cons(new rt.Con("#Pair", 0, [new rt.Con("#Pair", 0, [h, node_1]), touched(parent_1, node_1)]), acc);
             continue;
           }
           rt.nomatch(t0);
@@ -2772,7 +2772,7 @@ function Tasks$histories(dir, limit) {
       }
     }
   }
-  return lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m, change) => lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m2, id_1) => lib$base$Map$insert(id_1, rt.cons(lib$base$fst(change), lib$base$Option$getOr(lib$base$Map$lookup(id_1, m2), rt.NIL)), m2) })["Tasks.histories/\u03bb"], m, lib$base$snd(change)) })["Tasks.histories/\u03bb"], lib$base$Set$empty(), rt.ap(walk, Codebase$headOf(dir, Codebase$currentBranch(dir)), limit, rt.NIL));
+  return lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m, change) => lib$base$List$foldl(({ "Tasks.histories/\u03bb": (m2, id_1) => lib$base$Map$insert(id_1, rt.cons(lib$base$fst(change), lib$base$Option$getOr(lib$base$Map$lookup(id_1, m2), rt.NIL)), m2) })["Tasks.histories/\u03bb"], m, lib$base$snd(change)) })["Tasks.histories/\u03bb"], lib$base$Set$empty(), walk(Codebase$headOf(dir, Codebase$currentBranch(dir)), limit, rt.NIL));
 }
 rt.named(Tasks$histories, "Tasks.histories");
 
@@ -2892,7 +2892,7 @@ function Explorer$defJson(s, name, e) {
   }
   const t10 = new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [r8]);
   const t11 = new rt.Con("#Pair", 0, ["signature", t10]);
-  const t12 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", rt.ap(named, deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", rt.ap(named, users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.defJson/\u03bb": (t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]) })["Explorer.defJson/\u03bb"], Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
+  const t12 = rt.cons(new rt.Con("#Pair", 0, ["doc", lib$base$Option$getOr(lib$base$Option$map(rt.conFn("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, 1), Explorer$docOf(meta)), rt.con0("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 0))]), rt.cons(new rt.Con("#Pair", 0, ["html", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinked(links, source)])]), rt.cons(new rt.Con("#Pair", 0, ["ts", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Highlight$htmlLinkedIn("ts", links, tsSource)])]), rt.cons(new rt.Con("#Pair", 0, ["deps", named(deps)]), rt.cons(new rt.Con("#Pair", 0, ["users", named(users)]), rt.cons(new rt.Con("#Pair", 0, ["verdict", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Explorer$verdictOf(Explorer$Site$dir(s), h)])]), rt.cons(new rt.Con("#Pair", 0, ["tasks", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 4, [lib$base$List$map(({ "Explorer.defJson/\u03bb": (t) => new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 5, [rt.cons(new rt.Con("#Pair", 0, ["id", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$id(t)])]), rt.cons(new rt.Con("#Pair", 0, ["title", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Task$title(t)])]), rt.cons(new rt.Con("#Pair", 0, ["state", new rt.Con("dd860b39c17dadaf996e5b0d1109b7851ea8fe4d20e2cc0871c8c836084454ee", 3, [Tasks$stateText(Task$state(t))])]), rt.NIL)))]) })["Explorer.defJson/\u03bb"], Tasks$about(Explorer$Site$taskMap(s), name, h))])]), rt.NIL)))))));
   const t13 = rt.cons(t11, t12);
   const t14 = rt.cons(t7, t13);
   const t15 = rt.cons(t6, t14);
@@ -2958,8 +2958,8 @@ function Codebase$diffNamespaces(dir, a, b) {
     if (rt.equal(x, y)) {
       return rt.NIL;
     } else {
-      const xs = rt.ap(index, x);
-      const ys = rt.ap(index, y);
+      const xs = index(x);
+      const ys = index(y);
       return lib$base$List$concatMap(({ "Codebase.diffNamespaces/\u03bb": (key) => {
     const before = lib$base$Map$lookup(key, xs);
     const after = lib$base$Map$lookup(key, ys);
@@ -2967,7 +2967,7 @@ function Codebase$diffNamespaces(dir, a, b) {
       return rt.NIL;
     } else {
       if (lib$base$Text$startsWith("s", key)) {
-        return rt.ap(go, (rt.prims["append"](prefix, lib$base$Text$drop(1, key)) + "."), rt.ap(childOf, before), rt.ap(childOf, after));
+        return go((rt.prims["append"](prefix, lib$base$Text$drop(1, key)) + "."), childOf(before), childOf(after));
       } else {
         return rt.cons(new rt.Con("#Pair", 0, [rt.prims["append"](prefix, lib$base$Text$drop(1, key)), new rt.Con("#Pair", 0, [lib$base$Option$map(entryOf, before), lib$base$Option$map(entryOf, after)])]), rt.NIL);
       }
@@ -2996,7 +2996,7 @@ function Codebase$diffNamespaces(dir, a, b) {
     }
     rt.nomatch(change);
   }
-} })["Codebase.diffNamespaces/\u03bb"], lib$base$Set$empty(), rt.ap(go, "", a, b));
+} })["Codebase.diffNamespaces/\u03bb"], lib$base$Set$empty(), go("", a, b));
   return lib$base$List$filterMap(({ "Codebase.diffNamespaces/\u03bb": (pair) => {
   m6: {
     if (pair.tag === 0 && pair.fields[1].tag === 0) {
@@ -3040,7 +3040,7 @@ function Codebase$readNamespace(dir, h) {
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "sub" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[0].tag === 2 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const seg = item.fields[0].fields[1].fields[0].fields[0];
       const child = item.fields[0].fields[1].fields[1].fields[0].fields[0];
-      return rt.ap(go, (rt.prims["append"](prefix, seg) + "."), child, m);
+      return go((rt.prims["append"](prefix, seg) + "."), child, m);
     }
     if (item.tag === 3 && item.fields[0].tag === 1 && item.fields[0].fields[0].tag === 1 && item.fields[0].fields[0].fields[0] === "n" && item.fields[0].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].tag === 1 && item.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const name = item.fields[0].fields[1].fields[0];
@@ -3054,7 +3054,7 @@ function Codebase$readNamespace(dir, h) {
   }
 } })["Codebase.readNamespace/\u03bb"], acc, Codebase$nodeItems(dir, node));
   }
-  return rt.ap(go, "", h, lib$base$Set$empty());
+  return go("", h, lib$base$Set$empty());
 }
 rt.named(Codebase$readNamespace, "Codebase.readNamespace");
 
@@ -3261,7 +3261,7 @@ function Export$document(dir, ns, d) {
     if (x_1.tag === 0 && x_1.fields[1].tag === 0 && x_1.fields[1].fields[1].tag === 0 && x_1.fields[1].fields[1].fields[0].tag === 0) {
       const b_2 = x_1.fields[1].fields[1].fields[0].fields[1];
       const meta_3 = x_1.fields[1].fields[1].fields[1];
-      return lib$base$List$filter(({ "Export.document/\u03bb": (t) => lib$base$not(lib$base$Text$isEmpty(t)) })["Export.document/\u03bb"], rt.cons(rt.ap(text, meta_3, "lead"), rt.cons(Mdl$render(b_2), rt.NIL)));
+      return lib$base$List$filter(({ "Export.document/\u03bb": (t) => lib$base$not(lib$base$Text$isEmpty(t)) })["Export.document/\u03bb"], rt.cons(text(meta_3, "lead"), rt.cons(Mdl$render(b_2), rt.NIL)));
     }
     rt.nomatch(x_1);
   }
@@ -3271,7 +3271,7 @@ function Export$document(dir, ns, d) {
   m10: {
     if (t9.tag === 1 && t9.fields[0].tag === 0 && t9.fields[0].fields[1].tag === 0 && t9.fields[0].fields[1].fields[1].tag === 0) {
       const meta_4 = t9.fields[0].fields[1].fields[1].fields[1];
-      tail = rt.ap(text, meta_4, "tail");
+      tail = text(meta_4, "tail");
       break m10;
     }
     if (t9.tag === 0) {
@@ -3490,7 +3490,7 @@ function Mdl$parse(doc) {
           }
         }
       }
-      return rt.ap(go, lines, "", rt.con0("#Option", 0), rt.NIL, rt.NIL);
+      return go(lines, "", rt.con0("#Option", 0), rt.NIL, rt.NIL);
     }
     rt.nomatch(t0);
   }
@@ -3645,7 +3645,7 @@ function lib$base$Sexp$readAll(t) {
                 }
               } else {
                 if ((c_1 === 34)) {
-                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  const t6 = readString(((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
                   m7: {
                     if (t6.tag === 0) {
                       const value = t6.fields[0];
@@ -3666,7 +3666,7 @@ function lib$base$Sexp$readAll(t) {
                     rt.nomatch(t6);
                   }
                 } else {
-                  const j_2 = rt.ap(atomEnd, i_2);
+                  const j_2 = atomEnd(i_2);
                   const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
                   const t10 = rt.prims["Int.fromText"](atom);
@@ -3702,7 +3702,7 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, rt.NIL);
+  return go(0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
@@ -3778,7 +3778,7 @@ function Names$groups(pairs) {
       }
     }
   }
-  return rt.ap(go, lib$base$List$sort(pairs), "", rt.NIL, rt.NIL);
+  return go(lib$base$List$sort(pairs), "", rt.NIL, rt.NIL);
 }
 rt.named(Names$groups, "Names.groups");
 
@@ -3957,8 +3957,8 @@ rt.named(Codebase$readObject, "Codebase.readObject");
 
 function Codebase$causalFromSexp(form) {
   const field = ({ "Codebase.causalFromSexp/\u03bb": (key) => lib$base$Option$getOr(lib$base$List$find(({ "Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["Codebase.causalFromSexp/\u03bb"];
-  const first = ({ "Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["Codebase.causalFromSexp/\u03bb"];
-  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
+  const first = ({ "Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(field(key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["Codebase.causalFromSexp/\u03bb"];
+  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [first("ns"), lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$args(field("parents"))), first("msg"), first("tasks"), first("prior"), first("comments"), first("metas"), first("at")]);
 }
 rt.named(Codebase$causalFromSexp, "Codebase.causalFromSexp");
 
@@ -3969,7 +3969,7 @@ rt.named(Codebase$branchHead, "Codebase.branchHead");
 
 function Tasks$fromSexp(form) {
   const text = ({ "Tasks.fromSexp/\u03bb": (key) => lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asText, Codebase$metaField(new rt.Con("#Option", 1, [form]), key)), "") })["Tasks.fromSexp/\u03bb"];
-  return new rt.Con("df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", 0, [rt.ap(text, "id"), rt.ap(text, "title"), lib$base$Option$getOr(lib$base$List$lookup(rt.ap(text, "state"), Tasks$states()), rt.con0("9e891131338d0d7a162df929ca47a8833b06234f9b72b853fcfaa9d091fae2e2", 0)), lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asInt, Codebase$metaField(new rt.Con("#Option", 1, [form]), "priority")), 0), rt.ap(text, "assignee"), lib$base$List$map(lib$base$Sexp$asText, Codebase$metaList(new rt.Con("#Option", 1, [form]), "labels")), rt.ap(text, "parent"), rt.ap(text, "details"), lib$base$List$map(Tasks$attachmentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "links")), lib$base$List$map(Tasks$commentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "comments"))]);
+  return new rt.Con("df98922437a31b7bb250d907aa12cc740e0a1d48eeb38bb9d674c4a3e4f5be04", 0, [text("id"), text("title"), lib$base$Option$getOr(lib$base$List$lookup(text("state"), Tasks$states()), rt.con0("9e891131338d0d7a162df929ca47a8833b06234f9b72b853fcfaa9d091fae2e2", 0)), lib$base$Option$getOr(lib$base$Option$map(lib$base$Sexp$asInt, Codebase$metaField(new rt.Con("#Option", 1, [form]), "priority")), 0), text("assignee"), lib$base$List$map(lib$base$Sexp$asText, Codebase$metaList(new rt.Con("#Option", 1, [form]), "labels")), text("parent"), text("details"), lib$base$List$map(Tasks$attachmentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "links")), lib$base$List$map(Tasks$commentFromSexp, Codebase$metaList(new rt.Con("#Option", 1, [form]), "comments"))]);
 }
 rt.named(Tasks$fromSexp, "Tasks.fromSexp");
 
@@ -4449,13 +4449,13 @@ function Features$tree(features) {
     r0 = false;
   }
   if (r0) {
-    return rt.cons(new rt.Con("#Pair", 0, [depth, f_2]), rt.ap(under, ((depth + 1) | 0), Feature$featureId(f_2), rt.cons(Feature$featureId(f_2), seen)));
+    return rt.cons(new rt.Con("#Pair", 0, [depth, f_2]), under(((depth + 1) | 0), Feature$featureId(f_2), rt.cons(Feature$featureId(f_2), seen)));
   } else {
     return rt.NIL;
   }
 } })["Features.tree/\u03bb"], features);
   }
-  return lib$base$List$concatMap(({ "Features.tree/\u03bb": (f_3) => rt.cons(new rt.Con("#Pair", 0, [0, f_3]), rt.ap(under, 1, Feature$featureId(f_3), rt.cons(Feature$featureId(f_3), rt.NIL))) })["Features.tree/\u03bb"], lib$base$List$filter(isRoot, features));
+  return lib$base$List$concatMap(({ "Features.tree/\u03bb": (f_3) => rt.cons(new rt.Con("#Pair", 0, [0, f_3]), under(1, Feature$featureId(f_3), rt.cons(Feature$featureId(f_3), rt.NIL))) })["Features.tree/\u03bb"], lib$base$List$filter(isRoot, features));
 }
 rt.named(Features$tree, "Features.tree");
 
@@ -4539,7 +4539,7 @@ function Codebase$history(dir, branch, limit) {
       }
     }
   }
-  return rt.ap(go, Codebase$headOf(dir, branch), limit, rt.NIL);
+  return go(Codebase$headOf(dir, branch), limit, rt.NIL);
 }
 rt.named(Codebase$history, "Codebase.history");
 
@@ -5207,28 +5207,28 @@ function Entry$fromSexp(s) {
   const num = ({ "Entry.fromSexp/\u03bb": (k_1) => lib$base$Sexp$asInt(lib$base$Option$getOr(lib$base$List$get$p(a, k_1), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]))) })["Entry.fromSexp/\u03bb"];
   const h = lib$base$Sexp$head(s);
   if ((h === "term")) {
-    return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 0, [rt.ap(txt, 0)]);
+    return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 0, [txt(0)]);
   } else {
     if ((h === "ctor")) {
-      return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 1, [rt.ap(txt, 0), rt.ap(num, 1), rt.ap(num, 2)]);
+      return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 1, [txt(0), num(1), num(2)]);
     } else {
       if ((h === "type")) {
-        return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 2, [rt.ap(txt, 0), rt.ap(txt, 1), lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(lib$base$Option$getOr(lib$base$List$get$p(a, 2), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL]))))]);
+        return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 2, [txt(0), txt(1), lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(lib$base$Option$getOr(lib$base$List$get$p(a, 2), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL]))))]);
       } else {
         if ((h === "ability")) {
-          return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 3, [rt.ap(txt, 0), rt.ap(txt, 1)]);
+          return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 3, [txt(0), txt(1)]);
         } else {
           if ((h === "op")) {
-            return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 4, [rt.ap(txt, 0), rt.ap(num, 1), rt.ap(num, 2)]);
+            return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 4, [txt(0), num(1), num(2)]);
           } else {
             if ((h === "test")) {
-              return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 5, [rt.ap(txt, 0)]);
+              return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 5, [txt(0)]);
             } else {
               if ((h === "theorem")) {
-                return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 6, [rt.ap(txt, 0)]);
+                return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 6, [txt(0)]);
               } else {
                 if ((h === "spec")) {
-                  return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 7, [rt.ap(txt, 0)]);
+                  return new rt.Con("172512e837bc763d1218d545ee56d71bd0706cb748a96836bbf745a14851a325", 7, [txt(0)]);
                 } else {
                   return rt.prims["defect"](("unknown entry " + lib$base$Sexp$print(s)));
                 }
@@ -5360,7 +5360,7 @@ function Mdl$headingOf(t) {
       }
     }
   }
-  return rt.prims["Text.trim"](lib$base$Text$drop(rt.ap(go, 0), t));
+  return rt.prims["Text.trim"](lib$base$Text$drop(go(0), t));
 }
 rt.named(Mdl$headingOf, "Mdl.headingOf");
 
@@ -5387,7 +5387,7 @@ function lib$base$List$findIndex(p, xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(lib$base$List$findIndex, "lib.base.List.findIndex");
 
@@ -5435,7 +5435,7 @@ function lib$base$List$mapIndexed(f, xs) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, xs);
+  return go(0, rt.NIL, xs);
 }
 rt.named(lib$base$List$mapIndexed, "lib.base.List.mapIndexed");
 
@@ -5612,14 +5612,14 @@ function Types$fromSexp(u$, s$, vars$, rowVars$, params$, openArrows$) {
       }
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 0 && s.fields[0].fields[1].fields[1].tag === 0) {
         const i = s.fields[0].fields[1].fields[0].fields[0];
-        return lib$base$Option$getOr(lib$base$List$get$p(params, i), rt.ap(named, ("#" + rt.prims["Int.toText"](i))));
+        return lib$base$Option$getOr(lib$base$List$get$p(params, i), named(("#" + rt.prims["Int.toText"](i))));
       }
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[0].fields[0] === "?" && s.fields[0].fields[1].fields[1].tag === 0) {
         return Types$freshType(u);
       }
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "tvar" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[0].tag === 2 && s.fields[0].fields[1].fields[1].tag === 0) {
         const name = s.fields[0].fields[1].fields[0].fields[0];
-        return rt.ap(named, name);
+        return named(name);
       }
       if (s.tag === 3 && s.fields[0].tag === 1 && s.fields[0].fields[0].tag === 1 && s.fields[0].fields[0].fields[0] === "teff" && s.fields[0].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].tag === 1 && s.fields[0].fields[1].fields[1].fields[1].tag === 0) {
         const t_2 = s.fields[0].fields[1].fields[1].fields[0];
@@ -5782,7 +5782,7 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      return rt.ap(go, true, items, rt.cons("(", acc));
+      return go(true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
   }
@@ -5930,7 +5930,7 @@ function lib$base$List$zip(xs, ys) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs, ys);
+  return go(rt.NIL, xs, ys);
 }
 rt.named(lib$base$List$zip, "lib.base.List.zip");
 
@@ -5980,7 +5980,7 @@ function lib$base$List$range(lo, hi) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, ((hi - 1) | 0));
+  return go(rt.NIL, ((hi - 1) | 0));
 }
 rt.named(lib$base$List$range, "lib.base.List.range");
 
@@ -6288,7 +6288,7 @@ function Features$items(t) {
     return w;
   }
 } })["Features.items/\u03bb"];
-  return lib$base$List$filter(({ "Features.items/\u03bb": (w_1) => lib$base$not(lib$base$Text$isEmpty(w_1)) })["Features.items/\u03bb"], lib$base$List$map(({ "Features.items/\u03bb": (w_2) => rt.ap(unbullet, rt.prims["Text.trim"](w_2)) })["Features.items/\u03bb"], rt.prims["Text.split"](lib$base$Text$replace("\n", "|", t), "|")));
+  return lib$base$List$filter(({ "Features.items/\u03bb": (w_1) => lib$base$not(lib$base$Text$isEmpty(w_1)) })["Features.items/\u03bb"], lib$base$List$map(({ "Features.items/\u03bb": (w_2) => unbullet(rt.prims["Text.trim"](w_2)) })["Features.items/\u03bb"], rt.prims["Text.split"](lib$base$Text$replace("\n", "|", t), "|")));
 }
 rt.named(Features$items, "Features.items");
 
@@ -6663,7 +6663,7 @@ function Highlight$runsWith(kws, source) {
                 }
               }
             }
-            const j_2 = rt.ap(close, ((i + 1) | 0));
+            const j_2 = close(((i + 1) | 0));
             i$ = j_2;
             acc$ = rt.cons(new rt.Con("#Pair", 0, ["str", rt.prims["Text.slice"](source, i, j_2)]), acc);
             continue;
@@ -6764,7 +6764,7 @@ function Highlight$runsWith(kws, source) {
                         }
                       }
                     }
-                    const j_7 = rt.ap(word, i);
+                    const j_7 = word(i);
                     const w = rt.prims["Text.slice"](source, i, j_7);
                     let kind;
                     if (lib$base$Map$contains(w, kws)) {
@@ -6798,7 +6798,7 @@ function Highlight$runsWith(kws, source) {
       }
     }
   }
-  return rt.ap(scan, 0, rt.NIL);
+  return scan(0, rt.NIL);
 }
 rt.named(Highlight$runsWith, "Highlight.runsWith");
 
@@ -7203,7 +7203,7 @@ function Types$showRowWith(names, r, seen, shared) {
       }
     }
   }
-  const t4 = rt.ap(labels, r, rt.NIL);
+  const t4 = labels(r, rt.NIL);
   m5: {
     if (t4.tag === 0 && t4.fields[0].tag === 0 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 0 && t4.fields[1].fields[1] === true) {
       return "";
@@ -7270,7 +7270,7 @@ function Types$showRow(r, seen) {
       }
     }
   }
-  const t1 = rt.ap(labels, r, rt.NIL);
+  const t1 = labels(r, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[0].tag === 0 && t1.fields[1].tag === 1) {
       return "";
@@ -7354,7 +7354,7 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    return (("\"" + rt.prims["Text.concat"](lib$base$List$reverse(rt.ap(go, 0, 0, rt.NIL)))) + "\"");
+    return (("\"" + rt.prims["Text.concat"](lib$base$List$reverse(go(0, 0, rt.NIL)))) + "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
@@ -7524,10 +7524,10 @@ function Cli$vitestFact(cited) {
         const text_1 = source.fields[0];
         const declares = ({ "Cli.vitestFact/\u03bb": (call) => lib$base$List$any(({ "Cli.vitestFact/\u03bb": (quote) => lib$base$Text$contains(rt.prims["append"](rt.prims["append"](rt.prims["append"]((call + "("), quote), testName), quote), text_1) })["Cli.vitestFact/\u03bb"], rt.cons("'", rt.cons("\"", rt.cons("`", rt.NIL)))) })["Cli.vitestFact/\u03bb"];
         let r3;
-        if (rt.ap(declares, "test")) {
+        if (declares("test")) {
           r3 = true;
         } else {
-          r3 = rt.ap(declares, "it");
+          r3 = declares("it");
         }
         if (r3) {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [rt.cons(new rt.Con("#Pair", 0, ["kind", "vitest"]), rt.cons(new rt.Con("#Pair", 0, ["verdict", "external"]), rt.cons(new rt.Con("#Pair", 0, ["file", file]), rt.NIL)))]);
@@ -7686,7 +7686,7 @@ function Ts$definition(p, name, core, sig, doc) {
         m3: {
           if (typed.tag === 1 && typed.fields[0].tag === 0) {
             const result_1 = typed.fields[0].fields[1];
-            typeText = rt.ap(annotate, result_1);
+            typeText = annotate(result_1);
             break m3;
           }
           if (typed.tag === 0) {
@@ -7701,7 +7701,7 @@ function Ts$definition(p, name, core, sig, doc) {
         m4: {
           if (typed.tag === 1 && typed.fields[0].tag === 0) {
             const types_1 = typed.fields[0].fields[0];
-            paramText = lib$base$List$map(({ "Ts.definition/\u03bb": (pair) => rt.prims["append"](lib$base$fst(pair), rt.ap(annotate, lib$base$snd(pair))) })["Ts.definition/\u03bb"], lib$base$List$zip(names, types_1));
+            paramText = lib$base$List$map(({ "Ts.definition/\u03bb": (pair) => rt.prims["append"](lib$base$fst(pair), annotate(lib$base$snd(pair))) })["Ts.definition/\u03bb"], lib$base$List$zip(names, types_1));
             break m4;
           }
           if (typed.tag === 0) {
@@ -7718,7 +7718,7 @@ function Ts$definition(p, name, core, sig, doc) {
               if (result_2.tag === 3 && result_2.fields[0].tag === 1 && result_2.fields[0].fields[0].tag === 1 && result_2.fields[0].fields[0].fields[0] === "teff" && result_2.fields[0].fields[1].tag === 1 && result_2.fields[0].fields[1].fields[0].tag === 3 && result_2.fields[0].fields[1].fields[0].fields[0].tag === 1 && result_2.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && result_2.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "eff" && result_2.fields[0].fields[1].fields[1].tag === 1 && result_2.fields[0].fields[1].fields[1].fields[1].tag === 0) {
                 const effs = result_2.fields[0].fields[1].fields[0].fields[0].fields[1];
                 const r = result_2.fields[0].fields[1].fields[1].fields[0];
-                const t7 = rt.ap(annotate, r);
+                const t7 = annotate(r);
                 let r8;
                 if (lib$base$List$isEmpty(effs)) {
                   r8 = "";
@@ -7729,7 +7729,7 @@ function Ts$definition(p, name, core, sig, doc) {
                 break m6;
               }
               if (true) {
-                resultText = rt.ap(annotate, result_2);
+                resultText = annotate(result_2);
                 break m6;
               }
               rt.nomatch(result_2);
@@ -8041,7 +8041,7 @@ function Print$quoteText(t) {
       }
     }
   }
-  return (("\"" + rt.ap(go, 0, rt.NIL)) + "\"");
+  return (("\"" + go(0, rt.NIL)) + "\"");
 }
 rt.named(Print$quoteText, "Print.quoteText");
 
@@ -8081,7 +8081,7 @@ function Print$notationDecl(p, name, rule) {
           }
         }
       }
-      const t3 = rt.ap(binders, template, count, rt.NIL);
+      const t3 = binders(template, count, rt.NIL);
       m4: {
         if (t3.tag === 0) {
           return rt.con0("#Option", 0);
@@ -8100,7 +8100,7 @@ function Print$notationDecl(p, name, rule) {
             }
             if (part.tag === 2) {
               const i_1 = part.fields[0];
-              return rt.ap(nameOf, i_1);
+              return nameOf(i_1);
             }
             if (part.tag === 1) {
               const i_2 = part.fields[0];
@@ -8117,7 +8117,7 @@ function Print$notationDecl(p, name, rule) {
                   kind = (":" + rt.prims["Int.toText"](n));
                 }
               }
-              return rt.prims["append"](rt.prims["append"](rt.ap(nameOf, i_2), kind), repeat);
+              return rt.prims["append"](rt.prims["append"](nameOf(i_2), kind), repeat);
             }
             rt.nomatch(part);
           }
@@ -8186,13 +8186,13 @@ function Print$definition(p, name, core, sig, doc) {
   }
   function lamCount(t_1) {
     if ((lib$base$Sexp$head(t_1) === "lam")) {
-      return ((1 + rt.ap(lamCount, lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(t_1)), t_1))) | 0);
+      return ((1 + lamCount(lib$base$Option$getOr(lib$base$List$head$p(lib$base$Sexp$args(t_1)), t_1))) | 0);
     } else {
       return 0;
     }
   }
-  const unnamed = lib$base$List$all(({ "Print.definition/\u03bb": (x_1) => (x_1 === "") })["Print.definition/\u03bb"], lib$base$List$take(rt.ap(lamCount, core), rt.prims["Ref.get"](Printer$supply(p))));
-  const t2 = rt.ap(params, core, rt.NIL, rt.NIL);
+  const unnamed = lib$base$List$all(({ "Print.definition/\u03bb": (x_1) => (x_1 === "") })["Print.definition/\u03bb"], lib$base$List$take(lamCount(core), rt.prims["Ref.get"](Printer$supply(p))));
+  const t2 = params(core, rt.NIL, rt.NIL);
   m3: {
     if (t2.tag === 0 && t2.fields[1].tag === 0 && t2.fields[1].fields[0].tag === 3 && t2.fields[1].fields[0].fields[0].tag === 1 && t2.fields[1].fields[0].fields[0].fields[0].tag === 1 && t2.fields[1].fields[0].fields[0].fields[0].fields[0] === "match" && t2.fields[1].fields[0].fields[0].fields[1].tag === 1) {
       const names = t2.fields[0];
@@ -8292,7 +8292,7 @@ function Print$restoreAll(notes, spellings, notations, core) {
                 if (rest.tag === 1) {
                   const y = rest.fields[0];
                   const more = rest.fields[1];
-                  const t3 = rt.ap(go, y, c);
+                  const t3 = go(y, c);
                   m4: {
                     if (t3.tag === 0) {
                       const y2 = t3.fields[0];
@@ -8309,7 +8309,7 @@ function Print$restoreAll(notes, spellings, notations, core) {
               }
             }
           }
-          const t5 = rt.ap(each, items, rt.NIL, ((count + 1) | 0));
+          const t5 = each(items, rt.NIL, ((count + 1) | 0));
           m6: {
             if (t5.tag === 0) {
               const children = t5.fields[0];
@@ -8350,7 +8350,7 @@ function Print$restoreAll(notes, spellings, notations, core) {
         rt.nomatch(x);
       }
     }
-    return lib$base$fst(rt.ap(go, core, 0));
+    return lib$base$fst(go(core, 0));
   }
 }
 rt.named(Print$restoreAll, "Print.restoreAll");
@@ -8399,7 +8399,7 @@ function View$theoremDecl(p, name, types, prop, proof) {
       }
     }
   }
-  const t1 = rt.ap(params, prop, rt.NIL, rt.NIL);
+  const t1 = params(prop, rt.NIL, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[1].tag === 0) {
       const names = t1.fields[0];
@@ -8438,7 +8438,7 @@ function View$theoremDecl(p, name, types, prop, proof) {
           if (prop_1.tag === 3 && prop_1.fields[0].tag === 1 && prop_1.fields[0].fields[0].tag === 1 && prop_1.fields[0].fields[0].fields[0] === "app" && prop_1.fields[0].fields[1].tag === 1 && prop_1.fields[0].fields[1].fields[0].tag === 3 && prop_1.fields[0].fields[1].fields[0].fields[0].tag === 1 && prop_1.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && prop_1.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "prim" && prop_1.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && prop_1.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && prop_1.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "implies" && prop_1.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0 && prop_1.fields[0].fields[1].fields[1].tag === 1 && prop_1.fields[0].fields[1].fields[1].fields[1].tag === 1 && prop_1.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
             const hyp = prop_1.fields[0].fields[1].fields[1].fields[0];
             const rest = prop_1.fields[0].fields[1].fields[1].fields[1].fields[0];
-            return rt.cons(hyp, rt.ap(parts, rest));
+            return rt.cons(hyp, parts(rest));
           }
           if (true) {
             return rt.cons(prop_1, rt.NIL);
@@ -8446,7 +8446,7 @@ function View$theoremDecl(p, name, types, prop, proof) {
           rt.nomatch(prop_1);
         }
       }
-      return rt.prims["append"]((rt.prims["append"]((rt.prims["append"](("theorem " + name), binders) + " : "), rt.prims["Text.join"](" -> ", lib$base$List$map(({ "View.theoremDecl/\u03bb": (part) => Print$expr(p, part, env_1, 2, 0) })["View.theoremDecl/\u03bb"], rt.ap(parts, b_1)))) + " := "), proofText);
+      return rt.prims["append"]((rt.prims["append"]((rt.prims["append"](("theorem " + name), binders) + " : "), rt.prims["Text.join"](" -> ", lib$base$List$map(({ "View.theoremDecl/\u03bb": (part) => Print$expr(p, part, env_1, 2, 0) })["View.theoremDecl/\u03bb"], parts(b_1)))) + " := "), proofText);
     }
     rt.nomatch(t1);
   }
@@ -8703,7 +8703,7 @@ function Mdl$indentOf(line) {
       }
     }
   }
-  return rt.ap(go, 0);
+  return go(0);
 }
 rt.named(Mdl$indentOf, "Mdl.indentOf");
 
@@ -8893,7 +8893,7 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  return rt.ap(go, 0);
+  return go(0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
 
@@ -8948,7 +8948,7 @@ function Analytics$parts(ref) {
       }
     }
   }
-  const mark = rt.ap(lastHash, ((rt.prims["Text.length"](ref) - 1) | 0));
+  const mark = lastHash(((rt.prims["Text.length"](ref) - 1) | 0));
   if ((mark < 0)) {
     return new rt.Con("#Pair", 0, [ref, ""]);
   } else {
@@ -9079,7 +9079,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
                 m9: {
                   if (t8.tag === 1) {
                     const problem = t8.fields[0];
-                    return rt.ap(refused, problem);
+                    return refused(problem);
                   }
                   if (t8.tag === 0) {
                     const t10 = lib$base$try(({ "Cli.loadRuleWith/\u03bb": (v_6) => Image$load(({ "Cli.loadRuleWith/\u03bb": (x) => Codebase$readObject(dir, x) })["Cli.loadRuleWith/\u03bb"], rt.cons(h, rt.NIL)) })["Cli.loadRuleWith/\u03bb"]);
@@ -9103,7 +9103,7 @@ function Cli$loadRuleWith(types, dir, ns, name) {
                       }
                       if (t10.tag === 1) {
                         const e = t10.fields[0];
-                        return rt.ap(refused, ("could not be loaded: " + e));
+                        return refused(("could not be loaded: " + e));
                       }
                       rt.nomatch(t10);
                     }
@@ -9134,7 +9134,7 @@ rt.named(Cli$loadRuleWith, "Cli.loadRuleWith");
 
 function Cli$notationTypes(ns) {
   const typeNamed = ({ "Cli.notationTypes/\u03bb": (name) => Cli$ownOrMounted(ns, name) })["Cli.notationTypes/\u03bb"];
-  const t0 = new rt.Con("#Pair", 0, [rt.ap(typeNamed, "Syntax.Notation"), rt.ap(typeNamed, "Syntax.Part")]);
+  const t0 = new rt.Con("#Pair", 0, [typeNamed("Syntax.Notation"), typeNamed("Syntax.Part")]);
   m1: {
     if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[0].fields[0].tag === 2 && t0.fields[1].tag === 1 && t0.fields[1].fields[0].tag === 2) {
       const n = t0.fields[0].fields[0].fields[0];
@@ -9190,7 +9190,7 @@ function Ts$params(p, t, env) {
       }
     }
   }
-  return rt.ap(go, t, env, rt.NIL);
+  return go(t, env, rt.NIL);
 }
 rt.named(Ts$params, "Ts.params");
 
@@ -9273,7 +9273,7 @@ function Ts$typeVars(t) {
       }
       if (x.tag === 3) {
         const items = x.fields[0];
-        return lib$base$List$foldl(({ "Ts.typeVars/\u03bb": (a2, item) => rt.ap(go, item, a2) })["Ts.typeVars/\u03bb"], acc, items);
+        return lib$base$List$foldl(({ "Ts.typeVars/\u03bb": (a2, item) => go(item, a2) })["Ts.typeVars/\u03bb"], acc, items);
       }
       if (true) {
         return acc;
@@ -9281,7 +9281,7 @@ function Ts$typeVars(t) {
       rt.nomatch(x);
     }
   }
-  return rt.ap(go, t, rt.NIL);
+  return go(t, rt.NIL);
 }
 rt.named(Ts$typeVars, "Ts.typeVars");
 
@@ -9757,7 +9757,7 @@ function Print$bind(p, env) {
       }
     }
   }
-  return rt.ap(unique, base, 1);
+  return unique(base, 1);
 }
 rt.named(Print$bind, "Print.bind");
 
@@ -10251,7 +10251,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             }
           }
         }
-        const t6 = rt.ap(params, t, env, rt.NIL);
+        const t6 = params(t, env, rt.NIL);
         m7: {
           if (t6.tag === 0 && t6.fields[1].tag === 0) {
             const names = t6.fields[0];
@@ -10333,7 +10333,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
               }
             }
           }
-          const t13 = rt.ap(args, arity, env, rt.NIL);
+          const t13 = args(arity, env, rt.NIL);
           m14: {
             if (t13.tag === 0) {
               const names_1 = t13.fields[0];
@@ -10585,7 +10585,7 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
                 const c = args.fields[1].fields[0];
                 const p = args.fields[1].fields[1].fields[0];
                 const r = args.fields[1].fields[1].fields[1].fields[0];
-                const t4 = new rt.Con("#Pair", 0, [rt.ap(number, i), new rt.Con("#Pair", 0, [rt.ap(text, c), new rt.Con("#Pair", 0, [rt.ap(number, p), rt.ap(text, r)])])]);
+                const t4 = new rt.Con("#Pair", 0, [number(i), new rt.Con("#Pair", 0, [text(c), new rt.Con("#Pair", 0, [number(p), text(r)])])]);
                 m5: {
                   if (t4.tag === 0 && t4.fields[0].tag === 1 && t4.fields[1].tag === 0 && t4.fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].tag === 0 && t4.fields[1].fields[1].fields[0].tag === 1 && t4.fields[1].fields[1].fields[1].tag === 1) {
                     const index = t4.fields[0].fields[0];
@@ -10625,7 +10625,7 @@ function Syntax$decodeRule(notationType, partType, key, fqn, core) {
       if (!rt.equal(t_1, notationType)) {
         return rt.con0("#Option", 0);
       } else {
-        const t7 = new rt.Con("#Pair", 0, [rt.ap(text, category_1), new rt.Con("#Pair", 0, [rt.ap(number, prec_1), Print$listItems(parts)])]);
+        const t7 = new rt.Con("#Pair", 0, [text(category_1), new rt.Con("#Pair", 0, [number(prec_1), Print$listItems(parts)])]);
         m8: {
           if (t7.tag === 0 && t7.fields[0].tag === 1 && t7.fields[1].tag === 0 && t7.fields[1].fields[0].tag === 1 && t7.fields[1].fields[1].tag === 1) {
             const c_1 = t7.fields[0].fields[0];
@@ -10742,7 +10742,7 @@ function Syntax$elaboratorProblem(scheme, holes) {
   m4: {
     if (scheme.tag === 3 && scheme.fields[0].tag === 1 && scheme.fields[0].fields[0].tag === 1 && scheme.fields[0].fields[0].fields[0] === "tapp" && scheme.fields[0].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].tag === 1 && scheme.fields[0].fields[1].fields[1].fields[1].tag === 0) {
       const expansion = scheme.fields[0].fields[1].fields[1].fields[0];
-      return rt.ap(walk, expansion, 0);
+      return walk(expansion, 0);
     }
     if (true) {
       return new rt.Con("#Option", 1, ["has no Notation type"]);
@@ -10862,10 +10862,10 @@ function Print$mentions(name, text) {
         if ((found === 0)) {
           r1 = true;
         } else {
-          r1 = lib$base$not(rt.ap(isWord, rt.prims["Text.code"](text, ((found - 1) | 0))));
+          r1 = lib$base$not(isWord(rt.prims["Text.code"](text, ((found - 1) | 0))));
         }
         if (r1) {
-          r0 = lib$base$not(rt.ap(isWord, rt.prims["Text.code"](text, ((found + n) | 0))));
+          r0 = lib$base$not(isWord(rt.prims["Text.code"](text, ((found + n) | 0))));
         } else {
           r0 = false;
         }
@@ -10878,7 +10878,7 @@ function Print$mentions(name, text) {
       }
     }
   }
-  return rt.ap(scan, 0);
+  return scan(0);
 }
 rt.named(Print$mentions, "Print.mentions");
 
@@ -11141,7 +11141,7 @@ function Ts$stmts(p, t, env, ind, ret) {
               }
             }
           }
-          const t18 = rt.ap(args, arity, env, rt.NIL);
+          const t18 = args(arity, env, rt.NIL);
           m19: {
             if (t18.tag === 0) {
               const names_1 = t18.fields[0];
@@ -11231,7 +11231,7 @@ function View$paramNames(count, used) {
       }
     }
   }
-  return rt.ap(pick, 0, rt.NIL);
+  return pick(0, rt.NIL);
 }
 rt.named(View$paramNames, "View.paramNames");
 
@@ -11457,7 +11457,7 @@ function Print$patternAt(p, pat, env, prec) {
               }
             }
           }
-          const t18 = rt.ap(go, subs, env, rt.NIL);
+          const t18 = go(subs, env, rt.NIL);
           m19: {
             if (t18.tag === 0) {
               const texts = t18.fields[0];
@@ -11502,7 +11502,7 @@ function Print$lambdaHead(p, fn, env, ind) {
       }
     }
   }
-  const t1 = rt.ap(params, fn, env, rt.NIL);
+  const t1 = params(fn, env, rt.NIL);
   m2: {
     if (t1.tag === 0 && t1.fields[1].tag === 0) {
       const names = t1.fields[0];
@@ -11851,7 +11851,7 @@ function Image$closure(fetch, roots) {
       }
     }
   }
-  return lib$base$List$sortBy(({ "Image.closure/\u03bb": (a, b) => rt.prims["compare"](lib$base$fst(a), lib$base$fst(b)) })["Image.closure/\u03bb"], rt.ap(go, roots, lib$base$Set$empty(), rt.NIL));
+  return lib$base$List$sortBy(({ "Image.closure/\u03bb": (a, b) => rt.prims["compare"](lib$base$fst(a), lib$base$fst(b)) })["Image.closure/\u03bb"], go(roots, lib$base$Set$empty(), rt.NIL));
 }
 rt.named(Image$closure, "Image.closure");
 
@@ -12110,7 +12110,7 @@ function Ts$pattern(p, pat, env) {
             }
           }
         }
-        const t15 = rt.ap(go, subs, env, rt.NIL);
+        const t15 = go(subs, env, rt.NIL);
         m16: {
           if (t15.tag === 0) {
             const texts = t15.fields[0];
@@ -12187,7 +12187,7 @@ function lib$base$List$replicate(n, x) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, n);
+  return go(rt.NIL, n);
 }
 rt.named(lib$base$List$replicate, "lib.base.List.replicate");
 
@@ -12278,7 +12278,7 @@ function Syntax$holesOf(template, count, term) {
                   const a = triple.fields[0].fields[0];
                   const b = triple.fields[0].fields[1];
                   const extra = triple.fields[1];
-                  return rt.ap(walk, a, b, ((depth + extra) | 0));
+                  return walk(a, b, ((depth + extra) | 0));
                 }
                 rt.nomatch(triple);
               }
@@ -12302,7 +12302,7 @@ function Syntax$holesOf(template, count, term) {
       }
     }
   }
-  rt.ap(walk, Syntax$templateBody(template, count), term, 0);
+  walk(Syntax$templateBody(template, count), term, 0);
   if (lib$base$not(rt.prims["Ref.get"](fits))) {
     return rt.con0("#Option", 0);
   } else {
@@ -12347,7 +12347,7 @@ function Syntax$holeSlices(template, count, term) {
               const a = triple.fields[0].fields[0];
               const b = triple.fields[0].fields[1];
               const extra = triple.fields[1];
-              return rt.ap(walk, a, b, ((depth + extra) | 0));
+              return walk(a, b, ((depth + extra) | 0));
             }
             rt.nomatch(triple);
           }
@@ -12365,14 +12365,14 @@ function Syntax$holeSlices(template, count, term) {
       rt.nomatch(t);
     }
   }
-  rt.ap(walk, Syntax$templateBody(template, count), term, 0);
+  walk(Syntax$templateBody(template, count), term, 0);
   return new rt.Con("#Pair", 0, [rt.prims["Ref.get"](slices), rt.prims["Ref.get"](used)]);
 }
 rt.named(Syntax$holeSlices, "Syntax.holeSlices");
 
 function Print$notationText(p, rule, holes, named, env, ind) {
   const render = ({ "Print.notationText/\u03bb": (at) => Print$pieces(p, rule, holes, named, env, at) })["Print.notationText/\u03bb"];
-  const t0 = rt.ap(render, ind);
+  const t0 = render(ind);
   m1: {
     if (t0.tag === 0) {
       return rt.con0("#Option", 0);
@@ -12431,7 +12431,7 @@ function Print$notationText(p, rule, holes, named, env, ind) {
       if (r7) {
         return new rt.Con("#Option", 1, [flat]);
       } else {
-        const t8 = new rt.Con("#Pair", 0, [lastRepeat, rt.ap(render, ((ind + 2) | 0))]);
+        const t8 = new rt.Con("#Pair", 0, [lastRepeat, render(((ind + 2) | 0))]);
         m9: {
           if (t8.tag === 0 && t8.fields[0].tag === 1 && t8.fields[1].tag === 1) {
             const k_2 = t8.fields[0].fields[0];
@@ -12494,7 +12494,7 @@ function Types$rowToSexp(r) {
       }
     }
   }
-  return lib$base$Sexp$node("eff", rt.ap(items, r, rt.NIL));
+  return lib$base$Sexp$node("eff", items(r, rt.NIL));
 }
 rt.named(Types$rowToSexp, "Types.rowToSexp");
 
@@ -12627,13 +12627,13 @@ function Syntax$binderCounts(items) {
   } })["Syntax.binderCounts/\u03bb"], lib$base$List$range(0, ((last + 1) | 0))) })["Syntax.binderCounts/\u03bb"];
   m0: {
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "lam") {
-      return rt.ap(onLast, 1);
+      return onLast(1);
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "let") {
-      return rt.ap(onLast, 1);
+      return onLast(1);
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "ret") {
-      return rt.ap(onLast, 1);
+      return onLast(1);
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "letrec") {
       const fns = lib$base$Option$getOr(lib$base$List$get$p(items, ((last - 1) | 0)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL]));
@@ -12648,15 +12648,15 @@ function Syntax$binderCounts(items) {
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "case" && items.fields[1].tag === 1) {
       const pat = items.fields[1].fields[0];
-      return rt.ap(onLast, Syntax$patternBinders(pat));
+      return onLast(Syntax$patternBinders(pat));
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "on" && items.fields[1].tag === 1 && items.fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].fields[1].fields[0].tag === 3 && items.fields[1].fields[1].fields[1].fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const names = items.fields[1].fields[1].fields[1].fields[1].fields[0].fields[0];
-      return rt.ap(onLast, lib$base$List$length(names));
+      return onLast(lib$base$List$length(names));
     }
     if (items.tag === 1 && items.fields[0].tag === 1 && items.fields[0].fields[0] === "on" && items.fields[1].tag === 1 && items.fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].fields[0].tag === 0 && items.fields[1].fields[1].fields[1].fields[1].tag === 1 && items.fields[1].fields[1].fields[1].fields[1].fields[1].tag === 0) {
       const arity = items.fields[1].fields[1].fields[1].fields[0].fields[0];
-      return rt.ap(onLast, ((arity + 1) | 0));
+      return onLast(((arity + 1) | 0));
     }
     if (true) {
       return lib$base$List$map(({ "Syntax.binderCounts/\u03bb": (v) => 0 })["Syntax.binderCounts/\u03bb"], items);
@@ -12820,7 +12820,7 @@ function Print$pieces(p, rule, holes, named, env, ind) {
                     }
                   }
                 }
-                const t9 = rt.ap(each, items, 0, rt.NIL);
+                const t9 = each(items, 0, rt.NIL);
                 m10: {
                   if (t9.tag === 1) {
                     const texts = t9.fields[0];
@@ -13084,8 +13084,8 @@ function Print$needsSpace(a, b) {
 } })["Print.needsSpace/\u03bb"];
   const pair = rt.prims["append"](rt.prims["Text.fromCode"](a), rt.prims["Text.fromCode"](b));
   let r0;
-  if (rt.ap(wordish, a)) {
-    r0 = rt.ap(wordish, b);
+  if (wordish(a)) {
+    r0 = wordish(b);
   } else {
     r0 = false;
   }
@@ -13233,14 +13233,14 @@ function Lexer$lex(source) {
   function identEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
-      const c = rt.ap(at, i_1);
+      const c = at(i_1);
       if (Lexer$isIdentPart(c)) {
         i_1$ = ((i_1 + 1) | 0);
         continue;
       } else {
         let r0;
         if ((c === 46)) {
-          r0 = Lexer$isIdentStart(rt.ap(at, ((i_1 + 1) | 0)));
+          r0 = Lexer$isIdentStart(at(((i_1 + 1) | 0)));
         } else {
           r0 = false;
         }
@@ -13257,10 +13257,10 @@ function Lexer$lex(source) {
     for (;;) {
       const i_2 = i_2$;
       let r1;
-      if (lib$base$Text$isDigit(rt.ap(at, i_2))) {
+      if (lib$base$Text$isDigit(at(i_2))) {
         r1 = true;
       } else {
-        r1 = (rt.ap(at, i_2) === 95);
+        r1 = (at(i_2) === 95);
       }
       if (r1) {
         i_2$ = ((i_2 + 1) | 0);
@@ -13274,10 +13274,10 @@ function Lexer$lex(source) {
     for (;;) {
       const i_3 = i_3$;
       let r2;
-      if (Lexer$isHex(rt.ap(at, i_3))) {
+      if (Lexer$isHex(at(i_3))) {
         r2 = true;
       } else {
-        r2 = (rt.ap(at, i_3) === 95);
+        r2 = (at(i_3) === 95);
       }
       if (r2) {
         i_3$ = ((i_3 + 1) | 0);
@@ -13294,7 +13294,7 @@ function Lexer$lex(source) {
       if (rt.prims["ge"](i_4, n)) {
         r3 = true;
       } else {
-        r3 = (rt.ap(at, i_4) === 10);
+        r3 = (at(i_4) === 10);
       }
       if (r3) {
         return i_4;
@@ -13311,8 +13311,8 @@ function Lexer$lex(source) {
         return new rt.Con("#Pair", 0, [i_5, new rt.Con("#Pair", 0, [line, lineStart])]);
       } else {
         let r4;
-        if ((rt.ap(at, i_5) === 47)) {
-          r4 = (rt.ap(at, ((i_5 + 1) | 0)) === 45);
+        if ((at(i_5) === 47)) {
+          r4 = (at(((i_5 + 1) | 0)) === 45);
         } else {
           r4 = false;
         }
@@ -13324,8 +13324,8 @@ function Lexer$lex(source) {
           continue;
         } else {
           let r5;
-          if ((rt.ap(at, i_5) === 45)) {
-            r5 = (rt.ap(at, ((i_5 + 1) | 0)) === 47);
+          if ((at(i_5) === 45)) {
+            r5 = (at(((i_5 + 1) | 0)) === 47);
           } else {
             r5 = false;
           }
@@ -13340,7 +13340,7 @@ function Lexer$lex(source) {
               continue;
             }
           } else {
-            if ((rt.ap(at, i_5) === 10)) {
+            if ((at(i_5) === 10)) {
               i_5$ = ((i_5 + 1) | 0);
               depth$ = depth;
               line$ = ((line + 1) | 0);
@@ -13361,7 +13361,7 @@ function Lexer$lex(source) {
   function stringEnd(i_6$, acc$, line_1$, lineStart_1$) {
     for (;;) {
       const i_6 = i_6$, acc = acc$, line_1 = line_1$, lineStart_1 = lineStart_1$;
-      const c_1 = rt.ap(at, i_6);
+      const c_1 = at(i_6);
       if (rt.prims["ge"](i_6, n)) {
         return new rt.Con("#Pair", 0, ["", new rt.Con("#Pair", 0, [(-1), new rt.Con("#Pair", 0, [line_1, lineStart_1])])]);
       } else {
@@ -13369,10 +13369,10 @@ function Lexer$lex(source) {
           return new rt.Con("#Pair", 0, [rt.prims["Text.fromCodes"](lib$base$List$reverse(acc)), new rt.Con("#Pair", 0, [((i_6 + 1) | 0), new rt.Con("#Pair", 0, [line_1, lineStart_1])])]);
         } else {
           if ((c_1 === 92)) {
-            const e = rt.ap(at, ((i_6 + 1) | 0));
+            const e = at(((i_6 + 1) | 0));
             let r6;
             if ((e === 117)) {
-              r6 = (rt.ap(at, ((i_6 + 2) | 0)) === 123);
+              r6 = (at(((i_6 + 2) | 0)) === 123);
             } else {
               r6 = false;
             }
@@ -13380,7 +13380,7 @@ function Lexer$lex(source) {
               function digitsEnd1(j$) {
                 for (;;) {
                   const j = j$;
-                  if (Lexer$isHex(rt.ap(at, j))) {
+                  if (Lexer$isHex(at(j))) {
                     j$ = ((j + 1) | 0);
                     continue;
                   } else {
@@ -13388,12 +13388,12 @@ function Lexer$lex(source) {
                   }
                 }
               }
-              const close = rt.ap(digitsEnd1, ((i_6 + 3) | 0));
+              const close = digitsEnd1(((i_6 + 3) | 0));
               let r7;
               if (rt.equal(close, ((i_6 + 3) | 0))) {
                 r7 = true;
               } else {
-                r7 = (rt.ap(at, close) !== 125);
+                r7 = (at(close) !== 125);
               }
               if (r7) {
                 return Lexer$fail(line_1, ((i_6 - lineStart_1) | 0), "malformed \\u{} escape");
@@ -13435,11 +13435,11 @@ function Lexer$lex(source) {
     for (;;) {
       const i_7 = i_7$, line_2 = line_2$, lineStart_2 = lineStart_2$, bol = bol$, acc_1 = acc_1$;
       const spelled = ({ "Lexer.lex/\u03bb": (kind, value, spelling, start) => rt.cons(new rt.Con("b0d10dbd9f533e473e76eddc55de28a33c048d1bd676d9e8b365a2a8f2fc8a5c", 0, [kind, value, line_2, ((start - lineStart_2) | 0), bol, spelling]), acc_1) })["Lexer.lex/\u03bb"];
-      const tok = ({ "Lexer.lex/\u03bb": (kind_1, value_1, start_1) => rt.ap(spelled, kind_1, value_1, "", start_1) })["Lexer.lex/\u03bb"];
+      const tok = ({ "Lexer.lex/\u03bb": (kind_1, value_1, start_1) => spelled(kind_1, value_1, "", start_1) })["Lexer.lex/\u03bb"];
       if (rt.prims["ge"](i_7, n)) {
         return lib$base$List$reverse(rt.cons(new rt.Con("b0d10dbd9f533e473e76eddc55de28a33c048d1bd676d9e8b365a2a8f2fc8a5c", 0, [rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 8), "", line_2, 0, true, ""]), acc_1));
       } else {
-        const c_2 = rt.ap(at, i_7);
+        const c_2 = at(i_7);
         const col = ((i_7 - lineStart_2) | 0);
         if ((c_2 === 10)) {
           i_7$ = ((i_7 + 1) | 0);
@@ -13469,12 +13469,12 @@ function Lexer$lex(source) {
           } else {
             let r9;
             if ((c_2 === 45)) {
-              r9 = (rt.ap(at, ((i_7 + 1) | 0)) === 45);
+              r9 = (at(((i_7 + 1) | 0)) === 45);
             } else {
               r9 = false;
             }
             if (r9) {
-              const j_1 = rt.ap(lineEnd, i_7);
+              const j_1 = lineEnd(i_7);
               i_7$ = j_1;
               line_2$ = line_2;
               lineStart_2$ = lineStart_2;
@@ -13484,18 +13484,18 @@ function Lexer$lex(source) {
             } else {
               let r10;
               if ((c_2 === 47)) {
-                r10 = (rt.ap(at, ((i_7 + 1) | 0)) === 45);
+                r10 = (at(((i_7 + 1) | 0)) === 45);
               } else {
                 r10 = false;
               }
               if (r10) {
                 let isDoc;
-                if ((rt.ap(at, ((i_7 + 2) | 0)) === 45)) {
-                  isDoc = (rt.ap(at, ((i_7 + 3) | 0)) !== 47);
+                if ((at(((i_7 + 2) | 0)) === 45)) {
+                  isDoc = (at(((i_7 + 3) | 0)) !== 47);
                 } else {
                   isDoc = false;
                 }
-                const t11 = rt.ap(commentEnd, i_7, 0, line_2, lineStart_2);
+                const t11 = commentEnd(i_7, 0, line_2, lineStart_2);
                 m12: {
                   if (t11.tag === 0 && t11.fields[1].tag === 0) {
                     const j_2 = t11.fields[0];
@@ -13522,7 +13522,7 @@ function Lexer$lex(source) {
                 }
               } else {
                 if ((c_2 === 34)) {
-                  const t13 = rt.ap(stringEnd, ((i_7 + 1) | 0), rt.NIL, line_2, lineStart_2);
+                  const t13 = stringEnd(((i_7 + 1) | 0), rt.NIL, line_2, lineStart_2);
                   m14: {
                     if (t13.tag === 0 && t13.fields[1].tag === 0 && t13.fields[1].fields[0] === (-1) && t13.fields[1].fields[1].tag === 0) {
                       return Lexer$fail(line_2, col, "unterminated string");
@@ -13536,19 +13536,19 @@ function Lexer$lex(source) {
                       line_2$ = line2_1;
                       lineStart_2$ = lineStart2_1;
                       bol$ = false;
-                      acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 4), value_2, i_7);
+                      acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 4), value_2, i_7);
                       continue;
                     }
                     rt.nomatch(t13);
                   }
                 } else {
                   if ((c_2 === 39)) {
-                    const isEscape = (rt.ap(at, ((i_7 + 1) | 0)) === 92);
+                    const isEscape = (at(((i_7 + 1) | 0)) === 92);
                     let code_1;
                     if (isEscape) {
-                      code_1 = Lexer$escape(rt.ap(at, ((i_7 + 2) | 0)));
+                      code_1 = Lexer$escape(at(((i_7 + 2) | 0)));
                     } else {
-                      code_1 = rt.ap(at, ((i_7 + 1) | 0));
+                      code_1 = at(((i_7 + 1) | 0));
                     }
                     let close_1;
                     if (isEscape) {
@@ -13556,36 +13556,36 @@ function Lexer$lex(source) {
                     } else {
                       close_1 = ((i_7 + 2) | 0);
                     }
-                    if ((rt.ap(at, close_1) !== 39)) {
+                    if ((at(close_1) !== 39)) {
                       return Lexer$fail(line_2, col, "bad character literal");
                     } else {
                       i_7$ = ((close_1 + 1) | 0);
                       line_2$ = line_2;
                       lineStart_2$ = lineStart_2;
                       bol$ = false;
-                      acc_1$ = rt.ap(spelled, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 3), rt.prims["Int.toText"](code_1), rt.prims["Text.slice"](source, i_7, ((close_1 + 1) | 0)), i_7);
+                      acc_1$ = spelled(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 3), rt.prims["Int.toText"](code_1), rt.prims["Text.slice"](source, i_7, ((close_1 + 1) | 0)), i_7);
                       continue;
                     }
                   } else {
                     if (lib$base$Text$isDigit(c_2)) {
                       let r15;
                       if ((c_2 === 48)) {
-                        r15 = (rt.ap(at, ((i_7 + 1) | 0)) === 120);
+                        r15 = (at(((i_7 + 1) | 0)) === 120);
                       } else {
                         r15 = false;
                       }
                       if (r15) {
-                        const j_4 = rt.ap(hexEnd, ((i_7 + 2) | 0));
+                        const j_4 = hexEnd(((i_7 + 2) | 0));
                         const digits = lib$base$List$filter(({ "Lexer.lex/\u03bb": (d_1) => (d_1 !== 95) })["Lexer.lex/\u03bb"], lib$base$List$map(at, lib$base$List$range(((i_7 + 2) | 0), j_4)));
                         const value_3 = lib$base$List$foldl(({ "Lexer.lex/\u03bb": (v_1, d_2) => ((Math.imul(v_1, 16) + Lexer$hexValue(d_2)) | 0) })["Lexer.lex/\u03bb"], 0, digits);
                         i_7$ = j_4;
                         line_2$ = line_2;
                         lineStart_2$ = lineStart_2;
                         bol$ = false;
-                        acc_1$ = rt.ap(spelled, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 3), rt.prims["Int.toText"](value_3), rt.prims["Text.slice"](source, i_7, j_4), i_7);
+                        acc_1$ = spelled(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 3), rt.prims["Int.toText"](value_3), rt.prims["Text.slice"](source, i_7, j_4), i_7);
                         continue;
                       } else {
-                        const j_5 = rt.ap(digitsEnd, i_7);
+                        const j_5 = digitsEnd(i_7);
                         const written = rt.prims["Text.slice"](source, i_7, j_5);
                         const value_4 = lib$base$Text$replace("_", "", written);
                         const t16 = rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 3);
@@ -13595,7 +13595,7 @@ function Lexer$lex(source) {
                         } else {
                           r17 = written;
                         }
-                        const t18 = rt.ap(spelled, t16, value_4, r17, i_7);
+                        const t18 = spelled(t16, value_4, r17, i_7);
                         i_7$ = j_5;
                         line_2$ = line_2;
                         lineStart_2$ = lineStart_2;
@@ -13606,18 +13606,18 @@ function Lexer$lex(source) {
                     } else {
                       let r19;
                       if ((c_2 === 46)) {
-                        r19 = Lexer$isIdentStart(rt.ap(at, ((i_7 + 1) | 0)));
+                        r19 = Lexer$isIdentStart(at(((i_7 + 1) | 0)));
                       } else {
                         r19 = false;
                       }
                       if (r19) {
-                        const j_6 = rt.ap(identEnd, ((i_7 + 1) | 0));
+                        const j_6 = identEnd(((i_7 + 1) | 0));
                         let kind_2;
                         let r20;
-                        if ((rt.ap(at, ((i_7 - 1) | 0)) === 41)) {
+                        if ((at(((i_7 - 1) | 0)) === 41)) {
                           r20 = true;
                         } else {
-                          r20 = (rt.ap(at, ((i_7 - 1) | 0)) === 93);
+                          r20 = (at(((i_7 - 1) | 0)) === 93);
                         }
                         if (r20) {
                           kind_2 = rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 2);
@@ -13628,14 +13628,14 @@ function Lexer$lex(source) {
                         line_2$ = line_2;
                         lineStart_2$ = lineStart_2;
                         bol$ = false;
-                        acc_1$ = rt.ap(tok, kind_2, rt.prims["Text.slice"](source, ((i_7 + 1) | 0), j_6), i_7);
+                        acc_1$ = tok(kind_2, rt.prims["Text.slice"](source, ((i_7 + 1) | 0), j_6), i_7);
                         continue;
                       } else {
                         let r21;
                         if (Lexer$isIdentStart(c_2)) {
                           let r22;
                           if ((c_2 === 95)) {
-                            r22 = lib$base$not(Lexer$isIdentPart(rt.ap(at, ((i_7 + 1) | 0))));
+                            r22 = lib$base$not(Lexer$isIdentPart(at(((i_7 + 1) | 0))));
                           } else {
                             r22 = false;
                           }
@@ -13644,14 +13644,14 @@ function Lexer$lex(source) {
                           r21 = false;
                         }
                         if (r21) {
-                          const j_7 = rt.ap(identEnd, i_7);
+                          const j_7 = identEnd(i_7);
                           const word = rt.prims["Text.slice"](source, i_7, j_7);
                           if ((word === "\u03bb")) {
                             i_7$ = j_7;
                             line_2$ = line_2;
                             lineStart_2$ = lineStart_2;
                             bol$ = false;
-                            acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 6), "fun", i_7);
+                            acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 6), "fun", i_7);
                             continue;
                           } else {
                             if (rt.prims["Dict.contains"](word, Lexer$keywords())) {
@@ -13659,14 +13659,14 @@ function Lexer$lex(source) {
                               line_2$ = line_2;
                               lineStart_2$ = lineStart_2;
                               bol$ = false;
-                              acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 6), word, i_7);
+                              acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 6), word, i_7);
                               continue;
                             } else {
                               i_7$ = j_7;
                               line_2$ = line_2;
                               lineStart_2$ = lineStart_2;
                               bol$ = false;
-                              acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 0), word, i_7);
+                              acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 0), word, i_7);
                               continue;
                             }
                           }
@@ -13677,7 +13677,7 @@ function Lexer$lex(source) {
                             line_2$ = line_2;
                             lineStart_2$ = lineStart_2;
                             bol$ = false;
-                            acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), mapped, i_7);
+                            acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), mapped, i_7);
                             continue;
                           } else {
                             const two = rt.prims["Text.slice"](source, i_7, ((i_7 + 2) | 0));
@@ -13686,7 +13686,7 @@ function Lexer$lex(source) {
                               line_2$ = line_2;
                               lineStart_2$ = lineStart_2;
                               bol$ = false;
-                              acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), two, i_7);
+                              acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), two, i_7);
                               continue;
                             } else {
                               const one = rt.prims["Text.slice"](source, i_7, ((i_7 + 1) | 0));
@@ -13695,7 +13695,7 @@ function Lexer$lex(source) {
                                 line_2$ = line_2;
                                 lineStart_2$ = lineStart_2;
                                 bol$ = false;
-                                acc_1$ = rt.ap(tok, rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
+                                acc_1$ = tok(rt.con0("40fc4ce26e71460a826814ce944203c3035b529f44427ff0d29d85e1490e32e3", 5), one, i_7);
                                 continue;
                               } else {
                                 return Lexer$fail(line_2, col, ("unexpected character " + one));
@@ -13714,7 +13714,7 @@ function Lexer$lex(source) {
       }
     }
   }
-  return rt.ap(go, 0, 1, 0, true, rt.NIL);
+  return go(0, 1, 0, true, rt.NIL);
 }
 rt.named(Lexer$lex, "Lexer.lex");
 

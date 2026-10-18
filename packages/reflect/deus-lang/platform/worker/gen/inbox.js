@@ -96,7 +96,7 @@ function List$filter(p, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filter, "List.filter");
 
@@ -125,7 +125,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -316,7 +316,7 @@ function lib$base$Sexp$readAll(t) {
                 }
               } else {
                 if ((c_1 === 34)) {
-                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  const t6 = readString(((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
                   m7: {
                     if (t6.tag === 0) {
                       const value = t6.fields[0];
@@ -337,7 +337,7 @@ function lib$base$Sexp$readAll(t) {
                     rt.nomatch(t6);
                   }
                 } else {
-                  const j_2 = rt.ap(atomEnd, i_2);
+                  const j_2 = atomEnd(i_2);
                   const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
                   const t10 = rt.prims["Int.fromText"](atom);
@@ -373,7 +373,7 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, rt.NIL);
+  return go(0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
@@ -435,7 +435,7 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
 
@@ -460,7 +460,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
@@ -506,7 +506,7 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      return rt.ap(go, true, items, rt.cons("(", acc));
+      return go(true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
   }
@@ -627,7 +627,7 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    return (("\"" + rt.prims["Text.concat"](List$reverse(rt.ap(go, 0, 0, rt.NIL)))) + "\"");
+    return (("\"" + rt.prims["Text.concat"](List$reverse(go(0, 0, rt.NIL)))) + "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
@@ -669,7 +669,7 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  return rt.ap(go, 0);
+  return go(0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
 

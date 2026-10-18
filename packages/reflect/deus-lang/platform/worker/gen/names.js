@@ -63,20 +63,20 @@ async function Worker$Names$resolveWith(read, causal, name) {
   const t0 = rt.resumed($stack, await rt.ap(read, causal));
   m1: {
     if (t0.tag === 0) {
-      return rt.ap(without, "missing", (("the head " + causal) + " is in no pack yet"));
+      return without("missing", (("the head " + causal) + " is in no pack yet"));
     }
     if (t0.tag === 1) {
       const node = t0.fields[0];
       const snapshot = lib$toolchain$Codebase$Causal$snapshot(lib$toolchain$Codebase$causalFromSexp(lib$base$Sexp$read(node)));
       if (Text$isEmpty(snapshot)) {
-        return rt.ap(without, "unbound", "");
+        return without("unbound", "");
       } else {
         const found = rt.resumed($stack, await Worker$Names$entryWith(read, snapshot, name));
         if (not(Text$isEmpty(Worker$Names$Lookup$missing(found)))) {
-          return rt.ap(without, "missing", Worker$Names$Lookup$missing(found));
+          return without("missing", Worker$Names$Lookup$missing(found));
         } else {
           if (not(Worker$Names$Lookup$bound(found))) {
-            return rt.ap(without, "unbound", "");
+            return without("unbound", "");
           } else {
             if (Text$isEmpty(Worker$Names$Lookup$hash(found))) {
               return new rt.Con("ca82799dbb495220412cc179e1309379c9f93d9287e5b57370ffb96776fbabd4", 0, ["found", "", Worker$Names$Lookup$entry(found), "", "", false]);
@@ -144,7 +144,7 @@ function List$map(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$map, "List.map");
 
@@ -243,8 +243,8 @@ rt.named(lib$toolchain$Codebase$Causal$snapshot, "lib.toolchain.Codebase.Causal.
 
 function lib$toolchain$Codebase$causalFromSexp(form) {
   const field = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key) => Option$getOr(List$find(({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (x) => rt.equal(lib$base$Sexp$head(x), key) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"], lib$base$Sexp$args(form)), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 3, [rt.NIL])) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
-  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(rt.ap(field, key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
-  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [rt.ap(first, "ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(rt.ap(field, "parents"))), rt.ap(first, "msg"), rt.ap(first, "tasks"), rt.ap(first, "prior"), rt.ap(first, "comments"), rt.ap(first, "metas"), rt.ap(first, "at")]);
+  const first = ({ "lib.toolchain.Codebase.causalFromSexp/\u03bb": (key_1) => lib$base$Sexp$asText(Option$getOr(List$head$p(lib$base$Sexp$args(field(key_1))), new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, [""]))) })["lib.toolchain.Codebase.causalFromSexp/\u03bb"];
+  return new rt.Con("30ba12d242e14636cce4b12f405b0273268f13ecfa21d2733b0781017bd279dc", 0, [first("ns"), List$map(lib$base$Sexp$asText, lib$base$Sexp$args(field("parents"))), first("msg"), first("tasks"), first("prior"), first("comments"), first("metas"), first("at")]);
 }
 rt.named(lib$toolchain$Codebase$causalFromSexp, "lib.toolchain.Codebase.causalFromSexp");
 
@@ -392,7 +392,7 @@ function List$reverse(xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$reverse, "List.reverse");
 
@@ -652,7 +652,7 @@ function lib$base$Sexp$readAll(t) {
                 }
               } else {
                 if ((c_1 === 34)) {
-                  const t6 = rt.ap(readString, ((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
+                  const t6 = readString(((i_2 + 1) | 0), ((i_2 + 1) | 0), rt.NIL);
                   m7: {
                     if (t6.tag === 0) {
                       const value = t6.fields[0];
@@ -673,7 +673,7 @@ function lib$base$Sexp$readAll(t) {
                     rt.nomatch(t6);
                   }
                 } else {
-                  const j_2 = rt.ap(atomEnd, i_2);
+                  const j_2 = atomEnd(i_2);
                   const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
                   const t10 = rt.prims["Int.fromText"](atom);
@@ -709,7 +709,7 @@ function lib$base$Sexp$readAll(t) {
       }
     }
   }
-  return rt.ap(go, 0, rt.NIL, rt.NIL);
+  return go(0, rt.NIL, rt.NIL);
 }
 rt.named(lib$base$Sexp$readAll, "lib.base.Sexp.readAll");
 
@@ -947,7 +947,7 @@ function List$filterMap(f, xs) {
       }
     }
   }
-  return rt.ap(go, rt.NIL, xs);
+  return go(rt.NIL, xs);
 }
 rt.named(List$filterMap, "List.filterMap");
 
@@ -1009,7 +1009,7 @@ function lib$base$Sexp$emit(s, acc) {
           }
         }
       }
-      return rt.ap(go, true, items, rt.cons("(", acc));
+      return go(true, items, rt.cons("(", acc));
     }
     rt.nomatch(s);
   }
@@ -1071,7 +1071,7 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    return (("\"" + rt.prims["Text.concat"](List$reverse(rt.ap(go, 0, 0, rt.NIL)))) + "\"");
+    return (("\"" + rt.prims["Text.concat"](List$reverse(go(0, 0, rt.NIL)))) + "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
@@ -1113,7 +1113,7 @@ function lib$base$Sexp$plain(t) {
       }
     }
   }
-  return rt.ap(go, 0);
+  return go(0);
 }
 rt.named(lib$base$Sexp$plain, "lib.base.Sexp.plain");
 
@@ -1325,7 +1325,7 @@ async function List$map$wait(f, xs) {
       }
     }
   }
-  return rt.resumed($stack, await rt.ap(go, rt.NIL, xs));
+  return rt.resumed($stack, await go(rt.NIL, xs));
 }
 rt.named(List$map$wait, "List.map");
 

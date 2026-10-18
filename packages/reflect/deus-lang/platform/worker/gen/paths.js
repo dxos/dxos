@@ -224,7 +224,7 @@ function List$length(xs) {
       }
     }
   }
-  return rt.ap(go, 0, xs);
+  return go(0, xs);
 }
 rt.named(List$length, "List.length");
 
