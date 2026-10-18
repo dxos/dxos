@@ -13,10 +13,10 @@
    * last) lines up with the SubTrigger row that floating-ui aligns the positioner to.
    */
   .dx-submenu:has(> [data-placement$='-start']) {
-    margin-block-start: calc(-1 * var(--dx-control-inset));
+    margin-block-start: calc(-3 * var(--dx-control-inset));
   }
   .dx-submenu:has(> [data-placement$='-end']) {
-    margin-block-end: calc(-1 * var(--dx-control-inset));
+    margin-block-end: calc(-3 * var(--dx-control-inset));
   }
 
   /* A palette: square cells, `columns` to a row; the frame shrinks to the grid rather than a menu's minimum width. */
