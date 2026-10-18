@@ -2,7 +2,7 @@
 
 - Use trackpad for smoother scrolling
 
-# 1. Documents (20s)
+# 1. Documents (Light mode: 20s)
 
 - Plugins: Markdown, Canvas, Sheets
 - Template: DXOS Architecture
@@ -21,16 +21,7 @@
 - Insert Performance sheet
 - Navigate to Perf sheet and show chart companion
 
-# 2. Projects (20s)
-
-- Dark mode
-- Plugins: Projects
-- Template: Hello Worker
-- Check first three items; assign to assistant
-- FF Gantt chart; open timeline
-- Show diagram artifact
-
-# 3. Inbox (20s)
+# 2. Inbox (Light mode: 20s)
 
 - Plugins: Inbox, Calls
 - Template: Alien Labs
@@ -42,6 +33,16 @@
 - Navtree => Calendar
 - Scroll and select Event: XXX
 
-# 4. Meeting
+# 3. Projects (Dark mode: 20s)
+
+- Plugins: Projects
+- Template: Hello Worker
+
+- Check first three items; assign to assistant
+- Open tasks in assistant sidebar
+- FF Gantt chart; open timeline
+- Show diagram artifact
+
+# 4. Meetings
 
 - Join meeting
