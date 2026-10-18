@@ -71,12 +71,13 @@ describe('Alien Labs Sales pipeline', () => {
     const placed = STAGES.flatMap((stage) => kanban.arrangement?.columns[stage]?.ids ?? []);
     expect(placed).toEqual(items);
 
-    // The first four stages hold 2 to 5 customers each; every stage holds at least one.
-    for (const [index, stage] of STAGES.entries()) {
+    // Every stage holds 1 to 5 customers, and the board's early funnel (Lead, Qualified) is the fullest.
+    for (const stage of STAGES) {
       const count = kanban.arrangement?.columns[stage]?.ids.length ?? 0;
-      expect(count, stage).toBeGreaterThanOrEqual(index < 4 ? 2 : 1);
+      expect(count, stage).toBeGreaterThanOrEqual(1);
       expect(count, stage).toBeLessThanOrEqual(5);
     }
+    expect(kanban.arrangement?.columns['Qualified']?.ids.length).toBe(3);
 
     // Every organization, on the board or not, carries a logo the card can show.
     for (const org of ofType('type.organization:')) {

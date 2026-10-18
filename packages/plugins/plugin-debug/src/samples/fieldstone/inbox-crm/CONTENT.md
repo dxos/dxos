@@ -85,8 +85,8 @@ writes in also turns up on the calendar.
   rewrites the arrangement, never the organization. The Uncategorized column is hidden. Columns in
   order, with their cards:
   - Lead: `halcyon`, `kestrel`
-  - Qualified: `vantage`, `corvid`
-  - Demo: `brightwater`, `larkspur`
+  - Qualified: `vantage`, `corvid`, `larkspur`
+  - Demo: `brightwater`
   - Proposal: `meridian`, `aldermoor`
   - Negotiation: `northpine` (renewal), `tidewater`
   - Closed won: `okapi`, `lumen`
@@ -225,9 +225,10 @@ These must work end to end in the app.
 - 17 organizations (18 with team), 24 people (34 with team), 2 Tables and 1 Kanban.
 - Every type in the archive is declared by a partial or is a core type; no schema is persisted.
 - The Sales pipeline is the only Kanban: an items Kanban with the 7 stages in order and at least 10
-  distinct organizations, 2 to 5 in each of Lead, Qualified, Demo and Proposal, each column's card
-  order matching `PIPELINE`; every customer has a message from a person at that organization.
-- Every organization has a distinct SVG logo under 1KB.
+  distinct organizations, 1 to 5 in each stage and 3 in Qualified, each column's card order matching
+  `PIPELINE`; every customer has a message from a person at that organization.
+- Every organization has a distinct logo; each pipeline customer shows its own WebP poster
+  (`logos/`, regenerated into `logo-images.ts`), the others a generated SVG mark.
 - 188 messages in 103 threads. The oldest is at −60d and the newest at the reference date.
 - 313 events. Every week from −182d to +182d has at least one.
 - Every message from a person in the space has a sender Actor with `contact` set.

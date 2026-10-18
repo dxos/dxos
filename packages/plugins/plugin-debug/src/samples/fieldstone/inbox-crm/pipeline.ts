@@ -20,8 +20,8 @@ export type Stage = (typeof STAGES)[number];
 /** Each stage's customers, in card order. */
 export const PIPELINE = {
   'Lead': ['halcyon', 'kestrel'],
-  'Qualified': ['vantage', 'corvid'],
-  'Demo': ['brightwater', 'larkspur'],
+  'Qualified': ['vantage', 'corvid', 'larkspur'],
+  'Demo': ['brightwater'],
   'Proposal': ['meridian', 'aldermoor'],
   'Negotiation': ['northpine', 'tidewater'],
   'Closed won': ['okapi', 'lumen'],
