@@ -349,6 +349,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 339 | 10-20 01:40 | 30m 00s | 33cb591101 | The rest of the unsorted `dedup` uses move to `distinct` (D314) |
 | 340 | 10-20 02:30 | 20m 00s | 019c16fe68 | A stale spec gap closes: R-9 held since D95 and now has its test (D315) |
 | 341 | 10-20 03:30 | 30m 00s | 1a9056610c | Every toolchain test is cited by a requirement (D316) |
-| 342 | 10-20 05:50 | 40m 00s | this commit | A pull stops noting the metadata it receives as written locally (D317) |
+| 342 | 10-20 05:50 | 40m 00s | c94aaa6d0b | A pull stops noting the metadata it receives as written locally (D317) |
 
 Total from stage 1 to stage 342: 145h 10m.
