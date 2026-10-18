@@ -13,7 +13,7 @@ group index "Indexing" {
   node Extract "ObjectExtraction" ref="edge/packages/services/db-service/src/worker/indexer/automerge-object-extraction.ts"
   node Alarms "AlarmScheduling" ref="edge/packages/services/db-service/src/worker/indexer/alarm-scheduling.ts"
 }
-group platform "Platform" {
+group platform "Platform" color=light-violet {
   node Wasm "subduction-wasm" ref="edge/packages/sdk/edge-automerge"
   node Bindings "DO bindings" ref="edge/packages/services/db-service/src/worker/bindings.ts"
 }

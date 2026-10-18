@@ -10,7 +10,7 @@ group agents "Agents" {
   node Ai "ai" ref="packages/core/compute/ai"
   node Mcp "mcp-client" ref="packages/core/compute/mcp-client"
 }
-group runtime "Runtime" {
+group runtime "Runtime" color=light-violet {
   node Runtime "compute-runtime" ref="packages/core/compute/compute-runtime"
   node Compute "compute" ref="packages/core/compute/compute"
   node Operation "operation" ref="packages/core/compute/operation"

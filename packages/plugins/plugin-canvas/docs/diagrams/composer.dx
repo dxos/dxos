@@ -12,9 +12,9 @@ group sdk "SDK and data" {
   node Echo "ECHO" ref="packages/core/echo" color=green
   node Halo "HALO Identity" ref="packages/core/halo"
   node Mesh "MESH Network" ref="packages/core/mesh"
-  node Compute "Compute" ref="packages/core/compute" color=yellow
+  node Compute "Compute" ref="packages/core/compute" color=light-red
 }
-group remote "Remote" {
+group remote "Remote" color=light-violet {
   node Edge "EDGE" ref="packages/core/mesh/edge-client" color=orange
 }
 edge Shell composes Framework "boots"

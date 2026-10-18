@@ -30,8 +30,11 @@ export type CanvasDrawingProps = {
   readonly?: boolean;
 };
 
-/** The tone the reference diagrams' boxes take: the style set's second (index 1). */
-const DIAGRAM_BOX_TONE = 1;
+/** The tone the reference diagrams' plain boxes take: the style set's second (index 1). */
+export const DIAGRAM_BOX_TONE = 1;
+
+/** The tone the reference diagrams' dashed group outlines take: the style set's fourth (index 3), its lightest. */
+export const DIAGRAM_GROUP_TONE = 3;
 
 /** Adds a canvas drawing built from scene commands to `db`. */
 export const addCanvasDrawing = (
@@ -71,8 +74,8 @@ export const loadDiagramDrawings = async (
     drawings.set(id, addCanvasDrawing(db, { name: set.names[id] ?? id, commands, lattice: true, readonly: true }));
   }
 
-  // The reference diagrams draw their boxes in the style set's second tone, lighter than the default, so the coloured
-  // boxes and the group backdrops carry the emphasis; a box that sets a tone of its own keeps it.
+  // Plain boxes draw in the style set's second tone rather than its heavier default grey, and the dashed group outlines
+  // in its lightest, so the coloured boxes carry the emphasis; a box that sets a hue or a tone of its own keeps it.
   for (const drawing of drawings.values()) {
     const canvas = drawing.canvas.target;
     if (!canvas) {
@@ -80,18 +83,17 @@ export const loadDiagramDrawings = async (
     }
     Obj.update(canvas, (canvas) => {
       for (const [key, record] of Object.entries(canvas.content)) {
-        if (
-          !isNodeRecord(record) ||
-          record.node.type !== 'box' ||
-          record.node.style?.guide ||
-          record.node.style?.tone !== undefined
-        ) {
+        if (!isNodeRecord(record) || record.node.style?.tone !== undefined) {
           continue;
         }
-        canvas.content[key] = {
-          ...record,
-          node: { ...record.node, style: { ...record.node.style, tone: DIAGRAM_BOX_TONE } },
-        };
+        const tone = record.node.style?.guide
+          ? DIAGRAM_GROUP_TONE
+          : (record.node.style?.hue ?? 'neutral') === 'neutral'
+            ? DIAGRAM_BOX_TONE
+            : undefined;
+        if (tone !== undefined) {
+          canvas.content[key] = { ...record, node: { ...record.node, style: { ...record.node.style, tone } } };
+        }
       }
     });
   }

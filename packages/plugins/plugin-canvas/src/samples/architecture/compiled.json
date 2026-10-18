@@ -58,7 +58,7 @@
             "y": 0,
             "w": 320,
             "h": 192,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -189,7 +189,7 @@
         "scale": 1,
         "ref": "packages/core/compute",
         "elements": [
-          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Compute", "color": "yellow" }
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Compute", "color": "light-red" }
         ]
       }
     },
@@ -397,7 +397,7 @@
             "y": 0,
             "w": 704,
             "h": 576,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -685,7 +685,7 @@
             "y": 0,
             "w": 320,
             "h": 384,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -986,7 +986,7 @@
             "y": 0,
             "w": 1088,
             "h": 384,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -1358,7 +1358,7 @@
             "y": 0,
             "w": 704,
             "h": 192,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -1670,7 +1670,7 @@
             "y": 0,
             "w": 704,
             "h": 768,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -1969,7 +1969,7 @@
             "y": 0,
             "w": 704,
             "h": 768,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -2049,7 +2049,7 @@
             "w": 256,
             "h": 128,
             "text": "compute-service",
-            "color": "yellow"
+            "color": "light-red"
           }
         ]
       }
@@ -2296,7 +2296,7 @@
             "y": 0,
             "w": 320,
             "h": 384,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -2562,7 +2562,7 @@
             "y": 0,
             "w": 704,
             "h": 192,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -2862,7 +2862,7 @@
             "y": 0,
             "w": 704,
             "h": 384,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -3070,7 +3070,7 @@
             "y": 0,
             "w": 320,
             "h": 192,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },
@@ -3324,7 +3324,7 @@
             "y": 0,
             "w": 320,
             "h": 384,
-            "color": "yellow",
+            "color": "light-violet",
             "fill": "tint",
             "stroke": "dashed"
           },

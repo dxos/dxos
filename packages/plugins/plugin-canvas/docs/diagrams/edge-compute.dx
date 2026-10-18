@@ -12,7 +12,7 @@ group exec "Execution" {
   node Registry "FunctionsRegistry" ref="edge/packages/services/compute-service/src/registry/functions-registry.ts"
   node Logger "FunctionsLogger" ref="edge/packages/services/compute-service/src/functions-logger/functions-logger.ts"
 }
-group bindings "Bindings" {
+group bindings "Bindings" color=light-violet {
   node Store "D1 + R2" ref="edge/packages/services/compute-service/wrangler.jsonc"
   node Ext "db / ai / kms" ref="edge/packages/services"
 }

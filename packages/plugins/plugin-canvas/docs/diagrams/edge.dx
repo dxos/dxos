@@ -7,9 +7,9 @@ group gateway "Gateway" {
   node Router "edge router" ref="edge/packages/services/edge/wrangler.jsonc" color=orange
   node Hub "hub (accounts)" ref="edge/packages/services/hub-service/wrangler.jsonc"
 }
-group services "Services" compact {
+group services "Services" compact color=light-violet {
   node Db "db-service" ref="edge/packages/services/db-service/wrangler.jsonc" color=green
-  node Compute "compute-service" ref="edge/packages/services/compute-service/wrangler.jsonc" color=yellow
+  node Compute "compute-service" ref="edge/packages/services/compute-service/wrangler.jsonc" color=light-red
   node Identity "identity-service" ref="edge/packages/services/identity-service/wrangler.jsonc"
   node Kms "kms-service" ref="edge/packages/services/kms-service/wrangler.jsonc"
   node Ai "ai-service" ref="edge/packages/services/ai-service/wrangler.jsonc" color=violet
