@@ -4,6 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetRange from '@dxos/plugin-sheet/SheetRange';
 
 const HEADER = ['Plugin', 'PRs', 'Tests', 'Closed issues', 'Open issues'] as const;
 
@@ -43,20 +44,17 @@ const COUNT_COLUMN_SIZE = 120;
 export const makePluginMetrics = (): Sheet.Sheet => {
   const rows = [HEADER, ...PLUGIN_METRICS];
   const range = `A1:${COLUMNS[HEADER.length - 1]}${rows.length}`;
+  const cells = Object.fromEntries(
+    rows.flatMap((row, rowIndex) =>
+      row.map((value, columnIndex) => [`${COLUMNS[columnIndex]}${rowIndex + 1}`, { value }]),
+    ),
+  );
   const sheet = Sheet.make({
     name: 'Plugin metrics',
     rows: rows.length,
     columns: HEADER.length,
-    cells: Object.fromEntries(
-      rows.flatMap((row, rowIndex) =>
-        row.map((value, columnIndex) => [`${COLUMNS[columnIndex]}${rowIndex + 1}`, { value }]),
-      ),
-    ),
-    ranges: [
-      // The header row takes the sheet's heading style; the numeric columns' headers sit over their right-aligned figures.
-      { range: `A1:${COLUMNS[HEADER.length - 1]}1`, key: 'style', value: 'header' },
-      { range: `B1:${COLUMNS[HEADER.length - 1]}1`, key: 'alignment', value: 'end' },
-    ],
+    cells,
+    ranges: SheetRange.headerRanges(cells, `A1:${COLUMNS[HEADER.length - 1]}1`),
     charts: [
       {
         id: 'plugin-metrics',
