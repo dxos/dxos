@@ -21,10 +21,14 @@
 - Insert Performance sheet
 - Navigate to Perf sheet and show chart companion
 
-# 2. Projects
+# 2. Projects (20s)
 
+- Dark mode
 - Plugins: Projects
-- Template:
+- Template: Hello Worker
+- Check first three items; assign to assistant
+- FF Gantt chart; open timeline
+- Show diagram artifact
 
 # 3. Inbox (20s)
 
