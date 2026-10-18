@@ -36,7 +36,7 @@ export const PLUGIN_METRICS: ReadonlyArray<
 const COLUMNS = 'ABCDE';
 
 /** Column widths: the plugin names take the room the longest one needs; the counts need far less than the grid's 180px default. */
-const PLUGIN_COLUMN_SIZE = 300;
+const PLUGIN_COLUMN_SIZE = 270;
 const COUNT_COLUMN_SIZE = 120;
 
 /** Plugin size and activity as a sheet, charted as horizontal bars: plugins down the y axis, one series per measure. */
