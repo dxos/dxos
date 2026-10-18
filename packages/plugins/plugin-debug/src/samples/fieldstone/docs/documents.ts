@@ -8,6 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import type * as Project from '@dxos/compute/Project';
 import { Database, EID, type Obj } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import type * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Event, type Message, type Organization, type Person, type Task, type TaskSet } from '@dxos/types';
 
@@ -43,6 +44,8 @@ export type InboxCrmLinks = {
     >
   >;
   readonly threads: Readonly<Record<'okapiIncident', ReadonlyArray<Message.Message>>>;
+  /** The Sales pipeline board, filed first under Customers. */
+  readonly pipeline: { readonly kanban: Kanban.Kanban };
   readonly events: Readonly<Record<'teamSync', ReadonlyArray<Event.Event>>>;
 };
 

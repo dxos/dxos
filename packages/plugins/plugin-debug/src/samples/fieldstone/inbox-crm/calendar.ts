@@ -32,6 +32,16 @@ export type EventKey =
   | 'interviews'
   | 'release18'
   | 'brightwaterIntro'
+  | 'halcyonIntro'
+  | 'kestrelDiscovery'
+  | 'vantageDiscovery'
+  | 'vantageDeepDive'
+  | 'meridianProposal'
+  | 'tidewaterSecurity'
+  | 'tidewaterMsa'
+  | 'lumenValidation'
+  | 'lumenCheckIn'
+  | 'pallasDemo'
   | 'cloudflareCall'
   | 'cloudflareReview'
   | 'northpineQbr'
@@ -322,6 +332,100 @@ export const makeCalendar = (
           attendees: ['leo', 'mila', 'lucia', 'kofi'],
           time: [16, 0],
           minutes: 45,
+        }),
+      ],
+      halcyonIntro: [
+        timed(6, {
+          title: 'Halcyon Freight intro call',
+          description: `From the thread "Cairn for Halcyon Freight's Android builds": read a clean Gradle build scan.`,
+          attendees: ['priya', 'kofi', 'astrid'],
+          time: [14, 0],
+          minutes: 30,
+        }),
+      ],
+      kestrelDiscovery: [
+        timed(9, {
+          title: 'Kestrel Energy discovery call',
+          description: 'From the thread "Remote cache for a Bazel monorepo at Kestrel": two build event logs, sizing.',
+          attendees: ['owen', 'kofi', 'lucia'],
+          time: [16, 0],
+          minutes: 45,
+        }),
+      ],
+      vantageDiscovery: [
+        timed(-15, {
+          title: 'Vantage Aerospace discovery',
+          description:
+            'From the thread "Vantage Aerospace: notes from discovery": build volume, budget and decision process.',
+          attendees: ['claire', 'astrid', 'lucia'],
+          time: [17, 0],
+          minutes: 45,
+        }),
+      ],
+      vantageDeepDive: [
+        timed(13, {
+          title: 'Vantage technical deep dive',
+          description:
+            'From the thread "Vantage: US-only data residency": US-only storage, access and the shared control plane.',
+          attendees: ['claire', 'omar', 'anika', 'astrid'],
+          time: [16, 0],
+          minutes: 90,
+        }),
+      ],
+      meridianProposal: [
+        timed(7, {
+          title: 'Meridian proposal review',
+          description: 'From the thread "Meridian paid plan proposal": seat ramp to 90 and the SOC 2 clause.',
+          attendees: ['aisha', 'kenji', 'lucia', 'astrid'],
+          time: [15, 0],
+          minutes: 45,
+        }),
+      ],
+      tidewaterSecurity: [
+        timed(-22, {
+          title: 'Tidewater security review',
+          description:
+            'From the thread "Tidewater vendor security review": token revocation demo, breach notice, build logs.',
+          attendees: ['rohan', 'anika', 'astrid'],
+          time: [17, 0],
+          minutes: 60,
+        }),
+      ],
+      tidewaterMsa: [
+        timed(1, {
+          title: 'Tidewater MSA review',
+          description: 'From the thread "Tidewater MSA redlines": liability cap, automatic uptime credits, signatures.',
+          attendees: ['rohan', 'lucia', 'astrid'],
+          time: [16, 0],
+          minutes: 45,
+        }),
+      ],
+      lumenValidation: [
+        timed(-29, {
+          title: 'Lumen Biotech validation results',
+          description: 'From the thread "Lumen Biotech order form": warm-cache pipeline builds before signature.',
+          attendees: ['tobias', 'kofi', 'omar', 'astrid'],
+          time: [14, 0],
+          minutes: 60,
+        }),
+      ],
+      lumenCheckIn: [
+        timed(1, {
+          title: 'Lumen rollout check-in',
+          description: 'From the thread "Lumen rollout: second pipeline group": hit rates for the imaging pipelines.',
+          attendees: ['tobias', 'kofi', 'june'],
+          time: [13, 0],
+          minutes: 30,
+        }),
+      ],
+      pallasDemo: [
+        timed(-36, {
+          title: 'Pallas Retail demo',
+          description:
+            'From the thread "Pallas Retail: decision on Cairn": demo on their monorepo, then data residency.',
+          attendees: ['carmen', 'astrid', 'lucia'],
+          time: [15, 0],
+          minutes: 60,
         }),
       ],
       cloudflareCall: [

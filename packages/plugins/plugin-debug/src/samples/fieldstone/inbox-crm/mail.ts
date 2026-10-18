@@ -21,6 +21,16 @@ export type ThreadKey =
   | 'meridianSecurity'
   | 'okapiIncident'
   | 'brightwaterIntro'
+  | 'halcyonInbound'
+  | 'kestrelInbound'
+  | 'vantageDiscovery'
+  | 'vantageResidency'
+  | 'meridianProposal'
+  | 'tidewaterSecurity'
+  | 'tidewaterMsa'
+  | 'lumenSigned'
+  | 'lumenRollout'
+  | 'pallasDecision'
   | 'stripeBilling'
   | 'cloudflareCredits'
   | 'cloudflareR2'
@@ -661,6 +671,481 @@ Leo`,
     ],
   },
 ];
+//
+// Pipeline threads: the sales conversations behind the Sales pipeline deals the customer threads above do not cover.
+//
+
+const PIPELINE_THREADS: Thread[] = [
+  {
+    key: 'halcyonInbound',
+    subject: "Cairn for Halcyon Freight's Android builds",
+    customer: true,
+    mail: [
+      {
+        from: 'priya',
+        to: ['astrid'],
+        day: 8,
+        time: [13, 20],
+        body: `Hi Astrid,
+
+I read the Monorepo Notes piece on Gradle build caches and followed the link to Cairn. We're about 30 engineers on a Kotlin and Android codebase, with CI on GitHub Actions. Clean builds take 35 minutes and the Gradle cache we run on a single VM is full by Wednesday every week.
+
+Two questions before I take this to my manager: does Cairn work as a Gradle remote cache without a plugin of our own, and can we try it on one repo without a sales process?
+
+Priya Raman
+Platform Engineer, Halcyon Freight`,
+      },
+      {
+        from: 'astrid',
+        to: ['priya'],
+        cc: ['kofi', 'lucia'],
+        day: 7,
+        time: [9, 40],
+        body: `Hi Priya,
+
+Yes to both. Cairn speaks the Gradle HTTP cache protocol, so it is a URL and a token in settings.gradle. The Team plan has a free 14-day trial and needs no call to start.
+
+That said, a full VM by midweek usually means outputs that should not be cached at all, so a short call would save you a week. Kofi has tuned a lot of Android builds and can look at a build scan with you. Lucía is copied for pricing once you know what you need.
+
+Astrid`,
+      },
+      {
+        from: 'priya',
+        to: ['astrid', 'kofi'],
+        cc: ['lucia'],
+        day: 5,
+        time: [15, 5],
+        body: `Thanks both. I've started the trial on our main app repo and booked 30 minutes next Tuesday. I'll bring a build scan from a clean CI run.
+
+Priya`,
+      },
+    ],
+  },
+  {
+    key: 'kestrelInbound',
+    subject: 'Remote cache for a Bazel monorepo at Kestrel',
+    customer: true,
+    mail: [
+      {
+        from: 'owen',
+        to: ['astrid', 'kofi'],
+        day: 2,
+        time: [16, 30],
+        body: `Hello,
+
+Your Cache Line issue on affected-target detection was passed around our team last week. We run grid-management software from one Bazel monorepo: 140 engineers, about 9,000 targets, and a self-hosted bazel-remote on two machines that we keep resizing.
+
+We'd like to stop operating the cache ourselves. Before anyone on our side spends time on it, I need to know three things: whether you support the Bazel remote APIs including remote execution, where data is stored, and what a team our size pays.
+
+Owen Fairley
+Build Infrastructure Lead, Kestrel Energy`,
+      },
+      {
+        from: 'kofi',
+        to: ['owen'],
+        cc: ['astrid', 'lucia'],
+        day: 1,
+        time: [10, 15],
+        body: `Hi Owen, thanks for reading.
+
+> whether you support the Bazel remote APIs including remote execution
+
+Remote caching, yes, over gRPC with the standard flags. Remote execution is not something we offer; most teams your size get the bigger win from a shared cache with a high hit rate first.
+
+Data sits on Cloudflare R2 in the US by default, with an EU option. For 140 engineers you would be on Business, around $3,500 a month; Lucía can make that exact.
+
+Could we do a discovery call next week? Bring a recent build event log and I'll show you what we'd hit.
+
+Kofi`,
+      },
+      {
+        from: 'owen',
+        to: ['kofi'],
+        cc: ['astrid', 'lucia'],
+        day: 0,
+        time: [9, 40],
+        body: `No remote execution is fine for now. Friday next week works; I've accepted the invite and will bring two event logs, one clean and one incremental.
+
+Owen`,
+      },
+    ],
+  },
+  {
+    key: 'vantageDiscovery',
+    subject: 'Vantage Aerospace: notes from discovery',
+    customer: true,
+    mail: [
+      {
+        from: 'claire',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 14,
+        time: [18, 0],
+        body: `Astrid, Lucía,
+
+Thanks for the time yesterday. To confirm what we covered: 300 engineers across flight software and ground systems, CMake with ccache today, CI runs about 4,000 builds a day, and a full flight-software build takes 70 minutes. We'd like to get that under 15.
+
+We have budget this fiscal year if we choose a vendor by the end of next quarter. I'm the decision maker for tooling; our security team will need to review anything that stores build output.
+
+Can you send a short technical summary I can circulate internally?
+
+Claire Dubois
+Director of Software Engineering, Vantage Aerospace`,
+      },
+      {
+        from: 'astrid',
+        to: ['claire'],
+        cc: ['lucia', 'omar'],
+        day: 13,
+        time: [11, 30],
+        body: `Claire,
+
+Here is the short version to circulate. Cairn replaces your ccache directories with a shared cache keyed on compiler, flags and inputs; builds on any runner reuse each other's output. For a codebase like yours we usually see full builds drop by 70 to 80 percent once the cache is warm.
+
+Omar, who leads our cache engine, is copied. He can go deeper on how we key C++ builds and what we never store.
+
+Astrid`,
+      },
+      {
+        from: 'claire',
+        to: ['astrid', 'omar'],
+        cc: ['lucia'],
+        day: 12,
+        time: [17, 45],
+        body: `That's what I needed. I've shared it with my leads. The open question will be where the data lives; I'll write separately about that.
+
+Claire`,
+      },
+    ],
+  },
+  {
+    key: 'vantageResidency',
+    subject: 'Vantage: US-only data residency',
+    customer: true,
+    mail: [
+      {
+        from: 'claire',
+        to: ['astrid'],
+        cc: ['anika'],
+        day: 6,
+        time: [16, 20],
+        body: `Astrid,
+
+Some of our flight software is export-controlled, so our security team's first question is residency. Build output and cache metadata must stay in the US, and only US persons may have access to it.
+
+Can you meet that today, or is it on a roadmap? If it is a dedicated deployment, we'd want to understand the cost before the deep dive.
+
+Claire`,
+      },
+      {
+        from: 'anika',
+        to: ['claire'],
+        cc: ['astrid'],
+        day: 5,
+        time: [10, 50],
+        body: `Hi Claire,
+
+Storage can be pinned to US-only R2 buckets today, and the Workers that serve your tenant can be restricted to US data centres. Access to production is limited to four of us, and we can name a US-person on-call rotation for your tenant.
+
+What we can't do yet is a separate control plane, so cache metadata goes through the same API as other tenants, with the same encryption. I'd walk through exactly that in the deep dive so your security team can judge it.
+
+Anika`,
+      },
+    ],
+  },
+  {
+    key: 'meridianProposal',
+    subject: 'Meridian paid plan proposal',
+    customer: true,
+    mail: [
+      {
+        from: 'lucia',
+        to: ['aisha'],
+        cc: ['astrid', 'kenji'],
+        day: 2,
+        time: [14, 30],
+        body: `Aisha,
+
+Following Kenji's sign-off, here is our proposal for the paid plan: 60 seats on Enterprise at $40 a seat per month, $28,800 a year, billed annually. It includes SAML, audit-log export and the SOC 2 Type I report within the 60 days Kenji asked for.
+
+If you expect the trial to grow, we can price a ramp: seats added in the first year at the same rate, prorated monthly.
+
+The order form follows once you confirm the seat count.
+
+Lucía`,
+      },
+      {
+        from: 'aisha',
+        to: ['lucia', 'astrid'],
+        cc: ['kenji'],
+        day: 1,
+        time: [19, 10],
+        body: `Lucía,
+
+60 to start, but two more teams join in Q2, so call it 90 by June. Please add the ramp. Procurement will also ask for the SOC 2 condition to be written into the order form rather than an email.
+
+Can we review it together next week before it goes to them?
+
+Aisha`,
+      },
+      {
+        from: 'lucia',
+        to: ['aisha'],
+        cc: ['astrid', 'kenji'],
+        day: 0,
+        time: [10, 30],
+        body: `> Please add the ramp.
+
+Done: 60 seats now, up to 90 at the same rate, and the SOC 2 Type I delivery date as a clause in the order form. I've sent an invite for Wednesday to walk through it with you and Kenji.
+
+Lucía`,
+      },
+    ],
+  },
+  {
+    key: 'tidewaterSecurity',
+    subject: 'Tidewater vendor security review',
+    customer: true,
+    mail: [
+      {
+        from: 'rohan',
+        to: ['astrid'],
+        cc: ['anika'],
+        day: 28,
+        time: [15, 10],
+        body: `Astrid,
+
+Our security team has finished the paper review of Cairn. Three items before they can approve:
+
+- Evidence that tokens are scoped per project and revocable without a redeploy.
+- Your breach-notification window. Our regulator expects us to hear within 48 hours.
+- Whether build logs, which can contain policy numbers in test fixtures, are ever stored.
+
+They'd like to cover these on a call next week rather than over email.
+
+Rohan Mehta
+VP Platform Engineering, Tidewater Insurance`,
+      },
+      {
+        from: 'anika',
+        to: ['rohan'],
+        cc: ['astrid'],
+        day: 27,
+        time: [9, 0],
+        body: `Rohan,
+
+Short answers so your team can prepare: tokens are per project and revoke immediately from the dashboard or the API; our standard breach notice is 72 hours, and we can commit to 48 in your contract; build logs are never stored, only content-addressed outputs and their hashes.
+
+I'll demo token revocation live on the call. Tuesday afternoon your time works for me.
+
+Anika`,
+      },
+      {
+        from: 'rohan',
+        to: ['astrid', 'anika'],
+        day: 21,
+        time: [20, 5],
+        body: `Security approved this afternoon, conditional on the 48-hour notice appearing in the MSA. Legal will send redlines next.
+
+Rohan`,
+      },
+    ],
+  },
+  {
+    key: 'tidewaterMsa',
+    subject: 'Tidewater MSA redlines',
+    customer: true,
+    mail: [
+      {
+        from: 'rohan',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 13,
+        time: [14, 45],
+        body: `Lucía,
+
+Our legal team's redlines on the MSA are attached to the shared folder. The ones that matter:
+
+- Liability cap at three times annual fees, not one.
+- 48-hour breach notification, as agreed with security.
+- 99.9% monthly uptime with service credits, not a best-efforts clause.
+
+Everything else is wording. We'd like to sign this month; 220 seats on Enterprise is what we have budget for.
+
+Rohan`,
+      },
+      {
+        from: 'lucia',
+        to: ['rohan'],
+        cc: ['astrid'],
+        day: 12,
+        time: [10, 20],
+        body: `Rohan,
+
+48 hours and 99.9% with credits are both fine; they match what we already run to. The liability cap is the hard one. Three times fees is beyond what our insurance covers, so we can offer two times, with uncapped liability for a data breach caused by our negligence.
+
+220 seats at $40 a seat per month is $105,600 a year. I can hold that rate for a second year if you sign this month.
+
+Lucía`,
+      },
+      {
+        from: 'rohan',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 7,
+        time: [18, 30],
+        body: `Legal can accept two times with the breach carve-out. They want the uptime credits to apply automatically rather than on request. If you agree to that, we're down to signatures.
+
+Rohan`,
+      },
+      {
+        from: 'astrid',
+        to: ['rohan'],
+        cc: ['lucia'],
+        day: 6,
+        time: [9, 15],
+        body: `> They want the uptime credits to apply automatically
+
+Agreed. Anika already reports uptime per tenant, so credits can follow from it. Lucía will send the final MSA and order form; let's go through them together on Thursday so legal has one clean version.
+
+Astrid`,
+      },
+    ],
+  },
+  {
+    key: 'lumenSigned',
+    subject: 'Lumen Biotech order form',
+    customer: true,
+    mail: [
+      {
+        from: 'lucia',
+        to: ['tobias'],
+        cc: ['astrid'],
+        day: 23,
+        time: [11, 0],
+        body: `Tobias,
+
+The order form is in your inbox for signature: 150 seats on Enterprise, $72,000 a year with the research-institution discount we discussed, starting on signature. It includes SAML, the EU region and priority support.
+
+Once it's signed, Astrid will introduce your onboarding team.
+
+Lucía`,
+      },
+      {
+        from: 'tobias',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 21,
+        time: [16, 40],
+        body: `Signed and returned. The validation runs settled it: our pipeline builds went from 41 minutes to 9 with a warm cache, and the cluster team stopped asking for more disk.
+
+Tobias Lindqvist
+Head of Research Computing, Lumen Biotech`,
+      },
+      {
+        from: 'astrid',
+        to: ['tobias'],
+        cc: ['lucia', 'kofi', 'june'],
+        day: 20,
+        time: [9, 30],
+        body: `Welcome aboard, Tobias, and thank you.
+
+Kofi will run your rollout and June will set up SAML with your identity team. They'll start with the pipelines from the validation, then move the remaining groups one at a time so we can watch hit rates as we go.
+
+Astrid`,
+      },
+    ],
+  },
+  {
+    key: 'lumenRollout',
+    subject: 'Lumen rollout: second pipeline group',
+    customer: true,
+    mail: [
+      {
+        from: 'tobias',
+        to: ['kofi'],
+        cc: ['astrid', 'june'],
+        day: 9,
+        time: [13, 5],
+        body: `Kofi,
+
+First group is settled: hit rate 88% over the week and no complaints. SAML is live for everyone, thanks June.
+
+The second group is our imaging pipelines. They build large C++ libraries against two compiler versions, so I expect a lower hit rate at first. Anything we should change before we switch them over?
+
+Tobias`,
+      },
+      {
+        from: 'kofi',
+        to: ['tobias'],
+        cc: ['astrid', 'june'],
+        day: 8,
+        time: [10, 10],
+        body: `Tobias,
+
+Two things. Pin the compiler version in each pipeline's environment so the keys stay stable, and warm the cache with one build per compiler before you move the group. Expect around 60% the first week, rising as their branches converge.
+
+Once the group has run for a week, let's look at the numbers together; I've put a check-in on the calendar.
+
+Kofi`,
+      },
+      {
+        from: 'tobias',
+        to: ['kofi'],
+        cc: ['astrid'],
+        day: 7,
+        time: [15, 50],
+        body: `Will do. Warm-up builds are running tonight.
+
+Tobias`,
+      },
+    ],
+  },
+  {
+    key: 'pallasDecision',
+    subject: 'Pallas Retail: decision on Cairn',
+    customer: true,
+    mail: [
+      {
+        from: 'carmen',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 16,
+        time: [12, 25],
+        body: `Astrid, Lucía,
+
+Thank you for the demo and the proposal. We've decided not to go ahead this year. Our infrastructure board ruled that build output must stay in our own data centre in Madrid, and a hosted cache, even in an EU region, doesn't meet that. We'll run a self-hosted cache instead.
+
+This was not about the product. The team liked it, and the hit rates in the demo were better than what we expect to get ourselves.
+
+Carmen Ruiz
+Engineering Director, Pallas Retail Group`,
+      },
+      {
+        from: 'astrid',
+        to: ['carmen'],
+        cc: ['lucia'],
+        day: 15,
+        time: [9, 5],
+        body: `Carmen,
+
+Thank you for telling us directly, and for the reason. A customer-hosted tier is something we're weighing for next year; if it happens, you'll be among the first we call.
+
+Astrid`,
+      },
+      {
+        from: 'carmen',
+        to: ['astrid'],
+        day: 14,
+        time: [17, 0],
+        body: `Please do. Good luck with the 1.8 release.
+
+Carmen`,
+      },
+    ],
+  },
+];
+
 const VENDOR_THREADS: Thread[] = [
   {
     key: 'stripeBilling',
@@ -2210,8 +2695,8 @@ const SUMMARIES: Partial<Record<ThreadKey, string>> = {
 export type MailResult = { readonly mailbox: Mailbox.Mailbox; readonly threads: Threads };
 
 /**
- * Astrid's inbox: 150 messages in 90 threads over two months, in the mailbox's feed, with system
- * tags in its tag index, five summaries in its annotations feed, and the five extracted contacts
+ * Astrid's inbox: 180 messages in 100 threads over two months, in the mailbox's feed, with system
+ * tags in its tag index, five summaries in its annotations feed, and the seven extracted contacts
  * recorded in `mailbox.extracted` as `ExtractMessage` records them.
  */
 export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
@@ -2242,6 +2727,16 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
       meridianSecurity: [],
       okapiIncident: [],
       brightwaterIntro: [],
+      halcyonInbound: [],
+      kestrelInbound: [],
+      vantageDiscovery: [],
+      vantageResidency: [],
+      meridianProposal: [],
+      tidewaterSecurity: [],
+      tidewaterMsa: [],
+      lumenSigned: [],
+      lumenRollout: [],
+      pallasDecision: [],
       stripeBilling: [],
       cloudflareCredits: [],
       cloudflareR2: [],
@@ -2253,7 +2748,13 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     };
 
     const covered = new Set<number>();
-    for (const thread of [...CUSTOMER_THREADS, ...VENDOR_THREADS, ...INTERNAL_THREADS, ...BACKGROUND_THREADS]) {
+    for (const thread of [
+      ...CUSTOMER_THREADS,
+      ...PIPELINE_THREADS,
+      ...VENDOR_THREADS,
+      ...INTERNAL_THREADS,
+      ...BACKGROUND_THREADS,
+    ]) {
       const threadId = threadIdFor(thread.subject);
       let parent: Message.Message | undefined;
       for (const mail of thread.mail) {

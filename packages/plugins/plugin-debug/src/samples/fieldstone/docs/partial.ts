@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import type * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
@@ -37,7 +38,7 @@ export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.part
       const drawings = yield* makeDrawings();
       const docs = yield* makeDocuments({ people: team.people, sheets, drawings, inboxCrm, projects, architecture });
 
-      const refs = (...objects: Array<Markdown.Document | Sheet.Sheet | Drawing.Drawing | undefined>) =>
+      const refs = (...objects: Array<Markdown.Document | Sheet.Sheet | Drawing.Drawing | Kanban.Kanban | undefined>) =>
         objects.flatMap((object) => (object ? [Ref.make(object)] : []));
       yield* SampleSpace.collection(
         'Handbook',
@@ -72,6 +73,7 @@ export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.part
         yield* SampleSpace.collection(
           'Customers',
           refs(
+            inboxCrm.pipeline.kanban,
             docs['customer.northpine'],
             docs['customer.meridian'],
             docs['customer.okapi'],

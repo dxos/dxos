@@ -64,6 +64,57 @@ const ORG_SEEDS = [
     location: [-73.5674, 45.5019],
   },
   {
+    key: 'halcyon',
+    name: 'Halcyon Freight',
+    status: 'prospect',
+    website: 'https://halcyonfreight.com',
+    description:
+      'Freight logistics, 30 Android and Kotlin engineers on Gradle. Inbound lead from the Monorepo Notes newsletter.',
+    location: [4.4777, 51.9244],
+  },
+  {
+    key: 'kestrel',
+    name: 'Kestrel Energy',
+    status: 'prospect',
+    website: 'https://kestrelenergy.com',
+    description: 'Grid-management software on a Bazel monorepo, 140 engineers. Inbound lead after a Cache Line issue.',
+    location: [-104.9903, 39.7392],
+  },
+  {
+    key: 'vantage',
+    name: 'Vantage Aerospace',
+    status: 'qualified',
+    website: 'https://vantageaero.com',
+    description:
+      'Flight software for small satellites, 300 engineers on CMake. Qualified; needs US-only data residency.',
+    location: [-118.3965, 33.9192],
+  },
+  {
+    key: 'tidewater',
+    name: 'Tidewater Insurance',
+    status: 'qualified',
+    website: 'https://tidewaterins.com',
+    description: 'Insurance carrier, 220 engineers on Java and Bazel. Security review passed; MSA in redlines.',
+    location: [-72.6851, 41.7637],
+  },
+  {
+    key: 'lumen',
+    name: 'Lumen Biotech',
+    status: 'active',
+    website: 'https://lumenbio.com',
+    description: 'Computational biology, 150 seats on Enterprise. Signed three weeks ago; rollout in progress.',
+    location: [0.1218, 52.2053],
+  },
+  {
+    key: 'pallas',
+    name: 'Pallas Retail Group',
+    status: 'reject',
+    website: 'https://pallasretail.com',
+    description:
+      'Retail group in Madrid. Lost to a self-hosted cache: build output must stay in their own data centre.',
+    location: [-3.7038, 40.4168],
+  },
+  {
     key: 'saltmarsh',
     name: 'Saltmarsh Lodge',
     status: 'active',
@@ -74,7 +125,7 @@ const ORG_SEEDS = [
 ] as const satisfies ReadonlyArray<{
   key: string;
   name: string;
-  status: 'active' | 'qualified' | 'prospect';
+  status: 'active' | 'qualified' | 'prospect' | 'reject';
   website: string;
   description: string;
   location?: readonly [number, number];

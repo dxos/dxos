@@ -7,12 +7,14 @@ import { describe, test } from 'vitest';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
+import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Team from '../team/index.ts';
 import { REFERENCE } from '../util.ts';
 import { EXTRACTED } from './contacts.ts';
 import { Partial } from './partial.ts';
+import { DEAL_TYPENAME, DEALS, STAGES } from './pipeline.ts';
 
 type Ref = { readonly '/': string };
 type ActorJson = { readonly email?: string; readonly contact?: Ref };
@@ -31,7 +33,12 @@ type Entry = {
   readonly 'department'?: string;
   readonly 'emails'?: Array<{ readonly label?: string; readonly value: string }>;
   readonly 'extracted'?: Record<string, string[]>;
-  readonly 'spec'?: { readonly kind: string; readonly items?: Ref[] };
+  readonly 'spec'?: { readonly kind: string; readonly items?: Ref[]; readonly view?: Ref };
+  readonly 'name'?: string;
+  readonly 'organization'?: Ref;
+  readonly 'stage'?: string;
+  readonly 'arrangement'?: { readonly order: string[]; readonly columns: Record<string, { readonly ids: string[] }> };
+  readonly '@meta'?: { readonly key?: string };
 };
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -61,38 +68,81 @@ describe('Alien Labs inbox and CRM', () => {
       entries.filter((entry) => entry['@type']?.includes(typename));
     const feedEntries = archive.feeds.flatMap((feed) => feed.messages);
 
-    // 8 organizations (9 with team), 15 people (25 with team), 4 views.
-    expect(Object.keys(result.orgs)).toHaveLength(8);
-    expect(Object.keys(result.people)).toHaveLength(15);
-    expect(countOf('type.organization:')).toBe(9);
-    expect(countOf('type.person:')).toBe(25);
-    expect(countOf('type.table:') + countOf('type.kanban:')).toBe(4);
+    // 14 organizations (15 with team), 21 people (31 with team), 5 views.
+    expect(Object.keys(result.orgs)).toHaveLength(14);
+    expect(Object.keys(result.people)).toHaveLength(21);
+    expect(countOf('type.organization:')).toBe(15);
+    expect(countOf('type.person:')).toBe(31);
+    expect(countOf('type.table:') + countOf('type.kanban:')).toBe(5);
+
+    // Every type the archive holds is one the partials declare, or a core type every space holds
+    // (space properties, persisted schemas, the text behind documents); Deal's schema is persisted in the space.
+    const declared = new Set([
+      ...definition.schemas.map((schema) => Type.getTypename(schema)),
+      'org.dxos.type.spaceProperties',
+      'org.dxos.type.schema',
+      'org.dxos.type.text',
+    ]);
+    const schemaObjects = ofType(archive.objects, 'type.schema:');
+    expect(schemaObjects.map((object) => object['@meta']?.key)).toEqual([DEAL_TYPENAME]);
+    for (const type of Object.keys(counts)) {
+      const typename = type.startsWith('echo:///')
+        ? schemaObjects.find((object) => uri(object.id) === type)?.['@meta']?.key
+        : type.replace(/^dxn:/, '').replace(/:[^:]+$/, '');
+      expect(declared.has(typename ?? type), type).toBe(true);
+    }
 
     const people = ofType(archive.objects, 'type.person:');
     const personByEmail = new Map(people.map((person) => [person.emails?.[0]?.value, person]));
     const extractedIds = new Set(EXTRACTED.map((key) => result.people[key].id));
 
-    // The Person Kanban holds everyone but the 5 extracted contacts.
+    // The Person Kanban holds everyone but the 7 extracted contacts.
     const board = ofType(archive.objects, 'type.kanban:').find((kanban) => kanban.spec?.kind === 'items');
     const onBoard = (board?.spec?.items ?? []).map((ref) => ref['/']);
-    expect(onBoard).toHaveLength(20);
+    expect(onBoard).toHaveLength(24);
     expect(onBoard.some((ref) => [...extractedIds].some((id) => ref === uri(id)))).toBe(false);
 
-    // 150 messages in 90 threads, oldest at −60d and newest on the reference date.
+    // 180 messages in 100 threads, oldest at −60d and newest on the reference date.
     const messages = ofType(feedEntries, 'type.message:').filter((message) => message.properties?.subject);
-    expect(countOf('type.message:')).toBe(155);
-    expect(messages).toHaveLength(150);
-    expect(new Set(messages.map((message) => message.threadId)).size).toBe(90);
+    expect(countOf('type.message:')).toBe(185);
+    expect(messages).toHaveLength(180);
+    expect(new Set(messages.map((message) => message.threadId)).size).toBe(100);
     const created = messages.map((message) => message.created!).sort();
     expect(dayOf(created[0])).toBe(-60);
     expect(dayOf(created[created.length - 1])).toBe(0);
     expect(created[created.length - 1] <= REFERENCE.replace('Z', '.000Z')).toBe(true);
 
-    // 300 events, at least one in every week from −182d to +182d.
+    // The Sales pipeline: a view Kanban over Deals by stage, one deal per customer, at least 10.
+    const kanban = ofType(archive.objects, 'type.kanban:').find((entry) => entry.id === result.pipeline.kanban.id);
+    expect(kanban?.name).toBe('Sales pipeline');
+    expect(kanban?.spec?.kind).toBe('view');
+    expect(kanban?.arrangement?.order).toEqual(STAGES.map((stage) => stage.id));
+    const deals = archive.objects.filter((entry) => entry.stage !== undefined);
+    expect(deals.length).toBeGreaterThanOrEqual(10);
+    expect(deals).toHaveLength(DEALS.length);
+    for (const stage of STAGES) {
+      const ids = deals.filter((deal) => deal.stage === stage.id).map((deal) => deal.id);
+      expect(ids.length, stage.id).toBeGreaterThan(0);
+      expect(kanban?.arrangement?.columns[stage.id]?.ids).toEqual(ids);
+    }
+
+    // Every pipeline customer is a distinct organization with at least one email from someone who works there.
+    const customers = new Set(deals.map((deal) => deal.organization?.['/']));
+    expect(customers.size).toBe(deals.length);
+    for (const { key } of DEALS) {
+      const org = uri(result.orgs[key].id);
+      expect(customers.has(org), key).toBe(true);
+      const staff = ofType(archive.objects, 'type.person:')
+        .filter((person) => person.organization?.['/'] === org)
+        .map((person) => person.emails?.[0]?.value);
+      expect(messages.filter((message) => staff.includes(message.sender?.email)).length, key).toBeGreaterThan(0);
+    }
+
+    // 310 events, at least one in every week from −182d to +182d.
     const events = ofType(feedEntries, 'type.event:');
-    expect(countOf('type.event:')).toBe(300);
-    // Half carry notes: the one-offs, the team rituals and Hana's first 1:1s.
-    expect(events.filter((event) => event.description)).toHaveLength(150);
+    expect(countOf('type.event:')).toBe(310);
+    // Notes on the one-offs, the team rituals and Hana's first 1:1s.
+    expect(events.filter((event) => event.description)).toHaveLength(160);
     const eventDays = events.map((event) => dayOf(event.startDate!));
     for (let week = -182; week < 182; week += 7) {
       expect(eventDays.some((day) => day >= week && day < week + 7)).toBe(true);
@@ -123,7 +173,7 @@ describe('Alien Labs inbox and CRM', () => {
     const withThread = Object.values(result.people).filter((person) =>
       correspondents.includes(person.emails![0].value),
     );
-    expect(withThread).toHaveLength(15);
+    expect(withThread).toHaveLength(21);
     expect(withThread.filter((person) => !attending.has(person.emails![0].value))).toEqual([]);
 
     // Nadia's contact has an upcoming meeting to open: the Okapi follow-up.
@@ -133,7 +183,7 @@ describe('Alien Labs inbox and CRM', () => {
     );
     expect(upcoming.map((event) => event.title)).toEqual(['Okapi alerting follow-up']);
 
-    // The 5 extracted contacts look like extractions and the other 10 do not.
+    // The 7 extracted contacts look like extractions and the other 14 do not.
     const [mailbox] = ofType(archive.objects, 'type.mailbox:');
     const extraction = Object.entries(mailbox.extracted ?? {});
     expect(new Set(extraction.flatMap(([, ids]) => ids))).toEqual(extractedIds);

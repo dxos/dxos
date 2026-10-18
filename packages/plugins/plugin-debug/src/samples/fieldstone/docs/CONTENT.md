@@ -92,7 +92,7 @@ so reading one leads to the next.
 - Planning: `roadmap`, `hiring`, `pricing`, `vendors`, the `roadmap` drawing, and the `pricing`,
   `vendorSpend`, `cloudCost` and `hiring` sheets
 - Incidents: `postmortem`, `incidentTimeline`
-- Customers: the 4 customer notes, with inbox-crm
+- Customers, with inbox-crm: the Sales pipeline Kanban (`inboxCrm.pipeline.kanban`), then the 4 customer notes
 - Meetings: `syncNotes`
 
 ## Flows
