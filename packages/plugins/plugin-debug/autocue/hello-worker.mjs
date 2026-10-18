@@ -35,9 +35,25 @@ const FAST = 10;
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
 
-/** A navtree node by its own label: a leaf item or a branch's control, never a branch that only contains it. */
-const node = (label) =>
-  `[data-testid="deck.sidebar"] :is([data-part="item"],[data-part="branch-control"]):has(:text-is("${label}")) >> nth=0`;
+/** The project's own row in the navtree, under Projects. */
+const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has(:text-is("${PROJECT}")) >> nth=0`;
+
+/**
+ * Expands Projects until the project's row shows. A space that has just been created re-renders its tree a few
+ * times while its content loads, which can close a branch opened too early, so this checks the outcome, not the click.
+ */
+const showProject = async (page) => {
+  const trigger = page.locator('[data-testid="org.dxos.type.project.section"] [data-part="branch-trigger"]').first();
+  const row = page.locator(PROJECT_NODE);
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (await visible(row, 2_000)) {
+      return;
+    }
+    await trigger.waitFor({ state: 'visible', timeout: 15_000 });
+    await trigger.click();
+  }
+  await row.waitFor({ state: 'visible', timeout: 5_000 });
+};
 
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const taskRow = (title) => `${TASK_ROW}:has([data-testid="taskList.item.title"]:text-is("${title}"))`;
@@ -53,7 +69,7 @@ const visible = (locator, timeout) =>
 
 /** Closes the companion if one is open, so the project gets the full width. */
 const closeCompanion = async (page) => {
-  const close = page.locator('role=button[name="Close companion"]').first();
+  const close = page.locator('[data-testid="plankHeading.closeCompanion"]').first();
   if (await visible(close, 3_000)) {
     await close.click();
   }
@@ -103,7 +119,7 @@ const openTasks = async (demo, page) => {
     if (await visible(page.locator(crumb), 2_000)) {
       await demo.click({ selector: `${crumb} >> nth=0`, label: PROJECT });
     } else {
-      await demo.click({ selector: node(PROJECT), label: PROJECT });
+      await demo.click({ selector: PROJECT_NODE, label: PROJECT });
     }
   }
   await tasks.waitFor({ timeout: 15_000 });
@@ -138,10 +154,14 @@ export const steps = [
       const filter = page.locator('input[placeholder="Filter…"]').first();
       await filter.waitFor({ state: 'visible', timeout: 15_000 });
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Mermaid', hud: false });
-      const toggle = page.locator('input[id="org.dxos.plugin.mermaid-input"]');
+      // The switch's input is visually hidden; its label is what takes the click and carries the state.
+      const toggle = page.locator('[data-testid="pluginList.org.dxos.plugin.mermaid"] label[data-scope="switch"]');
       await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-      if (!(await toggle.isChecked())) {
+      if ((await toggle.getAttribute('data-state')) !== 'checked') {
         await toggle.click();
+        await page
+          .locator('[data-testid="pluginList.org.dxos.plugin.mermaid"] label[data-state="checked"]')
+          .waitFor({ timeout: 10_000 });
       }
       await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
 
@@ -169,7 +189,8 @@ export const steps = [
       });
       await page.waitForTimeout(BEAT);
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', label: 'Create' });
-      await page.locator(node(PROJECT)).waitFor({ state: 'visible', timeout: 60_000 });
+      await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 60_000 });
+      await showProject(page);
       await closeCompanion(page);
     },
   },
@@ -177,7 +198,9 @@ export const steps = [
     name: 'Open the project and its tasks',
     run: async ({ demo, page }) => {
       await caption(demo, 'Six tasks, from a diagram to a deployed Worker');
-      await demo.click({ selector: node(PROJECT), label: PROJECT });
+      await closeCompanion(page);
+      await showProject(page);
+      await demo.click({ selector: PROJECT_NODE, label: PROJECT });
       await openTasks(demo, page);
       await page.waitForTimeout(BEAT * 2);
     },
