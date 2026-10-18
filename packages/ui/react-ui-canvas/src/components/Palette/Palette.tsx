@@ -110,7 +110,7 @@ const flatHeight = (groups: readonly PaletteGroup[], button: number): number =>
 
 /**
  * Whether the rail folds its node groups: always, never, or (`auto`) when the flat rail would overflow its parent,
- * which the host sizes to the room the rail may take (`SceneView.Palette` spans from below the navigation to above
+ * which the host sizes to the room the rail may take (`Canvas.Palette` spans from below the navigation to above
  * the bottom bars); re-measured as that resizes.
  */
 const useCollapsed = (

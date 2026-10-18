@@ -32,7 +32,7 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { useRegistry } from '../../hooks/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
-import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
@@ -175,7 +175,7 @@ const describeSelection = (elements: readonly Element[]) => {
 
 export type PropertiesProps = Util.ThemedClassName<{
   projection: Projection;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   nodes?: NodeRegistry;
   fields?: FormFieldMap;
   /** Show the fields without letting them change; also implied by a projection that cannot `update`. */

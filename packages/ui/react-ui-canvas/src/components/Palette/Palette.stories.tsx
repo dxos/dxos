@@ -51,7 +51,7 @@ type StoryArgs = Pick<PaletteProps, 'collapse' | 'flyout'> & {
   height: number;
 };
 
-/** The rail floating in a view of `height`, as `SceneView.Palette` places it. */
+/** The rail floating in a view of `height`, as `Canvas.Palette` places it. */
 const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
   const [tool, setTool] = useState<Tool>({ kind: 'select' });
   return (

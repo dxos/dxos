@@ -14,7 +14,7 @@ import { createMemoryStore } from '../../model/store.ts';
 import { createTimeline } from '../../model/timeline.ts';
 import { type Scene } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */
 const topLevel = (root: HTMLElement, id: string) =>
@@ -45,16 +45,16 @@ const DefaultStory = () => {
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, []);
   return (
-    <SceneView.Root store={store} root={root} inspectors='docked'>
-      <SceneView.Canvas />
-      <SceneView.Navigation />
-      <SceneView.Actions />
-      <SceneView.Palette />
-      <SceneView.Timeline />
-      <SceneView.Properties />
-      <SceneView.Layers />
-      <SceneView.Objects />
-    </SceneView.Root>
+    <Canvas.Root store={store} root={root} inspectors='docked'>
+      <Canvas.Viewport />
+      <Canvas.Navigation />
+      <Canvas.Actions />
+      <Canvas.Palette />
+      <Canvas.Timeline />
+      <Canvas.Properties />
+      <Canvas.Layers />
+      <Canvas.Objects />
+    </Canvas.Root>
   );
 };
 

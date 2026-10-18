@@ -87,7 +87,7 @@ export type EditingPart = { id: NodeId; part: PartKey };
 /** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
 export type InspectorMode = 'floating' | 'docked';
 
-export type SceneViewAtoms = {
+export type CanvasAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
@@ -133,7 +133,7 @@ export type SceneViewAtoms = {
  * Fresh atoms for one view. Marked keepAlive so they survive React strict-mode remounts; the owner
  * decides their lifetime.
  */
-export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
+export const createCanvasAtoms = (root: SceneId): CanvasAtoms => ({
   camera: Atom.keepAlive(Atom.make<Camera>({ x: 0, y: 0, zoom: 1 })),
   path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),

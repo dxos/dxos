@@ -12,10 +12,10 @@ import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import {
+  Canvas,
   type FreehandProjectionOptions,
-  SceneView,
+  createCanvasAtoms,
   createMemoryStore,
-  createSceneViewAtoms,
   useRegistry,
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
@@ -47,7 +47,7 @@ import { sceneFromCircuit } from './scene.ts';
 
 //
 // The compute circuits on the scene engine (MIGRATION.md M3): the same controller, shapes and circuits
-// as the `compute` stories, rendered by `SceneView` through the compute projection.
+// as the `compute` stories, rendered by `Canvas` through the compute projection.
 //
 
 const sidebarTypes = ['scene', 'compute', 'controller', 'selected'] as const;
@@ -63,7 +63,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
   const registry = useRegistry();
   const scene = useMemo(() => sceneFromCircuit(circuit), [circuit]);
   const store = useMemo(() => createMemoryStore([scene]), [scene]);
-  const atoms = useMemo(() => createSceneViewAtoms(scene.id), [scene.id]);
+  const atoms = useMemo(() => createCanvasAtoms(scene.id), [scene.id]);
   const createProjection = useCallback(
     (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
     [controller],
@@ -102,19 +102,13 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <ComputeContext.Provider value={{ controller, resize }}>
         <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
-          <SceneView.Root
-            store={store}
-            root={scene.id}
-            atoms={atoms}
-            nodes={computeNodeRegistry}
-            projection={projection}
-          >
-            <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
-            <SceneView.Navigation />
-            <SceneView.Actions />
-            <SceneView.Debug />
-            <SceneView.Palette />
-          </SceneView.Root>
+          <Canvas.Root store={store} root={scene.id} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
+            <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
+            <Canvas.Navigation />
+            <Canvas.Actions />
+            <Canvas.Debug />
+            <Canvas.Palette />
+          </Canvas.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />
         </div>
       </ComputeContext.Provider>
@@ -150,7 +144,7 @@ const SidebarJson = ({
   sidebar: Sidebar;
   controller: ComputeGraphController;
   projection: ReturnType<typeof useSceneProjection>;
-  atoms: ReturnType<typeof createSceneViewAtoms>;
+  atoms: ReturnType<typeof createCanvasAtoms>;
 }) => {
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);

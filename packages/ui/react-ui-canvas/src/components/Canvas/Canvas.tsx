@@ -27,150 +27,146 @@ import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeneratorCompiler } from '../../generator/compile.ts';
-import { type GeneratorSource } from '../../generator/types.ts';
+import { type GeneratorCompiler, type GeneratorSource } from '../../generator/index.ts';
 import {
   SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
   useChanging,
   useClock,
+  useGeneratorFrames,
   useRegistry,
   useSceneProjection,
   useViewport,
   useWheel,
 } from '../../hooks/index.ts';
-import { useGeneratorFrames } from '../../hooks/useGeneratorFrames.ts';
-import { animate } from '../../model/animate.ts';
-import {
-  type Drag,
-  type InspectorMode,
-  type SceneViewAtoms,
-  createSceneViewAtoms,
-  isMoving,
-} from '../../model/atoms.ts';
-import { frameTimeAttribute, exposeClock as publishClock } from '../../model/clock.ts';
-import { keyAction } from '../../model/keys.ts';
-import { nodeAnimatable, nodeDef } from '../../model/node-def.ts';
-import {
-  type FreehandProjectionOptions,
-  type Projection,
-  readonlyCapabilities,
-  reduceIntent,
-} from '../../model/projection.ts';
-import {
-  type LinkRegistry,
-  type NodeRegistry,
-  defaultLinkRegistry,
-  defaultNodeRegistry,
-} from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
 import {
   type BackgroundGrid,
-  PLAIN_BACKGROUND,
-  type ThemeRegistry,
-  defaultThemeRegistry,
-  resolveBackground,
-  resolveLook,
-} from '../../model/style-set.ts';
-import {
-  OPACITY_PATH,
-  applyCameraKey,
-  cameraKey,
-  clampTime,
-  createTimeline,
-  getPath,
-  keyTimes,
-  removeKey,
-  sampleCamera,
-  setKey,
-  timelineFps,
-} from '../../model/timeline.ts';
-import {
   type Bounds,
   type Camera,
+  type CanvasAtoms,
   DEFAULT_GRID,
+  type Drag,
   type ElementId,
   type Endpoint,
+  type FreehandProjectionOptions,
+  type InspectorMode,
   type InstanceNode,
   type Intent,
   type Layer,
   type LayerId,
   type LinkId,
+  type LinkRegistry,
   MAJOR_GRID_RATIO,
   type Node,
   type NodeId,
+  type NodeRegistry,
   type NodeType,
+  OPACITY_PATH,
+  PLAIN_BACKGROUND,
   type Point,
+  type Projection,
   type Scene,
   type SceneId,
+  type SceneStore,
+  type ThemeRegistry,
   type Timeline,
+  animate,
+  applyCameraKey,
+  cameraKey,
+  clampTime,
+  createCanvasAtoms,
+  createTimeline,
+  defaultLinkRegistry,
+  defaultNodeRegistry,
+  defaultThemeRegistry,
+  frameTimeAttribute,
+  getPath,
   isFrameNode,
   isInstanceNode,
+  isMoving,
   isPointEndpoint,
-} from '../../model/types.ts';
+  keyAction,
+  keyTimes,
+  nodeAnimatable,
+  nodeDef,
+  exposeClock as publishClock,
+  readonlyCapabilities,
+  reduceIntent,
+  removeKey,
+  resolveBackground,
+  resolveLook,
+  sampleCamera,
+  setKey,
+  timelineFps,
+} from '../../model/index.ts';
 import {
   MIN_ZOOM,
   NOMINAL_ZOOM,
+  type PartKey,
+  activeLayer,
+  boundsFromPoints,
   cameraTransform,
-  fitBounds,
-  layerOpacity,
-  panBy,
-  sceneToScreen,
-  screenToScene,
-  zoomAt,
-} from '../../utils/camera.ts';
-import { duplicateSelection } from '../../utils/clipboard.ts';
-import {
+  classedNode,
   composeSelection,
   compositeBounds,
   compositeScenes,
   copyComposite,
+  createLayer,
+  createLink,
+  duplicateSelection,
+  fitBounds,
+  groupIntoScene,
+  hitTest,
   instanceCounts,
   instancePorts,
-  renamePortLinks,
-  retargetInstance,
-  ungroupInstance,
-} from '../../utils/compose.ts';
-import { nodeDragType } from '../../utils/dnd.ts';
-import { groupIntoScene } from '../../utils/group.ts';
-import { boundsFromPoints, hitTest } from '../../utils/hit.ts';
-import {
-  activeLayer,
-  createLayer,
+  layerOpacity,
   mergeLayersIntent,
   moveLayer,
+  nodeBounds,
+  nodeDragType,
+  nominalSize,
+  panBy,
+  partText,
+  partValues,
+  recordScenes,
+  recordStoreStep,
+  redo,
+  renamePortLinks,
+  retargetInstance,
   sceneLayers,
+  sceneOptions,
+  sceneToScreen,
+  screenToScene,
+  topZ,
+  undo,
+  ungroupInstance,
   visibleScene,
-} from '../../utils/layers.ts';
-import { topZ } from '../../utils/order.ts';
-import { type PartKey, partText, partValues } from '../../utils/parts.ts';
-import { sceneOptions } from '../../utils/scenes.ts';
-import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { classedNode } from '../../utils/style.ts';
-import { recordScenes, recordStoreStep, redo, undo } from '../../utils/undo.ts';
-import { About, type AboutStat } from '../About/About.tsx';
+  zoomAt,
+} from '../../utils/index.ts';
+import { About, type AboutStat } from '../About/index.ts';
 import {
   BackgroundField,
   BackgroundFill,
   GrainOverlay,
+  WashCanvas,
   backgroundField,
   drawsField,
-} from '../Background/Background.tsx';
-import { WashCanvas, supportsWashCanvas } from '../Background/WashCanvas.tsx';
-import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
+  supportsWashCanvas,
+} from '../Background/index.ts';
+import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { LayersPanel } from '../Layers/Layers.tsx';
-import { ObjectsPanel } from '../Objects/Objects.tsx';
-import { Palette } from '../Palette/Palette.tsx';
-import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
-import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
-import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
-import { TimelineBar } from '../Timeline/Timeline.tsx';
-import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { LayersPanel } from '../Layers/index.ts';
+import { ObjectsPanel } from '../Objects/index.ts';
+import { Palette } from '../Palette/index.ts';
+import { Properties, type PropertiesProps } from '../Properties/index.ts';
+import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/index.ts';
+import { ThemeBar } from '../ThemeBar/index.ts';
+import { TimelineBar } from '../Timeline/index.ts';
+import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';
+import { CanvasProvider, useCanvasContext } from './CanvasContext.ts';
 import { Dock, DockProvider } from './Dock.tsx';
 import { type InspectorDef, useInspector } from './Inspector.tsx';
-import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
@@ -225,7 +221,7 @@ const PREVIEW_LINK_ID = 'preview-link';
  */
 export type SceneDisplay = { snap: boolean; guides: boolean; fit: boolean };
 
-export type SceneViewRootProps = Util.ThemedClassName<{
+export type CanvasRootProps = Util.ThemedClassName<{
   store: SceneStore;
   root: SceneId;
   nodes?: NodeRegistry;
@@ -235,7 +231,7 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   /** A host-owned projection instead, shared with the host's panels (see `useSceneProjection`). */
   projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
-  atoms?: SceneViewAtoms;
+  atoms?: CanvasAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
   initialCamera?: Camera;
   /** Called once the camera settles on the root scene, so a host can persist it. */
@@ -314,7 +310,7 @@ export type SceneViewRootProps = Util.ThemedClassName<{
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
 
-const SceneViewRoot = ({
+const CanvasRoot = ({
   classNames,
   store,
   root,
@@ -351,7 +347,7 @@ const SceneViewRoot = ({
   compileGenerator,
   createGeneratorWorker,
   children,
-}: SceneViewRootProps) => {
+}: CanvasRootProps) => {
   const look = useMemo(() => {
     const resolved = resolveLook(themes, { theme: theme ?? defaultTheme, styleSet, background });
     return backgroundGrid && backgroundGrid !== resolved.background.grid
@@ -364,7 +360,7 @@ const SceneViewRoot = ({
     [themes, background, look.theme.background],
   );
   const registry = useRegistry();
-  const atoms = useMemo(() => atomsProp ?? createSceneViewAtoms(root), [atomsProp, root]);
+  const atoms = useMemo(() => atomsProp ?? createCanvasAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
   const viewport = useViewport(rootRef);
 
@@ -1538,7 +1534,7 @@ const SceneViewRoot = ({
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
 
   return (
-    <SceneViewProvider
+    <CanvasProvider
       registry={registry}
       atoms={atoms}
       store={store}
@@ -1666,17 +1662,17 @@ const SceneViewRoot = ({
           </div>
         </DockProvider>
       </SceneLookContext.Provider>
-    </SceneViewProvider>
+    </CanvasProvider>
   );
 };
 
-SceneViewRoot.displayName = 'SceneView.Root';
+CanvasRoot.displayName = 'Canvas.Root';
 
 //
 // Canvas
 //
 
-export type SceneViewCanvasProps = {
+export type CanvasViewportProps = {
   /** Nested levels below the root that may mount live; deeper portals stay previews (decision 10). */
   liveDepth?: number;
   /** Extra layers drawn in scene coordinates under the camera, above the scene (e.g. a host's animations). */
@@ -1686,7 +1682,7 @@ export type SceneViewCanvasProps = {
 };
 
 /** The scene itself under the camera: the grid, the layer, the control frame and the menu a gesture opens. */
-const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds }: SceneViewCanvasProps) => {
+const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds }: CanvasViewportProps) => {
   const {
     registry,
     atoms,
@@ -1741,7 +1737,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
     objectActions,
     drillIn,
     generated,
-  } = useSceneViewContext('SceneView.Canvas');
+  } = useCanvasContext('Canvas.Viewport');
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
   const selectedInstance = useMemo(() => {
     const [only] = selection.size === 1 ? [...selection] : [];
@@ -1969,13 +1965,13 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds
   );
 };
 
-SceneViewCanvas.displayName = 'SceneView.Canvas';
+CanvasViewport.displayName = 'Canvas.Viewport';
 
 //
 // Toolbars
 //
 
-export type SceneViewBarProps = Util.ThemedClassName<{}>;
+export type CanvasBarProps = Util.ThemedClassName<{}>;
 
 /**
  * The frame a bar floats in: its content's width, but half the view at most (the bar scrolls beyond that).
@@ -1984,8 +1980,8 @@ export type SceneViewBarProps = Util.ThemedClassName<{}>;
 const barFrame = 'absolute w-max max-w-[50%]';
 
 /** Where the view is in the scene tree. */
-const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions } = useSceneViewContext('SceneView.Navigation');
+const CanvasNavigation = ({ classNames = 'top-2 left-2' }: CanvasBarProps) => {
+  const { toolbarActions } = useCanvasContext('Canvas.Navigation');
   return (
     <div className={mx(barFrame, classNames)}>
       <NavigationToolbar actions={toolbarActions} />
@@ -1993,11 +1989,11 @@ const SceneViewNavigation = ({ classNames = 'top-2 left-2' }: SceneViewBarProps)
   );
 };
 
-SceneViewNavigation.displayName = 'SceneView.Navigation';
+CanvasNavigation.displayName = 'Canvas.Navigation';
 
 /** Everything that changes the view or the scene. */
-const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: SceneViewBarProps) => {
-  const { toolbarActions, nodeRegistry, capabilities, readonly } = useSceneViewContext('SceneView.Actions');
+const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: CanvasBarProps) => {
+  const { toolbarActions, nodeRegistry, capabilities, readonly } = useCanvasContext('Canvas.Actions');
   // Every action here edits the scene or how edits snap.
   if (readonly) {
     return null;
@@ -2010,11 +2006,11 @@ const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }:
   );
 };
 
-SceneViewActions.displayName = 'SceneView.Actions';
+CanvasActions.displayName = 'Canvas.Actions';
 
 /** The camera's controls and numbers; nothing here changes the scene. */
-const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, camera } = useSceneViewContext('SceneView.Debug');
+const CanvasDebug = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) => {
+  const { toolbarActions, camera } = useCanvasContext('Canvas.Debug');
   return (
     <div className={mx(barFrame, classNames)}>
       <CameraToolbar actions={toolbarActions}>{Math.round(camera.zoom * 100)}%</CameraToolbar>
@@ -2022,16 +2018,16 @@ const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) =
   );
 };
 
-SceneViewDebug.displayName = 'SceneView.Debug';
+CanvasDebug.displayName = 'Canvas.Debug';
 
 //
 // Theme
 //
 
 /** The theme picker and the grid over its background, at the bottom right. */
-const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) => {
+const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
   const { look, themes, themeOverride, themeGrid, guides, toggleGuides, onThemeChange, onBackgroundGridChange } =
-    useSceneViewContext('SceneView.Theme');
+    useCanvasContext('Canvas.Theme');
   return (
     <div className={mx(barFrame, classNames)}>
       <ThemeBar
@@ -2049,16 +2045,16 @@ const SceneViewTheme = ({ classNames = 'bottom-2 right-2' }: SceneViewBarProps) 
   );
 };
 
-SceneViewTheme.displayName = 'SceneView.Theme';
+CanvasTheme.displayName = 'Canvas.Theme';
 
 //
 // Palette
 //
 
 /** The tool rail: what the next gesture will draw. */
-const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
+const CanvasPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: CanvasBarProps) => {
   const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, setTool } =
-    useSceneViewContext('SceneView.Palette');
+    useCanvasContext('Canvas.Palette');
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
     <div className={mx('pointer-events-none', classNames)}>
@@ -2075,21 +2071,21 @@ const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: S
   );
 };
 
-SceneViewPalette.displayName = 'SceneView.Palette';
+CanvasPalette.displayName = 'Canvas.Palette';
 
 //
 // Properties
 //
 
-export type SceneViewPropertiesProps = Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+export type CanvasPropertiesProps = Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
   /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
   sceneFilter?: (id: SceneId) => boolean;
 };
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
-const SceneViewProperties = ({ fields, db, getOptions, overrides, sceneFilter }: SceneViewPropertiesProps) => {
+const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
-    useSceneViewContext('SceneView.Properties');
+    useCanvasContext('Canvas.Properties');
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -2139,7 +2135,7 @@ const SceneViewProperties = ({ fields, db, getOptions, overrides, sceneFilter }:
   ));
 };
 
-SceneViewProperties.displayName = 'SceneView.Properties';
+CanvasProperties.displayName = 'Canvas.Properties';
 
 //
 // Inspectors
@@ -2188,8 +2184,8 @@ const ABOUT_INSPECTOR: InspectorDef = {
  * The current scene's layers: an inspector that floats where the properties go while nothing is selected (the two take
  * turns). Each edit is one intent, so one undo step.
  */
-const SceneViewLayers = () => {
-  const { projection, atoms, capabilities } = useSceneViewContext('SceneView.Layers');
+const CanvasLayers = () => {
+  const { projection, atoms, capabilities } = useCanvasContext('Canvas.Layers');
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -2258,7 +2254,7 @@ const SceneViewLayers = () => {
   ));
 };
 
-SceneViewLayers.displayName = 'SceneView.Layers';
+CanvasLayers.displayName = 'Canvas.Layers';
 
 //
 // Objects
@@ -2269,7 +2265,7 @@ const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into a row's thumbnail. */
 const ObjectThumbnail = ({ id }: { id: SceneId }) => {
-  const { store, nodeRegistry } = useSceneViewContext('SceneView.Objects');
+  const { store, nodeRegistry } = useCanvasContext('Canvas.Objects');
   const composite = useAtomValue(store.scene(id));
   const content = composite && compositeBounds(composite);
   if (!composite || !content) {
@@ -2289,7 +2285,7 @@ const ObjectThumbnail = ({ id }: { id: SceneId }) => {
 };
 
 /** The drawing's composite objects: a docked inspector beside the layers. */
-const SceneViewObjects = () => {
+const CanvasObjects = () => {
   const {
     store,
     readonly,
@@ -2301,7 +2297,7 @@ const SceneViewObjects = () => {
     objectActions,
     baseProjection,
     timeline,
-  } = useSceneViewContext('SceneView.Objects');
+  } = useCanvasContext('Canvas.Objects');
   const scenes = useAtomValue(store.scenes);
   const objects = useMemo(() => {
     const counts = instanceCounts(scenes);
@@ -2345,21 +2341,21 @@ const SceneViewObjects = () => {
   ));
 };
 
-SceneViewObjects.displayName = 'SceneView.Objects';
+CanvasObjects.displayName = 'Canvas.Objects';
 
 //
 // Timeline
 //
 
-export type SceneViewTimelineProps = SceneViewBarProps;
+export type CanvasTimelineProps = CanvasBarProps;
 
 /**
  * The collapsed timeline bar (ANIMATION.md §5.8), over the bottom of the canvas: shown while the scene has a timeline
  * (the Objects panel's Animate action gives it one).
  */
-const SceneViewTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: SceneViewTimelineProps) => {
+const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: CanvasTimelineProps) => {
   const { registry, atoms, readonly, capabilities, timeline, time, playing, fps, seek, selection, timelineKeys } =
-    useSceneViewContext('SceneView.Timeline');
+    useCanvasContext('Canvas.Timeline');
   const autoKey = useAtomValue(atoms.autoKey);
   const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
   if (!timeline) {
@@ -2385,15 +2381,15 @@ const SceneViewTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' 
   );
 };
 
-SceneViewTimeline.displayName = 'SceneView.Timeline';
+CanvasTimeline.displayName = 'Canvas.Timeline';
 
 //
 // About
 //
 
 /** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
-const SceneViewAbout = () => {
-  const { scene, store } = useSceneViewContext('SceneView.About');
+const CanvasAbout = () => {
+  const { scene, store } = useCanvasContext('Canvas.About');
   const scenes = useAtomValue(store.scenes);
   const stats = useMemo<AboutStat[]>(
     () => [
@@ -2409,19 +2405,19 @@ const SceneViewAbout = () => {
   ));
 };
 
-SceneViewAbout.displayName = 'SceneView.About';
+CanvasAbout.displayName = 'Canvas.About';
 
-export const SceneView = {
-  Root: SceneViewRoot,
-  Canvas: SceneViewCanvas,
-  Navigation: SceneViewNavigation,
-  Actions: SceneViewActions,
-  Debug: SceneViewDebug,
-  Theme: SceneViewTheme,
-  Palette: SceneViewPalette,
-  Properties: SceneViewProperties,
-  Layers: SceneViewLayers,
-  Objects: SceneViewObjects,
-  Timeline: SceneViewTimeline,
-  About: SceneViewAbout,
+export const Canvas = {
+  Root: CanvasRoot,
+  Viewport: CanvasViewport,
+  Navigation: CanvasNavigation,
+  Actions: CanvasActions,
+  Debug: CanvasDebug,
+  Theme: CanvasTheme,
+  Palette: CanvasPalette,
+  Properties: CanvasProperties,
+  Layers: CanvasLayers,
+  Objects: CanvasObjects,
+  Timeline: CanvasTimeline,
+  About: CanvasAbout,
 };

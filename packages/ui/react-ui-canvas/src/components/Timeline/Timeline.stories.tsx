@@ -16,7 +16,7 @@ import { TimelineBar, keyAt } from './Timeline.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
 
-/** The bar over a real view clock, as `SceneView.Timeline` drives it, with keys kept in local state. */
+/** The bar over a real view clock, as `Canvas.Timeline` drives it, with keys kept in local state. */
 const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
   const registry = useRegistry();
   const clock = useMemo(() => createClock(), []);

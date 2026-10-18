@@ -36,7 +36,7 @@ export const BackgroundChoice = Schema.Union([
 export type BackgroundChoice = Schema.Schema.Type<typeof BackgroundChoice>;
 
 /**
- * The canvas variant's user preferences. Each one maps to a `SceneView` prop, so a setting that is
+ * The canvas variant's user preferences. Each one maps to a `Canvas` prop, so a setting that is
  * not wired to anything cannot appear here; per-document state (the camera, the snap toggle) stays on
  * the view, where two windows of one drawing keep their own.
  */

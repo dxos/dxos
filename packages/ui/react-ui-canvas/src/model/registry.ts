@@ -64,7 +64,7 @@ export type NodeViewProps = {
   opening?: boolean;
   /** The text part of this node being edited in place, with the editor's callbacks. */
   editing?: PartEditing;
-  /** The node's embedded content takes input (`SceneViewAtoms.active`); otherwise it should be inert. */
+  /** The node's embedded content takes input (`CanvasAtoms.active`); otherwise it should be inert. */
   active?: boolean;
   /** Opens the node (drills into a portal); absent where the layer is read-only. */
   onOpen?: () => void;

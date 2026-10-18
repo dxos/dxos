@@ -9,12 +9,12 @@ import { createContext } from '@dxos/react-hooks';
 import { type GeneratorFrames } from '../../generator/host.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
+  type CanvasAtoms,
   type ControlPointRef,
   type Drag,
   type EditingPart,
   type InspectorMode,
   type Isolation,
-  type SceneViewAtoms,
 } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
@@ -41,7 +41,7 @@ import { type SceneClipboard } from './useSceneClipboard.ts';
 import { type SceneNavigation } from './useSceneNavigation.ts';
 
 /**
- * What `SceneView.Root` composes and every part reads. The parts are a view onto one machine rather than
+ * What `Canvas.Root` composes and every part reads. The parts are a view onto one machine rather than
  * components with state of their own, so the whole of it is here rather than threaded part by part: a
  * toolbar and the canvas act on the same camera, the same selection and the same projection.
  */
@@ -69,9 +69,9 @@ export type ObjectActions = {
   remove: (composite: SceneId, instances: boolean) => void;
 };
 
-export type SceneViewContextValue = {
+export type CanvasContextValue = {
   registry: ReturnType<typeof useRegistry>;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   store: SceneStore;
   projection: Projection;
   capabilities: Capabilities;
@@ -191,4 +191,4 @@ export type SceneViewContextValue = {
     rootRef: RefObject<HTMLDivElement | null>;
   };
 
-export const [SceneViewProvider, useSceneViewContext] = createContext<SceneViewContextValue>('SceneView.Root');
+export const [CanvasProvider, useCanvasContext] = createContext<CanvasContextValue>('Canvas.Root');

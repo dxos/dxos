@@ -14,7 +14,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useRegistry, useSceneProjection } from '../../hooks/index.ts';
-import { createSceneViewAtoms } from '../../model/atoms.ts';
+import { createCanvasAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type ElementId, type Layer, type Scene, getElement } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
@@ -55,7 +55,7 @@ type StoryArgs = {
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const store = useMemo(() => createMemoryStore([SCENE]), []);
-  const atoms = useMemo(() => createSceneViewAtoms(SCENE.id), []);
+  const atoms = useMemo(() => createCanvasAtoms(SCENE.id), []);
   const projection = useSceneProjection({ store, atoms });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));

@@ -5,7 +5,7 @@
 import { type KeyboardEvent, useCallback } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms } from '../../model/atoms.ts';
 import { isToolKey, keyAction } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -15,7 +15,7 @@ import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
-import { type TimelineKeys } from './SceneViewContext.ts';
+import { type TimelineKeys } from './CanvasContext.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneClipboard } from './useSceneClipboard.ts';
@@ -24,7 +24,7 @@ import { type SceneSnap } from './useSceneSnap.ts';
 
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   scene: Scene;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;

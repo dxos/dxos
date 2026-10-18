@@ -11,12 +11,12 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useRegistry } from '../../hooks/index.ts';
-import { createSceneViewAtoms } from '../../model/atoms.ts';
+import { createCanvasAtoms } from '../../model/atoms.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type Layer } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { between } from '../../utils/order.ts';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 
@@ -44,16 +44,16 @@ const DefaultStory = ({ select }: StoryArgs) => {
     const tree = createTree();
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, []);
-  const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
+  const atoms = useMemo(() => createCanvasAtoms(root), [root]);
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select ? [select] : []));
   }, [registry, atoms, select]);
   return (
-    <SceneView.Root store={store} root={root} atoms={atoms} inspectors='docked'>
-      <SceneView.Properties />
-      <SceneView.Layers />
-      <SceneView.About />
-    </SceneView.Root>
+    <Canvas.Root store={store} root={root} atoms={atoms} inspectors='docked'>
+      <Canvas.Properties />
+      <Canvas.Layers />
+      <Canvas.About />
+    </Canvas.Root>
   );
 };
 

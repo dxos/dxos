@@ -4,8 +4,8 @@
 
 import { type ReactNode, useMemo } from 'react';
 
+import { useCanvasContext } from './CanvasContext.ts';
 import { type DockSection, useDockSection } from './Dock.tsx';
-import { useSceneViewContext } from './SceneViewContext.ts';
 
 /**
  * An inspector: a panel beside the canvas (properties, layers, about) that docks as one section of the dock or floats
@@ -27,7 +27,7 @@ export type InspectorChrome = {
  * none does, as the inspectors edit the scene.
  */
 export const useInspector = (def: InspectorDef, render: (chrome: InspectorChrome) => ReactNode): ReactNode | null => {
-  const { readonly, selection, inspectors, onInspectorsChange } = useSceneViewContext('SceneView.Inspector');
+  const { readonly, selection, inspectors, onInspectorsChange } = useCanvasContext('Canvas.Inspector');
   const docked = inspectors === 'docked';
   const onDockedChange = useMemo(
     () => onInspectorsChange && ((next: boolean) => onInspectorsChange(next ? 'docked' : 'floating')),

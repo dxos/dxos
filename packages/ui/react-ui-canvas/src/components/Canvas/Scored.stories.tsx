@@ -15,14 +15,14 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { type SceneViewAtoms, createSceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms, createCanvasAtoms } from '../../model/atoms.ts';
 import { defaultNodeRegistry } from '../../model/registry.ts';
 import { type SceneStore, createMemoryStore } from '../../model/store.ts';
 import { type Scene, type SceneId } from '../../model/types.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/diagram.ts';
 import { createModelSceneTree } from '../../utils/testing.ts';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 /**
  * Test:
@@ -165,7 +165,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 type ScorecardProps = {
   store: SceneStore;
   root: SceneId;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   engine?: Objective.Evaluation;
   /** Every judge of the layout, of any kind; defaults to the objective's constraints and cost terms. */
   scorers?: readonly Score.Scorer[];
@@ -305,14 +305,14 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
 type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evaluation };
 
 const Editor = ({ store, root, engine }: EditorProps) => {
-  const atoms = useMemo(() => createSceneViewAtoms(root), [root]);
+  const atoms = useMemo(() => createCanvasAtoms(root), [root]);
   return (
     <Layout.Grid cols={['fill', '24rem']} classNames='dx-fill'>
-      <SceneView.Root store={store} root={root} atoms={atoms}>
-        <SceneView.Canvas liveDepth={0} />
-        <SceneView.Actions />
-        <SceneView.Palette />
-      </SceneView.Root>
+      <Canvas.Root store={store} root={root} atoms={atoms}>
+        <Canvas.Viewport liveDepth={0} />
+        <Canvas.Actions />
+        <Canvas.Palette />
+      </Canvas.Root>
       <Scorecard store={store} root={root} atoms={atoms} engine={engine} />
     </Layout.Grid>
   );

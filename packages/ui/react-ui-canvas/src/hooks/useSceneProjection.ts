@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useMemo } from 'react';
 
-import { type SceneViewAtoms } from '../model/atoms.ts';
+import { type CanvasAtoms } from '../model/atoms.ts';
 import { type FreehandProjectionOptions, type Projection, createFreehandProjection } from '../model/projection.ts';
 import { type SceneStore } from '../model/store.ts';
 import { withUndo } from '../utils/undo.ts';
@@ -13,7 +13,7 @@ import { useRegistry } from './useRegistry.ts';
 
 export type UseSceneProjectionOptions = {
   store: SceneStore;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /**
    * A host-owned projection, already obtained from this hook, used for every scene on the path: for a host

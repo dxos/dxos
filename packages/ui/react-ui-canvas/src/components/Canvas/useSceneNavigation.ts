@@ -5,7 +5,7 @@
 import { type MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type Drag, type HistoryEntry, type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms, type Drag, type HistoryEntry } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
@@ -45,7 +45,7 @@ const AUTO_DRILL_MS = 150;
 
 export type UseSceneNavigationOptions = {
   registry: ReturnType<typeof useRegistry>;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   nodeRegistry: NodeRegistry;
   store: SceneStore;
   scenes: Record<SceneId, Scene>;

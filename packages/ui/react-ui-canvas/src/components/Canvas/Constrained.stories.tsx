@@ -10,7 +10,7 @@ import React, { useCallback, useMemo } from 'react';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
-import { createSceneViewAtoms } from '../../model/atoms.ts';
+import { createCanvasAtoms } from '../../model/atoms.ts';
 import { type FreehandProjectionOptions } from '../../model/projection.ts';
 import {
   CONSTRAINED_SCENE_ID,
@@ -19,7 +19,7 @@ import {
 } from '../../model/projections/constrained.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { Properties } from '../Properties/Properties.tsx';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 /**
  * Test:
@@ -69,17 +69,17 @@ const DefaultStory = () => {
     ({ registry }: FreehandProjectionOptions) => createConstrainedProjection({ registry, model }),
     [model],
   );
-  const atoms = useMemo(() => createSceneViewAtoms(CONSTRAINED_SCENE_ID), []);
+  const atoms = useMemo(() => createCanvasAtoms(CONSTRAINED_SCENE_ID), []);
   const projection = useSceneProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <SceneView.Root store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection}>
-        <SceneView.Canvas />
-        <SceneView.Navigation />
-        <SceneView.Actions />
-        <SceneView.Debug />
-        <SceneView.Palette />
-      </SceneView.Root>
+      <Canvas.Root store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+        <Canvas.Viewport />
+        <Canvas.Navigation />
+        <Canvas.Actions />
+        <Canvas.Debug />
+        <Canvas.Palette />
+      </Canvas.Root>
       <ConstraintList model={model} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>

@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { createMemoryStore } from '../../model/store.ts';
 import { type BackgroundGrid, THEME_IDS } from '../../model/style-set.ts';
 import { SceneBuilder } from '../../utils/builder.ts';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 const cell = (x: number, y: number, width = 4, height = 2) => ({
   x: x * 64,
@@ -69,7 +69,7 @@ const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
   useEffect(() => setTheme(initialTheme), [initialTheme]);
   const [grid, setGrid] = useState<BackgroundGrid>();
   return (
-    <SceneView.Root
+    <Canvas.Root
       store={store}
       root={root}
       theme={theme}
@@ -79,12 +79,12 @@ const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
       onBackgroundGridChange={setGrid}
       inspectors='floating'
     >
-      <SceneView.Canvas />
-      <SceneView.Navigation />
-      <SceneView.Actions />
-      <SceneView.Debug />
-      <SceneView.Theme />
-    </SceneView.Root>
+      <Canvas.Viewport />
+      <Canvas.Navigation />
+      <Canvas.Actions />
+      <Canvas.Debug />
+      <Canvas.Theme />
+    </Canvas.Root>
   );
 };
 

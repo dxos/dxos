@@ -13,7 +13,7 @@ import {
 } from 'react';
 
 import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
-import { type ControlPointRef, type Drag, type Handle, type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms, type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type CreateProps, type NodeRegistry } from '../../model/registry.ts';
@@ -93,7 +93,7 @@ export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' |
 
 export type UsePointerMachineOptions = {
   registry: ReturnType<typeof useRegistry>;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   store: SceneStore;
   scene: Scene;
   nodeRegistry: NodeRegistry;
@@ -264,7 +264,7 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select],
   );
 
-  /** Makes a node's embedded content live (`SceneViewAtoms.active`), when it has any. */
+  /** Makes a node's embedded content live (`CanvasAtoms.active`), when it has any. */
   const activate = useCallback(
     (id: NodeId) => {
       // Escaped: a host's node id may hold characters a selector would misread.

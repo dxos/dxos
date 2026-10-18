@@ -43,7 +43,7 @@ const DefaultStory = () => {
     create: (type: NodeType) => log(`create ${type}`),
   };
   return (
-    // `items-start`: each bar fills its box, as SceneView floats it, so the column must not stretch them.
+    // `items-start`: each bar fills its box, as Canvas floats it, so the column must not stretch them.
     <div className='flex flex-col items-start gap-2 p-2'>
       <NavigationToolbar actions={actions} />
       <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />

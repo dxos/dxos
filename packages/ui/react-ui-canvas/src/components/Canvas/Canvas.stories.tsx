@@ -19,7 +19,7 @@ import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
 import { TONES } from '../../utils/style.ts';
 import { createModelSceneTree, createSceneTree } from '../../utils/testing.ts';
-import { SceneView } from './SceneView.tsx';
+import { Canvas } from './Canvas.tsx';
 
 /**
  * Test:
@@ -67,7 +67,7 @@ const Editor = ({
   const [theme, setTheme] = useState<string>();
   const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
   return (
-    <SceneView.Root
+    <Canvas.Root
       store={store}
       root={root}
       readonly={readonly}
@@ -80,16 +80,16 @@ const Editor = ({
       onBackgroundGridChange={setBackgroundGrid}
       createProjection={lattice ? createLatticeProjection : undefined}
     >
-      <SceneView.Canvas liveDepth={liveDepth} />
-      <SceneView.Navigation />
-      <SceneView.Actions />
-      <SceneView.Debug />
-      <SceneView.Theme />
-      <SceneView.Palette />
-      <SceneView.Properties />
-      <SceneView.Layers />
-      <SceneView.About />
-    </SceneView.Root>
+      <Canvas.Viewport liveDepth={liveDepth} />
+      <Canvas.Navigation />
+      <Canvas.Actions />
+      <Canvas.Debug />
+      <Canvas.Theme />
+      <Canvas.Palette />
+      <Canvas.Properties />
+      <Canvas.Layers />
+      <Canvas.About />
+    </Canvas.Root>
   );
 };
 
@@ -270,7 +270,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/SceneView',
+  title: 'ui/react-ui-canvas/Canvas',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.

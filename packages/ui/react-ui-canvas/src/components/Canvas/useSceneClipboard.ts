@@ -5,7 +5,7 @@
 import { useCallback } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms } from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type Capabilities, type ElementId, type Point, type Scene } from '../../model/types.ts';
 import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
@@ -15,7 +15,7 @@ import { type SceneSnap } from './useSceneSnap.ts';
 
 export type UseSceneClipboardOptions = {
   registry: ReturnType<typeof useRegistry>;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   scene: Scene;
   projection: Projection;
   capabilities: Capabilities;

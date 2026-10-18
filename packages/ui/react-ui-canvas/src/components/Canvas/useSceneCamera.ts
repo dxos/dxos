@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type SceneViewAtoms } from '../../model/atoms.ts';
+import { type CanvasAtoms } from '../../model/atoms.ts';
 import { type Camera, type ElementId, type Size } from '../../model/types.ts';
 import { animateCamera } from '../../utils/camera.ts';
 
@@ -42,7 +42,7 @@ export type SceneCamera = {
  */
 export const useSceneCamera = (
   registry: ReturnType<typeof useRegistry>,
-  atoms: SceneViewAtoms,
+  atoms: CanvasAtoms,
   viewport: Size,
 ): SceneCamera => {
   const setCamera = useCallback(
