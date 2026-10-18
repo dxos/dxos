@@ -52,6 +52,7 @@ export const Chart = Schema.Struct({
   grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
   /** Bars run along the x axis, categories down the y axis (bar). */
   horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
+  stacked: Schema.optional(Schema.Boolean.annotate({ title: 'Stacked bars' })),
 });
 
 export type Chart = Schema.Schema.Type<typeof Chart>;

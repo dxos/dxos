@@ -18,6 +18,8 @@ export const PlotOptions = Schema.Struct({
   grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
   /** Bars run along the x axis, categories down the y axis (bar). */
   horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
+  /** A category's series stack into one bar rather than standing side by side (bar). */
+  stacked: Schema.optional(Schema.Boolean.annotate({ title: 'Stacked bars' })),
 });
 
 export type PlotOptions = Schema.Schema.Type<typeof PlotOptions>;

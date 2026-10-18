@@ -54,7 +54,16 @@ export const makePluginMetrics = (): Sheet.Sheet => {
       { range: `B1:${COLUMNS[HEADER.length - 1]}1`, key: 'alignment', value: 'end' },
     ],
     charts: [
-      { id: 'plugin-metrics', name: 'Plugin metrics', range, type: 'bar', header: true, grid: true, horizontal: true },
+      {
+        id: 'plugin-metrics',
+        name: 'Plugin metrics',
+        range,
+        type: 'bar',
+        header: true,
+        grid: true,
+        horizontal: true,
+        stacked: true,
+      },
     ],
   });
 };

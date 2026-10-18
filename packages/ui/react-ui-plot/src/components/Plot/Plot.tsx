@@ -67,7 +67,7 @@ Plot.displayName = 'Plot';
 
 const createPlot = (
   datums: PlotDatum[],
-  { type, grid = true, horizontal = false }: PlotOptions,
+  { type, grid = true, horizontal = false, stacked = false }: PlotOptions,
   { label, ...size }: { width: number; height: number; label?: string },
 ): SVGSVGElement | HTMLElement => {
   const series = new Set(datums.map((datum) => datum.series));
@@ -98,6 +98,8 @@ const createPlot = (
 
     case 'bar':
     default: {
+      // Several series stand side by side in a facet per category, unless they stack into one bar.
+      const grouped = series.size > 1 && !stacked;
       if (horizontal) {
         // Category labels sit left of the frame, so the margin grows with the longest one.
         const marginLeft = Math.max(MARGIN, ...keys.map((key) => String(key).length * LABEL_CHAR_WIDTH + MARGIN / 4));
@@ -105,26 +107,27 @@ const createPlot = (
           ...options,
           marginLeft,
           x: { label: null },
-          ...(series.size > 1
+          ...(grouped
             ? { fy: { label: null, domain: keys, axis: 'left' }, y: { axis: null, domain: seriesOrder } }
             : { y: { label: null, domain: keys } }),
           marks: [
             ObservablePlot.ruleX([0]),
-            series.size > 1
+            grouped
               ? ObservablePlot.barX(datums, { fy: 'key', y: 'series', x: 'value', fill: 'series', tip: TIP })
-              : ObservablePlot.barX(datums, { y: 'key', x: 'value', fill: 'series', tip: TIP }),
+              : // One bar per category; with several series, barX stacks them along it.
+                ObservablePlot.barX(datums, { y: 'key', x: 'value', fill: 'series', tip: TIP }),
           ],
         });
       }
 
       return ObservablePlot.plot({
         ...options,
-        ...(series.size > 1
+        ...(grouped
           ? { fx: { label: null, domain: keys, axis: 'bottom' }, x: { axis: null, domain: seriesOrder } }
           : { x: { label: null, domain: keys } }),
         marks: [
           ObservablePlot.ruleY([0]),
-          series.size > 1
+          grouped
             ? ObservablePlot.barY(datums, { fx: 'key', x: 'series', y: 'value', fill: 'series', tip: TIP })
             : ObservablePlot.barY(datums, { x: 'key', y: 'value', fill: 'series', tip: TIP }),
         ],
