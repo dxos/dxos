@@ -11,7 +11,9 @@
  *     --clips /tmp/meeting/clips --out /tmp/meeting/tracks
  *
  * Lines play one after another, `gap` seconds apart, after a silent `leadIn`, except a line with `at`, which starts
- * that many seconds after the lead-in; a line with no `text` is a silent gesture. A participant shows their looping
+ * that many seconds after the lead-in; a line with no `text` is a silent gesture. Between their lines a participant
+ * shows `listen-<id>-<n>.mp4` (their n-th gap of 2.5s or more, retimed to fit; `--plan` lists them) or, for a shorter
+ * pause, `still-<id>.png`; without those they fall back to their looping
  * listening clip whenever someone else is speaking. Every track starts on the same lead-in, so tracks started
  * together stay in step: `fake-media.mjs` loops the lead-in until its cue and `CallSimulation.start()` plays from
  * the top on join.
@@ -22,7 +24,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -34,6 +36,8 @@ const { values: options } = parseArgs({
     width: { type: 'string', default: '1280' },
     height: { type: 'string', default: '720' },
     fps: { type: 'string', default: '25' },
+    plan: { type: 'boolean', default: false },
+    screenshare: { type: 'string', multiple: true, default: [] },
   },
 });
 if (!options.conversation || !options.clips) {
@@ -78,16 +82,23 @@ const intermediate = [
 const lines = conversation.lines.map((line, index) => {
   const source = path.join(options.clips, `${String(index).padStart(2, '0')}-${line.speaker}.mp4`);
   const file = path.join(work, `line-${index}.mkv`);
+  if (options.plan) {
+    return { ...line, file, seconds: duration(source) };
+  }
   const audio = line.text ? ['-af', 'loudnorm=I=-16:TP=-1.5'] : [];
   run(['-i', source, '-vf', video, ...audio, ...intermediate, file]);
   return { ...line, file, seconds: duration(file) };
 });
 
 const idle = Object.fromEntries(
-  Object.keys(conversation.participants).map((id) => {
+  Object.keys(conversation.participants).flatMap((id) => {
+    const source = path.join(options.clips, `idle-${id}.mp4`);
+    if (options.plan || !existsSync(source)) {
+      return [];
+    }
     const file = path.join(work, `idle-${id}.mkv`);
-    run(['-i', path.join(options.clips, `idle-${id}.mp4`), '-vf', video, '-an', ...intermediate.slice(0, 6), file]);
-    return [id, { file, seconds: duration(file) }];
+    run(['-i', source, '-vf', video, '-an', ...intermediate.slice(0, 6), file]);
+    return [[id, { file, seconds: duration(file) }]];
   }),
 );
 
@@ -114,16 +125,64 @@ const idleSegment = (id, seconds, offset, file) => {
   ]);
 };
 
+/** `seconds` of a dedicated listening clip, retimed to fill its gap exactly. */
+const listenSegment = (source, seconds, file) => {
+  const factor = seconds / duration(source);
+  run([
+    ...['-i', source, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo'],
+    ...['-vf', `setpts=${factor.toFixed(5)}*PTS,${video}`, '-t', seconds.toFixed(3)],
+    ...['-map', '0:v', '-map', '1:a', ...intermediate, file],
+  ]);
+};
+
+/** `seconds` of the participant's still, for a pause too short to be worth its own footage. */
+const stillSegment = (still, seconds, file) => {
+  run([
+    ...['-loop', '1', '-i', still, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo'],
+    ...['-vf', video, '-t', seconds.toFixed(3), '-map', '0:v', '-map', '1:a', ...intermediate, file],
+  ]);
+};
+
+/** Gaps at least this long get their own listening clip (`listen-<id>-<n>.mp4`); shorter ones hold `still-<id>.png`. */
+const MIN_LISTEN = 2.5;
+const plan = [];
+
+/**
+ * Seconds of crossfade at each join between a line and the footage around it: two renders of the same still never
+ * frame it quite alike, so a hard cut reads as a jump. The filler is rendered that much longer on each side it meets a
+ * line, so the lines keep their exact times.
+ */
+const XFADE = 0.3;
+
 const tracks = Object.keys(conversation.participants).map((id) => {
-  const segments = [];
+  /** `{ fixed: file }` for a line, or `{ seconds, render(seconds, file) }` for the footage that fills a gap. */
+  const parts = [];
   let position = 0;
   let idleOffset = 0;
+  let listened = 0;
   const listen = (until) => {
-    if (until - position > 0.01) {
-      const file = path.join(work, `${id}-${segments.length}.mkv`);
-      idleSegment(id, until - position, idleOffset, file);
-      idleOffset += until - position;
-      segments.push(file);
+    const seconds = until - position;
+    if (seconds > 0.01) {
+      const clip = seconds >= MIN_LISTEN ? path.join(options.clips, `listen-${id}-${listened++}.mp4`) : undefined;
+      const still = path.join(options.clips, `still-${id}.png`);
+      if (clip) {
+        plan.push({ id, clip: path.basename(clip), seconds: Number(seconds.toFixed(2)), exists: existsSync(clip) });
+      }
+      if (options.plan) {
+        // Only the gaps are wanted.
+      } else if (clip && existsSync(clip)) {
+        parts.push({ seconds, render: (length, file) => listenSegment(clip, length, file) });
+      } else if (!clip && existsSync(still)) {
+        parts.push({ seconds, render: (length, file) => stillSegment(still, length, file) });
+      } else if (idle[id]) {
+        const offset = idleOffset;
+        parts.push({ seconds, render: (length, file) => idleSegment(id, length, offset, file) });
+        idleOffset += seconds;
+      } else {
+        throw new Error(
+          `${id}: nothing to fill ${seconds.toFixed(1)}s from ${position.toFixed(1)}s (add ${clip ?? still})`,
+        );
+      }
       position = until;
     }
   };
@@ -136,29 +195,99 @@ const tracks = Object.keys(conversation.participants).map((id) => {
         throw new Error(`${id}: line ${entry.index} starts before their previous one ends`);
       }
       listen(entry.start);
-      segments.push(lines[entry.index].file);
+      parts.push({ fixed: lines[entry.index].file });
       position = entry.end;
     });
   listen(total);
+  if (options.plan) {
+    return undefined;
+  }
 
-  const list = path.join(work, `${id}.txt`);
-  writeFileSync(list, segments.map((file) => `file '${path.resolve(file)}'`).join('\n'));
+  // Video: each part, fillers lengthened into the crossfades they take part in.
+  const videos = parts.map((part, index) => {
+    if (part.fixed) {
+      return part.fixed;
+    }
+    const file = path.join(work, `${id}-${index}.mkv`);
+    const fades = (index > 0 ? 1 : 0) + (index < parts.length - 1 ? 1 : 0);
+    part.render(part.seconds + fades * XFADE, file);
+    return file;
+  });
+  // Audio: each line's own sound and exact silences, so speech keeps its time whatever the picture does.
+  const audios = parts.map((part, index) => {
+    const file = path.join(work, `${id}-${index}.wav`);
+    if (part.fixed) {
+      run(['-i', part.fixed, '-vn', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', file]);
+    } else {
+      run([
+        '-f',
+        'lavfi',
+        '-i',
+        'anullsrc=r=48000:cl=stereo',
+        '-t',
+        part.seconds.toFixed(3),
+        '-c:a',
+        'pcm_s16le',
+        file,
+      ]);
+    }
+    return file;
+  });
+  const audioList = path.join(work, `${id}-audio.txt`);
+  writeFileSync(audioList, audios.map((file) => `file '${path.resolve(file)}'`).join('\n'));
+
+  let chain = '';
+  let label = '0:v';
+  let length = duration(videos[0]);
+  videos.slice(1).forEach((file, index) => {
+    const next = `v${index + 1}`;
+    chain += `[${label}][${index + 1}:v]xfade=transition=fade:duration=${XFADE}:offset=${(length - XFADE).toFixed(3)}[${next}];`;
+    label = next;
+    length += duration(file) - XFADE;
+  });
   const track = path.join(options.out, `${id}.webm`);
   run([
-    ...['-f', 'concat', '-safe', '0', '-i', list],
+    ...videos.flatMap((file) => ['-i', file]),
+    ...['-f', 'concat', '-safe', '0', '-i', audioList],
+    ...(chain ? ['-filter_complex', chain.slice(0, -1), '-map', `[${label}]`] : ['-map', '0:v']),
+    ...['-map', `${videos.length}:a`, '-t', total.toFixed(3)],
     ...['-c:v', 'libvpx-vp9', '-b:v', '1500k', '-deadline', 'good', '-cpu-used', '4', '-row-mt', '1'],
     ...['-c:a', 'libopus', '-b:a', '96k', track],
   ]);
   return track;
 });
 
+if (options.plan) {
+  console.log(JSON.stringify(plan, null, 2));
+  process.exit(0);
+}
+
 run([
   ...tracks.flatMap((track) => ['-i', track]),
   ...['-filter_complex', `amix=inputs=${tracks.length}:normalize=0`, '-vn', path.join(options.out, 'conversation.wav')],
 ]);
 const gestures = placed.filter((entry) => !entry.text).map(({ speaker, start, end }) => ({ speaker, start, end }));
+
+// `--screenshare <id>=<recording>` supplies the screen a participant shares from their `screenshare.at` (seconds after
+// the lead-in); the page plays `<id>-screen.webm` as that participant's screenshare track.
+const screenshares = options.screenshare.map((spec) => {
+  const [id, source] = spec.split('=');
+  const at = conversation.participants[id]?.screenshare?.at;
+  if (at === undefined) {
+    throw new Error(`--screenshare ${id}: set participants.${id}.screenshare.at in the conversation file`);
+  }
+  const file = `${id}-screen.webm`;
+  // An ended player stops feeding its stream and the shared screen goes black, so the last frame runs to the end.
+  const hold = Math.max(0, total - (leadIn + at) - duration(source)) + 1;
+  run([
+    ...['-i', source, '-an', '-vf', `tpad=stop_mode=clone:stop_duration=${hold.toFixed(2)},fps=25,format=yuv420p`],
+    ...['-c:v', 'libvpx-vp9', '-b:v', '2000k', '-deadline', 'good', '-cpu-used', '4', '-row-mt', '1'],
+    path.join(options.out, file),
+  ]);
+  return { speaker: id, start: leadIn + at, file };
+});
 writeFileSync(
   path.join(options.out, 'timeline.json'),
-  JSON.stringify({ leadIn, total, lines: timeline, gestures }, null, 2),
+  JSON.stringify({ leadIn, total, lines: timeline, gestures, screenshares }, null, 2),
 );
 console.log(JSON.stringify({ tracks, total: Number(total.toFixed(2)) }, null, 2));

@@ -15,6 +15,8 @@ export type SimulatedParticipantProps = {
   name: string;
   /** Video file (WebM in Chromium) whose picture and sound are the participant's camera and microphone. */
   src: string;
+  /** A screen recording the participant shares from `start` seconds on the conversation clock. */
+  screenshare?: { src: string; start: number };
 };
 
 /** One spoken line of a scripted conversation, timed in seconds from the top of the participants' files. */
@@ -33,6 +35,15 @@ type SimulatedParticipant = {
   stream: MediaStream;
   audioTrack: MediaStreamTrack;
   monitor: SpeakingMonitor;
+  screenshare?: {
+    start: number;
+    trackName: EncodedTrackName;
+    video: HTMLVideoElement;
+    stream: MediaStream;
+    on: boolean;
+    /** The participant's own track record, whose `screenshareEnabled` the call reads. */
+    tracks: NonNullable<UserState['tracks']>;
+  };
 };
 
 const SESSION_ID = 'simulated';
@@ -71,11 +82,13 @@ export class CallSimulation extends Resource {
 
   protected override async _close(): Promise<void> {
     this.#stopClock();
-    for (const { video, stream, monitor } of this.#participants) {
+    for (const { video, stream, monitor, screenshare } of this.#participants) {
       await monitor.close();
-      stream.getTracks().forEach((track) => track.stop());
-      video.pause();
-      video.remove();
+      for (const { stream: tracks, video: player } of [{ stream, video }, ...(screenshare ? [screenshare] : [])]) {
+        tracks.getTracks().forEach((track) => track.stop());
+        player.pause();
+        player.remove();
+      }
     }
     this.#participants.length = 0;
     await this.#audioContext.close();
@@ -97,13 +110,35 @@ export class CallSimulation extends Resource {
   leave(): void {
     this.#joined = false;
     this.#stopClock();
+    for (const { screenshare } of this.#participants) {
+      if (screenshare) {
+        this.#share(screenshare, false);
+      }
+    }
   }
 
-  /** Emits each line once the files reach its start; the players are the clock, so lines stay on their audio. */
+  /** Starts or stops a participant's screenshare; the grid shows its tile while `screenshareEnabled` is set. */
+  #share(screenshare: NonNullable<SimulatedParticipant['screenshare']>, on: boolean): void {
+    screenshare.on = on;
+    screenshare.tracks.screenshareEnabled = on;
+    if (on) {
+      screenshare.video.currentTime = 0;
+      void screenshare.video.play();
+    } else {
+      screenshare.video.pause();
+    }
+    this.changed.emit();
+  }
+
+  /**
+   * Emits each line, and starts each screenshare, once the files reach its start; the players are the clock, so both
+   * stay on the audio.
+   */
   #startClock(): void {
     this.#stopClock();
     const clock = this.#participants[0]?.video;
-    if (!clock || this.#transcript.length === 0) {
+    const shares = this.#participants.flatMap(({ screenshare }) => (screenshare ? [screenshare] : []));
+    if (!clock || (this.#transcript.length === 0 && shares.length === 0)) {
       return;
     }
 
@@ -112,7 +147,12 @@ export class CallSimulation extends Resource {
       while (next < this.#transcript.length && clock.currentTime >= this.#transcript[next].start) {
         this.spoke.emit(this.#transcript[next++]);
       }
-      if (next >= this.#transcript.length) {
+      for (const share of shares) {
+        if (!share.on && clock.currentTime >= share.start) {
+          this.#share(share, true);
+        }
+      }
+      if (next >= this.#transcript.length && shares.every(({ on }) => on)) {
         this.#stopClock();
       }
     }, CLOCK_INTERVAL);
@@ -134,9 +174,12 @@ export class CallSimulation extends Resource {
     const users = this.#participants.map(({ user, monitor }) => ({ ...user, speaking: monitor.isSpeaking }));
     const pulledVideoStreams = { ...media.pulledVideoStreams };
     const pulledAudioTracks = { ...media.pulledAudioTracks };
-    for (const { videoTrackName, audioTrackName, stream, audioTrack } of this.#participants) {
+    for (const { videoTrackName, audioTrackName, stream, audioTrack, screenshare } of this.#participants) {
       pulledVideoStreams[videoTrackName] = { stream, ctx: this._ctx };
       pulledAudioTracks[audioTrackName] = { track: audioTrack, ctx: this._ctx };
+      if (screenshare) {
+        pulledVideoStreams[screenshare.trackName] = { stream: screenshare.stream, ctx: this._ctx };
+      }
     }
 
     return {
@@ -148,12 +191,12 @@ export class CallSimulation extends Resource {
     };
   }
 
-  async #load(index: number, { name, src }: SimulatedParticipantProps): Promise<SimulatedParticipant> {
+  async #load(
+    index: number,
+    { name, src, screenshare: share }: SimulatedParticipantProps,
+  ): Promise<SimulatedParticipant> {
     const { video, videoTrack, audioTrack } = await loadMediaFile(this.#audioContext, src);
-    // A finished player stops producing frames and its tile goes black; hold the last frame instead.
-    video.addEventListener('ended', () => {
-      video.currentTime = Math.max(0, video.duration - 0.1);
-    });
+    holdLastFrame(video);
     const stream = new MediaStream([videoTrack]);
 
     const monitor = new SpeakingMonitor(audioTrack);
@@ -165,19 +208,35 @@ export class CallSimulation extends Resource {
       TrackNameCodec.encode({ sessionId: SESSION_ID, trackName: `${id}-${kind}`, mid: id });
     const videoTrackName = trackName('video');
     const audioTrackName = trackName('audio');
-    const user: UserState = {
-      id,
-      name,
-      joined: true,
-      raisedHand: false,
-      speaking: false,
-      tracks: { video: videoTrackName, videoEnabled: true, audio: audioTrackName, audioEnabled: true },
-      activities: {},
+    const screenshareTrackName = trackName('screenshare');
+    const tracks: NonNullable<UserState['tracks']> = {
+      video: videoTrackName,
+      videoEnabled: true,
+      audio: audioTrackName,
+      audioEnabled: true,
+      ...(share ? { screenshare: screenshareTrackName, screenshareEnabled: false } : {}),
     };
+    const screenshare = share && {
+      start: share.start,
+      trackName: screenshareTrackName,
+      on: false,
+      tracks,
+      ...(await loadMediaFile(this.#audioContext, share.src).then(({ video, videoTrack }) => {
+        holdLastFrame(video);
+        return { video, stream: new MediaStream([videoTrack]) };
+      })),
+    };
+    const user: UserState = { id, name, joined: true, raisedHand: false, speaking: false, tracks, activities: {} };
 
-    return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor };
+    return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor, screenshare };
   }
 }
+
+/** A finished player stops producing frames and its tile goes black; hold the last frame instead. */
+const holdLastFrame = (video: HTMLVideoElement) =>
+  video.addEventListener('ended', () => {
+    video.currentTime = Math.max(0, video.duration - 0.1);
+  });
 
 /**
  * Loads a video file into a hidden, paused player and returns its picture and sound as tracks.

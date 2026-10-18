@@ -15,7 +15,7 @@ import { CallsCapabilities } from '#types';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Call } from './Call.tsx';
 
-const LOCAL = 'Rich Burdon';
+const LOCAL = 'Astrid Holm';
 const COLLEAGUES = [
   { name: 'Lucía Ferreira', track: 'lucia' },
   { name: 'Ben Achterberg', track: 'ben' },
@@ -24,8 +24,12 @@ const COLLEAGUES = [
 
 const JOIN_TIMEOUT = 10_000;
 
+/** The parts of `conversation.mjs`'s `timeline.json` the story reads. */
+type Timeline = { screenshares?: { speaker: string; start: number; file: string }[] };
+
 type StoryProps = {
-  /** Base URL of the conversation's tracks: `rich.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`. */
+  /** Base URL of the conversation's tracks: `astrid.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`, and `timeline.json`, whose
+   * `screenshares` name the screen recordings participants share. */
   media: string;
 };
 
@@ -43,9 +47,21 @@ const SimulatedStory = ({ media }: StoryProps) => {
     setBlocked(false);
     let restore: (() => void) | undefined;
     const join = async () => {
-      const local = await fakeUserMedia(`${media}/rich.webm`);
+      const local = await fakeUserMedia(`${media}/astrid.webm`);
       restore = local.restore;
-      await callManager.simulate(COLLEAGUES.map(({ name, track }) => ({ name, src: `${media}/${track}.webm` })));
+      const timeline: Timeline | undefined = await fetch(`${media}/timeline.json`)
+        .then((response) => (response.ok ? response.json() : undefined))
+        .catch(() => undefined);
+      await callManager.simulate(
+        COLLEAGUES.map(({ name, track }) => {
+          const share = timeline?.screenshares?.find(({ speaker }) => speaker === track);
+          return {
+            name,
+            src: `${media}/${track}.webm`,
+            ...(share ? { screenshare: { src: `${media}/${share.file}`, start: share.start } } : {}),
+          };
+        }),
+      );
       callManager.setRoomId('story-room');
       await callManager.turnVideoOn();
       await callManager.turnAudioOn();

@@ -27,6 +27,8 @@ export const SetSimulatedParticipants = Operation.make({
         name: Schema.String,
         /** Video file URL; its picture and sound become the participant's camera and microphone. */
         src: Schema.String,
+        /** A screen recording the participant shares from `start` seconds into the conversation. */
+        screenshare: Schema.optional(Schema.Struct({ src: Schema.String, start: Schema.Number })),
       }),
     ),
     /** The conversation's lines, local user's included, timed in seconds from the top of the files. */

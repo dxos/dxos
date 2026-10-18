@@ -1,13 +1,13 @@
 {
-  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Rich is the local user, who joins late and waves; Lucía leads. Each `image` is a Higgsfield still that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures.",
+  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user, who joins late and waves; Lucía leads and shares her screen. Each `image` is a Higgsfield still that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures. Lucía shares her screen (the cost-chart-screenshare.mjs recording) `screenshare.at` seconds after the lead-in.",
   "leadIn": 2,
   "gap": 0.4,
   "tail": 3,
   "participants": {
-    "rich": {
-      "name": "Rich Burdon",
-      "role": "Engineering Lead",
-      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_25572161-0a22-4af5-b1bc-04688a465e3e.png"
+    "astrid": {
+      "name": "Astrid Holm",
+      "role": "Engineering Manager",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_023228_ae3afe50-653e-4eec-849a-977b4e9552f8.png"
     },
     "lucia": {
       "name": "Lucía Ferreira",
@@ -15,7 +15,10 @@
       "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_c7e0267d-beb7-4b3e-9ef9-0bfacda9650d.png",
       "voiceId": "16cae89929d94c25bc28b5af6f04822a",
       "expressiveness": "medium",
-      "motion": "Friendly and professional on a video call: composed posture, measured hand gestures while she explains."
+      "motion": "Friendly and professional on a video call: composed posture, measured hand gestures while she explains.",
+      "screenshare": {
+        "at": 7
+      }
     },
     "ben": {
       "name": "Ben Achterberg",
@@ -36,7 +39,7 @@
   },
   "lines": [
     {
-      "speaker": "rich",
+      "speaker": "astrid",
       "at": 0,
       "seconds": 4,
       "motion": "Has just joined a video call: smiles and gives a friendly wave at the camera with one hand, then lowers the hand and settles in."

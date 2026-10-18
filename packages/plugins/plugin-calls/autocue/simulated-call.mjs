@@ -38,13 +38,17 @@ export const steps = [
       const released = new Promise((resolve) => {
         state.release = resolve;
       });
-      await page.context().route('**/simulated-call/*.webm', async (route) => {
+      // The tracks, the screen recordings and the timeline that names them.
+      await page.context().route(/\/simulated-call\/[^/]+\.(webm|json)$/, async (route) => {
         await released;
         const file = path.join(TRACKS, path.basename(new URL(route.request().url()).pathname));
         return route.fulfill({
           status: 200,
           body: readFileSync(file),
-          headers: { 'content-type': 'video/webm', 'accept-ranges': 'none' },
+          headers: {
+            'content-type': file.endsWith('.json') ? 'application/json' : 'video/webm',
+            'accept-ranges': 'none',
+          },
         });
       });
       await demo.goto({});

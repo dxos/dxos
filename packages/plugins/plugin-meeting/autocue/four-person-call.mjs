@@ -3,14 +3,15 @@
 //
 
 /**
- * Fieldstone Labs scopes the Cairn dashboard plugin on a four-person call: Rich (the local user) joins a Meeting's call
- * after Lucía, Ben and Tomás have started, waves, is greeted, and writes the action items into the meeting notes.
+ * Fieldstone Labs scopes the Cairn dashboard plugin on a four-person call: Astrid (the local user) joins a Meeting's
+ * call after Lucía, Ben and Tomás have started, waves and is greeted; Lucía shares the cost chart, which Astrid
+ * maximizes, and Astrid writes the action items into the meeting notes.
  *
  * @mdl packages/plugins/plugin-meeting/PLUGIN.mdl test QA-2
  * @app composer-app dev build (plugin-debug's Fieldstone template, Calls and Meetings on), via
  *   `DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  *
- * The colleagues are plugin-calls' simulated participants and Rich's camera and microphone are a video too, so
+ * The colleagues are plugin-calls' simulated participants and Astrid's camera and microphone are a video too, so
  * the take needs no camera and no EDGE. Make the tracks first (HeyGen avatars; see the scripts' doc comments):
  *
  *   set -a; . .secrets/heygen.env; set +a
@@ -42,7 +43,7 @@ const CONVERSATION = JSON.parse(
 );
 const TIMELINE = JSON.parse(readFileSync(path.join(TRACKS, 'timeline.json'), 'utf8'));
 
-const LOCAL = 'rich';
+const LOCAL = 'astrid';
 const COLLEAGUES = ['lucia', 'ben', 'tomas'];
 const MEETING_NAME = 'Cairn dashboard plugin: scoping';
 const TEMPLATE = 'Fieldstone Labs';
@@ -54,6 +55,10 @@ const MEETINGS = 'org.dxos.plugin.meeting';
 const DEBUG = 'org.dxos.plugin.debug';
 const PLANK = '[data-testid="deck.plank"]';
 const COMPANION = '[data-testid="deck.companion"]';
+/** The expand (pin) button on the tile a participant's screenshare plays in, marked by its broadcast icon. */
+const SCREENSHARE_EXPAND = `${PLANK} .dx-expand:has([data-icon="ph--broadcast--regular"]) button[aria-label="Pin video"]`;
+/** Seconds the shared screen shows in the grid before it is maximized. */
+const SCREENSHARE_SETTLE = 1.5;
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -91,6 +96,13 @@ export const steps = [
       state.sources = {};
       for (const id of COLLEAGUES) {
         state.sources[id] = await serveMedia(context, { file: path.join(TRACKS, `${id}.webm`), name: id });
+      }
+      state.screens = {};
+      for (const { speaker, start, file } of TIMELINE.screenshares ?? []) {
+        state.screens[speaker] = {
+          start,
+          src: await serveMedia(context, { file: path.join(TRACKS, file), name: file }),
+        };
       }
       await page.reload({ timeout: 120_000 });
       await page.locator(PLANK).first().waitFor({ state: 'visible', timeout: 180_000 });
@@ -207,7 +219,11 @@ export const steps = [
       await demo.invoke({
         key: 'org.dxos.operation.calls.setSimulatedParticipants',
         input: {
-          participants: COLLEAGUES.map((id) => ({ name: CONVERSATION.participants[id].name, src: state.sources[id] })),
+          participants: COLLEAGUES.map((id) => ({
+            name: CONVERSATION.participants[id].name,
+            src: state.sources[id],
+            ...(state.screens[id] ? { screenshare: state.screens[id] } : {}),
+          })),
           transcript: TIMELINE.lines.map(({ speaker, start, text }) => ({
             speaker: CONVERSATION.participants[speaker].name,
             start,
@@ -222,7 +238,7 @@ export const steps = [
   },
   {
     name: 'Join with camera and microphone on',
-    narration: 'Rich opens the meeting and joins its call. Lucía, Ben and Tomás are already there.',
+    narration: 'Astrid opens the meeting and joins its call. Lucía, Ben and Tomás are already there.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Fieldstone Labs scopes the Cairn dashboard plugin');
       await demo.click({ selector: `${PLANK} button[aria-label="Call"]`, label: 'Call' });
@@ -231,7 +247,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
 
       await demo.click({ selector: `${PLANK} button:has-text("Join")`, label: 'Join' });
-      // Rich's own clip starts with the others', which start on join.
+      // Astrid's own clip starts with the others', which start on join.
       await page.evaluate(() => globalThis.__fakeMedia.start());
       state.joinedAt = Date.now();
       for (const id of [LOCAL, ...COLLEAGUES]) {
@@ -250,15 +266,27 @@ export const steps = [
   },
   {
     name: 'The conversation runs',
-    narration: 'They talk it through. Whoever is speaking is outlined, and the transcript fills in beside the call.',
+    narration:
+      'They talk it through. Whoever is speaking is outlined, the transcript fills in beside the call, and Lucía shares the cost chart.',
     run: async ({ demo, page }) => {
-      // Each line is captioned as it is spoken, from the timeline the tracks were cut to.
-      for (const line of TIMELINE.lines) {
-        const wait = state.joinedAt + line.start * 1_000 - Date.now();
+      // Each line is captioned as it is spoken, and each shared screen maximized once it appears, from the timeline
+      // the tracks were cut to.
+      const events = [
+        ...TIMELINE.lines.map((line) => ({
+          at: line.start,
+          run: () => caption(demo, line.text, CONVERSATION.participants[line.speaker].name),
+        })),
+        ...(TIMELINE.screenshares ?? []).map(({ start }) => ({
+          at: start + SCREENSHARE_SETTLE,
+          run: () => demo.click({ selector: SCREENSHARE_EXPAND, label: 'Expand' }),
+        })),
+      ].sort((a, b) => a.at - b.at);
+      for (const event of events) {
+        const wait = state.joinedAt + event.at * 1_000 - Date.now();
         if (wait > 0) {
           await page.waitForTimeout(wait);
         }
-        await caption(demo, line.text, CONVERSATION.participants[line.speaker].name);
+        await event.run();
       }
       const wait = state.joinedAt + (TIMELINE.lines.at(-1).end + 0.5) * 1_000 - Date.now();
       if (wait > 0) {
@@ -269,9 +297,9 @@ export const steps = [
   },
   {
     name: 'Write the action items',
-    narration: 'Rich writes the action items into the meeting notes.',
+    narration: 'Astrid writes the action items into the meeting notes.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Rich writes the action items into the meeting notes', 'QA-2 step 5');
+      await caption(demo, 'Astrid writes the action items into the meeting notes', 'QA-2 step 5');
       // The caption banner is pinned over the bottom of the page, where the editor's last line sits.
       await demo.clearCaption();
       // Notes open in the companion, so the call stays on screen beside them.
