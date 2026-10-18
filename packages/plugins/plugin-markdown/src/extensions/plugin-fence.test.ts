@@ -16,7 +16,7 @@ const DOC = ['# Title', '', '```mermaid', 'graph TD', '  A --> B', '```', '', '`
 const options = (canEnable: boolean): PluginFencesOptions => ({
   canEnable: () => canEnable,
   onSelect: () => {},
-  label: 'Enable plugin',
+  label: 'Open the plugin registry',
 });
 
 const widgetCount = (state: EditorState, canEnable: boolean) => {

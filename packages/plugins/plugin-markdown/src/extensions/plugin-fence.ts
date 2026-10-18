@@ -90,7 +90,7 @@ export const buildPluginFenceDecorations = (state: EditorState, options: PluginF
 };
 
 /**
- * Shows an "Enable plugin" button on fences whose language is rendered by a disabled plugin.
+ * Shows an "Open the plugin registry" button on fences whose language is rendered by a disabled plugin.
  * The host reconfigures the extension when the enabled set changes, so the button goes away once
  * the plugin (and with it the extension that renders the fence) is on.
  */
@@ -136,7 +136,8 @@ class EnablePluginWidget extends WidgetType {
     button.type = 'button';
     button.className = 'dx-control dx-button cm-plugin-fence-button';
     button.setAttribute('data-size', 'sm');
-    button.setAttribute('data-variant', 'primary');
+    button.setAttribute('data-variant', 'valence');
+    button.setAttribute('data-valence', 'info');
     button.textContent = this._options.label;
     button.title = this._options.title?.(this._pluginId) ?? this._pluginId;
     button.addEventListener('mousedown', (event) => event.preventDefault());
