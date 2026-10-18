@@ -372,7 +372,7 @@ export const Docked: Story = {
   },
 };
 
-/** Floating inspectors (the default): the dock's column over the canvas, the layers until something is selected; their menu docks them. */
+/** Floating inspectors (the default): the panel over the canvas, the layers until something is selected; its toolbar docks them. */
 export const Floating: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
@@ -381,18 +381,8 @@ export const Floating: Story = {
     await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
     // About shows only while docked.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
-    // The layers' menu docks the inspectors.
-    await userEvent.click(canvas.getByTestId('layers-menu'));
-    // Picked from the keyboard, as the Layers story does: a synthetic click does not select a menu item. The dock
-    // item ends the menu.
-    // The keys reach the menu only once it has taken focus, which lags its opening under a loaded run.
-    await waitFor(() => {
-      const menu = within(canvasElement.ownerDocument.body)
-        .getByTestId('inspector-dock-toggle')
-        .closest('[role="menu"]');
-      return expect(menu).toHaveFocus();
-    });
-    await userEvent.keyboard('{End}{Enter}');
+    // The inspector panel's own toolbar docks the inspectors.
+    await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
     await expect(await canvas.findByTestId('about')).toBeVisible();
   },

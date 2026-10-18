@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { freehandCapabilities } from '../../../engine/index.ts';
 import { type NodeRegistry, type Tool } from '../../../model/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../../SceneLayer/index.ts';
-import { Tools, type ToolsProps } from './Tools.tsx';
+import { ToolsPanel, type ToolsPanelProps } from './Tools.tsx';
 
 const ICONS = [
   'ph--brain--regular',
@@ -44,7 +44,7 @@ const MANY: NodeRegistry = Object.fromEntries(
   ),
 );
 
-type StoryArgs = Pick<ToolsProps, 'collapse' | 'flyout'> & {
+type StoryArgs = Pick<ToolsPanelProps, 'collapse' | 'flyout'> & {
   /** Many types in groups, or the built-in few. */
   many: boolean;
   /** The height of the view the rail floats in. */
@@ -57,7 +57,7 @@ const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
   return (
     <div className='relative w-64 border border-separator rounded-sm' style={{ height }}>
       <div className='absolute top-2 bottom-2 left-2 pointer-events-none'>
-        <Tools
+        <ToolsPanel
           tool={tool}
           nodes={many ? MANY : defaultNodeRegistry}
           links={defaultLinkRegistry}

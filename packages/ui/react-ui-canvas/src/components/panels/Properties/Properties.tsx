@@ -26,9 +26,7 @@ import {
 } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
 
 import { type CanvasAtoms, type Projection } from '../../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry } from '../../../hooks/index.ts';
@@ -71,7 +69,8 @@ import {
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
 import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
-import { InspectorMenu } from '../InspectorMenu/index.ts';
+import { type InspectorProps } from '../index.ts';
+import { InspectorActions } from '../InspectorPanel/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
@@ -181,13 +180,11 @@ const describeSelection = (elements: readonly Element[]) => {
   return [nodes > 0 && plural(nodes, 'node'), links > 0 && plural(links, 'link')].filter(Boolean).join(', ');
 };
 
-export type PropertiesProps = Util.ThemedClassName<{
+export type PropertiesInspectorProps = InspectorProps & {
   projection: Projection;
   atoms: CanvasAtoms;
   nodes?: NodeRegistry;
   fields?: FormFieldMap;
-  /** Show the fields without letting them change; also implied by a projection that cannot `update`. */
-  readonly?: boolean;
   /** The database a reference field picks from; without it reference fields are read-only. */
   db?: Database.Database;
   /** Narrows a reference field's candidates (e.g. to objects of one kind). */
@@ -200,13 +197,10 @@ export type PropertiesProps = Util.ThemedClassName<{
   styles?: Atom.Writable<StyleMap>;
   /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
   onGroup?: () => void;
-  /** Whether the panel is docked beside the canvas. */
-  docked?: boolean;
-  /** Docks or floats the inspectors, from the panel's menu; the item shows only when given. */
-  onDockedChange?: (docked: boolean) => void;
-}>;
+};
 
-export const Properties = ({
+/** The selection's properties, as one form; read-only too where the projection cannot `update`. */
+export const PropertiesInspector = ({
   classNames,
   projection,
   atoms,
@@ -219,9 +213,7 @@ export const Properties = ({
   sceneOptions,
   styles,
   onGroup,
-  docked = false,
-  onDockedChange,
-}: PropertiesProps) => {
+}: PropertiesInspectorProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const selection = useAtomValue(atoms.selection);
@@ -339,99 +331,80 @@ export const Properties = ({
 
   if (elements.length === 0) {
     return (
-      <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-        {onDockedChange && (
-          <Panel.Header asChild>
-            <Toolbar.Root data-testid='properties-toolbar'>
-              <Toolbar.Separator variant='gap' />
-              <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='properties-menu' />
-            </Toolbar.Root>
-          </Panel.Header>
-        )}
-        <Panel.Body>
-          <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
-        </Panel.Body>
-      </Panel.Root>
+      <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+        <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
+      </div>
     );
   }
 
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
-    <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-      <Panel.Header asChild>
-        <Toolbar.Root data-testid='properties-toolbar'>
-          {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
-            <Button.Root
-              variant='ghost'
-              iconOnly
-              icon='ph--frame-corners--regular'
-              label='New scene from selection'
-              disabled={readonly}
-              data-testid='properties-group'
-              onClick={onGroup}
-            />
-          )}
-          {styles && single && (
-            <Button.Root
-              variant='ghost'
-              iconOnly
-              icon='ph--swatches--regular'
-              label='New class from selection'
-              disabled={readonly}
-              data-testid='properties-new-class'
-              onClick={onCreateClass}
-            />
-          )}
-          {links.length > 0 && links.length === elements.length && (
-            <Button.Root
-              variant='ghost'
-              iconOnly
-              icon='ph--arrows-left-right--regular'
-              label='Flip direction'
-              disabled={readonly}
-              data-testid='properties-flip'
-              onClick={onFlip}
-            />
-          )}
-          <Toolbar.Separator variant='gap' />
-          <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='properties-menu' />
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
-        {schema && (
-          <LayersContext.Provider value={layers}>
-            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-              <SceneOptionsContext.Provider value={sceneOptions ?? []}>
-                <Form.Root
-                  key={[...selection].join()}
-                  schema={schema}
-                  values={values}
-                  fieldOverrides={fieldOverrides}
-                  fieldMap={fieldMap}
-                  db={db}
-                  getOptions={getOptions}
-                  readonly={readonly}
-                  autoSave
-                  onSave={onSave}
-                >
-                  {/* Floating, the panel is as tall as its host and a long form scrolls inside it; docked, the dock scrolls
-                      the panels together, so the form keeps no scroll of its own (it would hold the wheel). */}
-                  <Form.Viewport scroll={!docked}>
-                    <Form.Content>
-                      <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
-                    </Form.Content>
-                  </Form.Viewport>
-                </Form.Root>
-              </SceneOptionsContext.Provider>
-            </StyleClassesContext.Provider>
-          </LayersContext.Provider>
+    <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+      <InspectorActions data-testid='properties-toolbar'>
+        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--frame-corners--regular'
+            label='New scene from selection'
+            disabled={readonly}
+            data-testid='properties-group'
+            onClick={onGroup}
+          />
         )}
-      </Panel.Body>
-      <Panel.Footer classNames='text-center'>
-        <span className='text-sm text-fg-muted' data-testid='properties-summary'>
-          {summary}
-        </span>
-      </Panel.Footer>
-    </Panel.Root>
+        {styles && single && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--swatches--regular'
+            label='New class from selection'
+            disabled={readonly}
+            data-testid='properties-new-class'
+            onClick={onCreateClass}
+          />
+        )}
+        {links.length > 0 && links.length === elements.length && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--arrows-left-right--regular'
+            label='Flip direction'
+            disabled={readonly}
+            data-testid='properties-flip'
+            onClick={onFlip}
+          />
+        )}
+      </InspectorActions>
+      {schema && (
+        <LayersContext.Provider value={layers}>
+          <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+            <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+              <Form.Root
+                key={[...selection].join()}
+                schema={schema}
+                values={values}
+                fieldOverrides={fieldOverrides}
+                fieldMap={fieldMap}
+                db={db}
+                getOptions={getOptions}
+                readonly={readonly}
+                autoSave
+                onSave={onSave}
+              >
+                {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                <Form.Viewport scroll={false}>
+                  <Form.Content>
+                    <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
+            </SceneOptionsContext.Provider>
+          </StyleClassesContext.Provider>
+        </LayersContext.Provider>
+      )}
+      <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
+        {summary}
+      </p>
+    </div>
   );
 };

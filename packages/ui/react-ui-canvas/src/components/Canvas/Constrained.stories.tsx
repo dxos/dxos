@@ -18,7 +18,7 @@ import {
 } from '../../engine/index.ts';
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
-import { Properties } from '../panels/Properties/index.ts';
+import { PropertiesInspector } from '../panels/Properties/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -83,7 +83,7 @@ const DefaultStory = () => {
         <Canvas.Tools />
       </Canvas.Root>
       <ConstraintList model={model} />
-      <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />
+      <PropertiesInspector projection={projection} atoms={atoms} classNames='border-l border-separator' />
     </div>
   );
 };

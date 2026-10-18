@@ -6,10 +6,11 @@ import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef } fro
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type TimelineBarProps = Util.ThemedClassName<{
+import { type PanelProps } from '../types.ts';
+
+export type TimelinePanelProps = PanelProps & {
   /** Seconds. */
   time: number;
   duration: number;
@@ -18,7 +19,6 @@ export type TimelineBarProps = Util.ThemedClassName<{
   /** Times of the selection's keys, drawn as diamonds on the track. */
   keys?: readonly number[];
   autoKey?: boolean;
-  readonly?: boolean;
   onPlayingChange?: (playing: boolean) => void;
   onTimeChange?: (time: number) => void;
   onAutoKeyChange?: (autoKey: boolean) => void;
@@ -26,7 +26,7 @@ export type TimelineBarProps = Util.ThemedClassName<{
   onAddKey?: () => void;
   /** Removes the selection's keys at the playhead; offered while the playhead is on one. */
   onRemoveKey?: () => void;
-}>;
+};
 
 /** The key at time `t`, if one is within half a frame of it. */
 export const keyAt = (keys: readonly number[], t: number, fps: number): number | undefined =>
@@ -45,7 +45,7 @@ export const formatTime = (t: number, fps: number): string => {
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
  * previous or next key, and Delete removes the key under the playhead.
  */
-export const TimelineBar = ({
+export const TimelinePanel = ({
   classNames,
   time,
   duration,
@@ -59,7 +59,7 @@ export const TimelineBar = ({
   onAutoKeyChange,
   onAddKey,
   onRemoveKey,
-}: TimelineBarProps) => {
+}: TimelinePanelProps) => {
   const current = keyAt(keys, time, fps);
   const trackRef = useRef<HTMLDivElement>(null);
   const timeAt = useCallback(

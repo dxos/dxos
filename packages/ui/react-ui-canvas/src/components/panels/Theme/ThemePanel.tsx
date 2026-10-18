@@ -7,6 +7,7 @@ import React, { type CSSProperties } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -22,6 +23,7 @@ import {
   styleVariant,
 } from '../../../model/index.ts';
 import { BACKGROUND_FILLS, FLOATING_PANEL, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
+import { type PanelProps } from '../types.ts';
 
 /** The canvas colour behind a swatch in its theme's mode. */
 const SWATCH_CANVAS: Record<LookTone, string> = {
@@ -79,15 +81,15 @@ export const ThemeSwatch = ({ classNames, theme, registry }: ThemeSwatchProps) =
 /** The value of the option that clears the override, so the drawing takes the user's default. */
 const DEFAULT_VALUE = '';
 
-const GRID_OPTIONS: readonly { grid: BackgroundGrid; icon: string; label: string }[] = [
+/** The grids the switch offers; pressing the one drawn turns the grid off, so no option of its own is needed. */
+const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: string; label: string }[] = [
   { grid: 'dots', icon: 'ph--dots-nine--regular', label: 'Dots on the minor grid' },
   { grid: 'lines', icon: 'ph--grid-four--regular', label: 'Lines on the minor and major grid' },
-  { grid: 'none', icon: 'ph--prohibit--regular', label: 'No grid' },
 ];
 
 const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
 
-export type ThemeBarProps = Util.ThemedClassName<{
+export type ThemePanelProps = PanelProps & {
   registry: ThemeRegistry;
   /** The theme drawn, override or default. */
   theme: Theme;
@@ -104,11 +106,15 @@ export type ThemeBarProps = Util.ThemedClassName<{
   /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
   guides?: boolean;
   onGuidesToggle?: () => void;
-}>;
+};
 
-/** The theme picker, and the grid drawn over its background. */
-export const ThemeBar = ({
+/**
+ * The canvas's look: the theme selector, the guides toggle, and a switch between dots and lines over the background
+ * (pressing the one drawn turns the grid off).
+ */
+export const ThemePanel = ({
   classNames,
+  readonly,
   registry,
   theme,
   override,
@@ -118,11 +124,11 @@ export const ThemeBar = ({
   onGridChange,
   guides,
   onGuidesToggle,
-}: ThemeBarProps) => (
+}: ThemePanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
-      <Menu.Trigger asChild disabled={!onThemeChange}>
+      <Menu.Trigger asChild disabled={readonly || !onThemeChange}>
         <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
           <ThemeSwatch theme={theme} registry={registry} />
           <span className='truncate'>{theme.name}</span>
@@ -168,23 +174,32 @@ export const ThemeBar = ({
         iconOnly
         icon='ph--frame-corners--regular'
         label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+        disabled={readonly}
         classNames={mx(guides && 'bg-primary-500/20')}
         data-testid='toolbar-guides'
         onClick={onGuidesToggle}
       />
     )}
-    {GRID_OPTIONS.map((option) => (
-      <Button.Root
-        key={option.grid}
-        variant='ghost'
-        iconOnly
-        icon={option.icon}
-        label={option.label}
-        disabled={!onGridChange}
-        classNames={mx(grid === option.grid && 'bg-primary-500/20')}
-        data-testid={`theme-grid-${option.grid}`}
-        onClick={() => onGridChange?.(option.grid === themeGrid ? undefined : option.grid)}
-      />
-    ))}
+    <Toolbar.ToggleGroup
+      type='single'
+      aria-label='Grid'
+      disabled={readonly || !onGridChange}
+      value={grid === 'none' ? '' : grid}
+      onValueChange={(value) => {
+        const next: BackgroundGrid = value === 'dots' || value === 'lines' ? value : 'none';
+        onGridChange?.(next === themeGrid ? undefined : next);
+      }}
+    >
+      {GRID_OPTIONS.map((option) => (
+        <ToggleGroup.Item
+          key={option.grid}
+          value={option.grid}
+          icon={option.icon}
+          label={option.label}
+          iconOnly
+          data-testid={`theme-grid-${option.grid}`}
+        />
+      ))}
+    </Toolbar.ToggleGroup>
   </Toolbar.Root>
 );

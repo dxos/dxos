@@ -7,15 +7,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { About } from './About.tsx';
+import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
+import { AboutInspector } from './About.tsx';
 
-const meta: Meta<typeof About> = {
+const meta: Meta<typeof AboutInspector> = {
   title: 'ui/react-ui-canvas/components/panels/About',
-  component: About,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  component: AboutInspector,
+  decorators: [
+    withInspectorFrame({ id: 'about', title: 'About', icon: 'ph--info--regular', order: 0, show: 'never' }),
+    withTheme(),
+    withLayout({ layout: 'centered' }),
+  ],
   parameters: { translations: uiTranslations },
   args: {
-    classNames: 'w-80',
     stats: [
       { id: 'nodes', label: 'Nodes', value: 12 },
       { id: 'links', label: 'Links', value: 9 },

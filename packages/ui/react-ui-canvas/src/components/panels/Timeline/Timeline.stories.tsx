@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useClock, useRegistry } from '../../../hooks/index.ts';
 import { createClock } from '../../../model/index.ts';
-import { TimelineBar, keyAt } from './Timeline.tsx';
+import { TimelinePanel, keyAt } from './Timeline.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
 
@@ -26,7 +26,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
   const [keys, setKeys] = useState<number[]>([0, 1.5]);
   const [autoKey, setAutoKey] = useState(true);
   return (
-    <TimelineBar
+    <TimelinePanel
       time={time}
       duration={duration}
       playing={playing}

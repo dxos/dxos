@@ -12,7 +12,8 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type Layer, type LayerId } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { LayersPanel } from './Layers.tsx';
+import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
+import { LayersInspector } from './Layers.tsx';
 
 /** Three layers, bottom first, the middle one hidden. */
 const LAYERS: Layer[] = (() => {
@@ -30,8 +31,7 @@ const DefaultStory = () => {
     setLayers((layers) => layers.map((layer) => (layer.id === id ? { ...layer, ...values } : layer)));
   const remove = (ids: LayerId[]) => setLayers((layers) => layers.filter((layer) => !ids.includes(layer.id)));
   return (
-    <LayersPanel
-      classNames='w-72 border border-separator rounded-sm'
+    <LayersInspector
       layers={layers}
       selected={selected}
       onSelectedChange={setSelected}
@@ -69,7 +69,11 @@ const DefaultStory = () => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-canvas/components/panels/Layers',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [
+    withInspectorFrame({ id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 0, show: 'empty' }),
+    withTheme(),
+    withLayout({ layout: 'centered' }),
+  ],
   parameters: { translations: [...uiTranslations, ...formTranslations] },
 };
 

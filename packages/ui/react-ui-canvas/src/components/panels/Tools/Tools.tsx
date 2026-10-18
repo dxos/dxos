@@ -13,6 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } from '../../../model/index.ts';
 import { FLOATING_PANEL, nodeDragData } from '../../../utils/index.ts';
+import { type PanelProps } from '../types.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key?: string };
 
@@ -83,7 +84,7 @@ export const toolForKey = (
     .flat()
     .find((entry) => entry.key !== undefined && entry.key === key.toUpperCase())?.tool;
 
-export type ToolsProps = {
+export type ToolsPanelProps = PanelProps & {
   tool: Tool;
   nodes: NodeRegistry;
   links: LinkRegistry;
@@ -95,9 +96,7 @@ export type ToolsProps = {
   collapse?: 'auto' | boolean;
   /** How a folded group lists its tools: one per row with its name (the default), or a grid of icons. */
   flyout?: 'list' | 'grid';
-  /** The view is only looked at; shown on the toggle when `onReadonlyChange` is given. */
-  readonly?: boolean;
-  /** Offered, the tools group ends with a toggle between looking at the scene and editing it. */
+  /** The view is only looked at (`readonly`); offered, the tools group ends with a toggle between looking at the scene and editing it. */
   onReadonlyChange?: (readonly: boolean) => void;
   onToolChange: (tool: Tool) => void;
 };
@@ -114,7 +113,7 @@ const flatHeight = (groups: readonly ToolGroup[], button: number): number =>
 const useCollapsed = (
   ref: RefObject<HTMLDivElement | null>,
   groups: readonly ToolGroup[],
-  collapse: ToolsProps['collapse'],
+  collapse: ToolsPanelProps['collapse'],
 ) => {
   const [overflows, setOverflows] = useState(false);
   useLayoutEffect(() => {
@@ -140,7 +139,8 @@ const useCollapsed = (
  * it where it drops (the canvas is a pragmatic-dnd drop target for `nodeDragData`). With many types the node
  * groups fold into flyouts (`collapse`), each showing its active or last-used tool.
  */
-export const Tools = ({
+export const ToolsPanel = ({
+  classNames,
   tool,
   nodes,
   links,
@@ -150,7 +150,7 @@ export const Tools = ({
   readonly = false,
   onReadonlyChange,
   onToolChange,
-}: ToolsProps) => {
+}: ToolsPanelProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const groups = useMemo(() => toolGroups(nodes, links, capabilities), [nodes, links, capabilities]);
   const collapsed = useCollapsed(ref, groups, collapse);
@@ -158,7 +158,7 @@ export const Tools = ({
     <div
       ref={ref}
       // The host's frame spans the room the rail may take and lets the canvas below it take the pointer.
-      className={mx('flex flex-col w-fit divide-y divide-separator pointer-events-auto', FLOATING_PANEL)}
+      className={mx('flex flex-col w-fit divide-y divide-separator pointer-events-auto', FLOATING_PANEL, classNames)}
       data-testid='palette'
       data-collapsed={collapsed || undefined}
     >
@@ -228,7 +228,7 @@ const useHoverOpen = (setOpen: (open: boolean, hovered?: boolean) => void) => {
 type ToolsFlyoutProps = {
   group: ToolGroup;
   tool: Tool;
-  layout: NonNullable<ToolsProps['flyout']>;
+  layout: NonNullable<ToolsPanelProps['flyout']>;
   onToolChange: (tool: Tool) => void;
 };
 

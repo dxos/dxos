@@ -155,13 +155,14 @@ import {
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { About, type AboutStat } from '../panels/About/index.ts';
-import { LayersPanel } from '../panels/Layers/index.ts';
-import { ObjectsPanel } from '../panels/Objects/index.ts';
-import { Properties, type PropertiesProps } from '../panels/Properties/index.ts';
-import { ThemeBar } from '../panels/ThemeBar/index.ts';
-import { TimelineBar } from '../panels/Timeline/index.ts';
-import { Tools } from '../panels/Tools/index.ts';
+import { AboutInspector, type AboutStat } from '../panels/About/index.ts';
+import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/InspectorPanel/index.ts';
+import { LayersInspector } from '../panels/Layers/index.ts';
+import { ObjectsInspector } from '../panels/Objects/index.ts';
+import { PropertiesInspector, type PropertiesInspectorProps } from '../panels/Properties/index.ts';
+import { ThemePanel } from '../panels/Theme/index.ts';
+import { TimelinePanel } from '../panels/Timeline/index.ts';
+import { ToolsPanel } from '../panels/Tools/index.ts';
 import {
   type ElementHandlers,
   MAX_LIVE_DEPTH,
@@ -171,8 +172,6 @@ import {
 } from '../SceneLayer/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';
 import { CanvasProvider, useCanvasContext } from './CanvasContext.ts';
-import { Dock, DockProvider } from './Dock.tsx';
-import { type InspectorDef, useInspector } from './Inspector.tsx';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
 import { useSceneClipboard } from './useSceneClipboard.ts';
@@ -1631,7 +1630,12 @@ const CanvasRoot = ({
       generated={generated}
     >
       <SceneLookContext.Provider value={look}>
-        <DockProvider>
+        <InspectorPanel.Root
+          docked={!readonly && inspectors === 'docked'}
+          readonly={readonly}
+          selected={selection.size > 0}
+          onDockedChange={onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))}
+        >
           {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
@@ -1661,12 +1665,9 @@ const CanvasRoot = ({
             >
               {children}
             </div>
-            <Dock
-              floating={readonly || inspectors !== 'docked'}
-              onDockedChange={onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))}
-            />
+            <InspectorPanel.Content />
           </div>
-        </DockProvider>
+        </InspectorPanel.Root>
       </SceneLookContext.Provider>
     </CanvasProvider>
   );
@@ -2036,7 +2037,7 @@ const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
     useCanvasContext('Canvas.Theme');
   return (
     <div className={mx(barFrame, classNames)}>
-      <ThemeBar
+      <ThemePanel
         registry={themes}
         theme={look.theme}
         override={themeOverride}
@@ -2064,7 +2065,7 @@ const CanvasTools = ({ classNames = 'absolute top-14 bottom-14 left-2' }: Canvas
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
     <div className={mx('pointer-events-none', classNames)}>
-      <Tools
+      <ToolsPanel
         tool={tool}
         nodes={nodeRegistry}
         links={linkRegistry}
@@ -2083,7 +2084,7 @@ CanvasTools.displayName = 'Canvas.Tools';
 // Properties
 //
 
-export type CanvasPropertiesProps = Pick<PropertiesProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
   /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
   sceneFilter?: (id: SceneId) => boolean;
 };
@@ -2121,24 +2122,23 @@ const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: Ca
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   // Docked, the panel stays in its section whatever is selected (it says when nothing is).
-  return useInspector(PROPERTIES_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
-    <Properties
-      classNames={chrome}
-      docked={docked}
-      onDockedChange={onDockedChange}
-      projection={projection}
-      atoms={atoms}
-      nodes={nodeRegistry}
-      fields={fields}
-      db={db}
-      getOptions={getOptions}
-      overrides={overrides}
-      sceneOptions={options}
-      styles={store.styles}
-      onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
-      readonly={!capabilities.update}
-    />
-  ));
+  return (
+    <InspectorSection section={PROPERTIES_INSPECTOR}>
+      <PropertiesInspector
+        projection={projection}
+        atoms={atoms}
+        nodes={nodeRegistry}
+        fields={fields}
+        db={db}
+        getOptions={getOptions}
+        overrides={overrides}
+        sceneOptions={options}
+        styles={store.styles}
+        onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
+        readonly={!capabilities.update}
+      />
+    </InspectorSection>
+  );
 };
 
 CanvasProperties.displayName = 'Canvas.Properties';
@@ -2147,39 +2147,39 @@ CanvasProperties.displayName = 'Canvas.Properties';
 // Inspectors
 //
 
-const PROPERTIES_INSPECTOR: InspectorDef = {
+const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   id: 'properties',
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
-  float: 'selection',
+  show: 'selection',
 };
 
 // Floating, the layers take the properties' place while nothing is selected.
-const LAYERS_INSPECTOR: InspectorDef = {
+const LAYERS_INSPECTOR: InspectorSectionDef = {
   id: 'layers',
   title: 'Layers',
   icon: 'ph--stack--regular',
   order: 1,
-  float: 'empty',
+  show: 'empty',
 };
 
 // Docked beside the layers (ANIMATION.md §4.3).
-const OBJECTS_INSPECTOR: InspectorDef = {
+const OBJECTS_INSPECTOR: InspectorSectionDef = {
   id: 'objects',
   title: 'Objects',
   icon: 'ph--cube--regular',
   order: 2,
-  float: 'never',
+  show: 'never',
 };
 
 // The counts are a dock section only, so a floating or read-only view shows none.
-const ABOUT_INSPECTOR: InspectorDef = {
+const ABOUT_INSPECTOR: InspectorSectionDef = {
   id: 'about',
   title: 'About',
   icon: 'ph--info--regular',
   order: 3,
-  float: 'never',
+  show: 'never',
 };
 
 //
@@ -2214,50 +2214,49 @@ const CanvasLayers = () => {
     },
     [layers, registry, atoms],
   );
-  return useInspector(LAYERS_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
-    <LayersPanel
-      classNames={chrome}
-      docked={docked}
-      onDockedChange={onDockedChange}
-      layers={layers}
-      selected={selected}
-      readonly={readonly}
-      onSelectedChange={select}
-      onToggle={(id) => {
-        const layer = byId(id);
-        layer && setLayer({ ...layer, hidden: !layer.hidden });
-      }}
-      onRename={(id, name) => {
-        const layer = byId(id);
-        layer && setLayer({ ...layer, name });
-      }}
-      onMove={(id, index) => {
-        const layer = moveLayer(scene, id, index);
-        layer && setLayer(layer);
-      }}
-      onCreate={() => {
-        const layer = createLayer(scene, createId('layer'));
-        setLayer(layer);
-        select([layer.id]);
-        return layer.id;
-      }}
-      onDelete={
-        capabilities.delete
-          ? (ids) => {
-              projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
-              setPicked([]);
-            }
-          : undefined
-      }
-      onMerge={(ids, into) => {
-        const merge = mergeLayersIntent(scene, ids, into);
-        if (merge) {
-          projection.apply(merge);
-          select([into]);
+  return (
+    <InspectorSection section={LAYERS_INSPECTOR}>
+      <LayersInspector
+        layers={layers}
+        selected={selected}
+        readonly={readonly}
+        onSelectedChange={select}
+        onToggle={(id) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, hidden: !layer.hidden });
+        }}
+        onRename={(id, name) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, name });
+        }}
+        onMove={(id, index) => {
+          const layer = moveLayer(scene, id, index);
+          layer && setLayer(layer);
+        }}
+        onCreate={() => {
+          const layer = createLayer(scene, createId('layer'));
+          setLayer(layer);
+          select([layer.id]);
+          return layer.id;
+        }}
+        onDelete={
+          capabilities.delete
+            ? (ids) => {
+                projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+                setPicked([]);
+              }
+            : undefined
         }
-      }}
-    />
-  ));
+        onMerge={(ids, into) => {
+          const merge = mergeLayersIntent(scene, ids, into);
+          if (merge) {
+            projection.apply(merge);
+            select([into]);
+          }
+        }}
+      />
+    </InspectorSection>
+  );
 };
 
 CanvasLayers.displayName = 'Canvas.Layers';
@@ -2323,28 +2322,27 @@ const CanvasObjects = () => {
     return node && isInstanceNode(node) ? node.composite : undefined;
   }, [isolation, selection, displayScene]);
   const editable = capabilities.create === true && capabilities.delete === true;
-  return useInspector(OBJECTS_INSPECTOR, ({ docked, classNames: chrome, onDockedChange }) => (
-    <ObjectsPanel
-      classNames={chrome}
-      docked={docked}
-      onDockedChange={onDockedChange}
-      objects={objects}
-      selected={selected}
-      readonly={!editable}
-      onSelect={isolate}
-      onRename={objectActions.rename}
-      onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
-      onPlace={isolation ? undefined : objectActions.place}
-      onDuplicate={objectActions.duplicate}
-      onDelete={objectActions.remove}
-      thumbnail={(id) => <ObjectThumbnail id={id} />}
-      onAnimate={
-        timeline || readonly || !capabilities.update
-          ? undefined
-          : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
-      }
-    />
-  ));
+  return (
+    <InspectorSection section={OBJECTS_INSPECTOR}>
+      <ObjectsInspector
+        objects={objects}
+        selected={selected}
+        readonly={!editable}
+        onSelect={isolate}
+        onRename={objectActions.rename}
+        onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
+        onPlace={isolation ? undefined : objectActions.place}
+        onDuplicate={objectActions.duplicate}
+        onDelete={objectActions.remove}
+        thumbnail={(id) => <ObjectThumbnail id={id} />}
+        onAnimate={
+          timeline || readonly || !capabilities.update
+            ? undefined
+            : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
+        }
+      />
+    </InspectorSection>
+  );
 };
 
 CanvasObjects.displayName = 'Canvas.Objects';
@@ -2369,7 +2367,7 @@ const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: 
   }
   return (
     <div className={mx(barFrame, 'max-w-[calc(100%-2rem)]', classNames)}>
-      <TimelineBar
+      <TimelinePanel
         time={time}
         duration={timeline.duration}
         playing={playing}
@@ -2406,9 +2404,11 @@ const CanvasAbout = () => {
     ],
     [scene, scenes],
   );
-  return useInspector(ABOUT_INSPECTOR, ({ classNames, onDockedChange }) => (
-    <About classNames={classNames} stats={stats} onDockedChange={onDockedChange} />
-  ));
+  return (
+    <InspectorSection section={ABOUT_INSPECTOR}>
+      <AboutInspector stats={stats} />
+    </InspectorSection>
+  );
 };
 
 CanvasAbout.displayName = 'Canvas.About';

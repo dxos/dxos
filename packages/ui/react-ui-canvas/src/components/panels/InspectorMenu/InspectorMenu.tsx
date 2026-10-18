@@ -8,23 +8,14 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
 
 export type InspectorMenuProps = {
-  /** Whether the inspector is docked; names the item that moves it. */
-  'docked'?: boolean;
-  /** Offered, the menu ends with an item that docks or floats the inspectors. */
-  'onDockedChange'?: (docked: boolean) => void;
-  /** The inspector's own items, above the dock item. */
+  /** The inspector's less frequent actions. */
   'children'?: ReactNode;
   'data-testid'?: string;
 };
 
-/** An inspector's menu, at its toolbar's end: its own items, then docking or floating the inspectors. */
-export const InspectorMenu = ({
-  docked = false,
-  onDockedChange,
-  children,
-  'data-testid': testId = 'inspector-menu',
-}: InspectorMenuProps) => {
-  if (!children && !onDockedChange) {
+/** An inspector's overflow menu, at the end of its actions; docking is the inspector panel's, not the inspector's. */
+export const InspectorMenu = ({ children, 'data-testid': testId = 'inspector-menu' }: InspectorMenuProps) => {
+  if (!children) {
     return null;
   }
   return (
@@ -38,21 +29,7 @@ export const InspectorMenu = ({
           data-testid={testId}
         />
       </Menu.Trigger>
-      <Menu.Content>
-        {children}
-        {children && onDockedChange && <Menu.Separator />}
-        {onDockedChange && (
-          <Menu.Item
-            item={
-              docked
-                ? { value: 'float', label: 'Float inspectors', icon: 'ph--arrow-square-out--regular' }
-                : { value: 'dock', label: 'Dock inspectors', icon: 'ph--sidebar-simple--regular' }
-            }
-            data-testid='inspector-dock-toggle'
-            onSelect={() => onDockedChange(!docked)}
-          />
-        )}
-      </Menu.Content>
+      <Menu.Content>{children}</Menu.Content>
     </Menu.Root>
   );
 };

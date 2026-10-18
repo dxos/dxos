@@ -18,7 +18,8 @@ import { createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
 import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { Properties } from './Properties.tsx';
+import { InspectorFrame } from '../InspectorPanel/testing.tsx';
+import { PropertiesInspector } from './Properties.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 
@@ -66,12 +67,23 @@ const DefaultStory = ({ select }: StoryArgs) => {
   return (
     <Panel.Root>
       <Panel.Body classNames='grid grid-cols-[20rem_1fr] gap-3'>
-        <Properties projection={projection} atoms={atoms} styles={store.styles} />
+        <InspectorFrame section={PROPERTIES}>
+          <PropertiesInspector projection={projection} atoms={atoms} styles={store.styles} />
+        </InspectorFrame>
         <JsonHighlighter data={{ selected, styles }} classNames='text-sm' />
       </Panel.Body>
     </Panel.Root>
   );
 };
+
+/** The section the inspector shows in, as the canvas gives it. */
+const PROPERTIES = {
+  id: 'properties',
+  title: 'Properties',
+  icon: 'ph--sliders-horizontal--regular',
+  order: 0,
+  show: 'selection',
+} as const;
 
 const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/components/panels/Properties',

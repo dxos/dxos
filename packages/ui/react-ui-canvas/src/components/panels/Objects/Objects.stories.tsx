@@ -10,7 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type SceneId } from '../../../model/index.ts';
-import { type ObjectEntry, ObjectsPanel } from './Objects.tsx';
+import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
+import { type ObjectEntry, ObjectsInspector } from './Objects.tsx';
 
 /** Three composites, one not yet placed anywhere. */
 const OBJECTS: ObjectEntry[] = [
@@ -26,8 +27,7 @@ const DefaultStory = () => {
   const update = (id: SceneId, values: Partial<ObjectEntry>) =>
     setObjects((objects) => objects.map((entry) => (entry.id === id ? { ...entry, ...values } : entry)));
   return (
-    <ObjectsPanel
-      classNames='w-72 border border-separator rounded-sm'
+    <ObjectsInspector
       objects={objects}
       selected={selected}
       onSelect={setSelected}
@@ -61,7 +61,11 @@ const DefaultStory = () => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-canvas/components/panels/Objects',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [
+    withInspectorFrame({ id: 'objects', title: 'Objects', icon: 'ph--cube--regular', order: 0, show: 'never' }),
+    withTheme(),
+    withLayout({ layout: 'centered' }),
+  ],
   parameters: { translations: [...uiTranslations, ...formTranslations] },
 };
 
