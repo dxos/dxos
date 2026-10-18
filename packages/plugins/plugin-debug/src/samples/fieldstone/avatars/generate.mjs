@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 
 /** File slug to the person's full name, where the slug drops a diacritic the name keeps. */
 const NAMES = {
+  'ines-duarte': 'Inês Duarte',
+  'lucia-ferreira': 'Lucía Ferreira',
   'tomas-vidal': 'Tomás Vidal',
 };
 

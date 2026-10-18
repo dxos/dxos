@@ -13,6 +13,7 @@ describe('avatar images', () => {
   test('every headshot belongs to a seeded person', ({ expect }) => {
     const names = new Set<string>([...PEOPLE_SEEDS, ...CONTACT_SEEDS].map((seed) => seed.fullName));
     expect(Object.keys(AVATAR_IMAGES).filter((name) => !names.has(name))).toEqual([]);
-    expect(Object.keys(AVATAR_IMAGES).length).toBeGreaterThan(0);
+    // And every person has one.
+    expect([...names].filter((name) => !AVATAR_IMAGES[name])).toEqual([]);
   });
 });
