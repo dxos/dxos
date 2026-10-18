@@ -46,6 +46,10 @@
   .dx-card > .dx-card-poster {
     margin-inline: calc(-1 * var(--dx-card-inset));
   }
+  /* A wide card would otherwise grow its poster to dominate the card; the image covers the capped frame. */
+  .dx-card-poster {
+    max-height: 200px;
+  }
   /* Inside the border, so the inner radius is the card's less its border width. */
   .dx-card > .dx-card-poster:first-child {
     border-start-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
