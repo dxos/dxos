@@ -645,7 +645,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
                       (metaField meta "sig")
                       Option.none
               | Sexp.list (Sexp.sym "test" :: c :: []) => "test " ++ name ++ " :=" ++
-                  Print.body p (restoreAll notes spellings notations c) [] 0
+                  Print.bodyAt p (restoreAll notes spellings notations c) [] 0 (Text.length name + 8)
               | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) => View.theoremDecl p name types prop proof
               | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
               | Sexp.list (Sexp.sym "ability" :: _) => View.abilityDecl p ns name e obj meta

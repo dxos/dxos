@@ -293,6 +293,24 @@ def body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := if isB
     "\n" ++ spaces (ind + 2) ++ Print.expr p t env (ind + 2) 0
   else " " ++ inline
 
+/-- `body` after text that already takes `used` columns of its line: an expression that would run past the width
+  there, and is shorter on a line of its own, starts the next line instead, as a block does (D326). A definition's
+  whole body ran on after its signature to 208 columns, and a match arm's after its pattern. -/
+def bodyAt (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (used : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let shown := Print.body p t env ind
+  let first := Option.getOr (List.head? (Text.lines shown)) shown
+  if Text.startsWith "\n" shown || used + Text.length (unhinted first) <= width then shown else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let below := Print.expr p t env (ind + 2) 0
+    let belowFirst := Option.getOr (List.head? (Text.lines below)) below
+    if ind + 2 + Text.length (unhinted belowFirst) < used + Text.length (unhinted first) then "\n" ++ spaces (ind + 2) ++ below else
+      Ref.set p.supply supply
+      Ref.set p.fresh fresh
+      Print.body p t env ind
+
 /-- Statements: `let` lines and expressions at one indentation. -/
 def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
   let nl := "\n" ++ spaces ind
@@ -386,7 +404,7 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
         match c with
         | Sexp.list (Sexp.sym "case" :: pat :: b :: []) =>
             let (text, env2) := Print.pattern p pat env
-            "\n" ++ spaces ind ++ "| " ++ text ++ " =>" ++ Print.body p b env2 (ind + 2)
+            "\n" ++ spaces ind ++ "| " ++ text ++ " =>" ++ Print.bodyAt p b env2 (ind + 2) (ind + 5 + Text.length text)
         | _ => "") cases
       paren 1 prec ("match " ++ scrutText ++ " with" ++ Text.concat arms)
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
@@ -693,7 +711,9 @@ def plainDefinition (p : Printer) (name : Text) (docText : Text) (names : List T
     match (stubOf b, sig) with
     | (Option.some (stubName, sigText), Option.some s) => stubName == name && sigText == Sexp.print s
     | _ => false
-  docText ++ "def " ++ name ++ header ++ (if declared then "" else " :=" ++ Print.body p b env 0)
+  let opening := "def " ++ name ++ header ++ " :="
+  let lastLine := Option.getOr (List.last? (Text.lines opening)) opening
+  docText ++ "def " ++ name ++ header ++ (if declared then "" else " :=" ++ Print.bodyAt p b env 0 (Text.length lastLine))
 
 def notationsOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "notations"
 
