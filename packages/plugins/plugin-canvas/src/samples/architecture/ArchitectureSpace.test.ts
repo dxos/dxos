@@ -51,11 +51,13 @@ describe('ArchitectureSpace', () => {
       'Plugin metrics',
     ]);
 
-    // The metrics sheet charts every plugin row as horizontal bars, one series per measure.
+    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
     const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
     expect(metrics?.rows).toHaveLength(21);
-    expect(metrics?.columns).toHaveLength(4);
-    expect(metrics?.charts).toEqual([expect.objectContaining({ range: 'A1:D21', type: 'bar', horizontal: true })]);
+    expect(metrics?.columns).toHaveLength(5);
+    expect(metrics?.charts).toEqual([
+      expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
+    ]);
 
     // The root document links the other two by id and embeds the Composer drawing.
     const docs = await db.query(Filter.type(Markdown.Document)).run();

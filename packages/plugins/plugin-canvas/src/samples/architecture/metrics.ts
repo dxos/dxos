@@ -4,33 +4,35 @@
 
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
-const HEADER = ['Plugin', 'Files', 'PRs', 'Tests'] as const;
+const HEADER = ['Plugin', 'PRs', 'Tests', 'Open issues', 'Closed issues'] as const;
 
-/** Illustrative figures, not measured from the repository: source files, merged PRs and tests per plugin. */
-export const PLUGIN_METRICS: ReadonlyArray<readonly [plugin: string, files: number, prs: number, tests: number]> = [
-  ['plugin-markdown', 230, 412, 236],
-  ['plugin-assistant', 311, 538, 312],
-  ['plugin-sheet', 196, 287, 198],
-  ['plugin-canvas', 161, 241, 154],
-  ['plugin-inbox', 178, 326, 187],
-  ['plugin-space', 208, 371, 142],
-  ['plugin-client', 124, 203, 96],
-  ['plugin-deck', 141, 298, 118],
-  ['plugin-table', 126, 219, 131],
-  ['plugin-kanban', 81, 147, 72],
-  ['plugin-illustrator', 171, 189, 163],
-  ['plugin-explorer', 99, 124, 58],
-  ['plugin-thread', 104, 176, 84],
-  ['plugin-meeting', 72, 98, 41],
-  ['plugin-script', 114, 167, 103],
-  ['plugin-search', 55, 86, 47],
-  ['plugin-map', 65, 92, 38],
-  ['plugin-chess', 39, 64, 29],
-  ['plugin-mermaid', 31, 51, 22],
-  ['plugin-debug', 149, 254, 67],
+/** Illustrative figures, not measured from the repository: merged PRs, tests, and open and closed issues per plugin. */
+export const PLUGIN_METRICS: ReadonlyArray<
+  readonly [plugin: string, prs: number, tests: number, open: number, closed: number]
+> = [
+  ['plugin-markdown', 412, 236, 28, 144],
+  ['plugin-assistant', 538, 312, 35, 188],
+  ['plugin-sheet', 287, 198, 20, 100],
+  ['plugin-canvas', 241, 154, 17, 84],
+  ['plugin-inbox', 326, 187, 23, 114],
+  ['plugin-space', 371, 142, 25, 130],
+  ['plugin-client', 203, 96, 15, 71],
+  ['plugin-deck', 298, 118, 21, 104],
+  ['plugin-table', 219, 131, 16, 77],
+  ['plugin-kanban', 147, 72, 12, 51],
+  ['plugin-illustrator', 189, 163, 14, 66],
+  ['plugin-explorer', 124, 58, 10, 43],
+  ['plugin-thread', 176, 84, 14, 62],
+  ['plugin-meeting', 98, 41, 9, 34],
+  ['plugin-script', 167, 103, 13, 58],
+  ['plugin-search', 86, 47, 8, 30],
+  ['plugin-map', 92, 38, 9, 32],
+  ['plugin-chess', 64, 29, 7, 22],
+  ['plugin-mermaid', 51, 22, 6, 18],
+  ['plugin-debug', 254, 67, 18, 89],
 ];
 
-const COLUMNS = 'ABCD';
+const COLUMNS = 'ABCDE';
 
 /** Plugin size and activity as a sheet, charted as horizontal bars: plugins down the y axis, one series per measure. */
 export const makePluginMetrics = (): Sheet.Sheet => {
