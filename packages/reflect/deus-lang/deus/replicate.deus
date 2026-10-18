@@ -821,7 +821,7 @@ def importLines (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
           ": its text does not hash to its name\n")
         Option.none
     else if kind == "meta" then
-      if IO.exists (dir ++ "/meta/" ++ h) then () else writeMetaText dir h line
+      if IO.exists (dir ++ "/meta/" ++ h) then () else keepMetaText dir h line
       Option.none
     else Option.none) lines
   Seen.mk name claims hashes

@@ -950,10 +950,10 @@ def writeObjectText (dir : Text) (h : Text) (text : Text) : {IO} Unit :=
   let path := objectPath dir h
   if IO.exists path then () else IO.writeFile path (text ++ "\n")
 
-/-- `writeMeta` for metadata whose canonical text is already printed. -/
-def writeMetaText (dir : Text) (h : Text) (text : Text) : {IO} Unit :=
-  IO.writeFile (dir ++ "/meta/" ++ h) (text ++ "\n")
-  IO.appendFile (dir ++ "/metas.dirty") (h ++ "\n")
+/-- Metadata a pull receives, kept as `h`'s file and not noted for the next commit: a snapshot it pulled names its
+  current metadata already, so noting a bundle's copy would let an older version reach a later commit's snapshot. -/
+def keepMetaText (dir : Text) (h : Text) (text : Text) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (text ++ "\n")
+
 
 /-- The (name, hash) pairs where a definition among `names` uses a hash no name in `ns` has: what a
   stale merge left when it kept a dependent of a definition it replaced (task 30884468). -/
