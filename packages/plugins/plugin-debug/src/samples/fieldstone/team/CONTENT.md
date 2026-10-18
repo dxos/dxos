@@ -17,13 +17,13 @@ Alien Labs partials build on this one.
 ### Organization
 
 - 1 `Organization.Organization` `fieldstone`: Alien Labs, status `active`, website
-  `https://alienlabs.dev`, description "Builds Cairn, a hosted build cache for monorepos, on DXOS:
+  `https://alienlabs.io`, description "Builds Cairn, a hosted build cache for monorepos, on DXOS:
   the dashboard is a Composer plugin and the agents run on EDGE. Remote team, Lisbon and Toronto."
 
 ### People
 
 - 10 `Person.Person`, each with `fullName`, `jobTitle`, `department`, a work email
-  `<first>@alienlabs.dev`, a location, and `Person → Organization (organization)` to `fieldstone`.
+  `<first>@alienlabs.io`, a location, and `Person → Organization (organization)` to `fieldstone`.
   Department is Engineering unless noted:
   - `astrid` Astrid Holm, Engineering Manager
   - `omar` Omar Haddad, Staff Engineer, cache engine

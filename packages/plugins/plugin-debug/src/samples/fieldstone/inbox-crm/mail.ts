@@ -1514,7 +1514,7 @@ Partner Manager, GitHub`,
         time: [15, 15],
         body: `Hi Sofia,
 
-The action is published under alien-labs, and security@alienlabs.dev is our contact; it reaches Anika and Omar.
+The action is published under alien-labs, and security@alienlabs.io is our contact; it reaches Anika and Omar.
 
 Self-hosted runner docs are the gap. They'll be up within two weeks, including how to keep the cache volume warm on ephemeral runners, which is the question we get most.
 
@@ -2845,7 +2845,7 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     const scribe: Actor.Actor = {
       role: 'assistant',
       name: agents.scribe.name,
-      email: 'scribe@agents.alienlabs.dev',
+      email: 'scribe@agents.alienlabs.io',
       identityDid: agents.scribe.did,
     };
     const actorFor = (who: Who | 'scribe'): Actor.Actor => (who === 'scribe' ? scribe : personActor(people[who]));

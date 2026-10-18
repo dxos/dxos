@@ -47,7 +47,7 @@ export const makePeople = (fieldstone: Organization.Organization): Make<People> 
         jobTitle: seed.jobTitle,
         department: 'department' in seed ? seed.department : 'Engineering',
         location: seed.location,
-        emails: [{ label: 'Work', value: `${seed.key}@alienlabs.dev` }],
+        emails: [{ label: 'Work', value: `${seed.key}@alienlabs.io` }],
         organization: Ref.make(fieldstone),
       }),
     ),
