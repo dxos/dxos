@@ -6,6 +6,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
 import { Organization } from '@dxos/types';
 
+import { LOGO_IMAGES } from '../logo-images.ts';
 import { type LogoMark, makeLogo } from '../logo.ts';
 import { type Make } from '../util.ts';
 
@@ -189,7 +190,8 @@ export const makeOrganizations = (): Make<Orgs> =>
         status: seed.status,
         website: seed.website,
         description: seed.description,
-        image: makeLogo(seed.name, seed.logo.color, seed.logo.mark),
+        // A customer's own logo where one exists; the generated mark otherwise (vendors, the venue).
+        image: LOGO_IMAGES[seed.name] ?? makeLogo(seed.name, seed.logo.color, seed.logo.mark),
         ...('location' in seed ? { location: [...seed.location] } : {}),
       }),
     ),

@@ -80,9 +80,13 @@ describe('Alien Labs Sales pipeline', () => {
 
     // Every organization, on the board or not, carries a logo the card can show.
     for (const org of ofType('type.organization:')) {
-      expect(org.image, org.name).toMatch(/^data:image\/svg\+xml,/);
-      expect(decodeURIComponent(org.image ?? '').length, org.name).toBeLessThan(1024);
+      expect(org.image, org.name).toMatch(/^data:image\/(svg\+xml|webp;base64),/);
+      expect((org.image ?? '').length, org.name).toBeLessThan(12_000);
     }
     expect(new Set(ofType('type.organization:').map((org) => org.image)).size).toBe(orgIds.size);
+    // Every customer on the board shows its own logo rather than the generated mark.
+    for (const org of ofType('type.organization:').filter((org) => items.includes(org.id))) {
+      expect(org.image, org.name).toMatch(/^data:image\/webp;base64,/);
+    }
   });
 });

@@ -357,6 +357,15 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=ui/ui-theme,ui/react-ui-canvas,ui/react-ui moon run storybook-react:serve-nodeps"
       ],
       "port": 9009
+    },
+    {
+      "name": "storybook-spaces",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=apps/composer-app,plugins/plugin-kanban,ui/react-ui-mosaic moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
     }
   ]
 }
