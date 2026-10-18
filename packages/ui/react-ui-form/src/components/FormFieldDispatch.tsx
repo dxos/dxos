@@ -113,7 +113,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
   const label = useMemo(
     () =>
-      override?.hideLabel ? '' : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
+      override?.hideLabel
+        ? ''
+        : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
     [override?.hideLabel, override?.label, labelProp, title, name],
   );
   const readonly = override?.readonly ?? readonlyProp;
