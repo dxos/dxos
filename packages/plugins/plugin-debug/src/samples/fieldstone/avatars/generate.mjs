@@ -3,7 +3,7 @@
 //
 
 // Regenerates `../avatar-images.ts` from the WebP headshots in this directory (run with `node avatars/generate.mjs`).
-// Each headshot is a 128×128 WebP named after the person (`omar-haddad.webp`); 128px covers a 64px avatar at 2×.
+// Each headshot is a 240×240 WebP named after the person (`omar-haddad.webp`); 240px covers the 120px card photo at 2×.
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
