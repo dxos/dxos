@@ -16,6 +16,8 @@ export const PlotOptions = Schema.Struct({
   header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
   /** Draw grid lines (bar and xy). */
   grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
+  /** Bars run along the x axis, categories down the y axis (bar). */
+  horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
 });
 
 export type PlotOptions = Schema.Schema.Type<typeof PlotOptions>;

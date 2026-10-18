@@ -16,6 +16,9 @@ import { toPlotDatums } from '../../util/index.ts';
 const MARGIN = 40;
 const MIN_SIZE = MARGIN * 2;
 
+// Approximate advance of Plot's default 10px sans-serif axis text.
+const LABEL_CHAR_WIDTH = 6;
+
 // Plot's tip box defaults to a white fill, while its text follows the theme's currentColor.
 const TIP = { fill: 'var(--color-modal-surface)', stroke: 'var(--color-separator)' };
 
@@ -64,7 +67,7 @@ Plot.displayName = 'Plot';
 
 const createPlot = (
   datums: PlotDatum[],
-  { type, grid = true }: PlotOptions,
+  { type, grid = true, horizontal = false }: PlotOptions,
   { label, ...size }: { width: number; height: number; label?: string },
 ): SVGSVGElement | HTMLElement => {
   const series = new Set(datums.map((datum) => datum.series));
@@ -94,7 +97,26 @@ const createPlot = (
       });
 
     case 'bar':
-    default:
+    default: {
+      if (horizontal) {
+        // Category labels sit left of the frame, so the margin grows with the longest one.
+        const marginLeft = Math.max(MARGIN, ...keys.map((key) => String(key).length * LABEL_CHAR_WIDTH + MARGIN / 4));
+        return ObservablePlot.plot({
+          ...options,
+          marginLeft,
+          x: { label: null },
+          ...(series.size > 1
+            ? { fy: { label: null, domain: keys, axis: 'left' }, y: { axis: null, domain: seriesOrder } }
+            : { y: { label: null, domain: keys } }),
+          marks: [
+            ObservablePlot.ruleX([0]),
+            series.size > 1
+              ? ObservablePlot.barX(datums, { fy: 'key', y: 'series', x: 'value', fill: 'series', tip: TIP })
+              : ObservablePlot.barX(datums, { y: 'key', x: 'value', fill: 'series', tip: TIP }),
+          ],
+        });
+      }
+
       return ObservablePlot.plot({
         ...options,
         ...(series.size > 1
@@ -107,6 +129,7 @@ const createPlot = (
             : ObservablePlot.barY(datums, { x: 'key', y: 'value', fill: 'series', tip: TIP }),
         ],
       });
+    }
   }
 };
 
