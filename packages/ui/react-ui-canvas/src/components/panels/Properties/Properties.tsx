@@ -70,6 +70,7 @@ import {
   splitClassEdit,
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
+import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
@@ -77,7 +78,6 @@ import { FontField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
-import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
 const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];

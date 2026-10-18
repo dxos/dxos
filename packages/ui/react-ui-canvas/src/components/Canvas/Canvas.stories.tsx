@@ -81,7 +81,7 @@ const Editor = ({
       <Canvas.Actions />
       <Canvas.Debug />
       <Canvas.Theme />
-      <Canvas.Palette />
+      <Canvas.Tools />
       <Canvas.Properties />
       <Canvas.Layers />
       <Canvas.About />

@@ -49,7 +49,7 @@ export const Settings = Schema.Struct({
   ),
   showPalette: Schema.optional(
     Schema.Boolean.annotate({
-      title: 'Show palette',
+      title: 'Show tools',
       description: 'Display the node and link palette over the canvas.',
     }),
   ),

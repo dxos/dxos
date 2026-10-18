@@ -73,7 +73,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The drawing alone: no palette, panels, toolbars or grid. */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();

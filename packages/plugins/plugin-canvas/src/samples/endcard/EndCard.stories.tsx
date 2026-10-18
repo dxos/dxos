@@ -141,7 +141,7 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
       {chrome && (
         <>
           <Canvas.Navigation />
-          <Canvas.Palette />
+          <Canvas.Tools />
           <Canvas.Actions />
           <Canvas.Timeline />
           <Canvas.Properties />
@@ -176,7 +176,10 @@ type Story = StoryObj<typeof meta>;
  * 1. The operations author the card and the film view mounts, its clock exposed for export.
  * 2. Seeking to 2 s draws the scene at 2 s.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // 1. Authored and mounted (the first compile loads esbuild's binary).

@@ -111,7 +111,8 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-export const Classic: Story = {};
+/** The default theme. */
+export const Default: Story = {};
 
 export const Glass: Story = { args: { theme: 'glass-night' } };
 

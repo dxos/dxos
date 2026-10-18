@@ -158,9 +158,10 @@ import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { About, type AboutStat } from '../panels/About/index.ts';
 import { LayersPanel } from '../panels/Layers/index.ts';
 import { ObjectsPanel } from '../panels/Objects/index.ts';
-import { Palette } from '../panels/Palette/index.ts';
 import { Properties, type PropertiesProps } from '../panels/Properties/index.ts';
+import { ThemeBar } from '../panels/ThemeBar/index.ts';
 import { TimelineBar } from '../panels/Timeline/index.ts';
+import { Tools } from '../panels/Tools/index.ts';
 import {
   type ElementHandlers,
   MAX_LIVE_DEPTH,
@@ -168,7 +169,6 @@ import {
   defaultLinkRegistry,
   defaultNodeRegistry,
 } from '../SceneLayer/index.ts';
-import { ThemeBar } from '../ThemeBar/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';
 import { CanvasProvider, useCanvasContext } from './CanvasContext.ts';
 import { Dock, DockProvider } from './Dock.tsx';
@@ -2054,17 +2054,17 @@ const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
 CanvasTheme.displayName = 'Canvas.Theme';
 
 //
-// Palette
+// Tools
 //
 
 /** The tool rail: what the next gesture will draw. */
-const CanvasPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: CanvasBarProps) => {
+const CanvasTools = ({ classNames = 'absolute top-14 bottom-14 left-2' }: CanvasBarProps) => {
   const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, setTool } =
-    useCanvasContext('Canvas.Palette');
+    useCanvasContext('Canvas.Tools');
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
     <div className={mx('pointer-events-none', classNames)}>
-      <Palette
+      <Tools
         tool={tool}
         nodes={nodeRegistry}
         links={linkRegistry}
@@ -2077,7 +2077,7 @@ const CanvasPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: Canv
   );
 };
 
-CanvasPalette.displayName = 'Canvas.Palette';
+CanvasTools.displayName = 'Canvas.Tools';
 
 //
 // Properties
@@ -2420,7 +2420,7 @@ export const Canvas = {
   Actions: CanvasActions,
   Debug: CanvasDebug,
   Theme: CanvasTheme,
-  Palette: CanvasPalette,
+  Tools: CanvasTools,
   Properties: CanvasProperties,
   Layers: CanvasLayers,
   Objects: CanvasObjects,

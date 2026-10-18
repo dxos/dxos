@@ -8,7 +8,7 @@ import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
-import { useSceneLook } from '../../../hooks/index.ts';
+import { useSceneLook } from '../../hooks/index.ts';
 import {
   CLASSIC_LOOK,
   NodeStyle,
@@ -17,8 +17,8 @@ import {
   STYLE_HUES,
   type StyleHue,
   styleVariant,
-} from '../../../model/index.ts';
-import { BORDER_CLASSES, TONES, variantClasses } from '../../../utils/index.ts';
+} from '../../model/index.ts';
+import { BORDER_CLASSES, TONES, variantClasses } from '../../utils/index.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
 

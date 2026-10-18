@@ -67,7 +67,10 @@ type Story = StoryObj<typeof meta>;
  * 4. ⌘← and ⌘→ jump between keys; Delete removes the key under the playhead.
  * 5. Play advances the clock; pressing it again pauses.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // 1. Time and keys.

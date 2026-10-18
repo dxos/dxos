@@ -11,6 +11,6 @@ export * from './Grid/index.ts';
 export * from './LatticeGrid/index.ts';
 export * from './PartEditor/index.ts';
 export * from './SceneLayer/index.ts';
-export * from './ThemeBar/index.ts';
+export * from './StyleGrid/index.ts';
 export * from './Toolbar/index.ts';
 export * from './panels/index.ts';

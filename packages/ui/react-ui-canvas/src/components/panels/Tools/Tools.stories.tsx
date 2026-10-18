@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { freehandCapabilities } from '../../../engine/index.ts';
 import { type NodeRegistry, type Tool } from '../../../model/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../../SceneLayer/index.ts';
-import { Palette, type PaletteProps } from './Palette.tsx';
+import { Tools, type ToolsProps } from './Tools.tsx';
 
 const ICONS = [
   'ph--brain--regular',
@@ -44,20 +44,20 @@ const MANY: NodeRegistry = Object.fromEntries(
   ),
 );
 
-type StoryArgs = Pick<PaletteProps, 'collapse' | 'flyout'> & {
+type StoryArgs = Pick<ToolsProps, 'collapse' | 'flyout'> & {
   /** Many types in groups, or the built-in few. */
   many: boolean;
   /** The height of the view the rail floats in. */
   height: number;
 };
 
-/** The rail floating in a view of `height`, as `Canvas.Palette` places it. */
+/** The rail floating in a view of `height`, as `Canvas.Tools` places it. */
 const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
   const [tool, setTool] = useState<Tool>({ kind: 'select' });
   return (
     <div className='relative w-64 border border-separator rounded-sm' style={{ height }}>
       <div className='absolute top-2 bottom-2 left-2 pointer-events-none'>
-        <Palette
+        <Tools
           tool={tool}
           nodes={many ? MANY : defaultNodeRegistry}
           links={defaultLinkRegistry}
@@ -75,7 +75,7 @@ const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/components/panels/Palette',
+  title: 'ui/react-ui-canvas/components/panels/Tools',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   args: { collapse: 'auto', flyout: 'list', many: false, height: 640 },

@@ -96,7 +96,7 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
           <Canvas.Navigation />
           <Canvas.Actions />
           <Canvas.Debug />
-          <Canvas.Palette />
+          <Canvas.Tools />
         </Canvas.Root>
       </Root>
     </ComputeContext.Provider>

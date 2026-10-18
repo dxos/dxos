@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Palette.tsx';
+export * from './Tools.tsx';

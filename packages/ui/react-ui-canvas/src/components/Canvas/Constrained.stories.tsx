@@ -80,7 +80,7 @@ const DefaultStory = () => {
         <Canvas.Navigation />
         <Canvas.Actions />
         <Canvas.Debug />
-        <Canvas.Palette />
+        <Canvas.Tools />
       </Canvas.Root>
       <ConstraintList model={model} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />

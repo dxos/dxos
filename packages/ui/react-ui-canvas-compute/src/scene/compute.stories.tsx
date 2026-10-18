@@ -107,7 +107,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
             <Canvas.Navigation />
             <Canvas.Actions />
             <Canvas.Debug />
-            <Canvas.Palette />
+            <Canvas.Tools />
           </Canvas.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />
         </div>

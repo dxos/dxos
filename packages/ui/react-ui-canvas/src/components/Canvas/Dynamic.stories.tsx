@@ -119,7 +119,7 @@ const DefaultStory = () => {
         <Canvas.Navigation />
         <Canvas.Actions />
         <Canvas.Debug />
-        <Canvas.Palette />
+        <Canvas.Tools />
       </Canvas.Root>
       <GraphPanel graph={graph} overlay={overlay} />
       <Properties projection={projection} atoms={atoms} classNames='border-l border-separator' />

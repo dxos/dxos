@@ -27,10 +27,10 @@ const TOOLS_GROUP = 'Tools';
  * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
  * a `folded` group always does.
  */
-export type PaletteGroup = { name: string; entries: Entry[]; collapsible: boolean; folded?: boolean };
+export type ToolGroup = { name: string; entries: Entry[]; collapsible: boolean; folded?: boolean };
 
 /** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
-const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
+const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
   const groups = new Map<string, Entry[]>();
   for (const def of Object.values(nodes).filter((def) => def.palette !== false)) {
     const name = def.group ?? '';
@@ -43,11 +43,11 @@ const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
 };
 
 /**
- * Palette groups: the fixed tools, then the node types by group, then a link per link type; a group the projection
+ * Tool groups: the fixed tools, then the node types by group, then a link per link type; a group the projection
  * cannot apply (`create`, `link`) is left out rather than offered and silently dropped. Node groups fold when the rail
  * runs out of room; the link types always share one flyout, since a drawing mostly uses one of them.
  */
-export const paletteGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): PaletteGroup[] =>
+export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] =>
   [
     { name: TOOLS_GROUP, entries: BASE, collapsible: false },
     ...(capabilities.create ? nodeGroups(nodes) : []),
@@ -66,9 +66,9 @@ export const paletteGroups = (nodes: NodeRegistry, links: LinkRegistry, capabili
     },
   ].filter((group) => group.entries.length > 0);
 
-/** Palette entries by group, flat within each. */
-export const paletteEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): Entry[][] =>
-  paletteGroups(nodes, links, capabilities).map((group) => group.entries);
+/** Tool entries by group, flat within each. */
+export const toolEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): Entry[][] =>
+  toolGroups(nodes, links, capabilities).map((group) => group.entries);
 
 export const sameTool = (left: Tool, right: Tool): boolean =>
   left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
@@ -79,11 +79,11 @@ export const toolForKey = (
   capabilities: Capabilities,
   key: string,
 ): Tool | undefined =>
-  paletteEntries(nodes, links, capabilities)
+  toolEntries(nodes, links, capabilities)
     .flat()
     .find((entry) => entry.key !== undefined && entry.key === key.toUpperCase())?.tool;
 
-export type PaletteProps = {
+export type ToolsProps = {
   tool: Tool;
   nodes: NodeRegistry;
   links: LinkRegistry;
@@ -103,18 +103,18 @@ export type PaletteProps = {
 };
 
 /** The height the rail would take flat: each button, the gaps between them, and each group's padding and divider. */
-const flatHeight = (groups: readonly PaletteGroup[], button: number): number =>
+const flatHeight = (groups: readonly ToolGroup[], button: number): number =>
   groups.reduce((height, group) => height + (group.folded ? 1 : group.entries.length) * (button + 4) - 4 + 9, 0);
 
 /**
  * Whether the rail folds its node groups: always, never, or (`auto`) when the flat rail would overflow its parent,
- * which the host sizes to the room the rail may take (`Canvas.Palette` spans from below the navigation to above
+ * which the host sizes to the room the rail may take (`Canvas.Tools` spans from below the navigation to above
  * the bottom bars); re-measured as that resizes.
  */
 const useCollapsed = (
   ref: RefObject<HTMLDivElement | null>,
-  groups: readonly PaletteGroup[],
-  collapse: PaletteProps['collapse'],
+  groups: readonly ToolGroup[],
+  collapse: ToolsProps['collapse'],
 ) => {
   const [overflows, setOverflows] = useState(false);
   useLayoutEffect(() => {
@@ -140,7 +140,7 @@ const useCollapsed = (
  * it where it drops (the canvas is a pragmatic-dnd drop target for `nodeDragData`). With many types the node
  * groups fold into flyouts (`collapse`), each showing its active or last-used tool.
  */
-export const Palette = ({
+export const Tools = ({
   tool,
   nodes,
   links,
@@ -150,9 +150,9 @@ export const Palette = ({
   readonly = false,
   onReadonlyChange,
   onToolChange,
-}: PaletteProps) => {
+}: ToolsProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const groups = useMemo(() => paletteGroups(nodes, links, capabilities), [nodes, links, capabilities]);
+  const groups = useMemo(() => toolGroups(nodes, links, capabilities), [nodes, links, capabilities]);
   const collapsed = useCollapsed(ref, groups, collapse);
   return (
     <div
@@ -165,12 +165,12 @@ export const Palette = ({
       {groups.map((group) =>
         group.folded || (collapsed && group.collapsible) ? (
           <div key={group.name} className='flex flex-col p-1'>
-            <PaletteFlyout group={group} tool={tool} layout={flyout} onToolChange={onToolChange} />
+            <ToolsFlyout group={group} tool={tool} layout={flyout} onToolChange={onToolChange} />
           </div>
         ) : (
           <div key={group.name} className='flex flex-col gap-1 p-1'>
             {group.entries.map((entry) => (
-              <PaletteButton
+              <ToolButton
                 key={entry.label}
                 entry={entry}
                 active={sameTool(tool, entry.tool)}
@@ -225,10 +225,10 @@ const useHoverOpen = (setOpen: (open: boolean, hovered?: boolean) => void) => {
   );
 };
 
-type PaletteFlyoutProps = {
-  group: PaletteGroup;
+type ToolsFlyoutProps = {
+  group: ToolGroup;
   tool: Tool;
-  layout: NonNullable<PaletteProps['flyout']>;
+  layout: NonNullable<ToolsProps['flyout']>;
   onToolChange: (tool: Tool) => void;
 };
 
@@ -236,7 +236,7 @@ type PaletteFlyoutProps = {
  * A folded group: its active (else last-used, else first) tool as one button, picked with a click, and a corner
  * chevron (or a hover) opening the group's tools beside the rail, as a list or a grid (`layout`).
  */
-const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps) => {
+const ToolsFlyout = ({ group, tool, layout, onToolChange }: ToolsFlyoutProps) => {
   const [open, setOpenState] = useState(false);
   // Opened by a hover, the list takes no focus (a pointer user would see a focus ring on the first row); opened from
   // the chevron (a click or the keyboard), it does, so arrows move through it.
@@ -270,7 +270,7 @@ const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps
           onPointerLeave={hover.leave}
         >
           {/* No tooltip: hovering opens the flyout, which names every tool, and a tooltip would sit over it. */}
-          <PaletteButton entry={shown} active={active !== undefined} tooltip={false} onToolChange={onToolChange} />
+          <ToolButton entry={shown} active={active !== undefined} tooltip={false} onToolChange={onToolChange} />
           <Popover.Trigger asChild>
             <button
               type='button'
@@ -293,7 +293,7 @@ const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps
           data-testid={`palette-group-${group.name}-tools`}
         >
           {group.entries.map((entry) => (
-            <PaletteButton
+            <ToolButton
               key={entry.label}
               entry={entry}
               labelled={layout === 'list'}
@@ -310,7 +310,7 @@ const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps
   );
 };
 
-const PaletteButton = ({
+const ToolButton = ({
   entry,
   active,
   labelled,

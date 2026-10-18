@@ -47,7 +47,7 @@ const DefaultStory = () => {
       <Canvas.Viewport />
       <Canvas.Navigation />
       <Canvas.Actions />
-      <Canvas.Palette />
+      <Canvas.Tools />
       <Canvas.Timeline />
       <Canvas.Properties />
       <Canvas.Layers />
@@ -74,7 +74,10 @@ type Story = StoryObj<typeof meta>;
  * 3. Space plays from the start; the time advances.
  * 4. Selecting the object's row opens it in isolation (`Objects › Object 1`); Escape returns to the scene.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view');

@@ -310,7 +310,7 @@ const Editor = ({ store, root, engine }: EditorProps) => {
       <Canvas.Root store={store} root={root} atoms={atoms}>
         <Canvas.Viewport liveDepth={0} />
         <Canvas.Actions />
-        <Canvas.Palette />
+        <Canvas.Tools />
       </Canvas.Root>
       <Scorecard store={store} root={root} atoms={atoms} engine={engine} />
     </Layout.Grid>

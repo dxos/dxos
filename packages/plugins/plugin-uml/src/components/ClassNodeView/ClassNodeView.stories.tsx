@@ -70,7 +70,7 @@ const DefaultStory = () => {
     <Canvas.Root store={store} root={root} nodes={nodes}>
       <Canvas.Viewport />
       <Canvas.Actions />
-      <Canvas.Palette />
+      <Canvas.Tools />
       <Canvas.Properties />
     </Canvas.Root>
   );

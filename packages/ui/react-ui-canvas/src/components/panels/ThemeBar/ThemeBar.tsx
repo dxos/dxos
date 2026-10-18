@@ -20,8 +20,8 @@ import {
   resolveStyleSet,
   shortcutFor,
   styleVariant,
-} from '../../model/index.ts';
-import { BACKGROUND_FILLS, FLOATING_PANEL, RADIUS_CLASSES, variantClasses } from '../../utils/index.ts';
+} from '../../../model/index.ts';
+import { BACKGROUND_FILLS, FLOATING_PANEL, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
 
 /** The canvas colour behind a swatch in its theme's mode. */
 const SWATCH_CANVAS: Record<LookTone, string> = {
