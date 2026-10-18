@@ -17,7 +17,7 @@ export type AboutInspectorProps = InspectorProps & {
 
 /** A two-column table of the drawing's figures, one per list-height row: a label and its value. */
 export const AboutInspector = ({ classNames, stats }: AboutInspectorProps) => (
-  <Layout.Container classNames={classNames} data-testid='about'>
+  <Layout.Container gutter='sm' classNames={classNames} data-testid='about'>
     <Layout.Grid cols={['fill', 'auto']}>
       {stats.map(({ id, label, value }) => (
         <Fragment key={id}>
