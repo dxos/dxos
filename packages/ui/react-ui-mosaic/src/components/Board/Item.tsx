@@ -18,7 +18,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
-import { getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -81,14 +81,17 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
       >
         <Focus.Item asChild>
           <Card.Root
-            classNames={classNames}
+            // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
+            classNames={mx('not-data-selected:border-separator-subtle', classNames)}
             data-testid='board-item'
             ref={composedRef}
             onClick={(event) => event.currentTarget.focus()}
           >
             <Card.Header>
               <DragHandle.DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>
+                {label}
+              </Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>
