@@ -13,7 +13,6 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type Layer, type LayerId } from '../../../model/index.ts';
 import { type InspectorProps } from '../index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
-import { InspectorActions } from '../InspectorPanel/index.ts';
 
 export type LayersInspectorProps = InspectorProps & {
   /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */
@@ -103,7 +102,7 @@ export const LayersInspector = ({
   const top = selected[selected.length - 1];
   return (
     <>
-      <InspectorActions data-testid='layers-toolbar'>
+      <Toolbar.Root data-testid='layers-toolbar'>
         <Button.Root
           variant='ghost'
           iconOnly
@@ -134,7 +133,7 @@ export const LayersInspector = ({
             onSelect={() => onDelete?.(selected)}
           />
         </InspectorMenu>
-      </InspectorActions>
+      </Toolbar.Root>
       <OrderedList.Root
         items={items}
         getLabel={(layer) => layer.name}

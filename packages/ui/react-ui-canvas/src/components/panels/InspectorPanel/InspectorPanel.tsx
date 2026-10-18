@@ -44,7 +44,7 @@ type InspectorPanelContextValue = {
   docked: boolean;
   readonly: boolean;
   sections: readonly InspectorSectionDef[];
-  /** Each section's content slot (`id`) and header actions slot (`id:actions`). */
+  /** Each section's content slot, by section id. */
   slots: Readonly<Record<string, HTMLElement | null>>;
   closed: ReadonlySet<string>;
   shows: (section: InspectorSectionDef) => boolean;
@@ -177,7 +177,6 @@ const InspectorPanelContent = () => {
           <ScrollArea.Viewport>
             <Accordion.Root
               border={false}
-              classNames='gap-2 p-2'
               onPointerDown={stop}
               onPointerMove={stop}
               onPointerUp={stop}
@@ -190,20 +189,16 @@ const InspectorPanelContent = () => {
               }
             >
               {visible.map((section) => (
-                // Framed as its own card; clipped so its rows' fills and lines stay inside the rounded border.
+                // Edge to edge, one divider between sections; the frame's header holds only the label and disclosure.
                 <Accordion.Item
                   key={section.id}
                   value={section.id}
-                  classNames='rounded-sm border border-separator overflow-hidden'
+                  classNames='border-b border-separator last:border-b-0'
                   data-testid={`dock-section-${section.id}`}
                 >
-                  {/* The header: the disclosure, then the inspector's own actions in the toolbar's tone. */}
-                  <div className='flex items-center bg-toolbar-surface'>
-                    <Accordion.ItemTrigger icon={section.icon} classNames='flex-1 min-w-0'>
-                      {section.title}
-                    </Accordion.ItemTrigger>
-                    <Slot id={`${section.id}:actions`} setSlot={setSlot} className='flex items-center' />
-                  </div>
+                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
+                    {section.title}
+                  </Accordion.ItemTrigger>
                   <Accordion.ItemContent>
                     <Slot id={section.id} setSlot={setSlot} />
                   </Accordion.ItemContent>
@@ -228,14 +223,12 @@ export const InspectorPanel = {
 // Section
 //
 
-/** The section an inspector renders in, so its actions can reach the section's header. */
-const InspectorSectionContext = createContext<string | undefined>(undefined);
-
 export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectionDef }>;
 
 /**
- * Frames one inspector in the panel: registers its section (title, icon, disclosure) and renders the inspector into it
- * while the panel shows it. Outside a panel, the inspector renders where it is.
+ * Frames one inspector in the panel: registers its section (label and disclosure; later tabs, for several inspectors in
+ * one frame) and renders the inspector into it while the panel shows it. The inspector draws its own toolbar. Outside a
+ * panel, the inspector renders where it is.
  */
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
@@ -248,31 +241,9 @@ export const InspectorSection = ({ section, children }: InspectorSectionProps) =
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [panel?.register, id, title, icon, order, show]);
-  const content = <InspectorSectionContext.Provider value={id}>{children}</InspectorSectionContext.Provider>;
   if (!panel) {
-    return content;
+    return <>{children}</>;
   }
   const slot = panel.shows(section) ? panel.slots[id] : undefined;
-  return slot ? createPortal(content, slot) : null;
-};
-
-export type InspectorActionsProps = PropsWithChildren<{ 'data-testid'?: string }>;
-
-/**
- * An inspector's own actions: in its section's header inside a panel, else a toolbar above the inspector. Rendered by the
- * inspector itself, so the actions share its state.
- */
-export const InspectorActions = ({ children, 'data-testid': testId }: InspectorActionsProps) => {
-  const panel = useContext(InspectorPanelContext);
-  const section = useContext(InspectorSectionContext);
-  const slot = section ? panel?.slots[`${section}:actions`] : undefined;
-  const toolbar = (
-    <Toolbar.Root classNames={slot ? 'bg-transparent' : undefined} data-testid={testId}>
-      {children}
-    </Toolbar.Root>
-  );
-  if (section && panel) {
-    return slot ? createPortal(toolbar, slot) : null;
-  }
-  return toolbar;
+  return slot ? createPortal(children, slot) : null;
 };

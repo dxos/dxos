@@ -26,6 +26,7 @@ import {
 } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { type CanvasAtoms, type Projection } from '../../../engine/index.ts';
@@ -70,7 +71,6 @@ import {
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
 import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../index.ts';
-import { InspectorActions } from '../InspectorPanel/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
@@ -340,7 +340,7 @@ export const PropertiesInspector = ({
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-      <InspectorActions data-testid='properties-toolbar'>
+      <Toolbar.Root data-testid='properties-toolbar'>
         {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
           <Button.Root
             variant='ghost'
@@ -374,7 +374,7 @@ export const PropertiesInspector = ({
             onClick={onFlip}
           />
         )}
-      </InspectorActions>
+      </Toolbar.Root>
       {schema && (
         <LayersContext.Provider value={layers}>
           <StyleClassesContext.Provider value={styles ? styleMap : undefined}>

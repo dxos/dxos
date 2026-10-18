@@ -13,7 +13,6 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type SceneId } from '../../../model/index.ts';
 import { type InspectorProps } from '../index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
-import { InspectorActions } from '../InspectorPanel/index.ts';
 
 /** A composite as the panel lists it. */
 export type ObjectEntry = { id: SceneId; name: string; instances: number };
@@ -61,7 +60,7 @@ export const ObjectsInspector = ({
   const current = objects.find((entry) => entry.id === selected);
   return (
     <>
-      <InspectorActions data-testid='objects-toolbar'>
+      <Toolbar.Root data-testid='objects-toolbar'>
         <Button.Root
           variant='ghost'
           iconOnly
@@ -110,7 +109,7 @@ export const ObjectsInspector = ({
             onSelect={() => current && onDelete?.(current.id, true)}
           />
         </InspectorMenu>
-      </InspectorActions>
+      </Toolbar.Root>
       <OrderedList.Root
         items={objects}
         getLabel={(entry) => entry.name}
