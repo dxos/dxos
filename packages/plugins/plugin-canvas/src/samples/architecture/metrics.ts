@@ -7,30 +7,30 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
 const HEADER = ['Plugin', 'PRs', 'Tests', 'Closed issues', 'Open issues'] as const;
 
-/** Illustrative figures, not measured from the repository: merged PRs, tests, and closed and open issues per plugin. */
+/** Illustrative figures, not measured from the repository: merged PRs, tests, and closed and open issues per plugin, most PRs first. */
 export const PLUGIN_METRICS: ReadonlyArray<
   readonly [plugin: string, prs: number, tests: number, closed: number, open: number]
 > = [
-  ['plugin-markdown', 412, 236, 144, 28],
   ['plugin-assistant', 538, 312, 188, 35],
-  ['plugin-sheet', 287, 198, 100, 20],
-  ['plugin-canvas', 241, 154, 84, 17],
-  ['plugin-inbox', 326, 187, 114, 23],
+  ['plugin-markdown', 412, 236, 144, 28],
   ['plugin-space', 371, 142, 130, 25],
-  ['plugin-client', 203, 96, 71, 15],
+  ['plugin-inbox', 326, 187, 114, 23],
   ['plugin-deck', 298, 118, 104, 21],
+  ['plugin-sheet', 287, 198, 100, 20],
+  ['plugin-debug', 254, 67, 89, 18],
+  ['plugin-canvas', 241, 154, 84, 17],
   ['plugin-table', 219, 131, 77, 16],
-  ['plugin-kanban', 147, 72, 51, 12],
+  ['plugin-client', 203, 96, 71, 15],
   ['plugin-illustrator', 189, 163, 66, 14],
-  ['plugin-explorer', 124, 58, 43, 10],
   ['plugin-thread', 176, 84, 62, 14],
-  ['plugin-meeting', 98, 41, 34, 9],
   ['plugin-script', 167, 103, 58, 13],
-  ['plugin-search', 86, 47, 30, 8],
+  ['plugin-kanban', 147, 72, 51, 12],
+  ['plugin-explorer', 124, 58, 43, 10],
+  ['plugin-meeting', 98, 41, 34, 9],
   ['plugin-map', 92, 38, 32, 9],
+  ['plugin-search', 86, 47, 30, 8],
   ['plugin-chess', 64, 29, 22, 7],
   ['plugin-mermaid', 51, 22, 18, 6],
-  ['plugin-debug', 254, 67, 89, 18],
 ];
 
 const COLUMNS = 'ABCDE';
