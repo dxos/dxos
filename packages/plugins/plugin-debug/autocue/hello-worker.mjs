@@ -70,8 +70,9 @@ const visible = (locator, timeout) =>
 /** Closes the companion if one is open, so the project gets the full width. */
 const closeCompanion = async (page) => {
   const close = page.locator('[data-testid="plankHeading.closeCompanion"]').first();
+  // With help panels hidden the button can stay in the DOM with nothing to close, so a click that cannot land is fine.
   if (await visible(close, 3_000)) {
-    await close.click();
+    await close.click({ timeout: 2_000 }).catch(() => {});
   }
 };
 
@@ -153,6 +154,17 @@ export const steps = [
       // A delegated chat runs on the settings' default model, not the chat picker's.
       await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
       await page.waitForURL(/dxos:settings/, { timeout: 10_000 });
+      // Help panels open beside each new space a beat after it renders, too late to close before the camera sees them.
+      await demo.click({ selector: '[data-testid="settings.org.dxos.plugin.support"]', hud: false });
+      const hideHelp = page.getByRole('switch', { name: 'Hide help panels' });
+      await hideHelp.waitFor({ state: 'attached', timeout: 10_000 });
+      if (!(await hideHelp.isChecked())) {
+        // The input is visually hidden; its switch label takes the click.
+        await hideHelp.locator('xpath=ancestor::label[1]').click();
+        for (let attempt = 0; attempt < 20 && !(await hideHelp.isChecked()); attempt++) {
+          await page.waitForTimeout(250);
+        }
+      }
       await demo.click({ selector: '[data-testid="settings.org.dxos.plugin.assistant"]', hud: false });
       await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
