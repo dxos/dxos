@@ -80,6 +80,62 @@ export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
   Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
+const CALENDAR_FILTER_TYPE = `${calendarTypename}-filter`;
+
+type SavedFilter = { name: string; filter: string };
+
+/**
+ * A saved view per entry of the owner's `filters`: a child node carrying the owner as data (so the
+ * owner's article renders it) and the query as its `filter` property, with rename/delete actions.
+ */
+const makeSavedFilterNodes = (
+  owner: Mailbox.Mailbox | Calendar.Calendar,
+  filters: readonly SavedFilter[] | undefined,
+  type: string,
+) =>
+  (filters ?? []).map(({ name, filter }) =>
+    AppGraphNode.make({
+      id: `filter-${kebabize(name)}`,
+      type,
+      data: owner,
+      properties: {
+        label: name,
+        icon: 'ph--funnel--regular',
+        iconHue: 'rose',
+        filter,
+      },
+      actions: [
+        AppGraphNode.makeAction({
+          id: 'rename-filter',
+          data: (params?: AppGraphNode.InvokeProps) =>
+            Operation.invoke(InboxOperation.RenameFilter, {
+              owner,
+              name,
+              caller: `${params?.caller}:${params?.parent?.id}`,
+            }),
+          properties: {
+            label: ['rename-filter.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+            disposition: 'list-item',
+          },
+        }),
+        AppGraphNode.makeAction({
+          id: 'delete-filter',
+          data: () =>
+            Effect.sync(() => {
+              Obj.update(owner, (owner) => {
+                owner.filters = (owner.filters ?? []).filter((entry) => entry.name !== name);
+              });
+            }),
+          properties: {
+            label: ['delete-filter.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            disposition: 'list-item',
+          },
+        }),
+      ],
+    }),
+  );
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -238,52 +294,7 @@ export default Capability.makeModule(
                           mailbox,
                         },
                       }),
-                      ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
-                        AppGraphNode.make({
-                          id: `filter-${kebabize(name)}`,
-                          type: FILTER_TYPE,
-                          data: mailbox,
-                          properties: {
-                            label: name,
-                            icon: 'ph--funnel--regular',
-                            iconHue: 'rose',
-                            filter,
-                          },
-                          actions: [
-                            AppGraphNode.makeAction({
-                              id: 'rename-filter',
-                              data: (params?: AppGraphNode.InvokeProps) =>
-                                Operation.invoke(InboxOperation.RenameFilter, {
-                                  mailbox,
-                                  name,
-                                  caller: `${params?.caller}:${params?.parent?.id}`,
-                                }),
-                              properties: {
-                                label: ['rename-filter.label', { ns: meta.profile.key }],
-                                icon: 'ph--pencil-simple--regular',
-                                disposition: 'list-item',
-                              },
-                            }),
-                            AppGraphNode.makeAction({
-                              id: 'delete-filter',
-                              data: () =>
-                                Effect.sync(() => {
-                                  Obj.update(mailbox, (mailbox) => {
-                                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                                    if (index >= 0) {
-                                      mailbox.filters.splice(index, 1);
-                                    }
-                                  });
-                                }),
-                              properties: {
-                                label: ['delete-filter.label', { ns: meta.profile.key }],
-                                icon: 'ph--trash--regular',
-                                disposition: 'list-item',
-                              },
-                            }),
-                          ],
-                        }),
-                      ) ?? []),
+                      ...makeSavedFilterNodes(mailbox, mailboxSnapshot.filters, FILTER_TYPE),
                     ],
               });
             }),
@@ -430,6 +441,16 @@ export default Capability.makeModule(
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),
           }),
+      }),
+
+      // A calendar's saved views (see `Calendar.filters`), as children of the calendar's own node only —
+      // not of its saved views, which share the calendar as data.
+      AppGraphBuilder.createExtension({
+        id: 'calendarFilters',
+        match: (node) =>
+          node.type === calendarTypename && Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
+        connector: (calendar, get) =>
+          Effect.succeed(makeSavedFilterNodes(calendar, get(Obj.atom(calendar)).filters, CALENDAR_FILTER_TYPE)),
       }),
 
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the

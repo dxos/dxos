@@ -73,7 +73,9 @@ export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>
         const landmarks = getLandmarks(target.ownerDocument);
         const count = landmarks.length;
         const cursor = landmarks.indexOf(target);
-        landmarks[(cursor + count + step) % count]?.focus();
+        // Tab cycles through the shell; the arrows move across it and stop at its ends, as a spatial move should.
+        const next = event.key === 'Tab' ? (cursor + count + step) % count : cursor + step;
+        landmarks[next]?.focus();
         return;
       }
       onFocusGroupKeyDown(event);

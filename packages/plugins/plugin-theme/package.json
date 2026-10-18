@@ -101,6 +101,8 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
+    "@dxos/react-ui-calendar": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",

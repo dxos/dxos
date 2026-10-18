@@ -282,6 +282,26 @@ const pluginToolchain = (): string => {
 };
 
 /**
+ * Re-arms the watch on a file after every change it reports. Under `useFsEvents: false` each file is watched by a
+ * descriptor bound to its inode, and chokidar re-attaches after a rename-over save only on Linux, so on macOS every
+ * save after the first would be lost (same as storybook's `dxos:rearm-watch`).
+ */
+const rearmWatchPlugin = (): PluginOption => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (file) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (file.includes('\0') || !file.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(file);
+      server.watcher.add(file);
+    });
+  },
+});
+
+/**
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
@@ -316,6 +336,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
@@ -540,6 +563,7 @@ export default defineConfig((env) => ({
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
+    rearmWatchPlugin(),
     ...sharedPlugins(env),
 
     // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
@@ -814,7 +838,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**

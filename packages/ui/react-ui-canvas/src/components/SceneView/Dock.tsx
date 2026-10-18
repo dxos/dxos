@@ -3,8 +3,8 @@
 //
 
 //
-// The dock: a column beside the canvas that the inspectors move into when docked, one accordion section per
-// inspector. An inspector registers its section and portals itself into the section's slot.
+// The dock: one scrolling column of the inspectors, one accordion section each, beside the canvas when docked or floating
+// over it. An inspector registers its section and portals itself into the section's slot.
 //
 
 import React, {
@@ -25,6 +25,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { mx } from '@dxos/ui-theme';
+
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 
 /** A panel's section in the dock. */
 export type DockSection = {
@@ -80,15 +83,17 @@ const DockSlot = ({ id, setSlot }: { id: string; setSlot: DockContextValue['setS
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 export type DockProps = {
-  /** Offered, the dock's toolbar closes it, floating the inspectors over the canvas. */
-  onClose?: () => void;
+  /** Over the canvas, sized to its sections up to the view's height, rather than a column beside it. */
+  floating?: boolean;
+  /** Offered, the dock's toolbar docks a floating dock, or floats a docked one. */
+  onDockedChange?: (docked: boolean) => void;
 };
 
 /**
- * The dock column: a toolbar above an accordion of the registered sections, any number open, each as tall as its
- * panel, the column scrolling them together. Nothing (and no space) while no inspector is docked.
+ * The dock: a toolbar above an accordion of the registered sections, any number open, each as tall as its panel, the
+ * column scrolling them together. Nothing (and no space) while no section shows.
  */
-export const Dock = ({ onClose }: DockProps) => {
+export const Dock = ({ floating = false, onDockedChange }: DockProps) => {
   const dock = useContext(DockContext);
   if (!dock || dock.sections.length === 0) {
     return null;
@@ -96,21 +101,37 @@ export const Dock = ({ onClose }: DockProps) => {
   const { sections, closed, setSlot, setClosed } = dock;
   return (
     <Panel.Root
-      classNames='w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
+      classNames={
+        floating
+          ? mx('absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden', FLOATING_PANEL)
+          : 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
+      }
       data-testid='scene-view-dock'
+      data-floating={floating || undefined}
     >
-      {onClose && (
+      {onDockedChange && (
         <Panel.Header asChild>
           <Toolbar.Root data-testid='dock-toolbar'>
             <Toolbar.Separator variant='gap' />
-            <Button.Root
-              variant='ghost'
-              iconOnly
-              icon='ph--x--regular'
-              label='Close the dock (float the inspectors)'
-              data-testid='dock-close'
-              onClick={onClose}
-            />
+            {floating ? (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon='ph--sidebar-simple--regular'
+                label='Dock the inspectors beside the canvas'
+                data-testid='dock-open'
+                onClick={() => onDockedChange(true)}
+              />
+            ) : (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon='ph--arrow-square-out--regular'
+                label='Float the inspectors over the canvas'
+                data-testid='dock-close'
+                onClick={() => onDockedChange(false)}
+              />
+            )}
           </Toolbar.Root>
         </Panel.Header>
       )}
@@ -120,6 +141,7 @@ export const Dock = ({ onClose }: DockProps) => {
           <ScrollArea.Viewport>
             <Accordion.Root
               border={false}
+              classNames='gap-2 p-2'
               onPointerDown={stop}
               onPointerMove={stop}
               onPointerUp={stop}
@@ -134,9 +156,16 @@ export const Dock = ({ onClose }: DockProps) => {
               }
             >
               {sections.map((section) => (
-                <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
-                  {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
-                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-group-surface'>
+                // Framed like a floating inspector, so each docked panel reads as its own card; clipped so its rows' fills
+                // and lines stay inside the rounded border.
+                <Accordion.Item
+                  key={section.id}
+                  value={section.id}
+                  classNames='rounded-sm border border-separator overflow-hidden'
+                  data-testid={`dock-section-${section.id}`}
+                >
+                  {/* The toolbar's tone, so a section's header and its panel's toolbar read as one bar. */}
+                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
                     {section.title}
                   </Accordion.ItemTrigger>
                   <Accordion.ItemContent>
@@ -152,22 +181,19 @@ export const Dock = ({ onClose }: DockProps) => {
   );
 };
 
-/**
- * Registers a section while `docked`, and renders `panel` into it: docked, the panel's portal into the dock (once its
- * slot mounts); floating, `null`, so the caller renders the panel where it floats.
- */
-export const useDockSection = (section: DockSection, docked: boolean, panel: ReactNode): ReactNode | null => {
+/** Registers a section while `shown`, and renders `panel` into it as a portal once its slot mounts. */
+export const useDockSection = (section: DockSection, shown: boolean, panel: ReactNode): ReactNode | null => {
   const dock = useContext(DockContext);
   const { id, title, icon, order } = section;
   useLayoutEffect(() => {
-    if (!dock || !docked) {
+    if (!dock || !shown) {
       return;
     }
     return dock.register({ id, title, icon, order });
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dock?.register, docked, id, title, icon, order]);
-  if (!docked) {
+  }, [dock?.register, shown, id, title, icon, order]);
+  if (!shown) {
     return null;
   }
   const slot = dock?.slots[id];

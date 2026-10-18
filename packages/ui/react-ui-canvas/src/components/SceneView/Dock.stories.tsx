@@ -49,7 +49,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
     registry.set(atoms.selection, new Set(select ? [select] : []));
   }, [registry, atoms, select]);
   return (
-    <SceneView.Root store={store} root={root} atoms={atoms}>
+    <SceneView.Root store={store} root={root} atoms={atoms} inspectors='docked'>
       <SceneView.Properties />
       <SceneView.Layers />
       <SceneView.About />

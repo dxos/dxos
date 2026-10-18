@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { createContext, useControllableState } from '@dxos/react-hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -271,6 +271,25 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
     const monthFormat = useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short' }), [locale]);
     const dayFormat = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: 'short' }), [locale]);
 
+    // A month label that starts past the clipped left edge would show as a fragment ("an"), so hide it instead.
+    const viewportRef = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+      const viewport = viewportRef.current;
+      if (!viewport) {
+        return;
+      }
+      const update = () => {
+        const left = viewport.getBoundingClientRect().left;
+        viewport.querySelectorAll<HTMLElement>('[data-month]').forEach((label) => {
+          label.toggleAttribute('data-clipped', label.getBoundingClientRect().left < left);
+        });
+      };
+      update();
+      const observer = new ResizeObserver(update);
+      observer.observe(viewport);
+      return () => observer.disconnect();
+    }, [calendar, monthFormat]);
+
     return (
       // min-w-0 lets the matrix shrink inside grid/flex parents instead of widening them.
       <div {...Util.composableProps(props, { classNames: 'flex min-w-0 gap-[3px]' })} ref={forwardedRef}>
@@ -290,7 +309,7 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
           ))}
         </div>
         {/* justify-end overflows surplus weeks past the clipped left edge, pinning recent weeks right. */}
-        <div className='flex justify-end overflow-hidden'>
+        <div ref={viewportRef} className='flex justify-end overflow-hidden'>
           <div
             className='grid gap-[3px]'
             style={{
@@ -302,10 +321,11 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
             {calendar.months.map(({ weekIndex, month, year }) => (
               <span
                 key={`${year}-${month}`}
+                data-month
                 style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
                 // justify-self-end sets the label's right edge on its week column so overflow
                 // extends left, keeping the last month label unclipped at the pinned right edge.
-                className='justify-self-end whitespace-nowrap text-xs text-fg-muted'
+                className='justify-self-end whitespace-nowrap text-xs text-fg-muted data-clipped:invisible'
               >
                 {monthFormat.format(new Date(year, month, 1))}
               </span>

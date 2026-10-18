@@ -62,4 +62,6 @@ export const make = () =>
            existing object.
       `,
     }),
+    // An agent asked to draw (e.g. a project task) must be able to turn this on without a human at the skill picker.
+    agentCanEnable: true,
   });

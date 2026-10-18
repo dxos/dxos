@@ -13,10 +13,10 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | ------------------- | ---------------------------------------------------------- | ------------ |
 | Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | `partial.ts` |
 | Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | `partial.ts` |
-| Fieldstone team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
-| Fieldstone inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | `partial.ts` |
-| Fieldstone projects | `plugin-debug/src/samples/fieldstone/projects/CONTENT.md`  | `partial.ts` |
-| Fieldstone docs     | `plugin-debug/src/samples/fieldstone/docs/CONTENT.md`      | `partial.ts` |
+| Alien Labs team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
+| Alien Labs inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | `partial.ts` |
+| Alien Labs projects | `plugin-debug/src/samples/fieldstone/projects/CONTENT.md`  | `partial.ts` |
+| Alien Labs docs     | `plugin-debug/src/samples/fieldstone/docs/CONTENT.md`      | `partial.ts` |
 
 ## Templates
 
@@ -24,7 +24,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
 | DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
 | Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
-| Fieldstone Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, Architecture |
+| Alien Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, Architecture |
 
 ## Changing a sample space
 

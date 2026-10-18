@@ -1,14 +1,15 @@
 /*
  * Toggle: a Button whose pressed state (`aria-pressed` from the zag toggle machine, or `aria-checked` on a single-select
- * ToggleGroup's radio items) takes the accent.
+ * ToggleGroup's radio items) takes the accent; a SystemButton preset whose glyph already takes a valence for the
+ * pressed state (Star, Bookmark) keeps its own fill.
  */
 
 @layer dx-components {
-  .dx-button:is([aria-pressed='true'], [aria-checked='true']) {
+  .dx-button:is([aria-pressed='true'], [aria-checked='true']):not([data-icon-valence]) {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
-  .dx-button:is([aria-pressed='true'], [aria-checked='true']):hover:not(:disabled) {
+  .dx-button:is([aria-pressed='true'], [aria-checked='true']):not([data-icon-valence]):hover:not(:disabled) {
     background: var(--color-accent-bg-hover, var(--color-accent-bg));
   }
 

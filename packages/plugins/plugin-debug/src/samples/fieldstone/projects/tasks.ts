@@ -492,7 +492,7 @@ export const TASK_SEEDS = [
   {
     key: 'stripeCustomerMap',
     project: 'billing',
-    title: 'Map Fieldstone tenants to Stripe customers',
+    title: 'Map Alien Labs tenants to Stripe customers',
     description:
       'Every tenant needs a Stripe customer and a usage subscription. Most map one to one; a few organizations run ' +
       'several tenants.',
@@ -864,7 +864,7 @@ export const TASK_SEEDS = [
     key: 'swag',
     project: 'offsite',
     title: 'Order team hoodies',
-    description: 'Fieldstone logo, one colour.',
+    description: 'Alien Labs logo, one colour.',
     status: 'cancelled',
     priority: 'low',
     estimate: 'xs',

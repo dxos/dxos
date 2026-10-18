@@ -87,6 +87,8 @@ test.describe('SceneView lattice', () => {
   });
 
   test('with the lattice off, snap lands on the basic grid and the cells are hidden', async () => {
+    // Only a lines background draws the snap grid; the default theme draws dots.
+    await page.getByTestId('theme-grid-lines').click();
     await page.getByTestId('toolbar-lattice').click();
     await expect(page.getByTestId('lattice-grid')).toHaveCount(0);
     await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(1);

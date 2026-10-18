@@ -218,10 +218,14 @@
     padding-block-end: 0.125rem;
     user-select: none;
   }
-  /* A section heading reads like a field label (`Field.Label`): the size's label step, in the subdued colour. */
-  .dx-tree-group-label {
-    font-size: var(--dx-label-font-size);
+  /* A section heading reads as a small caps eyebrow over its rows, in the subdued colour, rather than another row;
+     qualified by `.dx-typography` so it outranks that class's own size, which control.css sets later. */
+  .dx-typography.dx-tree-group-label {
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 500;
     line-height: var(--dx-label-line-height);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--color-fg-subtle);
   }
 

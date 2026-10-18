@@ -9371,6 +9371,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../plugin-sheet
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -18364,6 +18367,12 @@ importers:
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
+      '@dxos/react-ui-calendar':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -25731,6 +25740,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-canvas
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
