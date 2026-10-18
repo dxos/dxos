@@ -124,50 +124,105 @@ const prune = (cache) => {
   }
 };
 
-/**
- * Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. The C is written
- * once and compiled twice: unoptimized first (about 18 s), so the native CLI replaces node within a minute of a seed
- * change, then at `-O2` (about 100 s, twice as fast to run), which replaces it in place (D281).
- */
-const build = (dir) => {
-  const codebase = join(mkdtempSync(join(tmpdir(), 'deus-native-')), 'codebase');
-  const deus = (...args) =>
-    execFileSync(process.execPath, [join(home, 'bin/deus.mjs'), ...args, '--codebase', codebase], {
-      stdio: ['ignore', 'ignore', 'pipe'],
-      env: { ...process.env, DEUS_NATIVE: '0' },
-    });
-  try {
-    // The build is kept under the seed's hash, so it must be of the code the seed is: deus/ has to compile to it.
-    execFileSync(
-      process.execPath,
-      [join(home, 'bin/deus.mjs'), 'compile', join(home, 'deus'), '--main', 'Cli.main', '-o', join(dir, 'check.image')],
-      {
+/** The newest native CLI built for another seed in `cache`, or undefined. */
+const previousNative = (cache, dir) =>
+  readdirSync(cache, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && join(cache, entry.name) !== dir)
+    .map((entry) => join(cache, entry.name, 'deus'))
+    .filter((binary) => existsSync(binary))
+    .map((binary) => ({ binary, at: statSync(binary).mtimeMs }))
+    .sort((left, right) => right.at - left.at)[0]?.binary;
+
+/** Runs the CLI on `args`: the native CLI `binary`, or the seed on node without one. */
+const runDeus = (binary, args) =>
+  binary
+    ? execFileSync(binary, args, {
+        stdio: ['ignore', 'ignore', 'pipe'],
+        env: { ...process.env, DEUS_HOME: home, DEUS_KERNEL: 'native', DEUS_NATIVE: '0' },
+      })
+    : execFileSync(process.execPath, [join(home, 'bin/deus.mjs'), ...args], {
         stdio: ['ignore', 'ignore', 'pipe'],
         env: { ...process.env, DEUS_NATIVE: '0' },
-      },
-    );
-    if (!readFileSync(join(dir, 'check.image')).equals(readFileSync(seedPath))) {
-      throw new Error('deus/ does not compile to the seed; run scripts/sync-deus.py');
-    }
-    deus('init', '--empty');
-    deus('add', join(home, 'deus'));
-    deus('build', 'Cli.main', '-o', join(dir, 'deus.c'), '--c');
-    // As `deus build --c` compiles it (Build.cExecutable), at each level in turn.
-    for (const level of ['-O0', '-O2']) {
-      execFileSync(process.env.CC ?? 'cc', [level, '-DDEUS_MAIN', '-o', join(dir, 'deus.tmp'), join(dir, 'deus.c')], {
-        stdio: ['ignore', 'ignore', 'pipe'],
       });
-      renameSync(join(dir, 'deus.tmp'), join(dir, 'deus'));
+
+/** Whether `binary` (the seed on node without one) compiles `deus/` to the seed: the build is kept under the seed's hash. */
+const compilesToSeed = (binary, image) => {
+  runDeus(binary, ['compile', join(home, 'deus'), '--main', 'Cli.main', '-o', image]);
+  return readFileSync(image).equals(readFileSync(seedPath));
+};
+
+/** Writes the C of `Cli.main` from `deus/` to `out` with `binary` (the seed on node without one), in a scratch codebase. */
+const writeC = (binary, out) => {
+  const scratch = mkdtempSync(join(tmpdir(), 'deus-native-'));
+  const codebase = ['--codebase', join(scratch, 'codebase')];
+  try {
+    runDeus(binary, ['init', '--empty', ...codebase]);
+    runDeus(binary, ['add', join(home, 'deus'), ...codebase]);
+    runDeus(binary, ['build', 'Cli.main', '-o', out, '--c', ...codebase]);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+};
+
+/** Compiles `c` to `out` as `deus build --c` does (Build.cExecutable), with `flags` before it. */
+const cc = (flags, c, out) =>
+  execFileSync(process.env.CC ?? 'cc', [...flags, '-DDEUS_MAIN', '-o', out, c], {
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+
+/** Link-time optimization splits the one C file into partitions compiled on every core: -O2 in 42 s instead of 107 s (D318). */
+const parallelFlags = () => {
+  const version = spawnSync(process.env.CC ?? 'cc', ['--version'], { encoding: 'utf8' }).stdout ?? '';
+  return version.includes('clang') ? ['-flto=thin'] : ['-flto=auto'];
+};
+
+/**
+ * Builds `Cli.main` with the C back end into `dir/deus` from `deus/`, or writes `dir/failed.log`. The C is compiled
+ * unoptimized first (about 17 s), so the native CLI replaces node within a minute of a seed change, then at `-O2`
+ * (twice as fast to run), which replaces it in place (D281). The previous seed's native CLI writes the C in about 8 s
+ * where node takes about a minute; the result counts only once the new CLI compiles `deus/` to the seed and writes
+ * that same C, which is what node would have written, and otherwise node writes it (D318).
+ */
+const build = (dir) => {
+  const c = join(dir, 'deus.c');
+  const tmp = join(dir, 'deus.tmp');
+  const image = join(dir, 'check.image');
+  try {
+    const previous = previousNative(dirname(dir), dir);
+    let ready = false;
+    if (previous) {
+      try {
+        writeC(previous, c);
+        cc(['-O0'], c, tmp);
+        writeC(tmp, join(dir, 'again.c'));
+        ready = compilesToSeed(tmp, image) && readFileSync(join(dir, 'again.c')).equals(readFileSync(c));
+      } catch {
+        ready = false;
+      }
     }
+    if (!ready) {
+      if (!compilesToSeed(undefined, image)) {
+        throw new Error('deus/ does not compile to the seed; run scripts/sync-deus.py');
+      }
+      writeC(undefined, c);
+      cc(['-O0'], c, tmp);
+    }
+    renameSync(tmp, join(dir, 'deus'));
+    try {
+      cc(['-O2', ...parallelFlags()], c, tmp);
+    } catch {
+      // A compiler without link-time optimization still builds the program in one piece.
+      cc(['-O2'], c, tmp);
+    }
+    renameSync(tmp, join(dir, 'deus'));
     prune(dirname(dir));
   } catch (error) {
     // Kept until the seed changes, so the launcher warns instead of rebuilding on every command.
     writeFileSync(join(dir, 'failed.log'), `${error.message}\n${error.stderr ?? ''}`);
   } finally {
-    rmSync(join(dir, 'deus.c'), { force: true });
-    rmSync(join(dir, 'check.image'), { force: true });
-    rmSync(join(dir, 'deus.tmp'), { force: true });
-    rmSync(dirname(codebase), { recursive: true, force: true });
+    for (const file of [c, image, tmp, join(dir, 'again.c')]) {
+      rmSync(file, { force: true });
+    }
     rmSync(join(dir, 'lock'), { force: true });
   }
 };
