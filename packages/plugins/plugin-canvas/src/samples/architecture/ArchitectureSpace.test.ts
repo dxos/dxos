@@ -45,8 +45,8 @@ describe('ArchitectureSpace', () => {
       'Composer',
       'DXOS',
       'EDGE',
-      'Composer',
-      'EDGE',
+      'Overview',
+      'CF Workers',
     ]);
 
     // The root document links the other two by id and embeds the Composer drawing.
@@ -54,7 +54,7 @@ describe('ArchitectureSpace', () => {
     const byName = (name: string) => docs.find((doc) => doc.name === name);
     const [composer, dxos, edge] = ['Composer', 'DXOS', 'EDGE'].map(byName);
     const content = (await composer?.content.load())?.content ?? '';
-    const composerDrawing = drawings.find((drawing) => drawing.name === 'Composer');
+    const composerDrawing = drawings.find((drawing) => drawing.name === 'Overview');
     expect(content).toContain(`React UI, on the [DXOS](echo:///${dxos?.id}) SDK`);
 
     // Every paragraph is one line: a line break inside one renders as a break in the editor. Fenced code (the sequence

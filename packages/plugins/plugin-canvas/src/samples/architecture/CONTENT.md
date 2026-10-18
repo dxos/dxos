@@ -17,13 +17,13 @@ and link them.
 
   | Id                   | Name            | Boxes | Arrows | Opens             |
   | -------------------- | --------------- | ----- | ------ | ----------------- |
-  | `composer`           | Composer        | 12    | 16     | 5 drill-downs     |
+  | `composer`           | Overview        | 12    | 16     | 5 drill-downs     |
   | `composer-framework` | App Framework   | 12    | 12     |                   |
   | `composer-data`      | Data Stack      | 12    | 14     | `composer-echo`   |
   | `composer-plugin`    | Plugin Anatomy  | 12    | 12     |                   |
   | `composer-compute`   | Compute         | 12    | 11     |                   |
   | `composer-echo`      | echo-host       | 14    | 16     |                   |
-  | `edge`               | EDGE            | 11    | 15     | 4 drill-downs     |
+  | `edge`               | CF Workers      | 11    | 15     | 4 drill-downs     |
   | `edge-router`        | Router          | 11    | 10     |                   |
   | `edge-db`            | db-service      | 12    | 11     | `edge-subduction` |
   | `edge-compute`       | compute-service | 11    | 10     |                   |
