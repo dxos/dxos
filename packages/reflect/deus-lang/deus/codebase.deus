@@ -909,7 +909,7 @@ def mergeWith (dir : Text) (other : Text) (prefer : Map Text Unit) : {IO, Throw 
     -- a merge that prefers theirs is `deus merge`'s retry, which recompiles such names itself.
     let dangling := if not (List.isEmpty (Set.toList prefer)) then [] else List.filter
       (fun n => not (List.contains n conflicted))
-      (dedup (List.map fst (danglingIn dir folded changedNames)))
+      (List.distinct (List.map fst (danglingIn dir folded changedNames)))
     match ((folded, changedNames, conflicted ++ dangling), tasks) with
     | ((ns, changed, []), merged, []) =>
         -- Checked apart from the fold, so a fault in the merge itself cannot lose names unseen (DataSafety.Spec).

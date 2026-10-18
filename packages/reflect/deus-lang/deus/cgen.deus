@@ -2102,7 +2102,7 @@ def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
 
 /-- The abilities `fns` perform or handle, in the order the runtime numbers them. -/
 def abilityNames (fns : List Wasm.Fn) : List Text :=
-  List.dedup (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody ++ (if usesDefect f.fnBody then ["#Defect"] else [])) fns)
+  List.distinct (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody ++ (if usesDefect f.fnBody then ["#Defect"] else [])) fns)
 
 /-- `fns` with handlers and operations rewritten into Core over the runtime (D124); unchanged when none performs or handles. -/
 def effects (fns : List Fn) : {Throw Text} List Fn :=
@@ -2183,7 +2183,7 @@ def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Thro
   -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
   -- A function may compare or show a value it only receives, so the types its signature names count too.
   let signed := filterMap (fun n => if Text.startsWith "#" n then Option.some n else typeHash n) (concatMap (fun f => typeNames f.fnType) fns)
-  let names := withFieldTypes fetch typeHash (dedup (concatMap (fun f => patternTypes f.fnBody ++ builtTypes f.fnBody) fns ++ signed))
+  let names := withFieldTypes fetch typeHash (List.distinct (concatMap (fun f => patternTypes f.fnBody ++ builtTypes f.fnBody) fns ++ signed))
   -- A definition that is only a primitive or a constant is inlined at its uses and gathers to nothing.
   if List.isEmpty fns then Throw.throw (export ++ " is a constant or a primitive, which its uses inline; build a function that uses it") else CGen.unit
     fns

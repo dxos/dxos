@@ -593,7 +593,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
             -- The notations a definition was written with print it back, each under its own name (Syntax.Spec R-5).
             let rules := filterMap (fun key => Option.bind
               (head? (getOr (Map.lookup key base.namesByHash) []))
-              (fun ruleName => loadRule dir ns ruleName)) (dedup (List.map snd notations))
+              (fun ruleName => loadRule dir ns ruleName)) (List.distinct (List.map snd notations))
             let p := withRules
               (withSelf (withLocals base locals) h name)
               (Map.fromList (List.map (fun r => (r.ruleKey, r)) rules))
@@ -624,7 +624,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
                 | Option.none => ""
               let opens := Text.concat (List.map
                 (fun home => "open " ++ home ++ " in\n")
-                (dedup (List.filter
+                (List.distinct (List.filter
                   (fun home => home != "")
                   (List.map (fun r => documentOf r.ruleName) rules))))
               let attrs := List.map (fun a =>
@@ -812,7 +812,7 @@ def merge (args : Args) : {IO, Throw Text} Unit :=
                   let printer := Print.printer theirsNs []
                   let stale := List.filter
                     (fun n => not (List.contains n edited))
-                    (dedup (List.map fst (danglingIn dir (Codebase.current dir) changed)))
+                    (List.distinct (List.map fst (danglingIn dir (Codebase.current dir) changed)))
                   let staleText := join "\n\n" (filterMap (fun name => Option.map
                     (fun e => snd (viewParts printer dir theirsNs name e "deus"))
                     (Map.lookup name theirsNs)) stale)
@@ -3121,7 +3121,7 @@ def parseDialect (dir : Text) (ns : Map Text Entry) (paths : List Text) (dialect
     -- A `.ts` file is in the TypeScript-like dialect whatever the flag says, since no DEUS source ends so.
     let (tsPaths, deusPaths) := List.partition (fun path => Text.endsWith ".ts" path) (expandPaths paths)
     let files := List.map (fun path => (path, readSource path)) deusPaths
-    let wanted := dedup (concatMap (fun f => namespacesNamed (snd f)) files)
+    let wanted := List.distinct (concatMap (fun f => namespacesNamed (snd f)) files)
     Compile.parseAll (notationTable dir ns wanted) files ++ List.map fromTs tsPaths
 
 /-- The notation stored as `name`, keyed by its hash, if `name` is one. -/

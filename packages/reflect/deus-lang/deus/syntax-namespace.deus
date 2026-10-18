@@ -20,7 +20,7 @@ def namespacesNamed (source : Text) : List Text :=
     let segments := Text.split n "."
     List.map (fun k => join "." (List.take k segments)) (range 1 (List.length segments + 1))) declared
   let opened := words "open "
-  dedup (enclosing ++ opened ++ concatMap (fun n => List.map (fun o => n ++ "." ++ o) opened) enclosing)
+  List.distinct (enclosing ++ opened ++ concatMap (fun n => List.map (fun o => n ++ "." ++ o) opened) enclosing)
 
 /-- Reads a stored notation: `Syntax.Notation.mk category precedence parts expansion` with literal
   arguments, where `notationType` and `partType` are the two types' hashes. -/
