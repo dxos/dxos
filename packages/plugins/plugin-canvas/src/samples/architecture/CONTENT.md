@@ -40,7 +40,7 @@ and link them, and a sheet of plugin metrics with a bar chart.
 - Boxes may carry a `ref` to a repository path, for example `packages/sdk/app-framework`.
 - 3 `Markdown.Document`:
   - **Composer**: embeds the `composer` drawing; links DXOS and EDGE; sections The app, The
-    framework, Plugin Registry, Data and compute.
+    framework, Plugin registry, Data and compute.
   - **DXOS**: embeds the `composer-data` drawing; links EDGE; a mermaid sequence diagram "An edit,
     end to end".
   - **EDGE**: embeds the `edge` drawing; a mermaid sequence diagram "A device connecting".

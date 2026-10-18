@@ -5,7 +5,7 @@
 # 1. Documents (20s)
 
 - Plugins: Markdown, Canvas, Sheets
-- Space Template: DXOS Architecture
+- Template: DXOS Architecture
 
 - Navtree => Collections > Architecture > Composer
 - Hover over card
@@ -21,10 +21,15 @@
 - Insert Performance sheet
 - Navigate to Perf sheet and show chart companion
 
-# 2. Inbox (20s)
+# 2. Projects
+
+- Plugins: Projects
+- Template:
+
+# 3. Inbox (20s)
 
 - Plugins: Inbox, Calls
-- Space Template: Alien Labs
+- Template: Alien Labs
 
 - Navtree => Mailbox
 - Scroll and select Message: XXX
@@ -32,9 +37,7 @@
 - Show Kanban
 - Navtree => Calendar
 - Scroll and select Event: XXX
+
+# 4. Meeting
+
 - Join meeting
-
-# 3. Projects
-
-- Plugins: Projects
-- Space Template:
