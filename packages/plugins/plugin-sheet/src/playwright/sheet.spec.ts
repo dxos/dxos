@@ -64,11 +64,13 @@ test.describe('plugin-sheet', () => {
     await sheet.press(')');
     await sheet.commit('Enter');
     // Check sum
-    await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(`${firstNumber + secondNumber + thirdNumber}`);
+    await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(
+      (firstNumber + secondNumber + thirdNumber).toLocaleString('en-US'),
+    );
     // Delete row of second number
     await sheet.deleteAxis('row', 3);
-    // Check sum again, it should be one cell up and reflect the updated range.
-    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${firstNumber + thirdNumber}`);
+    // Check sum again, it should be one cell up and reflect the updated range (numbers render in the locale's format).
+    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText((firstNumber + thirdNumber).toLocaleString('en-US'));
   });
 
   test('ranges', async () => {

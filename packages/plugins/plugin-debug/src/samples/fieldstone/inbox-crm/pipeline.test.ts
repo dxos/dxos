@@ -20,6 +20,7 @@ type Entry = {
   readonly '@type'?: string;
   readonly 'name'?: string;
   readonly 'image'?: string;
+  readonly 'description'?: string;
   readonly 'spec'?: {
     readonly kind: string;
     readonly pivotField?: string;
@@ -54,6 +55,8 @@ describe('Alien Labs Sales pipeline', () => {
 
     // An items board placed by its arrangement alone, so no card writes a stage into its organization.
     expect(kanban.spec?.kind).toBe('items');
+    // The card shows the description alone, so the board must carry one.
+    expect(kanban.description?.length ?? 0).toBeGreaterThan(20);
     expect(kanban.spec?.pivotField).toBe('');
     expect(kanban.arrangement?.order).toEqual(STAGES);
     expect(kanban.arrangement?.columns[KanbanConstants.UNCATEGORIZED_VALUE]).toEqual({ ids: [], hidden: true });

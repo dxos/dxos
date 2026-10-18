@@ -1089,7 +1089,7 @@ Tobias`,
 
 Two things. Pin the compiler version in each pipeline's environment so the keys stay stable, and warm the cache with one build per compiler before you move the group. Expect around 60% the first week, rising as their branches converge.
 
-Once the group has run for a week, let's look at the numbers together; I've put a check-in on the calendar.
+Once the group has run for a week, send me the numbers and we'll decide whether a check-in is worth it.
 
 Kofi`,
       },

@@ -3,15 +3,15 @@ group worker "hub-service" {
   node Worker "hub worker" ref="edge/packages/services/hub-service/src/worker.ts"
   node Entry "HubServiceEntry" ref="edge/packages/services/hub-service/src/entrypoint/hub-service.ts"
   node Auth "passkey / session" ref="edge/packages/services/hub-service/src/auth"
-  node Api "account API" ref="edge/packages/services/hub-service/src/api"
+  node Api "account API" ref="edge/packages/services/hub-service/src/api" color=blue
   node Managers "user / plan mgrs" ref="edge/packages/services/hub-service/src/db"
 }
 group objects "Durable Objects" {
-  node Mailbox "MailboxObject" ref="edge/packages/services/hub-service/src/mailbox/mailbox-object.ts"
+  node Mailbox "MailboxObject" ref="edge/packages/services/hub-service/src/mailbox/mailbox-object.ts" color=orange
   node Metering "UserMetering" ref="edge/packages/services/hub-service/src/entrypoint/hub-metering.ts"
 }
 group bindings "Bindings" color=light-violet {
-  node Stores "D1 + SESSION_KV" ref="edge/packages/services/hub-service/wrangler.jsonc"
+  node Stores "D1 + SESSION_KV" ref="edge/packages/services/hub-service/wrangler.jsonc" color=green
   node DbService "db-service" ref="edge/packages/services/db-service"
 }
 edge Worker -> Auth "login"

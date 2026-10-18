@@ -37,8 +37,7 @@ export type InboxStackAction =
   | { type: 'star'; messageId: string }
   | { type: 'archive'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
-  | { type: 'create-topic'; messageId: string }
-  | { type: 'save'; filter: string };
+  | { type: 'create-topic'; messageId: string };
 
 export type InboxStackActionHandler = (action: InboxStackAction) => void;
 

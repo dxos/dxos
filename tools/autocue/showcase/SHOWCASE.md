@@ -42,6 +42,16 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
       1920x1080 at 60 fps (a screenshot becomes a 3s still clip), lays out the grid (`tour-1`..`tour-3` on the tour
       cells; other clips repeat only far from themselves), renders the composite from the Grid story with a 20s hold
       per tour, and writes `composite.mp4` back to the folder.
+  - Any number of tours, `tour-1`..`tour-<n>`, sit side by side in row 3; the camera pans right from each to the next.
+  - `--full` holds each tour for its whole clip; `--overlap <ms>` starts the zoom-out that long before the last tour
+    ends, so it plays on as the grid is revealed; `--zoom <ms>` sets the zoom-out's length.
+  - `--reuse-tours` lets the tour clips fill grid cells too when there are few other clips, `--once a,b` places those
+    clips in one cell only, `--pin <clip>@<col>,<row>` fixes a clip to a cell, and `--min` sets how close two copies
+    may sit.
+  - `--supersample 2` renders each frame at twice the pixel density and area-averages it down, so tiles do not alias
+    during the zoom-out (about twice the render time).
+  - The 2026-10-18 session: `--full --overlap 73083 --zoom 15000 --reuse-tours --once map,spacetime --pin explorer@3,2
+--min 2 --supersample 2` (the zoom starts 2s into meeting, with explorer above it).
 
 ## Recording it
 
@@ -109,7 +119,8 @@ Every showcase clip and every take of the composite follows these:
    plank.
 7. **Full resolution.** Record at `--scale 2` and encode every clip at 1920x1080, so a tour cell filling the frame is
    shown 1:1 rather than upscaled.
-8. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
+8. **Themed ground.** The grid's ground and gutters follow the story's theme global (light for the composite), and
+   `assemble.mjs` letterboxes a clip that is not 16:9 in the theme's page colour (`--theme`).
 9. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
    exactly 60 fps. A live screencast of the story delivers about 25 fps at 1080p, so camera moves judder.
 

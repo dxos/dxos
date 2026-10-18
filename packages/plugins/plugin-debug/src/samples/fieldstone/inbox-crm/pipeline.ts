@@ -42,6 +42,8 @@ export const makePipeline = (orgs: Record<OrgKey, Organization.Organization>): M
     const kanban = yield* Database.add(
       Kanban.makeItems({
         name: 'Sales pipeline',
+        description:
+          'Every enterprise customer and prospect for Cairn, from first contact to closed, one card per company. Kofi and Lucía own it; it is walked at the Sales Review.',
         pivotField: '',
         items: STAGES.flatMap((stage) => PIPELINE[stage].map((key) => Ref.make(orgs[key]))),
         arrangement: {

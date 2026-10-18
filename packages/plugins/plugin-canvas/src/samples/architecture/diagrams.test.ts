@@ -123,4 +123,22 @@ describe('loadDiagramSet', () => {
     }
     expect(violations).toEqual([]);
   });
+
+  test('every scene colours some of its boxes, never all of them', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const drawings = await loadDiagramDrawings(db, architectureDiagrams(files));
+    expect(drawings.size).toBe(12);
+
+    const counts = [...drawings].map(([id, drawing]) => {
+      // A drill-down box is a frame onto its child drawing, so it counts as a box of this scene.
+      const boxes = Object.values(drawing.canvas.target?.content ?? {})
+        .filter(isNodeRecord)
+        .map((record) => record.node)
+        .filter((node) => !node.style?.guide && (node.type === 'rect' || node.type === 'frame'));
+      const coloured = boxes.filter((node) => (node.style?.hue ?? 'neutral') !== 'neutral').length;
+      return { id, coloured: coloured > 0 && coloured < boxes.length };
+    });
+    expect(counts).toEqual([...drawings.keys()].map((id) => ({ id, coloured: true })));
+  });
 });

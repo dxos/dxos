@@ -12,7 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
-export type MailboxFilterProps = {
+export type QueryFilterProps = {
   db?: Database.Database;
   tags: Tag.Map;
   value: string;
@@ -27,8 +27,8 @@ export type MailboxFilterProps = {
   saveButtonRef: Ref<HTMLButtonElement>;
 };
 
-/** Filter row slotted into the mailbox toolbar (query editor + save/clear actions). */
-export const MailboxFilter = ({
+/** Filter row slotted into a list article's toolbar (query editor + save/clear actions). */
+export const QueryFilter = ({
   db,
   tags,
   value,
@@ -39,7 +39,7 @@ export const MailboxFilter = ({
   onSave,
   editorRef,
   saveButtonRef,
-}: MailboxFilterProps) => {
+}: QueryFilterProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <>
@@ -50,17 +50,19 @@ export const MailboxFilter = ({
         value={value}
         onChange={onChange}
         onFilterChange={({ filter }) => onFilterChange(filter)}
+        // The editor's own placeholder already names `#`; the trigger hint would render run into it.
+        commandHint={false}
         ref={editorRef}
       />
       <Button.Root
         disabled={!filter}
         icon='ph--folder-plus--regular'
         iconOnly
-        label={t('mailbox-toolbar-save-button.label')}
+        label={t('query-filter-save-button.label')}
         onClick={onSave}
         ref={saveButtonRef}
       />
-      <Button.Root icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
+      <Button.Root icon='ph--x--regular' iconOnly label={t('query-filter-clear-button.label')} onClick={onClear} />
     </>
   );
 };

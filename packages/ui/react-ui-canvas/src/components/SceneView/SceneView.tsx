@@ -258,7 +258,7 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   readonly?: boolean;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
-  /** Where the inspectors (properties, layers, about) sit: docked in a column beside the canvas, or floating over it. */
+  /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */
   inspectors?: InspectorMode;
   /**
    * Called when the dock is closed or an inspector's menu docks or floats them; the dock's close button and the menu
@@ -331,7 +331,7 @@ const SceneViewRoot = ({
   margin = DEFAULT_MARGIN,
   readonly = false,
   onReadonlyChange,
-  inspectors = 'docked',
+  inspectors = 'floating',
   onInspectorsChange,
   themes = defaultThemeRegistry,
   theme,

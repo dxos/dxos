@@ -30,11 +30,16 @@ type GridProps = {
   gap: number;
   /**
    * Cells (`[col, row]`) the camera visits in turn, each filling the view and playing `tour-<n>.mp4`; a cell outside
-   * the grid (a negative column) is added to it. Unset is three cells of row 3 ending in the bottom-left quadrant.
+   * the grid (a negative column) is added to it. Unset is one cell of row 3 per entry of `holds` (three without it),
+   * from the left, so three end in the bottom-left quadrant.
    */
   tour?: [number, number][];
   /** Time held on each toured tile, in ms. */
   hold: number;
+  /** Time held on each toured tile in turn, in ms (a clip's length); a tile without an entry holds for `hold`. */
+  holds?: number[];
+  /** How long before the last toured tile's hold ends the zoom-out starts, in ms, so its clip plays on as it zooms. */
+  overlap?: number;
   /** Time to pan from one toured tile to the next, in ms. */
   pan: number;
   /** Final zoom-out time, in ms. */
@@ -57,12 +62,8 @@ declare global {
 /** One leg of the camera's path: held on a tile (`focus`), or moving between two cameras. */
 type Shot = { ms: number; focus?: string; move?: (t: number) => Camera; camera?: Camera };
 
-/** Three cells of row 3, the last in the bottom-left quadrant of a 6x6 grid. */
-const DEFAULT_TOUR: [number, number][] = [
-  [0, 3],
-  [1, 3],
-  [2, 3],
-];
+/** `count` cells of row 3 from the left; three end in the bottom-left quadrant of a 6x6 grid. */
+const defaultTour = (count = 3): [number, number][] => Array.from({ length: count }, (_, col) => [col, 3]);
 
 /** A straight slide between two cameras at the same zoom, so a pan never zooms out and back in. */
 const slide =
@@ -95,7 +96,7 @@ const Tile = ({ clip, label, bounds, onLoad, playing }: TileProps) => {
       style={{ left: bounds.x, top: bounds.y, width: bounds.width, height: bounds.height }}
     >
       {failed ? (
-        <div className='grid dx-fill place-items-center text-[120px] text-neutral-500'>{label}</div>
+        <div className='grid dx-fill place-items-center text-[120px] text-fg-muted'>{label}</div>
       ) : (
         <video
           className='dx-fill object-cover'
@@ -129,6 +130,8 @@ const DefaultStory = ({
   gap,
   tour: tourProp,
   hold,
+  holds: holdsProp,
+  overlap = 0,
   pan,
   duration,
   controls = true,
@@ -142,7 +145,12 @@ const DefaultStory = ({
   // The tour starts once its first tile has loaded (or turned out to have no clip).
   const [ready, setReady] = useState(false);
   // An empty tour would generate no shots, so no tile renders; it falls back to the default like an unset one.
-  const tour = useMemo(() => (tourProp?.length ? tourProp : DEFAULT_TOUR), [tourProp]);
+  const tour = useMemo(
+    () => (tourProp?.length ? tourProp : defaultTour(holdsProp?.length || 3)),
+    [tourProp, holdsProp],
+  );
+  // Coerced because array args given in the story URL arrive as strings.
+  const holds = useMemo(() => tour.map((_, step) => Number(holdsProp?.[step] ?? hold)), [tour, holdsProp, hold]);
 
   /** Every cell drawn: the grid's, then any tour cell outside it; a tour cell plays its own clip. */
   const cells = useMemo(() => {
@@ -186,13 +194,13 @@ const DefaultStory = ({
       const last = step === cameras.length - 1;
       const focus = `${col},${row}`;
       return [
-        { ms: hold, focus, camera: from },
+        { ms: last ? Math.max(0, holds[step] - overlap) : holds[step], focus, camera: from },
         last
           ? { ms: duration, move: interpolateCamera(from, fitBounds(extent, viewport, gap), viewport) }
           : { ms: pan, move: slide(from, cameras[step + 1]) },
       ];
     });
-  }, [cells, tour, viewport, gap, hold, pan, duration]);
+  }, [cells, tour, viewport, gap, holds, overlap, pan, duration]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
 
   useEffect(() => {
@@ -229,12 +237,13 @@ const DefaultStory = ({
     }
     // When each toured clip's hold starts, so a seek can play it from its beginning as the camera arrives.
     const holdStart = new Map<string, number>();
-    shots.reduce((start, shot) => {
-      if (shot.focus) {
-        holdStart.set(shot.focus, start);
-      }
-      return start + shot.ms;
-    }, 0);
+    const zoomStart =
+      shots.reduce((start, shot) => {
+        if (shot.focus) {
+          holdStart.set(shot.focus, start);
+        }
+        return start + shot.ms;
+      }, 0) - shots[shots.length - 1].ms;
     window.grid = {
       total,
       seek: async (ms) => {
@@ -254,7 +263,13 @@ const DefaultStory = ({
               return undefined;
             }
             const start = holdStart.get(cell.id);
-            const time = (Math.max(0, start === undefined ? ms : ms - start) / 1_000) % video.duration;
+            const local = Math.max(0, start === undefined ? ms : ms - start) / 1_000;
+            // A toured clip plays once and rests on its last frame as the camera leaves it, looping only once the
+            // zoom-out starts, so the slide away never jumps back to its opening.
+            const time =
+              start !== undefined && ms < zoomStart
+                ? Math.min(local, Math.max(0, video.duration - 0.02))
+                : local % video.duration;
             if (Math.abs(video.currentTime - time) < 0.001) {
               return undefined;
             }
@@ -284,7 +299,7 @@ const DefaultStory = ({
   const camera = shot?.camera ?? shot?.move?.(easeInOut(t));
 
   return (
-    <div ref={ref} className='relative dx-fill overflow-hidden bg-neutral-950'>
+    <div ref={ref} className='relative dx-fill overflow-hidden bg-group-surface'>
       {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
       {camera &&
         cells.map((cell) => (
@@ -339,6 +354,11 @@ const meta: Meta<GridProps> = {
   title: 'tools/autocue/Grid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  // Typed so the story URL can set them (`holds[0]:43300;overlap:12000`); Storybook drops URL args it has no type for.
+  argTypes: {
+    holds: { type: { name: 'array', value: { name: 'number' } }, control: 'object' },
+    overlap: { type: { name: 'number' }, control: 'number' },
+  },
 };
 
 export default meta;

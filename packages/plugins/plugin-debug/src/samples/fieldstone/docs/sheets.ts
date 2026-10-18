@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetRange from '@dxos/plugin-sheet/SheetRange';
 
 export type SheetKey = 'pricing' | 'vendorSpend' | 'cloudCost' | 'incidentTimeline' | 'hiring';
 
@@ -35,19 +36,22 @@ const dateFormula = (iso: string): string => {
   return `=DATE(${date.getUTCFullYear()},${date.getUTCMonth() + 1},${date.getUTCDate()})`;
 };
 
-const makePricing = () =>
-  Sheet.make({
+const makePricing = () => {
+  const cells = table([
+    ['Tier', 'Base / month', 'Included GB', 'Overage / GB', 'Typical GB', 'Monthly price'],
+    ['Free', 0, 10, 0, 8, '=B2+MAX(0,E2-C2)*D2'],
+    ['Team', 99, 250, 0.08, 400, '=B3+MAX(0,E3-C3)*D3'],
+    ['Business', 499, 2000, 0.06, 3500, '=B4+MAX(0,E4-C4)*D4'],
+    ['Enterprise', 2400, 15000, 0.04, 22000, '=B5+MAX(0,E5-C5)*D5'],
+  ]);
+  return Sheet.make({
     name: 'Cairn plans',
     rows: 5,
     columns: 6,
-    cells: table([
-      ['Tier', 'Base / month', 'Included GB', 'Overage / GB', 'Typical GB', 'Monthly price'],
-      ['Free', 0, 10, 0, 8, '=B2+MAX(0,E2-C2)*D2'],
-      ['Team', 99, 250, 0.08, 400, '=B3+MAX(0,E3-C3)*D3'],
-      ['Business', 499, 2000, 0.06, 3500, '=B4+MAX(0,E4-C4)*D4'],
-      ['Enterprise', 2400, 15000, 0.04, 22000, '=B5+MAX(0,E5-C5)*D5'],
-    ]),
+    cells,
+    ranges: SheetRange.headerRanges(cells, 'A1:F1'),
   });
+};
 
 // R2 took over hot-blob serving three months before the reference date, which is where the Cloudflare line flattens.
 const VENDOR_SPEND = [
@@ -68,36 +72,41 @@ const makeVendorSpend = (now: Date) => {
     ...Array.from({ length: 13 }, (_, index) => `=SUM(${COLUMNS[index + 1]}2:${COLUMNS[index + 1]}4)`),
   ];
 
+  const cells = table([['Vendor', ...months, 'Total'], ...vendorRows, totalRow]);
   return Sheet.make({
     name: 'Vendor spend, last 12 months',
     rows: 5,
     columns: 14,
-    cells: table([['Vendor', ...months, 'Total'], ...vendorRows, totalRow]),
+    cells,
+    ranges: SheetRange.headerRanges(cells, 'A1:N1'),
   });
 };
 
-const makeCloudCost = (now: Date) =>
-  Sheet.make({
+const makeCloudCost = (now: Date) => {
+  const cells = {
+    ...table([
+      ['Month', 'Compute and S3', 'Workers and R2', 'Total'],
+      [`${monthLabel(now, 0)} (actual)`, 12700, 2500, '=B2+C2'],
+      ...Array.from({ length: 6 }, (_, index) => {
+        const row = index + 3;
+        return [monthLabel(now, index + 1), `=B${row - 1}*(1+G2)`, `=C${row - 1}*(1+G3)`, `=B${row}+C${row}`];
+      }),
+      ['Next 6 months', '=SUM(B3:B8)', '=SUM(C3:C8)', '=SUM(D3:D8)'],
+    ]),
+    F1: { value: 'Growth / month' },
+    F2: { value: 'Compute and S3' },
+    G2: { value: 0.03 },
+    F3: { value: 'Workers and R2' },
+    G3: { value: 0.08 },
+  };
+  return Sheet.make({
     name: 'Cloud cost forecast',
     rows: 9,
     columns: 7,
-    cells: {
-      ...table([
-        ['Month', 'Compute and S3', 'Workers and R2', 'Total'],
-        [`${monthLabel(now, 0)} (actual)`, 12700, 2500, '=B2+C2'],
-        ...Array.from({ length: 6 }, (_, index) => {
-          const row = index + 3;
-          return [monthLabel(now, index + 1), `=B${row - 1}*(1+G2)`, `=C${row - 1}*(1+G3)`, `=B${row}+C${row}`];
-        }),
-        ['Next 6 months', '=SUM(B3:B8)', '=SUM(C3:C8)', '=SUM(D3:D8)'],
-      ]),
-      F1: { value: 'Growth / month' },
-      F2: { value: 'Compute and S3' },
-      G2: { value: 0.03 },
-      F3: { value: 'Workers and R2' },
-      G3: { value: 0.08 },
-    },
+    cells,
+    ranges: [...SheetRange.headerRanges(cells, 'A1:D1'), ...SheetRange.headerRanges(cells, 'F1:G1')],
   });
+};
 
 // Minutes after detection; detection is Okapi's first report, five weeks before the reference date.
 const INCIDENT_ROWS = [
@@ -133,15 +142,17 @@ const makeIncidentTimeline = (detected: Date) => {
     owner,
     `=A${index + 2}/60`,
   ]);
+  const cells = {
+    ...table([['T+ minutes', 'Time (UTC)', 'Event', 'Owner', 'Hours since detection'], ...rows]),
+    C23: { value: 'Days to close' },
+    E23: { value: '=A21/1440' },
+  };
   return Sheet.make({
     name: 'Okapi incident timeline',
     rows: 23,
     columns: 5,
-    cells: {
-      ...table([['T+ minutes', 'Time (UTC)', 'Event', 'Owner', 'Hours since detection'], ...rows]),
-      C23: { value: 'Days to close' },
-      E23: { value: '=A21/1440' },
-    },
+    cells,
+    ranges: SheetRange.headerRanges(cells, 'A1:E1'),
   });
 };
 
@@ -153,25 +164,27 @@ const makeHiring = (clock: SampleSpace.Clock['Service']) => {
     ['Frontend Engineer', 'Astrid', 'Take-home', 45, 3],
     ['Developer Advocate, EU', 'Lucía', 'Sourcing', 12, 14],
   ] as const;
+  const cells = {
+    ...table([
+      ['Role', 'Hiring manager', 'Stage', 'Opened', 'Days open', 'Candidates'],
+      ...roles.map(([role, manager, stage, daysAgo, candidates], index) => [
+        role,
+        manager,
+        stage,
+        dateFormula(clock.daysAgo(daysAgo)),
+        `=H1-D${index + 2}`,
+        candidates,
+      ]),
+    ]),
+    G1: { value: 'As of' },
+    H1: { value: dateFormula(clock.now.toISOString()) },
+  };
   return Sheet.make({
     name: 'Open roles',
     rows: 6,
     columns: 8,
-    cells: {
-      ...table([
-        ['Role', 'Hiring manager', 'Stage', 'Opened', 'Days open', 'Candidates'],
-        ...roles.map(([role, manager, stage, daysAgo, candidates], index) => [
-          role,
-          manager,
-          stage,
-          dateFormula(clock.daysAgo(daysAgo)),
-          `=H1-D${index + 2}`,
-          candidates,
-        ]),
-      ]),
-      G1: { value: 'As of' },
-      H1: { value: dateFormula(clock.now.toISOString()) },
-    },
+    cells,
+    ranges: [...SheetRange.headerRanges(cells, 'A1:F1'), { range: 'G1', key: SheetRange.styleKey, value: 'header' }],
   });
 };
 

@@ -235,12 +235,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       pagination,
       threshold: paginationThreshold,
     });
+    const wasScrollingRef = useRef(false);
     const handleChange = useCallback(
-      (nextVirtualizer: Virtualizer<any, any>, sync: boolean) => {
+      (nextVirtualizer: Virtualizer<HTMLElement, HTMLDivElement>, sync: boolean) => {
+        const settled = wasScrollingRef.current && !nextVirtualizer.isScrolling;
+        wasScrollingRef.current = nextVirtualizer.isScrolling;
+        if (settled) {
+          remeasureMounted(nextVirtualizer, orientation);
+        }
+
         handlePaginationChange(nextVirtualizer);
         onChange?.(nextVirtualizer, sync);
       },
-      [handlePaginationChange, onChange],
+      [handlePaginationChange, onChange, orientation],
     );
 
     const virtualizer = useVirtualizer({
@@ -378,6 +385,24 @@ const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
 ) => ReactElement;
 
 (MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
+
+/**
+ * Re-measures every mounted item from the DOM.
+ * During a smooth scroll virtual-core discards ResizeObserver measurements of items outside a window
+ * around the scroll target and never replays them, so a tile that mounted or resized mid-scroll keeps
+ * its estimated size (overlapping or gapping its neighbours) until it next changes size.
+ */
+const remeasureMounted = (virtualizer: Virtualizer<HTMLElement, HTMLDivElement>, orientation: Axis) => {
+  virtualizer.elementsCache.forEach((element) => {
+    if (element.isConnected) {
+      const rect = element.getBoundingClientRect();
+      virtualizer.resizeItem(
+        virtualizer.indexFromElement(element),
+        Math.round(orientation === 'horizontal' ? rect.width : rect.height),
+      );
+    }
+  });
+};
 
 //
 // InternalPlaceholder

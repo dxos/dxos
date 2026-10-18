@@ -11,10 +11,47 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
 import { canvasRecordOf } from '#model';
 
 import * as ArchitectureSpace from './ArchitectureSpace.ts';
+
+/** Header cells (row 1 labels) missing the heading style, or over all-numeric values without end alignment. */
+const unstyledHeaders = (sheet: Sheet.Sheet): string[] => {
+  const ranges = sheet.ranges.map(({ range, key, value }) => ({
+    ...SheetUtil.rangeFromIndex(sheet, range),
+    key,
+    value,
+  }));
+  const covered = (key: string, value: string, { col, row }: { col: number; row: number }) =>
+    ranges.some(
+      (range) =>
+        range.key === key &&
+        range.value === value &&
+        col >= range.from.col &&
+        col <= range.to.col &&
+        row >= range.from.row &&
+        row <= range.to.row,
+    );
+  const cells = Object.entries(sheet.cells).map(([index, { value }]) => ({
+    ...SheetUtil.addressFromIndex(sheet, index),
+    value,
+  }));
+  return cells
+    .filter(({ row, value }) => row === 0 && typeof value === 'string' && !value.startsWith('='))
+    .flatMap((header) => {
+      const column = cells.filter(({ col, row }) => col === header.col && row > 0);
+      const numeric =
+        column.length > 0 && column.every(({ value }) => typeof value === 'number' || String(value).startsWith('='));
+      return [
+        ...(covered('style', 'header', header) ? [] : [`${sheet.name}: ${header.value} has no heading style`]),
+        ...(numeric && !covered('alignment', 'end', header)
+          ? [`${sheet.name}: ${header.value} is not end-aligned`]
+          : []),
+      ];
+    });
+};
 
 let builder: EchoTestBuilder;
 
@@ -58,6 +95,15 @@ describe('ArchitectureSpace', () => {
     expect(metrics?.charts).toEqual([
       expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
     ]);
+
+    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
+    const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
+    expect(metrics?.rows).toHaveLength(21);
+    expect(metrics?.columns).toHaveLength(5);
+    expect(metrics?.charts).toEqual([
+      expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
+    ]);
+    expect(metrics && unstyledHeaders(metrics)).toEqual([]);
 
     // The root document links the other two by id and embeds the Composer drawing.
     const docs = await db.query(Filter.type(Markdown.Document)).run();
