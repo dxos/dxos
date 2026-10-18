@@ -48,3 +48,15 @@
 # 4. Meetings
 
 - Join meeting
+
+# Grid
+
+- Plugin gallery
+- Explorer (Alien Labs: yellow dot => connections)
+- Chess
+- Map/Globe
+- Voxel
+- Spacetime
+- Terra
+- Sequencer
+- Magazine

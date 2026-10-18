@@ -14,7 +14,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
-import { MailboxFilter } from './MailboxFilter.tsx';
+import { QueryFilter } from './QueryFilter.tsx';
 
 // Sample tags so the `#` autocomplete has something to offer, created at render time to avoid
 // Storybook serialization issues with ECHO objects (see the QueryEditor story for the same pattern).
@@ -39,7 +39,7 @@ const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
   return (
     <div>
       <Toolbar.Root>
-        <MailboxFilter
+        <QueryFilter
           db={space?.db}
           tags={tags}
           filter={filter}
@@ -63,7 +63,7 @@ const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/containers/MailboxFilter',
+  title: 'plugins/plugin-inbox/components/QueryFilter',
   render: DefaultStory,
   decorators: [
     withTheme(),
