@@ -48,6 +48,11 @@ export const makePluginMetrics = (): Sheet.Sheet => {
         row.map((value, columnIndex) => [`${COLUMNS[columnIndex]}${rowIndex + 1}`, { value }]),
       ),
     ),
+    ranges: [
+      // The header row takes the sheet's heading style; the numeric columns' headers sit over their right-aligned figures.
+      { range: `A1:${COLUMNS[HEADER.length - 1]}1`, key: 'style', value: 'header' },
+      { range: `B1:${COLUMNS[HEADER.length - 1]}1`, key: 'alignment', value: 'end' },
+    ],
     charts: [
       { id: 'plugin-metrics', name: 'Plugin metrics', range, type: 'bar', header: true, grid: true, horizontal: true },
     ],
