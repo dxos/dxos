@@ -10,10 +10,11 @@
  * placed on its tour cell, so it does not reappear next to the tour either.
  *
  *   node tools/autocue/showcase/layout.mjs --run temp/showcase/<run> [--tour markdown,canvas,projects,composer] [--min 3]
- *     [--tours 3] [--reuse-tours]
+ *     [--tours 3] [--reuse-tours] [--once map,spacetime]
  *
  * The `--tours` tour cells take the first of `--tour` that recorded, so one failed tour flow does not block the
- * composite. `--reuse-tours` lets the tour clips fill grid cells too, for a run with few other clips.
+ * composite. `--reuse-tours` lets the tour clips fill grid cells too, for a run with few other clips, and `--once`
+ * names clips placed at most once.
  *
  * Exits non-zero when two copies of a clip end up closer than `--min` cells (Chebyshev distance: a diagonal
  * neighbour is 1), so a run with too few clips is caught before the composite is rendered.
@@ -37,6 +38,7 @@ const { values: options } = parseArgs({
     'rows': { type: 'string', default: '6' },
     'tours': { type: 'string', default: '3' },
     'reuse-tours': { type: 'boolean', default: false },
+    'once': { type: 'string', default: '' },
   },
 });
 
@@ -67,6 +69,7 @@ if (tour.length < TOUR_CELLS.length) {
   process.exit(1);
 }
 const pool = options['reuse-tours'] ? available : available.filter((name) => !tour.includes(name));
+const once = new Set(options.once.split(',').map((name) => name.trim()));
 if (pool.length === 0) {
   console.error('no grid clips besides the tour clips');
   process.exit(1);
@@ -88,9 +91,9 @@ for (let row = 0; row < ROWS; row++) {
       continue;
     }
     // Farthest from its own nearest copy first, then the least used, then by name so a layout is repeatable.
-    const [name] = [...pool].sort(
-      (a, b) => nearest(b, cell) - nearest(a, cell) || uses(a) - uses(b) || a.localeCompare(b),
-    );
+    const [name] = pool
+      .filter((name) => !once.has(name) || uses(name) === 0)
+      .sort((a, b) => nearest(b, cell) - nearest(a, cell) || uses(a) - uses(b) || a.localeCompare(b));
     placed.set(name, [...(placed.get(name) ?? []), cell]);
     grid.push({ index: row * COLS + col, cell, name });
   }
