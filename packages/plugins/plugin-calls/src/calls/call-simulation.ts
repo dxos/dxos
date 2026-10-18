@@ -131,24 +131,38 @@ export class CallSimulation extends Resource {
   }
 
   /**
-   * Emits each line, and starts each screenshare, once the files reach its start; the players are the clock, so both
-   * stay on the audio.
+   * Emits each line, and starts each screenshare, once the files reach its start; the furthest-along playing file is
+   * the clock, so both stay on the audio. Once every file has ended, the clock runs on in real time, so events timed
+   * past the files' end still fire.
    */
   #startClock(): void {
     this.#stopClock();
-    const clock = this.#participants[0]?.video;
+    const players = this.#participants.map(({ video }) => video);
     const shares = this.#participants.flatMap(({ screenshare }) => (screenshare ? [screenshare] : []));
-    if (!clock || (this.#transcript.length === 0 && shares.length === 0)) {
+    if (players.length === 0 || (this.#transcript.length === 0 && shares.length === 0)) {
       return;
     }
 
+    let position = 0;
+    let sampledAt = performance.now();
+    const now = () => {
+      const playing = players.filter((video) => !video.paused);
+      if (playing.length === 0) {
+        return position + (performance.now() - sampledAt) / 1_000;
+      }
+      position = Math.max(...playing.map((video) => video.currentTime));
+      sampledAt = performance.now();
+      return position;
+    };
+
     let next = 0;
     this.#clock = setInterval(() => {
-      while (next < this.#transcript.length && clock.currentTime >= this.#transcript[next].start) {
+      const time = now();
+      while (next < this.#transcript.length && time >= this.#transcript[next].start) {
         this.spoke.emit(this.#transcript[next++]);
       }
       for (const share of shares) {
-        if (!share.on && clock.currentTime >= share.start) {
+        if (!share.on && time >= share.start) {
           this.#share(share, true);
         }
       }
