@@ -71,39 +71,8 @@ describe('deus CLI replication', () => {
       expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
       expect(deus('view', 'y', ...a).stdout).toContain('def y');
 
-      // Both sides changing one recursive group merge when they edited different members (D177).
-      deus(
-        'add',
-        file(
-          'g.deus',
-          'def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n',
-        ),
-        ...a,
-      );
-      deus('push', ...a);
-      deus('pull', ...b);
-      deus('merge', 'origin.main', ...b);
-      deus('update', file('even.deus', 'def even (n : Int) : Bool := if n <= 0 then true else odd (n - 1)\n'), ...a);
-      deus('push', ...a);
-      deus('update', file('odd.deus', 'def odd (n : Int) : Bool := if n <= 0 then false else even (n - 1)\n'), ...b);
-      const both = deus('push', ...b);
-      expect(both.stderr).toContain('merging it and pushing again');
-      expect(both.code).toBe(0);
-      deus('pull', ...a);
-      deus('merge', 'origin.main', ...a);
-      expect(deus('view', 'even', 'odd', ...a).stdout).toMatch(/def even[^\n]*n <= 0[\s\S]*def odd[^\n]*n <= 0/);
-
-      // A dependent both sides only rehashed calls both edits after the merge, not a hash no name has (D187).
-      // Values no other name in the store has, since equal definitions share a hash.
-      deus('add', file('fg.deus', 'def f : Int := 301\ndef g : Int := 302\ndef h : Int := f + g\n'), ...a);
-      deus('push', ...a);
-      deus('pull', ...b);
-      deus('merge', 'origin.main', ...b);
-      deus('update', file('f.deus', 'def f : Int := 10\n'), ...a);
-      deus('push', ...a);
-      deus('update', file('g.deus', 'def g : Int := 20\n'), ...b);
-      expect(deus('push', ...b).code).toBe(0);
-      expect(deus('eval', 'h', ...b).stdout).toBe('30\n');
+      // Group merges (D177) and rehashed dependents (D187) are Replicate.Spec.groupMembersMerge and
+      // rehashedDependentTakesBothEdits, cached DEUS tests.
 
       // Enough history for level-1 boundaries (causal hashes starting with 0).
       for (let i = 1; i <= 70; i++) {
@@ -137,25 +106,7 @@ describe('deus CLI replication', () => {
       const refused = deus('compact', '--keep', '3', ...a);
       expect(refused.code).toBe(1);
       expect(refused.stderr).toContain('compact keeps the whole history');
-
-      // An object whose text is not what its name says is not taken in (D91).
-      const forger = ['--codebase', join(scratch, 'forger')];
-      const victim = ['--codebase', join(scratch, 'victim')];
-      for (const c of [forger, victim]) {
-        deus('init', '--empty', ...c);
-        deus('remote', 'add', 'origin', join(scratch, 'forged-remote'), ...c);
-      }
-      deus('add', join(root, 'deus/builtins.deus'), ...forger);
-      deus('add', file('w.deus', 'def w : Int := 41\n'), ...forger);
-      const wHash: string = JSON.parse(deus('ls', '--json', ...forger).stdout).find(
-        (row: { name: string }) => row.name === 'w',
-      ).hash;
-      const objectFile = join(scratch, 'forger', 'objects', wHash.slice(0, 2), wHash);
-      writeFileSync(objectFile, readFileSync(objectFile, 'utf8').replace('41', '42'));
-      deus('push', ...forger);
-      const pulled = deus('pull', ...victim);
-      expect(pulled.stderr).toContain(`skipped object #${wHash.slice(0, 10)}`);
-      expect(existsSync(join(scratch, 'victim', 'objects', wHash.slice(0, 2), wHash))).toBe(false);
+      // A forged object (D91) is Replicate.Spec.pullSkipsForgedObjects, a cached DEUS test.
     },
   );
 
