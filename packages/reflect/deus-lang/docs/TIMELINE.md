@@ -347,6 +347,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 337 | 10-19 22:30 | 20m 00s | 2b86865e4a | `deus link`'s check moves from vitest to a cached DEUS test (D313) |
 | 338 | 10-20 00:50 | 40m 00s | 59e6672f97 | The compilers stop capturing and registering things twice (`List.distinct`, D314) |
 | 339 | 10-20 01:40 | 30m 00s | 33cb591101 | The rest of the unsorted `dedup` uses move to `distinct` (D314) |
-| 340 | 10-20 02:30 | 20m 00s | this commit | A stale spec gap closes: R-9 held since D95 and now has its test (D315) |
+| 340 | 10-20 02:30 | 20m 00s | 019c16fe68 | A stale spec gap closes: R-9 held since D95 and now has its test (D315) |
+| 341 | 10-20 03:30 | 30m 00s | this commit | Every toolchain test is cited by a requirement (D316) |
 
-Total from stage 1 to stage 340: 144h 00m.
+Total from stage 1 to stage 341: 144h 30m.
