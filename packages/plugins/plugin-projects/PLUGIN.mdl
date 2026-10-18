@@ -195,4 +195,43 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
       expect: the two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+
+test QA-5: Watch an agent fill the pipeline from the Hello Worker template
+  desc: |
+    The pipeline demo — create a space from the Hello Worker template, add a diagram task, brief the agent to
+    diagram the Worker and then write its code without running anything, hand it two tasks, and watch the Gantt
+    chart fill as it works. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/hello-worker.mjs`,
+    which `autocue/hello-worker.sh` records in three cuts (light, dark, dark with ident and captions).
+  actors: human, agent
+  status: draft
+  given:
+    - an identity exists, on a fresh profile
+    - plugins: Debug (for the Hello Worker template) and Mermaid are enabled
+    - edge: AI requests reach a model (EDGE preview)
+  steps:
+    - name: Create the Hello Worker space
+      do: Open the app menu, click Create space, pick Hello Worker and click Create.
+      expect: the new space opens, and its navtree lists the Hello Worker project under Projects
+    - name: Open the project
+      do: Open Projects in the navtree and click the Hello Worker project.
+      expect: the project opens on its Overview tab with the template's instructions
+    - name: Brief the agent
+      do: At the end of the Instructions, add that this run draws the Worker as a Mermaid diagram first, then
+        writes its code, and creates no sandbox and deploys nothing.
+      expect: the Instructions keep what was typed
+    - name: Add a diagram task
+      do: Open the Tasks tab and add "Draw the Worker as a diagram" from the Add task row.
+      expect: the task lists below the template's five
+    - name: Hand the agent the diagram and the code
+      do: Tick "Draw the Worker as a diagram" and "Write the Worker", then click "Assign selected tasks to agent".
+      expect: a delegated chat starts, and the Gantt chart shows its session lane
+    - name: Watch the pipeline fill
+      do: Leave the chart open while the agent works.
+      expect: |
+        the session lane grows, each task gets its own lane as the agent starts it, and both tasks reach done or
+        review; the project's Artifacts list a diagram document and a code document
+      note: Nothing is run or deployed; the template's other tasks stay todo.
+    - name: Show the artifacts
+      do: Open the Overview tab and open the diagram, then the code.
+      expect: the diagram renders as Mermaid, and the code is the Worker's fetch handler
 ```
