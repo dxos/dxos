@@ -28,8 +28,8 @@
 - Template: Alien Labs
 
 - Navtree => Mailbox
-- Scroll and select Message: "Re: Cairn 1.8 release notes draft"
-- Hover card from companion message to Org "Alien Labs"
+- Scroll and select Message: "Brightwater"
+- Hover card from companion message "Kofi" to Org "Alien Labs"
 - Navtree => Organizations => People
 - Navtree => Calendar
 - Scroll and select Event: Sales Review
