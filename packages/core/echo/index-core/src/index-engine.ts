@@ -467,6 +467,17 @@ export class IndexEngine {
   }
 
   /**
+   * The ids among `documentIds` the index holds under a space other than `spaceId`: the indexer attributes a document
+   * to the spaces whose directories link it, so these belong to another space too.
+   */
+  queryDocumentsIndexedElsewhere(query: {
+    spaceId: SpaceId;
+    documentIds: readonly string[];
+  }): Effect.Effect<Set<string>, SqlError.SqlError> {
+    return this.#objectMetaIndex.queryDocumentsIndexedElsewhere(query);
+  }
+
+  /**
    * Delete index rows for garbage-collected documents and objects: whole documents (all their
    * rows) plus individual objects removed from a surviving document. Cascades from `objectMeta`
    * (by record id) into the snapshot store and the FTS and reverse-ref indexes, and drops the
