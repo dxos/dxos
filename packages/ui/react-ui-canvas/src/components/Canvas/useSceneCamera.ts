@@ -5,9 +5,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type CanvasAtoms } from '../../model/atoms.ts';
-import { type Camera, type ElementId, type Size } from '../../model/types.ts';
-import { animateCamera } from '../../utils/camera.ts';
+import { type Camera, type CanvasAtoms, type ElementId, type Size } from '../../model/index.ts';
+import { animateCamera } from '../../utils/index.ts';
 
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
 const NAVIGATION_SETTLE_MS = 150;

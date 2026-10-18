@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useEffect, useRef } from 'react';
 
-import { type Clock, MAX_CLOCK_STEP } from '../model/clock.ts';
+import { type Clock, MAX_CLOCK_STEP } from '../model/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
 export type UseClockOptions = {

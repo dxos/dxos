@@ -5,12 +5,15 @@
 import { useCallback } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type CanvasAtoms } from '../../model/atoms.ts';
-import { type Projection } from '../../model/projection.ts';
-import { type Capabilities, type ElementId, type Point, type Scene } from '../../model/types.ts';
-import { clipboardBounds, copySelection, pasteFragment } from '../../utils/clipboard.ts';
-import { activeLayer } from '../../utils/layers.ts';
-import { between, topZ } from '../../utils/order.ts';
+import {
+  type CanvasAtoms,
+  type Capabilities,
+  type ElementId,
+  type Point,
+  type Projection,
+  type Scene,
+} from '../../model/index.ts';
+import { activeLayer, between, clipboardBounds, copySelection, pasteFragment, topZ } from '../../utils/index.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
 export type UseSceneClipboardOptions = {

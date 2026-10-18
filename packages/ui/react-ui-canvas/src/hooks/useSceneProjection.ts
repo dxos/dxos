@@ -5,10 +5,14 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useMemo } from 'react';
 
-import { type CanvasAtoms } from '../model/atoms.ts';
-import { type FreehandProjectionOptions, type Projection, createFreehandProjection } from '../model/projection.ts';
-import { type SceneStore } from '../model/store.ts';
-import { withUndo } from '../utils/undo.ts';
+import {
+  type CanvasAtoms,
+  type FreehandProjectionOptions,
+  type Projection,
+  type SceneStore,
+  createFreehandProjection,
+} from '../model/index.ts';
+import { withUndo } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
 export type UseSceneProjectionOptions = {

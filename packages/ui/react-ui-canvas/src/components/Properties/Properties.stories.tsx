@@ -14,11 +14,15 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useRegistry, useSceneProjection } from '../../hooks/index.ts';
-import { createCanvasAtoms } from '../../model/atoms.ts';
-import { createMemoryStore } from '../../model/store.ts';
-import { type ElementId, type Layer, type Scene, getElement } from '../../model/types.ts';
-import { SceneBuilder } from '../../utils/builder.ts';
-import { between } from '../../utils/order.ts';
+import {
+  type ElementId,
+  type Layer,
+  type Scene,
+  createCanvasAtoms,
+  createMemoryStore,
+  getElement,
+} from '../../model/index.ts';
+import { SceneBuilder, between } from '../../utils/index.ts';
 import { Properties } from './Properties.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });

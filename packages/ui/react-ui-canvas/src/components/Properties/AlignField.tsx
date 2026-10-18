@@ -9,7 +9,7 @@ import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
-import { type HorizontalAlign, NodeStyle, type VerticalAlign } from '../../model/types.ts';
+import { type HorizontalAlign, NodeStyle, type VerticalAlign } from '../../model/index.ts';
 
 export type IconToggleOption<T extends string> = { value: T; icon: string; label: string };
 

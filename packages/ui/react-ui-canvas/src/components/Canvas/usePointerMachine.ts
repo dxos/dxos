@@ -13,39 +13,59 @@ import {
 } from 'react';
 
 import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
-import { type CanvasAtoms, type ControlPointRef, type Drag, type Handle } from '../../model/atoms.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type Projection } from '../../model/projection.ts';
-import { type CreateProps, type NodeRegistry } from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
 import {
   type Camera,
+  type CanvasAtoms,
   type Capabilities,
+  type ControlPointRef,
+  type CreateProps,
+  type Drag,
   type ElementId,
   type Endpoint,
+  type Handle,
   type Link,
   type Node,
   type NodeId,
+  type NodeRegistry,
   type NodeType,
   type Point,
   type Port,
+  type Projection,
   type Scene,
+  type SceneStore,
   type SplineLink,
   type Tool,
   endpointNode,
   isFrameNode,
   isPointEndpoint,
-} from '../../model/types.ts';
-import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
-import { duplicateSelection } from '../../utils/clipboard.ts';
-import { boundsFromPoints, hitTest, nodesIntersecting } from '../../utils/hit.ts';
-import { DEFAULT_LAYER, activeLayer } from '../../utils/layers.ts';
-import { topZ } from '../../utils/order.ts';
-import { nodePorts, portAccepts, portPoint } from '../../utils/ports.ts';
-import { resizeBounds } from '../../utils/resize.ts';
-import { insertIndex, linkGeometry, sideToward } from '../../utils/route.ts';
-import { NOMINAL_SIZES, cloneShape, createLink, createNode, nodeBounds, nominalSize } from '../../utils/shapes.ts';
-import { type LinkEnd, handlePoint } from '../ControlFrame/ControlFrame.tsx';
+  nodeDef,
+} from '../../model/index.ts';
+import {
+  DEFAULT_LAYER,
+  NOMINAL_SIZES,
+  activeLayer,
+  boundsCenter,
+  boundsFromPoints,
+  cloneShape,
+  createLink,
+  createNode,
+  duplicateSelection,
+  hitTest,
+  insertIndex,
+  linkGeometry,
+  nodeBounds,
+  nodePorts,
+  nodesIntersecting,
+  nominalSize,
+  panBy,
+  portAccepts,
+  portPoint,
+  resizeBounds,
+  screenToScene,
+  sideToward,
+  topZ,
+} from '../../utils/index.ts';
+import { type LinkEnd, handlePoint } from '../ControlFrame/index.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 

@@ -11,11 +11,8 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useRegistry } from '../../hooks/index.ts';
-import { createCanvasAtoms } from '../../model/atoms.ts';
-import { createMemoryStore } from '../../model/store.ts';
-import { type Layer } from '../../model/types.ts';
-import { SceneBuilder } from '../../utils/builder.ts';
-import { between } from '../../utils/order.ts';
+import { type Layer, createCanvasAtoms, createMemoryStore } from '../../model/index.ts';
+import { SceneBuilder, between } from '../../utils/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });

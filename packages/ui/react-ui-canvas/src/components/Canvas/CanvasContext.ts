@@ -6,35 +6,36 @@ import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type GeneratorFrames } from '../../generator/host.ts';
+import { type GeneratorFrames } from '../../generator/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
+  type BackgroundGrid,
+  type Bounds,
+  type Camera,
   type CanvasAtoms,
+  type Capabilities,
   type ControlPointRef,
   type Drag,
   type EditingPart,
+  type ElementId,
   type InspectorMode,
   type Isolation,
-} from '../../model/atoms.ts';
-import { type Projection } from '../../model/projection.ts';
-import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
-import { type BackgroundGrid, type SceneLook, type ThemeRegistry } from '../../model/style-set.ts';
-import {
-  type Bounds,
-  type Camera,
-  type Capabilities,
-  type ElementId,
   type LinkId,
+  type LinkRegistry,
   type NodeId,
+  type NodeRegistry,
+  type Projection,
   type Scene,
   type SceneId,
+  type SceneLook,
+  type SceneStore,
+  type ThemeRegistry,
   type Timeline,
   type Tool,
-} from '../../model/types.ts';
-import { type Clipboard } from '../../utils/clipboard.ts';
-import { type ElementHandlers } from '../SceneLayer/SceneLayer.tsx';
-import { type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+} from '../../model/index.ts';
+import { type Clipboard } from '../../utils/index.ts';
+import { type ElementHandlers } from '../SceneLayer/index.ts';
+import { type ToolbarActions } from '../Toolbar/index.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneClipboard } from './useSceneClipboard.ts';

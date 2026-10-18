@@ -6,7 +6,7 @@ import React, { createContext, useContext } from 'react';
 
 import { Form, type FormFieldRenderer, SelectField } from '@dxos/react-ui-form';
 
-import { type SceneOption } from '../../utils/scenes.ts';
+import { type SceneOption } from '../../utils/index.ts';
 
 /** The scenes a selected scene shape may open, as the panel's host lists them (`sceneOptions`). */
 export const SceneOptionsContext = createContext<readonly SceneOption[]>([]);

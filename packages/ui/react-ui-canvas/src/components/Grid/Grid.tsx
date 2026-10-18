@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type Point } from '../../model/types.ts';
+import { type Point } from '../../model/index.ts';
 
 const gridRatios = [1 / 4, 1, 4, 16];
 

@@ -8,9 +8,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { THEME_IDS, defaultThemeRegistry, resolveLook, styleVariant } from '../../model/style-set.ts';
-import { type NodeTone, type StyleHue } from '../../model/types.ts';
-import { ThemeBar } from '../ThemeBar/ThemeBar.tsx';
+import {
+  type NodeTone,
+  type StyleHue,
+  THEME_IDS,
+  defaultThemeRegistry,
+  resolveLook,
+  styleVariant,
+} from '../../model/index.ts';
+import { ThemeBar } from '../ThemeBar/index.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 
 type StoryArgs = Pick<StyleGridProps, 'indeterminate' | 'readonly'> & { theme?: string };

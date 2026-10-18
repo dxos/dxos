@@ -12,7 +12,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { type Layer, type LayerId } from '../../model/types.ts';
+import { type Layer, type LayerId } from '../../model/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 
 export type LayersPanelProps = Util.ThemedClassName<{

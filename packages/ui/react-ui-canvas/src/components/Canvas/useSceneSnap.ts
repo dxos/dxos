@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { MAJOR_GRID_RATIO } from '../../model/types.ts';
+import { MAJOR_GRID_RATIO } from '../../model/index.ts';
 
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels

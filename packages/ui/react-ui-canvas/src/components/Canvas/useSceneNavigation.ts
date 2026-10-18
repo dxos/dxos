@@ -5,31 +5,33 @@
 import { type MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type CanvasAtoms, type Drag, type HistoryEntry } from '../../model/atoms.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
 import {
   type Bounds,
   type Camera,
+  type CanvasAtoms,
+  type Drag,
   type ElementId,
+  type HistoryEntry,
   type Node,
+  type NodeRegistry,
   type Scene,
   type SceneId,
+  type SceneStore,
   type Size,
   isFrameNode,
-} from '../../model/types.ts';
+  nodeDef,
+} from '../../model/index.ts';
 import {
   DRILL_ANIMATION_MS,
   NOMINAL_ZOOM,
+  contentBounds,
   coverage,
   enterPortal,
   exitPortal,
   fitBounds,
+  nodeBounds,
   portalFrame,
-} from '../../utils/camera.ts';
-import { contentBounds } from '../../utils/hit.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
+} from '../../utils/index.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 
 /** An empty root has nothing to frame: fitting it centres the origin at true size. */

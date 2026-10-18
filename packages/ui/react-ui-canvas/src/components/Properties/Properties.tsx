@@ -30,38 +30,45 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { useRegistry } from '../../hooks/index.ts';
-import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
-import { type CanvasAtoms } from '../../model/atoms.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type Projection } from '../../model/projection.ts';
-import { type NodeRegistry, defaultNodeRegistry } from '../../model/registry.ts';
-import { NO_STYLES } from '../../model/store.ts';
+import { SCENE_OVERLAY_ATTRIBUTE, useRegistry } from '../../hooks/index.ts';
 import {
   BaseNode,
+  type CanvasAtoms,
   CurveLink,
   type Element,
   type Layer,
   LineLink,
   type LinkType,
+  NO_STYLES,
   type Node,
+  type NodeRegistry,
   type NodeStyle,
+  type Projection,
   SmartLink,
   SplineLink,
   type StyleClass,
   type StyleMap,
+  defaultNodeRegistry,
   getElement,
   isFrameNode,
   isLink,
   isNoteNode,
+  nodeDef,
   showsContents,
-} from '../../model/types.ts';
-import { elementLayer, sceneLayers } from '../../utils/layers.ts';
-import { MAX_PORTS_PER_SIDE, portsPerSideOf } from '../../utils/ports.ts';
+} from '../../model/index.ts';
+import {
+  MAX_PORTS_PER_SIDE,
+  type SceneOption,
+  classedLink,
+  classedNode,
+  elementLayer,
+  flipLink,
+  portsPerSideOf,
+  resolveStyle,
+  sceneLayers,
+  splitClassEdit,
+} from '../../utils/index.ts';
 import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
-import { type SceneOption } from '../../utils/scenes.ts';
-import { flipLink } from '../../utils/shapes.ts';
-import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';

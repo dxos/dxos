@@ -11,7 +11,6 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { shortcutFor } from '../../model/keys.ts';
 import {
   type BackgroundGrid,
   type LookTone,
@@ -19,11 +18,11 @@ import {
   type ThemeRegistry,
   resolveBackground,
   resolveStyleSet,
+  shortcutFor,
   styleVariant,
-} from '../../model/style-set.ts';
+} from '../../model/index.ts';
 import { FLOATING_PANEL } from '../../utils/chrome.ts';
-import { variantClasses } from '../../utils/style.ts';
-import { BACKGROUND_FILLS, RADIUS_CLASSES } from '../../utils/surfaces.ts';
+import { BACKGROUND_FILLS, RADIUS_CLASSES, variantClasses } from '../../utils/index.ts';
 
 /** The canvas colour behind a swatch in its theme's mode. */
 const SWATCH_CANVAS: Record<LookTone, string> = {

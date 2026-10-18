@@ -12,7 +12,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { type SceneId } from '../../model/types.ts';
+import { type SceneId } from '../../model/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 
 /** A composite as the panel lists it. */

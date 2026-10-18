@@ -11,10 +11,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
-import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
-import { type Capabilities, type Tool } from '../../model/types.ts';
+import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } from '../../model/index.ts';
 import { FLOATING_PANEL } from '../../utils/chrome.ts';
-import { nodeDragData } from '../../utils/dnd.ts';
+import { nodeDragData } from '../../utils/index.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key?: string };
 

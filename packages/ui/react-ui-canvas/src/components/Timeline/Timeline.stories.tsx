@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useClock, useRegistry } from '../../hooks/index.ts';
-import { createClock } from '../../model/clock.ts';
+import { createClock } from '../../model/index.ts';
 import { TimelineBar, keyAt } from './Timeline.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };

@@ -15,12 +15,16 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { type CanvasAtoms, createCanvasAtoms } from '../../model/atoms.ts';
-import { defaultNodeRegistry } from '../../model/registry.ts';
-import { type SceneStore, createMemoryStore } from '../../model/store.ts';
-import { type Scene, type SceneId } from '../../model/types.ts';
-import { SceneBuilder } from '../../utils/builder.ts';
-import { diagnosticElements, toDiagramObjects } from '../../utils/diagram.ts';
+import {
+  type CanvasAtoms,
+  type Scene,
+  type SceneId,
+  type SceneStore,
+  createCanvasAtoms,
+  createMemoryStore,
+  defaultNodeRegistry,
+} from '../../model/index.ts';
+import { SceneBuilder, diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
 import { createModelSceneTree } from '../../utils/testing.ts';
 import { Canvas } from './Canvas.tsx';
 

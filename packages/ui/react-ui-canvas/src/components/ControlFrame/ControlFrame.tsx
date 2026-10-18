@@ -12,29 +12,38 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ControlPointRef, type Drag, type Handle, isMoving } from '../../model/atoms.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
 import {
   type Bounds,
   type Capabilities,
+  type ControlPointRef,
+  type Drag,
   type ElementId,
   type Endpoint,
+  type Handle,
   type Link,
   type LinkId,
   type Node,
+  type NodeRegistry,
   type Point,
   type Port,
   type Scene,
   type SplineLink,
   endpointNode,
+  isMoving,
   isPointEndpoint,
-} from '../../model/types.ts';
-import { boundsFromPoints } from '../../utils/hit.ts';
-import { type LatticeSpec } from '../../utils/lattice.ts';
-import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
-import { curvePath, linkGeometry, sceneLinkGeometry } from '../../utils/route.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
+  nodeDef,
+} from '../../model/index.ts';
+import {
+  type LatticeSpec,
+  boundsFromPoints,
+  curvePath,
+  linkGeometry,
+  nodeBounds,
+  nodePorts,
+  oppositeSide,
+  portPoint,
+  sceneLinkGeometry,
+} from '../../utils/index.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 

@@ -11,16 +11,16 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { useSceneProjection } from '../../hooks/index.ts';
-import { createCanvasAtoms } from '../../model/atoms.ts';
-import { type FreehandProjectionOptions } from '../../model/projection.ts';
 import {
   DYNAMIC_SCENE_ID,
+  type FreehandProjectionOptions,
   type GraphModel,
   type Overlay,
+  createCanvasAtoms,
   createDynamicProjection,
-} from '../../model/projections/dynamic.ts';
-import { createMemoryStore } from '../../model/store.ts';
-import { Properties } from '../Properties/Properties.tsx';
+  createMemoryStore,
+} from '../../model/index.ts';
+import { Properties } from '../Properties/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /**

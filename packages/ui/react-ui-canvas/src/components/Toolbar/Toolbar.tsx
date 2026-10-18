@@ -17,11 +17,9 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { shortcutFor } from '../../model/keys.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
-import { type Capabilities, type NodeType, type SceneId } from '../../model/types.ts';
+import { type Capabilities, type NodeRegistry, type NodeType, type SceneId, shortcutFor } from '../../model/index.ts';
 import { FLOATING_PANEL } from '../../utils/chrome.ts';
-import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
+import { Breadcrumbs } from '../Breadcrumbs/index.ts';
 
 /** What the toolbars can ask of the view; a missing action hides or disables its control. */
 export type ToolbarActions = {

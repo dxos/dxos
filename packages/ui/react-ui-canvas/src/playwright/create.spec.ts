@@ -6,7 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { NOMINAL_SIZES, nominalSize } from '../utils/shapes.ts';
+import { NOMINAL_SIZES, nominalSize } from '../utils/index.ts';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;

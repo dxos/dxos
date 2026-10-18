@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
-import { type Camera, type Point } from '../../model/types.ts';
-import { panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import { type Camera, type Point } from '../../model/index.ts';
+import { panBy, screenToScene, zoomAt } from '../../utils/index.ts';
 import { GridComponent, type GridProps } from './Grid.tsx';
 
 const ZOOM_STEP = 1.25;
