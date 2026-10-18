@@ -423,16 +423,9 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []), a :: b :: []) =>
           match Print.infixOf name with
           | Option.some (op, level) =>
-              let supply := Ref.get p.supply
-              let fresh := Ref.get p.fresh
-              let flat := Print.expr p a env ind level ++ " " ++ op ++ " " ++ Print.expr p b env ind (level + 1)
-              if fits ind flat then paren level prec flat else
-                -- Too long: break after the operator; a chain of one operator breaks at each.
-                Ref.set p.supply supply
-                Ref.set p.fresh fresh
-                let left := Print.expr p a env ind level
-                paren level prec (left ++ " " ++ op ++ "\n" ++ spaces (ind + 2) ++
-                  Print.expr p b env (ind + 2) (level + 1))
+              -- The parser nests a chain of one operator to the left, so the first operand binds at `level`.
+              let items := Print.leftOperands name t
+              paren level prec (Print.fillChain p op items env ind level (level + 1))
           | Option.none => Print.application p f args env ind prec
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []), a :: []) => paren 95 prec ("-" ++ Print.expr p a env ind 100)
       | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => "(" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) (Print.tupleItems t)) ++ ")"
@@ -470,16 +463,56 @@ def operands (conj : Bool) (t : Sexp) : List Sexp :=
   the last one level looser, as it nests to the right. Binder names are drawn as text is made, so the one-line attempt
   is undone before the second. -/
 def chain (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  Print.chainAt p op items env ind prec (prec - 1)
+
+/-- The operands of `name` applied as a chain nested to the left (`(a ++ b) ++ c`), as the parser reads one. -/
+def leftOperands (name : Text) (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str n :: []) :: a :: b :: []) =>
+      if n == name then Print.leftOperands name a ++ [b] else [t]
+  | _ => [t]
+
+/-- `chain` with the first operands at precedence `prec` and the last at `lastPrec`, for a chain of either nesting. -/
+def chainAt (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) (lastPrec : Int) : Text :=
   let supply := Ref.get p.supply
   let fresh := Ref.get p.fresh
   let last := List.length items - 1
-  let at := fun (i : Int) => if i == last then prec - 1 else prec
+  let at := fun (i : Int) => if i == last then lastPrec else prec
   let flat := join (" " ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env ind (at i)) items)
   if fits ind flat then flat else
     Ref.set p.supply supply
     Ref.set p.fresh fresh
     let inner := ind + 3 + Text.length op
     join ("\n" ++ spaces (ind + 2) ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env (if i == 0 then ind else inner) (at i)) items)
+
+/-- `a op b op c` on one line when it fits, else as many operands to a line as fit, each later line led by `op`: a
+  text built with `++` would take a line per piece one operand to a line (D325). The first operand binds at `prec`,
+  the rest at `rest`. -/
+def fillChain (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) (rest : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  -- Nested to the left, every operand after the first is a right operand: `a - (b + c) - 1` keeps its parentheses.
+  let at := fun (i : Int) => if i == 0 then prec else rest
+  let flat := join (" " ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env ind (at i)) items)
+  if fits ind flat then flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let inner := ind + 3 + Text.length op
+    let lead := "\n" ++ spaces (ind + 2) ++ op ++ " "
+    let texts := mapIndexed (fun i x => Print.expr p x env (if i == 0 then ind else inner) (at i)) items
+    -- `column` is where the line being filled ends; a piece of several lines ends that line.
+    let step := fun (acc : (Text, Int)) (piece : Text) =>
+      let (out, column) := acc
+      let first := Option.getOr (List.head? (Text.lines piece)) piece
+      let lastLine := Option.getOr (List.last? (Text.lines piece)) piece
+      let multi := Text.contains "\n" piece
+      if not multi && column + Text.length op + 2 + Text.length piece <= width then (out ++ " " ++ op ++ " " ++ piece, column + Text.length op + 2 + Text.length piece)
+      else (out ++ lead ++ piece, if multi then Text.length lastLine else inner + Text.length first)
+    match texts with
+    | [] => ""
+    | head :: rest =>
+        let headLast := Option.getOr (List.last? (Text.lines head)) head
+        fst (List.foldl step (head, (if Text.contains "\n" head then Text.length headLast else ind + Text.length head)) rest)
 
 /-- Columns a printed line may take before an application breaks its arguments onto lines of their own. -/
 def width : Int := 100

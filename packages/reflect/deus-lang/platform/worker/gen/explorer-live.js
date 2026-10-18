@@ -10400,17 +10400,8 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
               if (t26.tag === 1 && t26.fields[0].tag === 0) {
                 const op = t26.fields[0].fields[0];
                 const level_1 = t26.fields[0].fields[1];
-                const supply = rt.prims["Ref.get"](Printer$supply(p));
-                const fresh = rt.prims["Ref.get"](Printer$fresh(p));
-                const flat = rt.prims["append"]((rt.prims["append"]((Print$expr(p, a_5, env, ind, level_1) + " "), op) + " "), Print$expr(p, b_6, env, ind, ((level_1 + 1) | 0)));
-                if (Print$fits(ind, flat)) {
-                  return Print$paren(level_1, prec, flat);
-                } else {
-                  rt.prims["Ref.set"](Printer$supply(p), supply);
-                  rt.prims["Ref.set"](Printer$fresh(p), fresh);
-                  const left = Print$expr(p, a_5, env, ind, level_1);
-                  return Print$paren(level_1, prec, rt.prims["append"](rt.prims["append"]((rt.prims["append"]((left + " "), op) + "\n"), Print$spaces(((ind + 2) | 0))), Print$expr(p, b_6, env, ((ind + 2) | 0), ((level_1 + 1) | 0))));
-                }
+                const items = Print$leftOperands(name_4, t);
+                return Print$paren(level_1, prec, Print$fillChain(p, op, items, env, ind, level_1, ((level_1 + 1) | 0)));
               }
               if (t26.tag === 0) {
                 return Print$application(p, f, args_1, env, ind, prec);
@@ -10431,8 +10422,8 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
             const t28 = Print$listItems(t);
             m29: {
               if (t28.tag === 1) {
-                const items = t28.fields[0];
-                return Print$listLiteral(p, items, env, ind);
+                const items_1 = t28.fields[0];
+                return Print$listLiteral(p, items_1, env, ind);
               }
               if (t28.tag === 0) {
                 return Print$paren(67, prec, rt.prims["append"]((Print$expr(p, h_2, env, ind, 68) + " :: "), Print$expr(p, rest, env, ind, 67)));
@@ -11659,34 +11650,7 @@ function Print$ifThenElse(p, c, yes, no, env, ind, prec) {
 rt.named(Print$ifThenElse, "Print.ifThenElse");
 
 function Print$chain(p, op, items, env, ind, prec) {
-  const supply = rt.prims["Ref.get"](Printer$supply(p));
-  const fresh = rt.prims["Ref.get"](Printer$fresh(p));
-  const last = ((lib$base$List$length(items) - 1) | 0);
-  const at = ({ "Print.chain/\u03bb": (i) => {
-  if (rt.equal(i, last)) {
-    return ((prec - 1) | 0);
-  } else {
-    return prec;
-  }
-} })["Print.chain/\u03bb"];
-  const flat = rt.prims["Text.join"](((" " + op) + " "), lib$base$List$mapIndexed(({ "Print.chain/\u03bb": (i_1, x) => Print$expr(p, x, env, ind, at(i_1)) })["Print.chain/\u03bb"], items));
-  if (Print$fits(ind, flat)) {
-    return flat;
-  } else {
-    rt.prims["Ref.set"](Printer$supply(p), supply);
-    rt.prims["Ref.set"](Printer$fresh(p), fresh);
-    const inner = ((((ind + 3) | 0) + rt.prims["Text.length"](op)) | 0);
-    return rt.prims["Text.join"]((rt.prims["append"](("\n" + Print$spaces(((ind + 2) | 0))), op) + " "), lib$base$List$mapIndexed(({ "Print.chain/\u03bb": (i_2, x_1) => {
-    let r0;
-    if ((i_2 === 0)) {
-      r0 = ind;
-    } else {
-      r0 = inner;
-    }
-    const t1 = at(i_2);
-    return Print$expr(p, x_1, env, r0, t1);
-  } })["Print.chain/\u03bb"], items));
-  }
+  return Print$chainAt(p, op, items, env, ind, prec, ((prec - 1) | 0));
 }
 rt.named(Print$chain, "Print.chain");
 
@@ -11812,6 +11776,108 @@ function Print$infixOf(name) {
   }
 }
 rt.named(Print$infixOf, "Print.infixOf");
+
+function Print$leftOperands(name, t) {
+  m0: {
+    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "app" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[0].fields[0] === "prim" && t.fields[0].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      const n = t.fields[0].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0];
+      const a = t.fields[0].fields[1].fields[1].fields[0];
+      const b = t.fields[0].fields[1].fields[1].fields[1].fields[0];
+      if (rt.equal(n, name)) {
+        return rt.prims["append"](Print$leftOperands(name, a), rt.cons(b, rt.NIL));
+      } else {
+        return rt.cons(t, rt.NIL);
+      }
+    }
+    if (true) {
+      return rt.cons(t, rt.NIL);
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Print$leftOperands, "Print.leftOperands");
+
+function Print$fillChain(p, op, items, env, ind, prec, rest) {
+  const supply = rt.prims["Ref.get"](Printer$supply(p));
+  const fresh = rt.prims["Ref.get"](Printer$fresh(p));
+  const at = ({ "Print.fillChain/\u03bb": (i) => {
+  if ((i === 0)) {
+    return prec;
+  } else {
+    return rest;
+  }
+} })["Print.fillChain/\u03bb"];
+  const flat = rt.prims["Text.join"](((" " + op) + " "), lib$base$List$mapIndexed(({ "Print.fillChain/\u03bb": (i_1, x) => Print$expr(p, x, env, ind, at(i_1)) })["Print.fillChain/\u03bb"], items));
+  if (Print$fits(ind, flat)) {
+    return flat;
+  } else {
+    rt.prims["Ref.set"](Printer$supply(p), supply);
+    rt.prims["Ref.set"](Printer$fresh(p), fresh);
+    const inner = ((((ind + 3) | 0) + rt.prims["Text.length"](op)) | 0);
+    const lead = (rt.prims["append"](("\n" + Print$spaces(((ind + 2) | 0))), op) + " ");
+    const texts = lib$base$List$mapIndexed(({ "Print.fillChain/\u03bb": (i_2, x_1) => {
+    let r0;
+    if ((i_2 === 0)) {
+      r0 = ind;
+    } else {
+      r0 = inner;
+    }
+    const t1 = at(i_2);
+    return Print$expr(p, x_1, env, r0, t1);
+  } })["Print.fillChain/\u03bb"], items);
+    const step = ({ "Print.fillChain/\u03bb": (acc, piece) => {
+    m2: {
+      if (acc.tag === 0) {
+        const out = acc.fields[0];
+        const column = acc.fields[1];
+        const first = lib$base$Option$getOr(lib$base$List$head$p(lib$base$Text$lines(piece)), piece);
+        const lastLine = lib$base$Option$getOr(lib$base$List$last$p(lib$base$Text$lines(piece)), piece);
+        const multi = lib$base$Text$contains("\n", piece);
+        let r3;
+        if (lib$base$not(multi)) {
+          r3 = rt.prims["le"](((((((column + rt.prims["Text.length"](op)) | 0) + 2) | 0) + rt.prims["Text.length"](piece)) | 0), Print$width());
+        } else {
+          r3 = false;
+        }
+        if (r3) {
+          return new rt.Con("#Pair", 0, [rt.prims["append"]((rt.prims["append"]((out + " "), op) + " "), piece), ((((((column + rt.prims["Text.length"](op)) | 0) + 2) | 0) + rt.prims["Text.length"](piece)) | 0)]);
+        } else {
+          const t4 = rt.prims["append"](rt.prims["append"](out, lead), piece);
+          let r5;
+          if (multi) {
+            r5 = rt.prims["Text.length"](lastLine);
+          } else {
+            r5 = ((inner + rt.prims["Text.length"](first)) | 0);
+          }
+          return new rt.Con("#Pair", 0, [t4, r5]);
+        }
+      }
+      rt.nomatch(acc);
+    }
+  } })["Print.fillChain/\u03bb"];
+    m6: {
+      if (texts.tag === 0) {
+        return "";
+      }
+      if (texts.tag === 1) {
+        const head = texts.fields[0];
+        const rest_1 = texts.fields[1];
+        const headLast = lib$base$Option$getOr(lib$base$List$last$p(lib$base$Text$lines(head)), head);
+        let r7;
+        if (lib$base$Text$contains("\n", head)) {
+          r7 = rt.prims["Text.length"](headLast);
+        } else {
+          r7 = ((ind + rt.prims["Text.length"](head)) | 0);
+        }
+        const t8 = new rt.Con("#Pair", 0, [head, r7]);
+        const t9 = lib$base$List$foldl(step, t8, rest_1);
+        return lib$base$fst(t9);
+      }
+      rt.nomatch(texts);
+    }
+  }
+}
+rt.named(Print$fillChain, "Print.fillChain");
 
 function Print$listLiteral(p, items, env, ind) {
   const supply = rt.prims["Ref.get"](Printer$supply(p));
@@ -12550,6 +12616,38 @@ function Print$notationLevel(rule) {
   }
 }
 rt.named(Print$notationLevel, "Print.notationLevel");
+
+function Print$chainAt(p, op, items, env, ind, prec, lastPrec) {
+  const supply = rt.prims["Ref.get"](Printer$supply(p));
+  const fresh = rt.prims["Ref.get"](Printer$fresh(p));
+  const last = ((lib$base$List$length(items) - 1) | 0);
+  const at = ({ "Print.chainAt/\u03bb": (i) => {
+  if (rt.equal(i, last)) {
+    return lastPrec;
+  } else {
+    return prec;
+  }
+} })["Print.chainAt/\u03bb"];
+  const flat = rt.prims["Text.join"](((" " + op) + " "), lib$base$List$mapIndexed(({ "Print.chainAt/\u03bb": (i_1, x) => Print$expr(p, x, env, ind, at(i_1)) })["Print.chainAt/\u03bb"], items));
+  if (Print$fits(ind, flat)) {
+    return flat;
+  } else {
+    rt.prims["Ref.set"](Printer$supply(p), supply);
+    rt.prims["Ref.set"](Printer$fresh(p), fresh);
+    const inner = ((((ind + 3) | 0) + rt.prims["Text.length"](op)) | 0);
+    return rt.prims["Text.join"]((rt.prims["append"](("\n" + Print$spaces(((ind + 2) | 0))), op) + " "), lib$base$List$mapIndexed(({ "Print.chainAt/\u03bb": (i_2, x_1) => {
+    let r0;
+    if ((i_2 === 0)) {
+      r0 = ind;
+    } else {
+      r0 = inner;
+    }
+    const t1 = at(i_2);
+    return Print$expr(p, x_1, env, r0, t1);
+  } })["Print.chainAt/\u03bb"], items));
+  }
+}
+rt.named(Print$chainAt, "Print.chainAt");
 
 function Types$rowToSexp(r) {
   function items(row$, acc$) {
