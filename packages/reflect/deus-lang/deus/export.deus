@@ -154,7 +154,8 @@ def cachedView (kept : MutMap Text Unit) (printer : Printer) (global : Text) (di
     getOr (Map.lookup d printer.fieldNames) "") (dependenciesOf dir h)
   let key := Text.sha256 (join
     "\n"
-    ([global, name, Entry.kind e, h, getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", join "," (getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++
+    -- The CLI's image is part of what a view depends on: a printer change otherwise kept serving old text (D324).
+    ([getOr (IO.getEnv "DEUS_IMAGE_HASH") "", global, name, Entry.kind e, h, getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", join "," (getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++
       refs))
   MutMap.set kept key ()
   let path := dir ++ "/cache/views/" ++ key

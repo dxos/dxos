@@ -356,5 +356,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 346 | 10-20 09:00 | 40m 00s | 3a0c99e322 | The js target calls local functions directly: 487 `rt.ap` calls in the Worker down to 158 (D321) |
 | 347 | 10-20 10:10 | 1h 10m | e80722ad6d | The C back end asks only which owned locals the rest of a body uses: `build --c` 36 s to 29 s on node, 3.5 s to 3.1 s natively (D322) |
 | 348 | 10-20 10:50 | 30m 00s | f74b879035 | An export keeps only the cached views it read: 51 MB to 13 MB (D323) |
+| 349 | 10-20 11:50 | 1h 00m | this commit | Long `&&` and `||` chains print one operand per line; exported views are keyed by the CLI that printed them (D324) |
 
-Total from stage 1 to stage 348: 150h 00m.
+Total from stage 1 to stage 349: 151h 00m.

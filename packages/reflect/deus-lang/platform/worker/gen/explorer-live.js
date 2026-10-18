@@ -10207,7 +10207,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
         if (r3) {
           return Print$ifThenElse(p, a_1, b, lib$base$Sexp$node("con", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["#Bool"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]), rt.NIL)))), env, ind, prec);
         } else {
-          return Print$paren(35, prec, rt.prims["append"]((Print$expr(p, a_1, env, ind, 36) + " && "), Print$expr(p, b, env, ind, 35)));
+          return Print$paren(35, prec, Print$chain(p, "&&", Print$operands(true, t), env, ind, 36));
         }
       }
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "if" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#Bool" && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
@@ -10222,7 +10222,7 @@ function Print$expr(p$, t$, env$, ind$, prec$) {
         if (r4) {
           return Print$ifThenElse(p, a_2, lib$base$Sexp$node("con", rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 2, ["#Bool"]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [1]), rt.cons(new rt.Con("f024ce25b31cf5e76b3a93a6549238a6c334f1a800226b8260cb33498eb5de42", 0, [0]), rt.NIL)))), b_1, env, ind, prec);
         } else {
-          return Print$paren(30, prec, rt.prims["append"]((Print$expr(p, a_2, env, ind, 31) + " || "), Print$expr(p, b_1, env, ind, 30)));
+          return Print$paren(30, prec, Print$chain(p, "||", Print$operands(false, t), env, ind, 31));
         }
       }
       if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "if" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
@@ -11657,6 +11657,86 @@ function Print$ifThenElse(p, c, yes, no, env, ind, prec) {
   return Print$paren(1, prec, r2);
 }
 rt.named(Print$ifThenElse, "Print.ifThenElse");
+
+function Print$chain(p, op, items, env, ind, prec) {
+  const supply = rt.prims["Ref.get"](Printer$supply(p));
+  const fresh = rt.prims["Ref.get"](Printer$fresh(p));
+  const last = ((lib$base$List$length(items) - 1) | 0);
+  const at = ({ "Print.chain/\u03bb": (i) => {
+  if (rt.equal(i, last)) {
+    return ((prec - 1) | 0);
+  } else {
+    return prec;
+  }
+} })["Print.chain/\u03bb"];
+  const flat = rt.prims["Text.join"](((" " + op) + " "), lib$base$List$mapIndexed(({ "Print.chain/\u03bb": (i_1, x) => Print$expr(p, x, env, ind, at(i_1)) })["Print.chain/\u03bb"], items));
+  if (Print$fits(ind, flat)) {
+    return flat;
+  } else {
+    rt.prims["Ref.set"](Printer$supply(p), supply);
+    rt.prims["Ref.set"](Printer$fresh(p), fresh);
+    const inner = ((((ind + 3) | 0) + rt.prims["Text.length"](op)) | 0);
+    return rt.prims["Text.join"]((rt.prims["append"](("\n" + Print$spaces(((ind + 2) | 0))), op) + " "), lib$base$List$mapIndexed(({ "Print.chain/\u03bb": (i_2, x_1) => {
+    let r0;
+    if ((i_2 === 0)) {
+      r0 = ind;
+    } else {
+      r0 = inner;
+    }
+    const t1 = at(i_2);
+    return Print$expr(p, x_1, env, r0, t1);
+  } })["Print.chain/\u03bb"], items));
+  }
+}
+rt.named(Print$chain, "Print.chain");
+
+function Print$operands(conj, t) {
+  m0: {
+    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "if" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#Bool" && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      const a = t.fields[0].fields[1].fields[0];
+      const b = t.fields[0].fields[1].fields[1].fields[0];
+      let r1;
+      if (conj) {
+        if (lib$base$not(Print$isBlock(a))) {
+          r1 = lib$base$not(Print$isBlock(b));
+        } else {
+          r1 = false;
+        }
+      } else {
+        r1 = false;
+      }
+      if (r1) {
+        return rt.cons(a, Print$operands(conj, b));
+      } else {
+        return rt.cons(t, rt.NIL);
+      }
+    }
+    if (t.tag === 3 && t.fields[0].tag === 1 && t.fields[0].fields[0].tag === 1 && t.fields[0].fields[0].fields[0] === "if" && t.fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].tag === 3 && t.fields[0].fields[1].fields[1].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[0].fields[0] === "con" && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].tag === 2 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[0].fields[0] === "#Bool" && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].tag === 0 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[0].fields[0] === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[0].fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0 && t.fields[0].fields[1].fields[1].fields[1].tag === 1 && t.fields[0].fields[1].fields[1].fields[1].fields[1].tag === 0) {
+      const a_1 = t.fields[0].fields[1].fields[0];
+      const b_1 = t.fields[0].fields[1].fields[1].fields[1].fields[0];
+      let r2;
+      if (lib$base$not(conj)) {
+        if (lib$base$not(Print$isBlock(a_1))) {
+          r2 = lib$base$not(Print$isBlock(b_1));
+        } else {
+          r2 = false;
+        }
+      } else {
+        r2 = false;
+      }
+      if (r2) {
+        return rt.cons(a_1, Print$operands(conj, b_1));
+      } else {
+        return rt.cons(t, rt.NIL);
+      }
+    }
+    if (true) {
+      return rt.cons(t, rt.NIL);
+    }
+    rt.nomatch(t);
+  }
+}
+rt.named(Print$operands, "Print.operands");
 
 function Print$application(p, f, args, env, ind, prec) {
   const supply = rt.prims["Ref.get"](Printer$supply(p));
