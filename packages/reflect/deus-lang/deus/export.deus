@@ -141,8 +141,9 @@ def dependenciesOf (dir : Text) (h : Text) : {IO} List Text :=
 
 /-- A definition's exported text, reused while everything its printing reads is unchanged: its name,
   hash and metadata, the names its hash goes by, and how each hash it refers to prints (Export.Spec R-9).
-  `global` digests the type and declaration names every view may print. -/
-def cachedView (printer : Printer) (global : Text) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO, Throw Text} Text :=
+  `global` digests the type and declaration names every view may print; `kept` collects the key used, so
+  `pruneViews` can drop the rest. -/
+def cachedView (kept : MutMap Text Unit) (printer : Printer) (global : Text) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO, Throw Text} Text :=
   let h := Entry.hash e
   let owner := join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
   let ownerKey :=
@@ -155,6 +156,7 @@ def cachedView (printer : Printer) (global : Text) (dir : Text) (ns : Map Text E
     "\n"
     ([global, name, Entry.kind e, h, getOr (IO.readFile (dir ++ "/meta/" ++ h)) "", join "," (getOr (Map.lookup h printer.namesByHash) []), ownerKey] ++
       refs))
+  MutMap.set kept key ()
   let path := dir ++ "/cache/views/" ++ key
   match IO.readFile path with
   | Option.some text => text
@@ -163,6 +165,12 @@ def cachedView (printer : Printer) (global : Text) (dir : Text) (ns : Map Text E
       IO.mkdirp (dir ++ "/cache/views")
       IO.writeFile path body
       body
+
+/-- Removes the cached views an export did not read: each is keyed by everything its text depends on, so one from an
+  earlier state is never read again, and the folder held 10,513 files for 3,881 definitions (D323). -/
+def pruneViews (dir : Text) (kept : MutMap Text Unit) : {IO} Unit :=
+  let folder := dir ++ "/cache/views"
+  if IO.exists folder then forEach (IO.listDir folder) (fun key => if MutMap.has kept key then () else IO.remove (folder ++ "/" ++ key)) else ()
 
 /-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
 def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
@@ -173,10 +181,12 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
   let global := Text.sha256 (join "\n" (List.map
     (fun pair => fst pair ++ "=" ++ snd pair)
     (Map.toList printer.typeNames ++ Map.toList printer.declared)))
+  let kept := MutMap.new ()
   let sources := filterMap (fun pair =>
     let (name, e) := pair
-    let body := cachedView printer global dir ns name e
+    let body := cachedView kept printer global dir ns name e
     if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
+  pruneViews dir kept
   -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
   let documents := specDocuments ns
   if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
@@ -249,12 +259,14 @@ def writeTerms (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int) :=
     match home with
     | Option.some a => headerLine mdl (child a name) ++ "\n"
     | Option.none => ""
+  let kept := MutMap.new ()
   let code := filterMap (fun pair =>
     let (name, e) := pair
     if exported e then
-      let body := cachedView printer global dir ns name e
+      let body := cachedView kept printer global dir ns name e
       if Text.isEmpty (trim body) then Option.none else Option.some (termPath name ".deus", headed false name ++ body ++ "\n")
     else Option.none) (Map.toList ns)
+  pruneViews dir kept
   let specs := List.map (fun d => (termPath d ".mdl", headed true d ++ document dir ns d)) (specDocuments ns)
   let files := code ++ specs
   let written := Set.fromList (List.map fst files)
