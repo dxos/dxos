@@ -381,6 +381,22 @@ describe('answer mapping', () => {
     });
   });
 
+  test('structured descriptions are sent as JSON text', ({ expect }) => {
+    const structured = Decision.rate({
+      instructions: { focus: 'tone' },
+      criteria: [
+        { label: 'calm', description: { cue: 'even' } },
+        { label: 'angry', description: 'shouting' },
+      ],
+    });
+
+    expect(TypeSafeResolver.toQuestion(structured)).toEqual({
+      type: 'score',
+      instructions: '{"focus":"tone"}',
+      criteria: ['{"cue":"even"}', 'shouting'],
+    });
+  });
+
   test('a choice distribution covers every label, filling the ones System One omitted', ({ expect }) => {
     const answer = TypeSafeResolver.toProviderAnswer(team, {
       type: 'choice',
