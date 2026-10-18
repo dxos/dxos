@@ -369,10 +369,11 @@ test QA-2: A four-person meeting call, with notes taken during it
     The local user joins a Meeting's call with three colleagues, they talk, and the local user
     writes the action items into the meeting's notes. The colleagues are simulated participants
     (plugin-calls `SetSimulatedParticipants`) played from pre-recorded avatar videos, and the
-    local camera and microphone are a fourth video, so the test needs no camera and no EDGE.
+    local camera and microphone are a fourth video, so the test needs no camera and no EDGE. The
+    seam also carries the script's lines, which stand in for live transcription.
   actors: agent
   covers: [F-1.1, F-1.2, T-1]
-  status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with HeyGen avatars; speaking outline on each line's speaker
+  status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with HeyGen avatars; outline and transcript entry on each line's speaker
   given:
     - an identity exists, with display name "Astrid Holm"
     - space: the Fieldstone Labs sample space (plugin-debug template) is open
@@ -382,7 +383,8 @@ test QA-2: A four-person meeting call, with notes taken during it
     - tracks: one equal-length WebM per participant (astrid, lucia, ben, tomas), made by
       `.agents/skills/autocue/scripts/conversation.mjs` from
       `autocue/fieldstone-dashboard.conversation.json`; the browser's camera and microphone play
-      astrid's (`fake-media.mjs`), and the other three are served to the page
+      astrid's (`fake-media.mjs`), and the other three are served to the page; its `timeline.json`
+      gives each line's speaker, start and text
   steps:
     - name: Create and open the meeting
       do: Create a Meeting named "Cairn dashboard plugin: scoping" in the space and open it.
@@ -390,24 +392,28 @@ test QA-2: A four-person meeting call, with notes taken during it
       capture: created
       expect: MeetingArticle opens with the Notes, Transcript, Summary and Call tabs
     - name: Add the colleagues
-      do: (no UI — test seam) Fill the call with Lucía Ferreira, Ben Achterberg and Tomás Vidal.
-      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [{ name: "Lucía Ferreira", src: $given.tracks.lucia }, { name: "Ben Achterberg", src: $given.tracks.ben }, { name: "Tomás Vidal", src: $given.tracks.tomas }] }
+      do: (no UI — test seam) Make the meeting active and fill the call with Lucía Ferreira, Ben Achterberg and Tomás Vidal, with the script's timed lines.
+      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [{ name: "Lucía Ferreira", src: $given.tracks.lucia }, { name: "Ben Achterberg", src: $given.tracks.ben }, { name: "Tomás Vidal", src: $given.tracks.tomas }], transcript: $given.tracks.timeline }
       expect: nothing visible yet — the participants appear on join
     - name: Join with camera and microphone on
       do: Open the Call tab, turn the camera on, unmute, and click Join.
       expect: |
         the grid shows four tiles named Astrid Holm, Lucía Ferreira, Ben Achterberg and Tomás Vidal,
         each playing its video; the toolbar's participant count reads 4
+    - name: Open the transcript beside the call
+      do: Open the companion side-by-side, choose the meeting companion, then its Transcript tab.
+      expect: the call stays in the plank and the meeting's transcript shows in the companion
     - name: The conversation runs
       do: Watch the call until the last line ("… Thanks, everyone.").
       expect: |
         each speaker's tile shows the speaking outline while they talk and only then, in the
-        script's order: Astrid, Lucía, Ben, Tomás, Lucía, Ben, Tomás, Astrid
+        script's order: Astrid, Lucía, Ben, Tomás, Lucía, Ben, Tomás, Astrid; each line appears
+        once in the transcript, under its speaker's name, as it starts
       note: |
         Remote speaking state comes from each simulated participant's own audio, as a real
         participant's comes from their microphone; the local tile's comes from the fake microphone.
     - name: Write the action items
-      do: Open the Notes tab and type the three action items Astrid names.
+      do: Open the companion's Notes tab and type the three action items Astrid names.
       expect: the notes hold "Ben: share the sketch", "Tomás: build the plank", "Lucía: check it with Okapi"
     - name: Leave
       do: Click Leave.

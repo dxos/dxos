@@ -273,13 +273,17 @@ export const steps = [
       await demo.clearCaption();
       // Notes open in the companion, so the call stays on screen beside them.
       await demo.click({ selector: `${COMPANION} button[aria-label="Notes"]`, label: 'Notes' });
-      const editor = page.locator(`${COMPANION} .cm-content`).first();
+      // The transcript tab keeps its own editor mounted but hidden.
+      const editor = page.locator(`${COMPANION} .cm-content >> visible=true`).first();
       await editor.click();
       // The editor continues a task list on Enter, so only the first item takes the markdown prefix.
       await page.keyboard.type(`- [ ] ${ACTION_ITEMS.join('\n')}`, { delay: 40 });
       await waitForPage(
         page,
-        ([companion, last]) => document.querySelector(`${companion} .cm-content`)?.textContent?.includes(last),
+        ([companion, last]) =>
+          [...document.querySelectorAll(`${companion} .cm-content`)].some((editor) =>
+            editor.textContent?.includes(last),
+          ),
         [COMPANION, ACTION_ITEMS.at(-1)],
         10_000,
       );

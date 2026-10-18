@@ -25,6 +25,7 @@ import { parseArgs } from 'node:util';
 
 const API = 'https://api.heygen.com';
 const POLL_MS = 10_000;
+const SUBMIT_SPACING_MS = 1_000;
 const TIMEOUT_MS = 30 * 60_000;
 /** Listening clips loop, so a short one is enough. */
 const IDLE_SECONDS = 10;
@@ -189,8 +190,10 @@ const jobs = [
 const silenceAssetId = jobs.some(({ listening }) => listening) ? await silence() : undefined;
 
 // HeyGen renders submissions concurrently, so waiting on them together takes as long as the slowest.
+// Submissions are staggered: the API allows 10 requests per second, polls included.
 const results = await Promise.allSettled(
-  jobs.map(({ file, speaker, text, listening }) => {
+  jobs.map(async ({ file, speaker, text, listening }, index) => {
+    await new Promise((resolve) => setTimeout(resolve, index * SUBMIT_SPACING_MS));
     const participant = conversation.participants[speaker];
     return generate(file, {
       avatar_id: roster[speaker].avatarId,
