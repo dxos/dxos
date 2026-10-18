@@ -14,7 +14,7 @@ import * as Team from '../team/index.ts';
 import { REFERENCE } from '../util.ts';
 import { EXTRACTED } from './contacts.ts';
 import { Partial } from './partial.ts';
-import { DEAL_TYPENAME, DEALS, STAGES } from './pipeline.ts';
+import { PIPELINE, STAGES } from './pipeline.ts';
 
 type Ref = { readonly '/': string };
 type ActorJson = { readonly email?: string; readonly contact?: Ref };
@@ -35,8 +35,9 @@ type Entry = {
   readonly 'extracted'?: Record<string, string[]>;
   readonly 'spec'?: { readonly kind: string; readonly items?: Ref[]; readonly view?: Ref };
   readonly 'name'?: string;
+  readonly 'parentMessage'?: string;
+  readonly 'blocks'?: Array<{ readonly _tag: string; readonly text?: string; readonly disposition?: string }>;
   readonly 'organization'?: Ref;
-  readonly 'stage'?: string;
   readonly 'arrangement'?: { readonly order: string[]; readonly columns: Record<string, { readonly ids: string[] }> };
   readonly '@meta'?: { readonly key?: string };
 };
@@ -68,15 +69,15 @@ describe('Alien Labs inbox and CRM', () => {
       entries.filter((entry) => entry['@type']?.includes(typename));
     const feedEntries = archive.feeds.flatMap((feed) => feed.messages);
 
-    // 14 organizations (15 with team), 21 people (31 with team), 5 views.
+    // 14 organizations (15 with team), 21 people (31 with team), 2 tables and the Sales pipeline Kanban.
     expect(Object.keys(result.orgs)).toHaveLength(14);
     expect(Object.keys(result.people)).toHaveLength(21);
     expect(countOf('type.organization:')).toBe(15);
     expect(countOf('type.person:')).toBe(31);
-    expect(countOf('type.table:') + countOf('type.kanban:')).toBe(5);
+    expect(countOf('type.table:') + countOf('type.kanban:')).toBe(3);
 
     // Every type the archive holds is one the partials declare, or a core type every space holds
-    // (space properties, persisted schemas, the text behind documents); Deal's schema is persisted in the space.
+    // (space properties, persisted schemas, the text behind documents); no schema is persisted in the space.
     const declared = new Set([
       ...definition.schemas.map((schema) => Type.getTypename(schema)),
       'org.dxos.type.spaceProperties',
@@ -84,7 +85,7 @@ describe('Alien Labs inbox and CRM', () => {
       'org.dxos.type.text',
     ]);
     const schemaObjects = ofType(archive.objects, 'type.schema:');
-    expect(schemaObjects.map((object) => object['@meta']?.key)).toEqual([DEAL_TYPENAME]);
+    expect(schemaObjects).toEqual([]);
     for (const type of Object.keys(counts)) {
       const typename = type.startsWith('echo:///')
         ? schemaObjects.find((object) => uri(object.id) === type)?.['@meta']?.key
@@ -96,15 +97,9 @@ describe('Alien Labs inbox and CRM', () => {
     const personByEmail = new Map(people.map((person) => [person.emails?.[0]?.value, person]));
     const extractedIds = new Set(EXTRACTED.map((key) => result.people[key].id));
 
-    // The Person Kanban holds everyone but the 7 extracted contacts.
-    const board = ofType(archive.objects, 'type.kanban:').find((kanban) => kanban.spec?.kind === 'items');
-    const onBoard = (board?.spec?.items ?? []).map((ref) => ref['/']);
-    expect(onBoard).toHaveLength(24);
-    expect(onBoard.some((ref) => [...extractedIds].some((id) => ref === uri(id)))).toBe(false);
-
     // 180 messages in 100 threads, oldest at −60d and newest on the reference date.
     const messages = ofType(feedEntries, 'type.message:').filter((message) => message.properties?.subject);
-    expect(countOf('type.message:')).toBe(185);
+    expect(countOf('type.message:')).toBe(195);
     expect(messages).toHaveLength(180);
     expect(new Set(messages.map((message) => message.threadId)).size).toBe(100);
     const created = messages.map((message) => message.created!).sort();
@@ -112,26 +107,21 @@ describe('Alien Labs inbox and CRM', () => {
     expect(dayOf(created[created.length - 1])).toBe(0);
     expect(created[created.length - 1] <= REFERENCE.replace('Z', '.000Z')).toBe(true);
 
-    // The Sales pipeline: a view Kanban over Deals by stage, one deal per customer, at least 10.
+    // The Sales pipeline: an items Kanban over the customer organizations by stage, at least 10.
     const kanban = ofType(archive.objects, 'type.kanban:').find((entry) => entry.id === result.pipeline.kanban.id);
     expect(kanban?.name).toBe('Sales pipeline');
-    expect(kanban?.spec?.kind).toBe('view');
-    expect(kanban?.arrangement?.order).toEqual(STAGES.map((stage) => stage.id));
-    const deals = archive.objects.filter((entry) => entry.stage !== undefined);
-    expect(deals.length).toBeGreaterThanOrEqual(10);
-    expect(deals).toHaveLength(DEALS.length);
+    expect(kanban?.spec?.kind).toBe('items');
+    expect(kanban?.arrangement?.order).toEqual(STAGES);
+    const customers = STAGES.flatMap((stage) => PIPELINE[stage]);
+    expect(customers.length).toBeGreaterThanOrEqual(10);
     for (const stage of STAGES) {
-      const ids = deals.filter((deal) => deal.stage === stage.id).map((deal) => deal.id);
-      expect(ids.length, stage.id).toBeGreaterThan(0);
-      expect(kanban?.arrangement?.columns[stage.id]?.ids).toEqual(ids);
+      expect(kanban?.arrangement?.columns[stage]?.ids).toEqual(PIPELINE[stage].map((key) => result.orgs[key].id));
     }
 
     // Every pipeline customer is a distinct organization with at least one email from someone who works there.
-    const customers = new Set(deals.map((deal) => deal.organization?.['/']));
-    expect(customers.size).toBe(deals.length);
-    for (const { key } of DEALS) {
+    expect(new Set(customers).size).toBe(customers.length);
+    for (const key of customers) {
       const org = uri(result.orgs[key].id);
-      expect(customers.has(org), key).toBe(true);
       const staff = ofType(archive.objects, 'type.person:')
         .filter((person) => person.organization?.['/'] === org)
         .map((person) => person.emails?.[0]?.value);
@@ -142,10 +132,38 @@ describe('Alien Labs inbox and CRM', () => {
     const events = ofType(feedEntries, 'type.event:');
     expect(countOf('type.event:')).toBe(310);
     // Notes on the one-offs, the team rituals and Hana's first 1:1s.
-    expect(events.filter((event) => event.description)).toHaveLength(160);
+    expect(events.filter((event) => event.description)).toHaveLength(164);
+
+    // The 10 most recent events before the reference time carry full meeting notes with a task list.
+    const recentEvents = events
+      .filter((event) => (event.startDate ?? '') <= REFERENCE.replace('Z', '.000Z'))
+      .sort((left, right) => (right.startDate ?? '').localeCompare(left.startDate ?? ''))
+      .slice(0, 10);
+    expect(recentEvents).toHaveLength(10);
+    for (const event of recentEvents) {
+      const notes = event.description ?? '';
+      expect(notes.split('\n').length, event.title).toBeGreaterThanOrEqual(25);
+      expect(notes, event.title).toMatch(/^- \[ \] /m);
+    }
     const eventDays = events.map((event) => dayOf(event.startDate!));
     for (let week = -182; week < 182; week += 7) {
       expect(eventDays.some((day) => day >= week && day < week + 7)).toBe(true);
+    }
+
+    // The 10 most recent messages each have a detailed summary in the annotations feed.
+    const summaryOf = new Map(
+      ofType(feedEntries, 'type.message:')
+        .filter((entry) => entry.parentMessage && entry.blocks?.some((block) => block.disposition === 'summary'))
+        .map((entry) => [entry.parentMessage, entry.blocks?.find((block) => block.disposition === 'summary')?.text]),
+    );
+    const recentMessages = [...messages]
+      .sort((left, right) => (right.created ?? '').localeCompare(left.created ?? ''))
+      .slice(0, 10);
+    for (const message of recentMessages) {
+      const summary = summaryOf.get(message.id) ?? '';
+      expect(summary.length, message.properties?.subject).toBeGreaterThan(400);
+      expect(summary, message.properties?.subject).toMatch(/^- /m);
+      expect(summary, message.properties?.subject).toContain('**Suggested next actions**');
     }
 
     // Senders in the space link to their contact; automated senders link to none.

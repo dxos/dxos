@@ -4,10 +4,10 @@ Astrid's inbox, contacts and calendar. Two months of mail, a year of calendar, a
 writes in also turns up on the calendar.
 
 - Code: `organizations.ts`, `contacts.ts`, `views.ts`, `pipeline.ts`, `mail.ts`, `calendar.ts`, `util.ts`, `partial.ts`,
-  `index.ts`, `partial.test.ts`
+  `index.ts`, `partial.test.ts`, `pipeline.test.ts`; logos from `../logo.ts`
 - Requires: [team](../team/CONTENT.md) (`orgs.fieldstone`, `people.*`, `agents.scribe`)
 - Provides: `orgs.<key>`, `people.<key>` for the contacts below, `mailbox`, `calendar`,
-  `threads.<key>`, `events.<key>`, `pipeline` (the Sales pipeline Kanban and its deals)
+  `threads.<key>`, `events.<key>`, `pipeline` (the Sales pipeline Kanban)
 - Clock: every timed event falls on a weekday. Mail runs from −60d to the reference date. The calendar runs from −182d to +182d. The
   reference date should fall on a Wednesday.
 - Used by: Alien Labs (`../FieldstoneSpace.ts`)
@@ -17,8 +17,8 @@ writes in also turns up on the calendar.
 ### Organizations
 
 - 3 vendors, real company names, status `active`: `github` GitHub, `stripe` Stripe, `cloudflare`
-  Cloudflare (the primary cloud).
-- 10 customers, fictional, each a deal on the Sales pipeline:
+  Cloudflare (the primary cloud). Each is also an early-stage prospect on the Sales pipeline.
+- 10 customers, fictional, each on the Sales pipeline:
   - `northpine` Northpine Robotics, `active`, the largest customer, renewal due next month
   - `meridian` Meridian Health Data, `qualified`, enterprise trial blocked on a security review
   - `okapi` Okapi Payments, `active`, hit a cache-corruption incident five weeks ago
@@ -31,6 +31,9 @@ writes in also turns up on the calendar.
   - `pallas` Pallas Retail Group, `reject`, lost to a self-hosted cache
 - 1 venue, fictional: `saltmarsh` Saltmarsh Lodge, `active`, hosts the team offsite.
 - Every organization has a description and website. Customers have a location.
+- Every organization, the team's included, has a logo in `image`: a 16:9 SVG banner (a white
+  geometric mark over the name on a brand colour, no yellow) as a data URL, under 1KB, which the
+  Organization card shows as its poster.
 
 ### Contacts
 
@@ -66,31 +69,23 @@ writes in also turns up on the calendar.
   `mailbox.extracted[messageId]` lists the contact's id under the first message they sent.
 - Views:
   - Table over Person: name, job title, organization, email
-  - Kanban over Person by department, built with `Kanban.makeItems` and `pivotField: 'department'`,
-    holding every person with a department. Columns in order: Leadership, Engineering, Product,
-    Design, Developer Relations, Sales, Partnerships, Security. Extracted
-    contacts have no department and stay off the board until someone sets one. A view Kanban cannot
-    be used: it pivots only on a single-select field, and `Person` has none.
-  - Table and Kanban over Organization, the Kanban by `status`
+  - Table over Organization: name, status, website, description
 
 ### Sales pipeline
 
-- 1 `Deal` type, `com.alienlabs.type.deal`, defined in `pipeline.ts` and stored in the space with
-  `Database.addType`: `Organization.status` has five fixed values and a view Kanban pivots only on a
-  single-select field, so the stages need their own schema. Fields: `name`, `organization` →
-  Organization, `contact` → Person, `owner` → Person (Alien Labs), `stage` (single select), `value`
-  (USD a year), `closeDate`, `nextStep`.
-- 1 Kanban "Sales pipeline", built with `Kanban.make` over a View of `Deal` with
-  `pivotFieldName: 'stage'`. Columns in order, with each customer's deal:
+- 1 Kanban "Sales pipeline", built with `Kanban.makeItems` over the customer organizations, so each
+  card is the Organization card with its logo. `Organization` has no stage field (`status` has five
+  fixed values), so `pivotField` is empty: the arrangement alone places each card, and dragging one
+  rewrites the arrangement, never the organization. The Uncategorized column is hidden. Columns in
+  order, with their cards:
   - Lead: `halcyon`, `kestrel`
-  - Qualified: `vantage`
-  - Demo: `brightwater`
-  - Proposal: `meridian`
+  - Qualified: `vantage`, `github`
+  - Demo: `brightwater`, `cloudflare`
+  - Proposal: `meridian`, `stripe`
   - Negotiation: `northpine` (renewal), `tidewater`
   - Closed won: `okapi`, `lumen`
   - Closed lost: `pallas`
-- 10 `Deal`s, one per customer. Each customer's contact writes at least one message in a thread that
-  matches its stage.
+- Each fictional customer's contact writes at least one message in a thread that matches its stage.
 
 ### Mail
 
@@ -149,6 +144,8 @@ writes in also turns up on the calendar.
   the 8 newsletter issues, `updates` on the other 42 automated messages.
 - 5 thread summaries in the annotations feed, one each for `northpineSso`, `meridianSecurity`,
   `okapiIncident`, `stripeBilling`, `offsite`.
+- 10 message summaries in the annotations feed, one for each of the 10 most recent messages
+  (`message-summaries.ts`): the gist, key points, asks and deadlines, and suggested next actions.
 
 ### Calendar
 
@@ -182,10 +179,15 @@ writes in also turns up on the calendar.
     (−15d), Tidewater MSA review (+1d), Lumen rollout check-in (+1d), Halcyon Freight intro call
     (+6d), Meridian proposal review (+7d), Kestrel Energy discovery call (+9d), Vantage technical
     deep dive (+13d)
-- 160 events have a description: every one-off names the thread it came from; team syncs, sprint
+- 164 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
   occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
-  other 1:1s have none.
+  other 1:1s have none, except as below.
+- The 10 most recent events before the reference date carry full markdown meeting notes instead
+  (`event-notes.ts`): attendees, agenda, discussion, decisions and a task list of action items
+  owned by attendees. They are the Omar 1:1 (0d), team syncs (−2d, −9d), on-call handoffs (−5d,
+  −12d), the Meridian security review (−6d), sprint planning (−8d), Imogen Clarke's interview and
+  the Kofi 1:1 (−9d), and the retro (−12d).
 
 ### Collections
 
@@ -199,7 +201,7 @@ These must work end to end in the app.
 
 1. Open the inbox, open `okapiIncident`, open Nadia's message in the conversation, hover her avatar
    to see her card, and open her contact.
-2. From Nadia's contact, open the Person Kanban and find her under Engineering.
+2. Open the Sales pipeline and find Okapi Payments, with its logo, under Closed won.
 3. From Nadia's contact, open the Okapi alerting follow-up from her upcoming events. The contact
    view lists the 5 newest messages and up to 3 recent and 3 upcoming events, matched by `contact`
    ref or email.
@@ -208,12 +210,12 @@ These must work end to end in the app.
 
 ## Checks
 
-- 14 organizations (15 with team), 21 people (31 with team), 5 views (2 Table, 3 Kanban).
-- Every type in the archive is declared by a partial or is a core type; the one persisted schema is `Deal`.
-- The Sales pipeline Kanban is a view Kanban with the 7 stages in order; 10 deals, at least one per
-  stage, each column's card order matching its deals; every deal's customer has a message from a
-  person at that organization.
-- The Person Kanban holds 24 people: everyone but the 7 extracted contacts.
+- 14 organizations (15 with team), 21 people (31 with team), 2 Tables and 1 Kanban.
+- Every type in the archive is declared by a partial or is a core type; no schema is persisted.
+- The Sales pipeline is the only Kanban: an items Kanban with the 7 stages in order and at least 10
+  distinct organizations, 2 to 5 in each of Lead, Qualified, Demo and Proposal, each column's card
+  order matching `PIPELINE`; every customer has a message from a person at that organization.
+- Every organization has a distinct SVG logo under 1KB.
 - 180 messages in 100 threads. The oldest is at −60d and the newest at the reference date.
 - 310 events. Every week from −182d to +182d has at least one.
 - Every message from a person in the space has a sender Actor with `contact` set.

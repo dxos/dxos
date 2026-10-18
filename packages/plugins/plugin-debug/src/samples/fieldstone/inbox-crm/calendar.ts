@@ -11,6 +11,7 @@ import { Event } from '@dxos/types';
 
 import { HANA_JOINED_DAYS_AGO, type PersonKey } from '../team/index.ts';
 import { type Make, personActor } from '../util.ts';
+import { EVENT_NOTES, eventNoteKey } from './event-notes.ts';
 import { type Directory } from './mail.ts';
 import { type Clock, at, dateOnly, monthly, weekly } from './util.ts';
 
@@ -159,7 +160,7 @@ export const makeCalendar = (
       const startDate = at(clock, offset, event.time[0], event.time[1]);
       return Event.make({
         title: event.title,
-        description: event.description,
+        description: EVENT_NOTES[eventNoteKey(event.title, offset)] ?? event.description,
         owner,
         attendees: attendeesOf(event.attendees),
         startDate,

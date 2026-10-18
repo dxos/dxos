@@ -13,6 +13,7 @@ import { type Actor, Message, type Person } from '@dxos/types';
 import { type Agents, type PersonKey } from '../team/index.ts';
 import { type Make, personActor } from '../util.ts';
 import { type ContactKey, EXTRACTED } from './contacts.ts';
+import { MESSAGE_SUMMARIES, messageSummaryKey } from './message-summaries.ts';
 import { type Clock, address, at, isWeekday, makeRandom, textBlock, threadIdFor } from './util.ts';
 
 export type ThreadKey =
@@ -2696,8 +2697,9 @@ export type MailResult = { readonly mailbox: Mailbox.Mailbox; readonly threads: 
 
 /**
  * Astrid's inbox: 180 messages in 100 threads over two months, in the mailbox's feed, with system
- * tags in its tag index, five summaries in its annotations feed, and the seven extracted contacts
- * recorded in `mailbox.extracted` as `ExtractMessage` records them.
+ * tags in its tag index, five thread summaries and ten summaries of the newest messages in its
+ * annotations feed, and the seven extracted contacts recorded in `mailbox.extracted` as
+ * `ExtractMessage` records them.
  */
 export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
   Effect.gen(function* () {
@@ -2721,6 +2723,7 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     const astrid = address(people.astrid);
 
     const entries: Array<{ message: Message.Message; tags: SystemTags.SystemTagId[] }> = [];
+    const summarized: Array<{ message: Message.Message; text: string }> = [];
     const threads: Threads = {
       northpineSso: [],
       northpineRenewal: [],
@@ -2784,6 +2787,10 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
           },
         });
         parent = message;
+        const summary = MESSAGE_SUMMARIES[messageSummaryKey(thread.subject, mail.from, mail.day)];
+        if (summary) {
+          summarized.push({ message, text: summary });
+        }
         entries.push({
           message,
           tags: [
@@ -2840,15 +2847,25 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
       }
     }
 
-    const summaries = Object.entries(SUMMARIES).map(([key, text]) => {
-      const thread = threads[key as ThreadKey];
-      const newest = thread[thread.length - 1];
-      return Mailbox.makeSummary({
-        message: newest,
-        text,
-        created: new Date(Date.parse(newest.created) + 60 * 60 * 1000).toISOString(),
-      });
-    });
+    const summaries = [
+      ...Object.entries(SUMMARIES).map(([key, text]) => {
+        const thread = threads[key as ThreadKey];
+        const newest = thread[thread.length - 1];
+        return Mailbox.makeSummary({
+          message: newest,
+          text,
+          created: new Date(Date.parse(newest.created) + 60 * 60 * 1000).toISOString(),
+        });
+      }),
+      // Summarized shortly after arrival, so even the newest is dated before the reference time.
+      ...summarized.map(({ message, text }) =>
+        Mailbox.makeSummary({
+          message,
+          text,
+          created: new Date(Date.parse(message.created) + 15 * 60 * 1000).toISOString(),
+        }),
+      ),
+    ];
 
     const { db } = yield* Database.Service;
     yield* SampleSpace.appendToFeed(feed, messages);
