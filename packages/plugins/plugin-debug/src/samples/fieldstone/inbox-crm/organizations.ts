@@ -129,6 +129,36 @@ const ORG_SEEDS = [
     location: [-3.7038, 40.4168],
   },
   {
+    key: 'corvid',
+    logo: { color: '#111827', mark: 'bolt' },
+    name: 'Corvid Analytics',
+    status: 'qualified',
+    website: 'https://corvidanalytics.com',
+    description:
+      'Fraud-detection platform, 180 engineers on a Python and Rust monorepo built with Pants. Qualified; budget approved for a technical evaluation.',
+    location: [-97.7431, 30.2672],
+  },
+  {
+    key: 'larkspur',
+    logo: { color: '#0f766e', mark: 'dots' },
+    name: 'Larkspur Media',
+    status: 'prospect',
+    website: 'https://larkspurmedia.com',
+    description:
+      'Streaming apps for web, TV and mobile, 120 engineers on an Nx TypeScript monorepo. Demo of the Nx remote cache booked.',
+    location: [-122.3321, 47.6062],
+  },
+  {
+    key: 'aldermoor',
+    logo: { color: '#7c2d12', mark: 'square' },
+    name: 'Aldermoor Bank',
+    status: 'qualified',
+    website: 'https://aldermoorbank.com',
+    description:
+      'Retail bank, 400 engineers moving from Maven to Bazel. Proposal for Enterprise in the EU region with procurement.',
+    location: [10.7522, 59.9139],
+  },
+  {
     key: 'saltmarsh',
     logo: { color: '#57534e', mark: 'triangle' },
     name: 'Saltmarsh Lodge',

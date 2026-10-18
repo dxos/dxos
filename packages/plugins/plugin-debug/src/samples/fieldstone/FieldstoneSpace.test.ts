@@ -21,11 +21,11 @@ describe('Alien Labs template', () => {
         .filter(([type]) => type.includes(typename))
         .reduce((total, [, count]) => total + count, 0);
 
-    expect(countOf('type.organization')).toBe(15);
-    expect(countOf('type.person')).toBe(31);
+    expect(countOf('type.organization')).toBe(18);
+    expect(countOf('type.person')).toBe(34);
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);
-    expect(countOf('type.event')).toBe(310);
+    expect(countOf('type.event')).toBe(313);
     // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides.
     expect(countOf('type.document')).toBe(23);
     // 5 Alien Labs drawings and 12 architecture diagrams.

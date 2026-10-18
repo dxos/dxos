@@ -69,11 +69,11 @@ describe('Alien Labs inbox and CRM', () => {
       entries.filter((entry) => entry['@type']?.includes(typename));
     const feedEntries = archive.feeds.flatMap((feed) => feed.messages);
 
-    // 14 organizations (15 with team), 21 people (31 with team), 2 tables and the Sales pipeline Kanban.
-    expect(Object.keys(result.orgs)).toHaveLength(14);
-    expect(Object.keys(result.people)).toHaveLength(21);
-    expect(countOf('type.organization:')).toBe(15);
-    expect(countOf('type.person:')).toBe(31);
+    // 17 organizations (18 with team), 24 people (34 with team), 2 tables and the Sales pipeline Kanban.
+    expect(Object.keys(result.orgs)).toHaveLength(17);
+    expect(Object.keys(result.people)).toHaveLength(24);
+    expect(countOf('type.organization:')).toBe(18);
+    expect(countOf('type.person:')).toBe(34);
     expect(countOf('type.table:') + countOf('type.kanban:')).toBe(3);
 
     // Every type the archive holds is one the partials declare, or a core type every space holds
@@ -97,11 +97,11 @@ describe('Alien Labs inbox and CRM', () => {
     const personByEmail = new Map(people.map((person) => [person.emails?.[0]?.value, person]));
     const extractedIds = new Set(EXTRACTED.map((key) => result.people[key].id));
 
-    // 180 messages in 100 threads, oldest at −60d and newest on the reference date.
+    // 188 messages in 103 threads, oldest at −60d and newest on the reference date.
     const messages = ofType(feedEntries, 'type.message:').filter((message) => message.properties?.subject);
-    expect(countOf('type.message:')).toBe(195);
-    expect(messages).toHaveLength(180);
-    expect(new Set(messages.map((message) => message.threadId)).size).toBe(100);
+    expect(countOf('type.message:')).toBe(203);
+    expect(messages).toHaveLength(188);
+    expect(new Set(messages.map((message) => message.threadId)).size).toBe(103);
     const created = messages.map((message) => message.created!).sort();
     expect(dayOf(created[0])).toBe(-60);
     expect(dayOf(created[created.length - 1])).toBe(0);
@@ -128,11 +128,11 @@ describe('Alien Labs inbox and CRM', () => {
       expect(messages.filter((message) => staff.includes(message.sender?.email)).length, key).toBeGreaterThan(0);
     }
 
-    // 310 events, at least one in every week from −182d to +182d.
+    // 313 events, at least one in every week from −182d to +182d.
     const events = ofType(feedEntries, 'type.event:');
-    expect(countOf('type.event:')).toBe(310);
+    expect(countOf('type.event:')).toBe(313);
     // Notes on the one-offs, the team rituals and Hana's first 1:1s.
-    expect(events.filter((event) => event.description)).toHaveLength(164);
+    expect(events.filter((event) => event.description)).toHaveLength(167);
 
     // The 10 most recent events before the reference time carry full meeting notes with a task list.
     const recentEvents = events
@@ -191,7 +191,7 @@ describe('Alien Labs inbox and CRM', () => {
     const withThread = Object.values(result.people).filter((person) =>
       correspondents.includes(person.emails![0].value),
     );
-    expect(withThread).toHaveLength(21);
+    expect(withThread).toHaveLength(24);
     expect(withThread.filter((person) => !attending.has(person.emails![0].value))).toEqual([]);
 
     // Nadia's contact has an upcoming meeting to open: the Okapi follow-up.
@@ -201,7 +201,7 @@ describe('Alien Labs inbox and CRM', () => {
     );
     expect(upcoming.map((event) => event.title)).toEqual(['Okapi alerting follow-up']);
 
-    // The 7 extracted contacts look like extractions and the other 14 do not.
+    // The 7 extracted contacts look like extractions and the other 17 do not.
     const [mailbox] = ofType(archive.objects, 'type.mailbox:');
     const extraction = Object.entries(mailbox.extracted ?? {});
     expect(new Set(extraction.flatMap(([, ids]) => ids))).toEqual(extractedIds);

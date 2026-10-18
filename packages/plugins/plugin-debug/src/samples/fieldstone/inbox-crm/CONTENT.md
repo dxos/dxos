@@ -17,8 +17,8 @@ writes in also turns up on the calendar.
 ### Organizations
 
 - 3 vendors, real company names, status `active`: `github` GitHub, `stripe` Stripe, `cloudflare`
-  Cloudflare (the primary cloud). Each is also an early-stage prospect on the Sales pipeline.
-- 10 customers, fictional, each on the Sales pipeline:
+  Cloudflare (the primary cloud).
+- 13 customers, fictional, each on the Sales pipeline:
   - `northpine` Northpine Robotics, `active`, the largest customer, renewal due next month
   - `meridian` Meridian Health Data, `qualified`, enterprise trial blocked on a security review
   - `okapi` Okapi Payments, `active`, hit a cache-corruption incident five weeks ago
@@ -29,6 +29,9 @@ writes in also turns up on the calendar.
   - `tidewater` Tidewater Insurance, `qualified`, security review passed, MSA in redlines
   - `lumen` Lumen Biotech, `active`, signed three weeks ago
   - `pallas` Pallas Retail Group, `reject`, lost to a self-hosted cache
+  - `corvid` Corvid Analytics, `qualified`, Pants monorepo, technical evaluation approved
+  - `larkspur` Larkspur Media, `prospect`, Nx monorepo, demo booked
+  - `aldermoor` Aldermoor Bank, `qualified`, Maven to Bazel, Enterprise proposal with procurement
 - 1 venue, fictional: `saltmarsh` Saltmarsh Lodge, `active`, hosts the team offsite.
 - Every organization has a description and website. Customers have a location.
 - Every organization, the team's included, has a logo in `image`: a 16:9 SVG banner (a white
@@ -37,7 +40,7 @@ writes in also turns up on the calendar.
 
 ### Contacts
 
-- 21 `Person.Person` outside Alien Labs, fictional, each with a work email on its organization's
+- 24 `Person.Person` outside Alien Labs, fictional, each with a work email on its organization's
   domain and `Person → Organization (organization)`. Each line gives key, name, job title,
   organization and, for contacts entered by hand, `department`:
   - `dana` Dana Whitfield, Account Executive, Stripe, Sales
@@ -60,6 +63,9 @@ writes in also turns up on the calendar.
   - `rohan` Rohan Mehta, VP Platform Engineering, Tidewater Insurance, Leadership
   - `tobias` Tobias Lindqvist, Head of Research Computing, Lumen Biotech, Engineering
   - `carmen` Carmen Ruiz, Engineering Director, Pallas Retail Group, Engineering
+  - `daniel` Daniel Okafor, Head of Developer Productivity, Corvid Analytics, Engineering
+  - `yuki` Yuki Tanaka, Staff Engineer, Developer Experience, Larkspur Media, Engineering
+  - `henrik` Henrik Solberg, Director of Engineering Platforms, Aldermoor Bank, Leadership
   - `wren` Wren Calloway, Events Coordinator, Saltmarsh Lodge
 - 7 of these were extracted from mail rather than entered by hand: `marcus`, `ruth`, `ted`, `sam`,
   `priya`, `owen`, `wren`. Their records hold only a name, an email and an organization matched by email domain,
@@ -79,20 +85,20 @@ writes in also turns up on the calendar.
   rewrites the arrangement, never the organization. The Uncategorized column is hidden. Columns in
   order, with their cards:
   - Lead: `halcyon`, `kestrel`
-  - Qualified: `vantage`, `github`
-  - Demo: `brightwater`, `cloudflare`
-  - Proposal: `meridian`, `stripe`
+  - Qualified: `vantage`, `corvid`
+  - Demo: `brightwater`, `larkspur`
+  - Proposal: `meridian`, `aldermoor`
   - Negotiation: `northpine` (renewal), `tidewater`
   - Closed won: `okapi`, `lumen`
   - Closed lost: `pallas`
-- Each fictional customer's contact writes at least one message in a thread that matches its stage.
+- Each customer's contact writes at least one message in a thread that matches its stage.
 
 ### Mail
 
 - 1 `Mailbox` "Inbox", Astrid's. `Mailbox` has no owner field: her mail is the mail tagged `sent`.
   It is the only mailbox in the space, which the contact view's related messages rely on.
 - Every message has `properties.subject`, which the contact view shows.
-- 180 `Message`s in 100 threads, from −60d to the reference date. Every weekday has mail.
+- 188 `Message`s in 103 threads, from −60d to the reference date. Every weekday has mail.
 - Threads share a `threadId`; each reply's `parentMessage` is the previous message in its thread.
   Replies quote briefly and read like real mail: a little terse, signed with a first name.
 - Length: most named-thread messages run 2 to 5 short paragraphs (about 60 to 200 words) with a
@@ -103,7 +109,7 @@ writes in also turns up on the calendar.
   `contact: Ref<Person>` as well as name and email. Automated senders carry no contact. The Scribe's
   Actor carries its `identityDid`. `Message` has no recipient field, so recipients are RFC 5322
   address lists in `properties.to` and `properties.cc`, as synced mail stores them.
-- Named threads, 100 messages in 30 threads:
+- Named threads, 108 messages in 33 threads:
   - Customers:
     - `northpineSso` Northpine SSO rollout: Grace, Marcus, Astrid, June, 7 messages, from −44d
     - `northpineRenewal` Northpine renewal and seat count: Grace, Ruth, Astrid, Lucía, 5 messages
@@ -124,6 +130,11 @@ writes in also turns up on the calendar.
     - `lumenSigned` Lumen Biotech order form: Lucía, Tobias, Astrid, 3 messages
     - `lumenRollout` Lumen rollout: second pipeline group: Tobias, Kofi, 3 messages
     - `pallasDecision` Pallas Retail: decision on Cairn: Carmen, Astrid, 3 messages
+    - `corvidEvaluation` Corvid Analytics: Pants remote cache evaluation: Daniel, Astrid, Kofi, 3
+      messages, from −22d
+    - `larkspurDemo` Nx remote cache demo for Larkspur Media: Yuki, Kofi, 2 messages, from −16d
+    - `aldermoorProposal` Aldermoor Bank: Enterprise proposal: Henrik, Lucía, Astrid, 3 messages,
+      from −28d
   - Vendors:
     - `stripeBilling` Stripe usage-based billing migration: Dana, June, 6 messages
     - `cloudflareCredits` Cloudflare credits and an annual commit: Elena, Anika, Astrid, 4 messages
@@ -150,7 +161,7 @@ writes in also turns up on the calendar.
 ### Calendar
 
 - 1 `Calendar` "Alien Labs", the only calendar in the space. `Calendar` has no owner field: every
-  `Event.owner` is Astrid. 310 `Event`s from −182d to +182d, so the calendar
+  `Event.owner` is Astrid. 313 `Event`s from −182d to +182d, so the calendar
   scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`; no event has more than 5.
 - `Event` has no recurrence field, so each repeating series is stored as one `Event` per
   occurrence. Occurrences of a series share title, time of day, duration and attendees, except that
@@ -165,7 +176,7 @@ writes in also turns up on the calendar.
   - `oncall` On-call handoff, weekly on Friday at 15:00, Anika and the incoming engineer, 52
   - `productReview` Product review, monthly, Astrid, Lucía, Ben, Kofi, June, 12
   - `northpineSync` Northpine sync, monthly, Grace, Marcus, Astrid, June, 12
-- One-off events, 27:
+- One-off events, 30:
   - Past: Cairn 1.7 release (all-day, −75d, Astrid, Omar, Felix, Anika, Kofi), Northpine SSO kickoff (−40d), Okapi postmortem review
     (−26d), Stripe billing working session (−20d), Hana onboarding day one (−14d), Meridian security
     review (−6d), 2 interviews (−30d, −9d)
@@ -178,8 +189,9 @@ writes in also turns up on the calendar.
     validation results (−29d), Tidewater security review (−22d), Vantage Aerospace discovery
     (−15d), Tidewater MSA review (+1d), Lumen rollout check-in (+1d), Halcyon Freight intro call
     (+6d), Meridian proposal review (+7d), Kestrel Energy discovery call (+9d), Vantage technical
-    deep dive (+13d)
-- 164 events have a description: every one-off names the thread it came from; team syncs, sprint
+    deep dive (+13d), Corvid Analytics technical evaluation (+8d), Larkspur Media demo (+12d),
+    Aldermoor Bank proposal review (+14d)
+- 167 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
   occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
   other 1:1s have none, except as below.
@@ -210,14 +222,14 @@ These must work end to end in the app.
 
 ## Checks
 
-- 14 organizations (15 with team), 21 people (31 with team), 2 Tables and 1 Kanban.
+- 17 organizations (18 with team), 24 people (34 with team), 2 Tables and 1 Kanban.
 - Every type in the archive is declared by a partial or is a core type; no schema is persisted.
 - The Sales pipeline is the only Kanban: an items Kanban with the 7 stages in order and at least 10
   distinct organizations, 2 to 5 in each of Lead, Qualified, Demo and Proposal, each column's card
   order matching `PIPELINE`; every customer has a message from a person at that organization.
 - Every organization has a distinct SVG logo under 1KB.
-- 180 messages in 100 threads. The oldest is at −60d and the newest at the reference date.
-- 310 events. Every week from −182d to +182d has at least one.
+- 188 messages in 103 threads. The oldest is at −60d and the newest at the reference date.
+- 313 events. Every week from −182d to +182d has at least one.
 - Every message from a person in the space has a sender Actor with `contact` set.
 - Every external contact with a thread attends at least one event.
 - Nadia attends an event after the reference date: the Okapi alerting follow-up.

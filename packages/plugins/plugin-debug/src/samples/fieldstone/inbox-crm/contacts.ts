@@ -128,6 +128,30 @@ const CONTACT_SEEDS = [
     jobTitle: 'Engineering Director',
     department: 'Engineering',
   },
+  {
+    key: 'daniel',
+    fullName: 'Daniel Okafor',
+    email: 'daniel.okafor@corvidanalytics.com',
+    org: 'corvid',
+    jobTitle: 'Head of Developer Productivity',
+    department: 'Engineering',
+  },
+  {
+    key: 'yuki',
+    fullName: 'Yuki Tanaka',
+    email: 'yuki.tanaka@larkspurmedia.com',
+    org: 'larkspur',
+    jobTitle: 'Staff Engineer, Developer Experience',
+    department: 'Engineering',
+  },
+  {
+    key: 'henrik',
+    fullName: 'Henrik Solberg',
+    email: 'henrik.solberg@aldermoorbank.com',
+    org: 'aldermoor',
+    jobTitle: 'Director of Engineering Platforms',
+    department: 'Leadership',
+  },
   { key: 'wren', fullName: 'Wren Calloway', email: 'wren.calloway@saltmarshlodge.pt', org: 'saltmarsh' },
 ] as const satisfies ReadonlyArray<{
   key: string;

@@ -43,6 +43,9 @@ export type EventKey =
   | 'lumenValidation'
   | 'lumenCheckIn'
   | 'pallasDemo'
+  | 'corvidEvaluation'
+  | 'larkspurDemo'
+  | 'aldermoorReview'
   | 'cloudflareCall'
   | 'cloudflareReview'
   | 'northpineQbr'
@@ -342,6 +345,35 @@ export const makeCalendar = (
           attendees: ['priya', 'kofi', 'astrid'],
           time: [14, 0],
           minutes: 30,
+        }),
+      ],
+      corvidEvaluation: [
+        timed(8, {
+          title: 'Corvid Analytics technical evaluation',
+          description:
+            'From the thread "Corvid Analytics: Pants remote cache evaluation": two weeks of CI timings, expected hit rates.',
+          attendees: ['daniel', 'kofi', 'astrid'],
+          time: [15, 0],
+          minutes: 60,
+        }),
+      ],
+      larkspurDemo: [
+        timed(12, {
+          title: 'Larkspur Media demo',
+          description: 'From the thread "Nx remote cache demo for Larkspur Media": cold and warm builds on their fork.',
+          attendees: ['yuki', 'kofi', 'lucia'],
+          time: [17, 0],
+          minutes: 45,
+        }),
+      ],
+      aldermoorReview: [
+        timed(14, {
+          title: 'Aldermoor Bank proposal review',
+          description:
+            'From the thread "Aldermoor Bank: Enterprise proposal": procurement questions on EU residency and customer-managed keys.',
+          attendees: ['henrik', 'lucia', 'astrid'],
+          time: [10, 0],
+          minutes: 45,
         }),
       ],
       kestrelDiscovery: [

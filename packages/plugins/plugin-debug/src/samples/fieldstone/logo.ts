@@ -20,6 +20,10 @@ const MARKS = {
   wing: '<path d="M126 92c20-4 38-20 50-48 4 18 0 36-10 48z" fill="#fff"/>',
   cross: '<path d="M152 42h16v20h20v16h-20v20h-16V78h-20V62h20z" fill="#fff"/>',
   arc: '<path d="M130 92a30 30 0 0 1 60 0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><circle cx="160" cy="54" r="9" fill="#fff"/>',
+  square:
+    '<rect x="137" y="47" width="46" height="46" rx="10" fill="none" stroke="#fff" stroke-width="8"/><rect x="152" y="62" width="16" height="16" rx="3" fill="#fff"/>',
+  dots: '<g fill="#fff"><circle cx="146" cy="56" r="11"/><circle cx="174" cy="56" r="11"/><circle cx="146" cy="84" r="11"/><circle cx="174" cy="84" r="11"/></g>',
+  bolt: '<path d="M168 40l-30 36h18l-6 26 30-38h-18z" fill="#fff"/>',
   saucer:
     '<g fill="#fff"><ellipse cx="160" cy="76" rx="34" ry="10"/><path d="M142 72a18 18 0 0 1 36 0z"/></g><circle cx="160" cy="98" r="4" fill="#fff"/>',
 } as const;

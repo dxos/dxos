@@ -32,6 +32,9 @@ export type ThreadKey =
   | 'lumenSigned'
   | 'lumenRollout'
   | 'pallasDecision'
+  | 'corvidEvaluation'
+  | 'larkspurDemo'
+  | 'aldermoorProposal'
   | 'stripeBilling'
   | 'cloudflareCredits'
   | 'cloudflareR2'
@@ -1142,6 +1145,134 @@ Astrid`,
         body: `Please do. Good luck with the 1.8 release.
 
 Carmen`,
+      },
+    ],
+  },
+  {
+    key: 'corvidEvaluation',
+    subject: 'Corvid Analytics: Pants remote cache evaluation',
+    customer: true,
+    mail: [
+      {
+        from: 'daniel',
+        to: ['astrid'],
+        cc: ['kofi'],
+        day: 22,
+        time: [11, 10],
+        body: `Hi Astrid,
+
+Thanks for the call last week. I took Cairn to our engineering leadership and the budget for an evaluation is approved.
+
+For context: about 180 engineers on one Python and Rust monorepo built with Pants, with CI on Buildkite. Median CI time is 28 minutes and most of it is rebuilding Rust crates nobody touched.
+
+Before we start, two requirements. The cache must work with the Pants remote cache settings we already have, and our security team needs to know where artifacts are stored. Can Kofi run a technical evaluation with us in the next few weeks?
+
+Daniel Okafor
+Head of Developer Productivity, Corvid Analytics`,
+      },
+      {
+        from: 'astrid',
+        to: ['daniel'],
+        cc: ['kofi', 'lucia'],
+        day: 21,
+        time: [9, 25],
+        body: `Hi Daniel,
+
+Good news on the budget. Pants speaks the Bazel remote APIs, so Cairn works with your existing remote_store_address and a token; no plugin needed. Artifacts are stored on Cloudflare R2 in the US by default, and I'll send our data handling summary for your security team.
+
+Kofi will run the evaluation. Lucía is copied for the commercial side once you know your seat count.
+
+Astrid`,
+      },
+      {
+        from: 'daniel',
+        to: ['astrid', 'kofi'],
+        cc: ['lucia'],
+        day: 19,
+        time: [15, 40],
+        body: `That works. I've booked the technical evaluation with Kofi and will bring two weeks of CI timings so we can compare hit rates.
+
+Daniel`,
+      },
+    ],
+  },
+  {
+    key: 'larkspurDemo',
+    subject: 'Nx remote cache demo for Larkspur Media',
+    customer: true,
+    mail: [
+      {
+        from: 'yuki',
+        to: ['astrid', 'kofi'],
+        day: 16,
+        time: [14, 5],
+        body: `Hi both,
+
+We build our web, TV and mobile apps from one Nx monorepo, about 120 engineers. Nx Cloud is getting expensive and we'd rather own where our cache lives.
+
+Could you show us Cairn as an Nx remote cache? I'd like our two tech leads in the room, and ideally you'd run it against a fork of one of our repos.
+
+Yuki Tanaka
+Staff Engineer, Developer Experience, Larkspur Media`,
+      },
+      {
+        from: 'kofi',
+        to: ['yuki'],
+        cc: ['astrid', 'lucia'],
+        day: 15,
+        time: [10, 30],
+        body: `Hi Yuki,
+
+Happy to. Cairn implements the Nx remote cache API, so the demo is one environment variable change on your fork. Send me the fork and a CI run we can replay, and I'll show cold and warm builds side by side.
+
+I've sent an invite for a 45-minute demo. Lucía can walk through pricing at the end if that's useful.
+
+Kofi`,
+      },
+    ],
+  },
+  {
+    key: 'aldermoorProposal',
+    subject: 'Aldermoor Bank: Enterprise proposal',
+    customer: true,
+    mail: [
+      {
+        from: 'henrik',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 28,
+        time: [10, 0],
+        body: `Hi Astrid,
+
+The demo landed well with the platform team. We're moving 400 engineers from Maven to Bazel this year and want the cache in place before the first services move.
+
+Please send a proposal for Enterprise. Two requirements from our risk office: all data in the EU region, and a customer-managed encryption key.
+
+Henrik Solberg
+Director of Engineering Platforms, Aldermoor Bank`,
+      },
+      {
+        from: 'lucia',
+        to: ['henrik'],
+        cc: ['astrid'],
+        day: 27,
+        time: [16, 20],
+        body: `Hi Henrik,
+
+Here is the proposal in short: Enterprise for 400 seats, EU region only, with customer-managed keys through your KMS, and the migration support Kofi described in the demo. The order form follows once procurement has reviewed the terms.
+
+Happy to walk your procurement team through it.
+
+Lucía`,
+      },
+      {
+        from: 'henrik',
+        to: ['lucia', 'astrid'],
+        day: 26,
+        time: [11, 45],
+        body: `Thanks, Lucía. Procurement has it. Let's review it together with their questions; I'll send a time.
+
+Henrik`,
       },
     ],
   },
@@ -2696,7 +2827,7 @@ const SUMMARIES: Partial<Record<ThreadKey, string>> = {
 export type MailResult = { readonly mailbox: Mailbox.Mailbox; readonly threads: Threads };
 
 /**
- * Astrid's inbox: 180 messages in 100 threads over two months, in the mailbox's feed, with system
+ * Astrid's inbox: 188 messages in 103 threads over two months, in the mailbox's feed, with system
  * tags in its tag index, five thread summaries and ten summaries of the newest messages in its
  * annotations feed, and the seven extracted contacts recorded in `mailbox.extracted` as
  * `ExtractMessage` records them.
@@ -2740,6 +2871,9 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
       lumenSigned: [],
       lumenRollout: [],
       pallasDecision: [],
+      corvidEvaluation: [],
+      larkspurDemo: [],
+      aldermoorProposal: [],
       stripeBilling: [],
       cloudflareCredits: [],
       cloudflareR2: [],

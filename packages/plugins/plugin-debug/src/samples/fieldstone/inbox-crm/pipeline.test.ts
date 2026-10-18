@@ -64,6 +64,10 @@ describe('Alien Labs Sales pipeline', () => {
     expect(items.length).toBeGreaterThanOrEqual(10);
     expect(new Set(items).size).toBe(items.length);
     expect(items.filter((id) => !orgIds.has(id))).toEqual([]);
+    // Vendors and the venue stay off the board.
+    for (const key of ['github', 'stripe', 'cloudflare', 'saltmarsh'] as const) {
+      expect(items, key).not.toContain(result.orgs[key].id);
+    }
     const placed = STAGES.flatMap((stage) => kanban.arrangement?.columns[stage]?.ids ?? []);
     expect(placed).toEqual(items);
 
