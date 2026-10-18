@@ -7,6 +7,38 @@ import { type Plugin, type Rollup } from 'vite';
 const LOADER_PREFIX = '\0dxos-worker-entry-loader:';
 
 /**
+ * Loader body for the entry module at `target`.
+ *
+ * A worker's first `connect` (SharedWorker) and the parent's first messages are dispatched as soon as the
+ * loader has run, before the real module can listen, so they are held and replayed in order once it has
+ * loaded; holding stops propagation so a listener the module adds before it finishes loading does not see
+ * them twice. A rejected `import()` is rethrown from a task, since only an uncaught error reaches the
+ * spawning tab's `Worker.onerror` as a failed script would.
+ */
+const loaderSource = (target: string): string => `
+const types = ['connect', 'message', 'messageerror'];
+const held = [];
+const hold = (event) => {
+  event.stopImmediatePropagation();
+  held.push(event);
+};
+types.forEach((type) => addEventListener(type, hold));
+import(${JSON.stringify(target)}).then(
+  () => {
+    types.forEach((type) => removeEventListener(type, hold));
+    held.forEach(({ type, data, origin, lastEventId, source, ports }) => {
+      dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports: [...ports] }));
+    });
+  },
+  (error) => {
+    setTimeout(() => {
+      throw error;
+    });
+  },
+);
+`;
+
+/**
  * Start a worker bundle from a loader chunk that `import()`s the worker's real entry module.
  *
  * Rolldown hoists modules a worker shares with its lazy chunks into the entry chunk, and WebKit evaluates
@@ -49,18 +81,7 @@ export const workerEntryLoader = (): Plugin => {
     },
     load: (id) => {
       const target = targets.get(id);
-      if (!target) {
-        return null;
-      }
-      // Rethrown from a task: a rejected `import()` stays an unhandled rejection inside the worker, while
-      // an uncaught error reaches the spawning tab's `Worker.onerror` as a failed script would.
-      return [
-        `import(${JSON.stringify(target.id)}).catch((error) => {`,
-        '  setTimeout(() => {',
-        '    throw error;',
-        '  });',
-        '});',
-      ].join('\n');
+      return target ? loaderSource(target.id) : null;
     },
     generateBundle(_options, bundle) {
       if (targets.size === 0) {

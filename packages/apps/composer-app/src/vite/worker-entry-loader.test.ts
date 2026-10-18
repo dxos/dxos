@@ -22,6 +22,10 @@ const FIXTURE: Record<string, string> = {
     `import { shared } from './shared.ts';`,
     `const scope = globalThis as any;`,
     `scope.workerEvaluations = (scope.workerEvaluations ?? 0) + 1;`,
+    `scope.received = [];`,
+    `for (const type of ['connect', 'message']) {`,
+    `  addEventListener(type, (event: MessageEvent) => scope.received.push(type + ':' + event.data));`,
+    `}`,
     `scope.lazyResult = import('./lazy.ts').then(({ lazy }) => [shared('worker'), lazy()]);`,
   ].join('\n'),
 };
@@ -88,16 +92,29 @@ describe('workerEntryLoader', () => {
     expect(importers.map((chunk) => chunk.fileName)).toEqual([]);
   });
 
-  test('the loader runs the worker module once, and its lazy chunk shares that instance', async ({ expect }) => {
+  test('the loader runs the worker module once, and replays what arrived before it loaded', async ({ expect }) => {
     const { assets, chunks } = await buildFixture([workerEntryLoader()]);
-    const scope = globalThis as { workerEvaluations?: number; lazyResult?: Promise<string[]> };
+    const scope = globalThis as { workerEvaluations?: number; received?: string[]; lazyResult?: Promise<string[]> };
+    // Stands in for the worker global, which node does not have.
+    const workerScope = new EventTarget();
+    vi.stubGlobal('addEventListener', workerScope.addEventListener.bind(workerScope));
+    vi.stubGlobal('removeEventListener', workerScope.removeEventListener.bind(workerScope));
+    vi.stubGlobal('dispatchEvent', workerScope.dispatchEvent.bind(workerScope));
     onTestFinished(() => {
+      vi.unstubAllGlobals();
       delete scope.workerEvaluations;
+      delete scope.received;
       delete scope.lazyResult;
     });
 
     await import(pathToFileURL(path.join(assets, workerEntryOf(chunks).fileName)).href);
-    await vi.waitFor(() => expect(scope.lazyResult).toBeDefined());
+    expect(scope.workerEvaluations).toBeUndefined();
+    workerScope.dispatchEvent(new MessageEvent('connect', { data: 'early' }));
+    workerScope.dispatchEvent(new MessageEvent('message', { data: 'early' }));
+
+    await vi.waitFor(() => expect(scope.received).toEqual(['connect:early', 'message:early']));
+    workerScope.dispatchEvent(new MessageEvent('message', { data: 'late' }));
+    expect(scope.received).toEqual(['connect:early', 'message:early', 'message:late']);
     expect(await scope.lazyResult).toEqual(['worker:shared', 'lazy:shared']);
     expect(scope.workerEvaluations).toEqual(1);
   });
