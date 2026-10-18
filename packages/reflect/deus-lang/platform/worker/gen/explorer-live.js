@@ -266,7 +266,7 @@ function Codebase$readMeta(dir, h) {
 rt.named(Codebase$readMeta, "Codebase.readMeta");
 
 function Codebase$peekObject(dir, h) {
-  const t0 = rt.prims["MutMap.get"](Codebase$objectCache(), h);
+  const t0 = rt.prims["MutMap.get"](Codebase$objectCache(), Codebase$cacheKey(dir, h));
   m1: {
     if (t0.tag === 1) {
       const form = t0.fields[0];
@@ -1232,6 +1232,11 @@ function Project$file(dir) {
 rt.named(Project$file, "Project.file");
 
 const Codebase$objectCache = rt.lazy("Codebase.objectCache", () => rt.prims["MutMap.new"](undefined));
+
+function Codebase$cacheKey(dir, h) {
+  return rt.prims["append"]((dir + "\n"), h);
+}
+rt.named(Codebase$cacheKey, "Codebase.cacheKey");
 
 function Codebase$objectPath(dir, h) {
   return rt.prims["append"]((rt.prims["append"]((dir + "/objects/"), lib$base$Text$take(2, h)) + "/"), h);
@@ -3929,7 +3934,7 @@ function Codebase$Causal$tasks(v) {
 rt.named(Codebase$Causal$tasks, "Codebase.Causal.tasks");
 
 function Codebase$readObject(dir, h) {
-  const t0 = rt.prims["MutMap.get"](Codebase$objectCache(), h);
+  const t0 = rt.prims["MutMap.get"](Codebase$objectCache(), Codebase$cacheKey(dir, h));
   m1: {
     if (t0.tag === 1) {
       const form = t0.fields[0];
@@ -3944,7 +3949,7 @@ function Codebase$readObject(dir, h) {
         if (t2.tag === 1) {
           const text = t2.fields[0];
           const form_1 = lib$base$Sexp$read(text);
-          rt.prims["MutMap.set"](Codebase$objectCache(), h, form_1);
+          rt.prims["MutMap.set"](Codebase$objectCache(), Codebase$cacheKey(dir, h), form_1);
           return new rt.Con("#Option", 1, [form_1]);
         }
         rt.nomatch(t2);

@@ -14,101 +14,70 @@ const { root, scratch, file, deus } = cliHarness('cli-replicate-');
 
 // Replication through bundles and remotes, in a file of their own so they run in parallel with the rest.
 describe('deus CLI replication', () => {
-  test(
-    'replicates through immutable bundles, surfaces concurrent heads, and compacts deterministically',
-    { timeout: 240_000 },
-    ({ expect }) => {
-      const remote = join(scratch, 'remote');
-      const a = ['--codebase', join(scratch, 'replica-a')];
-      const b = ['--codebase', join(scratch, 'replica-b')];
-      for (const c of [a, b]) {
-        deus('init', '--empty', ...c);
-        deus('remote', 'add', 'origin', remote, ...c);
-      }
-      // Fixed messages keep causal hashes, and so the strata boundaries, the same on every run.
-      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...a);
-      expect(deus('push', ...a).stdout).toMatch(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/);
-      expect(deus('push', ...a).stdout).toBe('origin already has main.\n');
-      // Only the shared toolchain remote refreshes the public explorer; a toolchain store pushing elsewhere does not.
-      const toolchain = ['--codebase', join(scratch, 'replica-toolchain')];
-      deus('init', '--empty', ...toolchain);
-      deus('project', 'init', 'https://dxos.org/deus/toolchain', ...toolchain);
-      deus('remote', 'add', 'origin', join(scratch, 'remote-toolchain'), ...toolchain);
-      deus('add', file('t.deus', 'def t : Int := 1\n'), ...toolchain);
-      expect(deus('push', ...toolchain)).toMatchObject({
-        stdout: expect.stringMatching(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/),
-        code: 0,
-      });
-      deus('pull', ...b);
-      expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
-      // Builtin objects travel with the bundle, so the clone types constructor patterns.
-      expect(existsSync(join(scratch, 'replica-b', 'objects', '#O', '#Option'))).toBe(true);
-      expect(deus('eval', 'match List.head? [41] with | some g => g + 1 | none => 0', ...b).stdout).toBe('42\n');
+  test('replicates through immutable bundles and surfaces concurrent heads', { timeout: 240_000 }, ({ expect }) => {
+    const remote = join(scratch, 'remote');
+    const a = ['--codebase', join(scratch, 'replica-a')];
+    const b = ['--codebase', join(scratch, 'replica-b')];
+    for (const c of [a, b]) {
+      deus('init', '--empty', ...c);
+      deus('remote', 'add', 'origin', remote, ...c);
+    }
+    // Fixed messages keep causal hashes, and so the strata boundaries, the same on every run.
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...a);
+    expect(deus('push', ...a).stdout).toMatch(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/);
+    expect(deus('push', ...a).stdout).toBe('origin already has main.\n');
+    // Only the shared toolchain remote refreshes the public explorer; a toolchain store pushing elsewhere does not.
+    const toolchain = ['--codebase', join(scratch, 'replica-toolchain')];
+    deus('init', '--empty', ...toolchain);
+    deus('project', 'init', 'https://dxos.org/deus/toolchain', ...toolchain);
+    deus('remote', 'add', 'origin', join(scratch, 'remote-toolchain'), ...toolchain);
+    deus('add', file('t.deus', 'def t : Int := 1\n'), ...toolchain);
+    expect(deus('push', ...toolchain)).toMatchObject({
+      stdout: expect.stringMatching(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/),
+      code: 0,
+    });
+    deus('pull', ...b);
+    expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
+    // Builtin objects travel with the bundle, so the clone types constructor patterns.
+    expect(existsSync(join(scratch, 'replica-b', 'objects', '#O', '#Option'))).toBe(true);
+    expect(deus('eval', 'match List.head? [41] with | some g => g + 1 | none => 0', ...b).stdout).toBe('42\n');
 
-      // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D91).
-      const fake = `0-${createHash('sha256').update('real').digest('hex')}`;
-      writeFileSync(join(remote, 'bundles', 'README'), 'notes');
-      writeFileSync(join(remote, 'bundles', fake), gzipSync('forged'));
-      const guarded = deus('pull', ...b);
-      expect(guarded.code).toBe(0);
-      expect(guarded.stderr).toContain('ignored bundles/README on origin: not a bundle name');
-      expect(guarded.stderr).toContain(`skipped bundle ${fake} on origin: its text does not hash to its name`);
-      rmSync(join(remote, 'bundles', 'README'));
-      rmSync(join(remote, 'bundles', fake));
+    // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D91).
+    const fake = `0-${createHash('sha256').update('real').digest('hex')}`;
+    writeFileSync(join(remote, 'bundles', 'README'), 'notes');
+    writeFileSync(join(remote, 'bundles', fake), gzipSync('forged'));
+    const guarded = deus('pull', ...b);
+    expect(guarded.code).toBe(0);
+    expect(guarded.stderr).toContain('ignored bundles/README on origin: not a bundle name');
+    expect(guarded.stderr).toContain(`skipped bundle ${fake} on origin: its text does not hash to its name`);
+    rmSync(join(remote, 'bundles', 'README'));
+    rmSync(join(remote, 'bundles', fake));
 
-      // A push that leaves out the remote's head is refused, so concurrent work is merged before it lands (D167).
-      deus('add', file('x.deus', 'def x : Int := 1\n'), '--message', 'x', ...a);
-      deus('push', ...a);
-      deus('add', file('y.deus', 'def y : Int := 2\n'), '--message', 'y', ...b);
-      const stale = deus('push', ...b, '--no-merge');
-      expect(stale.code).not.toBe(0);
-      expect(stale.stderr).toContain('run `deus pull origin` and `deus merge origin.main`, then push again');
-      // Without --no-merge, the push pulls and merges the remote itself and pushes again (D177).
-      const merged = deus('push', ...b);
-      expect(merged.code).toBe(0);
-      expect(merged.stderr).toContain('origin moved since the last pull; merging it and pushing again');
-      expect(deus('pull', ...a).stdout).not.toContain('heads (concurrent pushes)');
-      expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
-      expect(deus('view', 'y', ...a).stdout).toContain('def y');
+    // A push that leaves out the remote's head is refused, so concurrent work is merged before it lands (D167).
+    deus('add', file('x.deus', 'def x : Int := 1\n'), '--message', 'x', ...a);
+    deus('push', ...a);
+    deus('add', file('y.deus', 'def y : Int := 2\n'), '--message', 'y', ...b);
+    const stale = deus('push', ...b, '--no-merge');
+    expect(stale.code).not.toBe(0);
+    expect(stale.stderr).toContain('run `deus pull origin` and `deus merge origin.main`, then push again');
+    // Without --no-merge, the push pulls and merges the remote itself and pushes again (D177).
+    const merged = deus('push', ...b);
+    expect(merged.code).toBe(0);
+    expect(merged.stderr).toContain('origin moved since the last pull; merging it and pushing again');
+    expect(deus('pull', ...a).stdout).not.toContain('heads (concurrent pushes)');
+    expect(deus('merge', 'origin.main', ...a).stdout).toMatch(/^Fast-forwarded/);
+    expect(deus('view', 'y', ...a).stdout).toContain('def y');
 
-      // Group merges (D177) and rehashed dependents (D187) are Replicate.Spec.groupMembersMerge and
-      // rehashedDependentTakesBothEdits, cached DEUS tests.
+    // Group merges (D177) and rehashed dependents (D187) are Replicate.Spec.groupMembersMerge and
+    // rehashedDependentTakesBothEdits, cached DEUS tests.
 
-      // Enough history for level-1 boundaries (causal hashes starting with 0).
-      for (let i = 1; i <= 70; i++) {
-        deus('add', file('v.deus', `def v${i} : Int := ${i}\n`), '--message', `v${i}`, ...a);
-        if (i % 10 === 0) {
-          deus('push', ...a);
-        }
-      }
-      const before = readdirSync(join(remote, 'bundles')).length;
-      const first = JSON.parse(deus('compact', '--json', ...a).stdout);
-      expect(first.written.length).toBeGreaterThan(0);
-      expect(first.deleted.length).toBeGreaterThan(0);
-      expect(readdirSync(join(remote, 'bundles')).length).toBeLessThan(before);
-      // Deleted bundles move to trash/, so a compaction bug never loses history (DataSafety.Spec).
-      expect(readdirSync(join(remote, 'trash', 'bundles')).sort()).toEqual([...first.deleted].sort());
-      // Strata come from hashes and bundles are canonical: another client's compaction writes nothing new.
-      deus('pull', ...b);
-      expect(JSON.parse(deus('compact', '--json', ...b).stdout)).toEqual({ written: [], deleted: [] });
+    // Compaction (D73) is Replicate.Spec.compactionKeepsHistory, a cached DEUS test; the refusal to trim history stays.
+    const refused = deus('compact', '--keep', '3', ...a);
+    expect(refused.code).toBe(1);
+    expect(refused.stderr).toContain('compact keeps the whole history');
 
-      const fresh = ['--codebase', join(scratch, 'replica-c')];
-      deus('init', '--empty', ...fresh);
-      deus('remote', 'add', 'origin', remote, ...fresh);
-      deus('pull', ...fresh);
-      deus('merge', 'origin.main', ...fresh);
-      expect(deus('eval', 'v70 + v3 + x + y', ...fresh).stdout).toBe('76\n');
-
-      // Compaction never trims history: a clone of the compacted remote has every change, as git does.
-      const history = (c: string[]) => deus('log', '--n', '1000', ...c).stdout;
-      expect(history(fresh)).toBe(history(a));
-      expect(history(a).split('\n').length).toBeGreaterThan(70);
-      const refused = deus('compact', '--keep', '3', ...a);
-      expect(refused.code).toBe(1);
-      expect(refused.stderr).toContain('compact keeps the whole history');
-      // A forged object (D91) is Replicate.Spec.pullSkipsForgedObjects, a cached DEUS test.
-    },
-  );
+    // A forged object (D91) is Replicate.Spec.pullSkipsForgedObjects, a cached DEUS test.
+  });
 
   test('packs carry objects found by ranged reads (D180)', { timeout: 120_000 }, ({ expect }) => {
     const remote = join(scratch, 'remote-packs');

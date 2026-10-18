@@ -26,27 +26,31 @@
 
 namespace Codebase
 
-/-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
+/-- Objects read so far, per process, by store and hash: an object never changes, but whether a store holds it is
+  that store's answer, so one store's read must not answer for another in the same process (D329). -/
 def objectCache : MutMap Text Sexp := MutMap.new ()
+
+/-- The key `objectCache` keeps `h` of store `dir` under. -/
+def cacheKey (dir : Text) (h : Text) : Text := dir ++ "\n" ++ h
 
 def objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
 
 def isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
 
 def readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
-  match MutMap.get objectCache h with
+  match MutMap.get objectCache (cacheKey dir h) with
   | some form => some form
   | none =>
     match IO.readFile (objectPath dir h) with
     | none => none
     | some text =>
       let form := Sexp.read text
-      MutMap.set objectCache h form
+      MutMap.set objectCache (cacheKey dir h) form
       some form
 
 /-- `readObject` without keeping the form: a pass over every object (the explorer's, D192) holds one at a time. -/
 def peekObject (dir : Text) (h : Text) : {IO} Option Sexp :=
-  match MutMap.get objectCache h with
+  match MutMap.get objectCache (cacheKey dir h) with
   | some form => some form
   | none => Option.map Sexp.read (IO.readFile (objectPath dir h))
 
