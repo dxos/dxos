@@ -366,24 +366,24 @@ test QA-1: Create a meeting, set it active, and generate a summary
 ```mdl
 test QA-2: A four-person meeting call, with notes taken during it
   desc: |
-    The local user joins a Meeting's call with three colleagues, they talk, and the local user
+    The local user joins a Meeting's call after three colleagues have started, is greeted, they talk, and the local user
     writes the action items into the meeting's notes. The colleagues are simulated participants
     (plugin-calls `SetSimulatedParticipants`) played from pre-recorded avatar videos, and the
     local camera and microphone are a fourth video, so the test needs no camera and no EDGE. The
     seam also carries the script's lines, which stand in for live transcription.
   actors: agent
   covers: [F-1.1, F-1.2, T-1]
-  status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with HeyGen avatars; outline and transcript entry on each line's speaker
+  status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with Higgsfield characters voiced by HeyGen, light mode; outline and transcript entry on each line's speaker
   given:
-    - an identity exists, with display name "Astrid Holm"
+    - an identity exists, with display name "Rich Burdon"
     - space: the Fieldstone Labs sample space (plugin-debug template) is open
     - plugin-calls and plugin-meeting are enabled — both default ON only in dev builds
     - the runtime config names an EDGE calls endpoint (the Call tab and Join need one configured,
       not reachable)
-    - tracks: one equal-length WebM per participant (astrid, lucia, ben, tomas), made by
+    - tracks: one equal-length WebM per participant (rich, lucia, ben, tomas), made by
       `.agents/skills/autocue/scripts/conversation.mjs` from
       `autocue/fieldstone-dashboard.conversation.json`; the browser's camera and microphone play
-      astrid's (`fake-media.mjs`), and the other three are served to the page; its `timeline.json`
+      rich's (`fake-media.mjs`), and the other three are served to the page; its `timeline.json`
       gives each line's speaker, start and text
   steps:
     - name: Create and open the meeting
@@ -398,22 +398,27 @@ test QA-2: A four-person meeting call, with notes taken during it
     - name: Join with camera and microphone on
       do: Open the Call tab, turn the camera on, unmute, and click Join.
       expect: |
-        the grid shows four tiles named Astrid Holm, Lucía Ferreira, Ben Achterberg and Tomás Vidal,
+        the grid shows four tiles named Rich Burdon, Lucía Ferreira, Ben Achterberg and Tomás Vidal,
         each playing its video; the toolbar's participant count reads 4
     - name: Open the transcript beside the call
       do: Open the companion side-by-side, choose the meeting companion, then its Transcript tab.
       expect: the call stays in the plank and the meeting's transcript shows in the companion
+    - name: Greeted on arrival
+      do: Watch the first seconds after joining.
+      expect: |
+        the local tile waves, Ben and Tomás acknowledge it (a small wave, a nod), and Lucía says
+        "Hi. We just got started."
     - name: The conversation runs
       do: Watch the call until the last line ("… Thanks, everyone.").
       expect: |
         each speaker's tile shows the speaking outline while they talk and only then, in the
-        script's order: Astrid, Lucía, Ben, Tomás, Lucía, Ben, Tomás, Astrid; each line appears
+        script's order: Lucía, Lucía, Ben, Tomás, Lucía, Ben, Tomás, Lucía; each line appears
         once in the transcript, under its speaker's name, as it starts
       note: |
         Remote speaking state comes from each simulated participant's own audio, as a real
         participant's comes from their microphone; the local tile's comes from the fake microphone.
     - name: Write the action items
-      do: Open the companion's Notes tab and type the three action items Astrid names.
+      do: Open the companion's Notes tab and type the three action items Lucía names.
       expect: the notes hold "Ben: share the sketch", "Tomás: build the plank", "Lucía: check it with Okapi"
     - name: Leave
       do: Click Leave.

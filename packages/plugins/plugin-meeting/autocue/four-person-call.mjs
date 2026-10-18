@@ -3,24 +3,25 @@
 //
 
 /**
- * Fieldstone Labs scopes the Cairn dashboard plugin on a four-person call: Astrid (the local user) joins a Meeting's
- * call with Lucía, Ben and Tomás, they talk it through, and Astrid writes the action items into the meeting notes.
+ * Fieldstone Labs scopes the Cairn dashboard plugin on a four-person call: Rich (the local user) joins a Meeting's call
+ * after Lucía, Ben and Tomás have started, waves, is greeted, and writes the action items into the meeting notes.
  *
  * @mdl packages/plugins/plugin-meeting/PLUGIN.mdl test QA-2
  * @app composer-app dev build (plugin-debug's Fieldstone template, Calls and Meetings on), via
  *   `DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  *
- * The colleagues are plugin-calls' simulated participants and Astrid's camera and microphone are a video too, so
+ * The colleagues are plugin-calls' simulated participants and Rich's camera and microphone are a video too, so
  * the take needs no camera and no EDGE. Make the tracks first (HeyGen avatars; see the scripts' doc comments):
  *
  *   set -a; . .secrets/heygen.env; set +a
  *   node .agents/skills/autocue/scripts/heygen.mjs --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --out /tmp/meeting
  *   node .agents/skills/autocue/scripts/conversation.mjs --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --clips /tmp/meeting/clips --out /tmp/meeting/tracks
  *
- * Record (the hidden players need autoplay; `MEETING_TRACKS` defaults to /tmp/meeting/tracks):
+ * Record in light mode with no captions (the hidden players need autoplay; `MEETING_TRACKS` defaults to
+ * /tmp/meeting/tracks):
  *
  *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/meeting/take \
- *     --chromium-args --autoplay-policy=no-user-gesture-required
+ *     --theme light --captions off --chromium-args --autoplay-policy=no-user-gesture-required
  *
  * The recording has no sound. Lay `<tracks>/conversation.wav` under the trimmed video so that the first line's caption
  * (in the trimmer's `.vtt`) sits `leadIn` seconds into the audio: delay it by (that caption's time − `leadIn`). The
@@ -41,7 +42,7 @@ const CONVERSATION = JSON.parse(
 );
 const TIMELINE = JSON.parse(readFileSync(path.join(TRACKS, 'timeline.json'), 'utf8'));
 
-const LOCAL = 'astrid';
+const LOCAL = 'rich';
 const COLLEAGUES = ['lucia', 'ben', 'tomas'];
 const MEETING_NAME = 'Cairn dashboard plugin: scoping';
 const TEMPLATE = 'Fieldstone Labs';
@@ -56,6 +57,8 @@ const COMPANION = '[data-testid="deck.companion"]';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
+/** How long the finished task list stays on screen. */
+const LINGER = 8_000;
 
 const caption = (demo, value, subtitle = 'plugin-meeting/PLUGIN.mdl · QA-2') => demo.caption({ value, subtitle });
 
@@ -219,7 +222,7 @@ export const steps = [
   },
   {
     name: 'Join with camera and microphone on',
-    narration: 'Astrid opens the meeting and joins its call. Lucía, Ben and Tomás are already there.',
+    narration: 'Rich opens the meeting and joins its call. Lucía, Ben and Tomás are already there.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Fieldstone Labs scopes the Cairn dashboard plugin');
       await demo.click({ selector: `${PLANK} button[aria-label="Call"]`, label: 'Call' });
@@ -228,7 +231,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
 
       await demo.click({ selector: `${PLANK} button:has-text("Join")`, label: 'Join' });
-      // Astrid's own clip starts with the others', which start on join.
+      // Rich's own clip starts with the others', which start on join.
       await page.evaluate(() => globalThis.__fakeMedia.start());
       state.joinedAt = Date.now();
       for (const id of [LOCAL, ...COLLEAGUES]) {
@@ -266,9 +269,9 @@ export const steps = [
   },
   {
     name: 'Write the action items',
-    narration: 'Astrid writes the action items into the meeting notes.',
+    narration: 'Rich writes the action items into the meeting notes.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Astrid writes the action items into the meeting notes', 'QA-2 step 5');
+      await caption(demo, 'Rich writes the action items into the meeting notes', 'QA-2 step 5');
       // The caption banner is pinned over the bottom of the page, where the editor's last line sits.
       await demo.clearCaption();
       // Notes open in the companion, so the call stays on screen beside them.
@@ -287,7 +290,8 @@ export const steps = [
         [COMPANION, ACTION_ITEMS.at(-1)],
         10_000,
       );
-      await page.waitForTimeout(BEAT * 2);
+      // A held caption keeps the trimmer from cutting the pause on the finished list.
+      await demo.caption({ value: 'Action items', subtitle: 'QA-2 step 5', hold: LINGER });
     },
   },
   {

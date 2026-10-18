@@ -10,14 +10,15 @@
  *     --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json \
  *     --clips /tmp/meeting/clips --out /tmp/meeting/tracks
  *
- * Lines play one after another, `gap` seconds apart, after a silent `leadIn`; a participant shows their looping
+ * Lines play one after another, `gap` seconds apart, after a silent `leadIn`, except a line with `at`, which starts
+ * that many seconds after the lead-in; a line with no `text` is a silent gesture. A participant shows their looping
  * listening clip whenever someone else is speaking. Every track starts on the same lead-in, so tracks started
  * together stay in step: `fake-media.mjs` loops the lead-in until its cue and `CallSimulation.start()` plays from
  * the top on join.
  *
  * Writes `<out>/<participant>.webm` (VP9 + Opus, which Chromium decodes), `<out>/conversation.wav` (every voice,
- * mixed, to lay under the screen recording, which captures no sound) and `<out>/timeline.json` (each line's start
- * and end in seconds).
+ * mixed, to lay under the screen recording, which captures no sound) and `<out>/timeline.json` (each spoken line's
+ * start and end in seconds, and the gestures').
  */
 
 import { execFileSync } from 'node:child_process';
@@ -73,10 +74,12 @@ const intermediate = [
 ];
 
 // Loudness-normalized speech crosses plugin-calls' speaking threshold however quietly the avatar was rendered.
+// A line without `text` is a silent gesture (a wave, a nod), so there is no speech to normalize.
 const lines = conversation.lines.map((line, index) => {
   const source = path.join(options.clips, `${String(index).padStart(2, '0')}-${line.speaker}.mp4`);
   const file = path.join(work, `line-${index}.mkv`);
-  run(['-i', source, '-vf', video, '-af', 'loudnorm=I=-16:TP=-1.5', ...intermediate, file]);
+  const audio = line.text ? ['-af', 'loudnorm=I=-16:TP=-1.5'] : [];
+  run(['-i', source, '-vf', video, ...audio, ...intermediate, file]);
   return { ...line, file, seconds: duration(file) };
 });
 
@@ -88,13 +91,19 @@ const idle = Object.fromEntries(
   }),
 );
 
+// A line with `at` starts that many seconds after the lead-in; the rest follow the last spoken line. Gestures never
+// hold up the speech, so a wave can overlap a greeting.
 let clock = leadIn;
-const timeline = lines.map((line) => {
-  const entry = { speaker: line.speaker, text: line.text, start: clock, end: clock + line.seconds };
-  clock = entry.end + gap;
+const placed = lines.map((line) => {
+  const start = line.at === undefined ? clock : leadIn + line.at;
+  const entry = { speaker: line.speaker, text: line.text, start, end: start + line.seconds };
+  if (line.text) {
+    clock = Math.max(clock, entry.end + gap);
+  }
   return entry;
 });
-const total = clock - gap + tail;
+const timeline = placed.filter((entry) => entry.text);
+const total = Math.max(...placed.map((entry) => entry.end)) + tail;
 
 /** `seconds` of a participant's listening loop, continuing where its last stretch left off so the loop seam moves. */
 const idleSegment = (id, seconds, offset, file) => {
@@ -118,13 +127,18 @@ const tracks = Object.keys(conversation.participants).map((id) => {
       position = until;
     }
   };
-  timeline.forEach((entry, index) => {
-    if (entry.speaker === id) {
+  placed
+    .map((entry, index) => ({ ...entry, index }))
+    .filter((entry) => entry.speaker === id)
+    .sort((a, b) => a.start - b.start)
+    .forEach((entry) => {
+      if (entry.start < position - 0.01) {
+        throw new Error(`${id}: line ${entry.index} starts before their previous one ends`);
+      }
       listen(entry.start);
-      segments.push(lines[index].file);
+      segments.push(lines[entry.index].file);
       position = entry.end;
-    }
-  });
+    });
   listen(total);
 
   const list = path.join(work, `${id}.txt`);
@@ -142,5 +156,9 @@ run([
   ...tracks.flatMap((track) => ['-i', track]),
   ...['-filter_complex', `amix=inputs=${tracks.length}:normalize=0`, '-vn', path.join(options.out, 'conversation.wav')],
 ]);
-writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify({ leadIn, total, lines: timeline }, null, 2));
+const gestures = placed.filter((entry) => !entry.text).map(({ speaker, start, end }) => ({ speaker, start, end }));
+writeFileSync(
+  path.join(options.out, 'timeline.json'),
+  JSON.stringify({ leadIn, total, lines: timeline, gestures }, null, 2),
+);
 console.log(JSON.stringify({ tracks, total: Number(total.toFixed(2)) }, null, 2));

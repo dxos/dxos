@@ -1,50 +1,66 @@
 {
-  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user; the others are simulated participants. heygen.mjs generates each participant from `prompt` and records the look in <out>/cast.json unless a participant sets avatarId.",
-  "leadIn": 3,
+  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Rich is the local user, who joins late and waves; Lucía leads. Each `image` is a Higgsfield still that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures.",
+  "leadIn": 2,
   "gap": 0.4,
   "tail": 3,
   "participants": {
-    "astrid": {
-      "name": "Astrid Holm",
-      "role": "Engineering Manager",
-      "prompt": "Woman in her mid 20s, Scandinavian, short dark bob, round tortoiseshell glasses, cream knit sweater, big warm smile, clearly enjoying the conversation. Sitting in a cozy busy coffee shop, espresso machine and warm bokeh lights behind her, latte cup on the table. Daylight from the window. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
-      "voiceId": "41f17b4ebd334ac99a91c2aada5f86d7",
-      "expressiveness": "medium",
-      "motion": "Talking warmly on a video call, relaxed, smiling, an occasional small hand gesture."
+    "rich": {
+      "name": "Rich Burdon",
+      "role": "Engineering Lead",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_25572161-0a22-4af5-b1bc-04688a465e3e.png"
     },
     "lucia": {
       "name": "Lucía Ferreira",
-      "role": "Product Manager",
-      "prompt": "Woman in her mid 20s, Latina, long dark wavy hair, thin gold-rimmed glasses, mustard cardigan over a white tee, laughing, lively and animated. Sitting outside on a park bench, green trees and a path behind her, bright sunny afternoon. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "role": "Product Lead",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_c7e0267d-beb7-4b3e-9ef9-0bfacda9650d.png",
       "voiceId": "16cae89929d94c25bc28b5af6f04822a",
-      "expressiveness": "high",
-      "motion": "Animated and enthusiastic on a video call: expressive hand gestures, open palms, counting on her fingers, laughing, leaning in."
+      "expressiveness": "medium",
+      "motion": "Friendly and professional on a video call: composed posture, measured hand gestures while she explains."
     },
     "ben": {
       "name": "Ben Achterberg",
       "role": "Product Designer",
-      "prompt": "Japanese man in his mid 20s, short black hair, black rectangular glasses, charcoal hoodie, grinning, relaxed and having fun. Late at night in his small Tokyo apartment: the room is dark, lit only by a warm desk lamp and the cool glow of his monitor on his face; a large window behind him shows a dark night sky and glittering city lights and neon. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013055_9f08e094-2b5c-48b5-9f89-931b835e0787.png",
       "voiceId": "26776342fd0247d8aa4055ce1060b948",
       "expressiveness": "medium",
-      "motion": "Relaxed and cheerful on a video call, grinning, a light shrug and a small gesture toward the screen."
+      "motion": "Calm and professional on a video call, a small hand gesture toward the screen as he describes the layout."
     },
     "tomas": {
       "name": "Tomás Vidal",
       "role": "Frontend Engineer",
-      "prompt": "Man in his late 20s, Spanish, short curly hair and short trimmed beard, clear-framed glasses, light blue denim shirt, smiling broadly, cheerful. Bright modern co-working space, whiteboard with sketches and plants behind him, daylight. Video call webcam framing: medium close-up from a laptop camera at eye level, looking straight into the camera, head, shoulders and hands visible. Natural matte skin, realistic, no retouching, 35mm lens.",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_9d84dfec-be6b-4a6d-8488-31d2e9083665.png",
       "voiceId": "7bb4df56d7714d33bb88ed1dde8128f6",
       "expressiveness": "medium",
-      "motion": "Upbeat on a video call, nodding while he talks, one confident hand gesture."
+      "motion": "Friendly and professional on a video call, nodding as he talks, one small hand gesture."
     }
   },
   "lines": [
     {
-      "speaker": "astrid",
-      "text": "Thanks for jumping on. Today we scope the Cairn dashboard as a Composer plugin. Lucía, what do customers need first?"
+      "speaker": "rich",
+      "at": 0,
+      "seconds": 4,
+      "motion": "Has just joined a video call: smiles and gives a friendly wave at the camera with one hand, then lowers the hand and settles in."
+    },
+    {
+      "speaker": "ben",
+      "at": 1,
+      "seconds": 3,
+      "motion": "Glances up at the camera, smiles and gives a small, brief wave with one hand, then looks back down."
+    },
+    {
+      "speaker": "tomas",
+      "at": 1.3,
+      "seconds": 3,
+      "motion": "Looks up at the camera, smiles and gives a small nod hello, mouth closed."
     },
     {
       "speaker": "lucia",
-      "text": "Cache hit rate per repo, and which builds missed. Okapi asked for exactly that twice last month."
+      "at": 1.6,
+      "text": "Hi. We just got started."
+    },
+    {
+      "speaker": "lucia",
+      "text": "We're scoping the Cairn dashboard as a Composer plugin. Customers want cache hit rate per repo, and which builds missed."
     },
     {
       "speaker": "ben",
@@ -67,8 +83,8 @@
       "text": "I'll have Builder draft the query, and I can show a first cut in storybook on Thursday."
     },
     {
-      "speaker": "astrid",
-      "text": "Great. Ben shares the sketch today, Tomás builds the plank, and Lucía checks it with Okapi. Thanks, everyone."
+      "speaker": "lucia",
+      "text": "Great. Ben shares the sketch today, Tomás builds the plank, and I'll check it with Okapi. Thanks, everyone."
     }
   ]
 }

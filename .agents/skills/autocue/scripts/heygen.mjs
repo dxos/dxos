@@ -10,11 +10,13 @@
  *   HEYGEN_API_KEY=… node .agents/skills/autocue/scripts/heygen.mjs \
  *     --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --out /tmp/meeting
  *
- * Casting: each participant's `prompt` generates a synthetic photo avatar (`POST /v3/avatars`, type `prompt`), and
+ * Casting: each participant's `image` (a URL, e.g. a Higgsfield still, or a file beside the conversation) becomes a
+ * photo avatar, or its `prompt` generates a synthetic one (`POST /v3/avatars`), and
  * its look id is written to `<out>/cast.json` so a rerun keeps the same face; `--cast-only` stops there so the faces
  * can be reviewed (`<out>/cast/<id>.webp`) before any video is paid for. A participant's `avatarId` or `voiceId`
  * wins over generation. Clips render on Avatar IV, whose `motion` and `expressiveness` settings set how much each
- * person moves; listening clips lip-sync to silence with the `listening` motion prompt. Files already in
+ * person moves; listening clips lip-sync to silence with the `listening` motion prompt, and a line with no `text`
+ * is a silent gesture of `seconds` directed by its `motion` (a wave, a nod). Files already in
  * `<out>/clips` are not regenerated.
  */
 
@@ -95,19 +97,21 @@ const cast = async () => {
     const avatarId = participant.avatarId ?? saved[id]?.avatarId;
     roster[id] = { avatarId, voiceId: participant.voiceId ?? saved[id]?.voiceId };
     if (!avatarId) {
-      if (!participant.prompt) {
-        throw new Error(`${id}: set avatarId or prompt in the conversation file`);
+      const name = `${path.basename(options.conversation, '.conversation.json')}-${id}`;
+      const request = participant.image
+        ? { type: 'photo', name, file: await imageFile(participant.image) }
+        : participant.prompt
+          ? { type: 'prompt', name, prompt: participant.prompt, aspect_ratio: '16:9' }
+          : undefined;
+      if (!request) {
+        throw new Error(`${id}: set avatarId, image or prompt in the conversation file`);
       }
-      const { avatar_item: item } = await api('POST', '/v3/avatars', {
-        type: 'prompt',
-        name: `${path.basename(options.conversation, '.conversation.json')}-${id}`,
-        prompt: participant.prompt,
-        aspect_ratio: '16:9',
-      });
+      const { avatar_item: item } = await api('POST', '/v3/avatars', request);
       roster[id].avatarId = item.id;
-      console.log(`generating ${id} (${item.id})`);
+      console.log(`creating ${id} (${item.id})`);
     }
-    if (!roster[id].voiceId) {
+    const speaks = conversation.lines.some((line) => line.speaker === id && line.text);
+    if (speaks && !roster[id].voiceId) {
       throw new Error(`${id}: set voiceId in the conversation file (GET /v3/voices lists them)`);
     }
     writeFileSync(castFile, JSON.stringify({ ...saved, ...roster }, null, 2));
@@ -131,21 +135,39 @@ const cast = async () => {
   return roster;
 };
 
-/** A silent audio asset to lip-sync the listening clips to; v3 takes no silence voice. */
-const silence = async () => {
-  const file = path.join(options.out, 'silence.wav');
-  execFileSync(process.env.FFMPEG_PATH ?? 'ffmpeg', [
-    ...['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono'],
-    ...['-t', String(IDLE_SECONDS), file],
-  ]);
+/** Uploads a local file and returns its asset id. */
+const upload = async (file, type) => {
   const form = new FormData();
-  form.append('file', new Blob([readFileSync(file)], { type: 'audio/wav' }), 'silence.wav');
+  form.append('file', new Blob([readFileSync(file)], { type }), path.basename(file));
   const response = await fetch(`${API}/v3/assets`, { method: 'POST', headers: { 'X-Api-Key': key }, body: form });
   const json = await response.json();
   if (!response.ok || json.error) {
     throw new Error(`POST /v3/assets: ${response.status} ${JSON.stringify(json.error ?? json)}`);
   }
   return json.data.asset_id;
+};
+
+/** A participant's `image`: a URL, or a file relative to the conversation file. */
+const imageFile = async (image) =>
+  /^https?:/.test(image)
+    ? { type: 'url', url: image }
+    : {
+        type: 'asset_id',
+        asset_id: await upload(path.resolve(path.dirname(options.conversation), image), 'image/png'),
+      };
+
+const silences = new Map();
+/** A silent audio asset of `seconds` to lip-sync listening and gesture clips to; v3 takes no silence voice. */
+const silence = (seconds) => {
+  if (!silences.has(seconds)) {
+    const file = path.join(options.out, `silence-${seconds}.wav`);
+    execFileSync(process.env.FFMPEG_PATH ?? 'ffmpeg', [
+      ...['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono'],
+      ...['-t', String(seconds), file],
+    ]);
+    silences.set(seconds, upload(file, 'audio/wav'));
+  }
+  return silences.get(seconds);
 };
 
 /** Submits one clip on Avatar IV, waits for it, and downloads it to `file`. */
@@ -185,26 +207,28 @@ const jobs = [
     file: path.join(clipsDir, `${String(index).padStart(2, '0')}-${line.speaker}.mp4`),
     speaker: line.speaker,
     text: line.text,
+    gesture: line.text ? undefined : { motion: line.motion, seconds: line.seconds },
   })),
 ].filter(({ file }) => !existsSync(file));
-const silenceAssetId = jobs.some(({ listening }) => listening) ? await silence() : undefined;
 
 // HeyGen renders submissions concurrently, so waiting on them together takes as long as the slowest.
 // Submissions are staggered: the API allows 10 requests per second, polls included.
 const results = await Promise.allSettled(
-  jobs.map(async ({ file, speaker, text, listening }, index) => {
+  jobs.map(async ({ file, speaker, text, listening, gesture }, index) => {
     await new Promise((resolve) => setTimeout(resolve, index * SUBMIT_SPACING_MS));
     const participant = conversation.participants[speaker];
     return generate(file, {
       avatar_id: roster[speaker].avatarId,
       ...(listening
-        ? { audio_asset_id: silenceAssetId, motion_prompt: LISTENING, expressiveness: 'low' }
-        : {
-            script: text,
-            voice_id: roster[speaker].voiceId,
-            ...(participant.motion ? { motion_prompt: participant.motion } : {}),
-            expressiveness: participant.expressiveness ?? 'medium',
-          }),
+        ? { audio_asset_id: await silence(IDLE_SECONDS), motion_prompt: LISTENING, expressiveness: 'low' }
+        : gesture
+          ? { audio_asset_id: await silence(gesture.seconds), motion_prompt: gesture.motion, expressiveness: 'medium' }
+          : {
+              script: text,
+              voice_id: roster[speaker].voiceId,
+              ...(participant.motion ? { motion_prompt: participant.motion } : {}),
+              expressiveness: participant.expressiveness ?? 'medium',
+            }),
     });
   }),
 );

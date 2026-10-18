@@ -15,7 +15,7 @@ import { CallsCapabilities } from '#types';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Call } from './Call.tsx';
 
-const LOCAL = 'Astrid Holm';
+const LOCAL = 'Rich Burdon';
 const COLLEAGUES = [
   { name: 'Lucía Ferreira', track: 'lucia' },
   { name: 'Ben Achterberg', track: 'ben' },
@@ -25,7 +25,7 @@ const COLLEAGUES = [
 const JOIN_TIMEOUT = 10_000;
 
 type StoryProps = {
-  /** Base URL of the conversation's tracks: `astrid.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`. */
+  /** Base URL of the conversation's tracks: `rich.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`. */
   media: string;
 };
 
@@ -43,7 +43,7 @@ const SimulatedStory = ({ media }: StoryProps) => {
     setBlocked(false);
     let restore: (() => void) | undefined;
     const join = async () => {
-      const local = await fakeUserMedia(`${media}/astrid.webm`);
+      const local = await fakeUserMedia(`${media}/rich.webm`);
       restore = local.restore;
       await callManager.simulate(COLLEAGUES.map(({ name, track }) => ({ name, src: `${media}/${track}.webm` })));
       callManager.setRoomId('story-room');

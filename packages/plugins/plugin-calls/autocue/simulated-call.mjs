@@ -10,7 +10,7 @@
  *
  * Make the tracks first (see `plugin-meeting/autocue/four-person-call.mjs`), then record:
  *
- *   MEETING_TRACKS=/tmp/meeting/tracks node .agents/skills/autocue/scripts/driver.mjs --out /tmp/meeting/story \
+ *   MEETING_TRACKS=/tmp/meeting/tracks node .agents/skills/autocue/scripts/driver.mjs --out /tmp/meeting/story --theme light --captions off \
  *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-calls-components-simulatedcall--default&viewMode=story' \
  *     --chromium-args --autoplay-policy=no-user-gesture-required
  *
