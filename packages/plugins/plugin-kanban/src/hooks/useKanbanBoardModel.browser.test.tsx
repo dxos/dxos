@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { act, renderHook } from '@testing-library/react';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren } from 'react';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
@@ -16,6 +18,7 @@ import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/sc
 
 import { Kanban } from '#types';
 
+import { useItemsProjection } from './useItemsProjection.ts';
 import { useKanbanBoardModel } from './useKanbanBoardModel.ts';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
@@ -253,5 +256,37 @@ describe('useKanbanBoardModel', () => {
     });
 
     expect(itemsColAUpdateCount).toBe(0);
+  });
+
+  test('an items kanban with no pivot field places cards by the arrangement alone', ({ expect }) => {
+    const lead = Obj.make(KanbanTaskSchema, { title: 'Lead' });
+    const won = Obj.make(KanbanTaskSchema, { title: 'Won' });
+    const loose = Obj.make(KanbanTaskSchema, { title: 'Loose' });
+    const itemsAtom = Atom.make<KanbanTask[]>(() => [lead, won, loose]);
+    const itemsKanban = Kanban.makeItems({
+      pivotField: '',
+      arrangement: { order: ['Lead', 'Won'], columns: { Lead: { ids: [lead.id] }, Won: { ids: [won.id] } } },
+    });
+    if (!Kanban.isKanbanItems(itemsKanban)) {
+      throw new Error('Expected an items kanban.');
+    }
+
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
+    );
+    const { result } = renderHook(
+      () => useKanbanBoardModel(itemsKanban, useItemsProjection(itemsKanban), itemsAtom, registry),
+      { wrapper },
+    );
+
+    const columns = result.current.getColumns();
+    const itemIds = (columnValue: string) => {
+      const column = columns.find((column) => column.columnValue === columnValue);
+      return column && result.current.getItems(column).map((item) => item.id);
+    };
+    expect(columns.map((column) => column.columnValue)).toEqual(['__uncategorized__', 'Lead', 'Won']);
+    expect(itemIds('Lead')).toEqual([lead.id]);
+    expect(itemIds('Won')).toEqual([won.id]);
+    expect(itemIds('__uncategorized__')).toEqual([loose.id]);
   });
 });

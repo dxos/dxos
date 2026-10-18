@@ -48,7 +48,7 @@ type KanbanViewSpec
 type KanbanItemsSpec
   fields:
     kind: "items"              # discriminator — kanban owns items explicitly
-    pivotField: string         # property path that drives column membership
+    pivotField: string         # property path that drives column membership; empty places cards by arrangement alone
     items: Ref<object>[]       # items owned directly by the kanban
 ```
 

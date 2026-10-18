@@ -7,4 +7,4 @@ export { type ContactKey } from './contacts.ts';
 export { type ThreadKey } from './mail.ts';
 export { type OrgKey } from './organizations.ts';
 export { Partial, type Provides, type Requires } from './partial.ts';
-export { type DealKey, type Pipeline, type Stage } from './pipeline.ts';
+export { type Pipeline, type Stage } from './pipeline.ts';

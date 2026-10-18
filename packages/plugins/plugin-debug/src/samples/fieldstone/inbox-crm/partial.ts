@@ -18,7 +18,7 @@ import { type EventKey, makeCalendar } from './calendar.ts';
 import { type ContactKey, makeContacts } from './contacts.ts';
 import { type ThreadKey, makeMail } from './mail.ts';
 import { type OrgKey, makeOrganizations } from './organizations.ts';
-import { Deal, type Pipeline, makePipeline } from './pipeline.ts';
+import { type Pipeline, makePipeline } from './pipeline.ts';
 import { makeViews } from './views.ts';
 
 export type Requires = { readonly team: TeamProvides };
@@ -32,7 +32,7 @@ export type Provides = {
   readonly threads: Record<ThreadKey, Message.Message[]>;
   /** Events by key, sorted by start; `oneOnOne` and `interviews` hold every occurrence. */
   readonly events: Record<EventKey, Event.Event[]>;
-  /** One deal per customer on the Sales pipeline Kanban, which the docs partial files under Customers. */
+  /** The Sales pipeline Kanban of customer organizations, which the docs partial files under Customers. */
   readonly pipeline: Pipeline;
 };
 
@@ -41,7 +41,6 @@ export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.part
   schemas: [
     Blob.Blob,
     Calendar.Calendar,
-    Deal,
     Event.Event,
     Feed.Feed,
     Kanban.Kanban,
@@ -59,10 +58,10 @@ export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.part
       const orgs = yield* makeOrganizations();
       const people = yield* makeContacts(orgs);
       const directory = { ...team.people, ...people };
-      yield* makeViews(Object.values(directory));
+      yield* makeViews();
       const { mailbox, threads } = yield* makeMail(directory, team.agents);
       const { calendar, events } = yield* makeCalendar(directory);
-      const pipeline = yield* makePipeline(orgs, directory);
+      const pipeline = yield* makePipeline(orgs);
       return { orgs, people, mailbox, calendar, threads, events, pipeline };
     }),
 });
