@@ -158,6 +158,8 @@ export const steps = [
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
       await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
       await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', hud: false });
+      // The Help companion opens on first run, and its tour video cannot load in every environment.
+      await closeCompanion(page);
       await demo.cut();
     },
   },
@@ -175,6 +177,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', label: 'Create' });
       await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 60_000 });
+      await closeCompanion(page);
       await showProject(page);
       await closeCompanion(page);
     },
