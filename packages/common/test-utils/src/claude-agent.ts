@@ -26,6 +26,13 @@ export type ClaudeAgentOptions = {
   allowedTools: string[];
   /** Ceiling for one turn, in ms. */
   timeout?: number;
+  /**
+   * Run with `--bare` (the default). Bare mode also withholds tools that need the full harness,
+   * such as `Monitor`, so a suite exercising those opts out and isolates the run through `env.HOME`.
+   */
+  bare?: boolean;
+  /** Merged over the inherited environment, e.g. a throwaway `HOME` for a non-bare run. */
+  env?: Record<string, string>;
 };
 
 /** One content block of an `assistant` message, as `claude --print --output-format stream-json` emits it. */
@@ -68,7 +75,10 @@ export type Turn = {
   toolCalls: string[];
   /** Every event of the turn, for diagnosing a failure without re-running the model. */
   events: StreamEvent[];
-  /** Epoch milliseconds of the send and of the `result` event. */
+  /**
+   * Epoch milliseconds of the send and of the `result` event; for {@link ClaudeAgent.nextTurn}, of
+   * the call and of its resolution, since an unprompted turn has no send.
+   */
   start: number;
   end: number;
 };
@@ -79,6 +89,8 @@ export class ClaudeAgent {
   #child: ChildProcessWithoutNullStreams;
   #buffer = '';
   #events: StreamEvent[] = [];
+  /** Index just past the last `result` a caller has been handed, where {@link nextTurn} resumes. */
+  #consumed = 0;
   #timeout: number;
   #stderr = '';
   #onEvent?: (event: StreamEvent) => void;
@@ -121,6 +133,8 @@ export class ClaudeAgent {
     model,
     allowedTools,
     timeout = DEFAULT_TIMEOUT,
+    bare = true,
+    env: extraEnv = {},
   }: ClaudeAgentOptions): ClaudeAgent {
     // Every CLAUDE_* variable is dropped: run from inside another Claude Code session they name
     // that session, and the child would resume the caller's conversation instead of starting one.
@@ -143,7 +157,7 @@ export class ClaudeAgent {
         '--verbose',
         // A repo CLAUDE.md, the developer's settings and any installed plugin would each change
         // what the agent does; without this the suite's failures are not reproducible.
-        '--bare',
+        ...(bare ? ['--bare'] : []),
         // Fresh conversation per run, and never one the caller is also writing to.
         '--session-id',
         randomUUID(),
@@ -165,6 +179,7 @@ export class ClaudeAgent {
         cwd,
         env: {
           ...env,
+          ...extraEnv,
           // `claude` reads ANTHROPIC_API_KEY; the suite sources the value from
           // DX_ANTHROPIC_API_KEY so a developer's interactive login is never what it spends.
           ANTHROPIC_API_KEY: apiKey,
@@ -185,17 +200,59 @@ export class ClaudeAgent {
    * One turn at a time: the conversation is a single stream, so a second call while a turn is in
    * flight would take over the first one's callbacks and hand it the other's result. A turn that
    * times out ends the agent rather than only rejecting, because the CLI is still working and its
-   * late `result` would otherwise land on whatever turn came next.
+   * late `result` would otherwise land on whatever turn came next. For the same reason it refuses
+   * while an unprompted turn is pending: that turn's `result` would be taken for this one's.
    */
   send(prompt: string): Promise<Turn> {
+    if (this.#events.slice(this.#consumed).some((event) => event.type === 'assistant' || event.type === 'result')) {
+      return Promise.reject(new Error('an unprompted turn is pending; drain it with nextTurn() first'));
+    }
+    return this.#awaitTurn(this.#events.length, () =>
+      this.#child.stdin.write(
+        `${JSON.stringify({
+          type: 'user',
+          message: { role: 'user', content: [{ type: 'text', text: prompt }] },
+          parent_tool_use_id: null,
+        })}\n`,
+      ),
+    );
+  }
+
+  /**
+   * Resolves with the next turn the agent takes without a prompt — one woken by a background task
+   * such as a `Monitor` event — including one that already finished before this was called.
+   */
+  nextTurn(): Promise<Turn> {
+    return this.#awaitTurn(this.#consumed);
+  }
+
+  #awaitTurn(start: number, begin?: () => void): Promise<Turn> {
     if (this.#exited) {
       return Promise.reject(this.#exited);
     }
     if (this.#onEvent || this.#onFail) {
       return Promise.reject(new Error('a turn is already in flight; await it before sending the next one'));
     }
-    const start = this.#events.length;
     const startedAt = Date.now();
+    const turnEnding = (end: number, event: Extract<StreamEvent, { type: 'result' }>): Turn => {
+      this.#consumed = end;
+      const events = this.#events.slice(start, end);
+      return {
+        result: typeof event.result === 'string' ? event.result : undefined,
+        isError: event.is_error === true,
+        toolCalls: toolCallNames(events),
+        events,
+        start: startedAt,
+        end: Date.now(),
+      };
+    };
+
+    const finished = this.#events.findIndex((event, index) => index >= start && event.type === 'result');
+    const event = this.#events[finished];
+    if (event?.type === 'result') {
+      return Promise.resolve(turnEnding(finished + 1, event));
+    }
+
     return new Promise<Turn>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.#fail(`turn timed out after ${this.#timeout}ms; last events: ${this.#tail(start)}`);
@@ -214,24 +271,10 @@ export class ClaudeAgent {
         clearTimeout(timer);
         this.#onEvent = undefined;
         this.#onFail = undefined;
-        const events = this.#events.slice(start);
-        resolve({
-          result: typeof event.result === 'string' ? event.result : undefined,
-          isError: event.is_error === true,
-          toolCalls: toolCallNames(events),
-          events,
-          start: startedAt,
-          end: Date.now(),
-        });
+        resolve(turnEnding(this.#events.length, event));
       };
 
-      this.#child.stdin.write(
-        `${JSON.stringify({
-          type: 'user',
-          message: { role: 'user', content: [{ type: 'text', text: prompt }] },
-          parent_tool_use_id: null,
-        })}\n`,
-      );
+      begin?.();
     });
   }
 
