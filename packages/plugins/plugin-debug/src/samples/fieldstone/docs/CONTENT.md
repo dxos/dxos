@@ -78,7 +78,9 @@ so reading one leads to the next.
 
 - 5 `Drawing.Drawing`, each a plugin-canvas canvas (`Canvas.SCENE_SCHEMA`) built with
   `Architecture.addCanvasDrawing` from scene commands: boxes, ellipses, labels and arrows bound to
-  the boxes they join. They stay editable, off the lattice:
+  the boxes they join. They stay editable, off the lattice.
+  Every box is 256×128 (the Architecture diagrams' box), on a grid, so a label wraps to at most three
+  24px lines and a caption on a level link shows in full; roadmap bars keep the height but span their dates:
   - `orgChart` Alien Labs' 10 people and who reports to whom
   - `architectureDiagram` Cairn's services and stores; the dashboard box is the Composer plugin
   - `requestFlow` One cache request, client to storage and back

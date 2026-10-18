@@ -13,33 +13,84 @@ export type DrawingKey = 'orgChart' | 'architectureDiagram' | 'requestFlow' | 'r
 
 export type Drawings = Record<DrawingKey, Drawing.Drawing>;
 
-type Commands = Architecture.CompiledDiagrams[string];
+export type Commands = Architecture.CompiledDiagrams[string];
 type Element = Extract<Commands[number], { op: 'upsert-object' }>['object']['elements'][number];
 type Box = Extract<Element, { kind: 'rect' | 'ellipse' | 'diamond' | 'triangle' }>;
 type Arrow = Extract<Element, { kind: 'arrow' }>;
 type Style = Pick<Box, 'color' | 'fill' | 'stroke' | 'weight'>;
 
-const rect = (id: string, x: number, y: number, w: number, h: number, text: string, style: Style = {}): Element => ({
-  kind: 'rect',
-  id,
-  x,
-  y,
-  w,
-  h,
-  text,
-  ...style,
-});
+/**
+ * Every box of a drawing is this size, as the DXOS Architecture diagrams' boxes are: the canvas sets a box's label at
+ * 24px on 32px lines (two minor grid units), so 128px holds three lines with a grid unit above and below.
+ */
+export const BOX = { w: 256, h: 128 };
 
-const ellipse = (id: string, x: number, y: number, w: number, h: number, text: string, style: Style = {}): Element => ({
-  kind: 'ellipse',
-  id,
-  x,
-  y,
-  w,
-  h,
-  text,
-  ...style,
-});
+/** The lines a box label may take. */
+export const MAX_LINES = 3;
+
+/** The canvas's line height for a box label, in scene px. */
+export const LINE_HEIGHT = 32;
+
+/** A box label's average glyph width at 24px, on the generous side; the label is padded a grid unit either side. */
+const CHAR_W = 13;
+const TEXT_PAD = 16;
+
+/** A link caption's average glyph width at 14px, and the run it loses to its backdrop and the arrowheads. */
+const CAPTION_CHAR_W = 8.5;
+const CAPTION_CLEARANCE = 40;
+
+/** The lines `text` wraps to in a box `width` wide, estimated by greedy word wrap; infinite when a word cannot fit. */
+export const lineCount = (text: string, width: number): number => {
+  const room = Math.floor((width - TEXT_PAD * 2) / CHAR_W);
+  return text.split('\n').reduce((lines, paragraph) => {
+    let count = 1;
+    let used = 0;
+    for (const word of paragraph.split(' ')) {
+      const length = used === 0 ? word.length : used + 1 + word.length;
+      if (used > 0 && length > room) {
+        count++;
+        used = word.length;
+      } else {
+        used = length;
+      }
+      // The canvas never breaks inside a word, so one wider than the box is clipped.
+      if (used > room) {
+        return Infinity;
+      }
+    }
+    return lines + count;
+  }, 0);
+};
+
+/** The horizontal run a link caption needs to show in full. */
+export const captionRun = (text: string): number => Math.ceil(text.length * CAPTION_CHAR_W + CAPTION_CLEARANCE);
+
+/** The narrowest width, on the minor grid, at which `text` wraps to at most {@link MAX_LINES} lines. */
+const fitWidth = (text: string): number => {
+  let width = 64;
+  while (lineCount(text, width) > MAX_LINES) {
+    width += 16;
+  }
+  return width;
+};
+
+type Shape = Box['kind'];
+
+/** A grid of {@link BOX}-sized cells `gap` apart, so a drawing's boxes match and line up; ids double as arrow ends. */
+const grid = (gap: { x: number; y: number }) => {
+  const at = (col: number, row: number) => ({ x: col * (BOX.w + gap.x), y: row * (BOX.h + gap.y) });
+  const box =
+    (kind: Shape) =>
+    (id: string, col: number, row: number, text: string, style: Style = {}): Element => ({
+      kind,
+      id,
+      ...at(col, row),
+      ...BOX,
+      text,
+      ...style,
+    });
+  return { at, rect: box('rect'), ellipse: box('ellipse'), diamond: box('diamond') };
+};
 
 const arrow = (from: string, to: string, options: Pick<Arrow, 'text' | 'stroke' | 'color'> = {}): Element => ({
   kind: 'arrow',
@@ -64,10 +115,11 @@ const scene = (elements: Element[]): Commands => [
   { op: 'upsert-object', object: { id: 'drawing', origin: { x: 0, y: 0 }, scale: 1, elements } },
 ];
 
+// Omar and Hana sit side by side so the buddy link runs between them rather than through Felix.
 const ORG_CHART_REPORTS = [
   ['omar', 'Omar Haddad\nStaff Engineer, cache engine', 'blue'],
-  ['felix', 'Felix Andersen\nBackend, cache engine', 'blue'],
   ['hana', 'Hana Sato\nSoftware Engineer', 'blue'],
+  ['felix', 'Felix Andersen\nBackend, cache engine', 'blue'],
   ['june', 'June Okonkwo\nAPI and billing', 'blue'],
   ['tomas', 'Tomás Vidal\nFrontend', 'blue'],
   ['anika', 'Anika Rao\nSRE', 'blue'],
@@ -76,29 +128,33 @@ const ORG_CHART_REPORTS = [
   ['kofi', 'Kofi Mensah\nDeveloper Relations', 'green'],
 ] as const;
 
-const makeOrgChart = () =>
-  scene([
-    rect('astrid', 720, 0, 200, 90, 'Astrid Holm\nEngineering Manager', { color: 'violet' }),
+const makeOrgChart = () => {
+  const { at, rect } = grid({ x: 192, y: 128 });
+  const middle = (ORG_CHART_REPORTS.length - 1) / 2;
+  return scene([
+    rect('astrid', middle, 0, 'Astrid Holm\nEngineering Manager', { color: 'violet' }),
     ...ORG_CHART_REPORTS.flatMap(([id, text, color], index) => [
-      rect(id, index * 180, 220, 160, 90, text, { color }),
+      rect(id, index, 1, text, { color }),
       arrow('astrid', id),
     ]),
     arrow('omar', 'hana', { text: 'onboarding buddy', stroke: 'dashed', color: 'grey' }),
-    label('note', 0, 360, 'Everyone reports to Astrid. Engineering in blue.', 600),
+    label('note', 0, at(0, 2).y, 'Everyone reports to Astrid. Engineering in blue.', 600),
   ]);
+};
 
-const makeArchitectureDiagram = () =>
-  scene([
-    rect('cli', 0, 160, 180, 90, 'Cairn CLI\n(CI runners, laptops)', { color: 'black' }),
-    rect('edge', 260, 160, 180, 90, 'Edge gateway\nCloudflare Workers', { color: 'orange' }),
-    rect('auth', 260, 0, 180, 80, 'Auth\ntokens, SSO', { color: 'violet' }),
-    rect('index', 520, 160, 180, 90, 'Index service\nkey → digest', { color: 'blue' }),
-    rect('meter', 520, 0, 180, 80, 'Usage meter', { color: 'green' }),
-    rect('dashboard', 0, 0, 180, 80, 'Dashboard\nComposer plugin', { color: 'black' }),
-    ellipse('postgres', 780, 160, 170, 90, 'Postgres\nvia Hyperdrive', { color: 'blue' }),
-    ellipse('r2', 260, 340, 180, 90, 'R2\nhot blobs', { color: 'orange' }),
-    ellipse('s3', 520, 340, 180, 90, 'S3\norigin, cold blobs', { color: 'yellow' }),
-    ellipse('stripe', 780, 0, 170, 80, 'Stripe', { color: 'green' }),
+const makeArchitectureDiagram = () => {
+  const { rect, ellipse } = grid({ x: 160, y: 96 });
+  return scene([
+    rect('dashboard', 0, 0, 'Dashboard\nComposer plugin', { color: 'black' }),
+    rect('auth', 1, 0, 'Auth\ntokens, SSO', { color: 'violet' }),
+    rect('meter', 2, 0, 'Usage meter', { color: 'green' }),
+    ellipse('stripe', 3, 0, 'Stripe', { color: 'green' }),
+    rect('cli', 0, 1, 'Cairn CLI\n(CI runners, laptops)', { color: 'black' }),
+    rect('edge', 1, 1, 'Edge gateway\nCloudflare Workers', { color: 'orange' }),
+    rect('index', 2, 1, 'Index service\nkey → digest', { color: 'blue' }),
+    ellipse('postgres', 3, 1, 'Postgres\nvia Hyperdrive', { color: 'blue' }),
+    ellipse('r2', 1, 2, 'R2\nhot blobs', { color: 'orange' }),
+    ellipse('s3', 2, 2, 'S3\norigin, cold blobs', { color: 'yellow' }),
     arrow('cli', 'edge', { text: 'HTTPS' }),
     arrow('dashboard', 'edge'),
     arrow('edge', 'auth'),
@@ -109,6 +165,7 @@ const makeArchitectureDiagram = () =>
     arrow('index', 'meter', { text: 'bytes served' }),
     arrow('meter', 'stripe', { text: 'metered usage' }),
   ]);
+};
 
 const REQUEST_STEPS = [
   ['cli', 'Cairn CLI\nhash inputs → action key', 'black'],
@@ -118,18 +175,20 @@ const REQUEST_STEPS = [
   ['verify', 'CLI\nverify digest, restore', 'black'],
 ] as const;
 
-const makeRequestFlow = () =>
-  scene([
-    ...REQUEST_STEPS.map(([id, text, color], index) => rect(id, index * 230, 0, 180, 90, text, { color })),
+const makeRequestFlow = () => {
+  const { rect } = grid({ x: 224, y: 96 });
+  return scene([
+    ...REQUEST_STEPS.map(([id, text, color], index) => rect(id, index, 0, text, { color })),
     arrow('cli', 'edge', { text: '1 GET /v2/cache/:key' }),
     arrow('edge', 'index', { text: '2 lookup' }),
     arrow('index', 'r2', { text: '3 hit: presign' }),
     arrow('r2', 'verify', { text: '4 bytes' }),
-    rect('build', 230, 200, 180, 90, 'Miss: CLI builds\nlocally', { color: 'red' }),
-    rect('commit', 460, 200, 180, 90, 'PUT blob, then\ncompare-and-set key', { color: 'red' }),
+    rect('build', 1, 1, 'Miss: CLI builds\nlocally', { color: 'red' }),
+    rect('commit', 2, 1, 'PUT blob, then\ncompare-and-set key', { color: 'red' }),
     arrow('index', 'build', { text: 'miss', stroke: 'dashed' }),
     arrow('build', 'commit'),
   ]);
+};
 
 // Bars are [label, start, end] in days from the reference date, clipped to the quarter.
 const ROADMAP_LANES = [
@@ -173,13 +232,17 @@ const ROADMAP_LANES = [
 
 const DAY_MS = 86_400_000;
 
+/** The gap between lanes, and between a bar and the next in its lane. */
+const ROADMAP_GAP = 16;
+
 const makeRoadmap = (now: Date) => {
-  const LANE_H = 90;
   const DAY_W = 10;
+  const TOP = 48;
   const quarter = Math.floor(now.getUTCMonth() / 3) * 3;
   const start = Date.UTC(now.getUTCFullYear(), quarter, 1);
   const end = Date.UTC(now.getUTCFullYear(), quarter + 3, 1);
-  const x = (time: number) => 180 + ((Math.min(Math.max(time, start), end) - start) / DAY_MS) * DAY_W;
+  const x = (time: number) =>
+    BOX.w + ROADMAP_GAP * 2 + ((Math.min(Math.max(time, start), end) - start) / DAY_MS) * DAY_W;
   const months = [0, 1, 2].map((index) => {
     const month = new Date(Date.UTC(now.getUTCFullYear(), quarter + index, 1));
     return label(
@@ -190,31 +253,48 @@ const makeRoadmap = (now: Date) => {
       200,
     );
   });
+  const lanesHeight = ROADMAP_LANES.length * (BOX.h + ROADMAP_GAP);
   // The canvas has no free lines, so the reference date is a hairline box.
-  const today = rect('today', x(now.getTime()) - 1, 40, 2, 480, '', { color: 'red', fill: 'solid', stroke: 'dashed' });
+  const today = {
+    kind: 'rect',
+    id: 'today',
+    x: x(now.getTime()) - 1,
+    y: TOP - 8,
+    w: 2,
+    h: lanesHeight + 8,
+    text: '',
+    color: 'red',
+    fill: 'solid',
+    stroke: 'dashed',
+  } satisfies Element;
   const lanes = ROADMAP_LANES.flatMap(([id, name, color, bars], lane) => {
-    const y = 60 + lane * (LANE_H + 20);
+    const y = TOP + lane * (BOX.h + ROADMAP_GAP);
+    // A bar is as wide as its dates, or as its label needs (a three-day offsite is a sliver), and starts clear of the
+    // bar before it, so a widened bar does not cover its neighbour.
+    let right = 0;
     return [
-      rect(`lane-${id}`, 0, y, 160, LANE_H, name, { color: 'grey' }),
-      ...bars.map(([text, from, to], bar) => {
-        const left = x(now.getTime() + from * DAY_MS);
-        const width = Math.max(x(now.getTime() + to * DAY_MS) - left, 40);
-        return rect(`${id}-${bar}`, left, y + 15, width, LANE_H - 30, text, { color, fill: 'solid', weight: 's' });
+      { kind: 'rect', id: `lane-${id}`, x: 0, y, ...BOX, text: name, color: 'grey' } satisfies Element,
+      ...bars.map(([text, from, to], bar): Element => {
+        const left = Math.max(x(now.getTime() + from * DAY_MS), right === 0 ? 0 : right + ROADMAP_GAP);
+        const width = Math.max(x(now.getTime() + to * DAY_MS) - left, fitWidth(text));
+        right = left + width;
+        return { kind: 'rect', id: `${id}-${bar}`, x: left, y, w: width, h: BOX.h, text, color, fill: 'solid' };
       }),
     ];
   });
   return scene([...months, ...lanes, today]);
 };
 
-const makeEscalation = () =>
-  scene([
-    rect('alert', 0, 0, 180, 80, 'PostHog alert fires', { color: 'red' }),
-    rect('primary', 240, 0, 180, 80, 'Primary on-call\nack in 15 min', { color: 'orange' }),
-    { kind: 'diamond', id: 'sev', x: 480, y: -20, w: 160, h: 120, text: 'SEV1?', color: 'black' },
-    rect('secondary', 240, 180, 180, 80, 'Secondary: Omar\nif no ack', { color: 'orange' }),
-    rect('ic', 700, 0, 180, 80, 'Astrid takes\nincident command', { color: 'violet' }),
-    rect('comms', 700, 180, 180, 80, 'Lucía: status page,\ncustomer email', { color: 'green' }),
-    rect('vendor', 940, 0, 180, 80, 'Vendor support\nCloudflare', { color: 'grey' }),
+const makeEscalation = () => {
+  const { rect, diamond } = grid({ x: 160, y: 96 });
+  return scene([
+    rect('alert', 0, 0, 'PostHog alert fires', { color: 'red' }),
+    rect('primary', 1, 0, 'Primary on-call\nack in 15 min', { color: 'orange' }),
+    diamond('sev', 2, 0, 'SEV1?', { color: 'black' }),
+    rect('secondary', 1, 1, 'Secondary: Omar\nif no ack', { color: 'orange' }),
+    rect('ic', 3, 0, 'Astrid takes\nincident command', { color: 'violet' }),
+    rect('comms', 3, 1, 'Lucía: status page,\ncustomer email', { color: 'green' }),
+    rect('vendor', 4, 0, 'Vendor support\nCloudflare', { color: 'grey' }),
     arrow('alert', 'primary'),
     arrow('primary', 'secondary', { text: '15 min', stroke: 'dashed' }),
     arrow('primary', 'sev'),
@@ -222,19 +302,30 @@ const makeEscalation = () =>
     arrow('ic', 'comms'),
     arrow('ic', 'vendor', { text: 'provider fault' }),
   ]);
+};
+
+/** Each drawing's scene commands, the roadmap over `now`'s quarter. */
+export const makeScenes = (now: Date): Record<DrawingKey, Commands> => ({
+  orgChart: makeOrgChart(),
+  architectureDiagram: makeArchitectureDiagram(),
+  requestFlow: makeRequestFlow(),
+  roadmap: makeRoadmap(now),
+  escalation: makeEscalation(),
+});
 
 /** The five canvas drawings the handbook and planning documents embed. Spec: `CONTENT.md` § Drawings. */
 export const makeDrawings = Effect.fnUntraced(function* () {
   const { db } = yield* Database.Service;
   const { now } = yield* SampleSpace.Clock;
   const quarter = Math.floor(now.getUTCMonth() / 3) + 1;
+  const scenes = makeScenes(now);
   const drawing = (name: string, commands: Commands) => Architecture.addCanvasDrawing(db, { name, commands });
   const drawings: Drawings = {
-    orgChart: drawing('Alien Labs org chart', makeOrgChart()),
-    architectureDiagram: drawing('Cairn architecture', makeArchitectureDiagram()),
-    requestFlow: drawing('Cache request flow', makeRequestFlow()),
-    roadmap: drawing(`Q${quarter} roadmap timeline`, makeRoadmap(now)),
-    escalation: drawing('On-call escalation', makeEscalation()),
+    orgChart: drawing('Alien Labs org chart', scenes.orgChart),
+    architectureDiagram: drawing('Cairn architecture', scenes.architectureDiagram),
+    requestFlow: drawing('Cache request flow', scenes.requestFlow),
+    roadmap: drawing(`Q${quarter} roadmap timeline`, scenes.roadmap),
+    escalation: drawing('On-call escalation', scenes.escalation),
   };
   return drawings;
 });
