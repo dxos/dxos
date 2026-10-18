@@ -52,7 +52,11 @@ export default Capability.makeModule(
     };
     // Subscribed here rather than in `onJoin`, which plugin-calls never invokes; utterances only flow in a simulated call.
     const callManager = yield* Capability.get(CallsCapabilities.Manager);
-    callManager.simulatedUtterance.on((utterance) => void writeUtterance(utterance).catch((err) => log.catch(err)));
+    const unsubscribe = callManager.simulatedUtterance.on(
+      (utterance) => void writeUtterance(utterance).catch((err) => log.catch(err)),
+    );
+    // The manager outlives this module, so a reactivation would otherwise write every line twice.
+    yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
 
     return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {

@@ -11,7 +11,10 @@ import { loadMediaFile } from '../calls/call-simulation.ts';
  */
 export const fakeUserMedia = async (src: string): Promise<{ start: () => Promise<void>; restore: () => void }> => {
   const audioContext = new AudioContext();
-  const { video, videoTrack, audioTrack } = await loadMediaFile(audioContext, src);
+  const { video, videoTrack, audioTrack } = await loadMediaFile(audioContext, src).catch((err) => {
+    void audioContext.close();
+    throw err;
+  });
   const mediaDevices = navigator.mediaDevices;
   const { getUserMedia, enumerateDevices } = mediaDevices;
   const devices = [

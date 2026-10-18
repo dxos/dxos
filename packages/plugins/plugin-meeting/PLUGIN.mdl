@@ -383,17 +383,25 @@ test QA-2: A four-person meeting call, with notes taken during it
     - tracks: one equal-length WebM per participant (astrid, lucia, ben, tomas), made by
       `.agents/skills/autocue/scripts/conversation.mjs` from
       `autocue/fieldstone-dashboard.conversation.json`; the browser's camera and microphone play
-      astrid's (`fake-media.mjs`), and the other three are served to the page; its `timeline.json`
-      gives each line's speaker, start and text, and the screenshare's start
+      astrid's (`fake-media.mjs`), and the other three are served to the page, with
+      `lucia-screen.webm` (the screen Lucía shares); its `timeline.json` gives each line's speaker
+      id, start and text, and the screenshare's start
+    - transcript: `timeline.json`'s `lines` as `{ speaker, start, text }`, each `speaker` id mapped to the
+      participant's display name (`four-person-call.mjs` does this)
+    - screen: `{ src: <lucia-screen.webm URL>, start: <timeline.json screenshares[0].start> }`
   steps:
     - name: Create and open the meeting
       do: Create a Meeting named "Cairn dashboard plugin: scoping" in the space and open it.
       invoke: [op:Create] { name: "Cairn dashboard plugin: scoping", db: $given.space.db }
       capture: created
       expect: MeetingArticle opens with the Notes, Transcript, Summary and Call tabs
+    - name: Make the meeting active
+      do: (no UI — test seam) Make the new meeting the active one, so the call's lines reach its transcript.
+      invoke: [op:SetActive] { object: $created }
+      expect: nothing visible
     - name: Add the colleagues
-      do: (no UI — test seam) Make the meeting active and fill the call with Lucía Ferreira, Ben Achterberg and Tomás Vidal, with the script's timed lines.
-      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [{ name: "Lucía Ferreira", src: $given.tracks.lucia }, { name: "Ben Achterberg", src: $given.tracks.ben }, { name: "Tomás Vidal", src: $given.tracks.tomas }], transcript: $given.tracks.timeline }
+      do: (no UI — test seam) Fill the call with Lucía Ferreira, Ben Achterberg and Tomás Vidal, with Lucía's screenshare and the script's timed lines.
+      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [{ name: "Lucía Ferreira", src: $given.tracks.lucia, screenshare: $given.screen }, { name: "Ben Achterberg", src: $given.tracks.ben }, { name: "Tomás Vidal", src: $given.tracks.tomas }], transcript: $given.transcript }
       expect: nothing visible yet — the participants appear on join
     - name: Join with camera and microphone on
       do: Open the Call tab, turn the camera on, unmute, and click Join.

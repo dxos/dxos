@@ -255,7 +255,14 @@ export const loadMediaFile = async (
   document.body.appendChild(video);
   await new Promise<void>((resolve, reject) => {
     video.addEventListener('loadeddata', () => resolve(), { once: true });
-    video.addEventListener('error', () => reject(new Error(`cannot load media file ${src}`)), { once: true });
+    video.addEventListener(
+      'error',
+      () => {
+        video.remove();
+        reject(new Error(`cannot load media file ${src}`));
+      },
+      { once: true },
+    );
   });
 
   const destination = audioContext.createMediaStreamDestination();

@@ -91,6 +91,10 @@ const poll = async (label, check) => {
 
 const download = async (url, file) => {
   const response = await fetch(url);
+  // An error body saved as the clip would be skipped as done on every rerun.
+  if (!response.ok) {
+    throw new Error(`download ${path.basename(file)}: ${response.status}`);
+  }
   writeFileSync(file, Buffer.from(await response.arrayBuffer()));
 };
 

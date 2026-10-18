@@ -46,12 +46,27 @@ const SimulatedStory = ({ media }: StoryProps) => {
   useEffect(() => {
     setBlocked(false);
     let restore: (() => void) | undefined;
+    let cancelled = false;
+    // The attempt keeps running after a timeout or cleanup, so it stops at its next step once it is stale.
+    const live = () => {
+      if (cancelled) {
+        throw new DOMException('Attempt superseded', 'AbortError');
+      }
+    };
+    const teardown = () => {
+      void callManager.leave();
+      void callManager.simulate(undefined);
+      restore?.();
+      restore = undefined;
+    };
     const join = async () => {
       const local = await fakeUserMedia(`${media}/astrid.webm`);
       restore = local.restore;
+      live();
       const timeline: Timeline | undefined = await fetch(`${media}/timeline.json`)
         .then((response) => (response.ok ? response.json() : undefined))
         .catch(() => undefined);
+      live();
       await callManager.simulate(
         COLLEAGUES.map(({ name, track }) => {
           const share = timeline?.screenshares?.find(({ speaker }) => speaker === track);
@@ -62,10 +77,13 @@ const SimulatedStory = ({ media }: StoryProps) => {
           };
         }),
       );
+      live();
       callManager.setRoomId('story-room');
       await callManager.turnVideoOn();
       await callManager.turnAudioOn();
+      live();
       await callManager.join();
+      live();
       await local.start();
     };
     // A blocked autoplay either rejects or leaves `AudioContext.resume()` pending until a gesture, so a stall counts too.
@@ -73,26 +91,34 @@ const SimulatedStory = ({ media }: StoryProps) => {
     const stalled = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new DOMException('Autoplay stalled', 'NotAllowedError')), JOIN_TIMEOUT);
     });
-    let cancelled = false;
-    void Promise.race([join(), stalled])
+    const attemptDone = join();
+    void Promise.race([attemptDone, stalled])
       .then(() => clearTimeout(timer))
       .catch((err) => {
         if (cancelled) {
           return;
         }
         if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          // The blocked attempt has already joined, so it leaves before the retry button replaces the call.
+          cancelled = true;
+          teardown();
           setBlocked(true);
         } else {
           log.catch(err);
         }
       });
+    // Media a stale attempt acquires after cleanup ran is released when that attempt stops.
+    void attemptDone.catch(() => {
+      if (cancelled) {
+        restore?.();
+        restore = undefined;
+      }
+    });
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      void callManager.leave();
-      void callManager.simulate(undefined);
-      restore?.();
+      teardown();
     };
   }, [callManager, media, attempt]);
 
