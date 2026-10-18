@@ -13,11 +13,11 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../builder/index.ts';
-import { createCanvasAtoms } from '../../engine/index.ts';
-import { useRegistry, useSceneProjection } from '../../hooks/index.ts';
-import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../model/index.ts';
-import { between } from '../../utils/index.ts';
+import { SceneBuilder } from '../../../builder/index.ts';
+import { createCanvasAtoms } from '../../../engine/index.ts';
+import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
+import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
+import { between } from '../../../utils/index.ts';
 import { Properties } from './Properties.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
@@ -74,7 +74,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Properties',
+  title: 'ui/react-ui-canvas/components/panels/Properties',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'column', classNames: 'w-[50rem]' })],
   args: { select: ['a'] },

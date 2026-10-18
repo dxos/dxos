@@ -8,9 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { freehandCapabilities } from '../../engine/index.ts';
-import { type NodeRegistry, type Tool } from '../../model/index.ts';
-import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
+import { freehandCapabilities } from '../../../engine/index.ts';
+import { type NodeRegistry, type Tool } from '../../../model/index.ts';
+import { defaultLinkRegistry, defaultNodeRegistry } from '../../SceneLayer/index.ts';
 import { Palette, type PaletteProps } from './Palette.tsx';
 
 const ICONS = [
@@ -75,7 +75,7 @@ const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Palette',
+  title: 'ui/react-ui-canvas/components/panels/Palette',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   args: { collapse: 'auto', flyout: 'list', many: false, height: 640 },

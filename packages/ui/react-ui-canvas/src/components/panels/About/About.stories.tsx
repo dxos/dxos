@@ -10,7 +10,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { About } from './About.tsx';
 
 const meta: Meta<typeof About> = {
-  title: 'ui/react-ui-canvas/About',
+  title: 'ui/react-ui-canvas/components/panels/About',
   component: About,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },

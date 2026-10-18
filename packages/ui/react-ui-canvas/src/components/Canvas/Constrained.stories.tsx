@@ -18,7 +18,7 @@ import {
 } from '../../engine/index.ts';
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
-import { Properties } from '../Properties/index.ts';
+import { Properties } from '../panels/Properties/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -89,7 +89,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas/Constrained',
+  title: 'ui/react-ui-canvas/components/Constrained',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
 };

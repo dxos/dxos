@@ -57,7 +57,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Dock',
+  title: 'ui/react-ui-canvas/components/Dock',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   args: { select: 'a' },

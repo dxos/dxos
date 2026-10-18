@@ -120,7 +120,7 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
 };
 
 const meta: Meta<GridProps> = {
-  title: 'ui/react-ui-canvas/Grid',
+  title: 'ui/react-ui-canvas/components/Grid',
   component: GridComponent,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

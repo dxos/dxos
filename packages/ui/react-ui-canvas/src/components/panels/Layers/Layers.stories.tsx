@@ -10,8 +10,8 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type Layer, type LayerId } from '../../model/index.ts';
-import { between } from '../../utils/index.ts';
+import { type Layer, type LayerId } from '../../../model/index.ts';
+import { between } from '../../../utils/index.ts';
 import { LayersPanel } from './Layers.tsx';
 
 /** Three layers, bottom first, the middle one hidden. */
@@ -67,7 +67,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/Layers',
+  title: 'ui/react-ui-canvas/components/panels/Layers',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },

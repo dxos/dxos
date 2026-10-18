@@ -53,7 +53,7 @@ const Stepping = (props: Partial<FrameHeaderProps>) => {
  * 2. Play turns to pause and back.
  */
 const meta: Meta<typeof Stepping> = {
-  title: 'ui/react-ui-canvas/FrameHeader',
+  title: 'ui/react-ui-canvas/components/FrameHeader',
   render: (args) => <Stepping {...args} />,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };

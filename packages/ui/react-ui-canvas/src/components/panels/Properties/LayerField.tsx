@@ -8,7 +8,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { type Layer } from '../../model/index.ts';
+import { type Layer } from '../../../model/index.ts';
 import { ClassField, StyleClassesContext } from './ClassField.tsx';
 
 /** The scene's layers, bottom first, for the layer field. */

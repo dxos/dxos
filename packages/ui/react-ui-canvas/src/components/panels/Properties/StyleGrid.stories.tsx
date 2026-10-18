@@ -15,8 +15,8 @@ import {
   defaultThemeRegistry,
   resolveLook,
   styleVariant,
-} from '../../model/index.ts';
-import { ThemeBar } from '../ThemeBar/index.ts';
+} from '../../../model/index.ts';
+import { ThemeBar } from '../../ThemeBar/index.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 
 type StoryArgs = Pick<StyleGridProps, 'indeterminate' | 'readonly'> & { theme?: string };
@@ -62,7 +62,7 @@ const DefaultStory = ({ indeterminate, readonly, theme: initialTheme }: StoryArg
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/StyleGrid',
+  title: 'ui/react-ui-canvas/components/panels/StyleGrid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   args: {

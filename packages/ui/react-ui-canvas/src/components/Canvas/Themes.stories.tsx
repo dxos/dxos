@@ -97,7 +97,7 @@ const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
  * 3. The grid buttons draw dots, lines or no grid over the theme's background.
  */
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Themes',
+  title: 'ui/react-ui-canvas/components/Themes',
   render: (args) => <ThemeView {...args} />,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },

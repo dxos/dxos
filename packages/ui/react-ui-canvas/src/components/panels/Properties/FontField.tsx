@@ -8,7 +8,7 @@ import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, NodeStyle } from '../../model/index.ts';
+import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, NodeStyle } from '../../../model/index.ts';
 
 const FAMILY_LABELS: Record<FontFamily, string> = { default: 'Default', monospace: 'Monospace' };
 

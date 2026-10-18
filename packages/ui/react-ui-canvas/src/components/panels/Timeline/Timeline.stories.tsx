@@ -10,8 +10,8 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { useClock, useRegistry } from '../../hooks/index.ts';
-import { createClock } from '../../model/index.ts';
+import { useClock, useRegistry } from '../../../hooks/index.ts';
+import { createClock } from '../../../model/index.ts';
 import { TimelineBar, keyAt } from './Timeline.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
@@ -44,7 +44,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Timeline',
+  title: 'ui/react-ui-canvas/components/panels/Timeline',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },

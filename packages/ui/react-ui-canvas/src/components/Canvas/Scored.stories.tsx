@@ -363,7 +363,7 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Scored',
+  title: 'ui/react-ui-canvas/components/Scored',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   argTypes: {

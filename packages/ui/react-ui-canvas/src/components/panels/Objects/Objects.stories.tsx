@@ -9,7 +9,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type SceneId } from '../../model/index.ts';
+import { type SceneId } from '../../../model/index.ts';
 import { type ObjectEntry, ObjectsPanel } from './Objects.tsx';
 
 /** Three composites, one not yet placed anywhere. */
@@ -59,7 +59,7 @@ const DefaultStory = () => {
  * 2. The toolbar groups a new object, and its menu places, duplicates and deletes the selected one.
  */
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/Objects',
+  title: 'ui/react-ui-canvas/components/panels/Objects',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },

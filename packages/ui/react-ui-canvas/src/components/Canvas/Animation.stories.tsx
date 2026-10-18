@@ -57,7 +57,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas/Animation',
+  title: 'ui/react-ui-canvas/components/Animation',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { translations: [...uiTranslations, ...formTranslations] },

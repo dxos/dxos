@@ -143,7 +143,6 @@ import {
   visibleScene,
   zoomAt,
 } from '../../utils/index.ts';
-import { About, type AboutStat } from '../About/index.ts';
 import {
   BackgroundField,
   BackgroundFill,
@@ -156,10 +155,12 @@ import {
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { LayersPanel } from '../Layers/index.ts';
-import { ObjectsPanel } from '../Objects/index.ts';
-import { Palette } from '../Palette/index.ts';
-import { Properties, type PropertiesProps } from '../Properties/index.ts';
+import { About, type AboutStat } from '../panels/About/index.ts';
+import { LayersPanel } from '../panels/Layers/index.ts';
+import { ObjectsPanel } from '../panels/Objects/index.ts';
+import { Palette } from '../panels/Palette/index.ts';
+import { Properties, type PropertiesProps } from '../panels/Properties/index.ts';
+import { TimelineBar } from '../panels/Timeline/index.ts';
 import {
   type ElementHandlers,
   MAX_LIVE_DEPTH,
@@ -168,7 +169,6 @@ import {
   defaultNodeRegistry,
 } from '../SceneLayer/index.ts';
 import { ThemeBar } from '../ThemeBar/index.ts';
-import { TimelineBar } from '../Timeline/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';
 import { CanvasProvider, useCanvasContext } from './CanvasContext.ts';
 import { Dock, DockProvider } from './Dock.tsx';

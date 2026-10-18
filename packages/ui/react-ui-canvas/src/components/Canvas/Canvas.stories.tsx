@@ -266,7 +266,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/Canvas',
+  title: 'ui/react-ui-canvas/components/Canvas',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
