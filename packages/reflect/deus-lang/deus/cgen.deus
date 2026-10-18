@@ -1003,10 +1003,15 @@ def isIn (xs : List Int) (x : Int) : Bool := List.contains x xs
 /-- Which of `locals` occur free in `e` under `env`, in their order: `freeLocals` kept to `locals`, without listing every
   use, and stopping once all are found. The back end asks this of the rest of a body at each binding (D322). -/
 def usedOf (env : List Int) (locals : List Int) (e : Sexp) : List Int :=
-  let indexed := List.mapIndexed (fun i x => (i, x)) env
-  let slotsOf := fun (l : Int) => if l < 0 then [] else List.filterMap (fun pair => if snd pair == l then Option.some (fst pair) else Option.none) indexed
-  let left := CGen.unseen 0 e (List.concatMap slotsOf locals)
-  List.filter (fun l => List.any (fun i => not (isIn left i)) (slotsOf l)) locals
+  let slots := List.map (fun l => if l < 0 then [] else CGen.positions l env 0 []) locals
+  let left := CGen.unseen 0 e (List.concat slots)
+  List.map fst (List.filter (fun pair => List.any (fun i => not (isIn left i)) (snd pair)) (List.zip locals slots))
+
+/-- The indices at which `l` is in `env`, from `at`, onto `found`; no pairs are built, as `usedOf` asks this often. -/
+def positions (l : Int) (env : List Int) (at : Int) (found : List Int) : List Int :=
+  match env with
+  | [] => found
+  | x :: rest => CGen.positions l rest (at + 1) (if x == l then at :: found else found)
 
 /-- `slots`, the indices of `env` that `usedOf` looks for, less those `e` reads below `depth` binders. -/
 def unseen (depth : Int) (e : Sexp) (slots : List Int) : List Int :=
