@@ -88,7 +88,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
           >
             <Card.Header>
               <DragHandle.DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>

@@ -71,7 +71,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
           <Card.Root grid ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
               <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
