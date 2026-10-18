@@ -12,7 +12,7 @@ import { Actor, Task, TaskSet } from '@dxos/types';
 import { daysAgo } from './util.ts';
 
 //
-// Five steps, flat and in order.
+// Six steps, flat and in order.
 //
 // Flat on purpose: the whole run is one afternoon's work, and a tree would imply stages that can be
 // planned against each other. Everything is `todo` — this is a plan to run, not a project caught
@@ -35,6 +35,12 @@ type TaskSeed = {
 const USER: Actor.Actor = { role: 'user', name: 'You' };
 
 const STEPS: ReadonlyArray<TaskSeed> = [
+  {
+    title: 'Draw the Worker as a diagram',
+    description:
+      'Before any code: one Markdown document holding a Mermaid flowchart (a ```mermaid fenced block) of the request path — client, fetch handler, the JSON body with its greeting and UTC time, response. File the document as an artifact on this project, so the code that follows has something to be checked against.',
+    estimate: 'xs',
+  },
   {
     title: 'Create a sandbox and install wrangler',
     description:
@@ -70,7 +76,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
 
 export type TasksResult = { taskSet: TaskSet.TaskSet; tasks: Task.Task[] };
 
-/** The five steps, each depending on the one before it. */
+/** The six steps, each depending on the one before it. */
 export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>
@@ -104,7 +110,7 @@ export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('task
         taskSet.tasks = refs;
       });
 
-      // Nothing can be deployed before it is written, and nothing claimed before it is deployed.
+      // Nothing is written before it is drawn, deployed before it is written, or claimed before it is deployed.
       for (const [index, task] of tasks.entries()) {
         if (index > 0) {
           const previous = tasks[index - 1];

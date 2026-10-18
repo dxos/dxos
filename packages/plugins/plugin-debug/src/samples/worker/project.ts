@@ -21,8 +21,8 @@ const INSTRUCTIONS = `Deploy the Worker described by the task list, working the 
 setting each one's status as you finish it: the task list is how I follow this run.
 
 What the Worker does is the whole specification — one fetch handler, JSON out, a greeting and the \
-current UTC time. There is no design stage and nothing to choose. If a step starts to look like \
-architecture, it is the wrong step.
+current UTC time. The one diagram is the whole design stage and there is nothing to choose. If a \
+step starts to look like architecture, it is the wrong step.
 
 Write the code yourself in one sandbox, driving it through the Sandbox skill \
 (\`org.dxos.skill.sandbox\`). The sandbox image ships a coding agent of its own; do not delegate to \

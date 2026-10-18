@@ -32,7 +32,7 @@ const taskArchive = async (definition: ReturnType<typeof WorkerSpace.make>): Pro
  * schema it seeds changes incompatibly, the build fails here.
  */
 describe('Worker template', () => {
-  test('builds the project and its five steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
+  test('builds the project and its six steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
     const { json, objectCount } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
@@ -44,8 +44,8 @@ describe('Worker template', () => {
     expect(countOf('type.project')).toBe(1);
     expect(countOf('type.instructions')).toBe(1);
     expect(countOf('type.taskSet')).toBe(1);
-    expect(countOf('type.task:')).toBe(5);
-    // The URL and the response body are what the run produces, so the space ships no documents.
+    expect(countOf('type.task:')).toBe(6);
+    // The diagram, the URL and the response body are what the run produces, so the space ships no documents.
     expect(countOf('type.document')).toBe(0);
   });
 
@@ -72,6 +72,7 @@ describe('Worker template', () => {
     const tasks = await taskArchive(WorkerSpace.make());
 
     expect(tasks.map((task) => task.title)).toEqual([
+      'Draw the Worker as a diagram',
       'Create a sandbox and install wrangler',
       'Write the Worker',
       'Deploy it with no Cloudflare login',

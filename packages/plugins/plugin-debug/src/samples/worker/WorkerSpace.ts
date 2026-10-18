@@ -20,7 +20,7 @@ const partials = {
 
 /**
  * The smallest thing that still builds and deploys: one Cloudflare Worker returning a greeting and
- * the time, as five tasks from an empty sandbox to a URL that answers.
+ * the time, as six tasks from a diagram to a URL that answers.
  *
  * It is the short path through the same ground `StockfishSpace` covers at length. There the work is
  * the engine and the deploy is one stage of five; here the deploy IS the project, so there is no
@@ -51,6 +51,6 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.worker',
-    description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
+    description: 'Six tasks from a diagram to a Cloudflare Worker that answers, with no account to start.',
     definition: make(),
   });
