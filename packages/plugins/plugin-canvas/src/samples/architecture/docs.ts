@@ -212,7 +212,7 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
 
       Activation events are values such as \`Startup\`, \`Idle\` and \`SurfacesRequested(role)\` in \`src/common/activation-events.ts\`. When one fires, the \`PluginManager\` activates the modules waiting on it. The activation graph (\`activation-graph.ts\`) orders them so a module that requires a singleton capability starts after its provider. Capabilities are typed tags made with \`Capability.make\` or \`Capability.makeSingleton\`, and a module reads them with \`Capability.get\` or \`Capability.getAll\`. Common tags live in \`Capabilities\`, such as \`ReactSurface\`, \`OperationHandler\` and \`ProcessManager\`. App-level ones live in the toolkit's \`AppCapabilities\`, such as \`AppGraphBuilder\`, \`Settings\` and \`SpaceTemplate\`.
 
-      ### A plugin
+      ### Plugin Registry
 
       Each plugin under ${code('packages/plugins')} has the same anatomy: \`plugin.tsx\` names its modules, \`capabilities/\` contributes them, \`containers/\` are the surfaces, \`types/\` its ECHO schema, and \`PLUGIN.mdl\` states what it does. The UI is built from ${code('packages/ui/react-ui')}.
 
