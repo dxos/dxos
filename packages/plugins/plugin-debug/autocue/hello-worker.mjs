@@ -228,15 +228,20 @@ export const steps = [
     name: 'Open the diagram from the project',
     run: async ({ demo, page }) => {
       await caption(demo, 'The diagram, filed on the project');
-      await demo.click({ selector: '[data-testid="projectsPlugin.tab.overview"] >> nth=0', label: 'Overview' });
-      const gallery = page.locator('[data-testid="projectsPlugin.artifacts"]').first();
-      await gallery.waitFor({ state: 'visible', timeout: 15_000 });
-      await gallery.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(BEAT);
-      await demo.click({
-        selector: '[data-testid="projectsPlugin.artifacts"] :is(button,a,[role="button"],[data-scope="card"]) >> nth=0',
-        label: 'Diagram',
-      });
+      // Filing an artifact can open it in the project's plank by itself, which hides the project's tabs.
+      const overview = page.locator('[data-testid="projectsPlugin.tab.overview"]').first();
+      if (await visible(overview, 2_000)) {
+        await demo.click({ selector: '[data-testid="projectsPlugin.tab.overview"] >> nth=0', label: 'Overview' });
+        const gallery = page.locator('[data-testid="projectsPlugin.artifacts"]').first();
+        await gallery.waitFor({ state: 'visible', timeout: 15_000 });
+        await gallery.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(BEAT);
+        await demo.click({
+          selector:
+            '[data-testid="projectsPlugin.artifacts"] :is(button,a,[role="button"],[data-scope="card"]) >> nth=0',
+          label: 'Diagram',
+        });
+      }
       // The drawing opens in the project's plank, under its breadcrumb, once its canvas has laid out.
       await page.waitForFunction(
         () =>
