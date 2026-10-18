@@ -62,7 +62,7 @@ async function Worker$Bundles$answer(store, verb, rest, verify, body, authorize,
         return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [404, "not a bundle name"]);
       } else {
         if ((verb === "GET")) {
-          const t1 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$read(store)), name));
+          const t1 = rt.resumed($stack, await rt.ap(Worker$Bundles$Store$read(store), name));
           m2: {
             if (t1.tag === 0) {
               return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [404, "no such bundle"]);
@@ -79,7 +79,7 @@ async function Worker$Bundles$answer(store, verb, rest, verify, body, authorize,
           } else {
             if ((verb === "DELETE")) {
               rt.resumed($stack, await rt.ap(authorize, "compact"));
-              rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$trash(store)), name));
+              rt.resumed($stack, await rt.ap(Worker$Bundles$Store$trash(store), name));
               return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "deleted", true, 200]);
             } else {
               return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [405, "method not allowed"]);
@@ -180,7 +180,7 @@ rt.named(Worker$Http$problem, "Worker.Http.problem");
 async function Worker$Bundles$listing(store, verb) {
   const $stack = rt.handlers();
   if ((verb === "GET")) {
-    return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 0, [rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$names(store)), undefined))]);
+    return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 0, [rt.resumed($stack, await rt.ap(Worker$Bundles$Store$names(store), undefined))]);
   } else {
     return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 3, [405, "method not allowed"]);
   }
@@ -224,8 +224,7 @@ function Worker$Paths$isBundle(name) {
 }
 rt.named(Worker$Paths$isBundle, "Worker.Paths.isBundle");
 
-async function Worker$Bundles$Store$read(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$read(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -245,12 +244,12 @@ async function Worker$Bundles$push(store, name, verify, body, authorize, moveHea
   const $stack = rt.handlers();
   rt.resumed($stack, await rt.ap(authorize, "push"));
   const sent = rt.resumed($stack, await rt.ap(body, undefined));
-  if (rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$holds(store)), name))) {
+  if (rt.resumed($stack, await rt.ap(Worker$Bundles$Store$holds(store), name))) {
     return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "stored", false, 200]);
   } else {
     let problem;
     if (verify) {
-      problem = Worker$Bundles$pushProblem(name, rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$digest(store)), sent)));
+      problem = Worker$Bundles$pushProblem(name, rt.resumed($stack, await rt.ap(Worker$Bundles$Store$digest(store), sent)));
     } else {
       problem = rt.con0("#Option", 0);
     }
@@ -268,7 +267,7 @@ async function Worker$Bundles$push(store, name, verify, body, authorize, moveHea
             return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 4, [refusal]);
           }
           if (t1.tag === 0) {
-            rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Bundles$Store$write(store)), name, sent));
+            rt.resumed($stack, await rt.ap(Worker$Bundles$Store$write(store), name, sent));
             return new rt.Con("3d1cf370935c2713b1d1b555e8e78a4f145c9adecc1cf83ceffcea7fc608abe1", 2, [name, "stored", true, 201]);
           }
           rt.nomatch(t1);
@@ -280,8 +279,7 @@ async function Worker$Bundles$push(store, name, verify, body, authorize, moveHea
 }
 rt.named(Worker$Bundles$push, "Worker.Bundles.push");
 
-async function Worker$Bundles$Store$trash(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$trash(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -429,8 +427,7 @@ rt.named(Worker$Http$json, "Worker.Http.json");
 
 const lib$web$Js$bool = rt.importFn(rt, "js.as.bool", [['bool']], ['raw'], "lib.web.Js.bool");
 
-async function Worker$Bundles$Store$names(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$names(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -498,8 +495,7 @@ function Worker$Heads$isHash(t) {
 }
 rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
-async function Worker$Bundles$Store$holds(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$holds(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -533,8 +529,7 @@ function Worker$Bundles$pushProblem(name, digest) {
 }
 rt.named(Worker$Bundles$pushProblem, "Worker.Bundles.pushProblem");
 
-async function Worker$Bundles$Store$digest(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$digest(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -550,8 +545,7 @@ async function Worker$Bundles$Store$digest(v) {
 }
 rt.named(Worker$Bundles$Store$digest, "Worker.Bundles.Store.digest");
 
-async function Worker$Bundles$Store$write(v) {
-  const $stack = rt.handlers();
+function Worker$Bundles$Store$write(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];

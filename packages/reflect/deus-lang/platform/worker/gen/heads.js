@@ -530,7 +530,7 @@ rt.named(Worker$Http$header, "Worker.Http.header");
 
 async function Worker$Heads$move(store, claim, sent) {
   const $stack = rt.handlers();
-  const current = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$current(store)), Worker$Heads$Claim$branch(claim)));
+  const current = rt.resumed($stack, await rt.ap(Worker$Heads$HeadStore$current(store), Worker$Heads$Claim$branch(claim)));
   const causal = Option$map(fst, current);
   let required;
   m0: {
@@ -539,7 +539,7 @@ async function Worker$Heads$move(store, claim, sent) {
       if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
         required = 0;
       } else {
-        required = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$epochAt(store)), head));
+        required = rt.resumed($stack, await rt.ap(Worker$Heads$HeadStore$epochAt(store), head));
       }
       break m0;
     }
@@ -559,16 +559,16 @@ async function Worker$Heads$move(store, claim, sent) {
     } else {
       let r1;
       if ((decided === "write")) {
-        r1 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$swap(store)), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), tag));
+        r1 = rt.resumed($stack, await rt.ap(Worker$Heads$HeadStore$swap(store), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), tag));
       } else {
         r1 = false;
       }
       if (r1) {
-        rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$log(store)), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), causal));
+        rt.resumed($stack, await rt.ap(Worker$Heads$HeadStore$log(store), Worker$Heads$Claim$branch(claim), Worker$Heads$Claim$head(claim), causal));
         return new rt.Con("c32022374ef28d9e5c538eb0a215a2f197969d53a93d1990dc6f3dcad4c7f98e", 0, [0, required, Worker$Heads$Claim$head(claim)]);
       } else {
         let r2;
-        const t3 = rt.resumed($stack, await rt.ap(rt.resumed($stack, await Worker$Heads$HeadStore$current(store)), Worker$Heads$Claim$branch(claim)));
+        const t3 = rt.resumed($stack, await rt.ap(Worker$Heads$HeadStore$current(store), Worker$Heads$Claim$branch(claim)));
         m4: {
           if (t3.tag === 1 && t3.fields[0].tag === 0) {
             const head_1 = t3.fields[0].fields[0];
@@ -1055,8 +1055,7 @@ function Worker$Heads$Moved$head(v) {
 }
 rt.named(Worker$Heads$Moved$head, "Worker.Heads.Moved.head");
 
-async function Worker$Heads$HeadStore$current(v) {
-  const $stack = rt.handlers();
+function Worker$Heads$HeadStore$current(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -1094,8 +1093,7 @@ function Worker$Heads$Claim$head(v) {
 }
 rt.named(Worker$Heads$Claim$head, "Worker.Heads.Claim.head");
 
-async function Worker$Heads$HeadStore$epochAt(v) {
-  const $stack = rt.handlers();
+function Worker$Heads$HeadStore$epochAt(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -1150,8 +1148,7 @@ function Worker$Heads$verdict(current, claim, required, sent) {
 }
 rt.named(Worker$Heads$verdict, "Worker.Heads.verdict");
 
-async function Worker$Heads$HeadStore$swap(v) {
-  const $stack = rt.handlers();
+function Worker$Heads$HeadStore$swap(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];
@@ -1165,8 +1162,7 @@ async function Worker$Heads$HeadStore$swap(v) {
 }
 rt.named(Worker$Heads$HeadStore$swap, "Worker.Heads.HeadStore.swap");
 
-async function Worker$Heads$HeadStore$log(v) {
-  const $stack = rt.handlers();
+function Worker$Heads$HeadStore$log(v) {
   m0: {
     if (v.tag === 0) {
       const v_1 = v.fields[0];

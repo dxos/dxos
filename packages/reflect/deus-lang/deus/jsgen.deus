@@ -253,6 +253,28 @@ def mentions (a : Text) (t : Sexp) : Bool :=
   | Sexp.list items => List.any (mentions a) items
   | _ => false
 
+/-- Whether applying a function of type `t` to `n` arguments may wait: `Js.Async` is in the effects of those `n`
+  arrows. A function it only returns or takes, such as a structure field's, does not make it wait (D319). -/
+def waitsAt (asyncHash : Text) (n : Int) (t : Sexp) : Bool :=
+  let async := fun (x : Sexp) => mentions asyncIri x || mentions asyncHash x
+  if n <= 0 then false else
+    match t with
+    | Sexp.list (Sexp.sym "tfun" :: _ :: result :: row) =>
+        List.any async row || (match result with
+          | Sexp.list [Sexp.sym "teff", effects, inner] => async effects || JsGen.waitsAt asyncHash (n - 1) inner
+          | _ => JsGen.waitsAt asyncHash (n - 1) result)
+    | Sexp.list [Sexp.sym "teff", effects, inner] => async effects || JsGen.waitsAt asyncHash n inner
+    | _ => async t
+
+test waitsOnlyWhereItsOwnArrowsWait :=
+  let async := Sexp.list [Sexp.sym "eff", Sexp.list [Sexp.sym "tref", Sexp.str asyncIri]]
+  let text := Sexp.list [Sexp.sym "tref", Sexp.str "#Text"]
+  let field := Sexp.list [Sexp.sym "tfun", text, text, async]
+  let accessor := Sexp.list [Sexp.sym "tfun", text, field]
+  not (waitsAt "" 1 accessor) && waitsAt "" 2 accessor && waitsAt "" 1 field && not (waitsAt "" 0 field)
+    && waitsAt "" 1 (Sexp.list [Sexp.sym "tfun", text, Sexp.list [Sexp.sym "teff", async, text]])
+    && waitsAt "" 1 (Sexp.list [Sexp.sym "forall", accessor])
+
 /-- A definition's stored type: its signature, else its inferred scheme, else `()`. -/
 def storedType (meta : Option Sexp) : Sexp :=
   match Codebase.metaField meta "sig" with
@@ -307,7 +329,7 @@ def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw
                 let (kind, waits) :=
                   match JsGen.unlam core with
                   | (0, _) => (JsKind.constant, false)
-                  | (n, _) => (JsKind.fn n, not (Text.isEmpty asyncHash) && (mentions asyncIri t || mentions asyncHash t))
+                  | (n, _) => (JsKind.fn n, not (Text.isEmpty asyncHash) && waitsAt asyncHash n t)
                 go
                   (rest ++ Wasm.refsOf core)
                   (JsDef.mk h display (jsName display) kind body t waits :: acc)

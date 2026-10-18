@@ -6437,7 +6437,7 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
             } else {
               const locals = lib$base$List$map(lib$base$Sexp$asText, Codebase$metaList(meta, "locals"));
               const notations = Print$notationsOf(meta);
-              const rules = lib$base$List$filterMap(({ "Cli.viewParts/\u03bb": (key) => lib$base$Option$bind(lib$base$List$head$p(lib$base$Option$getOr(lib$base$Map$lookup(key, Printer$namesByHash(base)), rt.NIL)), ({ "Cli.viewParts/\u03bb": (ruleName) => Cli$loadRule(dir, ns, ruleName) })["Cli.viewParts/\u03bb"]) })["Cli.viewParts/\u03bb"], lib$base$List$dedup(lib$base$List$map(lib$base$snd, notations)));
+              const rules = lib$base$List$filterMap(({ "Cli.viewParts/\u03bb": (key) => lib$base$Option$bind(lib$base$List$head$p(lib$base$Option$getOr(lib$base$Map$lookup(key, Printer$namesByHash(base)), rt.NIL)), ({ "Cli.viewParts/\u03bb": (ruleName) => Cli$loadRule(dir, ns, ruleName) })["Cli.viewParts/\u03bb"]) })["Cli.viewParts/\u03bb"], List$distinct(lib$base$List$map(lib$base$snd, notations)));
               const p = Print$withRules(Print$withSelf(Print$withLocals(base, locals), h, name), lib$base$Map$fromList(lib$base$List$map(({ "Cli.viewParts/\u03bb": (r) => new rt.Con("#Pair", 0, [Syntax$Loaded$ruleKey(r), r]) })["Cli.viewParts/\u03bb"], rules)));
               let own;
               if (lib$base$List$contains(rt.cons("syntax", rt.NIL), lib$base$List$map(({ "Cli.viewParts/\u03bb": (a) => lib$base$List$map(lib$base$Sexp$asText, lib$base$Sexp$asList(a)) })["Cli.viewParts/\u03bb"], Codebase$metaList(meta, "attrs")))) {
@@ -6516,7 +6516,7 @@ function Cli$viewParts(base, dir, ns, name, e, dialect) {
                   }
                   rt.nomatch(doc);
                 }
-                const opens = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (home) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "open ", home), " in\n") })["Cli.viewParts/\u03bb"], lib$base$List$dedup(lib$base$List$filter(({ "Cli.viewParts/\u03bb": (home_1) => (home_1 !== "") })["Cli.viewParts/\u03bb"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (r_1) => Export$documentOf(Syntax$Loaded$ruleName(r_1)) })["Cli.viewParts/\u03bb"], rules)))));
+                const opens = rt.ap(rt.prims["Text.concat"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (home) => rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "open ", home), " in\n") })["Cli.viewParts/\u03bb"], List$distinct(lib$base$List$filter(({ "Cli.viewParts/\u03bb": (home_1) => (home_1 !== "") })["Cli.viewParts/\u03bb"], lib$base$List$map(({ "Cli.viewParts/\u03bb": (r_1) => Export$documentOf(Syntax$Loaded$ruleName(r_1)) })["Cli.viewParts/\u03bb"], rules)))));
                 const attrs = lib$base$List$map(({ "Cli.viewParts/\u03bb": (a_1) => {
                 const t12 = lib$base$Sexp$asList(a_1);
                 m13: {
@@ -7589,6 +7589,17 @@ function Cli$loadRule(dir, ns, name) {
   return Cli$loadRuleWith(Cli$notationTypes(ns), dir, ns, name);
 }
 rt.named(Cli$loadRule, "Cli.loadRule");
+
+function List$distinct(xs) {
+  return lib$base$List$reverse(lib$base$List$foldl(({ "List.distinct/\u03bb": (kept, x) => {
+  if (lib$base$List$contains(x, kept)) {
+    return kept;
+  } else {
+    return rt.cons(x, kept);
+  }
+} })["List.distinct/\u03bb"], rt.NIL, xs));
+}
+rt.named(List$distinct, "List.distinct");
 
 function Print$withRules(base, rules) {
   return new rt.Con("0e392f1f1de50e0b488f02f6166f3e21cbc2add934400608d4ae165ae028d02a", 0, [Printer$display(base), Printer$fullNames(base), Printer$typeNames(base), Printer$fieldNames(base), Printer$declared(base), Printer$namesByHash(base), Printer$supply(base), Printer$fresh(base), Printer$hints(base), rules, Printer$shadows(base)]);
