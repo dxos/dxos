@@ -10,16 +10,17 @@
 - Navtree => Collections > Architecture > Composer
 - Hover over card
 - Add a comment: "@dima Please review this."
-- Add a comment: "@kai Add a mermaid drawing."
+- Add a comment: "@kai Add a mermaid diagram here."
 - Select plugins: Mermaid
-- Unselet Mermain then nav back
-- Open Canvas link
+- Nav back
+- Open Canvas link; unlock
 - Close companion
 - Select box
 - Zoom in to "Client Service" Then "Echo Host"
 - Select EDGE document
 - Insert Performance sheet
 - Navigate to Perf sheet and show chart companion
+- Show plugin gallery
 
 # 2. Inbox (Light mode: 20s)
 
@@ -28,11 +29,11 @@
 
 - Navtree => Mailbox
 - Scroll and select Message: "Re: Cairn 1.8 release notes draft"
-- Hover card from companion message to Org XXX
-- Show Kanban
+- Hover card from companion message to Org "Alien Labs"
 - Navtree => Organizations => People
 - Navtree => Calendar
 - Scroll and select Event: XXX
+- Navigate to Kanban from the description
 
 # 3. Projects (Dark mode: 20s)
 
