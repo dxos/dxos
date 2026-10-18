@@ -361,6 +361,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 351 | 10-20 13:30 | 50m 00s | aa14d25a23 | A long definition, test or match arm body starts on the next line: long printed lines 129 to 53 (D326) |
 | 352 | 10-20 14:10 | 40m 00s | 85fb624bb6 | The node kernel looks before reading a file that may be missing: adding the toolchain about 1 s faster (D327) |
 | 353 | 10-20 15:10 | 1h 00m | 3ad6a3828e | Group merges, rehashed dependents and forged objects are cached DEUS tests; the vitest replication test takes 2.0 s instead of 6.9 s (D328) |
-| 354 | 10-20 16:10 | 1h 00m | this commit | The object cache is keyed by store: a pulled store gets its builtin types, and compaction is a cached DEUS test (D329) |
+| 354 | 10-20 16:10 | 1h 00m | a93b462a40 | The object cache is keyed by store: a pulled store gets its builtin types, and compaction is a cached DEUS test (D329) |
 
 Total from stage 1 to stage 354: 155h 20m.
