@@ -44,15 +44,28 @@ describe('rewriteIntent', () => {
   });
 
   test('at t = 0 a property that has a track is keyed, not written to the base', ({ expect }) => {
-    const scene = { ...base, timeline: setKey(createTimeline(), 'a', 'opacity', { t: 1, value: 1 }) };
-    const next = apply(scene, { kind: 'update', id: 'a', values: { opacity: 0, label: 'A' } }, 0);
-    expect(next.timeline?.tracks['a:opacity'].keys).toEqual([
+    const scene = { ...base, timeline: setKey(createTimeline(), 'a', 'style.opacity', { t: 1, value: 1 }) };
+    const next = apply(scene, { kind: 'update', id: 'a', values: { style: { opacity: 0 }, label: 'A' } }, 0);
+    expect(next.timeline?.tracks['a:style.opacity'].keys).toEqual([
       { t: 0, value: 0 },
       { t: 1, value: 1 },
     ]);
     // A property that is not animatable goes to the base in the same step.
     expect(next.nodes.a).toMatchObject({ label: 'A' });
-    expect(next.nodes.a.opacity).toBeUndefined();
+    expect(next.nodes.a.style?.opacity).toBeUndefined();
+  });
+
+  test('an edit of the whole style keys the opacity inside it and writes the rest to the base', ({ expect }) => {
+    const scene = { ...base, timeline: setKey(createTimeline(), 'a', 'style.opacity', { t: 0, value: 1 }) };
+    const next = apply(scene, { kind: 'update', id: 'a', values: { style: { hue: 'red', opacity: 0.5 } } }, 1);
+    expect(next.timeline?.tracks['a:style.opacity'].keys).toEqual([
+      { t: 0, value: 1 },
+      { t: 1, value: 0.5 },
+    ]);
+    expect(next.nodes.a.style).toEqual({ hue: 'red' });
+    // An untouched opacity is the sampled value and stays off the base.
+    const again = apply(next, { kind: 'update', id: 'a', values: { style: { hue: 'blue', opacity: 0.75 } } }, 0.5);
+    expect(again.nodes.a.style).toEqual({ hue: 'blue' });
   });
 
   test('a resize keys the centre and the size', ({ expect }) => {

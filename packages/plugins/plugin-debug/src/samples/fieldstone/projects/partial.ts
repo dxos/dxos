@@ -41,7 +41,7 @@ export type Provides = {
   >;
 };
 
-/** Fieldstone's projects, their tasks, and the agent runs behind them. Spec: `CONTENT.md`. */
+/** Alien Labs' projects, their tasks, and the agent runs behind them. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.partial('fieldstoneProjects', {
   schemas: [
     Chat.Chat,

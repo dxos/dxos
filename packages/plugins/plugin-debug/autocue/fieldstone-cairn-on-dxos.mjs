@@ -3,7 +3,7 @@
 //
 
 /**
- * Fieldstone vignette: how Cairn plugs into DXOS. The team's architecture doc leads into the DXOS diagrams: Plugin Anatomy for Cairn's dashboard, EDGE's compute service for its agents.
+ * Alien Labs vignette: how Cairn plugs into DXOS. The team's architecture doc leads into the DXOS diagrams: Plugin Anatomy for Cairn's dashboard, EDGE's compute service for its agents.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-8
  * @app composer-app bundled dev build, served by `vite preview` on :4187
@@ -28,7 +28,7 @@
  * Not yet run: written ahead of its first take, so selectors past the setup are unverified.
  */
 
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -94,7 +94,7 @@ const closeCompanion = async (page) => {
   }
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Fieldstone Labs' });
+const caption = (demo, value) => demo.caption({ value, subtitle: 'Alien Labs' });
 
 /** The companion's message card for `sender` whose body starts with `text`. */
 const messageCard = (page, sender, text) =>

@@ -117,7 +117,8 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
         autoSave
         onSave={handleSave}
       >
-        <Form.Viewport>
+        {/* Joins the card's rails, so the fields start at the header's text edge rather than a gutter further in. */}
+        <Form.Viewport gutter='inherit' width='full'>
           <Form.Content>
             <Form.Fields />
           </Form.Content>

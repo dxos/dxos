@@ -12,10 +12,10 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { REFERENCE } from '../util.ts';
 import { Partial } from './partial.ts';
 
-describe('Fieldstone team', () => {
+describe('Alien Labs team', () => {
   test('seeds the company, its people and its agents', { timeout: 120_000 }, async ({ expect }) => {
     const definition = SampleSpace.make({
-      space: { name: 'Fieldstone team' },
+      space: { name: 'Alien Labs team' },
       reference: REFERENCE,
       partials: { team: Partial },
       build: (partials) => partials.team(),

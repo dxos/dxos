@@ -11,6 +11,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { shortcutFor } from '../../model/keys.ts';
 import {
   type BackgroundGrid,
   type LookTone,
@@ -20,6 +21,7 @@ import {
   resolveStyleSet,
   styleVariant,
 } from '../../model/style-set.ts';
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 import { variantClasses } from '../../utils/style.ts';
 import { BACKGROUND_FILLS, RADIUS_CLASSES } from '../../utils/surfaces.ts';
 
@@ -85,7 +87,7 @@ const GRID_OPTIONS: readonly { grid: BackgroundGrid; icon: string; label: string
   { grid: 'none', icon: 'ph--prohibit--regular', label: 'No grid' },
 ];
 
-const barClasses = 'w-full gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
 
 export type ThemeBarProps = Util.ThemedClassName<{
   registry: ThemeRegistry;
@@ -101,6 +103,9 @@ export type ThemeBarProps = Util.ThemedClassName<{
   onGridChange?: (grid: BackgroundGrid | undefined) => void;
   /** The grid the theme's background draws, so picking it again clears the override. */
   themeGrid: BackgroundGrid;
+  /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
+  guides?: boolean;
+  onGuidesToggle?: () => void;
 }>;
 
 /** The theme picker, and the grid drawn over its background. */
@@ -113,6 +118,8 @@ export const ThemeBar = ({
   themeGrid,
   onThemeChange,
   onGridChange,
+  guides,
+  onGuidesToggle,
 }: ThemeBarProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
@@ -156,6 +163,18 @@ export const ThemeBar = ({
       </Menu.Content>
     </Menu.Root>
     <Toolbar.Separator variant='line' />
+    {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
+    {onGuidesToggle && (
+      <Button.Root
+        variant='ghost'
+        iconOnly
+        icon='ph--frame-corners--regular'
+        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+        classNames={mx(guides && 'bg-primary-500/20')}
+        data-testid='toolbar-guides'
+        onClick={onGuidesToggle}
+      />
+    )}
     {GRID_OPTIONS.map((option) => (
       <Button.Root
         key={option.grid}

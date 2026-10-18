@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Event } from '@dxos/types';
 
 import { HANA_JOINED_DAYS_AGO, type PersonKey } from '../team/index.ts';
 import { type Make, personActor } from '../util.ts';
+import { EVENT_NOTES, eventNoteKey } from './event-notes.ts';
 import { type Directory } from './mail.ts';
 import { type Clock, at, dateOnly, monthly, weekly } from './util.ts';
 
@@ -32,16 +33,37 @@ export type EventKey =
   | 'interviews'
   | 'release18'
   | 'brightwaterIntro'
+  | 'halcyonIntro'
+  | 'kestrelDiscovery'
+  | 'vantageDiscovery'
+  | 'meridianProposal'
+  | 'tidewaterSecurity'
+  | 'tidewaterMsa'
+  | 'lumenValidation'
+  | 'pallasDemo'
+  | 'corvidEvaluation'
+  | 'larkspurDemo'
+  | 'aldermoorReview'
   | 'cloudflareCall'
-  | 'awsReview'
   | 'northpineQbr'
-  | 'offsite';
+  | 'offsite'
+  | 'salesReview';
 
 export type Events = Record<EventKey, Event.Event[]>;
 
 type Who = keyof Directory;
 
-const FIELDSTONE: PersonKey[] = ['astrid', 'omar', 'felix', 'june', 'tomas', 'anika', 'ben', 'lucia', 'kofi', 'hana'];
+// No meeting has more than 5 attendees, so each series invites the people it is for, not the whole team.
+/** Engineering leads and product, who run the weekly sync. */
+const TEAM_SYNC: PersonKey[] = ['astrid', 'omar', 'june', 'anika', 'lucia'];
+/** The engineers who plan sprints. */
+const ENGINEERING: PersonKey[] = ['astrid', 'omar', 'felix', 'june', 'tomas'];
+/** The cache team, who shipped the 1.8 work the retros look back on. */
+const RETRO: PersonKey[] = ['astrid', 'omar', 'felix', 'hana', 'anika'];
+/** Product, design, developer relations and billing. */
+const PRODUCT: PersonKey[] = ['astrid', 'lucia', 'ben', 'kofi', 'june'];
+/** Release owners: the cache engineers, SRE and developer relations for the announcement. */
+const RELEASE: PersonKey[] = ['astrid', 'omar', 'felix', 'anika', 'kofi'];
 
 /** Astrid's reports, each with the time of day of their monthly 1:1. */
 const REPORTS: Array<{ readonly key: PersonKey; readonly time: readonly [number, number] }> = [
@@ -60,7 +82,18 @@ const REPORTS: Array<{ readonly key: PersonKey; readonly time: readonly [number,
 const ROTATION: PersonKey[] = ['june', 'tomas', 'omar', 'felix'];
 
 const FIRST = -182;
-const LAST = 182;
+/** Nothing is scheduled more than three months ahead. */
+const LAST = 90;
+/** The team sync continues only this far past the reference date, so the future reads as a light schedule. */
+const SERIES_LAST = 14;
+
+/** Occurrences on or before `last`. */
+const until = (offsets: number[], last: number): number[] => offsets.filter((offset) => offset <= last);
+
+/** Enough weekly occurrences from {@link FIRST} to reach {@link LAST}. */
+const WEEKS = Math.ceil((LAST - FIRST) / 7) + 1;
+/** Enough monthly occurrences from {@link FIRST} to reach {@link LAST}. */
+const MONTHS = Math.ceil((LAST - FIRST) / 30) + 1;
 
 type Timed = {
   readonly title: string;
@@ -71,7 +104,7 @@ type Timed = {
 };
 
 /**
- * Astrid's calendar for a year around the reference date. `Event` has no recurrence, so each series
+ * Astrid's calendar, dense for six months back and light for three months ahead. `Event` has no recurrence, so each series
  * is one Event per occurrence.
  */
 /** Agendas for the weekly team sync, in rotation. */
@@ -118,17 +151,51 @@ const NORTHPINE_NOTES = [
   'Cache hit rate on their Bazel monorepo; next quarter’s plans.',
 ];
 
-/** Notes for Hana's first five 1:1s. */
-const HANA_NOTES = [
-  'First week: laptop, accounts, the cache-engine walkthrough with Omar.',
-  'First month: the flaky-test task, on-call shadowing, questions so far.',
-  'Taking a Builder review on her own; first solo on-call week.',
-  'Owning the regression suite; what to pick up next quarter.',
-  'Six-month check-in: growth plan and the 1.9 work she wants.',
-];
+/** Notes for Hana's first 1:1, the only one before the reference date. */
+const HANA_NOTES = ['First week: laptop, accounts, the cache-engine walkthrough with Omar.'];
+
+/**
+ * The half-year sales review's agenda, which links the pipeline board by its id so the reader opens it from the event.
+ */
+const salesReviewNotes = (pipelineId: string) =>
+  [
+    '## Sales Review',
+    '',
+    `Walk the [Sales pipeline](echo:///${pipelineId}) column by column, oldest movement first.`,
+    '',
+    '## Attendees',
+    '',
+    '- Astrid Holm (chair)',
+    '- Kofi Mensah',
+    '- Lucía Ferreira',
+    '- June Okonkwo',
+    '',
+    '## Pre-read: where each deal stands',
+    '',
+    '- **Lead:** Halcyon Freight and Kestrel Energy both came in from the Bazel cache post; intro calls are booked.',
+    '- **Qualified:** Vantage Aerospace needs US-only data residency; Corvid Analytics and Larkspur Media have evaluations scheduled.',
+    '- **Demo:** Brightwater Games is two weeks into its trial and asking about seat pricing.',
+    '- **Proposal:** Meridian Health Data and Aldermoor Bank have proposals out; Aldermoor wants customer-managed keys.',
+    '- **Negotiation:** Northpine Robotics renewal hinges on the dedicated region; Tidewater Insurance is in MSA redlines.',
+    '- **Closed:** Okapi Payments and Lumen Biotech are live; Pallas Retail chose a self-hosted cache.',
+    '',
+    '## To decide',
+    '',
+    '- Whether to hold list price for Tidewater and offer a 12-month term instead of a discount.',
+    '- Whether EU-only data and customer-managed keys become one Enterprise add-on, priced once.',
+    '',
+    '## Prep',
+    '',
+    '- [ ] Kofi: send Vantage the US-region architecture note before the deep dive.',
+    '- [ ] June: draft the Enterprise add-on pricing for Aldermoor and Meridian.',
+    '- [ ] Lucía: write up why Pallas went self-hosted for the 1.9 roadmap review.',
+    '- [ ] Astrid: confirm the Northpine dedicated-region date with Anika.',
+    '- [x] Kofi: move Larkspur from Demo to Qualified until the demo happens.',
+  ].join('\n');
 
 export const makeCalendar = (
   people: Directory,
+  pipeline?: Obj.Unknown,
 ): Make<{ readonly calendar: Calendar.Calendar; readonly events: Events }> =>
   Effect.gen(function* () {
     const clock: Clock = yield* SampleSpace.Clock;
@@ -139,7 +206,7 @@ export const makeCalendar = (
       const startDate = at(clock, offset, event.time[0], event.time[1]);
       return Event.make({
         title: event.title,
-        description: event.description,
+        description: EVENT_NOTES[eventNoteKey(event.title, offset)] ?? event.description,
         owner,
         attendees: attendeesOf(event.attendees),
         startDate,
@@ -171,21 +238,22 @@ export const makeCalendar = (
 
     const events: Events = {
       teamSync: rotating(
-        weekly(clock, { weekday: 1, from: FIRST, count: 52 }),
-        { title: 'Team sync', attendees: FIELDSTONE, time: [10, 0], minutes: 30 },
+        until(weekly(clock, { weekday: 1, from: FIRST, count: WEEKS }), SERIES_LAST),
+        { title: 'Team sync', attendees: TEAM_SYNC, time: [10, 0], minutes: 30 },
         TEAM_SYNC_NOTES,
       ),
       sprintPlanning: rotating(
-        weekly(clock, { weekday: 2, from: FIRST, count: 26, everyWeeks: 2 }),
-        { title: 'Sprint planning', attendees: FIELDSTONE, time: [14, 0], minutes: 60 },
+        until(weekly(clock, { weekday: 2, from: FIRST, count: WEEKS, everyWeeks: 2 }), 0),
+        { title: 'Sprint planning', attendees: ENGINEERING, time: [14, 0], minutes: 60 },
         SPRINT_NOTES,
       ),
       retro: rotating(
-        weekly(clock, { weekday: 5, from: FIRST, count: 26, everyWeeks: 2 }),
-        { title: 'Retro', attendees: FIELDSTONE, time: [14, 0], minutes: 45 },
+        until(weekly(clock, { weekday: 5, from: FIRST, count: WEEKS, everyWeeks: 2 }), 0),
+        { title: 'Retro', attendees: RETRO, time: [14, 0], minutes: 45 },
         RETRO_NOTES,
       ),
-      oncall: weekly(clock, { weekday: 5, from: FIRST, count: 52 }).map((offset, week) => {
+      // Only this week's handoff is booked ahead.
+      oncall: until(weekly(clock, { weekday: 5, from: FIRST, count: WEEKS }), 7).map((offset, week) => {
         const incoming = ROTATION[week % ROTATION.length];
         return timed(offset, {
           title: 'On-call handoff',
@@ -195,20 +263,19 @@ export const makeCalendar = (
         });
       }),
       productReview: rotating(
-        monthly(clock, { from: -170, count: 12 }),
-        { title: 'Product review', attendees: FIELDSTONE, time: [15, 0], minutes: 60 },
+        until(monthly(clock, { from: -170, count: MONTHS }), 0),
+        { title: 'Product review', attendees: PRODUCT, time: [15, 0], minutes: 60 },
         PRODUCT_REVIEW_NOTES,
       ),
       northpineSync: rotating(
-        monthly(clock, { from: -165, count: 12 }),
+        until(monthly(clock, { from: -165, count: MONTHS }), 0),
         { title: 'Northpine sync', attendees: ['grace', 'marcus', 'astrid', 'june'], time: [16, 0], minutes: 45 },
         NORTHPINE_NOTES,
       ),
       oneOnOne: REPORTS.flatMap(({ key, time }, index) => {
         const from = key === 'hana' ? -HANA_JOINED_DAYS_AGO : FIRST + 2 + index * 3;
-        const count = key === 'hana' ? Math.floor((LAST - 3 - from) / 30) + 1 : 12;
         // Only Hana's first months carry notes: a ramp-up plan worth writing down.
-        return monthly(clock, { from, count }).map((offset, index) =>
+        return until(monthly(clock, { from, count: MONTHS }), 0).map((offset, index) =>
           timed(offset, {
             title: `Astrid / ${people[key].fullName?.split(' ')[0]} 1:1`,
             description: key === 'hana' ? HANA_NOTES[index] : undefined,
@@ -223,7 +290,7 @@ export const makeCalendar = (
         allDay(-75, -75, {
           title: 'Cairn 1.7 release',
           description: 'Release day for Cairn 1.7.',
-          attendees: FIELDSTONE,
+          attendees: RELEASE,
         }),
       ],
       northpineKickoff: [
@@ -272,6 +339,18 @@ export const makeCalendar = (
           minutes: 120,
         }),
       ],
+      salesReview: pipeline
+        ? [
+            // Thursday of next week, the quietest weekday on the coming week's calendar.
+            timed(8, {
+              title: 'Sales Review',
+              description: salesReviewNotes(pipeline.id),
+              attendees: ['astrid', 'kofi', 'lucia', 'june'],
+              time: [11, 0],
+              minutes: 45,
+            }),
+          ]
+        : [],
       meridianReview: [
         timed(-6, {
           title: 'Meridian security review',
@@ -302,7 +381,7 @@ export const makeCalendar = (
           title: 'Cairn 1.8 release',
           description:
             'From the threads "Cairn 1.8 release notes draft" and "GitHub Actions integration partner program": the verified setup-cairn listing goes live with the release.',
-          attendees: [...FIELDSTONE, 'sofia'],
+          attendees: ['astrid', 'omar', 'felix', 'kofi', 'sofia'],
         }),
       ],
       brightwaterIntro: [
@@ -314,20 +393,117 @@ export const makeCalendar = (
           minutes: 45,
         }),
       ],
-      cloudflareCall: [
+      halcyonIntro: [
         timed(6, {
-          title: 'Cloudflare R2 pricing call',
-          description: 'From the thread "Cloudflare R2 egress pricing": enterprise commit and operation costs.',
-          attendees: ['ines', 'omar', 'felix'],
-          time: [15, 0],
+          title: 'Halcyon Freight intro call',
+          description: `From the thread "Cairn for Halcyon Freight's Android builds": read a clean Gradle build scan.`,
+          attendees: ['priya', 'kofi', 'astrid'],
+          time: [14, 0],
           minutes: 30,
         }),
       ],
-      awsReview: [
+      corvidEvaluation: [
         timed(8, {
-          title: 'AWS architecture review',
-          description: 'From the thread "AWS credits and a Savings Plan": size the Savings Plan and the new region.',
-          attendees: ['elena', 'anika', 'astrid'],
+          title: 'Corvid Analytics technical evaluation',
+          description:
+            'From the thread "Corvid Analytics: Pants remote cache evaluation": two weeks of CI timings, expected hit rates.',
+          attendees: ['daniel', 'kofi', 'astrid'],
+          time: [15, 0],
+          minutes: 60,
+        }),
+      ],
+      larkspurDemo: [
+        timed(12, {
+          title: 'Larkspur Media demo',
+          description: 'From the thread "Nx remote cache demo for Larkspur Media": cold and warm builds on their fork.',
+          attendees: ['yuki', 'kofi', 'lucia'],
+          time: [17, 0],
+          minutes: 45,
+        }),
+      ],
+      aldermoorReview: [
+        timed(-19, {
+          title: 'Aldermoor Bank proposal review',
+          description:
+            'From the thread "Aldermoor Bank: Enterprise proposal": procurement questions on EU residency and customer-managed keys.',
+          attendees: ['henrik', 'lucia', 'astrid'],
+          time: [10, 0],
+          minutes: 45,
+        }),
+      ],
+      kestrelDiscovery: [
+        timed(9, {
+          title: 'Kestrel Energy discovery call',
+          description: 'From the thread "Remote cache for a Bazel monorepo at Kestrel": two build event logs, sizing.',
+          attendees: ['owen', 'kofi', 'lucia'],
+          time: [16, 0],
+          minutes: 45,
+        }),
+      ],
+      vantageDiscovery: [
+        timed(-15, {
+          title: 'Vantage Aerospace discovery',
+          description:
+            'From the thread "Vantage Aerospace: notes from discovery": build volume, budget and decision process.',
+          attendees: ['claire', 'astrid', 'lucia'],
+          time: [17, 0],
+          minutes: 45,
+        }),
+      ],
+      meridianProposal: [
+        timed(7, {
+          title: 'Meridian proposal review',
+          description: 'From the thread "Meridian paid plan proposal": seat ramp to 90 and the SOC 2 clause.',
+          attendees: ['aisha', 'kenji', 'lucia', 'astrid'],
+          time: [15, 0],
+          minutes: 45,
+        }),
+      ],
+      tidewaterSecurity: [
+        timed(-22, {
+          title: 'Tidewater security review',
+          description:
+            'From the thread "Tidewater vendor security review": token revocation demo, breach notice, build logs.',
+          attendees: ['rohan', 'anika', 'astrid'],
+          time: [17, 0],
+          minutes: 60,
+        }),
+      ],
+      tidewaterMsa: [
+        timed(1, {
+          title: 'Tidewater MSA review',
+          description: 'From the thread "Tidewater MSA redlines": liability cap, automatic uptime credits, signatures.',
+          attendees: ['rohan', 'lucia', 'astrid'],
+          time: [16, 0],
+          minutes: 45,
+        }),
+      ],
+      lumenValidation: [
+        timed(-29, {
+          title: 'Lumen Biotech validation results',
+          description: 'From the thread "Lumen Biotech order form": warm-cache pipeline builds before signature.',
+          attendees: ['tobias', 'kofi', 'omar', 'astrid'],
+          time: [14, 0],
+          minutes: 60,
+        }),
+      ],
+      pallasDemo: [
+        timed(-36, {
+          title: 'Pallas Retail demo',
+          description:
+            'From the thread "Pallas Retail: decision on Cairn": demo on their monorepo, then data residency.',
+          attendees: ['carmen', 'astrid', 'lucia'],
+          time: [15, 0],
+          minutes: 60,
+        }),
+      ],
+      cloudflareCall: [
+        // One call answers both threads: the Tuesday after the release is also the week after next.
+        timed(6, {
+          title: 'Cloudflare commit and architecture review',
+          description:
+            'From the threads "Cloudflare R2 egress pricing" and "Cloudflare credits and an annual commit": operation costs, then size the commit and the new region.',
+          attendees: ['ines', 'elena', 'omar', 'felix', 'astrid'],
           time: [15, 0],
           minutes: 60,
         }),
@@ -345,7 +521,7 @@ export const makeCalendar = (
         allDay(34, 36, {
           title: 'Team offsite at Saltmarsh Lodge',
           description: 'From the thread "Q4 offsite planning": three days of working sessions by the coast.',
-          attendees: [...FIELDSTONE, 'wren'],
+          attendees: ['astrid', 'lucia', 'ben', 'wren'],
           location: {
             street: 'Estrada da Lagoa 12',
             locality: 'Comporta',
@@ -361,7 +537,7 @@ export const makeCalendar = (
       list.sort((left, right) => left.startDate.localeCompare(right.startDate));
     }
 
-    const calendar = yield* Database.add(Calendar.make({ name: 'Fieldstone' }));
+    const calendar = yield* Database.add(Calendar.make({ name: 'Alien Labs' }));
     const feed = calendar.feed.target;
     if (!feed) {
       return yield* Effect.fail(new SampleSpace.SampleSpaceError({ context: { reason: 'calendar-feed-missing' } }));

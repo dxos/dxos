@@ -12,15 +12,15 @@ import { InboxOperation } from '#types';
 export default InboxOperation.RenameFilter.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { mailbox, name, caller } = input;
+      const { owner, name, caller } = input;
       yield* Operation.invoke(LayoutOperation.UpdatePopover, {
         subject: SpaceSurface.RENAME_POPOVER,
         anchorId: caller ?? '',
         props: {
           initialValue: name,
           onRename: (newName: string) => {
-            Obj.update(mailbox, (mailbox) => {
-              const filter = mailbox.filters?.find((entry: { name: string }) => entry.name === name);
+            Obj.update(owner, (owner) => {
+              const filter = owner.filters?.find((entry: { name: string }) => entry.name === name);
               if (filter) {
                 filter.name = newName;
               }

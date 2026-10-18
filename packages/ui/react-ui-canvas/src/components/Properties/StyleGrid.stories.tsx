@@ -74,7 +74,7 @@ export const Default: StoryObj<StoryArgs> = {};
 /** Glass's four variants: clear, frost, tint and solid. */
 export const Glass: StoryObj<StoryArgs> = { args: { theme: 'glass-night' } };
 
-/** Flat's three variants: subtle, muted and solid. */
+/** Flat's four variants: clear, subtle, muted and solid. */
 export const Flat: StoryObj<StoryArgs> = { args: { theme: 'flat' } };
 
 /** Outline's three variants: hairline, bold and dashed. */

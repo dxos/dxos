@@ -4,8 +4,9 @@
  */
 
 @layer dx-components {
+  /* A glyph, not text: the warning hue's text tone is dark enough to read as brown, so the fill takes the hue itself. */
   .dx-button[data-icon-valence='warning'] > .dx-icon {
-    color: var(--color-warning-text);
+    color: var(--color-amber-400);
   }
   .dx-button[data-icon-valence='success'] > .dx-icon {
     color: var(--color-success-text);

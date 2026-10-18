@@ -29,8 +29,8 @@ const parseChoice = (key: string): StyleChoice | undefined => {
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** The pressed item keeps the panel's background; the selection is drawn around the swatch instead. */
-const ITEM_CLASSES = 'min-w-0 px-0 aria-checked:bg-transparent aria-checked:hover:bg-hover-surface';
+/** No item background, pressed or hovered: the swatch is the target, and the selection is drawn around it. */
+const ITEM_CLASSES = 'min-w-0 px-0 bg-transparent hover:bg-transparent aria-checked:bg-transparent';
 
 export type StyleGridProps = {
   /** The look whose style set's variants the rows show; the enclosing view's by default. */

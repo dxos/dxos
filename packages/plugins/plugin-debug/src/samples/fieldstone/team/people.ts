@@ -6,12 +6,13 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { type Organization, Person } from '@dxos/types';
 
+import { AVATAR_IMAGES } from '../avatar-images.ts';
 import { type Make } from '../util.ts';
 
 const LISBON: [number, number] = [-9.14, 38.72];
 const TORONTO: [number, number] = [-79.38, 43.65];
 
-const PEOPLE_SEEDS = [
+export const PEOPLE_SEEDS = [
   { key: 'astrid', fullName: 'Astrid Holm', jobTitle: 'Engineering Manager', location: LISBON },
   { key: 'omar', fullName: 'Omar Haddad', jobTitle: 'Staff Engineer, cache engine', location: TORONTO },
   { key: 'felix', fullName: 'Felix Andersen', jobTitle: 'Backend Engineer, cache engine', location: LISBON },
@@ -42,10 +43,11 @@ export const makePeople = (fieldstone: Organization.Organization): Make<People> 
     Database.add(
       Person.make({
         fullName: seed.fullName,
+        ...(AVATAR_IMAGES[seed.fullName] && { image: AVATAR_IMAGES[seed.fullName] }),
         jobTitle: seed.jobTitle,
         department: 'department' in seed ? seed.department : 'Engineering',
         location: seed.location,
-        emails: [{ label: 'Work', value: `${seed.key}@fieldstone.dev` }],
+        emails: [{ label: 'Work', value: `${seed.key}@alienlabs.io` }],
         organization: Ref.make(fieldstone),
       }),
     ),

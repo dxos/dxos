@@ -3,3 +3,4 @@
 //
 
 export * from './merge-conflict.ts';
+export * from './plugin-fence.ts';

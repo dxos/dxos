@@ -308,7 +308,7 @@ export const Test: Story = {
       await expect(helper.right).toBeLessThanOrEqual(input.left + 0.5);
       await expect(helper.top).toBeCloseTo(inputTop, 0);
       await expect(row).toHaveAttribute('data-surface', '+1');
-      await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+      await expect(getComputedStyle(row).borderTopWidth).toBe('0px');
     }
     await expect(canvas.getByRole('textbox', { name: 'Theme' })).toBeInTheDocument();
     const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();

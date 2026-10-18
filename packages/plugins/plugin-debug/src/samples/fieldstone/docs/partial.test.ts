@@ -9,6 +9,8 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { addressFromA1Notation } from '@dxos/compute-hyperformula/types';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Canvas from '@dxos/plugin-canvas/Canvas';
+import type * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
 import * as Team from '../team/index.ts';
@@ -16,7 +18,13 @@ import { REFERENCE } from '../util.ts';
 import { Partial } from './partial.ts';
 import { type SheetKey } from './sheets.ts';
 
-type ArchiveObject = { 'id': string; '@type': string; 'content'?: string | { '/': string } };
+type ArchiveObject = {
+  'id': string;
+  '@type': string;
+  'content'?: string | { '/': string };
+  'canvas'?: { '/': string };
+  'schema'?: string;
+};
 
 const LINK = /(!?)\[[^\]]*\]\(echo:\/\/\/([0-9A-Z]+)\)/g;
 
@@ -32,19 +40,55 @@ const cellsIn = (range: string): string[] => {
 
 const DERIVED: ReadonlyArray<[SheetKey, string[]]> = [
   ['pricing', ['F2:F5']],
-  ['vendorSpend', ['N2:N5', 'B6:N6']],
+  ['vendorSpend', ['N2:N4', 'B5:N5']],
   ['cloudCost', ['D2:D8', 'B3:C8', 'B9:D9']],
   ['incidentTimeline', ['E2:E21', 'E23']],
   ['hiring', ['E2:E6']],
 ];
 
-describe('Fieldstone docs', () => {
+/** Header cells (row 1 labels) missing the heading style, or over all-numeric values without end alignment. */
+const unstyledHeaders = (sheet: Sheet.Sheet): string[] => {
+  const ranges = sheet.ranges.map(({ range, key, value }) => ({
+    ...SheetUtil.rangeFromIndex(sheet, range),
+    key,
+    value,
+  }));
+  const covered = (key: string, value: string, { col, row }: { col: number; row: number }) =>
+    ranges.some(
+      (range) =>
+        range.key === key &&
+        range.value === value &&
+        col >= range.from.col &&
+        col <= range.to.col &&
+        row >= range.from.row &&
+        row <= range.to.row,
+    );
+  const cells = Object.entries(sheet.cells).map(([index, { value }]) => ({
+    ...SheetUtil.addressFromIndex(sheet, index),
+    value,
+  }));
+  return cells
+    .filter(({ row, value }) => row === 0 && typeof value === 'string' && !value.startsWith('='))
+    .flatMap((header) => {
+      const column = cells.filter(({ col, row }) => col === header.col && row > 0);
+      const numeric =
+        column.length > 0 && column.every(({ value }) => typeof value === 'number' || String(value).startsWith('='));
+      return [
+        ...(covered('style', 'header', header) ? [] : [`${sheet.name}: ${header.value} has no heading style`]),
+        ...(numeric && !covered('alignment', 'end', header)
+          ? [`${sheet.name}: ${header.value} is not end-aligned`]
+          : []),
+      ];
+    });
+};
+
+describe('Alien Labs docs', () => {
   test(
     'builds linked documents, sheets and drawings without the optional partials',
     { timeout: 120_000 },
     async ({ expect }) => {
       const definition = SampleSpace.make({
-        space: { name: 'Fieldstone docs' },
+        space: { name: 'Alien Labs docs' },
         reference: REFERENCE,
         partials: { team: Team.Partial, docs: Partial },
         build: (partials) =>
@@ -68,6 +112,10 @@ describe('Fieldstone docs', () => {
       expect(count(typeOf(docs.handbook.id))).toBe(11);
       expect(count(typeOf(sheets.pricing.id))).toBe(5);
       expect(count(typeOf(drawings.orgChart.id))).toBe(5);
+      for (const drawing of Object.values(drawings)) {
+        const canvas = objects.get(drawing.id)?.canvas?.['/'].replace('echo:///', '');
+        expect(canvas && objects.get(canvas)?.schema).toBe(Canvas.SCENE_SCHEMA);
+      }
 
       const references = Object.values(docs).map((doc) => {
         const text = objects.get(doc.id)?.content;
@@ -113,6 +161,8 @@ describe('Fieldstone docs', () => {
           expect(String(value), `${key}!${cell}`).toMatch(/^=/);
         }
       }
+
+      expect(Object.values(sheets).flatMap(unstyledHeaders)).toEqual([]);
     },
   );
 });
