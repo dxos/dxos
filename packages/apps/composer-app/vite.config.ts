@@ -42,7 +42,6 @@ import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
-import { workerEntryLoader } from './src/vite/worker-entry-loader.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -559,7 +558,10 @@ export default defineConfig((env) => ({
   worker: {
     format: 'es' as const,
 
-    plugins: () => [...sharedPlugins(env), workerEntryLoader()],
+    plugins: () => [...sharedPlugins(env)],
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
