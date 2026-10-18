@@ -375,7 +375,10 @@ describe('answer mapping', () => {
       instructions: 'Does this convey urgency?',
     });
     expect(TypeSafeResolver.toQuestion(team)).toMatchObject({ type: 'choice', criteria: team.criteria });
-    expect(TypeSafeResolver.toQuestion(frustration)).toMatchObject({ type: 'score', criteria: frustration.criteria });
+    expect(TypeSafeResolver.toQuestion(frustration)).toMatchObject({
+      type: 'score',
+      criteria: frustration.criteria.map((level) => level.description),
+    });
   });
 
   test('a choice distribution covers every label, filling the ones System One omitted', ({ expect }) => {

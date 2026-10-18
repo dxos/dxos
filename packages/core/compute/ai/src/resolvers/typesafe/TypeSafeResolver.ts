@@ -80,17 +80,35 @@ export const EvaluateResponse = Schema.Struct({
 
 export type EvaluateResponse = typeof EvaluateResponse.Type;
 
+/** System One takes plain-text descriptions, so structured Effect descriptions are sent as JSON text. */
+const describe = (description: Decision.Description): string =>
+  typeof description === 'string' ? description : JSON.stringify(description);
+
 /** The System One question for an Effect decision. */
 export const toQuestion = (decision: Decision.Any): Question => {
+  const instructions = describe(decision.instructions);
   switch (decision._tag) {
     case 'Probability':
       return decision.criteria
-        ? { type: 'noul', instructions: decision.instructions, criteria: decision.criteria }
-        : { type: 'noul', instructions: decision.instructions };
+        ? {
+            type: 'noul',
+            instructions,
+            criteria: { true: describe(decision.criteria.true), false: describe(decision.criteria.false) },
+          }
+        : { type: 'noul', instructions };
     case 'Classify':
-      return { type: 'choice', instructions: decision.instructions, criteria: decision.criteria };
+      return {
+        type: 'choice',
+        instructions,
+        criteria: Object.fromEntries(
+          Object.entries(decision.criteria).map(([label, description]) => [
+            label,
+            description === null ? label : describe(description),
+          ]),
+        ),
+      };
     case 'Rate':
-      return { type: 'score', instructions: decision.instructions, criteria: decision.criteria };
+      return { type: 'score', instructions, criteria: decision.criteria.map((level) => describe(level.description)) };
   }
 };
 
@@ -135,9 +153,10 @@ export const toProviderAnswer = (decision: Decision.Any, answer: Answer): Decisi
         rating: answer.score,
         confidence: answer.confidence,
         probabilities: toDistribution(
-          levels,
-          (level, index) => answer.probabilities?.[String(index)] ?? answer.probabilities?.[level],
-          levels[Math.round(answer.score)],
+          levels.map((level) => level.label),
+          (_, index) =>
+            answer.probabilities?.[String(index)] ?? answer.probabilities?.[describe(levels[index].description)],
+          levels[Math.round(answer.score)]?.label,
         ),
       };
     }
