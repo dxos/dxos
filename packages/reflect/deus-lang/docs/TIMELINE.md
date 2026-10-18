@@ -351,6 +351,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 341 | 10-20 03:30 | 30m 00s | 1a9056610c | Every toolchain test is cited by a requirement (D316) |
 | 342 | 10-20 05:50 | 40m 00s | c94aaa6d0b | A pull stops noting the metadata it receives as written locally (D317) |
 | 343 | 10-20 06:50 | 1h 00m | 0d3ed97189 | A seed change rebuilds the native CLI in 80 s instead of 195 s: the previous native CLI writes the C, checked, and -O2 uses every core (D318) |
-| 344 | 10-20 07:30 | 40m 00s | this commit | The js target makes only functions that wait `async`: field accessors are plain functions again (D319) |
+| 344 | 10-20 07:30 | 40m 00s | 86ecbe93ee | The js target makes only functions that wait `async`: field accessors are plain functions again (D319) |
 
 Total from stage 1 to stage 344: 146h 50m.
