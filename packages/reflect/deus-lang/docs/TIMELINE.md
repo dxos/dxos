@@ -344,6 +344,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 334 | 10-19 19:40 | 20m 00s | 9d5e464c2f | The Worker's build list lives in its codebase (D310) |
 | 335 | 10-19 20:30 | 20m 00s | 21ffed6acd | Raw-hole checks move from vitest to a cached DEUS test (D311) |
 | 336 | 10-19 21:30 | 30m 00s | f89b6ec04c | The CLI update-and-merge check moves from vitest to a cached DEUS test (D312) |
-| 337 | 10-19 22:30 | 20m 00s | this commit | `deus link`'s check moves from vitest to a cached DEUS test (D313) |
+| 337 | 10-19 22:30 | 20m 00s | 2b86865e4a | `deus link`'s check moves from vitest to a cached DEUS test (D313) |
+| 338 | 10-20 00:50 | 40m 00s | this commit | The compilers stop capturing and registering things twice (`List.distinct`, D314) |
 
-Total from stage 1 to stage 337: 142h 30m.
+Total from stage 1 to stage 338: 143h 10m.

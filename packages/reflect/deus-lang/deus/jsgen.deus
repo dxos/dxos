@@ -1059,12 +1059,12 @@ def mappings (sources : List (Option Int)) : Text :=
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (view : Text -> Text -> {Throw Text | r} Text) (ns : Map Text Entry) (jsImport : Text) (roots : List (Text, Text)) (runtime : Text) (mapName : Text) : {Throw Text | r} (Text, Text) :=
   let asyncHash := asyncOf ns
   let defs := JsGen.gather fetch meta ns jsImport asyncHash (List.map snd roots)
-  let modules := dedup (filterMap (fun d =>
+  let modules := List.distinct (filterMap (fun d =>
     match d.jdKind with
     | JsKind.importFn m _ _ => if m == "" || m == "deus:runtime" then Option.none else Option.some m
     | JsKind.importValue m _ => if m == "" || m == "deus:runtime" then Option.none else Option.some m
     | _ => Option.none) defs)
-  let types := dedup (concatMap (fun d => abilitiesOf d.jdBody) defs)
+  let types := List.distinct (concatMap (fun d => abilitiesOf d.jdBody) defs)
   let objects := Dict.fromList (List.map (fun h => (h, fetch h)) (types ++ filterMap (fun pair =>
     match snd pair with
     | Entry.type h _ _ => Option.some h

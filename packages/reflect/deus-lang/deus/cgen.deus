@@ -1212,7 +1212,7 @@ def partial (h : Text) (arity : Int) (xs : List Sexp) : Sexp :=
 /-- A lambda as a closure: its code is lifted to `static V c<k>(V self, V arg)`, which reads the
   captured locals from `self` without counting them, and the block holds the code and captures. -/
 def lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Sexp) : {Throw Text} Text :=
-  let free := dedup (freeLocals (-1 :: env) b)
+  let free := List.distinct (freeLocals (-1 :: env) b)
   if List.length free > 253 then Throw.throw "a lambda that captures more than 253 locals is outside the C subset" else
     let k := List.length (Ref.get ctx.cLifted)
     let captures := mapIndexed (fun i l => (l, i + 2)) free
@@ -1815,7 +1815,7 @@ def liftExpr (parent : Text) (next : Ref Int) (out : Ref (List Wasm.Fn)) (e : Se
   match e with
   | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
     let n := List.length fs
-    let caps := List.dedup (List.concatMap (freeVars n) fs)
+    let caps := List.distinct (List.concatMap (freeVars n) fs)
     let count := List.length caps
     let names := List.map (fun _ =>
       let k := Ref.get next

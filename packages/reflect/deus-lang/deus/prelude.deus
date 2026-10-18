@@ -254,6 +254,9 @@ def sortBy (cmp : a -> a -> Int) (xs : List a) : List a :=
 
 def sort (xs : List a) : List a := sortBy compare xs
 
+/-- Each item once, where it first occurs; unlike `dedup`, for a list that is not sorted. Quadratic, for short lists. -/
+def distinct (xs : List a) : List a := reverse (foldl (fun kept x => if contains x kept then kept else x :: kept) [] xs)
+
 /-- Removes adjacent duplicates (all duplicates, on a sorted list). -/
 def dedup : List a -> List a
   | x :: y :: rest => if x == y then dedup (y :: rest) else x :: dedup (y :: rest)
