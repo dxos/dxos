@@ -218,10 +218,13 @@
     padding-block-end: 0.125rem;
     user-select: none;
   }
-  /* A section heading reads like a field label (`Field.Label`): the size's label step, in the subdued colour. */
+  /* A section heading reads as a small caps eyebrow over its rows, in the subdued colour, rather than another row. */
   .dx-tree-group-label {
-    font-size: var(--dx-label-font-size);
+    font-size: 0.6875rem;
+    font-weight: 500;
     line-height: var(--dx-label-line-height);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--color-fg-subtle);
   }
 
