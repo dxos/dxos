@@ -3,15 +3,18 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -28,15 +31,20 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 
 import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from '#components';
 import { useLinkQuery } from '#hooks';
+import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { mergeConflicts } from '../../extensions/index.ts';
+import { mergeConflicts, pluginFences } from '../../extensions/index.ts';
+
+// Stands in for the enabled set outside a plugin manager (stories, tests), where nothing can be offered.
+const noPlugins = Atom.make<readonly string[]>([]);
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the
@@ -195,11 +203,33 @@ const MarkdownArticleImpl = forwardRef<
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode, extensionProps]);
 
+    // Fences rendered by a disabled plugin offer the registry, filtered by the fence's language.
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { invokePromise } = Hooks.useOperationInvoker();
+    const manager = PluginManagerProvider.useOptionalPluginManager();
+    const enabled = useAtomValue(manager?.enabled ?? noPlugins);
+    const fenceExtension = useMemo<Extension>(() => {
+      if (!manager || !SettingsOperation.isPluginRegistryAvailable(enabled)) {
+        return [];
+      }
+      const names = new Map(
+        manager
+          .getPlugins()
+          .map((plugin) => [plugin.meta.profile.key, plugin.meta.profile.name ?? plugin.meta.profile.key]),
+      );
+      return pluginFences({
+        canEnable: (pluginId) => names.has(pluginId) && !enabled.includes(pluginId),
+        onSelect: ({ language }) => void invokePromise(SettingsOperation.OpenPluginRegistry, { filter: language }),
+        label: t('enable-plugin.label'),
+        title: (pluginId) => t('enable-plugin.title', { plugin: names.get(pluginId) ?? pluginId }),
+      });
+    }, [manager, enabled, invokePromise, t]);
+
     // The binding's extensions (review overlays/compartments) are stable across keystrokes by
     // construction — recreating this array remounts nothing but recreates the editor state config.
     const combinedExtensions = useMemo<Extension[]>(
-      () => [...extensions, mergeConflicts(), ...(binding.extensions ?? [])],
-      [extensions, binding.extensions],
+      () => [...extensions, mergeConflicts(), fenceExtension, ...(binding.extensions ?? [])],
+      [extensions, fenceExtension, binding.extensions],
     );
 
     // Toolbar actions from the app graph. Branch selection / suggest / return-to-main live in the
@@ -268,7 +298,6 @@ const MarkdownArticleImpl = forwardRef<
     const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
-    const { invokePromise } = Hooks.useOperationInvoker();
     // Contributed slash-menu commands, one group per contributing plugin. Each entry names an
     // operation; selecting it hands the operation the surface and the offset the trigger was
     // consumed at, and the handler reaches the live view through `EditorViews`.
