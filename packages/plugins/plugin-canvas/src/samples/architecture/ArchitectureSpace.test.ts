@@ -95,14 +95,6 @@ describe('ArchitectureSpace', () => {
     expect(metrics?.charts).toEqual([
       expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
     ]);
-
-    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
-    const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
-    expect(metrics?.rows).toHaveLength(21);
-    expect(metrics?.columns).toHaveLength(5);
-    expect(metrics?.charts).toEqual([
-      expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
-    ]);
     expect(metrics && unstyledHeaders(metrics)).toEqual([]);
 
     // The root document links the other two by id and embeds the Composer drawing.
