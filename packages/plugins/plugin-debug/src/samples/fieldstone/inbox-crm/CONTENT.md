@@ -161,7 +161,7 @@ writes in also turns up on the calendar.
 ### Calendar
 
 - 1 `Calendar` "Alien Labs", the only calendar in the space. `Calendar` has no owner field: every
-  `Event.owner` is Astrid. 313 `Event`s from −182d to +182d, so the calendar
+  `Event.owner` is Astrid. 314 `Event`s from −182d to +182d, so the calendar
   scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`; no event has more than 5.
 - `Event` has no recurrence field, so each repeating series is stored as one `Event` per
   occurrence. Occurrences of a series share title, time of day, duration and attendees, except that
@@ -191,7 +191,7 @@ writes in also turns up on the calendar.
     (+6d), Meridian proposal review (+7d), Kestrel Energy discovery call (+9d), Vantage technical
     deep dive (+13d), Corvid Analytics technical evaluation (+8d), Larkspur Media demo (+12d),
     Aldermoor Bank proposal review (+14d)
-- 167 events have a description: every one-off names the thread it came from; team syncs, sprint
+- 168 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
   occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
   other 1:1s have none, except as below.
@@ -230,7 +230,7 @@ These must work end to end in the app.
 - Every organization has a distinct logo; each pipeline customer shows its own WebP poster
   (`logos/`, regenerated into `logo-images.ts`), the others a generated SVG mark.
 - 188 messages in 103 threads. The oldest is at −60d and the newest at the reference date.
-- 313 events. Every week from −182d to +182d has at least one.
+- 314 events. Every week from −182d to +182d has at least one.
 - Every message from a person in the space has a sender Actor with `contact` set.
 - Every external contact with a thread attends at least one event.
 - Nadia attends an event after the reference date: the Okapi alerting follow-up.

@@ -60,8 +60,9 @@ export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.part
       const directory = { ...team.people, ...people };
       yield* makeViews();
       const { mailbox, threads } = yield* makeMail(directory, team.agents);
-      const { calendar, events } = yield* makeCalendar(directory);
+      // Ahead of the calendar, whose sales review links the board.
       const pipeline = yield* makePipeline(orgs);
+      const { calendar, events } = yield* makeCalendar(directory, pipeline.kanban);
       return { orgs, people, mailbox, calendar, threads, events, pipeline };
     }),
 });

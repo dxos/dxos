@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Event } from '@dxos/types';
 
@@ -49,7 +49,8 @@ export type EventKey =
   | 'cloudflareCall'
   | 'cloudflareReview'
   | 'northpineQbr'
-  | 'offsite';
+  | 'offsite'
+  | 'salesReview';
 
 export type Events = Record<EventKey, Event.Event[]>;
 
@@ -151,8 +152,48 @@ const HANA_NOTES = [
   'Six-month check-in: growth plan and the 1.9 work she wants.',
 ];
 
+/**
+ * The weekly sales review's notes, which link the pipeline board by its id so the reader opens it from the event.
+ */
+const salesReviewNotes = (pipelineId: string) =>
+  [
+    '## Sales Review',
+    '',
+    `Walked the [Sales pipeline](echo:///${pipelineId}) column by column, oldest movement first.`,
+    '',
+    '## Attendees',
+    '',
+    '- Astrid Holm (chair)',
+    '- Kofi Mensah',
+    '- Lucía Ferreira',
+    '- June Okonkwo',
+    '',
+    '## Pipeline',
+    '',
+    '- **Lead:** Halcyon Freight and Kestrel Energy both came in from the Bazel cache post; intro calls are booked.',
+    '- **Qualified:** Vantage Aerospace needs US-only data residency; Corvid Analytics and Larkspur Media have evaluations scheduled.',
+    '- **Demo:** Brightwater Games is two weeks into its trial and asking about seat pricing.',
+    '- **Proposal:** Meridian Health Data and Aldermoor Bank have proposals out; Aldermoor wants customer-managed keys.',
+    '- **Negotiation:** Northpine Robotics renewal hinges on the dedicated region; Tidewater Insurance is in MSA redlines.',
+    '- **Closed:** Okapi Payments and Lumen Biotech are live; Pallas Retail chose a self-hosted cache.',
+    '',
+    '## Decisions',
+    '',
+    '- Hold list price for Tidewater; offer a 12-month term instead of a discount.',
+    '- Treat EU-only data and customer-managed keys as one Enterprise add-on, priced once.',
+    '',
+    '## Action items',
+    '',
+    '- [ ] Kofi: send Vantage the US-region architecture note before the deep dive.',
+    '- [ ] June: draft the Enterprise add-on pricing for Aldermoor and Meridian.',
+    '- [ ] Lucía: write up why Pallas went self-hosted for the 1.9 roadmap review.',
+    '- [ ] Astrid: confirm the Northpine dedicated-region date with Anika.',
+    '- [x] Kofi: move Larkspur from Demo to Qualified until the demo happens.',
+  ].join('\n');
+
 export const makeCalendar = (
   people: Directory,
+  pipeline?: Obj.Unknown,
 ): Make<{ readonly calendar: Calendar.Calendar; readonly events: Events }> =>
   Effect.gen(function* () {
     const clock: Clock = yield* SampleSpace.Clock;
@@ -296,6 +337,17 @@ export const makeCalendar = (
           minutes: 120,
         }),
       ],
+      salesReview: pipeline
+        ? [
+            timed(-1, {
+              title: 'Sales Review',
+              description: salesReviewNotes(pipeline.id),
+              attendees: ['astrid', 'kofi', 'lucia', 'june'],
+              time: [11, 0],
+              minutes: 45,
+            }),
+          ]
+        : [],
       meridianReview: [
         timed(-6, {
           title: 'Meridian security review',

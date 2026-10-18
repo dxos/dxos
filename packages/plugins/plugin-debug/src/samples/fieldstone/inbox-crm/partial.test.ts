@@ -128,11 +128,11 @@ describe('Alien Labs inbox and CRM', () => {
       expect(messages.filter((message) => staff.includes(message.sender?.email)).length, key).toBeGreaterThan(0);
     }
 
-    // 313 events, at least one in every week from −182d to +182d.
+    // 314 events, at least one in every week from −182d to +182d.
     const events = ofType(feedEntries, 'type.event:');
-    expect(countOf('type.event:')).toBe(313);
+    expect(countOf('type.event:')).toBe(314);
     // Notes on the one-offs, the team rituals and Hana's first 1:1s.
-    expect(events.filter((event) => event.description)).toHaveLength(167);
+    expect(events.filter((event) => event.description)).toHaveLength(168);
 
     // The 10 most recent events before the reference time carry full meeting notes with a task list.
     const recentEvents = events
