@@ -1,0 +1,327 @@
+/-
+  A Composer plugin written in DEUS (D97): a small codebase explorer inside Composer, plus a skill
+  that lets Composer's assistant read the codebase and write DEUS.
+
+  - An ECHO type, `DEUS Codebase`, that people create from the + menu. It names the explorer site
+    to read (`deus explore --out`) and keeps the definitions pinned on it, so pins sync to everyone
+    in the space.
+  - An article surface for it: search every name, open a definition (its signature, doc, source,
+    what it uses and what uses it), follow references, pin it.
+  - A skill and two tools, `searchDefinitions` and `viewDefinition`, so the assistant answers from
+    the codebase and writes DEUS that fits it.
+
+  `examples/composer/build.sh` compiles `DeusPlugin.plugin` with `deus build --js` and bundles it as
+  `index.mjs` next to a `manifest.json`; Composer loads it from that URL.
+-/
+
+namespace DeusPlugin
+
+open React
+
+def panel : Js := Js.import "@dxos/react-ui/Panel" ""
+
+def toolbar : Js := Js.import "@dxos/react-ui/Toolbar" ""
+
+def input : Js := Js.import "@dxos/react-ui/Input" ""
+
+def button : Js := Js.import "@dxos/react-ui/Button" ""
+
+def icon : Js := Js.import "@dxos/react-ui/Icon" "Icon"
+
+def part (ns : Js) (name : Text) (props : List (Text, Js)) (children : List Element) : Element :=
+  jsEl (Js.get ns name) props children
+
+def iconEl (name : Text) : Element := jsEl icon [("icon", Js.text name)] []
+
+--
+-- The explorer's files (docs/spec/EXPLORER.md).
+--
+
+/-- A name of `names.json`. -/
+structure Entry @"urn:deus:composer:Entry" where
+  entryName : Text
+  entryKind : Text
+  entryHash : Text
+  entrySig : Text
+  entrySummary : Text
+
+def entryOf (o : Js) : Entry :=
+  { entryName := Js.toText (Js.get o "name"),
+    entryKind := Js.toText (Js.get o "kind"),
+    entryHash := Js.toText (Js.get o "hash"),
+    entrySig := Js.toText (Js.get o "sig"),
+    entrySummary := Js.toText (Js.get o "summary") }
+
+/-- A definition's page: a builtin's `#` is `_`, since a URL path cannot carry it. -/
+def pageOf (hash : Text) : Text := "def/" ++ Text.replace "#" "_" hash ++ ".json"
+
+/-- The site folder, ending in `/`. -/
+def folder (url : Text) : Text := if Text.endsWith "/" url then url else url ++ "/"
+
+def matches (query : Text) (e : Entry) : Bool :=
+  Text.contains (Text.toLower query) (Text.toLower e.entryName) || Text.contains (Text.toLower query) (Text.toLower e.entrySummary)
+
+def search (query : Text) (entries : List Entry) : List Entry :=
+  if Text.isEmpty (Text.trim query) then entries else List.filter (matches (Text.trim query)) entries
+
+def findName (name : Text) (entries : List Entry) : Option Entry :=
+  List.find (fun e => e.entryName == name) entries
+
+/-- Text of explorer HTML: tags dropped, entities decoded. -/
+def plainText (html : Text) : Text :=
+  let n := Text.length html
+  let rec go i inTag acc :=
+    if i >= n then Text.concat (List.reverse acc)
+    else
+      let c := Text.code html i
+      if c == '<' then go (i + 1) true acc
+      else if c == '>' then go (i + 1) false acc
+      else if inTag then go (i + 1) true acc
+      else go (i + 1) false (Text.slice html i (i + 1) :: acc)
+  Text.replace "&amp;" "&" (Text.replace "&gt;" ">" (Text.replace "&lt;" "<" (go 0 false [])))
+
+def orElse (fallback : Text) (t : Text) : Text := if Text.isEmpty (Text.trim t) then fallback else t
+
+def textField (o : Js) (key : Text) : Text :=
+  match Js.toOption (Js.get o key) with
+  | some v => Js.toText v
+  | none => ""
+
+def refs (o : Js) (key : Text) : List (Text, Text) :=
+  match Js.toOption (Js.get o key) with
+  | some v => List.map (fun r => (textField r "name", textField r "hash")) (Js.toList v)
+  | none => []
+
+--
+-- The surface.
+--
+
+/-- The definitions pinned on the codebase object. -/
+def pinnedOf (snapshot : Js) : List Text :=
+  match Js.toOption snapshot with
+  | some s =>
+    match Js.toOption (Js.get s "pinned") with
+    | some list => List.map Js.toText (Js.toList list)
+    | none => []
+  | none => []
+
+def siteOf (fallback : Text) (snapshot : Js) : Text :=
+  match Js.toOption snapshot with
+  | some s =>
+    let site := textField s "site"
+    folder (if Text.isEmpty (Text.trim site) then fallback else site)
+  | none => folder fallback
+
+def kindLabel (kind : Text) : Element := h "span" [className ("deus-kind deus-kind-" ++ kind)] [text kind]
+
+def entryRow (selected : Text) (pinned : Bool) (choose : Entry -> Unit) (e : Entry) : Element :=
+  h "li" [key e.entryName] [
+    h "button" [className (if e.entryHash == selected then "deus-row deus-current" else "deus-row"), onClick (fun _ => choose e)] [
+      h "span" [className "deus-row-head"] [
+        h "span" [className "deus-name"] [text e.entryName],
+        if pinned then iconEl "ph--bookmark-simple--fill" else fragment [],
+        kindLabel e.entryKind],
+      if Text.isEmpty e.entrySig then fragment [] else h "span" [className "deus-sig"] [text e.entrySig],
+      if Text.isEmpty e.entrySummary then fragment [] else h "span" [className "deus-summary"] [text e.entrySummary]]]
+
+def refList (label : Text) (items : List (Text, Text)) (openHash : Text -> Unit) : Element :=
+  if List.isEmpty items then fragment []
+  else
+    h "section" [className "deus-refs"] [
+      h "h3" [] [text (label ++ " · " ++ Int.toText (List.length items))],
+      h "div" [className "deus-chips"]
+        (List.map (fun r => keyed (snd r) chip (fst r, openHash, snd r)) (List.take 40 items))]
+
+/-- A reference to another definition. -/
+def chipView (props : (Text, Text -> Unit, Text)) : {Hooks} Element :=
+  match props with
+  | (name, openHash, hash) => h "button" [className "deus-chip", onClick (fun _ => openHash hash)] [text name]
+
+def chip : Component (Text, Text -> Unit, Text) := component "DeusChip" chipView
+
+def definitionView (page : Js) (pinned : Bool) (togglePin : Text -> Unit) (openHash : Text -> Unit) : Element :=
+  let name := textField page "name"
+  let verdict := textField page "verdict"
+  h "article" [className "deus-def"] [
+    h "header" [className "deus-def-head"] [
+      h "div" [] [
+        h "h2" [] [text name],
+        h "code" [className "deus-sig"] [text (textField page "signature")]],
+      part button "Root" [("variant", Js.text "ghost"), onClick (fun _ => togglePin name)] [
+        iconEl (if pinned then "ph--bookmark-simple--fill" else "ph--bookmark-simple--regular"),
+        text (if pinned then "Unpin" else "Pin")]],
+    if Text.isEmpty verdict then fragment []
+    else h "p" [className (if Text.startsWith "(pass" verdict then "deus-verdict deus-pass" else "deus-verdict deus-fail")] [text verdict],
+    if Text.isEmpty (textField page "doc") then fragment [] else h "p" [className "deus-doc"] [text (textField page "doc")],
+    h "pre" [className "deus-source",
+      ("dangerouslySetInnerHTML", Js.obj [("__html", Js.get page "html")]),
+      ("onClick", Js.fn1 (fun event =>
+        let link := Js.method (Js.get event "target") "closest" [Js.text "a[data-open]"]
+        if Js.isNull link then ()
+        else openHash (Text.replace "d:" "" (Js.toText (Js.method link "getAttribute" [Js.text "data-open"])))))] [],
+    refList "Uses" (refs page "deps") openHash,
+    refList "Used by" (refs page "users") openHash]
+
+/-- The article: a search over every name, the selected definition, and the pins. -/
+def explorerView (fallback : Text) (props : Js) : {Hooks} Element :=
+  let subject := Js.get props "subject"
+  let snapshot := Composer.useObjectValue subject
+  let site := siteOf fallback snapshot
+  let pinned := pinnedOf snapshot
+  let (entries, setEntries) := Hooks.useState ([] : List Entry)
+  let (query, setQuery) := Hooks.useState ""
+  let (page, setPage) := Hooks.useState (none : Option Js)
+  let (failure, setFailure) := Hooks.useState ""
+  Hooks.useEffect (fun _ =>
+    let loaded := Composer.andThen (Composer.fetchJson (site ++ "names.json")) (fun list =>
+      let _ := setEntries (List.map entryOf (Js.toList list))
+      Js.undefined)
+    let _ := Js.method loaded "catch" [Js.fn1 (fun err => setFailure ("cannot read " ++ site ++ "names.json: " ++ Js.toText (Js.get err "message")))]
+    ()) [Js.text site]
+  let openHash := fun (hash : Text) =>
+    let _ := Composer.andThen (Composer.fetchJson (site ++ pageOf hash)) (fun json =>
+      let _ := setPage (some json)
+      Js.undefined)
+    ()
+  let togglePin := fun (name : Text) =>
+    Composer.update subject (fun draft =>
+      let next := if List.contains name pinned then List.filter (fun n => n != name) pinned else pinned ++ [name]
+      let _ := Js.set draft "pinned" (Js.list (List.map Js.text next))
+      ())
+  let selected := match page with
+    | some p => textField p "hash"
+    | none => ""
+  let found := search query entries
+  let pinnedEntries := List.filterMap (fun n => findName n entries) pinned
+  let row := fun (e : Entry) => entryRow selected (List.contains e.entryName pinned) (fun x => openHash x.entryHash) e
+  part panel "Root" [("role", Js.get props "role"), className "deus-panel"] [
+    part panel "Header" [] [
+      part toolbar "Root" [] [
+        iconEl "ph--function--regular",
+        part toolbar "Text" [] [text (orElse "DEUS codebase" (textField snapshot "name"))],
+        part input "Root" [("placeholder", Js.text "Search definitions…"), ("value", Js.text query), onInput setQuery,
+          className "deus-search"] [],
+        part toolbar "Text" [className "deus-count"] [text (Int.toText (List.length found) ++ " of " ++ Int.toText (List.length entries))]]],
+    part panel "Body" [className "deus-body"] [
+      h "nav" [className "deus-list"] [
+        if Text.isEmpty failure then fragment [] else h "p" [className "deus-failure"] [text failure],
+        if List.isEmpty pinnedEntries then fragment []
+        else h "section" [] [h "h3" [] [text "Pinned"], h "ul" [] (List.map row pinnedEntries)],
+        h "section" [] [
+          h "h3" [] [text (if Text.isEmpty query then "Definitions" else "Matches")],
+          h "ul" [] (List.map row (List.take 200 found))]],
+      match page with
+      | some p => definitionView p (List.contains (textField p "name") pinned) togglePin openHash
+      | none => h "div" [className "deus-empty"] [
+          iconEl "ph--function--regular",
+          h "p" [] [text "Pick a definition to read its source, what it uses and what uses it."]]]]
+
+--
+-- The assistant: a skill and two tools.
+--
+
+def instructions : Text := Text.join "\n" [
+  "You can read a DEUS codebase and write DEUS code.",
+  "",
+  "DEUS is a functional language with algebraic effects (abilities). Its codebase is content-addressed:",
+  "every definition is stored by the hash of its meaning, under one or more names.",
+  "",
+  "Use searchDefinitions to find names (by part of a name or summary) and viewDefinition to read one:",
+  "its signature, doc comment, source, what it uses and what uses it. Read before you write, and reuse",
+  "what exists. Cite definitions by their full names.",
+  "",
+  "Writing DEUS:",
+  "- `def name (x : Int) (y : Text) : Bool := body`; a doc comment is `/-- … -/` before it.",
+  "- Data: `inductive Shape where | circle (r : Int) | rect (w : Int) (h : Int)`; records: `structure P where x : Int`.",
+  "- `match s with | Shape.circle r => … | Shape.rect w h => …`; `if … then … else …`; `let x := e` on its own line.",
+  "- Lambdas `fun x => e`; lists `[1, 2]`, `x :: xs`, `xs ++ ys`; tuples `(a, b)`; text `\"…\"` joined with `++`.",
+  "- Effects: `ability Ask where ask : Unit -> Int`; a function that asks has type `Unit -> {Ask} Int`;",
+  "  `handle body () with | Ask.ask _ -> k => k 21` answers it. `throw \"msg\"` raises `Throw Text`; `try` catches it.",
+  "- Namespaces: `namespace App` … `end App`; names are `App.main`. Tests: `test t := 1 + 1 == 2`;",
+  "  laws: `theorem t (n : Int) : f n >= 0 := by test 100`.",
+  "- Comments are `--` and `/- … -/`. Int is 32-bit; there is no null: use `Option` (`some x`, `none`).",
+  "",
+  "When you write code, put it in a ```deus fenced block, and say which existing definitions it uses."]
+
+/-- The site the assistant's tools read, set when the plugin is made. -/
+def siteRef : Ref Text := Ref.new ""
+
+def searchDefinitions : Js :=
+  Composer.operation "org.dxos.deus.operation.searchDefinitions" "Search DEUS definitions"
+    "Searches the DEUS codebase for definitions whose name or summary contains the query. Returns up to 40 lines of `name : type -- summary`."
+    [("query", Composer.described "Part of a name or summary, such as `List.map` or `parse`." Composer.schemaString)]
+
+def viewDefinition : Js :=
+  Composer.operation "org.dxos.deus.operation.viewDefinition" "View a DEUS definition"
+    "Reads one definition of the DEUS codebase by its full name: its signature, doc, source, what it uses and what uses it."
+    [("name", Composer.described "The full name, such as `List.map`." Composer.schemaString)]
+
+def entriesThen (f : List Entry -> Js) : Js :=
+  Composer.andThen (Composer.fetchJson (Ref.get siteRef ++ "names.json")) (fun list => f (List.map entryOf (Js.toList list)))
+
+def searchText (query : Text) (entries : List Entry) : Text :=
+  match List.take 40 (search query entries) with
+  | [] => "No definition matches " ++ query ++ "."
+  | found => Text.join "\n" (List.map (fun e =>
+      e.entryName ++ (if Text.isEmpty e.entrySig then "" else " : " ++ e.entrySig) ++
+        (if Text.isEmpty e.entrySummary then "" else " -- " ++ e.entrySummary)) found)
+
+def definitionText (page : Js) : Text :=
+  let names := fun (key : Text) => Text.join ", " (List.map fst (List.take 30 (refs page key)))
+  Text.join "\n" [
+    textField page "name" ++ " (" ++ textField page "kind" ++ ")",
+    textField page "signature",
+    textField page "doc",
+    "```deus",
+    plainText (textField page "html"),
+    "```",
+    "Uses: " ++ names "deps",
+    "Used by: " ++ names "users"]
+
+def handlers : List Js := [
+  Composer.handler searchDefinitions (fun input =>
+    entriesThen (fun entries => Js.text (searchText (Js.toText (Js.get input "query")) entries))),
+  Composer.handler viewDefinition (fun input =>
+    let name := Js.toText (Js.get input "name")
+    entriesThen (fun entries =>
+      match findName name entries with
+      | some e => Composer.andThen (Composer.fetchJson (Ref.get siteRef ++ pageOf e.entryHash)) (fun page => Js.text (definitionText page))
+      | none => Js.text ("There is no definition named " ++ name ++ "; try searchDefinitions.")))]
+
+--
+-- The plugin.
+--
+
+def codebaseType : Js :=
+  Composer.objectType "org.dxos.deus.type.codebase" "0.1.0" [
+    ("name", Composer.optional Composer.schemaString),
+    ("site", Composer.optional Composer.schemaString),
+    ("pinned", Composer.optional (Composer.arrayOf Composer.schemaString))]
+    "ph--function--regular" "indigo"
+
+/-- The plugin, reading the explorer site at `defaultSite` unless an object names another. -/
+def plugin (defaultSite : Text) : Js :=
+  let _ := Ref.set siteRef (folder defaultSite)
+  let explorer := jsComponent "DeusExplorer" (explorerView defaultSite)
+  Composer.plugin (Composer.meta "org.dxos.deus.explorer" "DEUS" "Browse a DEUS codebase and let the assistant program in DEUS." "ph--function--regular" "indigo") [
+    Composer.schemas [codebaseType],
+    Composer.translations [
+      ("org.dxos.deus.type.codebase", [
+        ("typename.label", "DEUS codebase"),
+        ("typename.label_zero", "DEUS codebases"),
+        ("typename.label_one", "DEUS codebase"),
+        ("typename.label_other", "DEUS codebases"),
+        ("object-name.placeholder", "New DEUS codebase"),
+        ("add-object.label", "Add DEUS codebase")]),
+      ("org.dxos.deus.explorer", [("plugin.name", "DEUS")])],
+    Composer.creatable "create" codebaseType (fun props =>
+      Composer.make codebaseType (Js.obj [
+        ("name", Js.text (orElse "DEUS toolchain" (textField props "name"))),
+        ("site", Js.text (textField props "site")),
+        ("pinned", Js.list [])])),
+    Composer.surface "article" Composer.article (Composer.objectOf Composer.article codebaseType) explorer,
+    Composer.operations "operations" handlers,
+    Composer.skills "skills" [
+      Composer.skill "org.dxos.deus.skill.deus" "DEUS" "Read the DEUS codebase and write DEUS code." instructions [searchDefinitions, viewDefinition]]]
+
+end DeusPlugin

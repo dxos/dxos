@@ -21,6 +21,7 @@
     "*.tpl",
     "**/*.mdx",
     ".agents/reviews/**",
+    "packages/reflect/deus-lang/codebase/**",
     ".store/**",
     "**/README.md",
     "packages/core/compute/agent-code-mode/src/docs/**",

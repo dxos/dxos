@@ -1,0 +1,82 @@
+-- context: @dxos/worker/Worker
+/-
+  The R2 bucket as the Worker's DEUS code uses it (task 41714c0d): reads, writes, deletes, listings that follow R2's
+  pages, and the trash a delete moves an object to (DataSafety.Spec), over `Js` and `Js.Async` (D237). The bucket is
+  the Worker's `BUCKET` binding.
+-/
+
+namespace Worker.R2
+
+/-- The object at `key`, with its body unread, or none. -/
+def get (bucket : Js) (key : Text) : {Js.Async} Option Js :=
+  Js.toOption (Js.Async.await (Js.method bucket "get" [Js.text key]))
+
+/-- Whether an object is at `key`, asked without reading it. -/
+def exists (bucket : Js) (key : Text) : {Js.Async} Bool :=
+  not (Js.isNull (Js.Async.await (Js.method bucket "head" [Js.text key])))
+
+/-- The content type an object was stored with, or `application/octet-stream`. -/
+def contentType (object : Js) : Text :=
+  match Js.toOption (Js.get object "httpMetadata") with
+  | Option.some metadata =>
+      match Js.toOption (Js.get metadata "contentType") with
+      | Option.some value => Js.toText value
+      | Option.none => "application/octet-stream"
+  | Option.none => "application/octet-stream"
+
+/-- Stores `body` (text, bytes or a stream) at `key` with `contentType`. -/
+def put (bucket : Js) (key : Text) (body : Js) (contentType : Text) : {Js.Async} Unit :=
+  let options := Js.obj [("httpMetadata", Js.obj [("contentType", Js.text contentType)])]
+  let _ := Js.Async.await (Js.method bucket "put" [Js.text key, body, options])
+  ()
+
+/-- The bytes of `buffer` (an `ArrayBuffer`), as a body R2 stores. -/
+def bytes (buffer : Js) : Js := Js.construct (Js.global "Uint8Array") [buffer]
+
+/-- Deletes the object at `key`, if there is one. -/
+def delete (bucket : Js) (key : Text) : {Js.Async} Unit :=
+  let _ := Js.Async.await (Js.method bucket "delete" [Js.text key])
+  ()
+
+/-- The keys under `prefix`, without it, from the page `cursor` names to the last. -/
+def listFrom (bucket : Js) (prefix : Text) (cursor : Option Text) : {Js.Async} List Text :=
+  let at := Option.getOr (Option.map (fun c => [("cursor", Js.text c)]) cursor) []
+  let page := Js.Async.await (Js.method bucket "list" [Js.obj (("prefix", Js.text prefix) :: at)])
+  let skip := Text.length prefix
+  let keys := List.map (fun object => Text.drop skip (Js.toText (Js.get object "key"))) (Js.toList (Js.get page "objects"))
+  if Js.toBool (Js.get page "truncated") then keys ++ listFrom bucket prefix (Option.some (Js.toText (Js.get page "cursor")))
+  else keys
+
+/-- The folders directly under `prefix` (`toolchain/`, `dxos/`), each ending in `/`, from the page `cursor` names to
+  the last. -/
+def foldersFrom (bucket : Js) (prefix : Text) (cursor : Option Text) : {Js.Async} List Text :=
+  let at := Option.getOr (Option.map (fun c => [("cursor", Js.text c)]) cursor) []
+  let page := Js.Async.await (Js.method bucket "list" [Js.obj ([("prefix", Js.text prefix), ("delimiter", Js.text "/")] ++ at)])
+  let folders :=
+    match Js.toOption (Js.get page "delimitedPrefixes") with
+    | Option.some listed => List.map Js.toText (Js.toList listed)
+    | Option.none => []
+  if Js.toBool (Js.get page "truncated") then folders ++ foldersFrom bucket prefix (Option.some (Js.toText (Js.get page "cursor")))
+  else folders
+
+/-- Every folder directly under `prefix`, following R2's pages, sorted. -/
+def listFolders (bucket : Js) (prefix : Text) : {Js.Async} List Text := List.sort (foldersFrom bucket prefix Option.none)
+
+/-- Every key under `prefix`, without it, following R2's pages, in R2's order, which is by key: sorting again would
+  cost a 5,000-key listing about 40 ms of the Worker's CPU. -/
+def listAll (bucket : Js) (prefix : Text) : {Js.Async} List Text := listFrom bucket prefix Option.none
+
+/-- Deletes `<project>/<folder>/<name>` by moving it to `<project>/trash/<folder>/<name>`, which no client can write
+  or delete, so a deleting bug costs storage, never data. R2 has no rename: it is a copy, then the delete. -/
+def toTrash (bucket : Js) (project : Text) (folder : Text) (name : Text) : {Js.Async} Unit :=
+  let key := project ++ "/" ++ folder ++ "/" ++ name
+  match get bucket key with
+  | Option.none => ()
+  | Option.some object =>
+      let body := bytes (Js.Async.await (Js.method (Js.construct (Js.global "Response") [Js.get object "body"]) "arrayBuffer" []))
+      let deletedAt := Js.toText (Js.call (Js.path Js.globalThis ["Date", "now"]) [])
+      let options := Js.obj [("httpMetadata", Js.get object "httpMetadata"), ("customMetadata", Js.obj [("deletedAt", Js.text deletedAt)])]
+      let _ := Js.Async.await (Js.method bucket "put" [Js.text (project ++ "/trash/" ++ folder ++ "/" ++ name), body, options])
+      delete bucket key
+
+end Worker.R2

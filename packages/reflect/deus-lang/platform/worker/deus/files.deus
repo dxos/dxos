@@ -1,0 +1,53 @@
+-- context: @dxos/worker/Worker
+/-
+  The files beside a project's bundles (task 41714c0d, D164): assets, the explorer's inbox and site, analytics events
+  and pushed results, under `/v1/<project>/files/<folder>/`. Reads are open; a write or delete needs a key with the
+  folder's scope (`Worker.Paths.scopeOf`).
+-/
+
+namespace Worker.Files
+
+/-- Answers `/v1/<project>/files/<folder>/<rest>` for `request`, on the R2 `bucket`. `authorize scope` checks the
+  request's key for `scope`, as remote.mjs's `authorize` does: a promise of the function a write's response passes
+  through to be audited, rejected with the 401 or 403 when the key may not. -/
+def serve (request : Js) (bucket : Js) (project : Text) (folder : Text) (rest : List Text) (authorize : Text -> Js) : {Js.Async} Js :=
+  let under := project ++ "/" ++ folder ++ "/"
+  let verb := Worker.Http.method request
+  if rest == [] || rest == [""] then
+    if verb == "GET" then Worker.Http.lines (Worker.R2.listAll bucket under) else Worker.Http.problem 405 "method not allowed"
+  else if not (List.all Worker.Paths.isSegment rest) then Worker.Http.problem 400 "invalid key"
+  else
+    let name := Text.join "/" rest
+    let key := under ++ name
+    if verb == "GET" then
+      match Worker.R2.get bucket key with
+      | Option.none => Worker.Http.problem 404 "not found"
+      | Option.some object =>
+          -- An asset named by its SHA-256 never changes, so a browser keeps it; pushed results (150 kB, read by every
+          -- explorer visit) may be a minute old; anything else may be written again at once.
+          let cache :=
+            if folder == "assets" && Worker.Heads.isHash name then "public, max-age=31536000, immutable"
+            else if folder == "results" then "public, max-age=60"
+            else "no-store"
+          Worker.Http.response
+            (Js.get object "body")
+            200
+            [("content-type", Worker.R2.contentType object), ("cache-control", cache), ("x-content-type-options", "nosniff")]
+    else if verb == "PUT" then
+      let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
+      let type := Option.getOr (Worker.Http.header request "content-type") "application/octet-stream"
+      let bytes := Worker.R2.bytes (Js.Async.await (Js.method request "arrayBuffer" []))
+      -- Browsers keep an asset named by a hash for good, so its bytes must be the ones the name promises.
+      if folder == "assets" && Worker.Heads.isHash name && Worker.Crypto.sha256 bytes != name then
+        Worker.Http.problem 400 "an asset named by a SHA-256 must hash to its name"
+      else
+        let _ := Worker.R2.put bucket key bytes type
+        Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("stored", Js.bool true)]) 201]
+    else if verb == "DELETE" then
+      let logged := Js.Async.await (authorize (Worker.Paths.scopeOf folder))
+      -- Assets are what comments and tasks attach; the site is rebuilt from the codebase, so it needs no trash.
+      let _ := if folder == "site" then Worker.R2.delete bucket key else Worker.R2.toTrash bucket project folder name
+      Js.call logged [Worker.Http.json (Js.obj [("key", Js.text name), ("deleted", Js.bool true)]) 200]
+    else Worker.Http.problem 405 "method not allowed"
+
+end Worker.Files

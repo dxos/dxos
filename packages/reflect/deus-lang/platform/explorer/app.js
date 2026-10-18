@@ -1,0 +1,4700 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// The codebase explorer (D58, D75): a single page over the JSON that `deus explore` writes, modelled on
+// Unison Share. A namespace tree, a finder (`/`), and a workspace of cards: definitions, namespaces, tasks
+// and changes. The open cards are kept in the URL fragment, in display order, so a view can be shared.
+
+const STATES = ['todo', 'doing', 'done', 'canceled'];
+const PRIORITIES = ['none', 'urgent', 'high', 'medium', 'low'];
+const KINDS = {
+  type: { icon: 'T', label: 'type', plural: 'Types' },
+  ability: { icon: 'A', label: 'ability', plural: 'Abilities' },
+  term: { icon: 'ƒ', label: 'term', plural: 'Terms' },
+  test: { icon: '⊨', label: 'test', plural: 'Tests' },
+  theorem: { icon: '∀', label: 'theorem', plural: 'Theorems' },
+  spec: { icon: 'S', label: 'spec block', plural: 'Spec blocks' },
+};
+const KIND_ORDER = Object.keys(KINDS);
+const LIST_LIMIT = 24;
+/** Rows each "Show more" adds to a list. */
+const LIST_PAGE = 100;
+
+const escape = (text) =>
+  String(text ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+const element = (id) => document.getElementById(id);
+
+const short = (hash) => (hash.startsWith('#') ? hash : `#${hash.slice(0, 8)}`);
+
+/** The git ref the toolchain's files are read at: the PR branch until PR 13952 merges, then `main` (task ccf9b182). */
+const REPO_REF = 'dm/agent-13-oct-x8ehi8-0y35ai';
+
+/** The toolchain's files in git, which spec documents link to by relative path. */
+const REPO_URL = `https://github.com/dxos/dxos/blob/${REPO_REF}/packages/reflect/deus-lang/`;
+
+/** The project's decision log, where D96 and the other decision numbers are recorded. */
+const DECISIONS_URL = `${REPO_URL}docs/DECISIONS.md`;
+
+/** A relative link from a spec document to a file in git (`../../docs/spec/CORE.md`), on GitHub; spec files' own links are relative to `docs/spec/`. */
+const repoUrl = (target) => {
+  const path = target.replace(/^(?:\.\.?\/)+/, '');
+  return REPO_URL + (/^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`);
+};
+
+/** The repo path a relative link names, as `repoUrl` resolves it. */
+const repoPath = (target) => {
+  const path = target.replace(/^(?:\.\.?\/)+/, '').replace(/#.*$/, '');
+  return /^(?:docs|deus|src|examples|platform|scripts)\//.test(path) ? path : `docs/spec/${path}`;
+};
+
+/** The embedded text a repository file is kept as (D279), found by the path `deus embed` recorded. */
+const embeddedDocOf = (path) => {
+  const entry = live === undefined ? undefined : documents().find((other) => other.path === path);
+  return entry && embedded(entry.name) ? entry.name : undefined;
+};
+
+/** A link to a document: its card when the codebase embeds it, else the file on GitHub; `escaped` when `target` already is. */
+const fileLink = (target, label, escaped = false) => {
+  // A bare `DECISIONS.md` is relative to whichever folder the linking document is in: docs/spec/ or docs/.
+  const path = repoPath(target);
+  const name = embeddedDocOf(path) ?? embeddedDocOf(path.replace(/^docs\/spec\//, 'docs/'));
+  return name
+    ? `<a class="ref" data-open="k:doc:${escape(name)}">${label}</a>`
+    : `<a href="${escaped ? repoUrl(target) : escape(repoUrl(target))}" target="_blank" rel="noopener">${label}</a>`;
+};
+
+/** A file in git named in prose (`examples/react/index.html`), which the site does not serve but GitHub does. */
+const REPO_PATH = /^(?:docs|deus|src|examples|platform|scripts)\/[\w./-]+\.\w+$/;
+
+/** The task with id `id` in the loaded codebase, if any. */
+const taskById = (id) => index.tasks?.find((task) => task.id === id);
+
+/** Whether decisions open as cards: the hosted site reads the codebase's copy of the log (`Docs.decisionsMd`). */
+const decisionsInCodebase = () => embedded('Docs.decisionsMd');
+
+/** HTML with each decision number (D96) and task id outside a link or code made a link; a one-digit decision is too short to tell from Cloudflare's D1. */
+const decisionLinks = (html) => {
+  let inside = 0;
+  return html
+    .split(/(<[^>]*>)/)
+    .map((part) => {
+      if (part.startsWith('<')) {
+        inside += /^<(?:a|code)[\s>]/.test(part) ? 1 : part === '</a>' || part === '</code>' ? -1 : 0;
+        return part;
+      }
+      return inside > 0
+        ? part
+        : part
+            .replace(
+              /\bD(\d{2,4})\b/g,
+              decisionsInCodebase()
+                ? `<a class="decision" data-open="x:D$1" title="Decision $1 in the project's decision log">D$1</a>`
+                : `<a class="decision" href="${DECISIONS_URL}" target="_blank" rel="noopener" title="Decision $1 in the project's decision log">D$1</a>`,
+            )
+            // A task id in prose ("depends on b09507db") opens the task; a definition's short hash stays text.
+            .replace(/\b[0-9a-f]{8}\b/g, (id) => {
+              const task = taskById(id);
+              return task
+                ? `<a class="task-link" data-open="t:${id}" title="${escape(task.title)} (${escape(task.state)})">${id}</a>`
+                : id;
+            });
+    })
+    .join('');
+};
+
+const lastSegment = (name) => name.slice(name.lastIndexOf('.') + 1);
+
+const namespaceOf = (name) => (name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : '');
+
+/** A definition's page: builtin hashes are IRIs such as `#Bool`, written as `_Bool`. */
+const pagePath = (hash) => `def/${hash.startsWith('#') ? `_${hash.slice(1)}` : hash}.json`;
+
+const cache = new Map();
+
+const fetchJson = (path) =>
+  fetch(path)
+    .then((response) => (response.ok ? response.json() : undefined))
+    .catch(() => undefined);
+
+/**
+ * The live explorer API of the codebase at the head the page was served for (D192), which the DEUS
+ * Worker sets; without it, as from `deus explore`, the app reads the files written beside it.
+ */
+const live = globalThis.DEUS_LIVE;
+
+/** The files the live API serves as one document, and the part each one is. */
+const LIVE_INDEX = {
+  'meta.json': 'meta',
+  'names.json': 'names',
+  'tasks.json': 'tasks',
+  'comments.json': 'comments',
+  'events.json': 'events',
+  'features.json': 'features',
+};
+
+let liveIndex;
+let liveResults;
+
+/**
+ * The project's pushed test and theorem results by hash (D209), read when the page opens: a head's pages
+ * were drawn with the results of their time, and a test run pushed since is newer.
+ */
+const pushedResults = () =>
+  (liveResults ??= fetch(live.replace(/\/live\/[^/]+$/, '/files/results/all'))
+    .then((response) => (response.ok ? response.text() : ''))
+    .catch(() => '')
+    .then(
+      (text) =>
+        new Map(
+          text
+            .split('\n')
+            .filter((line) => line.length > 65 && line[64] === ' ')
+            .map((line) => [line.slice(0, 64), line.slice(65)]),
+        ),
+    ));
+
+/** `pass` or `fail` for a verdict, as the drawn index says it (`Explorer.statusOf`). */
+const statusOf = (verdict) => (verdict.startsWith('(pass') ? 'pass' : verdict.startsWith('(fail') ? 'fail' : '');
+
+/** A file from the live API, or from the published files when the live API cannot answer. */
+const fromLive = async (path) => {
+  if (path in LIVE_INDEX) {
+    liveIndex ??= fetchJson(`${live}/index.json`);
+    const index = await liveIndex;
+    if (index) {
+      if (path === 'names.json') {
+        const results = await pushedResults();
+        for (const entry of index.names) {
+          const verdict = results.get(entry.hash);
+          if (verdict && (entry.kind === 'test' || entry.kind === 'theorem')) {
+            entry.status = statusOf(verdict);
+          }
+        }
+      }
+      return index[LIVE_INDEX[path]];
+    }
+  } else if (path.startsWith('def/') || path.startsWith('change/') || path.startsWith('doc/')) {
+    const page = await fetchJson(`${live}/${path}`);
+    if (page !== undefined) {
+      if (path.startsWith('def/') && (page.kind === 'test' || page.kind === 'theorem')) {
+        page.verdict = (await pushedResults()).get(page.hash) ?? page.verdict;
+      }
+      return page;
+    }
+  }
+  return fetchJson(path);
+};
+
+/** Each file is fetched once; a missing file resolves to `undefined`. */
+const load = (path) => {
+  if (!cache.has(path)) {
+    cache.set(path, live ? fromLive(path) : fetchJson(path));
+  }
+  return cache.get(path);
+};
+
+//
+// Codebase indexes.
+//
+
+const index = {
+  meta: undefined,
+  names: [],
+  tasks: [],
+  byHash: new Map(),
+  byName: new Map(),
+  /** The mounted libraries' prefixes (`lib.base.`): a name the project lacks is looked up under each (D206). */
+  mounts: [],
+  /** The hashes the mounted libraries define: a project's name for one is that library's definition, copied in. */
+  libraryHashes: new Set(),
+  tree: undefined,
+  /** The feature map's areas (D196), which order the overview and the sidebar. */
+  areas: [],
+};
+
+/** The namespace tree: a node per name segment; a node may also be a definition (`List` and `List.map`). */
+const buildTree = (names) => {
+  const root = { segment: '', path: '', children: new Map(), entry: undefined, count: 0 };
+  for (const entry of names) {
+    let node = root;
+    node.count++;
+    for (const segment of entry.name.split('.')) {
+      if (!node.children.has(segment)) {
+        const path = node.path ? `${node.path}.${segment}` : segment;
+        node.children.set(segment, { segment, path, children: new Map(), entry: undefined, count: 0 });
+      }
+      node = node.children.get(segment);
+      node.count++;
+    }
+    node.entry = entry;
+    node.count--;
+  }
+  return root;
+};
+
+const nodeAt = (path) => {
+  let node = index.tree;
+  for (const segment of path ? path.split('.') : []) {
+    node = node?.children.get(segment);
+  }
+  return node;
+};
+
+/** A count as the hub writes it, grouped by thousands (`3,153`). */
+const number = (value) => Number(value).toLocaleString('en-US');
+
+const sortedChildren = (node) => [...node.children.values()].sort((a, b) => a.segment.localeCompare(b.segment));
+
+/** Whether every definition under `node` is a mounted library's, as the prelude a new codebase starts with is. */
+const fromLibrary = (node) =>
+  (node.entry === undefined || index.libraryHashes.has(node.entry.hash)) &&
+  [...node.children.values()].every(fromLibrary);
+
+/**
+ * The tree's top level apart from `lib`, split into the project's own nodes and the prelude: nodes whose definitions
+ * are all a mounted library's. With nothing of its own, a project's nodes all count as its own.
+ */
+const topLevel = () => {
+  const all = sortedChildren(index.tree).filter((child) => child.path !== 'lib');
+  const prelude = all.filter(fromLibrary);
+  return prelude.length < all.length
+    ? { own: all.filter((child) => !prelude.includes(child)), prelude }
+    : { own: all, prelude: [] };
+};
+
+/** The definitions of a list of tree nodes and everything under them. */
+const entriesUnder = (nodes) =>
+  nodes.flatMap((node) => [...(node.entry ? [node.entry] : []), ...entriesUnder([...node.children.values()])]);
+
+/** The definition `name` names in the project, or else in exactly one mounted library (D206). */
+const named = (name) => {
+  const own = index.byName.get(name);
+  if (own) {
+    return own;
+  }
+  const mounted = index.mounts.map((mount) => index.byName.get(mount + name)).filter(Boolean);
+  return mounted.length === 1 ? mounted[0] : undefined;
+};
+
+/** Resolves a name as written inside `namespace`: the innermost enclosing namespace that binds it wins. */
+const resolve = (name, namespace) => {
+  const parts = namespace ? namespace.split('.') : [];
+  for (let i = parts.length; i >= 0; i--) {
+    const candidate = [...parts.slice(0, i), name].join('.');
+    const entry = named(candidate);
+    if (entry) {
+      return entry;
+    }
+  }
+  return undefined;
+};
+
+//
+// Writing (D82): signed-in members of the GitHub org comment and file tasks through the hosted
+// explorer's worker. Its requests wait in the remote's inbox until `deus inbox` applies them, so
+// the app shows them as pending until the pages are regenerated. Without the worker (a local
+// `deus explore`, a bare bucket) `api/me` is missing and the explorer stays read-only.
+//
+
+const account = { signIn: false, login: null, avatar: null, member: false, org: '' };
+
+/** Comments by subject (`def:<name>`, `change:<causal>`), from `comments.json`. */
+let comments = {};
+
+/** Requests filed here that the codebase does not have yet. */
+let pending = [];
+
+const ASSET_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+
+const getJson = async (path) => {
+  try {
+    const response = await fetch(path, { credentials: 'same-origin' });
+    return response.ok && (response.headers.get('content-type') ?? '').includes('json')
+      ? await response.json()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const loadWriting = async () => {
+  const [me, inbox, saved] = await Promise.all([getJson('api/me'), getJson('api/inbox'), load('comments.json')]);
+  comments = saved ?? {};
+  if (me) {
+    Object.assign(account, me);
+  }
+  // A request stays in the inbox until applied; once the pages carry it, it is shown from them.
+  pending = Array.isArray(inbox) ? inbox : [];
+  renderAccount();
+};
+
+const canWrite = () => account.signIn && account.member;
+
+const signInHref = () => `auth/login?return=${encodeURIComponent(location.pathname + location.hash)}`;
+
+const renderAccount = () => {
+  const node = element('account');
+  node.hidden = !account.signIn;
+  element('new-task').hidden = !canWrite();
+  element('report').hidden = !canWrite();
+  if (!account.signIn) {
+    return;
+  }
+  node.innerHTML = account.login
+    ? `${account.avatar ? `<img class="avatar" src="${escape(account.avatar)}" alt="" />` : ''}` +
+      `<span class="login" title="${account.member ? `Member of ${escape(account.org)}` : `Not a member of ${escape(account.org)}: read only`}">@${escape(account.login)}</span>` +
+      `${account.member ? '' : '<span class="chip">read only</span>'}<a class="plain-button" href="auth/logout">Sign out</a>`
+    : `<a class="plain-button sign-in" href="${escape(signInHref())}">Sign in<span class="wide-only"> with GitHub</span></a>`;
+};
+
+const authorHtml = (author) =>
+  author.startsWith('github:')
+    ? `<a class="author" href="https://github.com/${escape(author.slice(7))}" target="_blank" rel="noopener">@${escape(author.slice(7))}</a>`
+    : `<b class="author">${escape(author)}</b>`;
+
+/** `written` is RFC 3339 from the worker, or nanoseconds since the epoch from the CLI. */
+const whenHtml = (written) => {
+  if (!written) {
+    return '';
+  }
+  const date = /^\d+$/.test(written) ? new Date(Number(written.slice(0, -6))) : new Date(written);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : `<time datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</time>`;
+};
+
+/** A change's time (seconds since the epoch, D165): date and time in the reader's zone, the full time on hover. */
+const atHtml = (seconds) => {
+  if (typeof seconds !== 'number') {
+    return '';
+  }
+  const date = new Date(seconds * 1000);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  const text = date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `<time class="at" datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(text)}</time>`;
+};
+
+const assetHtml = (asset) => {
+  const href = `assets/${escape(asset.hash)}`;
+  return asset.type.startsWith('image/')
+    ? `<a class="asset" href="${href}" target="_blank" rel="noopener" title="${escape(asset.name)}"><img src="${href}" alt="${escape(asset.name)}" loading="lazy" /></a>`
+    : `<a class="asset file" href="${href}" target="_blank" rel="noopener">${escape(asset.name)}</a>`;
+};
+
+const commentHtml = (comment, isPending = false) =>
+  `<div class="comment${isPending ? ' pending' : ''}"><div class="comment-head">${authorHtml(comment.author ?? comment.by ?? '')}${whenHtml(comment.at)}` +
+  `${isPending ? '<span class="chip pending-chip" title="Filed here; it joins the codebase when the inbox is next applied">pending</span>' : ''}</div>` +
+  `${comment.note ? `<div class="doc">${docHtml(comment.note, '')}</div>` : ''}` +
+  `${comment.assets?.length ? `<div class="assets">${comment.assets.map(assetHtml).join('')}</div>` : ''}</div>`;
+
+/** Requests this page filed or found in the inbox that are not in the generated pages yet. */
+const pendingFor = (match) => pending.filter(match).map((request) => ({ ...request, author: request.by }));
+
+/** The form members write in; others see how to get there. `target` is `subject` or `task` with its value. */
+const composerHtml = (target, value) => {
+  if (!account.signIn) {
+    return '';
+  }
+  if (!account.login) {
+    return `<p class="composer-note muted"><a href="${escape(signInHref())}">Sign in with GitHub</a> to comment.</p>`;
+  }
+  if (!account.member) {
+    return `<p class="composer-note muted">Only members of the ${escape(account.org)} GitHub organization can comment.</p>`;
+  }
+  return (
+    `<form class="composer" data-${target}="${escape(value)}">` +
+    `<textarea name="note" rows="2" placeholder="Comment. Paste or drop an image to attach it." aria-label="Comment"></textarea>` +
+    `<div class="attachments"></div><footer>` +
+    `<label class="attach-button">Attach image<input type="file" accept="${ASSET_TYPES.join(',')}" multiple hidden /></label>` +
+    `<span class="muted hint">⌘↵ sends</span><button type="submit" class="primary-button">Comment</button></footer></form>`
+  );
+};
+
+/** A thread: saved comments, then pending ones, then the composer. */
+const threadSection = (saved, waiting, composer) => {
+  const count = saved.length + waiting.length;
+  if (count === 0 && !composer) {
+    return '';
+  }
+  return section(
+    'Comments',
+    count,
+    saved.map((comment) => commentHtml(comment)).join('') +
+      waiting.map((comment) => commentHtml(comment, true)).join('') +
+      composer,
+  );
+};
+
+const subjectThread = (subject) =>
+  threadSection(
+    comments[subject] ?? [],
+    pendingFor((request) => request.kind === 'comment' && request.subject === subject),
+    composerHtml('subject', subject),
+  );
+
+const taskThread = (task) =>
+  threadSection(
+    task.comments,
+    pendingFor((request) => request.kind === 'task-comment' && request.task === task.id),
+    composerHtml('task', task.id),
+  );
+
+/** Uploads one file to the asset store; the worker names it by its SHA-256. */
+const upload = async (file) => {
+  if (!ASSET_TYPES.includes(file.type)) {
+    throw new Error(`${file.name}: attach a PNG, JPEG, GIF, WebP image or a PDF`);
+  }
+  const response = await fetch('api/asset', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': file.type, 'x-file-name': encodeURIComponent(file.name || 'pasted.png'), 'x-deus': '1' },
+    body: file,
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.error ?? `upload failed (${response.status})`);
+  }
+  return body;
+};
+
+const post = async (path, body) => {
+  const response = await fetch(path, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-deus': '1' },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error ?? `request failed (${response.status})`);
+  }
+  return result;
+};
+
+/** What each form has uploaded, in order. */
+const attached = new WeakMap();
+
+const attach = async (form, files) => {
+  const list = form.querySelector('.attachments');
+  for (const file of files) {
+    const chip = document.createElement('span');
+    chip.className = 'attachment uploading';
+    chip.textContent = file.name || 'image';
+    list.append(chip);
+    try {
+      const asset = await upload(file);
+      attached.set(form, [...(attached.get(form) ?? []), asset]);
+      chip.className = 'attachment';
+      chip.dataset.hash = asset.hash;
+      chip.innerHTML =
+        (asset.type.startsWith('image/') ? `<img src="${URL.createObjectURL(file)}" alt="" />` : '') +
+        `<span>${escape(asset.name)}</span><button type="button" class="icon-button" data-detach="${escape(asset.hash)}" aria-label="Remove">✕</button>`;
+    } catch (error) {
+      chip.remove();
+      notify(error.message);
+    }
+  }
+};
+
+/** Re-renders the cards a new pending request shows up in. */
+const refreshCards = () => {
+  for (const [key, node] of cardElements) {
+    node.remove();
+    cardElements.delete(key);
+  }
+  return render();
+};
+
+const submit = async (form) => {
+  const button = form.querySelector('[type=submit]');
+  const assets = attached.get(form) ?? [];
+  if (form.querySelector('.attachment.uploading')) {
+    notify('Wait for the images to upload');
+    return;
+  }
+  button.disabled = true;
+  try {
+    if (form.id === 'task-form') {
+      const entry = await post('api/task', {
+        title: form.title.value,
+        details: form.details.value,
+        link: form.link.value.trim(),
+        labels: form.dataset.labels ?? '',
+        assets,
+      });
+      pending.push(entry);
+      closeOverlays();
+      form.reset();
+      delete form.dataset.labels;
+      form.querySelector('.attachments').innerHTML = '';
+      attached.delete(form);
+      notify('Filed. The task joins the codebase when the inbox is next applied.');
+      if (ui.view === 'tasks') {
+        renderTasks();
+      }
+      return;
+    }
+    const note = form.note.value;
+    const entry = form.dataset.task
+      ? await post('api/task-comment', { task: form.dataset.task, note, assets })
+      : await post('api/comment', { subject: form.dataset.subject, note, assets });
+    pending.push(entry);
+    const key = form.closest('.card')?.dataset.key;
+    await refreshCards();
+    if (key) {
+      setFocus(key, false);
+    }
+  } catch (error) {
+    notify(error.message);
+  } finally {
+    button.disabled = false;
+  }
+};
+
+const openTaskForm = ({ report = false } = {}) => {
+  if (!canWrite()) {
+    return;
+  }
+  const form = element('task-form');
+  if (report) {
+    form.dataset.labels = 'explorer,report';
+  } else if (form.dataset.labels) {
+    delete form.dataset.labels;
+  }
+  form.querySelector('h2').textContent = report ? 'Report' : 'New task';
+  const focused = ui.focus?.startsWith('d:') ? index.byHash.get(ui.focus.slice(2))?.name : undefined;
+  if (focused && !element('task-link').value) {
+    element('task-link').value = focused;
+  }
+  element('task-dialog').hidden = false;
+  element('task-title').focus();
+};
+
+/** `m`: the focused card's comment box. */
+const focusComposer = () => {
+  const node = ui.focus && cardElements.get(ui.focus);
+  const box = node?.querySelector('.composer textarea');
+  if (box) {
+    node.classList.remove('folded');
+    box.focus();
+  }
+};
+
+const onWriteEvents = () => {
+  document.addEventListener('submit', (event) => {
+    if (event.target.matches('.composer, #task-form')) {
+      event.preventDefault();
+      void submit(event.target);
+    }
+  });
+  document.addEventListener('change', (event) => {
+    if (event.target.matches('.attach-button input[type=file]')) {
+      void attach(event.target.closest('form'), [...event.target.files]);
+      event.target.value = '';
+    }
+  });
+  document.addEventListener('paste', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    const files = [...(event.clipboardData?.files ?? [])];
+    if (form && files.length > 0) {
+      event.preventDefault();
+      void attach(form, files);
+    }
+  });
+  document.addEventListener('dragover', (event) => {
+    if (event.target.closest?.('.composer, #task-form')) {
+      event.preventDefault();
+    }
+  });
+  document.addEventListener('drop', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    if (form && event.dataTransfer?.files.length) {
+      event.preventDefault();
+      void attach(form, [...event.dataTransfer.files]);
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    const form = event.target.closest?.('.composer, #task-form');
+    if (form && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      void submit(form);
+    }
+  });
+  document.addEventListener('click', (event) => {
+    const detach = event.target.closest('[data-detach]');
+    if (detach) {
+      const form = detach.closest('form');
+      attached.set(
+        form,
+        (attached.get(form) ?? []).filter((asset) => asset.hash !== detach.dataset.detach),
+      );
+      detach.closest('.attachment').remove();
+    } else if (event.target.closest('[data-dismiss]')) {
+      closeOverlays();
+    }
+  });
+  element('new-task').addEventListener('click', () => openTaskForm());
+  element('report').addEventListener('click', () => void report());
+  element('tasks-view').addEventListener('click', (event) => event.target.closest('[data-new-task]') && openTaskForm());
+};
+
+//
+// Workspace state: the open cards are the URL fragment; the focused card and folds are local.
+//
+
+const ui = {
+  focus: undefined,
+  folded: new Set(),
+  view: 'code',
+  expanded: new Set(),
+  dialect: 'deus',
+  /** What the task board shows: tasks whose title, id, labels or assignee hold `text`, and that carry `label`. */
+  taskFilter: { text: '', label: '', allLabels: false },
+};
+
+/** The dialect sources are shown in (D70): DEUS, or TypeScript-like where a page has it; kept per viewer. */
+const DIALECT_KEY = 'deus.dialect';
+
+try {
+  ui.dialect = localStorage.getItem(DIALECT_KEY) === 'ts' ? 'ts' : 'deus';
+} catch {}
+
+/** Percent-decoded text, or the text as it is when it is not valid percent-encoding (`#n:100%`). */
+const decoded = (text) => {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+};
+
+const parseFragment = () => {
+  const keys = decoded(location.hash.slice(1))
+    .split(',')
+    .filter((key) => /^[dtcnvksx]:./.test(key));
+  const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
+  return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
+};
+
+const writeFragment = (view, keys) => {
+  const next = [...(view === 'code' ? [] : [`v:${view}`]), ...keys].join(',');
+  if (decoded(location.hash.slice(1)) !== next) {
+    location.hash = next;
+  } else {
+    void render();
+  }
+};
+
+/** Opens a card after the focused one (or focuses it if already open), and shows the workspace. */
+const open = (key) => {
+  const { keys } = parseFragment();
+  const anchor = keys.indexOf(ui.focus);
+  ui.focus = key;
+  writeFragment(
+    ui.view === 'graph' ? 'graph' : 'code',
+    keys.includes(key) ? keys : [...keys.slice(0, anchor + 1), key, ...keys.slice(anchor + 1)],
+  );
+};
+
+const close = (key) => {
+  const { view, keys } = parseFragment();
+  const at = keys.indexOf(key);
+  const rest = keys.filter((other) => other !== key);
+  if (ui.focus === key) {
+    ui.focus = rest[Math.min(at, rest.length - 1)];
+  }
+  writeFragment(view, rest);
+};
+
+const setView = (view) => writeFragment(view, parseFragment().keys);
+
+//
+// Rendering helpers.
+//
+
+const icon = (kind) =>
+  `<span class="icon k-${escape(kind)}" title="${escape(KINDS[kind]?.label ?? kind)}">${escape(KINDS[kind]?.icon ?? '·')}</span>`;
+
+const folderIcon = '<span class="icon k-namespace" title="namespace">▤</span>';
+
+const statusMark = (status) =>
+  status === 'pass'
+    ? '<span class="status pass" title="passes">●</span>'
+    : status === 'fail'
+      ? '<span class="status fail" title="fails">●</span>'
+      : '';
+
+const defLink = (name, hash, label = name) =>
+  `<a class="ref" data-open="d:${escape(hash)}" data-hash="${escape(hash)}">${escape(label)}</a>`;
+
+const taskLink = (task) => `<a class="task-link" data-open="t:${escape(task.id)}">${escape(task.title)}</a>`;
+
+const changeLink = (causal, label = short(causal)) =>
+  `<a class="hash" data-open="c:${escape(causal)}">${escape(label)}</a>`;
+
+/** A type, with its type names linked: `Text -> {IO} List Int`. */
+const typeHtml = (text, namespace) =>
+  escape(text)
+    .replace(/\b([A-Z][\w]*(?:\.[A-Za-z_][\w?]*)*)/g, (word) => {
+      const entry = resolve(word, namespace);
+      return entry
+        ? `<a class="ref ty" data-open="d:${escape(entry.hash)}" data-hash="${escape(entry.hash)}">${word}</a>`
+        : `<span class="ty">${word}</span>`;
+    })
+    // A narrow screen wraps a type after an arrow, never inside one.
+    .replaceAll('-&gt;', '<span class="arrow">-&gt;</span><wbr>');
+
+/** `name : type`, highlighted. */
+const signatureHtml = (sig, namespace) => {
+  const at = sig.indexOf(' : ');
+  return at < 0
+    ? typeHtml(sig, namespace)
+    : `<span class="sig-name">${escape(sig.slice(0, at))}</span> : ${typeHtml(sig.slice(at + 3), namespace)}`;
+};
+
+/** The type part of a `name : type` signature. */
+const typeOf = (sig) => (sig.includes(' : ') ? sig.slice(sig.indexOf(' : ') + 3) : sig);
+
+/** Inline doc markup: `code` spans, linked when they name a definition. */
+const inlineDoc = (text, namespace) =>
+  decisionLinks(
+    escape(text)
+      // A double-backtick span (``a `b` c``) may hold backticks; a single one may not.
+      .replace(/``\s?(.+?)\s?``|`([^`]+)`/g, (_, doubled, single) => {
+        const code = doubled ?? single;
+        const entry = /^[\w.?]+$/.test(code) ? resolve(code, namespace) : undefined;
+        return entry
+          ? `<code>${defLink(entry.name, entry.hash, code)}</code>`
+          : REPO_PATH.test(code)
+            ? `<code><a href="${repoUrl(code)}" target="_blank" rel="noopener">${code}</a></code>`
+            : `<code>${code}</code>`;
+      })
+      // `Syntax.Spec R-3` in a comment is the requirement it implements, so it links there.
+      .replace(
+        /\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))(?:\s((?:R|A|L|F|QA)-\d+))?\b/g,
+        (whole, doc, id) => (isDocument(doc) ? docLink(doc, whole, id ?? '') : whole),
+      ),
+  );
+
+/** A doc comment as HTML: paragraphs, bullet lists and indented code blocks. */
+const docHtml = (doc, namespace) => {
+  const lines = doc.replace(/\s+$/, '').split('\n');
+  const indents = lines
+    .slice(1)
+    .filter((line) => line.trim())
+    .map((line) => line.length - line.trimStart().length);
+  const strip = indents.length > 0 ? Math.min(...indents) : 0;
+  const text = [lines[0].trim(), ...lines.slice(1).map((line) => line.slice(strip))].join('\n').trim();
+  return text
+    .split(/\n\s*\n/)
+    .map((block) => {
+      const blockLines = block.split('\n');
+      if (blockLines.every((line) => /^\s{2,}\S|^\s*$/.test(line))) {
+        const pad = Math.min(
+          ...blockLines.filter((line) => line.trim()).map((line) => line.length - line.trimStart().length),
+        );
+        return `<pre class="doc-code">${escape(blockLines.map((line) => line.slice(pad)).join('\n'))}</pre>`;
+      }
+      // A list, bulleted or numbered, may follow a line that leads into it ("Steps:") in the same block.
+      const ITEM = /^\s*(?:[-*]|\d+\.) /;
+      const first = blockLines.findIndex((line) => ITEM.test(line));
+      const lead = first < 0 ? blockLines : blockLines.slice(0, first);
+      const rest = first < 0 ? [] : blockLines.slice(first);
+      const paragraph = (part) => `<p>${inlineDoc(part.map((line) => line.trim()).join(' '), namespace)}</p>`;
+      if (rest.length > 0) {
+        const items = [];
+        for (const line of rest) {
+          if (ITEM.test(line)) {
+            items.push(line.replace(ITEM, ''));
+          } else {
+            items[items.length - 1] += ` ${line.trim()}`;
+          }
+        }
+        const tag = /^\s*\d+\. /.test(rest[0]) ? 'ol' : 'ul';
+        return (
+          (lead.length > 0 ? paragraph(lead) : '') +
+          `<${tag}>${items.map((item) => `<li>${inlineDoc(item, namespace)}</li>`).join('')}</${tag}>`
+        );
+      }
+      return paragraph(lead);
+    })
+    .join('');
+};
+
+/** A row in a listing: icon, linked name, signature and summary. */
+/** A definition's link; a spec block's opens its document at that block, where it reads in context. */
+const entryLink = (entry, label = entry.name) =>
+  entry.kind === 'spec'
+    ? docLink(namespaceOf(entry.name), label, lastSegment(entry.name))
+    : defLink(entry.name, entry.hash, label);
+
+/** A link whose text may break after each `.`, so a long name wraps between its segments rather than inside one. */
+const breakable = (link) => link.replace(/>([^<]*)<\/a>$/, (_, text) => `>${text.replaceAll('.', '.<wbr>')}</a>`);
+
+const entryRow = (entry, label = entry.name) =>
+  `<li class="entry-row">${icon(entry.kind)}${breakable(entryLink(entry, label))}${statusMark(entry.status)}` +
+  // A test is always `Bool`, so its row shows its mark and summary without the type.
+  (entry.sig && !(entry.kind === 'test' && typeOf(entry.sig).trim() === 'Bool')
+    ? `<code class="row-sig" title="${escape(entry.sig)}">${typeHtml(typeOf(entry.sig), namespaceOf(entry.name))}</code>`
+    : '') +
+  (entry.summary
+    ? `<span class="row-summary" title="${escape(entry.summary)}">${inlineDoc(entry.summary, namespaceOf(entry.name))}</span>`
+    : '') +
+  '</li>';
+
+/** A ref (`{name, hash}`) as a row, enriched from the name index. */
+const refRow = (ref) => {
+  const entry = index.byHash.get(ref.hash);
+  return entry
+    ? entryRow({ ...entry, name: ref.name })
+    : `<li class="entry-row"><span class="icon">·</span>${defLink(ref.name, ref.hash)}</li>`;
+};
+
+/** A list that shows the first rows and expands a page at a time, so a definition used by hundreds stays quick to open. */
+const rowList = (rows, empty = 'None.') => {
+  if (rows.length === 0) {
+    return `<p class="muted">${empty}</p>`;
+  }
+  const pages = [];
+  for (let start = LIST_LIMIT; start < rows.length; start += LIST_PAGE) {
+    pages.push(`<ul class="rows more" hidden>${rows.slice(start, start + LIST_PAGE).join('')}</ul>`);
+  }
+  return (
+    `<ul class="rows">${rows.slice(0, LIST_LIMIT).join('')}</ul>${pages.join('')}` +
+    (pages.length > 0 ? `<button class="link-button" data-more>${moreLabel(rows.length - LIST_LIMIT)}</button>` : '')
+  );
+};
+
+/** The label of a list's "more" button: the next page, and how many remain after it. */
+const moreLabel = (remaining) =>
+  remaining > LIST_PAGE ? `Show ${LIST_PAGE} more of ${number(remaining)}` : `Show ${number(remaining)} more`;
+
+const section = (title, count, body, openByDefault = true) =>
+  `<details class="section"${openByDefault ? ' open' : ''}><summary><h3>${title}${count === undefined ? '' : ` <span class="count">${count}</span>`}</h3></summary>${body}</details>`;
+
+/** Namespace path as links: `Codebase` › `Tasks` › name. */
+const breadcrumbs = (name, isNamespace) => {
+  const parts = name.split('.');
+  const crumbs = parts.slice(0, isNamespace ? parts.length : -1).map((part, i) => {
+    const path = parts.slice(0, i + 1).join('.');
+    return i === parts.length - 1
+      ? `<span class="crumb-last">${escape(part)}</span>`
+      : `<a class="crumb" data-open="n:${escape(path)}">${escape(part)}</a>`;
+  });
+  if (!isNamespace) {
+    crumbs.push(`<span class="crumb-last">${escape(parts[parts.length - 1])}</span>`);
+  }
+  return crumbs.join('<span class="crumb-dot">.</span>');
+};
+
+const card = (key, { iconHtml, title, meta = '', body, tag = '', prose = false, actions = '' }) =>
+  `<article class="card${ui.folded.has(key) ? ' folded' : ''}" data-key="${escape(key)}" tabindex="-1">` +
+  `<header>${iconHtml}<h2${prose ? ' class="prose"' : ''}>${title}</h2>${tag}<span class="card-meta">${meta}</span>${actions}` +
+  `<button class="icon-button" data-fold="${escape(key)}" title="Fold (c)" aria-label="Fold">▾</button>` +
+  `<button class="icon-button" data-close="${escape(key)}" title="Close (x)" aria-label="Close">✕</button></header>` +
+  `<div class="content">${body}</div></article>`;
+
+const hashChip = (hash) =>
+  `<button class="hash-chip" data-copy="${escape(hash)}" title="Copy the full hash">${escape(short(hash))}</button>`;
+
+//
+// Events (D104): what the analytics store recorded about definitions and changes, from `events.json`.
+//
+
+/** `events.json`, fetched only when `meta.json` counts events. */
+const loadEvents = () => (index.meta.events > 0 ? load('events.json') : Promise.resolve(undefined));
+
+/** A row's time: `recorded_at` is microseconds since the epoch, as decimal text. */
+const eventTime = (at) => {
+  const date = new Date(Number(String(at).slice(0, -3)));
+  return Number.isNaN(date.getTime())
+    ? ''
+    : `<time datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }))}</time>`;
+};
+
+/** A `CodeRef` value as a link: pinned `<project>/<name>#<hash>`, a name IRI, or `#<hash>` (a change's may be a 10-digit prefix). */
+const codeRefHtml = (ref) => {
+  const text = String(ref);
+  const at = text.lastIndexOf('#');
+  const fragment = at >= 0 ? text.slice(at + 1) : '';
+  const name = at >= 0 ? text.slice(0, at) : text;
+  const tail = name.includes('/') ? name.slice(name.lastIndexOf('/') + 1) : name;
+  const isHex = /^[0-9a-f]+$/.test(fragment);
+  const hash = fragment && !isHex ? `#${fragment}` : fragment;
+  const entry =
+    (hash && index.byHash.get(hash)) ||
+    (isHex && fragment.length >= 8 && fragment.length < 64
+      ? index.names.find((other) => other.hash.startsWith(fragment))
+      : undefined) ||
+    (!fragment && tail ? named(tail) : undefined);
+  if (entry) {
+    return defLink(entry.name, entry.hash);
+  }
+  const change = isHex && index.meta.history.find((node) => node.causal.startsWith(fragment));
+  if (change) {
+    return changeLink(change.causal, escape(change.message || short(change.causal)));
+  }
+  return `<code title="${escape(text)}">${escape(tail || text)}</code>`;
+};
+
+const cellHtml = (value, type) => {
+  if (value === undefined || value === null || value === '') {
+    return '<span class="muted">·</span>';
+  }
+  if (type === 'ref') {
+    return codeRefHtml(value);
+  }
+  if (type === 'bool') {
+    return value === true || value === 'true'
+      ? '<span class="status pass">✓</span>'
+      : '<span class="status fail">✗</span>';
+  }
+  const text = String(value);
+  return type === 'int'
+    ? `<span class="num">${escape(text)}</span>`
+    : `<span class="cell-text" title="${escape(text)}">${escape(text)}</span>`;
+};
+
+const eventTable = (type) =>
+  type.latest.length === 0
+    ? '<p class="muted">No events yet.</p>'
+    : `<div class="table-wrap"><table class="event-table"><thead><tr><th>When</th><th>By</th>${type.columns.map((column) => `<th>${escape(column.name)}</th>`).join('')}</tr></thead><tbody>` +
+      type.latest
+        .map(
+          (row) =>
+            `<tr><td>${eventTime(row.recorded_at)}</td><td>${escape(row.recorded_by)}</td>${type.columns.map((column) => `<td>${cellHtml(row[column.name], column.type)}</td>`).join('')}</tr>`,
+        )
+        .join('') +
+      '</tbody></table></div>' +
+      (type.count > type.latest.length
+        ? `<p class="muted table-note">The latest ${type.latest.length} of ${type.count}.</p>`
+        : '');
+
+const eventsCard = (key, events) => {
+  if (!events) {
+    return missingCard(key, 'This site has no events');
+  }
+  const total = events.types.reduce((sum, type) => sum + type.count, 0);
+  return card(key, {
+    iconHtml: '<span class="icon k-event" title="events">◆</span>',
+    title: 'Events',
+    meta: `<span class="count">${total} in ${events.types.length} type${events.types.length === 1 ? '' : 's'}</span>`,
+    body:
+      '<p class="muted">What the analytics store recorded about this codebase: test runs, CI checks and changes. A definition or change lists its own count.</p>' +
+      events.types
+        .map((type) => {
+          const entry = index.byName.get(type.name);
+          const title = entry ? defLink(type.name, entry.hash) : escape(type.name);
+          return section(
+            `${title} <span class="muted event-split">${type.pushed} pushed · ${type.pending} pending</span>`,
+            type.count,
+            eventTable(type),
+            type.count > 0,
+          );
+        })
+        .join(''),
+  });
+};
+
+/** The tallies for a definition or change hash, adding those filed under a prefix of it. */
+const tallyFor = (events, hash) => {
+  const tallies = new Map();
+  for (const [key, entry] of Object.entries(events?.byDefinition ?? {})) {
+    if (key === hash || (key.length >= 8 && key.length < hash.length && hash.startsWith(key))) {
+      for (const tally of entry.events) {
+        const id = `${tally.type} ${tally.column}`;
+        tallies.set(id, { ...tally, count: (tallies.get(id)?.count ?? 0) + tally.count });
+      }
+    }
+  }
+  return [...tallies.values()];
+};
+
+const eventsSection = (events, hash) => {
+  const tallies = tallyFor(events, hash);
+  return tallies.length === 0
+    ? ''
+    : section(
+        'Events',
+        tallies.reduce((sum, tally) => sum + tally.count, 0),
+        `<ul class="rows">${tallies
+          .map(
+            (tally) =>
+              `<li class="entry-row"><span class="icon k-event">◆</span><a data-open="k:events">${escape(tally.type)}</a><span class="muted">as ${escape(tally.column)}</span><span class="count">${tally.count}</span></li>`,
+          )
+          .join('')}</ul>`,
+      );
+};
+
+//
+// Features (D118): each feature map as a tree, from `features.json`.
+//
+
+/** `features.json`, fetched only when `meta.json` counts features. */
+const loadFeatures = () => (index.meta.features > 0 ? load('features.json') : Promise.resolve(undefined));
+
+/** A feature status as a badge, coloured as the task state it corresponds to. */
+const featureStatus = (status) => `<span class="state feature-${escape(status)}">${escape(status)}</span>`;
+
+/** A spec document links to its namespace when the site has one; a definition to its page; a task to its card. */
+const featureLinks = (feature) => {
+  const specs = feature.specs.map((doc) =>
+    index.names.some((entry) => entry.name.startsWith(`${doc}.`))
+      ? `<a class="ref" data-open="n:${escape(doc)}">${escape(doc)}</a>`
+      : `<code>${escape(doc)}</code>`,
+  );
+  const defs = feature.defs.map((name) => {
+    const entry = named(name);
+    return entry ? defLink(name, entry.hash) : `<code>${escape(name)}</code>`;
+  });
+  const tasks = feature.tasks.map((id) => {
+    const task = index.tasks.find((other) => other.id === id);
+    const open = feature.openTasks.includes(id);
+    return task
+      ? `<a class="task-link${open ? '' : ' closed'}" data-open="t:${escape(id)}" title="${escape(task.title)} (${escape(task.state)})">${escape(task.title)}</a>`
+      : `<code>${escape(id)}</code>`;
+  });
+  return [
+    ['Specs', specs],
+    ['Definitions', defs],
+    ['Tasks', tasks],
+  ]
+    .filter(([, links]) => links.length > 0)
+    .map(
+      ([label, links]) =>
+        `<div class="feature-links${label === 'Tasks' ? ' tasks' : ''}"><span class="feature-label">${label}</span>${links.join('')}</div>`,
+    )
+    .join('');
+};
+
+const featureRow = (feature) => {
+  const open = feature.openTasks.length;
+  const warnings = feature.problems.filter((problem) => !problem.startsWith('gap: '));
+  const gaps = feature.problems.filter((problem) => problem.startsWith('gap: '));
+  return (
+    `<li class="feature${feature.depth > 0 ? ' child' : ''}" style="--depth: ${Math.min(feature.depth, 4)}">` +
+    `<div class="feature-head">${featureStatus(feature.status)}<span class="feature-id">${escape(feature.id)}</span>` +
+    `<span class="feature-title">${escape(feature.title)}</span>` +
+    (feature.tasks.length > 0
+      ? `<span class="count" title="${open} of ${feature.tasks.length} tasks open">${open}/${feature.tasks.length} open</span>`
+      : '') +
+    '</div>' +
+    featureLinks(feature) +
+    warnings.map((problem) => `<p class="feature-problem">⚠ ${escape(problem)}</p>`).join('') +
+    gaps.map((problem) => `<p class="feature-gap">${escape(problem.slice('gap: '.length))}</p>`).join('') +
+    '</li>'
+  );
+};
+
+const featuresCard = (key, maps) => {
+  if (!maps || maps.length === 0) {
+    return missingCard(key, 'This site has no feature maps');
+  }
+  const all = maps.flatMap((map) => map.features);
+  const shipped = all.filter((feature) => feature.status === 'shipped').length;
+  const problems = all.filter((feature) => feature.problems.some((problem) => !problem.startsWith('gap: '))).length;
+  return card(key, {
+    iconHtml: '<span class="icon k-feature" title="features">◇</span>',
+    title: 'Features',
+    meta: `<span class="count">${shipped} of ${all.length} shipped</span>${problems > 0 ? ` <span class="count warn">${problems} with problems</span>` : ''}`,
+    body:
+      '<p class="muted">What the product is, feature by feature, from the feature maps in the codebase. Each feature links its specs, definitions and tasks.</p>' +
+      maps
+        .map((map) =>
+          section(
+            `<a class="ref" data-open="n:${escape(map.document)}">${escape(map.document)}</a>`,
+            map.features.length,
+            `<ul class="features">${map.features.map(featureRow).join('')}</ul>` +
+              (map.notes.length > 0
+                ? `<div class="feature-notes">${map.notes.map((note) => `<p class="feature-problem">⚠ ${escape(note)}</p>`).join('')}</div>`
+                : ''),
+          ),
+        )
+        .join(''),
+  });
+};
+
+//
+// Cards.
+//
+
+const verdictHtml = (def) => {
+  if (!def.verdict) {
+    return def.kind === 'test' || def.kind === 'theorem'
+      ? `<p class="verdict none">No result yet: results are kept where <code>deus ${def.kind === 'test' ? 'test' : 'check'} ${escape(def.name)}</code> ran, and none was pushed for this version.</p>`
+      : '';
+  }
+  // A theorem's verdict may name its checker after the case count (task 79f72c44).
+  const pass = def.verdict.match(/^\(pass "([^"]*)"\s*(\d+)?/);
+  if (pass && pass[1] === 'refused') {
+    return '<p class="verdict pass">✓ Refused, as it must be <span class="muted">an <code>@[expectFail]</code> probe of the prover: the claim is false</span></p>';
+  }
+  if (pass && pass[1] === 'expected failure') {
+    return '<p class="verdict pass">✓ Fails, as expected <span class="muted">marked <code>@[expectFail]</code></span></p>';
+  }
+  if (pass) {
+    const cases = pass[2] ? ` · ${pass[2]} case${pass[2] === '1' ? '' : 's'}` : '';
+    // `by test` checks a theorem on random cases, which is evidence, not a proof.
+    const tested = def.kind === 'theorem' && pass[1] === 'test';
+    return tested
+      ? `<p class="verdict pass">✓ Holds <span class="muted">on ${pass[2] ?? 'some'} random case${pass[2] === '1' ? '' : 's'}</span></p>`
+      : `<p class="verdict pass">✓ ${def.kind === 'theorem' ? 'Proved' : 'Passes'} <span class="muted">${escape(pass[1])}${cases}</span></p>`;
+  }
+  const fail = def.verdict.match(/^\(fail "((?:[^"\\]|\\.)*)"/);
+  const reason = fail ? fail[1].replace(/\\(.)/g, (_, char) => (char === 'n' ? '\n' : char)) : def.verdict;
+  return `<div class="verdict fail"><span>✗ ${def.kind === 'theorem' ? 'Not proved' : 'Fails'}</span><pre>${escape(reason)}</pre></div>`;
+};
+
+/** The source in the chosen dialect, without its leading doc comment, which the card renders as prose above it. */
+/** A source's leading comment as the generator highlights it: a doc comment, or a type's `/- … -/` block. */
+const LEAD = /^<span class=cm>(\/--?[\s\S]*?-\/|\/\*\*?[\s\S]*?\*\/)<\/span>\n*/;
+
+/** The text of a type's leading block comment, when the page has no doc of its own: it is the type's documentation. */
+const leadDoc = (def) => {
+  const found = def.doc ? undefined : LEAD.exec(def.html ?? '');
+  if (!found) {
+    return undefined;
+  }
+  const holder = document.createElement('div');
+  holder.innerHTML = found[1];
+  const lines = holder.textContent
+    .replace(/^\/--?|-\/$/g, '')
+    .split('\n')
+    .filter((line, at, all) => line.trim() !== '' || (at > 0 && at < all.length - 1));
+  const indent = Math.min(...lines.filter((line) => line.trim()).map((line) => line.length - line.trimStart().length));
+  return lines
+    .map((line) => line.slice(indent))
+    .join('\n')
+    .trim();
+};
+
+const sourceHtml = (def) => {
+  const html = ui.dialect === 'ts' && def.ts ? def.ts : def.html;
+  return def.doc || leadDoc(def) !== undefined ? html.replace(LEAD, '') : html;
+};
+
+/** What a definition's other names are: an ability's operations, a type's constructors, else names of its own. */
+const aliasLabel = (def) =>
+  def.kind === 'ability' ? 'Operations' : def.kind === 'type' ? 'Constructors' : 'Also named';
+
+/** The tests and theorems that use a definition, with their marks, lifted out of a "Used by" list that may run to hundreds. */
+const checkedByHtml = (def) => {
+  const checks = def.users.filter((ref) => CHECK_KINDS.has(index.byHash.get(ref.hash)?.kind ?? ''));
+  return checks.length === 0
+    ? ''
+    : section('Checked by', checks.length, rowList(checks.map(refRow)), checks.length <= LIST_LIMIT);
+};
+
+const CHECK_KINDS = new Set(['test', 'theorem']);
+
+const definitionCard = (key, def, events) => {
+  const namespace = namespaceOf(def.name);
+  const entry = index.byHash.get(def.hash);
+  const kindTag = `<span class="tag">${escape(KINDS[def.kind]?.label ?? def.kind)}</span>`;
+  return card(key, {
+    iconHtml: icon(def.kind),
+    title: breadcrumbs(def.name, false),
+    tag: kindTag,
+    meta: hashChip(def.hash),
+    actions: consoleButton(def),
+    body:
+      (def.doc
+        ? `<div class="doc">${docHtml(def.doc, namespace)}</div>`
+        : leadDoc(def)
+          ? `<div class="doc">${docHtml(leadDoc(def), namespace)}</div>`
+          : '') +
+      (specOf(def.name)
+        ? `<p class="aliases"><span class="label">Specified in</span>${docLink(specOf(def.name))}</p>`
+        : '') +
+      (isEmbeddedFile(def.name) && embedded(def.name)
+        ? `<p class="aliases"><span class="label">Document</span><a class="ref" data-open="k:doc:${escape(def.name)}">Read it</a></p>`
+        : '') +
+      verdictHtml(def) +
+      `<pre class="source" data-namespace="${escape(namespace)}" data-self="${escape(def.hash)}">${sourceHtml(def)}</pre>` +
+      (def.signature && def.kind !== 'type' && def.kind !== 'ability'
+        ? `<p class="inferred"><span class="label">Inferred type</span><code>${signatureHtml(def.signature, namespace)}</code></p>`
+        : '') +
+      (nodeAt(def.name)?.children.size > 0
+        ? `<p class="aliases"><span class="label">Namespace</span><a data-open="n:${escape(def.name)}">${folderIcon} ${escape(def.name)}.*</a> <span class="count">${nodeAt(def.name).count} definitions</span></p>`
+        : '') +
+      (def.aliases.length > 0
+        ? `<p class="aliases"><span class="label">${escape(aliasLabel(def))}</span> ${def.aliases
+            .map((alias) => {
+              const entry = index.byName.get(alias);
+              return entry ? defLink(alias, entry.hash) : `<code>${escape(alias)}</code>`;
+            })
+            .join(' ')}</p>`
+        : '') +
+      (def.tasks.length > 0
+        ? section(
+            'Tasks',
+            def.tasks.length,
+            `<ul class="rows">${def.tasks.map((task) => `<li class="entry-row">${stateChip(task.state)}${taskLink(task)}</li>`).join('')}</ul>`,
+          )
+        : '') +
+      subjectThread(`def:${def.name}`) +
+      eventsSection(events, def.hash) +
+      checkedByHtml(def) +
+      `<div class="relations">${section('Depends on', def.deps.length, rowList(def.deps.map(refRow), 'Nothing in this codebase.'), def.deps.length <= LIST_LIMIT)}` +
+      `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'No definition uses it.'), def.users.length <= LIST_LIMIT)}</div>` +
+      (entry ? '' : '<p class="muted">This hash no longer has a name on this branch.</p>'),
+  });
+};
+
+const namespaceCard = (key, path) => {
+  const node = nodeAt(path);
+  if (!node) {
+    return missingCard(key, `No namespace ${path}`);
+  }
+  const children = sortedChildren(node);
+  const namespaces = children.filter((child) => child.children.size > 0);
+  const leaves = children.filter((child) => child.entry);
+  const groups = KIND_ORDER.map((kind) => [kind, leaves.filter((child) => child.entry.kind === kind)]).filter(
+    ([, group]) => group.length > 0,
+  );
+  const self = node.entry;
+  return card(key, {
+    iconHtml: folderIcon,
+    title: breadcrumbs(path, true),
+    tag: '<span class="tag">namespace</span>',
+    meta: `<span class="muted">${node.count} definitions</span>`,
+    body:
+      (isDocument(path)
+        ? `<p class="self"><span class="icon k-spec">S</span><span><code>${escape(path)}</code> is a spec document:</span> ${docLink(path, 'read it')}</p>`
+        : '') +
+      (isDocument(`${path}.Spec`)
+        ? `<p class="self"><span class="icon k-spec">S</span><span>What <code>${escape(path)}</code> does is specified in</span> ${docLink(`${path}.Spec`)}</p>`
+        : '') +
+      (self
+        ? `<p class="self">${icon(self.kind)}<span><code>${escape(path)}</code> is also a ${escape(self.kind)}:</span> ${defLink(self.name, self.hash, 'open it')}</p>`
+        : '') +
+      (namespaces.length > 0
+        ? section(
+            'Namespaces',
+            namespaces.length,
+            `<ul class="namespace-grid">${namespaces
+              .map(
+                (child) =>
+                  `<li><a data-open="n:${escape(child.path)}">${folderIcon}<span>${escape(child.segment)}</span><span class="count">${child.count}</span></a></li>`,
+              )
+              .join('')}</ul>`,
+          )
+        : '') +
+      groups
+        .map(([kind, group]) =>
+          section(
+            KINDS[kind].plural,
+            group.length,
+            `<ul class="rows">${group.map((child) => entryRow(child.entry, child.segment)).join('')}</ul>`,
+          ),
+        )
+        .join(''),
+  });
+};
+
+const stateChip = (state) => `<span class="state ${escape(state)}">${escape(state)}</span>`;
+
+const priorityChip = (priority) =>
+  priority > 0 ? `<span class="priority p${priority}">${escape(PRIORITIES[priority])}</span>` : '';
+
+/** A change's message as a row shows it: one line, and a long list of names cut to its start (the full text is the title). */
+const rowMessage = (message) => {
+  const line = String(message)
+    .split('\n')[0]
+    // A path from the machine that made the change means nothing here; its file name does (older changes kept them).
+    .replace(/(^|\s)(?:\/[\w.@~-]+)+\/([\w.@-]+)/g, '$1$2')
+    // A library's IRI is a name, not a page; its address is where the hub shows it.
+    .replace(/^(lib \w+ \S+ )(https:\/\/\S+)/, (_, head, iri) => head + addressOf(iri))
+    // `deus task set` names only the task's id; its title says which task it was.
+    .replace(/^task: set ([0-9a-f]{8}) (\w+)$/, (whole, id, field) => {
+      const task = index.tasks.find((candidate) => candidate.id === id);
+      return task ? `task ${id} ${field}: ${task.title}` : whole;
+    });
+  return line.length > 140 ? `${line.slice(0, 137)}…` : line;
+};
+
+const changeRows = (changes) =>
+  changes.length === 0
+    ? '<p class="muted">None.</p>'
+    : `<ul class="rows">${changes
+        .map((change) =>
+          change.imported
+            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message" title="${escape(change.message)}">${escape(rowMessage(change.message))}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`
+            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}" title="${escape(change.message)}">${escape(rowMessage(change.message))}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}</li>`,
+        )
+        .join('')}</ul>`;
+
+/** Every definition of one kind, or every check (`k:checks`, failing first): what an overview tile opens. */
+const kindCard = (key, kind) => {
+  const isChecks = kind === 'checks';
+  if (!isChecks && !KINDS[kind]) {
+    return missingCard(key, `No kind ${kind}`);
+  }
+  const rank = { fail: 0, pass: 2 };
+  // The project's own, as the overview's tiles count them; a library's are listed in its own explorer.
+  const entries = index.names
+    .filter((entry) => !entry.name.startsWith('lib.') && (isChecks ? Boolean(entry.status) : entry.kind === kind))
+    .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
+  const failing = entries.filter((entry) => entry.status === 'fail').length;
+  return card(key, {
+    iconHtml: isChecks
+      ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>`
+      : icon(kind),
+    title: isChecks ? 'Checks' : escape(KINDS[kind].plural),
+    meta: `<span class="count">${isChecks ? `${entries.length - failing} of ${entries.length} pass` : entries.length}</span>`,
+    body: rowList(entries.map((entry) => entryRow(entry))),
+  });
+};
+
+/**
+ * Every requirement of every spec document, by what proves it: checks in the codebase (`deus test`, `deus check`),
+ * the vitest suite (`vitest:` evidence, which CI runs and this site does not see), or nothing yet.
+ */
+const requirementsByEvidence = async () => {
+  const docs = await Promise.all(specDocuments().map(async (name) => ({ name, page: await load(`doc/${name}.json`) })));
+  const requirements = docs.flatMap(({ name, page }) =>
+    (page?.blocks ?? []).filter((block) => block.type === 'req').map((block) => ({ doc: name, block })),
+  );
+  const by = (requirement) => requirement.block.props?.by ?? '';
+  return {
+    missing: docs.filter(({ page }) => !page).map(({ name }) => name),
+    inCodebase: requirements.filter((requirement) => by(requirement) && !by(requirement).startsWith('vitest:')),
+    inVitest: requirements.filter((requirement) => by(requirement).startsWith('vitest:')),
+    unproved: requirements.filter((requirement) => !by(requirement)),
+  };
+};
+
+/** The checks, failing first, and what they cover: which requirements they prove and which they cannot see. */
+const checksCard = (key, { missing, inCodebase, inVitest, unproved }) => {
+  const row = ({ doc, block }) =>
+    `<li class="entry-row">${docLink(doc, `${doc} ${block.id}`, block.id)}<span class="muted">${inlineDoc(block.title, doc)}</span></li>`;
+  const section = (title, note, requirements) =>
+    requirements.length === 0
+      ? ''
+      : `<h4 class="group-title">${escape(title)} <span class="count">${requirements.length}</span></h4><p class="muted">${note}</p><ul class="rows">${requirements.map(row).join('')}</ul>`;
+  const coverage =
+    '<section class="checks-coverage"><p>The count is this codebase\'s tests and theorems, as last pushed. ' +
+    `${inCodebase.length} requirements are proved by them; these are not:</p>` +
+    (missing.length > 0
+      ? `<p class="muted">${missing.length} spec documents could not be loaded, so their requirements are not counted: ${missing.map((name) => docLink(name)).join(', ')}.</p>`
+      : '') +
+    section(
+      'Proved by the vitest suite',
+      'Run by CI on the git repository (<code>vitest:</code> evidence), so their results are not on this site.',
+      inVitest,
+    ) +
+    section('Proved by nothing yet', 'Known gaps, each tracked in its spec document.', unproved) +
+    '</section>';
+  const base = kindCard(key, 'checks');
+  // Inside the card's content, after the list of checks.
+  const end = base.lastIndexOf('</div></article>');
+  return end < 0 ? base + coverage : base.slice(0, end) + coverage + base.slice(end);
+};
+
+const taskCard = (key, task) => {
+  const parent = index.tasks.find((other) => other.id === task.parent);
+  // A canceled subtask (often a duplicate) is counted, not listed.
+  const children = index.tasks.filter((other) => other.parent === task.id && other.state !== 'canceled');
+  const canceled = index.tasks.filter((other) => other.parent === task.id && other.state === 'canceled').length;
+  const links = task.links.map((link) => {
+    if (link.change) {
+      return `<li class="entry-row">${changeLink(link.change)}<span>${escape(link.message)}</span></li>`;
+    }
+    const entry = index.byHash.get(link.current ?? '');
+    const note =
+      link.current === null
+        ? '<span class="muted">no longer named</span>'
+        : link.current !== link.hash
+          ? `<span class="muted">changed since linked (was ${escape(short(link.hash))})</span>`
+          : '';
+    return `<li class="entry-row">${icon(entry?.kind ?? 'term')}${link.current === null ? `<code>${escape(link.definition)}</code>` : defLink(link.definition, link.current)}${note}</li>`;
+  });
+  return card(key, {
+    iconHtml: '<span class="icon k-task" title="task">◎</span>',
+    title: withDecisions(task.title),
+    prose: true,
+    tag: stateChip(task.state),
+    meta: `<span class="muted">${escape(task.id)}</span>`,
+    body:
+      `<p class="chips">${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
+        .map((label) => `<span class="chip">${escape(label)}</span>`)
+        .join('')}${parent ? `<span class="muted">subtask of</span> ${taskLink(parent)}` : ''}</p>` +
+      (task.details ? `<div class="doc">${docHtml(task.details, '')}</div>` : '') +
+      section(
+        'Linked',
+        links.length,
+        links.length > 0 ? `<ul class="rows">${links.join('')}</ul>` : '<p class="muted">Nothing linked.</p>',
+      ) +
+      (children.length > 0
+        ? section(
+            'Subtasks',
+            children.length,
+            `<ul class="rows">${children.map((child) => `<li class="entry-row">${stateChip(child.state)}${taskLink(child)}</li>`).join('')}</ul>` +
+              (canceled > 0 ? `<p class="muted">and ${canceled} canceled</p>` : ''),
+          )
+        : '') +
+      taskThread(task) +
+      section('History', task.history.length, changeRows(task.history), task.history.length <= 8),
+  });
+};
+
+/** A change names definitions by the hashes they had then; pages exist for the current ones. */
+const changeCard = (key, change, events) => {
+  const current = (name, hash) => index.byName.get(name)?.hash ?? hash;
+  const added = change.added.map((ref) => refRow({ name: ref.name, hash: current(ref.name, ref.hash) }));
+  // A dependent rehashed by `deus update` prints the same as before; edited names come first, with their diffs.
+  const edited = change.changed.filter((entry) => entry.before !== undefined && entry.before !== entry.after);
+  const isRehashed = (entry) => entry.before !== undefined && entry.before === entry.after;
+  // Rehashed dependents can number in the dozens beside one real edit, so they fold into one group after the rest.
+  const rehashed = change.changed.filter(isRehashed);
+  const changedRow = (entry) => {
+    const now = index.byName.get(entry.name);
+    const row =
+      `${icon(now?.kind ?? 'term')}${defLink(entry.name, current(entry.name, entry.hash))}` +
+      `<span class="hash">${escape(short(entry.from))} → ${escape(short(entry.hash))}</span>${now && now.hash !== entry.hash ? '<span class="muted">changed again since</span>' : ''}`;
+    if (entry.before === undefined) {
+      return `<li class="entry-row">${row}</li>`;
+    }
+    if (entry.before === entry.after) {
+      return `<li class="entry-row">${row}</li>`;
+    }
+    return `<li><details class="diff"${edited.length <= 6 ? ' open' : ''}><summary class="entry-row">${row}${diffSummary(entry)}</summary>${diffHtml(entry.before, entry.after)}</details></li>`;
+  };
+  const changed = [...edited, ...change.changed.filter((entry) => !edited.includes(entry) && !isRehashed(entry))].map(
+    changedRow,
+  );
+  const changedBody =
+    (changed.length > 0 ? rowList(changed) : '') +
+    (rehashed.length > 0
+      ? `<details class="rehashed-group"><summary class="muted">${plural(rehashed.length, 'definition')} rehashed because a dependency changed</summary>${rowList(rehashed.map(changedRow))}</details>`
+      : '');
+  const removed = change.removed.map(
+    (name) => `<li class="entry-row"><span class="icon">−</span><code>${escape(name)}</code></li>`,
+  );
+  const tasks = change.tasks
+    .map((id) => index.tasks.find((task) => task.id === id))
+    .filter(Boolean)
+    .map((task) => `<li class="entry-row">${stateChip(task.state)}${taskLink(task)}</li>`);
+  return card(key, {
+    iconHtml: '<span class="icon k-change" title="change">●</span>',
+    title: escape(change.message || '(no message)'),
+    prose: true,
+    tag: diffStat(change),
+    meta: `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}${hashChip(change.causal)}`,
+    body:
+      (added.length > 0 ? section('Added', added.length, rowList(added)) : '') +
+      (change.changed.length > 0 ? section('Changed', change.changed.length, changedBody) : '') +
+      (removed.length > 0 ? section('Removed', removed.length, rowList(removed)) : '') +
+      (tasks.length > 0 ? section('Tasks', tasks.length, `<ul class="rows">${tasks.join('')}</ul>`) : '') +
+      (added.length + changed.length + removed.length + tasks.length === 0
+        ? '<p class="muted">No visible names or tasks changed.</p>'
+        : '') +
+      eventsSection(events, change.causal) +
+      `<p class="parents"><span class="label">Parents</span> ${change.parents.map((parent) => changeLink(parent)).join(' ') || '<span class="muted">none: the first change</span>'}</p>` +
+      subjectThread(`change:${change.causal}`),
+  });
+};
+
+/** The longest common subsequence of lines, as `[' ' | '-' | '+', line]` pairs in order. */
+const diffLines = (before, after) => {
+  const rows = before.length;
+  const cols = after.length;
+  const table = Array.from({ length: rows + 1 }, () => new Uint32Array(cols + 1));
+  for (let i = rows - 1; i >= 0; i--) {
+    for (let j = cols - 1; j >= 0; j--) {
+      table[i][j] = before[i] === after[j] ? table[i + 1][j + 1] + 1 : Math.max(table[i + 1][j], table[i][j + 1]);
+    }
+  }
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < rows || j < cols) {
+    if (i < rows && j < cols && before[i] === after[j]) {
+      out.push([' ', before[i++]]);
+      j++;
+    } else if (j >= cols || (i < rows && table[i + 1][j] >= table[i][j + 1])) {
+      out.push(['-', before[i++]]);
+    } else {
+      out.push(['+', after[j++]]);
+    }
+  }
+  return out;
+};
+
+const KEYWORDS = new Set([
+  'def',
+  'theorem',
+  'test',
+  'inductive',
+  'structure',
+  'ability',
+  'namespace',
+  'end',
+  'match',
+  'with',
+  'fun',
+  'let',
+  'rec',
+  'if',
+  'then',
+  'else',
+  'handle',
+  'return',
+  'by',
+  'where',
+  'prim',
+  'sorry',
+]);
+
+/** One line of source, highlighted as `Highlight.html` does on the generator's side. */
+const highlightLine = (line) =>
+  line.replace(
+    /("(?:[^"\\]|\\.)*"?)|(--.*$|\/-.*$)|([A-Za-z_][\w.?]*)|([&<>])/g,
+    (match, string, comment, word, special) => {
+      if (string) {
+        return `<span class=str>${escape(string)}</span>`;
+      }
+      if (comment) {
+        return `<span class=cm>${escape(comment)}</span>`;
+      }
+      if (word) {
+        return KEYWORDS.has(word)
+          ? `<span class=kw>${word}</span>`
+          : /^[A-Z]/.test(word)
+            ? `<span class=ty>${word}</span>`
+            : word;
+      }
+      return escape(special);
+    },
+  );
+
+const diffLine = ([mark, line]) =>
+  `<span class="line ${mark === '+' ? 'add' : mark === '-' ? 'del' : ''}"><span class="mark">${mark}</span>${highlightLine(line)}</span>`;
+
+/** A unified diff that folds long unchanged runs to three lines of context on each side. */
+const diffHtml = (before, after) => {
+  const lines = diffLines(before.split('\n'), after.split('\n'));
+  const out = [];
+  for (let i = 0; i < lines.length;) {
+    let end = i;
+    while (end < lines.length && lines[end][0] === ' ') {
+      end++;
+    }
+    const keepHead = i === 0 ? 0 : 3;
+    const keepTail = end === lines.length ? 0 : 3;
+    if (end - i > keepHead + keepTail + 2) {
+      out.push(...lines.slice(i, i + keepHead).map(diffLine));
+      const hidden = lines.slice(i + keepHead, end - keepTail);
+      out.push(
+        `<button class="fold" data-unfold>⋯ ${hidden.length} unchanged lines</button><span class="folded-lines" hidden>${hidden.map(diffLine).join('')}</span>`,
+      );
+      out.push(...lines.slice(end - keepTail, end).map(diffLine));
+    } else {
+      out.push(...lines.slice(i, end).map(diffLine));
+    }
+    if (end < lines.length) {
+      out.push(diffLine(lines[end]));
+      end++;
+    }
+    i = end;
+  }
+  return `<pre class="diff-view">${out.join('')}</pre>`;
+};
+
+const diffSummary = (entry) => {
+  const lines = diffLines(entry.before.split('\n'), entry.after.split('\n'));
+  const added = lines.filter(([mark]) => mark === '+').length;
+  const removed = lines.filter(([mark]) => mark === '-').length;
+  return `<span class="diffstat">${added > 0 ? `<span class="plus" title="${plural(added, 'line')} added">+${added}</span>` : ''}${removed > 0 ? `<span class="minus" title="${plural(removed, 'line')} removed">−${removed}</span>` : ''}</span>`;
+};
+
+/** `1 definition`, `2 definitions`. */
+const plural = (count, noun) => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+const diffStat = (change) =>
+  `<span class="diffstat">${change.added.length > 0 ? `<span class="plus" title="${plural(change.added.length, 'definition')} added">+${change.added.length}</span>` : ''}${
+    change.changed.length > 0
+      ? `<span class="tilde" title="${plural(change.changed.length, 'definition')} changed">~${change.changed.length}</span>`
+      : ''
+  }${change.removed.length > 0 ? `<span class="minus" title="${plural(change.removed.length, 'definition')} removed">−${change.removed.length}</span>` : ''}</span>`;
+
+const missingCard = (key, message, suggestions = []) =>
+  card(key, {
+    iconHtml: '<span class="icon">?</span>',
+    title: escape(message),
+    body:
+      '<p class="muted">The site has no page for it.</p>' +
+      (suggestions.length > 0
+        ? `<p class="muted">Did you mean:</p><ul class="rows">${suggestions.map((entry) => entryRow(entry)).join('')}</ul>`
+        : ''),
+  });
+
+/** How many edits (insert, delete, change, or swap two neighbours) turn `a` into `b`. */
+const editDistance = (a, b) => {
+  const rows = [...Array(a.length + 1)].map((_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) {
+    rows[0][j] = j;
+  }
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return rows[a.length][b.length];
+};
+
+/**
+ * Up to five definitions a link to a name the project lacks probably meant: names within two edits of it (a swapped
+ * pair counts as one), nearest first and its own namespace first, then what the finder offers for its last part.
+ */
+const closeNames = (name) => {
+  const namespace = namespaceOf(name);
+  const near = index.names
+    .filter((entry) => Math.abs(entry.name.length - name.length) <= 2)
+    .map((entry) => ({ entry, distance: editDistance(name, entry.name) }))
+    .filter((pair) => pair.distance <= 2)
+    .sort(
+      (a, b) =>
+        a.distance - b.distance ||
+        (namespaceOf(b.entry.name) === namespace) - (namespaceOf(a.entry.name) === namespace),
+    )
+    .map((pair) => pair.entry);
+  const found =
+    near.length > 0
+      ? []
+      : search(lastSegment(name))
+          .filter((hit) => hit.entry)
+          .map((hit) => hit.entry);
+  return [...new Map([...near, ...found].map((entry) => [entry.hash, entry])).values()].slice(0, 5);
+};
+
+/** Texts the codebase embeds (`Docs.decisionsMd`, `Docs.gettingStartedMd`), each read once through the replication API. */
+const embeddedTexts = new Map();
+
+/** The text the codebase embeds under `name`, or undefined; a failed read is tried again by the next caller. */
+const loadEmbedded = (name) => {
+  if (!embeddedTexts.has(name)) {
+    const reading = (async () => {
+      const entry = index.byName.get(name);
+      const base = live?.replace(/\/live\/[^/]+$/, '');
+      if (!entry || !base) {
+        return undefined;
+      }
+      // The term's object names the embedded file by its SHA-256, which the files API serves.
+      const object = await fetchText(`${base}/objects/${entry.hash}`);
+      const sha = /\(text "([0-9a-f]{64})"\)/.exec(object ?? '')?.[1];
+      return sha ? fetchText(`${base}/files/assets/${sha}`) : undefined;
+    })().catch(() => {
+      embeddedTexts.delete(name);
+      return undefined;
+    });
+    embeddedTexts.set(name, reading);
+  }
+  return embeddedTexts.get(name);
+};
+
+/** Whether the hosted site can show a text the codebase embeds, rather than link to it on GitHub. */
+const embedded = (name) => live !== undefined && index.byName.has(name);
+
+let decisionLog;
+
+/** The decision log by number, parsed once per text read. */
+const loadDecisions = async () => {
+  const text = await loadEmbedded('Docs.decisionsMd');
+  if (decisionLog?.text !== text) {
+    decisionLog = { text, rows: decisionsOf(text ?? '') };
+  }
+  return decisionLog.rows;
+};
+
+/**
+ * The rows of a decision log, `| D<n> | decision | alternatives | why |`, by number. A cell may hold ` | ` itself (an
+ * mdl list), so the last two cells are the alternatives and the reason and the decision is everything between.
+ */
+const decisionsOf = (text) =>
+  new Map(
+    text
+      .split('\n')
+      .filter((line) => /^\| D\d+ +\|/.test(line))
+      .map((line) => {
+        // The table is padded to its widest cell, so `| D1   |` has spaces before the bar.
+        const cells = line
+          .slice(2, line.endsWith(' |') ? -2 : undefined)
+          .split(' | ')
+          .map((cell) => cell.trim());
+        return [
+          cells[0],
+          {
+            id: cells[0],
+            decision: cells.slice(1, Math.max(2, cells.length - 2)).join(' | '),
+            alternatives: cells.length > 3 ? cells[cells.length - 2] : '',
+            why: cells.length > 2 ? cells[cells.length - 1] : '',
+          },
+        ];
+      }),
+  );
+
+/** A document the codebase embeds (`docs/*.md` as `Docs.*`, D272), read in place; its first heading is the title. */
+const textCard = (key, text, fallback, path = '') => {
+  if (text === undefined) {
+    return missingCard(key, `${fallback} did not load`);
+  }
+  // A Markdown document reads as prose; any other file (code, configuration) as its text.
+  if (path !== '' && !path.endsWith('.md')) {
+    return card(key, {
+      iconHtml: '<span class="icon k-decision" title="file">?</span>',
+      title: escape(path),
+      prose: true,
+      body: `<pre class="source file-text">${escape(text)}</pre>`,
+    });
+  }
+  const [first, ...rest] = text.split('\n');
+  const title = /^# (.*)$/.exec(first)?.[1] ?? fallback;
+  return card(key, {
+    iconHtml: '<span class="icon k-decision" title="document">?</span>',
+    title: inlineMd(title, ''),
+    prose: true,
+    body: `<div class="doc">${mdHtml(/^# /.test(first) ? rest.join('\n') : text, '')}</div>`,
+  });
+};
+
+/** Whether a name is a file the codebase embeds from the repository: a document (`Docs.*`) or any other (`Repo.*`). */
+const isEmbeddedFile = (name) => name.startsWith('Docs.') || name.startsWith('Repo.');
+
+/** The files the codebase embeds, with the path each was embedded from and its file name. */
+const documents = () =>
+  index.names
+    .filter((entry) => isEmbeddedFile(entry.name))
+    .map((entry) => {
+      const path = /Embedded from (\S+) \(deus embed\)/.exec(entry.summary ?? '')?.[1] ?? entry.name;
+      return { ...entry, path, file: path.split('/').pop() ?? path };
+    })
+    .sort((one, other) => one.path.localeCompare(other.path));
+
+const documentsCard = (key) => {
+  const row = (entry) =>
+    `<li class="entry-row"><span class="icon k-decision">?</span><a class="ref" data-open="k:doc:${escape(entry.name)}">${escape(entry.name.startsWith('Repo.') ? entry.path : entry.file)}</a><span class="row-summary"><code>${escape(entry.name)}</code></span></li>`;
+  const all = documents();
+  const groups = [
+    ['Project', all.filter((entry) => entry.name.startsWith('Docs.') && !entry.name.startsWith('Docs.Specs.')), true],
+    ['Specifications', all.filter((entry) => entry.name.startsWith('Docs.Specs.')), true],
+    // The rest of the repository, which `deus export --files` writes back (D279); long, so folded.
+    ['Repository files', all.filter((entry) => entry.name.startsWith('Repo.')), false],
+  ].filter(([, group]) => group.length > 0);
+  return card(key, {
+    iconHtml: '<span class="icon k-decision">?</span>',
+    title: 'Documents',
+    prose: true,
+    body:
+      '<p class="muted">The project\'s documents and the rest of its files, kept in the codebase as texts (<code>deus embed</code>), so they travel with it.</p>' +
+      groups.map(([title, group, open]) => section(title, group.length, rowList(group.map(row)), open)).join(''),
+  });
+};
+
+const decisionCard = (key, row) =>
+  card(key, {
+    iconHtml: '<span class="icon k-decision" title="decision">D</span>',
+    title: escape(row.id),
+    prose: true,
+    body:
+      `<div class="doc">${mdHtml(row.decision, '')}</div>` +
+      (row.alternatives
+        ? section('Alternatives', undefined, `<div class="doc">${mdHtml(row.alternatives, '')}</div>`)
+        : '') +
+      (row.why ? section('Why', undefined, `<div class="doc">${mdHtml(row.why, '')}</div>`) : ''),
+  });
+
+const buildCard = async (key) => {
+  const value = key.slice(2);
+  switch (key[0]) {
+    case 'd': {
+      if (!DEFINITION_HASH.test(value)) {
+        return missingCard(key, `No definition named ${value}`, closeNames(value));
+      }
+      const [def, events] = await Promise.all([load(pagePath(value)), loadEvents()]);
+      if (def?.ts !== undefined) {
+        for (const switcher of document.querySelectorAll('#dialects, #sidebar-dialects')) {
+          switcher.hidden = false;
+        }
+      }
+      return def ? definitionCard(key, def, events) : missingCard(key, `No definition ${short(value)}`);
+    }
+    case 'x': {
+      const row = (await loadDecisions()).get(value);
+      return row ? decisionCard(key, row) : missingCard(key, `No decision ${value} in this codebase`);
+    }
+    case 'n':
+      return namespaceCard(key, value);
+    case 's':
+      return docCard(key, value);
+    case 't': {
+      const task = index.tasks.find((other) => other.id === value);
+      return task ? taskCard(key, task) : missingCard(key, `No task ${value}`);
+    }
+    case 'c': {
+      const [change, events] = await Promise.all([load(`change/${value}.json`), loadEvents()]);
+      return change ? changeCard(key, change, events) : missingCard(key, `No change ${short(value)}`);
+    }
+    case 'k':
+      return value === 'glossary'
+        ? glossaryCard(key)
+        : value === 'guide'
+          ? textCard(key, await loadEmbedded('Docs.gettingStartedMd'), 'Getting started')
+          : value.startsWith('doc:')
+            ? textCard(
+                key,
+                await loadEmbedded(value.slice(4)),
+                value.slice(4),
+                documents().find((entry) => entry.name === value.slice(4))?.path,
+              )
+            : value === 'docs'
+              ? documentsCard(key)
+              : value === 'events'
+                ? eventsCard(key, await loadEvents())
+                : value === 'features'
+                  ? featuresCard(key, await loadFeatures())
+                  : value === 'checks'
+                    ? checksCard(key, await requirementsByEvidence())
+                    : kindCard(key, value);
+    default:
+      return missingCard(key, key);
+  }
+};
+
+/** Links type names in the source that the generator left plain, resolving them as the definition would. */
+const linkSource = (root) => {
+  for (const pre of root.querySelectorAll('pre.source')) {
+    const namespace = pre.dataset.namespace;
+    for (const span of pre.querySelectorAll('span.ty')) {
+      if (span.closest('a')) {
+        continue;
+      }
+      const entry = resolve(span.textContent, namespace);
+      if (entry && entry.hash !== pre.dataset.self) {
+        const link = document.createElement('a');
+        link.className = 'ref';
+        link.dataset.open = `d:${entry.hash}`;
+        link.dataset.hash = entry.hash;
+        span.replaceWith(link);
+        link.append(span);
+      }
+    }
+    for (const link of pre.querySelectorAll('a.ref[data-open^="d:"]')) {
+      link.dataset.hash = link.dataset.open.slice(2);
+    }
+  }
+};
+
+//
+// Guide (D196): the project as a reader meets it, top down. The feature map says what the project is
+// and how it divides into areas and features; each feature names the spec documents that say what it
+// does; a spec document's requirements name the tests that prove them, and its api blocks the
+// definitions that implement them.
+//
+
+/** Spec documents, by the name their blocks share: `Address.Spec` for `Address.Spec.R-1`. */
+const specDocuments = () =>
+  [...new Set(index.names.filter((entry) => entry.kind === 'spec').map((entry) => namespaceOf(entry.name)))].sort();
+
+/** The spec documents as a set, built once: comments and listings ask about every reference they show. */
+let documentNames;
+const isDocument = (name) => (documentNames ??= new Set(specDocuments())).has(name);
+
+/** A spec document's link; `anchor` names one of its blocks (`R-3`). */
+const docLink = (name, label = name, anchor = '') =>
+  `<a class="ref doc-ref" data-open="s:${escape(name)}"${anchor ? ` data-anchor="${escape(anchor)}"` : ''}>${escape(label)}</a>`;
+
+/** The spec document a definition belongs to: the one its name is under, else the nearest `<Namespace>.Spec` above it. */
+const specOf = (name) => {
+  const parts = name.split('.');
+  for (let length = parts.length - 1; length > 0; length--) {
+    const prefix = parts.slice(0, length).join('.');
+    if (isDocument(prefix)) {
+      return prefix;
+    }
+    if (isDocument(`${prefix}.Spec`)) {
+      return `${prefix}.Spec`;
+    }
+  }
+  return undefined;
+};
+
+/** A spec document's page, `doc/<Doc>.json`. */
+const loadDoc = (name) => load(`doc/${name}.json`);
+
+/** The first `# ` heading of a document's text, which is its title. */
+const docTitle = (text) => /^# (.+)$/m.exec(text ?? '')?.[1] ?? '';
+
+/** A document's text without its frontmatter and its Extensions table, which are for the checker, not the reader. */
+const readableText = (text) => {
+  const lines = (text ?? '').split('\n');
+  let start = 0;
+  if (lines[0]?.trim() === '---') {
+    const end = lines.indexOf('---', 1);
+    start = end < 0 ? 0 : end + 1;
+  }
+  const out = [];
+  let skipping = false;
+  for (const line of lines.slice(start)) {
+    if (/^#{1,6} /.test(line)) {
+      skipping = /^#{1,6} Extensions\s*$/.test(line);
+    }
+    if (!skipping) {
+      out.push(line);
+    }
+  }
+  return out.join('\n');
+};
+
+/** The text without its title, which the card's header shows. */
+const withoutTitle = (text) => (text ?? '').replace(/^# .+\n?/m, '');
+
+/** The intro of a document: the paragraphs between its title and its first section. */
+const docIntro = (text) => {
+  const body = readableText(text).split('\n');
+  const title = body.findIndex((line) => /^# /.test(line));
+  const rest = body.slice(title + 1);
+  const next = rest.findIndex((line) => /^#{1,6} /.test(line) || line.startsWith('```'));
+  return (next < 0 ? rest : rest.slice(0, next)).join('\n').trim();
+};
+
+/**
+ * The areas of the project: each top-level feature of its feature maps (`*.Features` documents, else
+ * every map), with its features and the top-level namespaces they name. A namespace goes to the first
+ * area that names it, so each appears once.
+ */
+const areasOf = (maps) => {
+  const own = (maps ?? []).filter((map) => map.document.endsWith('.Features'));
+  const chosen = own.length > 0 ? own : (maps ?? []);
+  const areas = [];
+  for (const map of chosen) {
+    const byId = new Map(map.features.map((feature) => [feature.id, feature]));
+    const rootOf = (feature) => {
+      let current = feature;
+      for (let hops = 0; current.parent && byId.has(current.parent) && hops < 16; hops++) {
+        current = byId.get(current.parent);
+      }
+      return current;
+    };
+    const byRoot = new Map();
+    for (const feature of map.features) {
+      const root = rootOf(feature);
+      if (!byRoot.has(root.id)) {
+        const area = { document: map.document, feature: root, features: [], names: [], namespaces: [] };
+        byRoot.set(root.id, area);
+        areas.push(area);
+      }
+      const area = byRoot.get(root.id);
+      if (feature !== root) {
+        area.features.push(feature);
+      }
+      area.names.push(...feature.specs, ...feature.defs);
+    }
+  }
+  const placed = new Set();
+  for (const area of areas) {
+    for (const name of area.names) {
+      const top = name.split('.')[0];
+      if (!placed.has(top) && (nodeAt(top)?.children.size ?? 0) > 0) {
+        placed.add(top);
+        area.namespaces.push(top);
+      }
+    }
+  }
+  return areas;
+};
+
+/** The legend of the kind icons, so a first visitor can read the lists. */
+const legendHtml = () =>
+  `<p class="legend muted">${KIND_ORDER.map((kind) => `${icon(kind)} ${escape(KINDS[kind].label)}`).join(' · ')} · ${folderIcon} namespace · <span class="icon k-feature">◇</span> feature · <span class="icon k-task">◎</span> task · New here? ${embedded('Docs.gettingStartedMd') ? '<a class="ref" data-open="k:guide">The guide</a>' : `<a class="ref" href="${REPO_URL}docs/GETTING_STARTED.md" target="_blank" rel="noopener">The guide</a>`}, <a class="ref" data-open="k:glossary">the glossary</a>${documents().length > 0 && live !== undefined ? ' and <a class="ref" data-open="k:docs">all documents</a>' : ''}</p>`;
+
+/** Words the overview and the documents use that a newcomer may not know (task 8eec6c0d). */
+const GLOSSARY = [
+  [
+    'codebase',
+    'Where DEUS code lives instead of files: every definition stored by the hash of its content, with its names, history, specs, tests and tasks beside it.',
+  ],
+  [
+    'definition',
+    'One named thing in the codebase: a type, an ability, a term (a value or function), a test, a theorem, or a block of a spec document.',
+  ],
+  [
+    'hash',
+    "The SHA-256 of a definition's content. A name points at a hash, so renaming changes nothing, and a hash always means the same code. Shown short, like #a0acb612.",
+  ],
+  [
+    'namespace',
+    'The dotted prefix of names: List.map is map in the List namespace. Namespaces group definitions; they are not files.',
+  ],
+  [
+    'ability',
+    "A set of operations code may perform, such as IO or Storage, listed in a function's type as {IO}. A handler gives them meaning, so tests can run code that uses IO without touching the machine.",
+  ],
+  ['term', 'A value or a function. ƒ in the lists.'],
+  [
+    'the glyphs in lists',
+    'T type · A ability · ƒ term · ⊨ test · ∀ theorem · S a spec block (a requirement, API or law of a spec document) · ▤ namespace · ◇ feature · ◎ task. A green dot after a test or theorem means it passes and a red dot that it fails; ✓ and ✗ head the check counts. In the history, +3 ~2 −1 count the definitions a change added, changed and removed.',
+  ],
+  [
+    'theorem',
+    'A statement about code that is checked by test, by a decision procedure or by a proof, rather than only for one example.',
+  ],
+  [
+    'spec document',
+    'A document in the codebase (Address.Spec, Array.Spec) that says what a part does: prose, requirements (R-n), APIs (A-n) and laws (L-n), each linked to the tests or theorems that check it. `deus mdl` checks them.',
+  ],
+  ['requirement', 'A sentence a spec document commits to, R-1 and so on, naming in by: the tests that prove it.'],
+  [
+    'feature',
+    'A part of the product as the feature map lists it, with its status (planned, building, shipped), its spec documents, its main definitions and its tasks.',
+  ],
+  [
+    'change, causal, head',
+    "Each change to the codebase is a history node, also called a causal, named by its hash. A branch's head is its latest change; the explorer shows one head.",
+  ],
+  [
+    'prim',
+    'A primitive: a definition whose body is provided by the kernel that runs DEUS (prim "Array.set"), not written in DEUS.',
+  ],
+  [
+    'kernel',
+    'What evaluates compiled DEUS: in TypeScript (node and browsers), in Rust (native and wasm), and on Cloudflare Workers.',
+  ],
+  [
+    'seed',
+    'A compiled image of the toolchain checked into git, from which the toolchain compiles itself to the same bytes.',
+  ],
+  ['back end', 'A target the compiler emits besides the kernel: JavaScript, wasm or C.'],
+  [
+    'Perceus',
+    'A reference-counting scheme that frees memory exactly when the last reference goes and reuses it in place when a value is unique, as for the in-place arrays.',
+  ],
+  [
+    'R2, Worker, D1 (Cloudflare)',
+    'Cloudflare services the hosted codebase runs on: R2 stores packs of objects, the Worker serves the replication API and this explorer, the D1 database keeps API keys.',
+  ],
+  [
+    'D96 and other D-numbers',
+    "D followed by a number is an entry in the project's decision log, which records each choice and why: [docs/DECISIONS.md](https://github.com/dxos/dxos/blob/dm/agent-13-oct-x8ehi8-0y35ai/packages/reflect/deus-lang/docs/DECISIONS.md).",
+  ],
+];
+
+/** Escaped text with each decision number (D96) linked to the decision log, for a reader who has not met it. */
+const withDecisions = (text) => decisionLinks(escape(text));
+
+const glossaryCard = (key) =>
+  card(key, {
+    iconHtml: '<span class="icon k-namespace">?</span>',
+    title: 'Glossary',
+    meta: `<span class="count">${GLOSSARY.length} terms</span>`,
+    body: `<dl class="glossary">${GLOSSARY.map(([term, meaning]) => `<dt>${escape(term)}</dt><dd>${inlineMd(meaning, '')}</dd>`).join('')}</dl>`,
+  });
+
+//
+// Markdown, enough for spec documents: headings, paragraphs, lists, tables, quotes and code.
+//
+
+/** Inline markdown: `code` (linked when it names a definition), **bold**, *emphasis*, links, and requirement references. */
+/**
+ * Text split into code spans, code-labelled links and the prose between them. A span opens with a run of backticks
+ * and closes with a run of the same length (CommonMark), so `` ` ```deus ` `` is the code ```` ```deus ````.
+ */
+const inlinePieces = (text) => {
+  const pieces = [];
+  // A link whose label is code (``[`deus/codebase.deus`](../../deus/codebase.deus)``) is one piece, not split at its backticks.
+  const token = /\[`[^`]+`\]\([^)\s]+\)|(?<!`)(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g;
+  let from = 0;
+  for (const match of text.matchAll(token)) {
+    pieces.push(text.slice(from, match.index), match[0]);
+    from = match.index + match[0].length;
+  }
+  pieces.push(text.slice(from));
+  return pieces.filter((piece) => piece !== '');
+};
+
+/** The code a code span holds, without its backticks and the one space each side may pad it with; undefined for prose. */
+const codeSpan = (piece) => {
+  const fence = /^`+/.exec(piece)?.[0];
+  if (!fence || piece.length <= fence.length * 2 || !piece.endsWith(fence)) {
+    return undefined;
+  }
+  const code = piece.slice(fence.length, -fence.length);
+  return /^ .*[^ ].* $/s.test(code) ? code.slice(1, -1) : code;
+};
+
+const inlineMd = (text, namespace) =>
+  decisionLinks(
+    inlinePieces(String(text))
+      .map((piece) => {
+        const codeLink = /^\[`([^`]+)`\]\(([^)\s]+)\)$/.exec(piece);
+        if (codeLink) {
+          const [, label, target] = codeLink;
+          const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
+          if (doc && isDocument(doc)) {
+            return `<code>${docLink(doc, label)}</code>`;
+          }
+          if (/^https?:/.test(target)) {
+            return `<code><a href="${escape(target)}" target="_blank" rel="noopener">${escape(label)}</a></code>`;
+          }
+          return /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)
+            ? `<code>${fileLink(target, escape(label))}</code>`
+            : `<code>${escape(label)}</code>`;
+        }
+        const span = codeSpan(piece);
+        if (span !== undefined) {
+          const code = span;
+          if (isDocument(code)) {
+            return `<code>${docLink(code)}</code>`;
+          }
+          const entry = /^[\w.?-]+$/.test(code) ? resolve(code, namespace) : undefined;
+          if (!entry && (nodeAt(code)?.children.size ?? 0) > 0) {
+            return `<code><a class="ref" data-open="n:${escape(code)}">${escape(code)}</a></code>`;
+          }
+          if (entry) {
+            return `<code>${defLink(entry.name, entry.hash, code)}</code>`;
+          }
+          return REPO_PATH.test(code) ? `<code>${fileLink(code, escape(code))}</code>` : `<code>${escape(code)}</code>`;
+        }
+        return escape(piece)
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
+            const doc = /^(?:.*\/)?([A-Z][\w.]*)\.mdl$/.exec(target)?.[1];
+            if (doc && isDocument(doc)) {
+              return docLink(doc, label);
+            }
+            if (!/^https?:/.test(target) && /\.(?:md|deus|ts|mjs)(?:#[\w-]*)?$/.test(target)) {
+              return fileLink(target, label, true);
+            }
+            // `target` comes from escaped text, so it is already safe in an attribute.
+            return /^https?:/.test(target) ? `<a href="${target}" target="_blank" rel="noopener">${label}</a>` : label;
+          })
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+          .replace(/\b([A-Z][\w]*(?:\.[A-Z][\w]*)*\.(?:Spec|Features|QA))\s((?:R|A|L|F|QA)-\d+)/g, (whole, doc, id) =>
+            isDocument(doc) ? docLink(doc, `${doc} ${id}`, id) : whole,
+          );
+      })
+      .join(''),
+  );
+
+const tableHtml = (rows, namespace) => {
+  const cells = (row) =>
+    row
+      .trim()
+      .replace(/^\||\|$/g, '')
+      .split('|')
+      .map((cell) => cell.trim());
+  const [head, , ...body] = rows;
+  return (
+    `<table class="md-table"><thead><tr>${cells(head)
+      .map((cell) => `<th>${inlineMd(cell, namespace)}</th>`)
+      .join('')}</tr></thead>` +
+    `<tbody>${body
+      .map(
+        (row) =>
+          `<tr>${cells(row)
+            .map((cell) => `<td>${inlineMd(cell, namespace)}</td>`)
+            .join('')}</tr>`,
+      )
+      .join('')}</tbody></table>`
+  );
+};
+
+/** Markdown as HTML; `block(lines)` renders each ```mdl fence. */
+const mdHtml = (text, namespace, block = (lines) => `<pre class="doc-code">${escape(lines.join('\n'))}</pre>`) => {
+  const lines = text.split('\n');
+  const out = [];
+  let paragraph = [];
+  const flush = () => {
+    if (paragraph.length > 0) {
+      out.push(`<p>${inlineMd(paragraph.join(' '), namespace)}</p>`);
+      paragraph = [];
+    }
+  };
+  for (let at = 0; at < lines.length;) {
+    const line = lines[at];
+    const fence = /^```(\w*)/.exec(line);
+    if (fence) {
+      flush();
+      const end = lines.findIndex((other, i) => i > at && other.startsWith('```'));
+      const body = lines.slice(at + 1, end < 0 ? lines.length : end);
+      out.push(fence[1] === 'mdl' ? block(body) : `<pre class="doc-code">${escape(body.join('\n'))}</pre>`);
+      at = end < 0 ? lines.length : end + 1;
+      continue;
+    }
+    const heading = /^(#{1,6}) (.*)$/.exec(line);
+    if (heading) {
+      flush();
+      const level = Math.min(heading[1].length + 2, 6);
+      out.push(`<h${level} class="md-h">${inlineMd(heading[2], namespace)}</h${level}>`);
+      at++;
+      continue;
+    }
+    if (line.startsWith('|')) {
+      flush();
+      const rows = [];
+      while (at < lines.length && lines[at].startsWith('|')) {
+        rows.push(lines[at++]);
+      }
+      out.push(rows.length >= 2 ? tableHtml(rows, namespace) : `<p>${inlineMd(rows.join(' '), namespace)}</p>`);
+      continue;
+    }
+    const item = /^\s*(?:[-*]|\d+\.) /;
+    if (item.test(line)) {
+      flush();
+      const ordered = /^\s*\d+\. /.test(line);
+      const items = [];
+      while (at < lines.length && (item.test(lines[at]) || (/^\s{2,}\S/.test(lines[at]) && items.length > 0))) {
+        if (item.test(lines[at])) {
+          items.push(lines[at].replace(item, ''));
+        } else {
+          items[items.length - 1] += ` ${lines[at].trim()}`;
+        }
+        at++;
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      out.push(`<${tag}>${items.map((text) => `<li>${inlineMd(text, namespace)}</li>`).join('')}</${tag}>`);
+      continue;
+    }
+    if (line.startsWith('>')) {
+      flush();
+      const quoted = [];
+      while (at < lines.length && lines[at].startsWith('>')) {
+        quoted.push(lines[at++].replace(/^>\s?/, ''));
+      }
+      out.push(`<blockquote>${inlineMd(quoted.join(' '), namespace)}</blockquote>`);
+      continue;
+    }
+    if (line.trim() === '') {
+      flush();
+    } else {
+      paragraph.push(line.trim());
+    }
+    at++;
+  }
+  flush();
+  return out.join('');
+};
+
+//
+// Spec documents (D196): the document as prose, each block shown with what it links.
+//
+
+const BLOCK_LABELS = {
+  req: 'Requirement',
+  api: 'API',
+  law: 'Law',
+  feature: 'Feature',
+  qa: 'QA flow',
+  example: 'Example',
+};
+
+/** Names in a block property: `A | B`, `A, B` or one per `- ` line. */
+const namesIn = (value) =>
+  value
+    .split(/[|,\n]/)
+    .map((part) => part.replace(/^\s*-\s*/, '').trim())
+    .filter((part) => /^[\w.?-]+$/.test(part));
+
+/** A property's value with every definition it names linked. */
+const valueHtml = (value, namespace) =>
+  decisionLinks(
+    escape(value)
+      // `vitest:<file> > <test>` evidence opens the test file in the repository.
+      .replace(
+        /vitest:([\w./-]+)/g,
+        (_, path) => `vitest:<a href="${repoUrl(path)}" target="_blank" rel="noopener">${path}</a>`,
+      )
+      .replace(/\b([A-Za-z_][\w?]*(?:\.[A-Za-z_][\w?-]*)+)\b/g, (word) => {
+        const entry = resolve(word, namespace);
+        return entry ? defLink(entry.name, entry.hash, word) : word;
+      }),
+  );
+
+/** The definitions a block's `by:` names, with whether each passes: the evidence for a requirement. */
+const evidenceHtml = (names, namespace) =>
+  names
+    .map((name) => {
+      const entry = resolve(name, namespace) ?? resolve(lastSegment(name), namespace);
+      return entry
+        ? `<span class="evidence">${icon(entry.kind)}${defLink(entry.name, entry.hash, name)}${
+            entry.status
+              ? statusMark(entry.status)
+              : '<span class="muted" title="No result was pushed for this version">no result yet</span>'
+          }</span>`
+        : `<span class="evidence missing" title="No definition by this name">${escape(name)}</span>`;
+    })
+    .join('');
+
+const blockHtml = (doc, block) => {
+  const namespace = doc.name;
+  const entry = index.byName.get(`${doc.name}.${block.id}`);
+  const props = Object.entries(block.props ?? {});
+  const by = block.props?.by;
+  const rows = props
+    .filter(([key]) => key !== 'by')
+    .map(
+      ([key, value]) =>
+        `<div class="block-prop"><span class="block-key">${escape(key)}</span>` +
+        // A law's `theorem:` is its evidence, so it carries the same pass or fail mark as `by:`.
+        (key === 'theorem' && namesIn(value).length > 0
+          ? `<span class="block-value">${evidenceHtml(namesIn(value), namespace)}</span>`
+          : value.includes('\n')
+            ? `<pre class="block-value">${value
+                .replace(/^\n/, '')
+                .split('\n')
+                .map((line) => `<span class="value-line">${valueHtml(line, namespace)}</span>`)
+                .join('')}</pre>`
+            : `<span class="block-value">${valueHtml(value, namespace)}</span>`) +
+        '</div>',
+    )
+    .join('');
+  const evidence =
+    by !== undefined
+      ? `<div class="block-prop"><span class="block-key">proved by</span><span class="block-value">${
+          namesIn(by).length > 0 ? evidenceHtml(namesIn(by), namespace) : valueHtml(by, namespace)
+        }</span></div>`
+      : block.type === 'req'
+        ? '<div class="block-prop"><span class="block-key">proved by</span><span class="block-value muted">nothing yet</span></div>'
+        : '';
+  return (
+    `<section class="block block-${escape(block.type)}" data-block="${escape(block.id)}">` +
+    `<div class="block-head"><span class="block-type">${escape(BLOCK_LABELS[block.type] ?? block.type)}</span>` +
+    `${entry ? defLink(entry.name, entry.hash, block.id) : `<span class="block-id">${escape(block.id)}</span>`}` +
+    `<span class="block-title">${inlineMd(block.title, namespace)}</span></div>${evidence}${rows}</section>`
+  );
+};
+
+/** A document's text as the reader sees it, each ```mdl fence replaced by its block. */
+const documentHtml = (doc) => {
+  const byId = new Map((doc.blocks ?? []).map((block) => [block.id, block]));
+  return mdHtml(readableText(doc.text), doc.name, (lines) => {
+    const id = /^\s*\w+\s+([^:\s]+)/.exec(lines[0] ?? '')?.[1];
+    const block = id ? byId.get(id) : undefined;
+    return block ? blockHtml(doc, block) : `<pre class="doc-code">${escape(lines.join('\n'))}</pre>`;
+  });
+};
+
+const docCard = async (key, name) => {
+  const doc = await loadDoc(name);
+  if (!doc) {
+    return missingCard(key, `No spec document ${name}`);
+  }
+  const blocks = doc.blocks ?? [];
+  const counted = (type) => blocks.filter((block) => block.type === type).length;
+  const requirements = blocks.filter((block) => block.type === 'req');
+  const proved = requirements.filter((block) => block.props?.by).length;
+  const tests = index.names.filter((entry) => namespaceOf(entry.name) === name && entry.kind === 'test');
+  const meta = [
+    requirements.length > 0 ? `${proved} of ${requirements.length} requirements name their tests` : '',
+    counted('api') > 0 ? `${counted('api')} api` : '',
+    tests.length > 0 ? `${tests.length} tests` : '',
+  ]
+    .filter(Boolean)
+    .map((text) => `<span class="count">${text}</span>`)
+    .join(' ');
+  return card(key, {
+    iconHtml: '<span class="icon k-spec" title="spec document">S</span>',
+    title: escape(docTitle(doc.text) || name),
+    tag: `<span class="tag">${escape(name)}</span>`,
+    meta,
+    body:
+      `<div class="doc-page">${documentHtml({ ...doc, text: withoutTitle(doc.text) })}</div>` +
+      `<p class="muted doc-foot">Every definition of this document, its tests included: <a class="ref" data-open="n:${escape(name)}">${escape(name)}</a>` +
+      (nodeAt(name.split('.')[0])
+        ? ` · the code it describes: <a class="ref" data-open="n:${escape(name.split('.')[0])}">${escape(name.split('.')[0])}</a>`
+        : '') +
+      '</p>',
+  });
+};
+
+/** Scrolls the open document to the block a link named, and marks it. */
+const showAnchor = () => {
+  if (!ui.anchor) {
+    return;
+  }
+  const target = document.querySelector(
+    `.card[data-key="${CSS.escape(ui.anchor.key)}"] [data-block="${CSS.escape(ui.anchor.block)}"]`,
+  );
+  if (target) {
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    target.classList.add('flash');
+    setTimeout(() => target.classList.remove('flash'), 1600);
+  }
+  ui.anchor = undefined;
+};
+
+//
+// Home, tasks and history views.
+//
+
+/** A namespace as a tile of the overview's grid. */
+const namespaceTile = (node) =>
+  `<li><a data-open="n:${escape(node.path)}">${folderIcon}<span>${escape(node.segment)}</span><span class="count">${node.count}</span></a></li>`;
+
+/** One area of the guide: its features, the spec documents that describe them, and its namespaces. */
+const areaHtml = (area, hidden = false) => {
+  const docs = (feature) =>
+    feature.specs
+      .filter(isDocument)
+      .map((doc) => docLink(doc))
+      .join('');
+  return (
+    `<section class="area"${hidden ? ' hidden' : ''} data-tags="${escape((area.feature.tags ?? []).join(' '))}"><header>${featureStatus(area.feature.status)}<h4>${withDecisions(area.feature.title)}</h4>${docs(area.feature)}</header>` +
+    `<p class="area-about muted" data-area-about="${escape(area.feature.id)}"></p>` +
+    (area.features.length > 0
+      ? `<ul class="area-features">${area.features
+          .map(
+            (feature) =>
+              `<li>${featureStatus(feature.status)}<span class="feature-title">${withDecisions(feature.title)}</span><span class="feature-docs">${docs(feature)}</span></li>`,
+          )
+          .join('')}</ul>`
+      : '') +
+    (area.namespaces.length > 0
+      ? `<p class="area-code"><span class="muted">Code:</span> ${area.namespaces
+          .map((name) => `<a class="ref" data-open="n:${escape(name)}">${escape(name)}</a>`)
+          .join(' ')}</p>`
+      : '') +
+    '</section>'
+  );
+};
+
+/** The tag of the main areas, which the overview opens on when any area has it (D199). */
+const AREA_DEFAULT = 'home';
+
+/** The areas with tag chips to filter them by; the overview opens on the main ones, with a way to see all. */
+const areasBody = (areas) => {
+  const tagsOf = (area) => area.feature.tags ?? [];
+  const tagged = (tag) => areas.filter((area) => tagsOf(area).includes(tag)).length;
+  const tags = [...new Set(areas.flatMap(tagsOf))].filter((tag) => tag !== AREA_DEFAULT).sort();
+  const start = tagged(AREA_DEFAULT) > 0 ? AREA_DEFAULT : '';
+  const chip = (tag, label, count) =>
+    `<button class="tag-chip${tag === start ? ' active' : ''}" data-area-tag="${escape(tag)}">${escape(label)} <span class="count">${count}</span></button>`;
+  return (
+    `<div class="tag-chips">${start ? chip(AREA_DEFAULT, 'Main', tagged(AREA_DEFAULT)) : ''}${chip('', 'All', areas.length)}${tags
+      .map((tag) => chip(tag, tag, tagged(tag)))
+      .join('')}</div>` +
+    `<div class="areas">${areas
+      .map((area) => areaHtml(area, Boolean(start) && !tagsOf(area).includes(start)))
+      .join('')}</div>` +
+    (start ? `<button class="link-button area-all" data-area-tag="">View all ${areas.length} areas →</button>` : '')
+  );
+};
+
+/** Shows the areas tagged `tag` (every area for ""), and marks its chip. */
+const filterAreas = (root, tag) => {
+  for (const area of root.querySelectorAll('.areas .area')) {
+    area.hidden = tag !== '' && !(area.dataset.tags ?? '').split(' ').includes(tag);
+  }
+  for (const chip of root.querySelectorAll('.tag-chip')) {
+    chip.classList.toggle('active', chip.dataset.areaTag === tag);
+  }
+  root.querySelector('.area-all')?.toggleAttribute('hidden', tag === '');
+};
+
+/** A spec document's row; its title arrives with its page (`fillHome`). */
+const docRow = (name) => {
+  const requirements = index.names.filter(
+    (entry) => entry.kind === 'spec' && namespaceOf(entry.name) === name && /\.R-\d+$/.test(entry.name),
+  ).length;
+  const tests = index.names.filter((entry) => entry.kind === 'test' && namespaceOf(entry.name) === name).length;
+  return (
+    `<li class="doc-row"><span class="icon k-spec">S</span>${docLink(name)}<span class="doc-title muted" data-doc-title="${escape(name)}"></span>` +
+    `<span class="count">${[requirements > 0 ? `${requirements} requirements` : '', tests > 0 ? `${tests} tests` : ''].filter(Boolean).join(' · ')}</span></li>`
+  );
+};
+
+const homeHtml = () => {
+  const meta = index.meta;
+  // A project's counts and checks are its own; a mounted library's, and its prelude's, are counted in the library's
+  // own project (D206).
+  const { own: top, prelude } = topLevel();
+  const own = entriesUnder(top);
+  const counts = KIND_ORDER.map((kind) => [kind, own.filter((entry) => entry.kind === kind).length]).filter(
+    ([, count]) => count > 0,
+  );
+  const checked = own.filter((entry) => entry.status);
+  const failing = checked.filter((entry) => entry.status === 'fail');
+  const namespaces = top.filter((node) => node.children.size > 0);
+  const preludeSpaces = prelude.filter((node) => node.children.size > 0);
+  const libs = libraries();
+  const mounted = libs.reduce((sum, node) => sum + node.count, 0) + entriesUnder(prelude).length;
+  const roots = top.filter((node) => node.entry && node.children.size === 0).map((node) => node.entry);
+  const open = index.tasks.filter((task) => task.state === 'todo' || task.state === 'doing');
+  const areas = index.areas ?? [];
+  const docs = specDocuments().filter((doc) => !doc.startsWith('lib.'));
+  const placed = new Set(areas.flatMap((area) => area.namespaces));
+  const unplaced = namespaces.filter((node) => !placed.has(node.path));
+  const grouped =
+    (areas.length > 0
+      ? areas
+          .filter((area) => area.namespaces.length > 0)
+          .map(
+            (area) =>
+              `<h4 class="group-title">${escape(area.feature.title)}</h4><ul class="namespace-grid">${area.namespaces
+                .map((name) => namespaceTile(nodeAt(name)))
+                .join('')}</ul>`,
+          )
+          .join('') +
+        (unplaced.length > 0
+          ? `<details class="unplaced"><summary><h4 class="group-title">Everything else <span class="count">${unplaced.length}</span></h4></summary><ul class="namespace-grid">${unplaced.map(namespaceTile).join('')}</ul></details>`
+          : '')
+      : `<ul class="namespace-grid">${namespaces.map(namespaceTile).join('')}</ul>`) +
+    (preludeSpaces.length > 0
+      ? `<details class="unplaced"><summary><h4 class="group-title" title="Namespaces a mounted library also holds, as a new codebase starts with">Prelude <span class="count">${preludeSpaces.length}</span></h4></summary><ul class="namespace-grid">${preludeSpaces.map(namespaceTile).join('')}</ul></details>`
+      : '');
+  return (
+    '<article class="home">' +
+    `<header class="home-header"><h1>${escape(addressOf(meta.project))}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
+      meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
+    } · ${number(meta.definitions)} definitions${mounted > 0 ? ` (${number(mounted)} from libraries)` : ''} · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${number(count)}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
+    (checked.length > 0
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${number(checked.length - failing.length)}/${number(checked.length)}</b><span>checks pass</span></a></li>`
+      : '') +
+    (meta.features > 0
+      ? `<li><a data-open="k:features" title="What the product is, feature by feature"><span class="icon k-feature">◇</span><b>${meta.features}</b><span>features</span></a></li>`
+      : '') +
+    (meta.events > 0
+      ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
+      : '') +
+    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
+    // A failing check is the first thing a visitor wants named, not only counted.
+    (failing.length > 0
+      ? `<p class="failing-checks"><span class="icon k-fail">✗</span> Failing: ${failing
+          .slice(0, 6)
+          // Its summary says when a check fails on purpose, as `Sort.wrongClaim` does.
+          .map(
+            (entry) =>
+              defLink(entry.name, entry.hash) +
+              (entry.summary
+                ? ` <span class="muted">(${inlineDoc(entry.summary, namespaceOf(entry.name))})</span>`
+                : ''),
+          )
+          .join('; ')}${failing.length > 6 ? ` and <a data-open="k:checks">${failing.length - 6} more</a>` : ''}</p>`
+      : '') +
+    legendHtml() +
+    '<div class="home-intro" data-home-intro></div>' +
+    (areas.length > 0 ? section('Start here', areas.length, areasBody(areas)) : '') +
+    (docs.length > 0
+      ? section(
+          'Spec documents',
+          docs.length,
+          `<ul class="rows doc-list">${docs.map(docRow).join('')}</ul>`,
+          areas.length === 0,
+        )
+      : '') +
+    section('Namespaces', namespaces.length, grouped) +
+    (libs.length > 0
+      ? section(
+          'Libraries',
+          libs.length,
+          `<ul class="rows library-list">${libs
+            .map(
+              (node) =>
+                `<li><a data-open="n:${escape(node.path)}">${folderIcon}<b>${escape(node.segment)}</b></a><span class="muted">${number(node.count)} definitions in the release it pins, mounted as <code>${escape(node.path)}</code></span><a class="more-link" hidden data-library="${escape(libraryHref(node).slice(1, -1))}" href="${escape(libraryHref(node))}">Explore ${escape(libraryHref(node).slice(1, -1))} →</a></li>`,
+            )
+            .join('')}</ul>`,
+        )
+      : '') +
+    `<div class="home-columns"><div>${section('Recent changes', meta.history.length >= HISTORY_CAP ? `${HISTORY_CAP}+` : meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
+    `<div>${section(
+      'Open tasks',
+      open.length,
+      open.length > 0
+        ? `<ul class="rows">${open
+            .slice(0, 6)
+            .map(
+              (task) =>
+                `<li class="entry-row">${stateChip(task.state)}${taskLink(task)}${priorityChip(task.priority)}</li>`,
+            )
+            .join('')}</ul>`
+        : '<p class="muted">None.</p>',
+    )}<a class="more-link" data-view="tasks">Task board →</a></div></div>` +
+    (failing.length > 0
+      ? section(
+          'Failing checks',
+          failing.length,
+          `<ul class="rows">${failing.map((entry) => entryRow(entry)).join('')}</ul>`,
+        )
+      : '') +
+    (roots.length > 0
+      ? section('Top-level definitions', roots.length, rowList(roots.map((entry) => entryRow(entry))), false)
+      : '') +
+    '<p class="hint muted">Press <kbd>/</kbd> to find a definition by name or by type.</p>' +
+    '</article>'
+  );
+};
+
+/** What the overview shows once pages arrive: the feature map's introduction, and each spec document's title. */
+const fillHome = async (root) => {
+  void showLibraryLinks(root);
+  const map = (index.areas ?? [])[0]?.document;
+  const text = map ? ((await loadDoc(map))?.text ?? '') : '';
+  const intro = docIntro(text);
+  const slot = root.querySelector('[data-home-intro]');
+  if (slot && intro) {
+    slot.innerHTML = mdHtml(intro, map);
+  }
+  // An area's section in the map opens with a sentence on what the area is for, before its first feature.
+  for (const section of readableText(text).split(/^## /m).slice(1)) {
+    const about = /^.*\n\n((?:[^#`\n].*\n?)+)/.exec(section)?.[1];
+    const id = /^feature (\S+):/m.exec(section)?.[1];
+    const cell = id && about ? root.querySelector(`[data-area-about="${CSS.escape(id)}"]`) : null;
+    if (cell) {
+      cell.innerHTML = inlineMd(about.trim().replace(/\n/g, ' '), map);
+    }
+  }
+  await Promise.all(
+    specDocuments().map(async (name) => {
+      const title = docTitle((await loadDoc(name))?.text);
+      const cell = root.querySelector(`[data-doc-title="${CSS.escape(name)}"]`);
+      if (cell && title) {
+        cell.textContent = title;
+      }
+    }),
+  );
+};
+
+/** The definitions a task links, on its card, so the board shows where each task is in the code (task 5bd0ec5d). */
+const taskCode = (task) => {
+  const names = [...new Set((task.links ?? []).map((link) => link.definition).filter(Boolean))];
+  return names.length === 0
+    ? ''
+    : `<span class="task-code">${names
+        .slice(0, 3)
+        .map((name) => `<code>${escape(name)}</code>`)
+        .join('')}${names.length > 3 ? `<span class="muted">+${names.length - 3}</span>` : ''}</span>`;
+};
+
+/** Cards a closed column (done, canceled) shows before "Show all": the open work is what a visitor came for. */
+const CLOSED_SHOWN = 8;
+
+/** Whether `task` passes the board's filter. */
+const taskShown = (task) => {
+  const { text, label } = ui.taskFilter;
+  const wanted = text.trim().toLowerCase().replace(/^@/, '');
+  const haystack = [task.title, task.id, task.assignee ?? '', ...task.labels].join(' ').toLowerCase();
+  return (label === '' || task.labels.includes(label)) && (wanted === '' || haystack.includes(wanted));
+};
+
+/** The filter above the board: a text box and a chip per label, with how many tasks carry it. */
+const taskFilterHtml = () => {
+  const counts = new Map();
+  for (const task of index.tasks) {
+    for (const label of task.labels) {
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+  }
+  const sorted = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  // The most used labels, and the one in use, unless the reader asks for all: there are dozens.
+  const labels = ui.taskFilter.allLabels
+    ? sorted
+    : sorted.filter(([label], at) => at < TOP_LABELS || label === ui.taskFilter.label);
+  const hidden = sorted.length - labels.length;
+  return (
+    `<div class="task-filter"><input id="task-filter-text" type="search" placeholder="Filter by title, id, label or @assignee" aria-label="Filter tasks" autocomplete="off" value="${escape(ui.taskFilter.text)}">` +
+    `<div class="tag-chips">${labels
+      .map(
+        ([label, count]) =>
+          `<button class="tag-chip${label === ui.taskFilter.label ? ' active' : ''}" data-task-label="${escape(label)}">${escape(label)} <span class="count">${count}</span></button>`,
+      )
+      .join('')}${hidden > 0 ? `<button class="link-button" data-more-labels>${hidden} more</button>` : ''}</div></div>`
+  );
+};
+
+/** How many labels the task board's filter offers before "more". */
+const TOP_LABELS = 10;
+
+/** Sets the board's label filter (a second click on the same label clears it) and draws the board again. */
+const filterTasks = (label) => {
+  ui.taskFilter.label = ui.taskFilter.label === label ? '' : label;
+  renderTasks();
+};
+
+const renderTasks = () => {
+  // A canceled task whose title another task also has was filed twice; it says which one is kept.
+  const kept = new Map(
+    index.tasks.filter((task) => task.state !== 'canceled').map((task) => [task.title.trim().toLowerCase(), task]),
+  );
+  const duplicateOf = (task) => (task.state === 'canceled' ? kept.get(task.title.trim().toLowerCase()) : undefined);
+  const columns = STATES.map((state) => {
+    const tasks = index.tasks.filter((task) => task.state === state && taskShown(task));
+    const cards = tasks.map(
+      (task) =>
+        `<a class="task-card ${escape(state)}" data-open="t:${escape(task.id)}"><span class="task-title" title="${escape(task.title)}">${escape(task.title)}</span>` +
+        `<span class="task-meta"><span class="muted">${escape(task.id)}</span>${duplicateOf(task) ? `<span class="chip" title="The same task as ${escape(duplicateOf(task).id)}, which is kept">duplicate of ${escape(duplicateOf(task).id)}</span>` : ''}${priorityChip(task.priority)}${task.assignee ? `<span class="chip">@${escape(task.assignee)}</span>` : ''}${task.labels
+          .map(
+            (label) =>
+              `<span class="chip" data-task-label="${escape(label)}" title="Show only ${escape(label)} tasks">${escape(label)}</span>`,
+          )
+          .join('')}</span>${taskCode(task)}</a>`,
+    );
+    const closed = state === 'done' || state === 'canceled';
+    const shown = closed ? cards.slice(0, CLOSED_SHOWN) : cards;
+    const rest = closed ? cards.slice(CLOSED_SHOWN) : [];
+    return (
+      `<div class="column"><h3>${stateChip(state)}<span class="count">${tasks.length}</span></h3>` +
+      shown.join('') +
+      (rest.length > 0
+        ? `<div class="more-cards" hidden>${rest.join('')}</div><button class="link-button" data-more>Show all ${tasks.length}</button>`
+        : '') +
+      '</div>'
+    );
+  });
+  const filed = pending.filter((request) => request.kind === 'task');
+  const waiting =
+    filed.length > 0
+      ? `<section class="pending-tasks"><h3>Waiting for the inbox <span class="count">${filed.length}</span></h3>` +
+        filed
+          .map(
+            (request) =>
+              `<div class="task-card pending"><span class="task-title">${escape(request.title)}</span><span class="task-meta">${authorHtml(request.by)}<span class="chip pending-chip">pending</span></span></div>`,
+          )
+          .join('') +
+        '</section>'
+      : '';
+  const action = canWrite() ? '<button class="primary-button" data-new-task>New task</button>' : '';
+  element('tasks-view').innerHTML =
+    `<div class="view-head"><h1 class="view-title">Tasks</h1>${action}</div>${taskFilterHtml()}${waiting}<div class="board">${columns.join('')}</div>`;
+  // Typing redraws the board, so the box the reader types in is focused again where they were.
+  const input = element('task-filter-text');
+  input.addEventListener('input', () => {
+    const at = input.selectionStart;
+    ui.taskFilter.text = input.value;
+    renderTasks();
+    const again = element('task-filter-text');
+    again.focus();
+    again.setSelectionRange(at, at);
+  });
+};
+
+/** A change's message, with the title of the task a `task: comment on <id>` or `task: set <id> state` change names. */
+const changeMessage = (message) => {
+  const task = /^task: (?:comment on|set) ([0-9a-f]{8})\b/.exec(message ?? '');
+  const title = task && taskById(task[1])?.title;
+  return `${escape(message || '(no message)')}${title ? `<span class="muted"> · ${escape(title)}</span>` : ''}`;
+};
+
+/** How many changes the site lists, newest first (the generator's cap). */
+const HISTORY_CAP = 1000;
+
+/** Whether a change only touched tasks (`task: …`), which History can hide to show the code's own changes. */
+const isTaskChange = (change) => (change.message ?? '').startsWith('task: ');
+
+/** Shows the History rows of one kind: `all`, `code` or `tasks`. */
+const filterHistory = (kind) => {
+  const view = element('history-view');
+  view.dataset.filter = kind;
+  for (const chip of view.querySelectorAll('[data-history]')) {
+    chip.classList.toggle('active', chip.dataset.history === kind);
+  }
+};
+
+const renderHistory = async () => {
+  const history = index.meta.history;
+  const view = element('history-view');
+  const tasks = history.filter(isTaskChange).length;
+  const chip = (kind, label, count) =>
+    `<button class="tag-chip${kind === (view.dataset.filter ?? 'all') ? ' active' : ''}" data-history="${kind}">${label} <span class="count">${count}</span></button>`;
+  view.innerHTML =
+    `<h1 class="view-title">History <span class="muted">· ${escape(index.meta.branch)}</span></h1>` +
+    `<div class="tag-chips history-filter">${chip('all', 'All', history.length)}${chip('code', 'Code', history.length - tasks)}${chip('tasks', 'Tasks', tasks)}</div>` +
+    '<ol class="timeline">' +
+    history
+      .map((change) =>
+        change.imported
+          ? `<li><span class="timeline-row imported" title="Imported from an export; this store has no record of its contents"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
+            `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
+          : `<li${isTaskChange(change) ? ' class="task-change"' : ''}><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${changeMessage(change.message)}</span>` +
+            `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}${atHtml(change.at)}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
+      )
+      .join('') +
+    '</ol>' +
+    (history.length >= HISTORY_CAP ? `<p class="muted">The ${HISTORY_CAP} most recent changes.</p>` : '');
+  // Each row's counts come from its change page, which the Worker may draw on demand; fetching all of them at once
+  // sent up to a thousand requests and kept the page busy for minutes, so a row loads its counts when it is seen.
+  const pending = [];
+  let running = 0;
+  const pump = () => {
+    while (running < 4 && pending.length > 0) {
+      const slot = pending.shift();
+      running++;
+      void load(`change/${slot.dataset.stat}.json`)
+        .then((page) => {
+          if (page && slot.isConnected) {
+            slot.outerHTML = diffStat(page);
+          }
+        })
+        .finally(() => {
+          running--;
+          pump();
+        });
+    }
+  };
+  historyObserver?.disconnect();
+  // The row is watched, not its slot: a phone hides the empty slot, and a hidden element is never seen.
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        seen.unobserve(entry.target);
+        pending.push(entry.target.querySelector('[data-stat]'));
+      }
+    }
+    pump();
+  });
+  view.querySelectorAll('[data-stat]').forEach((slot) => seen.observe(slot.closest('li')));
+  historyObserver = seen;
+};
+
+/** The observer of the History view drawn last, replaced when it is drawn again. */
+let historyObserver;
+
+//
+// Namespace tree.
+//
+
+const treeRows = (node, depth) => rowsOf(sortedChildren(node), depth);
+
+/** The mounted libraries (D206): the children of the tree's `lib` node, `lib.base` and the like. */
+const libraries = () => (index.tree.children.get('lib') ? sortedChildren(index.tree.children.get('lib')) : []);
+
+/**
+ * Shows each library's explorer link only when the hub lists that project: a mount's name is chosen at install,
+ * and the codebase's record of which project it came from does not reach the Worker.
+ */
+const showLibraryLinks = async (root) => {
+  const links = [...root.querySelectorAll('[data-library]')];
+  if (links.length === 0) {
+    return;
+  }
+  try {
+    const response = await fetch('/v1/_projects');
+    const listed = new Set(response.ok ? (await response.json()).map((project) => project.address) : []);
+    for (const link of links) {
+      link.hidden = !listed.has(link.dataset.library);
+    }
+  } catch {
+    // Without the hub's list (a local explorer), the links stay hidden rather than risk a dead one.
+  }
+};
+
+/** Where a library's own explorer is: its project under this project's owner, as `@dxos/base` beside `@dxos/toolchain`. */
+const libraryHref = (node) => `/${addressOf(index.meta.project).split('/')[0]}/${node.segment}/`;
+
+/** The sidebar's libraries, after the project's own namespaces. */
+const libraryRows = () =>
+  libraries().length > 0 ? '<div class="tree-group">Libraries</div>' + rowsOf(libraries(), 0) : '';
+
+/**
+ * The tree's top level, grouped under the areas of the feature map (D196); the rest after them, then the prelude
+ * and the libraries.
+ */
+const topRows = () => {
+  const areas = (index.areas ?? []).filter((area) => area.namespaces.length > 0);
+  const { own, prelude } = topLevel();
+  const preludeRows =
+    prelude.length > 0
+      ? '<div class="tree-group" title="Definitions a mounted library also holds, as a new codebase starts with">Prelude</div>' +
+        rowsOf(prelude, 0)
+      : '';
+  if (areas.length === 0) {
+    return rowsOf(own, 0) + preludeRows + libraryRows();
+  }
+  const placed = new Set(areas.flatMap((area) => area.namespaces));
+  return (
+    areas
+      .map(
+        (area) =>
+          `<div class="tree-group">${escape(area.feature.title)}</div>` +
+          rowsOf(
+            area.namespaces.map((name) => nodeAt(name)),
+            0,
+          ),
+      )
+      .join('') +
+    '<div class="tree-group">Everything else</div>' +
+    rowsOf(
+      own.filter((child) => !placed.has(child.path)),
+      0,
+    ) +
+    preludeRows +
+    libraryRows()
+  );
+};
+
+const rowsOf = (children, depth) =>
+  children
+    .map((child) => {
+      const pad = `style="--depth:${depth}"`;
+      if (child.children.size > 0) {
+        const expanded = ui.expanded.has(child.path);
+        return (
+          `<div class="tree-node" data-path="${escape(child.path)}"><div class="tree-row folder" ${pad}>` +
+          `<button class="caret${expanded ? ' open' : ''}" data-toggle="${escape(child.path)}" aria-label="${escape(child.path)}" aria-expanded="${expanded}">▸</button>` +
+          (child.entry
+            ? `<a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}" title="${escape(child.entry.name)}">${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a>`
+            : `<a data-open="n:${escape(child.path)}" data-tree-key="n:${escape(child.path)}" title="${escape(child.path)}">${folderIcon}<span class="label">${escape(child.segment)}</span></a>`) +
+          `<span class="count">${child.count}</span></div>` +
+          `<div class="tree-children">${expanded ? treeRows(child, depth + 1) : ''}</div></div>`
+        );
+      }
+      return child.entry.kind === 'spec'
+        ? `<div class="tree-row leaf" ${pad}><a data-open="s:${escape(namespaceOf(child.entry.name))}" data-anchor="${escape(child.segment)}" title="${escape(child.entry.name)}">` +
+            `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span></a></div>`
+        : `<div class="tree-row leaf" ${pad}><a data-open="d:${escape(child.entry.hash)}" data-hash="${escape(child.entry.hash)}" data-tree-key="d:${escape(child.entry.hash)}" title="${escape(child.entry.name)}">` +
+            `${icon(child.entry.kind)}<span class="label">${escape(child.segment)}</span>${statusMark(child.entry.status)}</a></div>`;
+    })
+    .join('');
+
+const renderTree = () => {
+  element('tree').innerHTML = topRows();
+  treeTabStops();
+};
+
+/**
+ * The tree is one Tab stop (the active row, else the first), and the arrow keys move within it: Tab otherwise
+ * walked every row and caret before the content (audit: 234 presses).
+ */
+const treeTabStops = () => {
+  const tree = element('tree');
+  const links = [...tree.querySelectorAll('.tree-row > a')];
+  const current =
+    links.find((link) => link === document.activeElement) ?? tree.querySelector('.tree-row > a.active') ?? links[0];
+  for (const link of links) {
+    link.tabIndex = link === current ? 0 : -1;
+  }
+  for (const caret of tree.querySelectorAll('.caret')) {
+    caret.tabIndex = -1;
+  }
+};
+
+/** Up and down move between visible rows, right opens a folder or steps in, left closes it or steps out to its parent. */
+const onTreeKey = (event) => {
+  const tree = element('tree');
+  const link = event.target.closest('.tree-row > a');
+  if (!link || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+  const links = [...tree.querySelectorAll('.tree-row > a')];
+  const at = links.indexOf(link);
+  const node = link.parentElement.parentElement;
+  const folder = node.classList.contains('tree-node') ? node.dataset.path : undefined;
+  let next;
+  switch (event.key) {
+    case 'ArrowDown':
+      next = links[at + 1];
+      break;
+    case 'ArrowUp':
+      next = links[at - 1];
+      break;
+    case 'Home':
+      next = links[0];
+      break;
+    case 'End':
+      next = links[links.length - 1];
+      break;
+    case 'ArrowRight':
+      if (folder !== undefined && !ui.expanded.has(folder)) {
+        toggleFolder(folder, true);
+        next = link;
+      } else {
+        next = folder !== undefined ? links[at + 1] : undefined;
+      }
+      break;
+    case 'ArrowLeft':
+      if (folder !== undefined && ui.expanded.has(folder)) {
+        toggleFolder(folder, false);
+        next = link;
+      } else {
+        next = link.closest('.tree-children')?.parentElement.querySelector(':scope > .tree-row > a');
+      }
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+  event.stopPropagation();
+  if (next) {
+    next.focus();
+    treeTabStops();
+  }
+};
+
+const toggleFolder = (path, expand) => {
+  const node = element('tree').querySelector(`.tree-node[data-path="${CSS.escape(path)}"]`);
+  if (!node) {
+    return;
+  }
+  const isOpen = ui.expanded.has(path);
+  const next = expand ?? !isOpen;
+  if (next === isOpen) {
+    return;
+  }
+  next ? ui.expanded.add(path) : ui.expanded.delete(path);
+  const caret = node.querySelector(':scope > .tree-row .caret');
+  caret.classList.toggle('open', next);
+  caret.setAttribute('aria-expanded', String(next));
+  const depth = path.split('.').length;
+  node.querySelector(':scope > .tree-children').innerHTML = next ? treeRows(nodeAt(path), depth) : '';
+  treeTabStops();
+};
+
+/** Expands the tree down to a card's name and marks its row. */
+const reveal = (key) => {
+  const tree = element('tree');
+  for (const row of tree.querySelectorAll('.active')) {
+    row.classList.remove('active');
+  }
+  if (!key) {
+    return;
+  }
+  let name;
+  if (key.startsWith('n:')) {
+    name = key.slice(2);
+  } else if (key.startsWith('d:')) {
+    name = index.byHash.get(key.slice(2))?.name;
+  }
+  if (!name) {
+    return;
+  }
+  const parts = name.split('.');
+  const folders = key.startsWith('n:') ? parts.length - 1 : parts.length - 1;
+  for (let i = 1; i <= folders; i++) {
+    toggleFolder(parts.slice(0, i).join('.'), true);
+  }
+  const self = index.byName.get(name);
+  const row =
+    tree.querySelector(`[data-tree-key="${CSS.escape(key)}"]`) ??
+    (key.startsWith('n:') && self ? tree.querySelector(`[data-tree-key="d:${CSS.escape(self.hash)}"]`) : null);
+  if (row) {
+    row.classList.add('active');
+    treeTabStops();
+    // Centered when out of view, so a deep link shows the row with its parents above it rather than at an edge.
+    const box = element('sidebar').getBoundingClientRect();
+    const { top, bottom } = row.getBoundingClientRect();
+    row.scrollIntoView({ block: top < box.top || bottom > box.bottom ? 'center' : 'nearest' });
+  }
+};
+
+//
+// The workspace.
+//
+
+const cardElements = new Map();
+
+const setFocus = (key, scroll = true) => {
+  ui.focus = key;
+  for (const [other, node] of cardElements) {
+    node.classList.toggle('focused', other === key);
+  }
+  const node = key && cardElements.get(key);
+  if (node && scroll) {
+    // A card taller than the screen scrolled to `nearest` can land mid-card, so one whose top is out of view is
+    // brought in by its top.
+    const { top } = node.getBoundingClientRect();
+    node.scrollIntoView({ block: top < 0 || top > window.innerHeight * 0.6 ? 'start' : 'nearest', behavior: 'smooth' });
+  }
+  if (ui.view === 'graph') {
+    drawGraph();
+  }
+  reveal(key);
+};
+
+/** The reading position of each history entry, by an id kept in its state, so Back returns the reader to it; a
+ * link opens a new entry, which has no position yet. */
+const scrolls = new Map();
+// Ids survive a reload in the entries' state, so new ones start past any an earlier page load gave.
+let entries = Date.now();
+
+const entryId = () => {
+  if (typeof history.state?.entry !== 'number') {
+    history.replaceState({ ...history.state, entry: ++entries }, '');
+  }
+  return history.state.entry;
+};
+
+const rememberScroll = () => {
+  const main = element('main');
+  // Only an entry that has been shown keeps a position: the scrolls a render causes on its way there do not count.
+  main.addEventListener(
+    'scroll',
+    () => {
+      if (typeof history.state?.entry === 'number') {
+        scrolls.set(history.state.entry, main.scrollTop);
+      }
+    },
+    { passive: true },
+  );
+};
+
+let rendering = Promise.resolve();
+
+const render = () => {
+  rendering = rendering.then(renderNow, renderNow);
+  return rendering;
+};
+
+/** `#q:<text>` opens the finder on that query, once: a link can share a search (`/#q:List.map`). */
+const openQuery = () => {
+  // Split before decoding, so a comma written `%2C` stays in the query and the other keys stay encoded.
+  const raw = location.hash.slice(1).split(',');
+  const query = raw.find((key) => key.startsWith('q:'));
+  if (query === undefined) {
+    return;
+  }
+  const rest = raw.filter((key) => !key.startsWith('q:')).join(',');
+  history.replaceState(history.state, '', rest ? `#${rest}` : location.pathname + location.search);
+  element('finder-input').value = decoded(query.slice(2));
+  openFinder();
+};
+
+/** A definition key names a hash, a member of one (`<hash>.<n>`) or a builtin (`#Int`); anything else is a name. */
+const DEFINITION_HASH = /^([0-9a-f]{64}(\.[0-9]+)?|#.+)$/;
+
+/** The shortened hashes the explorer shows (`#9e80c8a9`): eight or more hex digits, short of a whole hash. */
+const SHORT_HASH = /^[0-9a-f]{8,63}$/;
+
+/** The one hash among `hashes` that starts with `prefix`, or undefined when none or several do. */
+const uniquePrefix = (hashes, prefix) => {
+  let found;
+  for (const hash of hashes) {
+    if (hash.startsWith(prefix)) {
+      if (found !== undefined) {
+        return undefined;
+      }
+      found = hash;
+    }
+  }
+  return found;
+};
+
+/** `#d:<name>` opens the definition of that name, so a link can be written by hand (`/#d:Cli.main`); the fragment
+ * is rewritten to the hash, which every other link uses. A name the project lacks is left for the card to report. */
+const canonicalNames = () => {
+  const raw = location.hash.slice(1).split(',');
+  let changed = false;
+  const keys = raw.map((key) => {
+    const value = decoded(key.slice(2));
+    if (key.startsWith('c:') && SHORT_HASH.test(value)) {
+      const full = uniquePrefix(
+        index.meta.history.map((change) => change.causal),
+        value,
+      );
+      changed ||= full !== undefined;
+      return full ? `c:${full}` : key;
+    }
+    const entry =
+      key.startsWith('d:') && !DEFINITION_HASH.test(value)
+        ? (named(value) ??
+          (SHORT_HASH.test(value) ? index.byHash.get(uniquePrefix(index.byHash.keys(), value) ?? '') : undefined))
+        : undefined;
+    changed ||= entry !== undefined;
+    return entry ? `d:${entry.hash}` : key;
+  });
+  if (changed) {
+    history.replaceState(history.state, '', `#${keys.join(',')}`);
+  }
+};
+
+const renderNow = async () => {
+  openQuery();
+  canonicalNames();
+  const { view, keys } = parseFragment();
+  ui.view = view;
+  // The tab names what the reader is looking at: a task's card belongs to Tasks and a change's to History.
+  const shown = keys.includes(ui.focus) ? ui.focus : keys[0];
+  const tab =
+    view !== 'code'
+      ? view === 'graph'
+        ? 'code'
+        : view
+      : shown?.startsWith('t:')
+        ? 'tasks'
+        : shown?.startsWith('c:')
+          ? 'history'
+          : 'code';
+  for (const link of document.querySelectorAll('#views [data-view]')) {
+    link.classList.toggle('active', link.dataset.view === tab);
+  }
+  element('layouts').hidden = view !== 'code' && view !== 'graph';
+  for (const button of document.querySelectorAll('#layouts [data-view]')) {
+    button.classList.toggle('active', button.dataset.view === view);
+  }
+  element('workspace').hidden = view !== 'code';
+  element('graph-view').hidden = view !== 'graph';
+  element('tasks-view').hidden = view !== 'tasks';
+  element('history-view').hidden = view !== 'history';
+  if (view === 'tasks') {
+    renderTasks();
+  } else if (view === 'history') {
+    void renderHistory();
+  } else if (view === 'graph') {
+    renderGraph(keys).catch((error) => {
+      console.error(error);
+      element('graph-view').innerHTML =
+        '<div class="graph-empty"><h2>The graph could not be drawn</h2><p class="muted">Its pages did not load; try again in a moment.</p></div>';
+    });
+  }
+
+  const workspace = element('workspace');
+  for (const [key, node] of cardElements) {
+    if (!keys.includes(key)) {
+      node.remove();
+      cardElements.delete(key);
+    }
+  }
+  // A card whose page is drawn on demand can take seconds after a push; past a moment the reader sees that it loads.
+  const loading = keys.some((key) => !cardElements.has(key))
+    ? setTimeout(() => {
+        const note = document.createElement('div');
+        note.className = 'card card-loading';
+        note.innerHTML = '<p class="muted">Loading…</p>';
+        const home = workspace.querySelector('.home');
+        home ? home.before(note) : workspace.append(note);
+      }, 300)
+    : undefined;
+  const built = await Promise.all(keys.map(async (key) => [key, cardElements.get(key) ?? (await buildCard(key))]));
+  clearTimeout(loading);
+  workspace.querySelector('.card-loading')?.remove();
+  workspace.querySelector('.home')?.remove();
+  for (const [key, value] of built) {
+    let node = value;
+    if (typeof value === 'string') {
+      const holder = document.createElement('div');
+      holder.innerHTML = value;
+      node = holder.firstElementChild;
+      linkSource(node);
+      cardElements.set(key, node);
+    }
+    workspace.append(node);
+  }
+  if (keys.length === 0) {
+    workspace.innerHTML = homeHtml();
+    void fillHome(workspace);
+  }
+  const focus = keys.includes(ui.focus) ? ui.focus : keys[0];
+  const saved = scrolls.get(history.state?.entry);
+  setFocus(focus, view === 'code' && focus !== undefined && saved === undefined);
+  if (saved !== undefined) {
+    element('main').scrollTop = saved;
+  }
+  entryId();
+  showAnchor();
+  const project = addressOf(index.meta.project);
+  document.title = focus ? `${titleOf(focus)} · ${project}` : project;
+};
+
+const titleOf = (key) => {
+  const value = key.slice(2);
+  if (key.startsWith('d:')) {
+    return index.byHash.get(value)?.name ?? short(value);
+  }
+  if (key.startsWith('t:')) {
+    return index.tasks.find((task) => task.id === value)?.title ?? value;
+  }
+  if (key.startsWith('s:') || key.startsWith('x:')) {
+    return value;
+  }
+  if (key.startsWith('k:')) {
+    return value === 'glossary'
+      ? 'Glossary'
+      : value === 'guide'
+        ? 'Getting started'
+        : value.startsWith('doc:')
+          ? (documents().find((entry) => entry.name === value.slice(4))?.file ?? value.slice(4))
+          : value === 'docs'
+            ? 'Documents'
+            : value === 'checks'
+              ? 'Checks'
+              : value === 'events'
+                ? 'Events'
+                : value === 'features'
+                  ? 'Features'
+                  : (KINDS[value]?.plural ?? value);
+  }
+  return key.startsWith('n:') ? value : short(value);
+};
+
+//
+// The graph view: the open definitions as cards in a force-directed layout, with what they depend on and
+// what uses them around them; an edge points from a user to its dependency.
+//
+
+const NEIGHBOR_LIMIT = 12;
+
+const graph = {
+  nodes: new Map(),
+  edges: [],
+  positions: new Map(),
+  camera: { x: 0, y: 0, scale: 1 },
+  moved: false,
+  alpha: 0,
+  frame: 0,
+  shownKeys: '',
+};
+
+/** A stable angle per hash, so the same neighbourhood lays out the same way on every visit. */
+const angleOf = (hash) => {
+  let sum = 0;
+  for (const char of hash) {
+    sum = (sum * 31 + char.charCodeAt(0)) % 3600;
+  }
+  return (sum / 3600) * 2 * Math.PI;
+};
+
+/** The open definitions, their pages, and up to `NEIGHBOR_LIMIT` neighbours each, dependencies first. */
+const graphData = async (keys) => {
+  const centers = keys.filter((key) => key.startsWith('d:')).map((key) => key.slice(2));
+  const pages = new Map();
+  await Promise.all(centers.map(async (hash) => pages.set(hash, await load(pagePath(hash)))));
+  const shown = new Map(
+    centers.filter((hash) => pages.get(hash)).map((hash) => [hash, { open: true, near: hash, hidden: 0 }]),
+  );
+  for (const hash of centers.filter((center) => shown.has(center))) {
+    const page = pages.get(hash);
+    const fresh = [...new Set([...page.deps, ...page.users].map((ref) => ref.hash))].filter(
+      (other) => !shown.has(other),
+    );
+    for (const other of fresh.slice(0, NEIGHBOR_LIMIT)) {
+      shown.set(other, { open: false, near: hash, hidden: 0 });
+    }
+    shown.get(hash).hidden = Math.max(0, fresh.length - NEIGHBOR_LIMIT);
+  }
+  await Promise.all(
+    [...shown.keys()]
+      .filter((hash) => !pages.has(hash))
+      .map(async (hash) => pages.set(hash, await load(pagePath(hash)))),
+  );
+  const edges = [];
+  for (const hash of shown.keys()) {
+    for (const dep of pages.get(hash)?.deps ?? []) {
+      if (shown.has(dep.hash) && dep.hash !== hash) {
+        edges.push([hash, dep.hash]);
+      }
+    }
+  }
+  return { centers, shown, edges, pages };
+};
+
+const graphNodeHtml = (hash, info, page) => {
+  const entry = index.byHash.get(hash) ?? page ?? { name: short(hash), kind: 'term' };
+  const name = entry.name;
+  const namespace = namespaceOf(name);
+  const sig = entry.sig ? typeOf(entry.sig) : page?.signature ? typeOf(page.signature) : '';
+  const summary = entry.summary ?? '';
+  return (
+    `<div class="gnode${info.open ? ' open' : ''}" data-node="${escape(hash)}" title="${escape(info.open ? `${name}: show in the list` : `${name}: open`)}">` +
+    `<div class="gnode-head">${icon(entry.kind)}<span class="gnode-name">${namespace ? `<span class="gnode-ns">${escape(namespace)}.</span>` : ''}${escape(lastSegment(name))}</span>${statusMark(entry.status)}</div>` +
+    (sig ? `<code class="gnode-sig">${escape(sig)}</code>` : '') +
+    (info.open && summary ? `<p class="gnode-summary">${inlineDoc(summary, namespace)}</p>` : '') +
+    (info.hidden > 0 ? `<span class="gnode-more">+${info.hidden} more in the list</span>` : '') +
+    '</div>'
+  );
+};
+
+/** One step of the layout: nodes repel, edges pull to a rest length, overlapping cards push apart. */
+const graphTick = () => {
+  const nodes = [...graph.nodes.values()];
+  const alpha = graph.alpha;
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      const b = nodes[j];
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+      const distance = Math.max(Math.hypot(dx, dy), 1);
+      const push = (alpha * 60000) / (distance * distance);
+      dx /= distance;
+      dy /= distance;
+      a.vx -= dx * push;
+      a.vy -= dy * push;
+      b.vx += dx * push;
+      b.vy += dy * push;
+      const overlapX = (a.width + b.width) / 2 + 24 - Math.abs(b.x - a.x);
+      const overlapY = (a.height + b.height) / 2 + 18 - Math.abs(b.y - a.y);
+      if (overlapX > 0 && overlapY > 0) {
+        const sign = (value) => (value >= 0 ? 1 : -1);
+        if (overlapX / (a.width + b.width) < overlapY / (a.height + b.height)) {
+          a.x -= (sign(b.x - a.x) * overlapX) / 2;
+          b.x += (sign(b.x - a.x) * overlapX) / 2;
+        } else {
+          a.y -= (sign(b.y - a.y) * overlapY) / 2;
+          b.y += (sign(b.y - a.y) * overlapY) / 2;
+        }
+      }
+    }
+  }
+  for (const [from, to] of graph.edges) {
+    const a = graph.nodes.get(from);
+    const b = graph.nodes.get(to);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const distance = Math.max(Math.hypot(dx, dy), 1);
+    const rest = (a.width + b.width) / 2 + 70;
+    const pull = ((distance - rest) / distance) * alpha * 0.06;
+    a.vx += dx * pull;
+    a.vy += dy * pull;
+    b.vx -= dx * pull;
+    b.vy -= dy * pull;
+  }
+  for (const node of nodes) {
+    const gravity = alpha * (node.open ? 0.02 : 0.006);
+    node.vx -= node.x * gravity;
+    node.vy -= node.y * gravity;
+    if (!node.pinned) {
+      node.x += node.vx;
+      node.y += node.vy;
+    }
+    node.vx *= 0.6;
+    node.vy *= 0.6;
+  }
+  graph.alpha *= 0.985;
+};
+
+/** Where the segment from `a`'s centre to `b`'s centre leaves `a`'s card. */
+const rimPoint = (a, b) => {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const scale = Math.min(a.width / 2 / Math.abs(dx || 1e-9), a.height / 2 / Math.abs(dy || 1e-9));
+  return [a.x + dx * Math.min(scale, 1), a.y + dy * Math.min(scale, 1)];
+};
+
+const drawGraph = () => {
+  const view = element('graph-view');
+  const stage = view.querySelector('.graph-stage');
+  if (!stage) {
+    return;
+  }
+  const { x, y, scale } = graph.camera;
+  stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  for (const node of graph.nodes.values()) {
+    node.element.style.transform = `translate(${node.x - node.width / 2}px, ${node.y - node.height / 2}px)`;
+    node.element.classList.toggle('focused', `d:${node.hash}` === ui.focus);
+  }
+  const focus = ui.focus?.slice(2);
+  stage.querySelector('.graph-edges').innerHTML = graph.edges
+    .map(([from, to]) => {
+      const a = graph.nodes.get(from);
+      const b = graph.nodes.get(to);
+      const [x1, y1] = rimPoint(a, b);
+      const [x2, y2] = rimPoint(b, a);
+      const near = from === focus || to === focus;
+      const main = a.open || b.open;
+      return `<line class="${near ? 'near' : main ? 'main' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#arrow${near ? '-near' : ''})"/>`;
+    })
+    .join('');
+};
+
+/** Centres the layout in the view, no larger than life; on a phone, around the focused card, still readable. */
+const fitGraph = () => {
+  const view = element('graph-view');
+  const nodes = [...graph.nodes.values()];
+  if (nodes.length === 0) {
+    return;
+  }
+  const left = Math.min(...nodes.map((node) => node.x - node.width / 2));
+  const right = Math.max(...nodes.map((node) => node.x + node.width / 2));
+  const top = Math.min(...nodes.map((node) => node.y - node.height / 2));
+  const bottom = Math.max(...nodes.map((node) => node.y + node.height / 2));
+  const fit = Math.min(1, (view.clientWidth - 32) / (right - left), (view.clientHeight - 80) / (bottom - top));
+  const scale = Math.max(fit, 0.6);
+  const focus = scale > fit ? (graph.nodes.get(ui.focus?.slice(2)) ?? nodes.find((node) => node.open)) : undefined;
+  const [centerX, centerY] = focus ? [focus.x, focus.y] : [(left + right) / 2, (top + bottom) / 2];
+  graph.camera = {
+    scale,
+    x: view.clientWidth / 2 - centerX * scale,
+    y: (view.clientHeight + 40) / 2 - centerY * scale,
+  };
+  graph.moved = false;
+};
+
+const animateGraph = () => {
+  cancelAnimationFrame(graph.frame);
+  const step = () => {
+    if (ui.view !== 'graph') {
+      return;
+    }
+    for (let i = 0; i < 2; i++) {
+      graphTick();
+    }
+    if (!graph.moved) {
+      fitGraph();
+    }
+    drawGraph();
+    if (graph.alpha > 0.02) {
+      graph.frame = requestAnimationFrame(step);
+    }
+  };
+  graph.frame = requestAnimationFrame(step);
+};
+
+const renderGraph = async (keys) => {
+  const view = element('graph-view');
+  const signature = keys.join(',');
+  // The pages behind a new graph can take seconds after a push; past a moment the reader sees that it loads.
+  const loading =
+    signature === graph.shownKeys
+      ? undefined
+      : setTimeout(() => {
+          view.querySelector('.graph-loading')?.remove();
+          view.insertAdjacentHTML('beforeend', '<p class="graph-loading muted">Drawing the graph…</p>');
+        }, 300);
+  let data;
+  try {
+    data = await graphData(keys);
+  } finally {
+    clearTimeout(loading);
+    view.querySelector('.graph-loading')?.remove();
+  }
+  if (parseFragment().view !== 'graph') {
+    return;
+  }
+  if (data.shown.size === 0) {
+    cancelAnimationFrame(graph.frame);
+    graph.nodes.clear();
+    graph.edges = [];
+    graph.shownKeys = signature;
+    view.innerHTML =
+      '<div class="graph-empty"><h2>Nothing to draw yet</h2><p class="muted">Open a definition from the tree or the finder (<kbd>/</kbd>) and the graph shows it with what it depends on and what uses it.</p></div>';
+    return;
+  }
+  if (signature === graph.shownKeys && view.querySelector('.graph-stage')) {
+    drawGraph();
+    return;
+  }
+  graph.shownKeys = signature;
+  for (const node of graph.nodes.values()) {
+    graph.positions.set(node.hash, [node.x, node.y]);
+  }
+  const others = keys.length - data.centers.length;
+  view.innerHTML =
+    '<div class="graph-stage"><svg class="graph-edges-layer" aria-hidden="true"><defs>' +
+    '<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker>' +
+    '<marker id="arrow-near" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker>' +
+    '</defs><g class="graph-edges"></g></svg>' +
+    [...data.shown].map(([hash, info]) => graphNodeHtml(hash, info, data.pages.get(hash))).join('') +
+    '</div>' +
+    '<div class="graph-bar"><span class="muted graph-hint">Click a card to open it; click an open card to show it in the list. Arrows point to what a definition uses.' +
+    (others > 0
+      ? ` ${others} open card${others === 1 ? ' is' : 's are'} not a definition and ${others === 1 ? 'shows' : 'show'} only in the list.`
+      : '') +
+    '</span><span class="graph-buttons"><button class="plain-button" data-graph="out" title="Zoom out (⌘ scroll)" aria-label="Zoom out">−</button>' +
+    '<button class="plain-button" data-graph="in" title="Zoom in (⌘ scroll)" aria-label="Zoom in">+</button>' +
+    '<button class="plain-button" data-graph="fit" title="Fit the graph to the view">Fit</button></span></div>';
+  const previous = graph.nodes;
+  graph.nodes = new Map();
+  for (const [hash, info] of data.shown) {
+    const nodeElement = view.querySelector(`.gnode[data-node="${CSS.escape(hash)}"]`);
+    const kept = graph.positions.get(hash);
+    const near = graph.positions.get(info.near) ?? [0, 0];
+    const angle = angleOf(hash);
+    const [x, y] =
+      kept ??
+      (info.open ? [near[0] + 40, near[1] + 40] : [near[0] + Math.cos(angle) * 260, near[1] + Math.sin(angle) * 180]);
+    graph.nodes.set(hash, {
+      hash,
+      open: info.open,
+      element: nodeElement,
+      width: nodeElement.offsetWidth,
+      height: nodeElement.offsetHeight,
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      pinned: previous.get(hash)?.pinned ?? false,
+    });
+  }
+  graph.edges = data.edges;
+  graph.alpha = 1;
+  // Most of the layout runs before the first paint, so the view opens settled rather than exploding.
+  const settled = [...graph.nodes.keys()].every((hash) => previous.has(hash));
+  for (let i = 0; i < (previous.size === 0 ? 160 : settled ? 0 : 40); i++) {
+    graphTick();
+  }
+  if (!graph.moved) {
+    fitGraph();
+  }
+  drawGraph();
+  animateGraph();
+};
+
+/** Dragging a card moves (and pins) it; dragging the background pans; the wheel or a pinch zooms. */
+const onGraphEvents = () => {
+  const view = element('graph-view');
+  const pointers = new Map();
+  let drag;
+  let pinch;
+  const toStage = (clientX, clientY) => {
+    const box = view.getBoundingClientRect();
+    return [
+      (clientX - box.left - graph.camera.x) / graph.camera.scale,
+      (clientY - box.top - graph.camera.y) / graph.camera.scale,
+    ];
+  };
+  const zoomAt = (clientX, clientY, factor) => {
+    const box = view.getBoundingClientRect();
+    const scale = Math.min(2.5, Math.max(0.15, graph.camera.scale * factor));
+    const px = clientX - box.left;
+    const py = clientY - box.top;
+    graph.camera.x = px - ((px - graph.camera.x) * scale) / graph.camera.scale;
+    graph.camera.y = py - ((py - graph.camera.y) * scale) / graph.camera.scale;
+    graph.camera.scale = scale;
+    graph.moved = true;
+    drawGraph();
+  };
+  view.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.graph-bar, .graph-empty') || event.button > 0) {
+      return;
+    }
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    view.setPointerCapture(event.pointerId);
+    if (pointers.size === 2) {
+      const [[ax, ay], [bx, by]] = [...pointers.values()];
+      pinch = { distance: Math.hypot(bx - ax, by - ay) };
+      drag = undefined;
+      return;
+    }
+    const nodeElement = event.target.closest('.gnode');
+    const node = nodeElement && graph.nodes.get(nodeElement.dataset.node);
+    const [sx, sy] = toStage(event.clientX, event.clientY);
+    drag = {
+      node,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: node ? node.x - sx : 0,
+      offsetY: node ? node.y - sy : 0,
+      cameraX: graph.camera.x,
+      cameraY: graph.camera.y,
+      moved: false,
+    };
+  });
+  view.addEventListener('pointermove', (event) => {
+    if (!pointers.has(event.pointerId)) {
+      return;
+    }
+    pointers.set(event.pointerId, [event.clientX, event.clientY]);
+    if (pinch && pointers.size === 2) {
+      const [[ax, ay], [bx, by]] = [...pointers.values()];
+      const distance = Math.hypot(bx - ax, by - ay);
+      zoomAt((ax + bx) / 2, (ay + by) / 2, distance / pinch.distance);
+      pinch.distance = distance;
+      return;
+    }
+    if (!drag) {
+      return;
+    }
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    drag.moved ||= Math.hypot(dx, dy) > 4;
+    if (!drag.moved) {
+      return;
+    }
+    if (drag.node) {
+      const [sx, sy] = toStage(event.clientX, event.clientY);
+      drag.node.x = sx + drag.offsetX;
+      drag.node.y = sy + drag.offsetY;
+      drag.node.pinned = true;
+      graph.alpha = Math.max(graph.alpha, 0.3);
+      graph.moved = true;
+      animateGraph();
+    } else {
+      graph.camera.x = drag.cameraX + dx;
+      graph.camera.y = drag.cameraY + dy;
+      graph.moved = true;
+    }
+    drawGraph();
+  });
+  const release = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size < 2) {
+      pinch = undefined;
+    }
+    if (drag && !drag.moved && drag.node && event.type === 'pointerup') {
+      const key = `d:${drag.node.hash}`;
+      if (drag.node.open) {
+        ui.focus = key;
+        setView('code');
+      } else {
+        open(key);
+      }
+    }
+    drag = undefined;
+  };
+  view.addEventListener('pointerup', release);
+  view.addEventListener('pointercancel', release);
+  view.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      // A pinch arrives as a wheel with ctrlKey; a plain wheel or two-finger scroll pans.
+      if (event.ctrlKey || event.metaKey) {
+        zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.01));
+      } else {
+        graph.camera.x -= event.deltaX;
+        graph.camera.y -= event.deltaY;
+        graph.moved = true;
+        drawGraph();
+      }
+    },
+    { passive: false },
+  );
+  view.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-graph]');
+    if (button) {
+      const box = view.getBoundingClientRect();
+      if (button.dataset.graph === 'fit') {
+        fitGraph();
+        drawGraph();
+      } else {
+        zoomAt(box.left + box.width / 2, box.top + box.height / 2, button.dataset.graph === 'in' ? 1.25 : 0.8);
+      }
+    }
+  });
+  window.addEventListener('resize', () => {
+    if (ui.view === 'graph' && !graph.moved) {
+      fitGraph();
+      drawGraph();
+    }
+  });
+};
+
+//
+// The finder.
+//
+
+/** Positions of `query` in `text`: a substring, preferring the last segment, else a subsequence. */
+const matchPositions = (text, query) => {
+  const lower = text.toLowerCase();
+  const fromLast = lower.indexOf(query, lower.lastIndexOf('.') + 1);
+  const at = fromLast >= 0 ? fromLast : lower.indexOf(query);
+  if (at >= 0) {
+    return Array.from({ length: query.length }, (_, i) => at + i);
+  }
+  const positions = [];
+  let from = 0;
+  for (const char of query) {
+    const found = lower.indexOf(char, from);
+    if (found < 0) {
+      return undefined;
+    }
+    positions.push(found);
+    from = found + 1;
+  }
+  return positions;
+};
+
+/** Whether the letters of `part` appear in `word` in order. */
+const isSubsequence = (part, word) => {
+  let at = 0;
+  for (const char of word) {
+    if (char === part[at]) {
+      at++;
+    }
+  }
+  return at === part.length;
+};
+
+const nameScore = (name, query) => {
+  const lower = name.toLowerCase();
+  const last = lastSegment(lower);
+  if (lower === query) {
+    return 1000;
+  }
+  if (last === query) {
+    return 950 - lower.length * 0.1;
+  }
+  if (last.startsWith(query)) {
+    return 850 - last.length;
+  }
+  if (lower.startsWith(query)) {
+    return 800 - lower.length * 0.5;
+  }
+  const inLast = last.indexOf(query);
+  if (inLast >= 0) {
+    return 700 - inLast - last.length * 0.5;
+  }
+  const inName = lower.indexOf(query);
+  if (inName >= 0) {
+    return 600 - inName * 0.5 - lower.length * 0.2;
+  }
+  // `lst.mp` abbreviates `List.map` part by part: each part's letters in order within the segment it lines up with.
+  const parts = query.split('.');
+  const segments = lower.split('.');
+  if (parts.length > 1 && parts.length <= segments.length) {
+    const tail = segments.slice(segments.length - parts.length);
+    if (parts.every((part, i) => part.length > 0 && isSubsequence(part, tail[i]))) {
+      const prefixes = parts.filter((part, i) => tail[i][0] === part[0]).length;
+      return 500 + prefixes * 20 - lower.length * 0.2;
+    }
+  }
+  const positions = matchPositions(name, query);
+  if (!positions) {
+    return -1;
+  }
+  const gaps = positions.reduce((sum, position, i) => sum + (i === 0 ? 0 : position - positions[i - 1] - 1), 0);
+  return gaps > query.length * 3 ? -1 : 300 - gaps * 5 - lower.length * 0.2;
+};
+
+const normalizeType = (text) => text.toLowerCase().replace(/\s+/g, ' ').trim();
+
+const highlight = (text, positions) => {
+  const marks = new Set(positions ?? []);
+  return [...text].map((char, i) => (marks.has(i) ? `<mark>${escape(char)}</mark>` : escape(char))).join('');
+};
+
+const finder = { results: [], selected: 0, opener: undefined };
+
+const search = (raw) => {
+  const query = raw.trim();
+  if (query === '') {
+    return [];
+  }
+  const bySignature = query.startsWith(':') || query.includes('->');
+  if (bySignature) {
+    const wanted = normalizeType(query.replace(/^:/, ''));
+    return index.names
+      .filter((entry) => entry.sig && normalizeType(typeOf(entry.sig)).includes(wanted))
+      .map((entry) => ({ entry, score: 500 - entry.sig.length * 0.5 }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 60);
+  }
+  const lower = query.toLowerCase();
+  const hits = [];
+  for (const entry of index.names) {
+    const score = nameScore(entry.name, lower);
+    if (score > 0) {
+      hits.push({
+        entry,
+        score: score + (entry.kind === 'type' || entry.kind === 'ability' ? 5 : 0),
+        positions: matchPositions(entry.name, lower),
+      });
+    }
+  }
+  for (const node of index.tree.children.size > 0 ? allNamespaces() : []) {
+    const score = nameScore(node.path, lower);
+    if (score > 0 && !index.byName.has(node.path)) {
+      hits.push({ namespace: node, score: score - 2, positions: matchPositions(node.path, lower) });
+    }
+  }
+  for (const task of index.tasks) {
+    const at = task.title.toLowerCase().indexOf(lower);
+    if (at >= 0 || task.id === lower) {
+      hits.push({
+        task,
+        score: 400 - at,
+        positions: at >= 0 ? Array.from({ length: lower.length }, (_, i) => at + i) : [],
+      });
+    }
+  }
+  if (hits.length === 0 && lower.length >= 3) {
+    // A typo matches nothing above, so names within two edits are offered, the whole name or its last part.
+    for (const entry of index.names) {
+      const name = entry.name.toLowerCase();
+      const last = lastSegment(name);
+      // Two edits change a length by at most two, which spares most names the distance itself.
+      const near = (text) => (Math.abs(text.length - lower.length) <= 2 ? editDistance(text, lower) : 3);
+      const edits = Math.min(near(name), near(last));
+      if (edits <= 2) {
+        hits.push({ entry, score: 200 - edits * 50 - name.length * 0.1, positions: [] });
+      }
+    }
+  }
+  return hits.sort((a, b) => b.score - a.score).slice(0, 60);
+};
+
+let namespaceList;
+
+const allNamespaces = () => {
+  if (!namespaceList) {
+    namespaceList = [];
+    const walk = (node) => {
+      for (const child of node.children.values()) {
+        if (child.children.size > 0) {
+          namespaceList.push(child);
+          walk(child);
+        }
+      }
+    };
+    walk(index.tree);
+  }
+  return namespaceList;
+};
+
+const resultHtml = (hit, i) => {
+  const selected = i === finder.selected ? ' selected' : '';
+  if (hit.task) {
+    return `<li class="result${selected}" data-index="${i}" role="option"><span class="icon k-task">◎</span><span class="result-name">${highlight(hit.task.title, hit.positions)}</span>${stateChip(hit.task.state)}</li>`;
+  }
+  if (hit.namespace) {
+    return `<li class="result${selected}" data-index="${i}" role="option">${folderIcon}<span class="result-name">${highlight(hit.namespace.path, hit.positions)}</span><span class="result-sig muted">${hit.namespace.count} definitions</span></li>`;
+  }
+  const entry = hit.entry;
+  return (
+    `<li class="result${selected}" data-index="${i}" role="option">${icon(entry.kind)}<span class="result-name">${highlight(entry.name, hit.positions)}</span>${statusMark(entry.status)}` +
+    `<code class="result-sig">${entry.sig ? escape(typeOf(entry.sig)) : ''}</code>${entry.summary ? `<span class="result-summary">${inlineDoc(entry.summary, '')}</span>` : ''}</li>`
+  );
+};
+
+const renderFinder = () => {
+  const list = element('finder-results');
+  const query = element('finder-input').value;
+  list.innerHTML =
+    finder.results.length > 0
+      ? finder.results.map(resultHtml).join('')
+      : query.trim()
+        ? '<li class="empty muted">No matches.</li>'
+        : '<li class="empty muted">Type to search every name in the codebase.</li>';
+  list.querySelector('.selected')?.scrollIntoView({ block: 'nearest' });
+};
+
+const openFinder = () => {
+  // Closing gives focus back to what opened the finder, so a keyboard user carries on from where they were.
+  if (element('finder').hidden) {
+    finder.opener = document.activeElement;
+  }
+  element('finder').hidden = false;
+  const input = element('finder-input');
+  input.select();
+  input.focus();
+  finder.results = search(input.value);
+  finder.selected = 0;
+  renderFinder();
+};
+
+const closeOverlays = () => {
+  const reopen = !element('finder').hidden && finder.opener instanceof HTMLElement && finder.opener !== document.body;
+  element('finder').hidden = true;
+  if (reopen && finder.opener.isConnected) {
+    finder.opener.focus();
+  }
+  element('shortcuts').hidden = true;
+  element('task-dialog').hidden = true;
+};
+
+const choose = (hit) => {
+  if (!hit) {
+    return;
+  }
+  closeOverlays();
+  // A document is found to be read, so it opens as text rather than as its `Embed.text` definition.
+  const reading =
+    hit.entry && isEmbeddedFile(hit.entry.name) && embedded(hit.entry.name) ? `k:doc:${hit.entry.name}` : undefined;
+  open(hit.task ? `t:${hit.task.id}` : hit.namespace ? `n:${hit.namespace.path}` : (reading ?? `d:${hit.entry.hash}`));
+};
+
+//
+// Hover previews.
+//
+
+let tooltipTimer;
+
+const showTooltip = (target) => {
+  const hash = target.dataset.hash;
+  const entry = index.byHash.get(hash);
+  if (!entry) {
+    return;
+  }
+  const tooltip = element('tooltip');
+  tooltip.innerHTML =
+    `<div class="tooltip-head">${icon(entry.kind)}<b>${escape(entry.name)}</b>${statusMark(entry.status)}<span class="muted">${escape(short(entry.hash))}</span></div>` +
+    (entry.sig ? `<code class="tooltip-sig">${signatureHtml(entry.sig, namespaceOf(entry.name))}</code>` : '') +
+    (entry.summary ? `<p>${inlineDoc(entry.summary, namespaceOf(entry.name))}</p>` : '');
+  tooltip.hidden = false;
+  const box = target.getBoundingClientRect();
+  const width = tooltip.offsetWidth;
+  const height = tooltip.offsetHeight;
+  const left = Math.max(8, Math.min(box.left, window.innerWidth - width - 8));
+  const below = box.bottom + 6 + height < window.innerHeight;
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${below ? box.bottom + 6 : box.top - height - 6}px`;
+};
+
+const hideTooltip = () => {
+  clearTimeout(tooltipTimer);
+  element('tooltip').hidden = true;
+};
+
+//
+// Events.
+//
+
+let toast;
+
+const notify = (message) => {
+  toast?.remove();
+  toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.append(toast);
+  setTimeout(() => toast?.remove(), 1600);
+};
+
+const isTyping = (target) =>
+  target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+
+let pendingG = false;
+
+const onKey = (event) => {
+  if (!element('finder').hidden) {
+    if (event.key === 'Escape') {
+      closeOverlays();
+    } else if (event.key === 'ArrowDown' || (event.key === 'n' && event.ctrlKey)) {
+      finder.selected = Math.min(finder.selected + 1, finder.results.length - 1);
+      renderFinder();
+    } else if (event.key === 'ArrowUp' || (event.key === 'p' && event.ctrlKey)) {
+      finder.selected = Math.max(finder.selected - 1, 0);
+      renderFinder();
+    } else if (event.key === 'Enter') {
+      choose(finder.results[finder.selected]);
+    } else {
+      return;
+    }
+    event.preventDefault();
+    return;
+  }
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    openFinder();
+    return;
+  }
+  if (event.key === 'Escape') {
+    closeOverlays();
+    return;
+  }
+  if (isTyping(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+  const { keys } = parseFragment();
+  const at = keys.indexOf(ui.focus);
+  if (pendingG) {
+    pendingG = false;
+    const view = { c: 'code', t: 'tasks', h: 'history' }[event.key];
+    if (view) {
+      setView(view);
+      return;
+    }
+  }
+  switch (event.key) {
+    case '/':
+      event.preventDefault();
+      openFinder();
+      break;
+    case '?':
+      element('shortcuts').hidden = false;
+      break;
+    case 'j':
+    case 'ArrowDown':
+      if ((ui.view === 'code' || ui.view === 'graph') && keys.length > 0 && event.key === 'j') {
+        setFocus(keys[Math.min(at + 1, keys.length - 1)]);
+      }
+      break;
+    case 'k':
+      if ((ui.view === 'code' || ui.view === 'graph') && keys.length > 0) {
+        setFocus(keys[Math.max(at - 1, 0)]);
+      }
+      break;
+    case 'x':
+      if (ui.focus) {
+        close(ui.focus);
+      }
+      break;
+    case 'X':
+      writeFragment(ui.view, []);
+      break;
+    case 'c':
+      if (ui.focus) {
+        toggleFold(ui.focus);
+      }
+      break;
+    case 'v':
+      if (ui.view === 'code' || ui.view === 'graph') {
+        setView(ui.view === 'graph' ? 'code' : 'graph');
+      }
+      break;
+    case 't':
+      document.body.classList.toggle('no-sidebar');
+      break;
+    case 'g':
+      pendingG = true;
+      break;
+    case 'm':
+      event.preventDefault();
+      focusComposer();
+      break;
+    case 'n':
+      event.preventDefault();
+      openTaskForm();
+      break;
+    case 'r':
+      event.preventDefault();
+      void report();
+      break;
+    case '`':
+      if (shell.info) {
+        event.preventDefault();
+        showShell();
+      }
+      break;
+    default:
+  }
+};
+
+const toggleFold = (key) => {
+  ui.folded.has(key) ? ui.folded.delete(key) : ui.folded.add(key);
+  cardElements.get(key)?.classList.toggle('folded', ui.folded.has(key));
+};
+
+const showDialect = () => {
+  for (const button of document.querySelectorAll('[data-dialect]')) {
+    button.classList.toggle('active', button.dataset.dialect === ui.dialect);
+  }
+};
+
+/** Re-renders the open definitions in another dialect. */
+const setDialect = (dialect) => {
+  ui.dialect = dialect;
+  try {
+    localStorage.setItem(DIALECT_KEY, dialect);
+  } catch {}
+  showDialect();
+  for (const key of [...cardElements.keys()].filter((other) => other.startsWith('d:'))) {
+    cardElements.get(key).remove();
+    cardElements.delete(key);
+  }
+  void render();
+};
+
+const onClick = (event) => {
+  const target = event.target.closest(
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run], [data-area-tag], [data-history], [data-task-label], [data-more-labels], [data-close-overlay]',
+  );
+  if (!target) {
+    const cardNode = event.target.closest('.card');
+    if (cardNode) {
+      setFocus(cardNode.dataset.key, false);
+    }
+    return;
+  }
+  // A modified click on a link opens it as the browser would (a new tab or window), from its `href`.
+  if (target.hasAttribute('href') && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) {
+    return;
+  }
+  event.preventDefault();
+  hideTooltip();
+  const data = target.dataset;
+  if (data.areaTag !== undefined) {
+    filterAreas(target.closest('.home') ?? document, data.areaTag);
+  } else if (data.history !== undefined) {
+    filterHistory(data.history);
+  } else if (data.taskLabel !== undefined) {
+    filterTasks(data.taskLabel);
+  } else if (data.moreLabels !== undefined) {
+    ui.taskFilter.allLabels = true;
+    renderTasks();
+  } else if (data.closeOverlay !== undefined) {
+    closeOverlays();
+  } else if (data.index !== undefined) {
+    choose(finder.results[Number(data.index)]);
+  } else if (data.open) {
+    const from = target.closest('.card');
+    if (from) {
+      ui.focus = from.dataset.key;
+    }
+    if (window.matchMedia('(max-width: 760px)').matches && target.closest('#sidebar')) {
+      document.body.classList.add('no-sidebar');
+    }
+    // A link to a block of a document (`R-3`) opens the document there.
+    ui.anchor = data.anchor ? { key: data.open, block: data.anchor } : undefined;
+    open(data.open);
+  } else if (data.close) {
+    close(data.close);
+  } else if (data.fold) {
+    toggleFold(data.fold);
+  } else if (data.view) {
+    setView(data.view);
+  } else if (data.toggle) {
+    toggleFolder(data.toggle);
+  } else if (data.copy) {
+    void navigator.clipboard?.writeText(data.copy).then(
+      () => notify('Copied the hash'),
+      () => notify(data.copy),
+    );
+  } else if (data.more !== undefined) {
+    // Only this list's pages: the run of hidden `ul.more` right before its button.
+    const pages = [];
+    for (
+      let page = target.previousElementSibling;
+      page?.matches('ul.rows.more[hidden]');
+      page = page.previousElementSibling
+    ) {
+      pages.unshift(page);
+    }
+    if (pages.length === 0) {
+      target.previousElementSibling.hidden = false;
+      target.remove();
+    } else {
+      pages[0].hidden = false;
+      const remaining = pages.slice(1).reduce((sum, page) => sum + page.children.length, 0);
+      if (remaining === 0) {
+        target.remove();
+      } else {
+        target.textContent = moreLabel(remaining);
+      }
+    }
+  } else if (data.unfold !== undefined) {
+    target.nextElementSibling.hidden = false;
+    target.remove();
+  } else if (data.dialect) {
+    setDialect(data.dialect);
+  } else if (data.home !== undefined) {
+    if (window.matchMedia('(max-width: 760px)').matches && target.closest('#sidebar')) {
+      document.body.classList.add('no-sidebar');
+    }
+    writeFragment('code', []);
+  } else if (data.run) {
+    shellCommand(data.run, data.next);
+  }
+};
+
+//
+// Console (D84): `deus` itself, on the wasm kernel in this page, against a snapshot of the codebase.
+//
+
+const shell = { info: null, session: null, history: [], position: 0, busy: false };
+
+/** Splits a command line into words as a POSIX shell does: '…' is literal, "…" honours backslash escapes. */
+const splitWords = (line) => {
+  const words = [];
+  let word;
+  for (let at = 0; at < line.length; at++) {
+    const char = line[at];
+    if (/\s/.test(char)) {
+      if (word !== undefined) {
+        words.push(word);
+      }
+      word = undefined;
+    } else if (char === "'") {
+      const end = line.indexOf("'", at + 1);
+      word = (word ?? '') + line.slice(at + 1, end < 0 ? line.length : end);
+      at = end < 0 ? line.length : end;
+    } else if (char === '"') {
+      word ??= '';
+      for (at++; at < line.length && line[at] !== '"'; at++) {
+        word += line[at] === '\\' && at + 1 < line.length ? line[++at] : line[at];
+      }
+    } else {
+      word = (word ?? '') + (char === '\\' && at + 1 < line.length ? line[++at] : char);
+    }
+  }
+  if (word !== undefined) {
+    words.push(word);
+  }
+  return words;
+};
+
+const shellPrint = (text, className) => {
+  if (!text) {
+    return;
+  }
+  const output = element('console-output');
+  const span = document.createElement('span');
+  span.textContent = text;
+  if (className) {
+    span.className = className;
+  }
+  output.append(span);
+  output.scrollTop = output.scrollHeight;
+};
+
+const fetchText = async (path) => {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`${path}: ${response.status}`);
+  }
+  return response.text();
+};
+
+/** Loads the kernel, the toolchain image and the codebase snapshot once, on first use: about a megabyte compressed. */
+const startShell = () =>
+  (shell.session ??= (async () => {
+    const started = performance.now();
+    const [host, kernelText, image, snapshot] = await Promise.all([
+      import('./console/host.mjs'),
+      fetchText('console/deus_kernel.wasm.b64'),
+      fetchText('console/deus.image'),
+      fetchText('console/codebase.json').then(JSON.parse),
+    ]);
+    // `atob` drops the line breaks `openssl base64` writes.
+    const wasm = Uint8Array.from(atob(kernelText), (char) => char.charCodeAt(0));
+    const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
+    const fs = host.createFiles(files);
+    const deus = await host.createDeus({
+      wasm,
+      fs,
+      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+    });
+    element('console-status').textContent =
+      `${Object.keys(snapshot).length} codebase files · ready in ${Math.round(performance.now() - started)} ms`;
+    return { deus, image };
+  })());
+
+const runShell = async (line) => {
+  shell.busy = true;
+  element('console-input').disabled = true;
+  shellPrint(`$ deus ${line}\n`, 'cmd');
+  try {
+    const { deus, image } = await startShell();
+    const begin = performance.now();
+    const result = await deus.run(image, { args: splitWords(line), cwd: '/work' });
+    shellPrint(result.stdout);
+    shellPrint(result.stderr, 'err');
+    shellPrint(`exit ${result.code} · ${Math.round(performance.now() - begin)} ms\n`, 'meta');
+  } catch (error) {
+    shell.session = null;
+    shellPrint(`The console could not start: ${error.message}\n`, 'err');
+  }
+  shell.busy = false;
+  element('console-input').disabled = false;
+  element('console-input').focus();
+};
+
+const showShell = (visible = element('console').hidden) => {
+  element('console').hidden = !visible;
+  document.body.classList.toggle('with-console', visible);
+  element('console-toggle').classList.toggle('active', visible);
+  if (visible) {
+    if (!shell.session) {
+      element('console-status').textContent = 'Loading the kernel, the toolchain and the codebase…';
+      void startShell().catch(() => {});
+    }
+    element('console-input').focus();
+  }
+};
+
+/** Opens the console, runs `line` there, and leaves `next` in the prompt for the reader to finish. */
+const shellCommand = (line, next = '') => {
+  showShell(true);
+  element('console-input').value = next;
+  if (line && !shell.busy) {
+    void runShell(line);
+  }
+};
+
+const consoleButton = (def) =>
+  shell.info
+    ? `<button class="icon-button" data-run="${escape(def.kind === 'test' ? `test ${def.name}` : `view ${def.name}`)}" data-next="${escape(def.kind === 'term' ? `eval ${def.name} ` : '')}" title="${def.kind === 'test' ? 'Run this test' : 'Open'} in the console" aria-label="Open in the console">›_</button>`
+    : '';
+
+const onShellEvents = async () => {
+  // meta.json says whether the site has a console, so a site without one requests nothing for it.
+  shell.info = index.meta.console ? await load('console/info.json') : undefined;
+  if (!shell.info) {
+    return;
+  }
+  element('console-toggle').hidden = false;
+  element('console-toggle').addEventListener('click', () => showShell());
+  element('console-close').addEventListener('click', () => showShell(false));
+  const input = element('console-input');
+  element('console-prompt').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const line = input.value.trim();
+    input.value = '';
+    if (!line || shell.busy) {
+      return;
+    }
+    if (line === 'clear') {
+      element('console-output').replaceChildren();
+      return;
+    }
+    shell.history.push(line);
+    shell.position = shell.history.length;
+    void runShell(line);
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowUp' && shell.position > 0) {
+      event.preventDefault();
+      input.value = shell.history[--shell.position];
+    } else if (event.key === 'ArrowDown' && shell.position < shell.history.length) {
+      event.preventDefault();
+      input.value = shell.history[++shell.position] ?? '';
+    } else if (event.key === 'Escape') {
+      event.stopPropagation();
+      input.blur();
+    }
+  });
+};
+
+//
+// Report (D93): a screenshot of what the reader sees, filed as a task about the explorer.
+//
+
+let styleText;
+
+/** Moves a clone's children by its original's scroll offsets, which serialization drops. */
+const keepScroll = (original, copy) => {
+  if (original.scrollTop || original.scrollLeft) {
+    copy.style.overflow = 'hidden';
+    for (const child of copy.children) {
+      child.style.transform = `translate(${-original.scrollLeft}px, ${-original.scrollTop}px)`;
+    }
+  }
+  [...original.children].forEach((child, at) => copy.children[at] && keepScroll(child, copy.children[at]));
+};
+
+/** Draws the page as it is now: the DOM, styled, inside an SVG `foreignObject`, onto a canvas. No permission is asked. */
+const drawPage = async () => {
+  styleText ??= await fetchText('app.css');
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const copy = document.body.cloneNode(true);
+  keepScroll(document.body, copy);
+  for (const node of copy.querySelectorAll('script, #toast, .toast')) {
+    node.remove();
+  }
+  // Typed text lives in properties, not attributes, so it is copied across by hand.
+  const fields = document.body.querySelectorAll('input, textarea');
+  copy.querySelectorAll('input, textarea').forEach((field, at) => {
+    const value = fields[at]?.value ?? '';
+    field instanceof HTMLTextAreaElement ? (field.textContent = value) : field.setAttribute('value', value);
+  });
+  // The image is drawn outside this document, so the theme's tokens are resolved here and pinned.
+  const computed = getComputedStyle(document.documentElement);
+  const tokens = [...new Set(styleText.match(/--[a-z0-9-]+(?=\s*:)/g) ?? [])]
+    .map((name) => `${name}:${computed.getPropertyValue(name)}`)
+    .join(';');
+  const root = document.createElement('div');
+  root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  root.setAttribute('class', document.body.className);
+  root.setAttribute(
+    'style',
+    `${tokens};width:${width}px;height:${height}px;overflow:hidden;background:var(--bg);color:var(--fg)`,
+  );
+  root.append(...copy.childNodes);
+  const markup = new XMLSerializer().serializeToString(root);
+  const style = styleText.replace(/\bbody\b/g, '.page-shot').replace(/:root/g, '.page-shot');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+    `<foreignObject width="100%" height="100%"><style xmlns="http://www.w3.org/1999/xhtml">${style.replace(/</g, '\\3c ')}</style>` +
+    markup.replace('class="', 'class="page-shot ') +
+    '</foreignObject></svg>';
+  const image = new Image();
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  await image.decode();
+  const scale = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const context = canvas.getContext('2d');
+  context.scale(scale, scale);
+  context.drawImage(image, 0, 0);
+  return new Promise((done, fail) =>
+    canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+  );
+};
+
+/** Asks the browser to share this tab and keeps one frame: the fallback when the page cannot draw itself. */
+const grabTab = async () => {
+  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
+  try {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = true;
+    await video.play();
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    return await new Promise((done, fail) =>
+      canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+    );
+  } finally {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
+/** What the reader was looking at, in words, for the report's details. */
+const placeOf = () => {
+  const { keys } = parseFragment();
+  const what =
+    ui.view === 'code' ? (keys.length > 0 ? keys.map(titleOf).join(', ') : 'the overview') : `the ${ui.view} view`;
+  return `Reported from ${what}: ${location.href}\n${window.innerWidth}×${window.innerHeight}, ${navigator.userAgent}\n\n`;
+};
+
+/** `r`: capture the view, then open the task form with the screenshot attached. */
+const report = async () => {
+  if (!canWrite()) {
+    return;
+  }
+  closeOverlays();
+  hideTooltip();
+  let shot;
+  try {
+    shot = await drawPage();
+  } catch {
+    shot = await grabTab().catch(() => undefined);
+  }
+  const form = element('task-form');
+  openTaskForm({ report: true });
+  if (!form.details.value) {
+    form.details.value = placeOf();
+  }
+  if (shot) {
+    await attach(form, [
+      new File([shot], `explorer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`, { type: 'image/png' }),
+    ]);
+  } else {
+    notify('Could not capture the page; attach a screenshot yourself');
+  }
+};
+
+/** The project's address `@owner/project` (Address.Spec, D184): the IRI itself, or read from a D49 IRI `https://<owner>.<tld>/…/<project>`. */
+const addressOf = (iri) => {
+  if (iri.startsWith('@')) {
+    return iri;
+  }
+  const match = /^https:\/\/([^./]+)\.[^/]+\/(?:.*\/)?([^/]+)$/.exec(iri);
+  return match ? `@${match[1].toLowerCase()}/${match[2].toLowerCase()}` : iri.replace(/^https?:\/\//, '');
+};
+
+/** A path link `/@owner/project/Name` (Address.Spec R-8) becomes a fragment at `/@owner/project/`, `#d:<hash>` for a definition and `#n:Name` for a namespace, so cards keep working by fragment. */
+const openPathLink = () => {
+  const match = /^(\/@[a-z0-9-]+\/[a-z0-9-]+\/)(.+)$/.exec(decoded(location.pathname));
+  if (!match || location.hash.length > 1) {
+    return;
+  }
+  const entry = named(match[2]);
+  const key = entry ? `d:${entry.hash}` : `n:${match[2]}`;
+  history.replaceState(history.state, '', `${match[1]}#${encodeURIComponent(key)}`);
+};
+
+/** The fragment that opens `key` alone: a link's `href`, so it can be focused, opened in a new tab and copied. */
+const keyHref = (key) => `#${key.replace(/[%#, ]/g, (c) => encodeURIComponent(c))}`;
+
+/** Gives the links under `root` that open a card or a view an `href`; clicks still go through `onClick`. */
+const addHrefs = (root) => {
+  const links = root.matches?.('a[data-open], a[data-view]') ? [root] : [];
+  for (const link of [...links, ...root.querySelectorAll('a[data-open]:not([href]), a[data-view]:not([href])')]) {
+    if (link.hasAttribute('href')) {
+      continue;
+    }
+    const { open: key, view } = link.dataset;
+    link.setAttribute('href', key ? keyHref(key) : view === 'code' ? '#' : `#v:${view}`);
+  }
+};
+
+const main = async () => {
+  const [meta, names, tasks] = await Promise.all([load('meta.json'), load('names.json'), load('tasks.json')]);
+  if (!meta || !names || !tasks) {
+    document.body.innerHTML =
+      '<p class="fatal">This site is missing <code>meta.json</code>, <code>names.json</code> or <code>tasks.json</code>; run <code>deus explore</code> again.</p>';
+    return;
+  }
+  Object.assign(index, { meta, names, tasks });
+  for (const entry of names) {
+    index.byName.set(entry.name, entry);
+    if (!index.byHash.has(entry.hash)) {
+      index.byHash.set(entry.hash, entry);
+    }
+  }
+  index.mounts = [...new Set(names.map((entry) => /^lib\.[^.]+\./.exec(entry.name)?.[0]).filter(Boolean))];
+  index.libraryHashes = new Set(names.filter((entry) => entry.name.startsWith('lib.')).map((entry) => entry.hash));
+  index.tree = buildTree(names);
+  element('project').textContent = addressOf(meta.project);
+  element('project').title = meta.project;
+  openPathLink();
+  element('branch').textContent = meta.branch;
+  // A phone's top bar has no room for the project, so the namespace drawer names it.
+  element('sidebar-project').textContent = `${addressOf(meta.project)} · ${meta.branch}`;
+  element('open-count').textContent = meta.open > 0 ? String(meta.open) : '';
+  if (index.tree.children.size < 12) {
+    for (const child of index.tree.children.values()) {
+      ui.expanded.add(child.path);
+    }
+  }
+  if (window.matchMedia('(max-width: 760px)').matches) {
+    document.body.classList.add('no-sidebar');
+  }
+  index.areas = areasOf(await loadFeatures());
+  renderTree();
+  showDialect();
+  await loadWriting();
+  onWriteEvents();
+  onGraphEvents();
+  await onShellEvents();
+
+  document.addEventListener('click', onClick);
+  document.addEventListener('keydown', onKey);
+  element('find').addEventListener('click', openFinder);
+  element('help').addEventListener('click', () => (element('shortcuts').hidden = false));
+  element('menu').addEventListener('click', () => document.body.classList.toggle('no-sidebar'));
+  for (const overlay of document.querySelectorAll('.overlay')) {
+    overlay.addEventListener('click', (event) => event.target === overlay && closeOverlays());
+  }
+  element('finder-input').addEventListener('input', (event) => {
+    finder.results = search(event.target.value);
+    finder.selected = 0;
+    renderFinder();
+  });
+  element('finder-results').addEventListener('mousemove', (event) => {
+    const row = event.target.closest('[data-index]');
+    if (row && Number(row.dataset.index) !== finder.selected) {
+      finder.selected = Number(row.dataset.index);
+      for (const other of element('finder-results').querySelectorAll('.result')) {
+        other.classList.toggle('selected', other === row);
+      }
+    }
+  });
+  document.addEventListener('mouseover', (event) => {
+    const target = event.target.closest('[data-hash]');
+    clearTimeout(tooltipTimer);
+    if (target && !target.closest('#tree')) {
+      tooltipTimer = setTimeout(() => showTooltip(target), 250);
+    } else if (!event.target.closest('#tooltip')) {
+      hideTooltip();
+    }
+  });
+  // A link followed while the finder is open (Back, or one pasted in) shows its card, not the finder over it.
+  window.addEventListener('hashchange', () => {
+    element('finder').hidden = true;
+    void render();
+  });
+  element('skip').addEventListener('click', () => element('main').focus());
+  element('tree').addEventListener('keydown', onTreeKey);
+  rememberScroll();
+  // The finder opens on ⌘K or Ctrl+K; the help names the one this keyboard has.
+  if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
+    for (const label of document.querySelectorAll('.mod-k')) {
+      label.textContent = 'Ctrl K';
+    }
+    element('find').title = 'Find a definition (/ or Ctrl K)';
+  }
+  addHrefs(document.body);
+  new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node instanceof Element) {
+          addHrefs(node);
+        }
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+  await render();
+};
+
+void main();

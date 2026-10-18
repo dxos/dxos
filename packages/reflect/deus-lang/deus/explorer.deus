@@ -1,0 +1,438 @@
+/-
+  The codebase explorer (D58): a single-page app over JSON written from a codebase, in the spirit
+  of Unison Share. Definitions and tasks open as cards in one workspace, so several can be read
+  at once, and a task board shows every task by state. The app is static files, so the same
+  output is served locally (`deus explore`, by the native web runtime and `platform/site.deus`)
+  and hosted from the bucket that holds the codebase's bundles (`deus explore --publish <remote>`).
+
+    index.html, app.js, app.css   the app (`platform/explorer/`), copied as they are
+    meta.json                     the project, branches, counts and recent history
+    names.json                    every visible name: name, kind, hash
+    def/<hash>.json               a definition: names, signature, highlighted source with its
+                                  references linked, dependencies, dependents, verdict, tasks
+    tasks.json                    every task, with its links resolved and its history
+    comments.json                 comments on definitions and changes, by subject (D82)
+    assets/<sha256>               the files comments and tasks attach
+    console/                      with `--console` (D84): the wasm kernel (as base64), its
+                                  drivers, the toolchain image and `codebase.json`, so the page
+                                  runs `deus` against this codebase with no server
+-/
+
+namespace Explorer
+
+def signature (meta : Option Sexp) : Text := Option.getOr (Option.map (fun s => Types.displayScheme s) (Codebase.metaField meta "scheme")) ""
+
+def docOf (meta : Option Sexp) : Option Text := Option.map asText (metaField meta "doc")
+
+/-- Names that are not hidden: not constructors' and operations' own pages. -/
+def visible (pair : (Text, Entry)) : Bool :=
+  match snd pair with
+  | Entry.ctor _ _ _ => false
+  | Entry.op _ _ _ => false
+  | _ => true
+
+/-- Heads of the forms that name another definition: terms, constructors, operations and types. -/
+def refHeads : Map Text Unit := Set.fromList ["ref", "tref", "con", "pcon", "op", "on"]
+
+/--
+  Every hash a form names, builtins included. Unlike `Codebase.dependencies`, which lists what an
+  update must propagate to, this also counts types named only in a signature, so `Bool` has users.
+-/
+def namedHashes (form : Sexp) : List Text :=
+  let rec go x acc :=
+    match x with
+    | Sexp.list (Sexp.sym head :: Sexp.str h :: rest) =>
+      List.foldl (fun a y => go y a) (if Map.contains head refHeads then h :: acc else acc) rest
+    | Sexp.list items => List.foldl (fun a y => go y a) acc items
+    | _ => acc
+  go form []
+
+/-- A definition's page file: builtin hashes are IRIs such as `#Bool`, and `#` cannot appear in a URL path. -/
+def pageOf (h : Text) : Text := if Text.startsWith "#" h then "_" ++ Text.drop 1 h else h
+
+/-- What a theorem states, from its source: `name (binders) : proposition`, the declaration up to its proof. -/
+def statementOf (source : Text) (name : Text) : Text :=
+  let start := indexOf source ("theorem " ++ name) 0
+  if start < 0 then "" else
+    let rest := Text.drop (start + Text.length "theorem " + Text.length name) source
+    let stop := indexOf rest " :=" 0
+    lastOf name ++ " " ++ Text.trim (Text.join " " (List.map Text.trim (Text.lines (if stop < 0 then rest else Text.take stop rest))))
+
+/-- The first sentence of a doc comment, for listings. -/
+def summaryOf (doc : Option Text) : Text :=
+  -- The first sentence, across the lines a doc comment wraps at: its first line alone stops mid-sentence.
+  let text := Text.join " " (List.filter (fun line => not (Text.isEmpty line)) (List.map Text.trim (Text.lines (Option.getOr doc ""))))
+  let stop := indexOf text ". " 0
+  let sentence := if stop < 0 then text else Text.take (stop + 1) text
+  if Text.length sentence > 240 then Text.take 237 sentence ++ "…" else sentence
+
+/-- Whether a definition has a verdict: tests and theorems are checked, other kinds never are. -/
+def checked (e : Entry) : Bool := Entry.kind e == "test" || Entry.kind e == "theorem"
+
+/-- `pass` or `fail` from a cached verdict, or `""` when there is none. -/
+def statusOf (verdict : Text) : Text :=
+  if Text.startsWith "(pass" verdict then "pass" else if Text.startsWith "(fail" verdict then "fail" else ""
+
+def lastOf (name : Text) : Text := Option.getOr (List.last? (Text.split name ".")) name
+
+def verdictOf (dir : Text) (h : Text) : {IO} Text := Text.trim (Option.getOr (IO.readFile (dir ++ "/results/" ++ h)) "")
+
+def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json := Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
+  getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [] ++ atJson dir (fst pair))
+
+/-- `[("at", seconds)]` when the change's time is known: from its history node (D165), else from
+  this store's provenance, which recorded it for changes made here before nodes carried a time. -/
+def atJson (dir : Text) (causal : Text) : {IO} List (Text, Json) :=
+  match madeAt dir causal with
+  | Option.some seconds => [("at", Json.num seconds)]
+  | Option.none => []
+
+/-- How many changes the History view lists, imported ones (D67) included. -/
+def historyLimit : Int := 1000
+
+/-- A row of the full log. A change imported from an export has no causal node in this store, so it
+  is marked `imported` and gets no page. -/
+def logJson (dir : Text) (entry : (Text, (Text, Text))) : {IO} Json :=
+  let (h, message, agent) := entry
+  Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
+    (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++ atJson dir h ++ (if isSome (readObject dir h) then [] else [("imported", Json.bool true)]))
+
+def refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name), ("hash", Json.str h)]
+
+def taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=
+  let link := fun a =>
+    match a with
+    | Attachment.definition name linked => Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", getOr (Option.map (fun e => Json.str (Entry.hash e)) (lookupMounted ns name)) Json.null)]
+    | Attachment.change h =>
+        let message :=
+          match readObject dir h with
+          | Option.some form => (causalFromSexp form).message
+          | Option.none => ""
+        Json.obj [("change", Json.str h), ("message", Json.str message)]
+  Json.obj [("id", Json.str (Task.id t)), ("title", Json.str (Task.title t)), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map commentJson t.comments)), ("history", Json.arr (List.map (Explorer.changeJson dir) history))]
+
+/-- A definition's source as `deus view` prints it, without its `-- ` header lines. -/
+def sourceOf (printer : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO} Text :=
+  match try (fun _ => viewEntryWith printer dir ns name e false) with
+  | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
+  | Result.err message => "-- " ++ message
+
+/-- What a change did, against its first parent: names added, rebound or removed, and tasks it
+  touched. A root change compares with an empty namespace. -/
+def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
+  let node := readCausal dir causal
+  let before :=
+    match parentsOf dir causal with
+    | p :: _ => readCausal dir p
+    | [] => Causal.mk "" [] "" "" "" "" "" ""
+  let diff := diffNamespaces dir before.snapshot node.snapshot
+  let added := filterMap (fun change =>
+    match change with
+    | (name, Option.none, Option.some e) => if visible (name, e) then Option.some (name, e) else Option.none
+    | _ => Option.none) diff
+  let changed := filterMap (fun change =>
+    match change with
+    | (name, Option.some old, Option.some new) => if Entry.hash old == Entry.hash new || not (visible (name, new)) then Option.none else Option.some (name, old, new)
+    | _ => Option.none) diff
+  let removed := filterMap (fun change =>
+    match change with
+    | (name, Option.some e, Option.none) => if visible (name, e) then Option.some (name, e) else Option.none
+    | _ => Option.none) diff
+  -- A rebound name carries both sources, so the app can show the change as a diff; a printer
+  -- indexes a whole namespace, so both are read only for changes that rebind something.
+  let nsBefore := if List.isEmpty changed || Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
+  let nsAfter := if List.isEmpty changed then Map.empty else readNamespace dir node.snapshot
+  let printers := if List.isEmpty changed then Option.none else Option.some (Print.printer nsBefore [], Print.printer nsAfter [])
+  let tasksAfter := Tasks.snapshotOf dir node
+  let tasksBefore := Tasks.snapshotOf dir before
+  let touched := List.filter
+    (fun id => Map.lookup id tasksAfter != Map.lookup id tasksBefore)
+    (Set.toList (Set.fromList (Map.keys tasksAfter ++ Map.keys tasksBefore)))
+  Json.obj ([("causal", Json.str causal), ("message", Json.str node.message), ("parents", Json.arr (List.map Json.str node.parents)), ("added", Json.arr (List.map (fun pair => refJson (fst pair) (Entry.hash (snd pair))) added)), ("changed", Json.arr (List.map (fun c =>
+    match (c, printers) with
+    | ((name, old, new), Option.some (pBefore, pAfter)) => Json.obj [("name", Json.str name), ("from", Json.str (Entry.hash old)), ("hash", Json.str (Entry.hash new)), ("before", Json.str (sourceOf pBefore dir nsBefore name old)), ("after", Json.str (sourceOf pAfter dir nsAfter name new))]
+    | _ => Json.null) changed)), ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)), ("tasks", Json.arr (List.map Json.str touched))] ++
+    getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir causal)) [] ++
+    atJson dir causal)
+
+/-- How many parameters a definition's term takes: its leading lambdas. -/
+def arity (core : Sexp) : Int :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] => 1 + arity b
+  | _ => 0
+
+/-- Parameter names for calls to an entry (D174): a function's binder names, which the printer draws
+  first, or a structure's fields for its constructor, keyed as `Print.hintNames` looks them up. -/
+def hintsOf (name : Text) (e : Entry) (object : Option Sexp) (meta : Option Sexp) : List (Text, List Text) :=
+  match (e, object) with
+  | (Entry.term h, Option.some (Sexp.list (Sexp.sym "term" :: core :: []))) =>
+      let count := arity core
+      let locals := List.map asText (metaList (Option.map (metaFor name) meta) "locals")
+      if count == 0 || List.length locals < count then [] else [(h, List.take count locals)]
+  | (Entry.type _ iri fields, _) => if List.isEmpty fields then [] else [(iri ++ "#0", fields)]
+  | _ => []
+
+/-- The app's files, from the toolchain's sources. -/
+def appFiles : List Text := ["index.html", "app.js", "app.css"]
+
+/-- What every page of a branch's explorer is drawn from, read once (D192): `generate` writes all of
+  it, and the DEUS Worker serves pages from it on request, reading the hosted codebase. -/
+structure Site where
+  dir : Text
+  project : Text
+  branch : Text
+  ns : Map Text Entry
+  entries : List (Text, Entry)
+  index : Map Text Text
+  namesByHash : Map Text (List Text)
+  info : Map Text (Text, Text)
+  depsOf : Map Text (List Text)
+  dependents : Map Text (List Text)
+  printer : Printer
+  allTasks : List Task
+  taskMap : Map Text Task
+
+/-- Reads the current branch of `dir` into a `Site`. -/
+def site (dir : Text) : {IO, Throw Text} Site :=
+  let ns := Codebase.current dir
+  let entries := List.filter visible (Map.toList ns)
+  let project :=
+    match Project.read dir with
+    | Option.some p => p.projectIri
+    | Option.none => "codebase"
+  -- Each definition's object and metadata are read once and not kept: what the pages need of them is its
+  -- dependencies, the parameter names its calls show, and each name's signature and summary. Keeping every
+  -- form held 200 MB for the toolchain, past a Worker isolate's 128 MB (D192).
+  let facts := List.map (fun pair =>
+    let h := Entry.hash (snd pair)
+    let meta := readMeta dir h
+    let object := peekObject dir h
+    let fromObject := getOr (Option.map namedHashes object) []
+    let fromScheme := getOr (Option.map namedHashes (metaField meta "scheme")) []
+    let named := Option.map (metaFor (fst pair)) meta
+    -- A theorem's scheme is its proof's type, not what it states, so lists show none.
+    let sig := match snd pair with
+      | Entry.theorem _ => ""
+      | _ => Explorer.signature named
+    (h, dedup (sort (fromObject ++ fromScheme)), hintsOf (fst pair) (snd pair) object meta, fst pair, sig, summaryOf (Explorer.docOf named))) entries
+  let depsOf := Map.fromList (List.map (fun f =>
+    let (h, deps, _, _) := f
+    (h, deps)) facts)
+  -- Calls show their callee's parameter names (D174); `deus view` prints without them, as source that parses.
+  let printer := withHints (Print.printer ns []) (Map.fromList (concatMap (fun f =>
+    let (_, _, hs, _) := f
+    hs) facts))
+  let dependents := Map.foldr
+    (fun h ds m => foldl (fun m2 d => Map.insert d (h :: getOr (Map.lookup d m2) []) m2) m ds)
+    Map.empty
+    depsOf
+  let tasks := sortBy order (Map.values (Tasks.current dir))
+  let info := Map.fromList (List.map (fun f =>
+    let (_, _, _, named) := f
+    named) facts)
+  Site.mk
+    dir
+    project
+    (currentBranch dir)
+    ns
+    entries
+    (nameIndex ns)
+    (Codebase.namesByHash ns)
+    info
+    depsOf
+    dependents
+    printer
+    tasks
+    (Map.fromList (List.map (fun t => (Task.id t, t)) tasks))
+
+/-- A name's metadata, as `Codebase.metaFor` reads it; read when a page needs it, since a site keeps none. -/
+def siteMeta (s : Site) (name : Text) (h : Text) : {IO} Option Sexp := Option.map (Codebase.metaFor name) (readMeta s.dir h)
+
+/-- `names.json`: every visible name with its kind, hash, signature, doc summary and test status, so the
+  app can list, search and preview names without opening their pages. -/
+def namesJson (s : Site) : {IO} Json := Json.arr (List.map (fun pair =>
+  let h := Entry.hash (snd pair)
+  let (sig, summary) := getOr (Map.lookup (fst pair) s.info) ("", "")
+  Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str sig), ("summary", Json.str summary), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf s.dir h) else ""))]) s.entries)
+
+/-- `tasks.json`: every task, with the changes that touched it. -/
+def tasksJson (s : Site) : {IO, Throw Text} Json :=
+  let histories := histories s.dir 200
+  Json.arr (List.map (fun t => Explorer.taskJson s.dir s.ns (getOr (Map.lookup (Task.id t) histories) []) t) s.allTasks)
+
+/-- `comments.json`: comments on definitions and changes (D82), by subject. -/
+def commentsJson (s : Site) : {IO, Throw Text} Json := Json.obj (List.map
+  (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair))))
+  (Map.toList (Comments.current s.dir)))
+
+/-- Events about the codebase (D104) and how many there are; a codebase whose event types cannot be
+  read gets no events rather than no site. -/
+def eventsOf (s : Site) : {IO} (Json, Int) :=
+  match try (fun _ =>
+    let ts := Analytics.types s.dir s.ns
+    (siteJson s.dir s.project s.ns 20, sum (List.map (fun c =>
+      let (_, pending, pushed) := c
+      pending + pushed) (counts s.dir ts)))) with
+  | Result.ok pair => pair
+  | Result.err _ => (Json.obj [("project", Json.str s.project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
+
+/-- Feature maps (D118) and how many features they hold; a map that cannot be read leaves the card empty. -/
+def featuresOfSite (s : Site) : {IO} (Json, Int) :=
+  match try (fun _ =>
+    let docs := featureDocuments s.dir (Site.ns s)
+    (featuresJson s.dir (Site.ns s) docs, sum (List.map (fun d => List.length (fst (featuresOf s.dir (Site.ns s) d))) docs))) with
+  | Result.ok pair => pair
+  | Result.err _ => (Json.arr [], 0)
+
+/-- `meta.json`: the project, branches, counts and the log. -/
+def metaJson (s : Site) (console : Bool) (events : Int) (features : Int) : {IO, Throw Text} Json :=
+  Json.obj [("project", Json.str s.project), ("branch", Json.str s.branch), ("branches", Json.arr (List.map Json.str (branches s.dir))), ("definitions", Json.num (List.length s.entries)), ("tasks", Json.num (List.length s.allTasks)), ("open", Json.num (List.length (List.filter isOpen s.allTasks))), ("console", Json.bool console), ("events", Json.num events), ("features", Json.num features), ("history", Json.arr (List.map (logJson s.dir) (fullLog s.dir historyLimit)))]
+
+/-- `def/<hash>.json`: a definition's names, signature, highlighted source in both dialects with its
+  references linked, dependencies, dependents, verdict and tasks. -/
+def defJson (s : Site) (name : Text) (e : Entry) : {IO} Json :=
+  let h := Entry.hash e
+  -- A library's definition reads as its library wrote it; the page's name still says where it is mounted (D206).
+  let shown := Names.unmount name
+  let source :=
+    match try (fun _ => viewEntryWith s.printer s.dir s.ns shown e false) with
+    | Result.ok text =>
+      let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (Text.lines text))
+      -- A field accessor is only its header's note (`-- a field of structure …`), which is then what the page shows.
+      if Text.isEmpty (Text.trim body) then getOr (List.last? (Text.lines text)) "" else body
+    | Result.err message => "-- " ++ message
+  -- The same definition in the TypeScript-like dialect (D70), shown when the viewer picks it.
+  let tsSource :=
+    match try (fun _ => viewEntryIn s.printer s.dir s.ns shown e "ts") with
+    | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "// " l)) (Text.lines text))
+    | Result.err message => "// " ++ message
+  let deps := List.filter (fun d => Map.contains d s.index && d != h) (getOr (Map.lookup h s.depsOf) [])
+  -- References in the source print under their display names; those names link to the definitions.
+  let links := Map.fromList (List.map (fun d => (nameFor s.printer d, d)) deps)
+  -- A recursive definition depends on itself; listing it as its own user would make the graph view loop.
+  let users := List.filter (fun u => u != h) (dedup (sort (getOr (Map.lookup h s.dependents) [])))
+  let named := fun hs => Json.arr (List.map (fun x => refJson (getOr (Map.lookup x s.index) (short x)) x) hs)
+  let meta := siteMeta s name h
+  let sig := Explorer.signature meta
+  Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
+    Json.str
+    (List.filter (fun other => other != name) (getOr (Map.lookup h s.namesByHash) [])))), ("signature", Json.str (match e with
+    | Entry.theorem _ => statementOf source shown
+    | _ => if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (Explorer.verdictOf s.dir h)), ("tasks", Json.arr (List.map
+    (fun t => Json.obj [("id", Json.str (Task.id t)), ("title", Json.str (Task.title t)), ("state", Json.str (stateText t.state))])
+    (about s.taskMap name h)))]
+
+/-- The page of the definition a hash names, by its first visible name, or `null` when no visible name has it. -/
+def defByHash (s : Site) (h : Text) : {IO} Json :=
+  match List.find (fun pair => Entry.hash (snd pair) == h) s.entries with
+  | Option.some (name, e) => defJson s name e
+  | Option.none => Json.null
+
+/-- The name the codebase embeds an app file under (`deus embed platform/explorer/app.js --as Explorer.App.js`). -/
+def appName (file : Text) : Text :=
+  if file == "index.html" then "Explorer.App.html" else if file == "app.js" then "Explorer.App.js" else "Explorer.App.css"
+
+/-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
+def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let s := Explorer.site dir
+  IO.mkdirp (out ++ "/def")
+  forEach appFiles (fun f => IO.writeFile (out ++ "/" ++ f) (Codebase.platformText dir (Explorer.appName f) ("platform/explorer/" ++ f)))
+  let events := eventsOf s
+  IO.writeFile (out ++ "/events.json") (Json.render (fst events))
+  let featureMaps := featuresOfSite s
+  IO.writeFile (out ++ "/features.json") (Json.render (fst featureMaps))
+  IO.writeFile
+    (out ++ "/meta.json")
+    (Json.render (metaJson s (IO.exists (out ++ "/console/info.json")) (snd events) (snd featureMaps)))
+  IO.writeFile (out ++ "/names.json") (Json.render (namesJson s))
+  let histories := histories dir 200
+  IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map
+    (fun t => Explorer.taskJson dir (Site.ns s) (getOr (Map.lookup (Task.id t) histories) []) t)
+    s.allTasks)))
+  IO.writeFile (out ++ "/comments.json") (Json.render (commentsJson s))
+  IO.mkdirp (out ++ "/assets")
+  forEach
+    (Assets.named dir)
+    (fun h => if IO.exists (out ++ "/assets/" ++ h) || not (Assets.has dir h) then () else
+      IO.exec "cp" [Assets.path dir h, out ++ "/assets/" ++ h]
+      ())
+  -- A page per change the app links to: recent history, and every change in a task's history.
+  IO.mkdirp (out ++ "/change")
+  let linked := concatMap (fun t => List.map fst (getOr (Map.lookup (Task.id t) histories) [])) s.allTasks
+  let shown := Set.toList (Set.fromList (List.map fst (Codebase.history dir s.branch 30) ++ linked))
+  forEach shown (fun c =>
+    let path := out ++ "/change/" ++ c ++ ".json"
+    -- A change never changes, so a page written once stays right.
+    if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
+  forEach (Site.entries s) (fun pair =>
+    let (name, e) := pair
+    IO.writeFile
+      (out ++ "/def/" ++ Explorer.pageOf (Entry.hash e) ++ ".json")
+      (Json.render (defJson s name e)))
+  IO.mkdirp (out ++ "/doc")
+  forEach
+    (specDocuments (Site.ns s))
+    (fun d => IO.writeFile (out ++ "/doc/" ++ d ++ ".json") (Json.render (docJson s d)))
+  List.length (Site.entries s)
+
+/-- The DEUS Worker's explorer API (D192), compiled to JS: everything but definitions, as one document. -/
+def liveIndex (s : Site) : {IO, Throw Text} Text :=
+  let events := eventsOf s
+  let featureMaps := featuresOfSite s
+  Json.render (Json.obj [("meta", metaJson s false (snd events) (snd featureMaps)), ("names", namesJson s), ("tasks", tasksJson s), ("comments", commentsJson s), ("events", fst events), ("features", fst featureMaps)])
+
+/--
+  A spec document's page (D196): its `.mdl` text and its blocks in reading order, so the explorer can
+  show the document itself, with each requirement, api and law linked to what proves or implements it.
+-/
+def docJson (s : Site) (d : Text) : {IO} Json :=
+  let text := Export.document s.dir s.ns d
+  let blockJson := fun (b : Block) => Json.obj [("type", Json.str b.blockType), ("id", Json.str b.blockId), ("title", Json.str b.blockTitle), ("line", Json.num b.lineNo),
+    ("props", Json.obj (List.map (fun p => (fst p, Json.str (snd p))) b.props))]
+  Json.obj [("name", Json.str d), ("text", Json.str text), ("blocks", Json.arr (List.map blockJson (Mdl.parse text).blocks))]
+
+/-- The DEUS Worker's page of a spec document (D196), or "" when the codebase has no such document; `Array.Spec` finds a mounted library's (D206). -/
+def liveDoc (s : Site) (d : Text) : {IO} Text :=
+  let documents := Export.specDocuments s.ns
+  match List.filter (fun doc => doc == d) documents ++ List.filter (fun doc => doc != d && Names.unmount doc == d) documents with
+  | found :: _ => Json.render (docJson s found)
+  | [] => ""
+
+/-- The DEUS Worker's page of the definition a hash names (D192). -/
+def liveDef (s : Site) (h : Text) : {IO} Text := Json.render (defByHash s h)
+
+/-- The DEUS Worker's page of a change (D192). -/
+def liveChange (dir : Text) (causal : Text) : {IO, Throw Text} Text := Json.render (changePage dir causal)
+
+/-- Directories a console snapshot leaves out: local state, binary files and remote bookkeeping. -/
+def consoleSkips : List Text := ["cache", "artifacts", "assets", "remotes", "exports"]
+
+/-- The codebase files a console snapshot holds: all of them but those under `consoleSkips`. -/
+def snapshotFiles (dir : Text) : {IO} List Text :=
+  List.filter (fun f => not (List.any (fun skip => Text.startsWith (skip ++ "/") f) consoleSkips)) (Cli.filesUnder dir "")
+
+/--
+  Writes `out/console/` (D84): the wasm kernel (base64) and its drivers, the toolchain image, and the
+  codebase directory as `codebase.json` (path to text), so the explorer can run `deus` against
+  the codebase it shows. The page loads it only when the console opens. Returns the files in the
+  snapshot.
+-/
+def console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let copied := try (fun _ =>
+    let home := Build.require "DEUS_HOME"
+    let crate := home ++ "/../deus-kernel"
+    IO.mkdirp (out ++ "/console")
+    -- The site is text end to end (the bundled server and `Remote.writeAll`), so the kernel ships as base64.
+    IO.writeFile (out ++ "/console/deus_kernel.wasm.b64") (Build.tool "openssl" ["base64", "-in", Build.wasmKernel ()])
+    let _ := Build.tool "cp" [crate ++ "/embed/kernel.mjs", crate ++ "/embed/host.mjs", out ++ "/console/"]
+    Build.tool "cp" [home ++ "/seed/deus.image", out ++ "/console/deus.image"])
+  match copied with
+  | Result.err f => throw (Failure.render f)
+  | Result.ok _ =>
+    let files := snapshotFiles dir
+    IO.writeFile (out ++ "/console/codebase.json") (Json.render (Json.obj (List.map (fun f => (f, Json.str (Option.getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
+    -- The app offers the console when this small file is there, before loading anything large.
+    IO.writeFile (out ++ "/console/info.json") (Json.render (Json.obj [("files", Json.num (List.length files)), ("branch", Json.str (Codebase.currentBranch dir))]))
+    List.length files
+
+end Explorer

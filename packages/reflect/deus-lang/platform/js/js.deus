@@ -1,0 +1,120 @@
+/-
+  JavaScript interop for the js target (D97, the codebase's JsGen.Spec#foreign-imports).
+
+  A binding is a definition whose body is `Js.import "<module>" "<path>"` and whose signature
+  gives its type; values cross through codecs chosen from that type. The hash of a definition is
+  its body's, so two bindings of one module and path are one definition with one type, and
+  `deus update` refuses them at different types (D159): the conversions below each name their own
+  path (`js.as.<name>`) for that reason.
+
+    def React.useState : a -> (a, a -> Unit) := Js.import "react" "useState"
+
+  `Js` is any JavaScript value, opaque to DEUS. The functions here reach into one: read a
+  property, call a method, build an object. They are themselves bindings, to the runtime's own
+  module `deus:runtime`.
+-/
+
+/-- Any JavaScript value. -/
+inductive Js @"urn:deus:js:Value" where
+
+namespace Js
+
+/--
+  Binds a definition to `module.path` on the js target; `""` is `globalThis`. On a kernel there is
+  no JavaScript, so using the binding is a defect.
+-/
+def import (module : Text) (path : Text) : a := defect ("Js.import " ++ module ++ " " ++ path ++ ": JavaScript imports run only on the js target")
+
+/--
+  Waiting for a JavaScript promise (task 41714c0d). On the js target a definition whose type has `Async` in its row
+  is an `async` function, and `await p` is JavaScript's `await`: R2, D1, `fetch` and `crypto.subtle` answer with
+  promises. A lambda that waits may be passed only to a definition that waits too, and a handler clause may not
+  wait. A kernel runs no JavaScript, so `await` is a defect there.
+-/
+ability Async @"urn:deus:js:Async" where
+  await : Js -> Js
+
+def text : Text -> Js := import "deus:runtime" "js.as.text"
+
+def int : Int -> Js := import "deus:runtime" "js.as.int"
+
+def bool : Bool -> Js := import "deus:runtime" "js.as.bool"
+
+def list : List Js -> Js := import "deus:runtime" "js.as.list"
+
+/-- A JavaScript function of no arguments that runs `f ()`. -/
+def fn0 : (Unit -> Unit) -> Js := import "deus:runtime" "js.as.fn0"
+
+/-- A JavaScript function of one argument. -/
+def fn1 : (Js -> Unit) -> Js := import "deus:runtime" "js.as.fn1"
+
+/-- A JavaScript function of one argument that returns a value. -/
+def fn : (Js -> Js) -> Js := import "deus:runtime" "js.as.fn"
+
+/-- A JavaScript function of two arguments that returns a value. -/
+def fn2 : (Js -> Js -> Js) -> Js := import "deus:runtime" "js.as.fn2"
+
+/-- `{ key: value, … }`. -/
+def obj : List (Text, Js) -> Js := import "deus:runtime" "js.object"
+
+def toText : Js -> Text := import "deus:runtime" "js.as.toText"
+
+def toInt : Js -> Int := import "deus:runtime" "js.as.toInt"
+
+def toBool : Js -> Bool := import "deus:runtime" "js.as.toBool"
+
+def toList : Js -> List Js := import "deus:runtime" "js.as.toList"
+
+/-- `none` for `null` and `undefined`. -/
+def toOption : Js -> Option Js := import "deus:runtime" "js.as.toOption"
+
+/-- A DEUS value carried through JavaScript untouched, for code that hands it back. -/
+def wrap : a -> Js := import "deus:runtime" "js.as.wrap"
+
+/-- The DEUS value `wrap` carried; the caller vouches for its type. -/
+def unwrap : Js -> a := import "deus:runtime" "js.as.unwrap"
+
+def undefined : Js := import "deus:runtime" "js.undefined"
+
+def null : Js := import "deus:runtime" "js.null"
+
+def isNull : Js -> Bool := import "deus:runtime" "js.isNull"
+
+/-- `a < b` in JavaScript: numbers past the 32-bit `Int`, such as milliseconds since 1970, compare without crossing. -/
+def lessThan : Js -> Js -> Bool := import "deus:runtime" "js.lessThan"
+
+/-- `typeof`, with `null` and arrays told apart. -/
+def typeOf : Js -> Text := import "deus:runtime" "js.typeOf"
+
+/-- `object[key]`. -/
+def get : Js -> Text -> Js := import "deus:runtime" "js.get"
+
+/-- `object[key] = value`; returns the object. -/
+def set : Js -> Text -> Js -> Js := import "deus:runtime" "js.set"
+
+/-- `fn(...args)`. -/
+def call : Js -> List Js -> Js := import "deus:runtime" "js.call"
+
+/-- `object[key](...args)`. -/
+def method : Js -> Text -> List Js -> Js := import "deus:runtime" "js.method"
+
+/-- `new ctor(...args)`. -/
+def construct : Js -> List Js -> Js := import "deus:runtime" "js.construct"
+
+def keys : Js -> List Text := import "deus:runtime" "js.keys"
+
+def stringify : Js -> Text := import "deus:runtime" "js.stringify"
+
+def parse : Text -> Js := import "deus:runtime" "js.parse"
+
+/-- `globalThis[name]`. -/
+def global (name : Text) : Js := get globalThis name
+
+def globalThis : Js := import "" ""
+
+def log : Js -> Unit := import "deus:runtime" "js.log"
+
+/-- A path of property reads: `path o ["a", "b"]` is `o.a.b`. -/
+def path (o : Js) (keys : List Text) : Js := List.foldl get o keys
+
+end Js

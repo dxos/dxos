@@ -1,0 +1,14 @@
+# The budget guard (guard.mjs): the billing alert's webhook, which cuts every other Worker on the account.
+# Secrets, set once: CF_TOKEN (Workers Scripts Write on the account) and WEBHOOK_SECRET (the webhook
+# destination's secret). See docs/OPERATIONS.md.
+name = "deus-guard"
+main = "guard.mjs"
+compatibility_date = "2026-07-01"
+account_id = "ba80533b56e4658ce26b198a040692a9"
+workers_dev = true
+
+[vars]
+ACCOUNT_ID = "ba80533b56e4658ce26b198a040692a9"
+SELF = "deus-guard"
+# The $10 budget alert ("Default budget alert (auto-created)"), which also emails Dmytro.
+POLICY_IDS = "f9d757935eb1427bb38f503d1a1df1b4"

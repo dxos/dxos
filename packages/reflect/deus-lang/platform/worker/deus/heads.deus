@@ -1,0 +1,387 @@
+-- context: @dxos/worker/Worker
+/-
+  The Worker's branch heads in DEUS (task 41714c0d, D167, DataSafety.Spec): what a push claims with its
+  `x-deus-claim` header, whether that claim may move the branch head, and the R2 reads and conditional writes that
+  move it (through `Js.Async`, D237). platform/worker/remote.mjs answers the request around them.
+-/
+
+namespace Worker.Heads
+
+/-- A push's claim: the branch, the head it moves to, and the heads it builds on (none for a first push). -/
+structure Claim @"urn:deus:worker:Claim" where
+  branch : Text
+  head : Text
+  bases : List Text
+
+/-- A history node's hash: 64 lower-case hex digits. -/
+def isHash (t : Text) : Bool := Text.length t == 64 && List.all (fun c => isDigit c || (c >= 'a' && c <= 'f')) (Text.utf8 t)
+
+/-- A branch name: a letter or digit, then up to 99 letters, digits, `.`, `_`, `/` or `-`. -/
+def isBranch (t : Text) : Bool :=
+  match Text.utf8 t with
+  | first :: rest =>
+      (isDigit first || isAlpha first) && List.length rest <= 99
+        && List.all (fun c => isDigit c || isAlpha c || c == '.' || c == '_' || c == '/' || c == '-') rest
+  | [] => false
+
+/-- `<branch> <head> <base>[,<base>…]`, with `-` for no base; none when the header is anything else. -/
+def parseClaim (header : Text) : Option Claim :=
+  match Text.split header " " with
+  | [branch, head, bases] =>
+      let based := if bases == "-" then [] else Text.split bases ","
+      if isBranch branch && isHash head && List.all isHash based then
+        Option.some (Claim.mk branch head based)
+      else Option.none
+  | _ => Option.none
+
+/-- What a claim does to a branch whose head is `current`, given the data-safety epoch that head asks for
+  (`required`) and the one the pushing CLI has (`sent`):
+  - `same`: the head is already there, so a retried push succeeds without a write;
+  - `epoch`: the CLI is older than the codebase asks, and its merge may have lost data;
+  - `write`: the head builds on the current one (or the branch is new), so the conditional write may move it;
+  - `moved`: the head moved since the push's pull. -/
+def verdict (current : Option Text) (claim : Claim) (required : Int) (sent : Int) : Text :=
+  match current with
+  | Option.some head =>
+      if head == claim.head then "same"
+      else if sent < required then "epoch"
+      else if List.contains head claim.bases then "write"
+      else "moved"
+  | Option.none => if sent < required then "epoch" else "write"
+
+/-- Where a branch's head lives: one small object, moved by conditional writes (D181). -/
+def headKey (project : Text) (branch : Text) : Text := project ++ "/heads/" ++ branch
+
+/-- A head as the bucket holds it: the history node, the etag a conditional write moves it from, and when it was
+  written (a JavaScript `Date`). -/
+structure Stored @"urn:deus:worker:StoredHead" where
+  causal : Text
+  etag : Text
+  uploaded : Js
+
+/-- The head of `branch` in the R2 `bucket`, or none; a head moved before D181 is a D1 row, which remote.mjs reads. -/
+def readStored (bucket : Js) (project : Text) (branch : Text) : {Js.Async} Option Stored :=
+  match Js.toOption (Js.Async.await (Js.method bucket "get" [Js.text (headKey project branch)])) with
+  | Option.none => Option.none
+  | Option.some object =>
+      let text := Js.toText (Js.Async.await (Js.method object "text" []))
+      Option.some (Stored.mk (Text.trim text) (Js.toText (Js.get object "etag")) (Js.get object "uploaded"))
+
+/-- The bucket's head when there is one, else `legacy`'s, which is read only then: heads moved before D181 are D1
+  rows, and reading one costs no write. -/
+def preferStored (stored : Option a) (legacy : Unit -> {Js.Async} Option a) : {Js.Async} Option a :=
+  match stored with
+  | Option.some head => Option.some head
+  | Option.none => legacy ()
+
+/-- The head of `branch` as remote.mjs and live.mjs read it: `{causal, etag, uploaded}` from the bucket, else
+  `{causal}` from the D1 `db` (none when the Worker has no `db`), else `undefined`. The first push after D181 copies a
+  D1 head to the bucket, since its conditional write creates the bucket's copy. -/
+def readHead (bucket : Js) (db : Js) (project : Text) (branch : Text) : {Js.Async} Js :=
+  let stored := Option.map (fun head => Js.obj [("causal", Js.text head.causal), ("etag", Js.text head.etag), ("uploaded", head.uploaded)]) (readStored bucket project branch)
+  let legacy := fun _ =>
+    match Js.toOption db with
+    | Option.none => Option.none
+    | Option.some database =>
+        match Worker.D1.first database "select causal from heads where project = ? and branch = ?" [Js.text project, Js.text branch] with
+        | Option.none => Option.none
+        | Option.some row => Option.some (Js.obj [("causal", Js.get row "causal")])
+  Option.getOr (preferStored stored legacy) Js.undefined
+
+test storedHeadsComeFirst :=
+  Worker.Http.offline (fun _ =>
+    let asked := Ref.new 0
+    let legacy := fun _ =>
+      let _ := Ref.set asked (Ref.get asked + 1)
+      Option.some "d1"
+    preferStored (Option.some "r2") legacy == Option.some "r2" && Ref.get asked == 0
+      && preferStored Option.none legacy == Option.some "d1" && Ref.get asked == 1
+      && preferStored Option.none (fun _ => Option.none) == Option.none)
+
+/-- Moves the head of `branch` to `causal` by a conditional write: from the head whose etag is `etag`, or only where
+  there is none. False when another push moved it first, so no two pushes both win (D167). -/
+def writeHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (etag : Option Text) : {Js.Async} Bool :=
+  let onlyIf :=
+    match etag with
+    | Option.some tag => Js.obj [("etagMatches", Js.text tag)]
+    | Option.none => Js.construct (Js.global "Headers") [Js.obj [("if-none-match", Js.text "*")]]
+  let options := Js.obj [("onlyIf", onlyIf), ("httpMetadata", Js.obj [("contentType", Js.text "text/plain")])]
+  not (Js.isNull (Js.Async.await (Js.method bucket "put" [Js.text (headKey project branch), Js.text causal, options])))
+
+/-- The folder of a branch's head log: one object per head the branch had (DataSafety.Spec). -/
+def headLogKey (project : Text) (branch : Text) : Text := project ++ "/headlog/" ++ branch ++ "/"
+
+/-- A head log entry's name: 13 digits of milliseconds, `-`, the head's hash; anything else in the folder is not one. -/
+def isLogged (name : Text) : Bool :=
+  match Text.split name "-" with
+  | [at, head] => Text.length at == 13 && List.all isDigit (Text.utf8 at) && isHash head
+  | _ => false
+
+/-- `t` with zeros before it, up to `width` characters. -/
+def padded (width : Int) (t : Text) : Text := Text.repeat (width - Text.length t) "0" ++ t
+
+/-- Records that `branch` moved to `causal` from `previous` by the key `keyId`, under the time it moved. The time is a
+  JavaScript number: milliseconds pass the 32-bit `Int`. -/
+def logHead (bucket : Js) (project : Text) (branch : Text) (causal : Text) (previous : Option Text) (keyId : Option Text) : {Js.Async} Unit :=
+  let at := Js.call (Js.path Js.globalThis ["Date", "now"]) []
+  let orNull := fun value => Option.getOr (Option.map Js.text value) Js.null
+  let entry := Js.stringify (Js.obj [("causal", Js.text causal), ("previous", orNull previous), ("at", at), ("key", orNull keyId)])
+  let options := Js.obj [("httpMetadata", Js.obj [("contentType", Js.text "application/json")])]
+  let _ := Js.Async.await (Js.method bucket "put" [Js.text (headLogKey project branch ++ padded 13 (Js.toText at) ++ "-" ++ causal), Js.text entry, options])
+  ()
+
+test logEntriesAreNamed :=
+  isLogged ("1760000000000-" ++ headA) && not (isLogged ("176000000000-" ++ headA)) && not (isLogged "1760000000000-x")
+    && not (isLogged ("1760000000000-" ++ headA ++ "-" ++ headA)) && padded 13 "42" == "0000000000042"
+
+/-- The data-safety epoch a `Safety.epoch` term's stored text asks for (`(term (int 3))`), or 0 for any other text:
+  a codebase that states no epoch asks for none (DataSafety.Spec). -/
+def epochOf (text : Text) : Int :=
+  match Sexp.readAll text with
+  | [Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "int", Sexp.int n]]] => if n < 0 then 0 else n
+  | _ => 0
+
+test epochsRead :=
+  epochOf "(term (int 3))" == 3 && epochOf "(term (text \"3\"))" == 0 && epochOf "" == 0 && epochOf "(term (int -2))" == 0
+    && epochOf "(term (int 3)) (x)" == 0
+
+/-- What a claim did to its branch: `status` 0 when the head is where the claim put it (moved now or already), 426
+  when the pushing CLI is older than the codebase's epoch (`required`), or 409 when the head moved since the pull
+  (`head`, the head it moved to, or ""). -/
+structure Moved @"urn:deus:worker:Moved" where
+  status : Int
+  required : Int
+  head : Text
+
+/-- Where a project's branch heads live: R2 at the edge, a map in tests. `current branch` is the head and the tag a
+  conditional write moves it from (none for a head read from D1, which a write moves only where the bucket holds
+  none); `epochAt head` is the data-safety epoch a head asks for; `swap branch head tag` moves the head from
+  the one tagged `tag` (or only where there is none), false when another push moved it first; `log branch head
+  previous` records a move. -/
+structure HeadStore where
+  current : Text -> {Js.Async} Option (Text, Option Text)
+  epochAt : Text -> {Js.Async} Int
+  swap : Text -> Text -> Option Text -> {Js.Async} Bool
+  log : Text -> Text -> Option Text -> {Js.Async} Unit
+
+/-- Moves `claim.branch` as the claim asks, if it may (D167, D181): reads the current head, asks its epoch only when
+  the head would change, decides by `verdict`, and swaps and logs the move by a conditional write, so of two pushes
+  from one head exactly one moves it. -/
+def move (store : HeadStore) (claim : Claim) (sent : Int) : {Js.Async} Moved :=
+  let current := store.current claim.branch
+  let causal := Option.map fst current
+  let required :=
+    match causal with
+    | Option.some head => if head == claim.head then 0 else store.epochAt head
+    | Option.none => 0
+  let tag := Option.bind current snd
+  let decided := verdict causal claim required sent
+  if decided == "same" then Moved.mk 0 required claim.head
+  else if decided == "epoch" then Moved.mk 426 required ""
+  else if decided == "write" && store.swap claim.branch claim.head tag then
+    let _ := store.log claim.branch claim.head causal
+    Moved.mk 0 required claim.head
+  else Moved.mk 409 required (match store.current claim.branch with | Option.some (head, _) => head | Option.none => "")
+
+/-- The heads of `project` in the R2 `bucket`, read through `readCurrent` (in JavaScript, a branch to a promise of
+  `{causal, etag}` or `undefined`, which also reads heads older than D181) and `epochAt` (a head to a promise of
+  its epoch), logged as moved by the key `keyId`. -/
+def r2Heads (bucket : Js) (project : Text) (keyId : Option Text) (readCurrent : Text -> Js) (epochAt : Text -> Js) : HeadStore :=
+  { current := fun branch =>
+      match Js.toOption (Js.Async.await (readCurrent branch)) with
+      | Option.none => Option.none
+      | Option.some found => Option.some (Js.toText (Js.get found "causal"), Option.map Js.toText (Js.toOption (Js.get found "etag"))),
+    epochAt := fun head => Js.toInt (Js.Async.await (epochAt head)),
+    swap := fun branch head tag => writeHead bucket project branch head tag,
+    log := fun branch head previous => logHead bucket project branch head previous keyId }
+
+/-- Why a push may not move its branch: it names no claim (only a key that may compact, which re-claims existing
+  heads, may omit one), the claim is malformed, the pushing CLI is older than the epoch the head asks for, or the
+  head moved since the push's pull. -/
+inductive Refusal @"urn:deus:worker:Refusal" where
+  | unclaimed
+  | malformed
+  | outdated (branch : Text) (required : Int) (sent : Int)
+  | overtaken (branch : Text) (head : Text)
+
+/-- The HTTP status of a refusal. -/
+def refusalStatus (refusal : Refusal) : Int :=
+  match refusal with
+  | Refusal.unclaimed => 428
+  | Refusal.malformed => 400
+  | Refusal.outdated _ _ _ => 426
+  | Refusal.overtaken _ _ => 409
+
+/-- What a refusal tells the pusher to do. -/
+def refusalMessage (refusal : Refusal) : Text :=
+  match refusal with
+  | Refusal.unclaimed => "a push must name the head it builds on (x-deus-claim); update deus by merging #13952"
+  | Refusal.malformed => "x-deus-claim is `<branch> <head> <base>[,<base>…]`"
+  | Refusal.outdated branch required sent =>
+      branch ++ " needs a deus with data-safety epoch " ++ Int.toText required ++ " (Safety.epoch) or newer, and this one has "
+        ++ Int.toText sent ++ ": its merge or push may lose data; update deus by merging #13952, then push again"
+  | Refusal.overtaken branch head =>
+      branch ++ " moved to #" ++ Text.take 10 head ++ " since you pulled; run `deus pull` and `deus merge`, then push again"
+
+/-- The epoch the pushing CLI has, from `x-deus-epoch`: up to nine decimal digits, so it stays an `Int`; anything
+  else counts as none. -/
+def sentEpoch (header : Option Text) : Int :=
+  match Option.map Text.trim header with
+  | Option.some digits =>
+      if Text.length digits >= 1 && Text.length digits <= 9 && List.all isDigit (Text.utf8 digits) then Option.getOr (Int.fromText digits) 0
+      else 0
+  | Option.none => 0
+
+/-- Moves the branch a push claims (header `claim`, the CLI's epoch header `epoch`), by `moveTo`, for a key holding
+  `scopes`; none when the head is where the push needs it, else why not. -/
+def claimed (claim : Option Text) (epoch : Option Text) (scopes : List Text) (moveTo : Claim -> Int -> {Js.Async} Moved) : {Js.Async} Option Refusal :=
+  match Option.bind claim (fun header => if Text.isEmpty header then Option.none else Option.some header) with
+  | Option.none => if List.contains "compact" scopes || List.contains "admin" scopes then Option.none else Option.some Refusal.unclaimed
+  | Option.some header =>
+      match parseClaim header with
+      | Option.none => Option.some Refusal.malformed
+      | Option.some parsed =>
+          let sent := sentEpoch epoch
+          let moved := moveTo parsed sent
+          if moved.status == 0 then Option.none
+          else if moved.status == 426 then Option.some (Refusal.outdated parsed.branch moved.required sent)
+          else Option.some (Refusal.overtaken parsed.branch moved.head)
+
+/-- Moves the branch head a push to `project` claims (D167), as remote.mjs asks before a bundle is stored: a promise
+  of `undefined` when the head is where the push needs it, else of the response that refuses it. `logged` is the
+  key's audit callback, carrying its `keyId` and `scopes`; `readCurrent` and `epochAt` are as for `r2Heads`. -/
+def gate (request : Js) (bucket : Js) (project : Text) (logged : Js) (readCurrent : Text -> Js) (epochAt : Text -> Js) : {Js.Async} Js :=
+  let scopes := List.map Js.toText (Js.toList (Js.get logged "scopes"))
+  let keyId := Option.map Js.toText (Js.toOption (Js.get logged "keyId"))
+  let refused :=
+    claimed
+      (Worker.Http.header request "x-deus-claim")
+      (Worker.Http.header request "x-deus-epoch")
+      scopes
+      (fun claim sent => move (r2Heads bucket project keyId readCurrent epochAt) claim sent)
+  match refused with
+  | Option.none => Js.undefined
+  | Option.some refusal =>
+      let extra :=
+        match refusal with
+        | Refusal.outdated _ required _ => [("epoch", Js.int required)]
+        | Refusal.overtaken _ head => [("head", if Text.isEmpty head then Js.null else Js.text head)]
+        | _ => []
+      Worker.Http.json (Js.obj (("error", Js.text (refusalMessage refusal)) :: extra)) (refusalStatus refusal)
+
+test claimsGateThePush :=
+  Worker.Http.offline (fun _ =>
+    let tried := Ref.new []
+    let moveTo := fun status => fun claim sent =>
+      let _ := Ref.set tried (Ref.get tried ++ [(claim.branch, sent)])
+      Moved.mk status 3 (if status == 409 then headB else "")
+    let claim := Option.some ("main " ++ headA ++ " -")
+    claimed Option.none Option.none ["push"] (moveTo 0) == Option.some Refusal.unclaimed
+      && claimed (Option.some "") Option.none ["push"] (moveTo 0) == Option.some Refusal.unclaimed
+      && claimed Option.none Option.none ["compact"] (moveTo 0) == Option.none
+      && claimed Option.none Option.none ["admin"] (moveTo 0) == Option.none
+      && claimed (Option.some "main x -") Option.none ["push"] (moveTo 0) == Option.some Refusal.malformed
+      && claimed claim (Option.some "2") ["push"] (moveTo 0) == Option.none
+      && claimed claim (Option.some "2") ["push"] (moveTo 426) == Option.some (Refusal.outdated "main" 3 2)
+      && claimed claim Option.none ["push"] (moveTo 409) == Option.some (Refusal.overtaken "main" headB)
+      && Ref.get tried == [("main", 2), ("main", 2), ("main", 0)])
+
+test epochsAreSmallWholeNumbers :=
+  sentEpoch (Option.some "3") == 3 && sentEpoch (Option.some " 12 ") == 12 && sentEpoch Option.none == 0
+    && sentEpoch (Option.some "-1") == 0 && sentEpoch (Option.some "1.5") == 0 && sentEpoch (Option.some "1234567890") == 0
+    && sentEpoch (Option.some "") == 0
+
+test refusalsSayWhatToDo :=
+  refusalStatus Refusal.unclaimed == 428 && refusalStatus Refusal.malformed == 400
+    && refusalStatus (Refusal.outdated "main" 3 2) == 426 && refusalStatus (Refusal.overtaken "main" headB) == 409
+    && refusalMessage (Refusal.outdated "main" 3 2)
+      == "main needs a deus with data-safety epoch 3 (Safety.epoch) or newer, and this one has 2: its merge or push may lose data; update deus by merging #13952, then push again"
+    && refusalMessage (Refusal.overtaken "main" headB) == "main moved to #bbbbbbbbbb since you pulled; run `deus pull` and `deus merge`, then push again"
+
+/-- Heads held in `heads` (a branch to its head and tag, the tag counting the writes) and moves logged in `moves`;
+  every head asks for the epoch `epochs` gives it, or 0. `move` in tests, with no R2. -/
+def memoryHeads (heads : Ref (Map Text (Text, Text))) (moves : Ref (List (Text, Text, Option Text))) (epochs : List (Text, Int)) : HeadStore :=
+  { current := fun branch => Option.map (fun held => (fst held, Option.some (snd held))) (Map.lookup branch (Ref.get heads)),
+    epochAt := fun head => Option.getOr (List.lookup head epochs) 0,
+    swap := fun branch head tag =>
+      if tag == Option.map snd (Map.lookup branch (Ref.get heads)) then
+        let _ := Ref.set heads (Map.insert branch (head, Int.toText (List.length (Ref.get moves))) (Ref.get heads))
+        true
+      else false,
+    log := fun branch head previous => Ref.set moves (Ref.get moves ++ [(branch, head, previous)]) }
+
+test headsMoveOnlyFromWhereThePushPulled :=
+  Worker.Http.offline (fun _ =>
+    let heads := Ref.new Map.empty
+    let moves := Ref.new []
+    let asked := Ref.new []
+    let base := memoryHeads heads moves [(headB, 2)]
+    let store := { base with epochAt := fun head =>
+      let _ := Ref.set asked (Ref.get asked ++ [head])
+      base.epochAt head }
+    let first := move store (Claim.mk "main" headA []) 0
+    let retried := move store (Claim.mk "main" headA []) 0
+    let built := move store (Claim.mk "main" headB [headA]) 0
+    let stale := move store (Claim.mk "main" headA [headA]) 5
+    let old := move store (Claim.mk "main" (Text.repeat 64 "c") [headB]) 1
+    first == Moved.mk 0 0 headA
+      && retried == Moved.mk 0 0 headA
+      && built == Moved.mk 0 0 headB
+      && stale == Moved.mk 409 2 headB
+      && old == Moved.mk 426 2 ""
+      && Ref.get moves == [("main", headA, Option.none), ("main", headB, Option.some headA)]
+      && Ref.get asked == [headA, headB, headB])
+
+test ofTwoPushesFromOneHeadOneMovesIt :=
+  Worker.Http.offline (fun _ =>
+    let heads := Ref.new (Map.insert "main" (headA, "t") Map.empty)
+    let moves := Ref.new []
+    let store := memoryHeads heads moves []
+    -- The second push read the head before the first moved it, and reads it again once its write fails.
+    let reads := Ref.new 0
+    let raced := { store with current := fun branch =>
+      let _ := Ref.set reads (Ref.get reads + 1)
+      if Ref.get reads == 1 then Option.some (headA, Option.some "t") else store.current branch }
+    let won := move store (Claim.mk "main" headB [headA]) 0
+    let lost := move raced (Claim.mk "main" (Text.repeat 64 "c") [headA]) 0
+    -- A head read from D1 has no tag: the write creates the bucket's copy.
+    let fromD1 := { store with current := fun _ => Option.some (headA, Option.none) }
+    let copied := move fromD1 (Claim.mk "dev" headB [headA]) 0
+    won == Moved.mk 0 0 headB && lost == Moved.mk 409 0 headB && Map.lookup "main" (Ref.get heads) == Option.some (headB, "0")
+      && copied == Moved.mk 0 0 headB && Map.lookup "dev" (Ref.get heads) == Option.some (headB, "1")
+      && Ref.get moves == [("main", headB, Option.some headA), ("dev", headB, Option.some headA)])
+
+/-- Answers `/v1/<project>/headlog/<branch>` for `request`: every head the branch had, oldest first, one
+  `<ms>-<causal>` per line. Only pushes write the log. -/
+def serveLog (request : Js) (bucket : Js) (project : Text) (rest : List Text) : {Js.Async} Js :=
+  if Worker.Http.method request != "GET" then Worker.Http.problem 405 "the head log is written only by pushes"
+  else
+    let segments := List.filter (fun segment => not (Text.isEmpty segment)) rest
+    let branch := Text.join "/" (List.map (fun part => Js.toText (Js.call (Js.global "decodeURIComponent") [Js.text part])) segments)
+    if not (isBranch branch) then Worker.Http.problem 404 "the head log is read as /headlog/<branch>"
+    else Worker.Http.lines (List.filter isLogged (Worker.R2.listAll bucket (headLogKey project branch)))
+
+/-- A sample head for the tests. -/
+def headA : Text := Text.repeat 64 "a"
+
+/-- Another sample head. -/
+def headB : Text := Text.repeat 64 "b"
+
+test claimsParse :=
+  parseClaim ("main " ++ headA ++ " -") == Option.some (Claim.mk "main" headA [])
+    && parseClaim ("feature/x " ++ headB ++ " " ++ headA ++ "," ++ headA) == Option.some (Claim.mk "feature/x" headB [headA, headA])
+
+test badClaimsAreRefused :=
+  List.all (fun header => parseClaim header == Option.none)
+    ["", "main", "main " ++ headA, "-main " ++ headA ++ " -", "main " ++ headA ++ " " ++ headA ++ ",", "main " ++ headA ++ "  -",
+     "main " ++ Text.repeat 64 "A" ++ " -", Text.repeat 101 "m" ++ " " ++ headA ++ " -"]
+
+test verdictsKeepHeads :=
+  verdict (Option.some headA) (Claim.mk "main" headA []) 9 0 == "same"
+    && verdict (Option.some headA) (Claim.mk "main" headB [headA]) 2 1 == "epoch"
+    && verdict (Option.some headA) (Claim.mk "main" headB [headA]) 2 2 == "write"
+    && verdict (Option.some headA) (Claim.mk "main" headB []) 0 0 == "moved"
+    && verdict Option.none (Claim.mk "main" headB []) 0 0 == "write"
+    && verdict Option.none (Claim.mk "main" headB []) 1 0 == "epoch"
+
+end Worker.Heads

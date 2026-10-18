@@ -1,0 +1,6 @@
+# Keep in sync with `rust` in /.prototools; CI's setup action installs exactly this.
+[toolchain]
+channel = "1.93.0"
+profile = "minimal"
+# The wasm kernels: WASI (scripts/wasm-seed.sh) and the embeddable one (embed/).
+targets = ["wasm32-wasip1", "wasm32-unknown-unknown"]

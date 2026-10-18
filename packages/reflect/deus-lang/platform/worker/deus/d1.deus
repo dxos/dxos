@@ -1,0 +1,29 @@
+-- context: @dxos/worker/Worker
+/-
+  The D1 database as the Worker's DEUS code uses it (task 41714c0d): a statement with its values bound, then its
+  first row, every row, or how many rows it changed, over `Js` and `Js.Async` (D237). The database is the Worker's
+  `DB` binding, which holds the API keys.
+-/
+
+namespace Worker.D1
+
+/-- `sql` prepared on `db` with `values` bound to its `?`s in order. -/
+def statement (db : Js) (sql : Text) (values : List Js) : Js :=
+  Js.method (Js.method db "prepare" [Js.text sql]) "bind" values
+
+/-- The first row `sql` reads, or none. -/
+def first (db : Js) (sql : Text) (values : List Js) : {Js.Async} Option Js :=
+  Js.toOption (Js.Async.await (Js.method (statement db sql values) "first" []))
+
+/-- Every row `sql` reads. -/
+def all (db : Js) (sql : Text) (values : List Js) : {Js.Async} List Js :=
+  Js.toList (Js.get (Js.Async.await (Js.method (statement db sql values) "all" [])) "results")
+
+/-- Runs `sql`, giving how many rows it changed. -/
+def run (db : Js) (sql : Text) (values : List Js) : {Js.Async} Int :=
+  let result := Js.Async.await (Js.method (statement db sql values) "run" [])
+  match Option.bind (Js.toOption (Js.get result "meta")) (fun meta => Js.toOption (Js.get meta "changes")) with
+  | Option.some changes => Js.toInt changes
+  | Option.none => 0
+
+end Worker.D1

@@ -1,0 +1,49 @@
+# The DEUS Worker (D164): the replication API at /v1/ and the codebase explorer, over a private bucket.
+name = "deus"
+main = "worker.mjs"
+compatibility_date = "2026-07-01"
+account_id = "ba80533b56e4658ce26b198a040692a9"
+workers_dev = true
+
+# Drawing a head's explorer reads and prints every definition once (D192); Workers Paid allows up to 5 minutes.
+[limits]
+cpu_ms = 120000
+# The first explorer of a codebase reads each definition with its own ranged read (D192).
+subrequests = 50000
+
+[vars]
+# The project whose explorer is served at `/`; requests and attachments go to <PREFIX>/inbox/ and <PREFIX>/assets/ (D82).
+PREFIX = "toolchain"
+# Only active members of this GitHub organization may write from the explorer.
+GITHUB_ORG = "dxos"
+
+# Explorer sign-in also needs three secrets, set with `wrangler secret put`: GITHUB_CLIENT_ID and
+# GITHUB_CLIENT_SECRET (a GitHub OAuth app whose callback URL is https://<this worker's host>/auth/callback)
+# and SESSION_SECRET (random, 32+ bytes). Without them the explorer is read-only.
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "deus-codebases"
+
+# A cache in front of the bucket for what visitors read most: each branch's shown head (60 s) and drawn
+# explorer pages (7 days), read through on demand so a push writes nothing to it.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "084c8df5e4bd4e8ab9b79e25b6d240fc"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "deus-auth"
+database_id = "bcc70fb6-81db-4506-8883-ffce92cb6333"
+migrations_dir = "migrations"
+
+# Drawing a pushed head's explorer (D192) outlasts the 30 s a response's waitUntil gets, so a queue
+# consumer, which may run for minutes, does it.
+[[queues.producers]]
+binding = "LIVE_QUEUE"
+queue = "deus-live"
+
+[[queues.consumers]]
+queue = "deus-live"
+max_batch_size = 1
+max_retries = 2

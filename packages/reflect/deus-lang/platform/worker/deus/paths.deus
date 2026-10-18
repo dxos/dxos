@@ -1,0 +1,70 @@
+-- context: @dxos/worker/Worker
+/-
+  What the Worker accepts as a name in a project's bucket folder, in DEUS (task 41714c0d, D164): bundle names, file
+  path segments, the file folders clients write, and the scope that writes each. platform/worker/remote.mjs answers
+  the requests around them.
+-/
+
+namespace Worker.Paths
+
+/-- A bundle's name: a level of one to three digits, `-`, and its SHA-256 (D50, D91). -/
+def isBundle (name : Text) : Bool :=
+  match Text.split name "-" with
+  | [level, hash] => Text.length level >= 1 && Text.length level <= 3 && List.all isDigit (Text.utf8 level) && Worker.Heads.isHash hash
+  | _ => false
+
+/-- One segment of a file's path: a letter, digit or `_`, then up to 199 letters, digits, `.`, `_` or `-`; so no
+  segment is `.`, `..` or empty, and a path cannot climb out of its folder. -/
+def isSegment (segment : Text) : Bool :=
+  match Text.utf8 segment with
+  | first :: rest =>
+      (isAlpha first || isDigit first || first == '_') && List.length rest <= 199
+        && List.all (fun c => isAlpha c || isDigit c || c == '.' || c == '_' || c == '-') rest
+  | [] => false
+
+/-- The file folders clients write; `results` holds the verdicts a push carries (D209). -/
+def folders : List Text := ["assets", "inbox", "site", "events", "results"]
+
+/-- Whether `folder` is one clients write. -/
+def isFolder (folder : Text) : Bool := List.contains folder folders
+
+/-- The scope that writes `folder`: its own name, except `results`, which a push writes. -/
+def scopeOf (folder : Text) : Text := if folder == "results" then "push" else folder
+
+test namesAreChecked :=
+  isBundle ("0-" ++ Worker.Heads.headA) && isBundle ("123-" ++ Worker.Heads.headA) && not (isBundle ("1234-" ++ Worker.Heads.headA))
+    && not (isBundle ("-" ++ Worker.Heads.headA)) && not (isBundle ("a-" ++ Worker.Heads.headA)) && not (isBundle "0-abc")
+
+test segmentsStayInTheirFolder :=
+  isSegment "index.html" && isSegment "_a-b.c" && not (isSegment "..") && not (isSegment ".") && not (isSegment "")
+    && not (isSegment ".hidden") && not (isSegment "a/b") && not (isSegment "a b") && isSegment (Text.repeat 200 "a")
+    && not (isSegment (Text.repeat 201 "a"))
+
+test resultsArePushed := scopeOf "results" == "push" && scopeOf "assets" == "assets" && isFolder "results" && not (isFolder "heads")
+
+/-- Which handler answers `/v1/<project>/<area>/<rest>`, and the path it is given: `bundles`, `packs`, `objects`
+  (for `objects` and `meta`), `names`, `live`, `headlog` or `files` (whose path starts with its folder), or "" for
+  none. `files/packs` is the packs, which `Remote.keys`, `download` and `upload` reach through the files API. -/
+structure Dispatch @"urn:deus:worker:Dispatch" where
+  handler : Text
+  path : List Text
+
+/-- The handler for `area` and the path after it (`Dispatch`). -/
+def dispatch (area : Text) (rest : List Text) : Dispatch :=
+  if List.contains area ["bundles", "packs", "names", "live", "headlog"] then Dispatch.mk area rest
+  else if area == "objects" || area == "meta" then Dispatch.mk "objects" rest
+  else if area == "files" then
+    match rest with
+    | "packs" :: after => Dispatch.mk "packs" after
+    | folder :: _ => if isFolder folder then Dispatch.mk "files" rest else Dispatch.mk "" []
+    | [] => Dispatch.mk "" []
+  else Dispatch.mk "" []
+
+test areasFindTheirHandlers :=
+  dispatch "bundles" ["0-a"] == Dispatch.mk "bundles" ["0-a"] && dispatch "meta" ["h"] == Dispatch.mk "objects" ["h"]
+    && dispatch "objects" [] == Dispatch.mk "objects" [] && dispatch "files" ["packs", "k"] == Dispatch.mk "packs" ["k"]
+    && dispatch "files" ["assets", "x"] == Dispatch.mk "files" ["assets", "x"] && dispatch "files" ["heads"] == Dispatch.mk "" []
+    && dispatch "files" [] == Dispatch.mk "" [] && dispatch "headlog" ["main"] == Dispatch.mk "headlog" ["main"]
+    && dispatch "trash" ["x"] == Dispatch.mk "" [] && dispatch "" [] == Dispatch.mk "" []
+
+end Worker.Paths

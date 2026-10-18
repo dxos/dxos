@@ -1,0 +1,640 @@
+/-
+  A WebAssembly back end (D51): compiles a definition and the definitions it calls to a binary
+  wasm module, written byte by byte in DEUS.
+
+  The subset is first-order code over integers and algebraic data: every definition is a
+  function of values to a value, built from literals, locals, `let`, `seq`, `if`, `match`,
+  constructors, integer and comparison primitives, and saturated calls of other such
+  definitions. A call in tail position is a `return_call`, so recursion that loops runs in
+  constant stack. Anything else (closures, text, effects) is refused with the form that is out
+  of the subset; such programs run on the wasm kernel instead (D41).
+
+  Values are `i32`s. `Int` and `Bool` (0, 1) are themselves; any other constructed value
+  (D56) points at a block `[tag, field…]` in linear memory, allocated by bumping a heap pointer
+  that grows memory as needed and never frees. The module exports `memory` and `alloc`, so a host
+  can build arguments and read results.
+
+  `Int.div` and `Int.mod` by zero trap rather than raise a defect.
+
+  `==`, `!=` and the order primitives compare `i32`s, which is right only for `Int` and `Bool`; on
+  a constructed value it would compare addresses. The compiler follows each definition's stored
+  type through its locals (D69) and refuses a comparison unless one side is an `Int` or `Bool`.
+-/
+
+namespace Wasm
+
+--
+-- Encoding.
+--
+
+def uleb (n : Int) : List Int :=
+  let byte := Int.and n 127
+  let rest := Int.ushr n 7
+  if rest == 0 then [byte] else Int.or byte 128 :: uleb rest
+
+def sleb (n : Int) : List Int :=
+  let byte := Int.and n 127
+  let rest := Int.shr n 7
+  if (rest == 0 && Int.and byte 64 == 0) || (rest == -1 && Int.and byte 64 != 0) then [byte]
+  else Int.or byte 128 :: sleb rest
+
+def vec (items : List (List Int)) : List Int := uleb (List.length items) ++ List.concat items
+
+def name (t : Text) : List Int :=
+  let bytes := Text.utf8 t
+  uleb (List.length bytes) ++ bytes
+
+def section (id : Int) (body : List Int) : List Int := id :: uleb (List.length body) ++ body
+
+def i32 : Int := 127
+
+--
+-- The subset.
+--
+
+/-- A definition in the module: its hash, parameter count, body and stored type (`()` if none). -/
+structure Fn @"urn:deus:wasm:Fn" where
+  fnHash : Text
+  fnArity : Int
+  fnBody : Sexp
+  fnType : Sexp
+
+/--
+  What compiling one definition sees: the module's functions, the data types it names (`(type …)`
+  objects by hash or IRI), the type known for each local so far, and the types whose equality
+  function the module needs, in function order (D100).
+-/
+structure Scope @"urn:deus:wasm:Scope" where
+  fns : List Fn
+  -- Each definition by its hash, with its index: lookups at every call stay constant time on large programs.
+  byHash : Dict Text (Int, Fn)
+  datatypes : List (Text, Sexp)
+  -- Each data type's object by its hash and by its IRI, for `typeObject`.
+  typeTable : Dict Text Sexp
+  typed : Ref (List (Int, Sexp))
+  eqs : Ref (List Sexp)
+
+/-- Each definition of `fns` by its hash, with its index, for `Scope.byHash`. -/
+def fnTable (fns : List Fn) : Dict Text (Int, Fn) := Dict.fromList (List.mapIndexed (fun i f => (f.fnHash, (i, f))) fns)
+
+/-- The definition `h` of the scope. -/
+def findFn (scope : Scope) (h : Text) : Option Fn := Option.map snd (Dict.lookup h scope.byHash)
+
+/-- `(lam (lam … b))` as (parameter count, b). -/
+def unlam (core : Sexp) : (Int, Sexp) :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] =>
+    match unlam b with
+    | (n, inner) => (n + 1, inner)
+  | _ => (0, core)
+
+def binary (name : Text) : Option Int :=
+  if name == "Int.add" then some 106
+  else if name == "Int.sub" then some 107
+  else if name == "Int.mul" then some 108
+  else if name == "Int.div" then some 109
+  else if name == "Int.mod" then some 111
+  else if name == "Int.and" then some 113
+  else if name == "Int.or" then some 114
+  else if name == "Int.xor" then some 115
+  else if name == "Int.shl" then some 116
+  else if name == "Int.shr" then some 117
+  else if name == "Int.ushr" then some 118
+  else if name == "eq" then some 70
+  else if name == "neq" then some 71
+  else if name == "lt" then some 72
+  else if name == "gt" then some 74
+  else if name == "le" then some 76
+  else if name == "ge" then some 78
+  else none
+
+def unknown : Sexp := Sexp.list []
+
+def tref (t : Text) : Sexp := Sexp.list [Sexp.sym "tref", Sexp.str t]
+
+/-- Whether `p` is a comparison, whose result is a `Bool`. -/
+def isComparison (p : Text) : Bool := List.any (fun x => x == p) ["eq", "neq", "lt", "gt", "le", "ge"]
+
+/-- Whether a value of type `t` is an `i32` that is the value itself, not an address. -/
+def isScalar (t : Sexp) : Bool := t == tref "#Int" || t == tref "#Bool"
+
+/-- `t` with each type variable replaced as `binding` says. -/
+def substitute (binding : Sexp -> Option Sexp) (t : Sexp) : Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", _] => Option.getOr (binding t) t
+  | Sexp.list items => Sexp.list (List.map (substitute binding) items)
+  | _ => t
+
+/-- The variables of `pattern` that `actual` fixes, as (variable, type). -/
+def matchType (pattern : Sexp) (actual : Sexp) : List (Sexp, Sexp) :=
+  match (pattern, actual) with
+  | (Sexp.list [Sexp.sym "tvar", _], _) => if actual == unknown then [] else [(pattern, actual)]
+  | (Sexp.list xs, Sexp.list ys) => if List.length xs == List.length ys then List.concatMap (fun pair => matchType (fst pair) (snd pair)) (List.zip xs ys) else []
+  | _ => []
+
+/-- A function type's first `n` parameter types and what remains. -/
+def peel (n : Int) (t : Sexp) : (List Sexp, Sexp) :=
+  if n == 0 then ([], t)
+  else
+    match t with
+    | Sexp.list (Sexp.sym "tfun" :: a :: b :: _) =>
+      match peel (n - 1) b with
+      | (params, result) => (a :: params, result)
+    | _ => (List.replicate n unknown, unknown)
+
+/-- The arguments of a type `(tapp (tref "T") a …)`; none for `(tref "T")`. -/
+def typeArgs (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "tapp" :: _ :: args) => args
+  | _ => []
+
+/-- The `(type …)` object a constructor names by hash, or a signature names by IRI. -/
+def typeObject (scope : Scope) (t : Text) : Option Sexp := Dict.lookup t scope.typeTable
+
+/-- `datatypes` by hash, then by IRI where no hash is that IRI, as `typeObject` finds them. -/
+def typeTable (datatypes : List (Text, Sexp)) : Dict Text Sexp :=
+  let byIri := List.filterMap (fun pair =>
+    match snd pair with
+    | Sexp.list (Sexp.sym "type" :: Sexp.str iri :: _) => some (iri, snd pair)
+    | _ => none) datatypes
+  -- Dict.fromList keeps the last of a repeated key, so hashes go last and the first IRI match goes after the rest.
+  Dict.fromList (List.reverse byIri ++ List.reverse datatypes)
+
+/-- A type object's constructors, each as its field types. -/
+def ctorFields (form : Sexp) : List (List Sexp) :=
+  match form with
+  | Sexp.list (Sexp.sym "type" :: _ :: _ :: ctors) => List.map (fun c =>
+      match c with
+      | Sexp.list (Sexp.sym "ctor" :: _ :: fields) => fields
+      | _ => []) ctors
+  | _ => []
+
+/-- `field` with the type object's parameters `(tvar k)` replaced by `args`. -/
+def instantiate (args : List Sexp) (field : Sexp) : Sexp :=
+  substitute (fun v =>
+    match v with
+    | Sexp.list [Sexp.sym "tvar", Sexp.int k] => List.get? args k
+    | _ => none) field
+
+/-- The type of field `i` of constructor `tag` of data type `typeHash`, at the scrutinee's type. -/
+def fieldType (scope : Scope) (typeHash : Text) (tag : Int) (i : Int) (scrutinee : Sexp) : Sexp :=
+  match typeObject scope typeHash with
+  | some form =>
+    match List.get? (ctorFields form) tag with
+    | some fields => Option.getOr (Option.map (instantiate (typeArgs scrutinee)) (List.get? fields i)) unknown
+    | none => unknown
+  | none => unknown
+
+/--
+  The type of constructor `tag` of `t` applied to arguments of types `argTypes`, named by IRI as
+  signatures name it; a parameter no argument fixes is unknown.
+-/
+def constructed (scope : Scope) (t : Text) (tag : Int) (argTypes : List Sexp) : Sexp :=
+  match typeObject scope t with
+  | some (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: Sexp.int arity :: ctors)) =>
+    if arity == 0 then tref iri
+    else
+      let fields := Option.getOr (List.get? (ctorFields (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: Sexp.int arity :: ctors))) tag) []
+      let bound := List.concatMap (fun pair => matchType (fst pair) (snd pair)) (List.zip fields argTypes)
+      Sexp.list (Sexp.sym "tapp" :: tref iri :: List.map (fun k => Option.getOr (List.lookup (Sexp.list [Sexp.sym "tvar", Sexp.int k]) bound) unknown) (List.range 0 arity))
+  | _ => tref t
+
+/-- Whether `t` names one layout: no unknown part, no type variable and no function. -/
+def complete (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [] => false
+  | Sexp.list (Sexp.sym "tvar" :: _) => false
+  | Sexp.list (Sexp.sym "tfun" :: _) => false
+  | Sexp.list items => List.all complete items
+  | _ => true
+
+/-- The name in `(tref n)` or `(tapp (tref n) …)`. -/
+def headName (t : Sexp) : Option Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tref", Sexp.str n] => some n
+  | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str n] :: _) => some n
+  | _ => none
+
+/-- Whether `t` is a complete data type the module knows the constructors of. -/
+def isData (scope : Scope) (t : Sexp) : Bool :=
+  not (isScalar t) && complete t &&
+    (match headName t with
+     | some n => n != "#Array" && n != "#Ref" && Option.isSome (typeObject scope n)
+     | none => false)
+
+/-- The function index of `t`'s equality function, registering it on first use: after `alloc`. -/
+def eqIndex (scope : Scope) (t : Sexp) : Int :=
+  let known := Ref.get scope.eqs
+  let i := List.findIndex (fun x => x == t) known
+  let j := if i < 0 then
+      let _ := Ref.set scope.eqs (known ++ [t])
+      List.length known
+    else i
+  List.length scope.fns + 1 + j
+
+def typeOfLocal (scope : Scope) (local : Int) : Sexp := Option.getOr (List.lookup local (Ref.get scope.typed)) unknown
+
+def setType (scope : Scope) (local : Int) (t : Sexp) : Unit :=
+  if t == unknown then () else Ref.set scope.typed ((local, t) :: Ref.get scope.typed)
+
+/-- The type of `e` as far as the compiler can see it: `()` when it cannot. -/
+def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
+  match e with
+  | Sexp.list [Sexp.sym "int", _] => tref "#Int"
+  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, _] => constructed scope t tag []
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, _] :: args) => constructed scope t tag (List.map (typeOf scope env) args)
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some local => typeOfLocal scope local
+    | none => unknown
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], _] => tref "#Int"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.length"], _] => tref "#Int"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.make"], _, x] => arrayOf (typeOf scope env x)
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.get"], a, _] =>
+    match typeArgs (typeOf scope env a) with
+    | [t] => t
+    | _ => unknown
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.set"], a, _, _] => typeOf scope env a
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.setInPlace"], a, _, _] => typeOf scope env a
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.copy"], a] => typeOf scope env a
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Ref.get"], r] =>
+    match typeArgs (typeOf scope env r) with
+    | [t] => t
+    | _ => unknown
+  | Sexp.list [Sexp.sym "text", _] => tref "#Text"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "append"], a, b] =>
+    let left := typeOf scope env a
+    if left == unknown then typeOf scope env b else left
+  -- A field taken out by the interpreter's reflection (D146) is of any type.
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Code.field"], _, _] => unknown
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
+    let known := textPrimType p
+    if known != unknown then known
+    else if List.length rest == 2 then (if isComparison p then tref "#Bool" else tref "#Int")
+    else unknown
+  | Sexp.list [Sexp.sym "if", _, t, f] =>
+    let left := typeOf scope env t
+    if left == unknown then typeOf scope env f else left
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
+    match findFn scope h with
+    | some f =>
+      match peel (List.length args) f.fnType with
+      | (params, result) =>
+        let bound := List.concatMap (fun pair => matchType (fst pair) (typeOf scope env (snd pair))) (List.zip params args)
+        substitute (fun v => List.lookup v bound) result
+    | none => unknown
+  | _ => unknown
+
+/-- The result type of a primitive the C back end's runtime implements (D115), or unknown; a lookup's `Option` and a clause are named, since `typeOf` counts other two-argument results as `Int`. -/
+def textPrimType (p : Text) : Sexp :=
+  if List.any (fun x => x == p) ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text"
+  else if List.any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int"
+  else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
+  else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"]
+  else if p == "Dict.lookup" || p == "MutMap.get" then Sexp.list [Sexp.sym "tapp", tref "#Option", unknown]
+  else if p == "deus.clause" then Sexp.list [Sexp.sym "tfun", unknown, unknown]
+  else if p == "deus.io.readFile" || p == "deus.io.getEnv" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Text"]
+  else if p == "deus.io.listDir" || p == "deus.io.args" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
+  else if p == "deus.io.readStdin" || p == "deus.io.wallClock" then tref "#Text"
+  else if p == "deus.io.time" || p == "Code.tag" then tref "#Int"
+  else if p == "Code.quote" then tref "#Text"
+  else if p == "Code.has" then tref "#Bool"
+  else unknown
+
+/-- `Array t`, or unknown when `t` is. -/
+def arrayOf (t : Sexp) : Sexp := if t == unknown then unknown else Sexp.list [Sexp.sym "tapp", tref "#Array", t]
+
+def refsOf (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => [h]
+  | Sexp.list items => List.concatMap refsOf items
+  | _ => []
+
+/-- The data types a body's patterns take apart. -/
+def patternTypes (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: rest) => t :: List.concatMap patternTypes rest
+  | Sexp.list items => List.concatMap patternTypes items
+  | _ => []
+
+/-- A definition's stored type: its inferred scheme, else its signature, else `()`. -/
+def storedType (meta : Option Sexp) : Sexp :=
+  match Codebase.metaField meta "scheme" with
+  | some t => t
+  | none => Option.getOr (Codebase.metaField meta "sig") unknown
+
+/-- `form` with each `(ref h)` that `prims` names replaced by its `(prim p)`. -/
+def inlinePrims (prims : List (Text, Sexp)) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => Option.getOr (List.lookup h prims) form
+  | Sexp.list items => Sexp.list (List.map (inlinePrims prims) items)
+  | _ => form
+
+/-- A literal, or a constructor applied to literals: a constant that costs nothing to rebuild at each use. -/
+def isStaticValue (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list [Sexp.sym "int", _] => true
+  | Sexp.list [Sexp.sym "text", _] => true
+  | Sexp.list [Sexp.sym "con", _, _, Sexp.int 0] => true
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", _, _, _] :: args) => List.all isStaticValue args
+  | _ => false
+
+/--
+  The functions `main` reaches, `main` first; a definition that is not a function is refused.
+  A definition that is only a primitive (`def Int.ushr := prim "Int.ushr"`) is inlined at its
+  calls, so `Int.and x y` compiles as `x &&& y` would, and so is a static constant (`Map.empty`).
+-/
+def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
+  gatherWith false fetch meta main
+
+/-- `gather`; with `constants`, a definition that is not a function gathers as one of arity 0, which the C back end evaluates once (D125). -/
+def gatherWith (constants : Bool) (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
+  let rec go pending seen acc prims :=
+    match pending with
+    | [] => List.map (fun f => Fn.mk f.fnHash f.fnArity (inlinePrims prims f.fnBody) f.fnType) (List.reverse acc)
+    | h :: rest =>
+      if List.any (fun x => x == h) seen then go rest seen acc prims
+      else
+        match fetch h with
+        | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", p]]) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
+        | some (Sexp.list [Sexp.sym "term", core]) =>
+          match unlam core with
+          | (0, _) =>
+            if isStaticValue core then go rest (h :: seen) acc ((h, core) :: prims)
+            else if constants then go (rest ++ refsOf core) (h :: seen) (Fn.mk h 0 core (storedType (meta h)) :: acc) prims
+            else throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
+          | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (storedType (meta h)) :: acc) prims
+        | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
+  go [main] [] [] []
+
+def fresh (next : Ref Int) : Int :=
+  let local := Ref.get next
+  Ref.set next (local + 1)
+  local
+
+def localGet (l : Int) : List Int := 32 :: uleb l
+
+def localSet (l : Int) : List Int := 33 :: uleb l
+
+/-- `i32.load` / `i32.store` at a constant offset, 4-byte aligned. -/
+def load (offset : Int) : List Int := [40, 2] ++ uleb offset
+
+def store (offset : Int) : List Int := [54, 2] ++ uleb offset
+
+/-- A pattern test against the value in local `v`: code that leaves the current block (`br_if 0`)
+  when it does not match, and the environment with what it binds (left to right, so the last
+  binding is `var 0`). -/
+def pattern (scope : Wasm.Scope) (next : Ref Int) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (List Int, List Int) :=
+  match pat with
+  | Sexp.list (Sexp.sym "pany" :: []) => ([], env)
+  | Sexp.list (Sexp.sym "pvar" :: []) => ([], v :: env)
+  | Sexp.list (Sexp.sym "pas" :: p :: []) => Wasm.pattern scope next v (v :: env) p
+  | Sexp.list (Sexp.sym "pint" :: Sexp.int n :: []) => (localGet v ++ 65 :: sleb n ++ [71, 13, 0], env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Bool" :: Sexp.int tag :: []) => (localGet v ++ [65, tag, 71, 13, 0], env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
+      let tagTest := localGet v ++ Wasm.load 0 ++ 65 :: sleb tag ++ [71, 13, 0]
+      foldl (fun acc pair =>
+        match (acc, pair) with
+        | ((code, bound), i, Sexp.list (Sexp.sym "pany" :: [])) => (code, bound)
+        | ((code, bound), i, sub) =>
+            let f := Wasm.fresh next
+            setType scope f (fieldType scope t tag i (typeOfLocal scope v))
+            let (subCode, bound2) := Wasm.pattern scope next f bound sub
+            (code ++ localGet v ++ Wasm.load (4 + 4 * i) ++ localSet f ++ subCode, bound2)) (tagTest, env) (mapIndexed (fun i x => (i, x)) subs)
+  | other => Throw.throw ("the pattern " ++ Sexp.print other ++ " is outside the wasm subset")
+
+/-- Code for `e`; `env` maps de Bruijn indices to locals, `next` is the next free local. -/
+def expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
+  let sub := fun x => Wasm.expr scope env next false x
+  let fns := scope.fns
+  let indexOf := fun h => getOr (Option.map fst (Dict.lookup h scope.byHash)) (-1)
+  match e with
+  | Sexp.list (Sexp.sym "int" :: Sexp.int n :: []) => 65 :: sleb n
+  | Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int tag :: Sexp.int 0 :: []) => [65, tag]
+  | Sexp.list (Sexp.sym "con" :: Sexp.str _ :: Sexp.int tag :: Sexp.int 0 :: []) => Wasm.construct scope env next tag []
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int n :: []) :: args) => if n != List.length args || t == "#Bool" then Throw.throw ("partial application of a constructor of " ++ t ++ " is outside the wasm subset") else Wasm.construct scope env next tag args
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+      let v := Wasm.fresh next
+      setType scope v (Wasm.typeOf scope env scrutinee)
+      -- One block per case: a failed test leaves it for the next; a match leaves the outer block.
+      let arms := concatMap (fun c =>
+        match c with
+        | Sexp.list (Sexp.sym "case" :: pat :: body :: []) =>
+            let (guard, bound) := Wasm.pattern scope next v env pat
+            [2, 64] ++ guard ++ Wasm.expr scope bound next tail body ++ [12, 1, 11]
+        | other => Throw.throw ("outside the wasm subset: " ++ Sexp.print other)) cases
+      sub scrutinee ++ localSet v ++ [2, Wasm.i32] ++ arms ++ [0, 11]
+  | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) =>
+      match get? env i with
+      | Option.some local => 32 :: uleb local
+      | Option.none => Throw.throw ("unbound variable " ++ Int.toText i)
+  | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) => sub c ++ [4, Wasm.i32] ++ Wasm.expr scope env next tail t ++ [5] ++
+      Wasm.expr scope env next tail f ++ [11]
+  | Sexp.list (Sexp.sym "seq" :: a :: b :: []) => sub a ++ [26] ++ Wasm.expr scope env next tail b
+  | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
+      let local := Ref.get next
+      Ref.set next (local + 1)
+      setType scope local (Wasm.typeOf scope env v)
+      sub v ++ 33 :: uleb local ++ Wasm.expr scope (local :: env) next tail b
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: a :: []) => [65, 0] ++ sub a ++ [107]
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: args) => if startsWith "Array." p || startsWith "Ref." p then array scope next p (List.map sub args) else Wasm.primitive scope env next e p args
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: args) =>
+      let index := indexOf h
+      match findFn scope h with
+      | Option.some f => if f.fnArity != List.length args then Throw.throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++
+          " arguments but is applied to " ++ Int.toText (List.length args) ++ "; partial application is outside the wasm subset") else concatMap sub args ++ (if tail then 18 else 16) :: uleb index
+      | Option.none => Throw.throw ("unknown function #" ++ Text.take 10 h)
+  | other => Throw.throw ("outside the wasm subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- A binary integer or comparison primitive applied to `args`. `==` and `!=` on a data type call
+  its generated equality function (D100); other comparisons need an `Int` or a `Bool`. -/
+def primitive (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : Text) (args : List Sexp) : {Throw Text} List Int :=
+  match (binary p, args) with
+  | (Option.some op, a :: b :: []) =>
+      let operands := Wasm.expr scope env next false a ++ Wasm.expr scope env next false b
+      let left := Wasm.typeOf scope env a
+      let right := Wasm.typeOf scope env b
+      if not (isComparison p) || isScalar left || isScalar right then operands ++ [op] else
+        let data := if isData scope left then Option.some left else if isData scope right then Option.some right else Option.none
+        match data with
+        | Option.some t => if p == "eq" then operands ++ 16 :: uleb (eqIndex scope t) else if p == "neq" then operands ++ 16 :: uleb (eqIndex scope t) ++ [69] else Throw.throw (p ++ " on constructed values is outside the wasm subset, which has no structural order: " ++
+            Text.take 120 (Sexp.print e))
+        | Option.none => Throw.throw (p ++
+            " on values that are not known to be Int, Bool or a data type is outside the wasm subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
+  | _ => Throw.throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
+/-- The body of `t`'s equality function, on the blocks in locals 0 and 1: the same address is equal,
+  different tags are not, and otherwise the fields compare in order, the last by `return_call` so a
+  list compares in constant stack. -/
+def eqBody (scope : Wasm.Scope) (t : Sexp) : {Throw Text} List Int :=
+  let form := getOr (Option.bind (headName t) (typeObject scope)) unknown
+  let args := Wasm.typeArgs t
+  let both := fun offset => localGet 0 ++ Wasm.load offset ++ localGet 1 ++ Wasm.load offset
+  let compare := fun field last => if isScalar field then [70] else if isData scope field then (if last then 18 else 16) :: uleb (eqIndex scope field) else Throw.throw ("eq on " ++ Sexp.print t ++ " is outside the wasm subset: it has a field of type " ++
+    Sexp.print field)
+  let rec fieldsEqual i fields :=
+    match fields with
+    | [] => [65, 1]
+    | f :: [] => both (4 + 4 * i) ++ compare f true
+    | f :: rest => both (4 + 4 * i) ++ compare f false ++ [4, Wasm.i32] ++ fieldsEqual (i + 1) rest ++
+        [5, 65, 0, 11]
+  let rec dispatch tag ctors :=
+    match ctors with
+    | [] => [65, 1]
+    | [] :: rest => dispatch (tag + 1) rest
+    | fields :: rest => localGet 0 ++ Wasm.load 0 ++ 65 :: sleb tag ++ [70, 4, Wasm.i32] ++
+        fieldsEqual 0 (List.map (Wasm.instantiate args) fields) ++ [5] ++ dispatch (tag + 1) rest ++ [11]
+  List.concat [localGet 0 ++ localGet 1 ++ [70, 4, Wasm.i32, 65, 1, 5], both 0 ++ [71, 4, Wasm.i32, 65, 0, 5], dispatch 0 (Wasm.ctorFields form), [11, 11, 11]]
+
+/--
+  `Array` primitives (D83, D96) on a block `[length, item…]`, and `Ref` on a block `[value]`;
+  `args` is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` copies the block and writes into the copy; `Array.setInPlace` and `Array.copy` come
+  from `Unique.rewriteAll`, which proved the array unique or needs a second one. `Ref.set` returns
+  address 0, whose word is 0, so it reads as `()`.
+-/
+def array (scope : Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
+  let unreachableIf := fun (cond : List Int) => cond ++ [4, 64, 0, 11]
+  let address := fun (a : Int) (i : Int) => localGet a ++ localGet i ++ [65, 2, 116, 106]
+  let checked := fun (a : Int) (i : Int) => unreachableIf (localGet i ++ localGet a ++ load 0 ++ [79])
+  match (p, args) with
+  | ("Ref.new", [v]) =>
+    let lr := fresh next
+    [65, 4] ++ (16 :: uleb (List.length scope.fns)) ++ localSet lr ++ localGet lr ++ v ++ store 0 ++ localGet lr
+  | ("Ref.get", [r]) => r ++ load 0
+  | ("Ref.set", [r, v]) => r ++ v ++ store 0 ++ [65, 0]
+  | ("Array.length", [a]) => a ++ load 0
+  | ("Array.get", [a, i]) =>
+    let la := fresh next
+    let li := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ load 4
+  | ("Array.setInPlace", [a, i, v]) =>
+    let la := fresh next
+    let li := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ store 4 ++ localGet la
+  | ("Array.set", [a, i, v]) =>
+    let la := fresh next
+    let li := fresh next
+    let lv := fresh next
+    let lc := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ v ++ localSet lv ++ checked la li ++ copyBlock scope la lc ++ address lc li ++ localGet lv ++ store 4 ++ localGet lc
+  | ("Array.copy", [a]) =>
+    let la := fresh next
+    let lc := fresh next
+    a ++ localSet la ++ copyBlock scope la lc ++ localGet lc
+  | ("Array.make", [n, x]) =>
+    let ln := fresh next
+    let lx := fresh next
+    let lp := fresh next
+    let li := fresh next
+    List.concat [
+      n ++ localSet ln ++ x ++ localSet lx,
+      unreachableIf (localGet ln ++ [65, 0, 72]),
+      localGet ln ++ [65, 2, 116, 65, 4, 106] ++ (16 :: uleb (List.length scope.fns)) ++ localSet lp,
+      localGet lp ++ localGet ln ++ store 0,
+      [65, 0] ++ localSet li,
+      [2, 64, 3, 64],
+      localGet li ++ localGet ln ++ [78, 13, 1],
+      address lp li ++ localGet lx ++ store 4,
+      localGet li ++ [65, 1, 106] ++ localSet li,
+      [12, 0, 11, 11],
+      localGet lp]
+  | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
+/-- Copies the array block at local `a` into a new block, whose address goes to local `c` (`memory.copy`). -/
+def copyBlock (scope : Scope) (a : Int) (c : Int) : List Int :=
+  let size := localGet a ++ load 0 ++ [65, 2, 116, 65, 4, 106]
+  size ++ (16 :: uleb (List.length scope.fns)) ++ localSet c ++ localGet c ++ localGet a ++ size ++ [252, 10, 0, 0]
+
+/-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
+def construct (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=
+  let p := Wasm.fresh next
+  let fields := List.concat (mapIndexed
+    (fun i a => localGet p ++ Wasm.expr scope env next false a ++ Wasm.store (4 + 4 * i))
+    args)
+  65 :: sleb (4 + 4 * List.length args) ++ 16 :: uleb (List.length scope.fns) ++ localSet p ++
+    localGet p ++ 65 :: sleb tag ++ Wasm.store 0 ++ fields ++ localGet p
+
+/--
+  `alloc n`: bumps the heap pointer (global 0) by `n` bytes. Past the end of memory it grows by
+  at least the current size, so a program that allocates a lot grows memory a logarithmic number
+  of times. Locals: 1 the block, 2 the pages missing.
+-/
+def allocBody : List Int :=
+  List.concat [
+    [35, 0, 33, 1],
+    [35, 0, 32, 0, 106, 36, 0],
+    [35, 0, 63, 0, 65, 16, 116, 75, 4, 64],
+    [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2],
+    [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11],
+    [32, 1, 11]]
+
+/-- The module: one type and one function per definition, then `alloc`, then an equality function
+  per data type compared (D100); `main` is exported as `export`. -/
+def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
+  let eqs := Ref.new []
+  let table := fnTable fns
+  let types := Wasm.typeTable datatypes
+  let codes := List.map (fun f =>
+    let next := Ref.new f.fnArity
+    let env := reverse (range 0 f.fnArity)
+    let scope := Wasm.Scope.mk
+      fns
+      table
+      datatypes
+      types
+      (Ref.new (mapIndexed (fun i t => (i, t)) (fst (peel f.fnArity f.fnType))))
+      eqs
+    let code := Wasm.expr scope env next true f.fnBody ++ [11]
+    let extra := Ref.get next - f.fnArity
+    let locals := if extra == 0 then vec [] else vec [uleb extra ++ [Wasm.i32]]
+    let entry := locals ++ code
+    uleb (List.length entry) ++ entry) fns
+  let alloc := List.length fns
+  let allocEntry := vec [[2, Wasm.i32]] ++ allocBody
+  -- Generating one equality function can register another (a field's type), so this runs to a fixpoint.
+  let eqScope := Wasm.Scope.mk fns table datatypes types (Ref.new []) eqs
+  let rec equalities j acc :=
+    match get? (Ref.get eqs) j with
+    | Option.some t =>
+        let entry := vec [] ++ eqBody eqScope t
+        equalities (j + 1) (acc ++ [uleb (List.length entry) ++ entry])
+    | Option.none => acc
+  let eqCodes := equalities 0 []
+  let eqTypes := if List.isEmpty eqCodes then [] else [[96] ++ vec [[Wasm.i32], [Wasm.i32]] ++ vec [[Wasm.i32]]]
+  let types1 := List.map (fun f => [96] ++ vec (replicate f.fnArity [Wasm.i32]) ++ vec [[Wasm.i32]]) fns ++
+    [[96] ++ vec [[Wasm.i32]] ++ vec [[Wasm.i32]]] ++ eqTypes
+  List.concat [[0, 97, 115, 109, 1, 0, 0, 0], section 1 (vec types1), section 3 (vec (mapIndexed (fun i _ => uleb i) (fns ++ [Fn.mk "" 1 unknown unknown]) ++
+    List.map (fun _ => uleb (alloc + 1)) eqCodes)), section 5 (vec [[0, 1]]), section 6 (vec [[Wasm.i32, 1, 65, 8, 11]]), section
+    7
+    (vec [Wasm.name export ++ [0, 0], Wasm.name "memory" ++ [2, 0], Wasm.name "alloc" ++ 0 :: uleb alloc]), section 10 (uleb (List.length codes + 1 + List.length eqCodes) ++ List.concat codes ++
+    uleb (List.length allocEntry) ++ allocEntry ++ List.concat eqCodes)]
+
+/-- The data types a form names: constructors and patterns by hash, types by IRI. -/
+def typeNames (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: rest) => t :: List.concatMap typeNames rest
+  | Sexp.list [Sexp.sym "con", Sexp.str t, _, _] => [t]
+  | Sexp.list [Sexp.sym "tref", Sexp.str t] => [t]
+  | Sexp.list items => List.concatMap typeNames items
+  | _ => []
+
+/-- Compiles `main` and what it calls to a wasm module exporting it as `export`. `fetch` answers a
+  hash, and a type's IRI with the type's object, since signatures name types by IRI. -/
+def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
+  let gathered := Wasm.gather fetch meta main
+  let fns := rewriteAll gathered (datatypesOf fetch gathered)
+  -- The types the code names, and the types their fields name, which an equality function walks.
+  let rec close pending seen acc :=
+    match pending with
+    | [] => reverse acc
+    | t :: rest => if any (fun x => x == t) seen then close rest seen acc else
+        match fetch t with
+        | Option.some form => close (rest ++ Wasm.typeNames form) (t :: seen) ((t, form) :: acc)
+        | Option.none => close rest (t :: seen) acc
+  Wasm.module
+    fns
+    (close (concatMap (fun f => Wasm.typeNames f.fnBody ++ Wasm.typeNames f.fnType) fns) [] [])
+    export
+
+end Wasm

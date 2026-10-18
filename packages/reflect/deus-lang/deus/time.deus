@@ -1,0 +1,205 @@
+/-
+  Time as types (D194, Dmytro: "we should have proper Time/Duration datatypes"), so nothing confuses
+  a delay with a timestamp. `Int` is 32-bit (D9), which holds 24 days of milliseconds and runs out of
+  Unix seconds in 2038, so both types split their value: a `Duration` is whole seconds and the
+  milliseconds after them (±68 years), an `Instant` is days since 1970-01-01 and the milliseconds
+  into that day (any date). The kernels' clocks stay primitives (`IO.time`, `IO.wallClock`); `Clock`
+  reads them as these types, and `Alarm.set` takes a `Duration`.
+-/
+
+/-- A length of time: `wholeSeconds` and then `extraMillis` (0 to 999) more; negative lengths have negative seconds. -/
+structure Duration @"urn:deus:time:Duration" where
+  wholeSeconds : Int
+  extraMillis : Int
+
+/-- A point in UTC, without leap seconds: `days` since 1970-01-01 and `millisOfDay` (0 to 86,399,999) into that day. -/
+structure Instant @"urn:deus:time:Instant" where
+  days : Int
+  millisOfDay : Int
+
+namespace Time
+
+/-- Division rounding toward negative infinity, so values before an origin fall in the right unit. -/
+def floorDiv (a : Int) (b : Int) : Int := if a % b != 0 && (a < 0) != (b < 0) then a / b - 1 else a / b
+
+/-- The remainder of `floorDiv`, always between 0 and `b`. -/
+def floorMod (a : Int) (b : Int) : Int := a - floorDiv a b * b
+
+/-- `n` as at least `width` digits, with leading zeros. -/
+def padded (width : Int) (n : Int) : Text :=
+  let digits := Int.toText n
+  Text.concat (List.map (fun _ => "0") (List.range 0 (width - Text.length digits))) ++ digits
+
+/-- The civil date (year, month 1-12, day 1-31) of a day count since 1970-01-01, after Howard Hinnant's `civil_from_days`. -/
+def civilFromDays (days : Int) : (Int, Int, Int) :=
+  let z := days + 719468
+  let era := floorDiv z 146097
+  let doe := z - era * 146097
+  let yoe := (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+  let doy := doe - (365 * yoe + yoe / 4 - yoe / 100)
+  let mp := (5 * doy + 2) / 153
+  let d := doy - (153 * mp + 2) / 5 + 1
+  let m := if mp < 10 then mp + 3 else mp - 9
+  (yoe + era * 400 + (if m <= 2 then 1 else 0), m, d)
+
+/-- The day count since 1970-01-01 of a civil date, after Howard Hinnant's `days_from_civil`. -/
+def daysFromCivil (year : Int) (month : Int) (day : Int) : Int :=
+  let y := if month <= 2 then year - 1 else year
+  let era := floorDiv y 400
+  let yoe := y - era * 400
+  let mp := if month > 2 then month - 3 else month + 9
+  let doy := (153 * mp + 2) / 5 + day - 1
+  let doe := yoe * 365 + yoe / 4 - yoe / 100 + doy
+  era * 146097 + doe - 719468
+
+/-- A non-negative decimal number in text, of any size, divided by `divisor`: (quotient, remainder). The quotient must fit an `Int`. -/
+def divideDigits (digits : Text) (divisor : Int) : (Int, Int) :=
+  List.foldl (fun acc i =>
+    let (q, r) := acc
+    let v := r * 10 + (Text.code digits i - '0')
+    (q * 10 + v / divisor, v % divisor)) (0, 0) (List.range 0 (Text.length digits))
+
+def roundTrips (days : Int) : Bool :=
+  let (y, m, d) := civilFromDays days
+  daysFromCivil y m d == days
+
+test civilDatesRoundTrip := List.all Time.roundTrips [-1, 0, 11016, 20741, 47541, 2932896, -719468]
+
+test largeNumbersDivideInText := Time.divideDigits "1792089319123" 86400000 == (20741, 66919123)
+
+end Time
+
+namespace Duration
+
+/-- A duration of `ms` milliseconds, normalized so its millis are 0 to 999. -/
+def milliseconds (ms : Int) : Duration := Duration.mk (Time.floorDiv ms 1000) (Time.floorMod ms 1000)
+def seconds (n : Int) : Duration := Duration.mk n 0
+def minutes (n : Int) : Duration := Duration.mk (n * 60) 0
+def hours (n : Int) : Duration := Duration.mk (n * 3600) 0
+def days (n : Int) : Duration := Duration.mk (n * 86400) 0
+def zero : Duration := Duration.mk 0 0
+
+/-- `d` repeated `n` times. -/
+def times (d : Duration) (n : Int) : Duration :=
+  let ms := d.extraMillis * n
+  Duration.mk (d.wholeSeconds * n + Time.floorDiv ms 1000) (Time.floorMod ms 1000)
+
+def plus (a : Duration) (b : Duration) : Duration :=
+  let ms := a.extraMillis + b.extraMillis
+  Duration.mk (a.wholeSeconds + b.wholeSeconds + Time.floorDiv ms 1000) (Time.floorMod ms 1000)
+
+def negate (d : Duration) : Duration := if d.extraMillis == 0 then Duration.mk (0 - d.wholeSeconds) 0 else Duration.mk (0 - d.wholeSeconds - 1) (1000 - d.extraMillis)
+
+def minus (a : Duration) (b : Duration) : Duration := plus a (negate b)
+
+def isShorter (a : Duration) (b : Duration) : Bool := a.wholeSeconds < b.wholeSeconds || (a.wholeSeconds == b.wholeSeconds && a.extraMillis < b.extraMillis)
+
+/-- Total milliseconds, for durations under 24 days (an `Int` holds no more). -/
+def toMillis (d : Duration) : Int := d.wholeSeconds * 1000 + d.extraMillis
+
+/-- As people write it: `1d 2h 3m 4.005s`, `250ms`, `-1m`, `0s`. -/
+def toText (d : Duration) : Text :=
+  if d == Duration.zero then "0s"
+  else if d.wholeSeconds < 0 then "-" ++ toText (negate d)
+  else
+    let s := d.wholeSeconds
+    let ms := d.extraMillis
+    let parts := List.filter (fun part => not (Text.isEmpty part)) [
+      if s >= 86400 then Int.toText (s / 86400) ++ "d" else "",
+      if s % 86400 >= 3600 then Int.toText (s % 86400 / 3600) ++ "h" else "",
+      if s % 3600 >= 60 then Int.toText (s % 3600 / 60) ++ "m" else "",
+      if s % 60 == 0 && ms == 0 then ""
+      else if s == 0 then Int.toText ms ++ "ms"
+      else Int.toText (s % 60) ++ (if ms == 0 then "" else "." ++ Time.padded 3 ms) ++ "s"]
+    Text.join " " parts
+
+test unitsAgree :=
+  Duration.minutes 2 == Duration.seconds 120 && Duration.days 1 == Duration.hours 24 &&
+    Duration.plus (Duration.seconds 1) (Duration.milliseconds 500) == Duration.milliseconds 1500 &&
+    Duration.minus (Duration.seconds 1) (Duration.milliseconds 1500) == Duration.milliseconds (-500) &&
+    Duration.days 365 == Duration.seconds 31536000 &&
+    Duration.times (Duration.milliseconds 1500) 3 == Duration.milliseconds 4500
+
+test readsAsPeopleWriteIt :=
+  List.map Duration.toText [Duration.zero, Duration.milliseconds 250, Duration.seconds 90, Duration.milliseconds 4005, Duration.plus (Duration.days 1) (Duration.hours 2), Duration.minutes (-1), Duration.plus (Duration.hours 1) (Duration.milliseconds 1), Duration.milliseconds (-250)] ==
+    ["0s", "250ms", "1m 30s", "4.005s", "1d 2h", "-1m", "1h 0.001s", "-250ms"]
+
+end Duration
+
+namespace Instant
+
+def epoch : Instant := Instant.mk 0 0
+
+/-- The instant `ms` milliseconds after the epoch, for the 24 days either side of it an `Int` reaches; `fromEpochText` reaches any. -/
+def fromEpochMillis (ms : Int) : Instant := Instant.mk (Time.floorDiv ms 86400000) (Time.floorMod ms 86400000)
+
+/-- The instant `n` seconds after the epoch (any `Int`, so until 2038). -/
+def fromEpochSeconds (n : Int) : Instant := Instant.mk (Time.floorDiv n 86400) (Time.floorMod n 86400 * 1000)
+
+/-- The instant a count of epoch milliseconds in decimal text names, of any size (non-negative). -/
+def fromEpochText (digits : Text) : Instant :=
+  let (days, ms) := Time.divideDigits digits 86400000
+  Instant.mk days ms
+
+def plus (i : Instant) (d : Duration) : Instant :=
+  let ms := i.millisOfDay + Time.floorMod d.wholeSeconds 86400 * 1000 + d.extraMillis
+  Instant.mk (i.days + Time.floorDiv d.wholeSeconds 86400 + Time.floorDiv ms 86400000) (Time.floorMod ms 86400000)
+
+/-- How long after `earlier` the instant `later` is (negative when it is before), within the ±68 years a `Duration` holds. -/
+def since (later : Instant) (earlier : Instant) : Duration :=
+  Duration.plus (Duration.days (later.days - earlier.days)) (Duration.milliseconds (later.millisOfDay - earlier.millisOfDay))
+
+def isBefore (a : Instant) (b : Instant) : Bool := a.days < b.days || (a.days == b.days && a.millisOfDay < b.millisOfDay)
+
+/-- ISO 8601 in UTC with milliseconds: `2026-10-15T18:35:19.123Z`. -/
+def toIso (i : Instant) : Text :=
+  let (y, m, d) := Time.civilFromDays i.days
+  let ms := i.millisOfDay
+  Time.padded 4 y ++ "-" ++ Time.padded 2 m ++ "-" ++ Time.padded 2 d ++ "T" ++
+    Time.padded 2 (ms / 3600000) ++ ":" ++ Time.padded 2 (ms % 3600000 / 60000) ++ ":" ++ Time.padded 2 (ms % 60000 / 1000) ++
+    "." ++ Time.padded 3 (ms % 1000) ++ "Z"
+
+/-- Reads `YYYY-MM-DDTHH:MM:SS` with optional `.fff` and a final `Z`, as `toIso` writes it. -/
+def parseIso (t : Text) : Option Instant :=
+  let number := fun (at : Int) (count : Int) => Int.fromText (Text.slice t at (at + count))
+  let fraction := if Text.slice t 19 20 == "." then Option.map (fun v => (v, 23)) (number 20 3) else some (0, 19)
+  match (number 0 4, number 5 2, number 8 2, number 11 2, number 14 2, number 17 2, fraction) with
+  | (some y, some mo, some d, some h, some mi, some s, some (ms, stop)) =>
+    if Text.slice t 4 5 == "-" && Text.slice t 10 11 == "T" && Text.slice t stop (stop + 1) == "Z" && Text.length t == stop + 1 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && h < 24 && mi < 60 && s < 60
+    then some (Instant.mk (Time.daysFromCivil y mo d) (h * 3600000 + mi * 60000 + s * 1000 + ms))
+    else none
+  | _ => none
+
+test isoMatchesKnownDates :=
+  List.map Instant.toIso [Instant.epoch, Instant.mk 11016 0, Instant.mk 47541 0, Instant.fromEpochText "1792089319123", Instant.mk (-1) 0, Instant.mk 2932896 86399999] ==
+    ["1970-01-01T00:00:00.000Z", "2000-02-29T00:00:00.000Z", "2100-03-01T00:00:00.000Z", "2026-10-15T18:35:19.123Z", "1969-12-31T00:00:00.000Z", "9999-12-31T23:59:59.999Z"]
+
+test isoRoundTrips :=
+  List.all (fun i => Instant.parseIso (Instant.toIso i) == some i) [Instant.epoch, Instant.mk 11016 0, Instant.mk 20741 66919123, Instant.mk (-1) 0, Instant.fromEpochMillis 1234567] &&
+    Instant.parseIso "2026-10-15T18:35:19Z" == some (Instant.mk 20741 66919000) &&
+    Instant.parseIso "2026-13-01T00:00:00Z" == none && Instant.parseIso "yesterday" == none
+
+test arithmeticCrossesDays :=
+  Instant.plus (Instant.mk 0 86399000) (Duration.seconds 2) == Instant.mk 1 1000 &&
+    Instant.plus Instant.epoch (Duration.milliseconds (-1)) == Instant.mk (-1) 86399999 &&
+    Instant.since (Instant.plus Instant.epoch (Duration.days 400)) Instant.epoch == Duration.days 400 &&
+    Instant.isBefore (Instant.mk (-1) 5) Instant.epoch &&
+    Instant.fromEpochSeconds 86401 == Instant.mk 1 1000
+
+test sinceIsADuration := Instant.since (Instant.plus Instant.epoch (Duration.hours 2)) Instant.epoch == Duration.hours 2
+
+end Instant
+
+namespace Clock
+
+/-- Now, from the wall clock (`IO.wallClock` gives epoch nanoseconds as text). -/
+def now (u : Unit) : {IO} Instant :=
+  let ns := IO.wallClock ()
+  Instant.fromEpochText (Text.take (Text.length ns - 6) ns)
+
+/-- How long the process has run, from the monotonic clock (`IO.time`, milliseconds). -/
+def uptime (u : Unit) : {IO} Duration := Duration.milliseconds (IO.time ())
+
+test nowReadsTheSimulatedClock := Instant.isBefore Instant.epoch (Clock.now ()) || Clock.now () == Instant.epoch
+
+end Clock

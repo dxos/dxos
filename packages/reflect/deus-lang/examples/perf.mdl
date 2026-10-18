@@ -1,0 +1,45 @@
+---
+id: org.dxos.deus.examples.perf
+name: Sort.Perf
+version: 1.0
+---
+
+# Performance of the sorting example
+
+Requirements on `examples/sort.deus`, checked by `deus mdl`. Costs are machine steps, so each
+verdict is reproducible on any machine and either kernel.
+
+## Extensions
+
+| Term   | URI                        |
+| ------ | -------------------------- |
+| `perf` | `org.dxos.deus.perf@1.0`   |
+
+## Requirements
+
+Insertion sort is quadratic on reversed input (each element walks the whole sorted prefix):
+
+```mdl
+perf P-1: insertion sort is quadratic on reversed input
+  run: fun n => Sort.isort (List.reverse (List.range 0 n))
+  sizes: 20 | 40 | 80
+  order: n^2
+  budget: 100000
+```
+
+and linear on sorted input, where each insert stops at once:
+
+```mdl
+perf P-2: insertion sort is linear on sorted input
+  run: fun n => Sort.isort (List.range 0 n)
+  sizes: 20 | 40 | 80
+  order: n
+```
+
+A single run within a budget:
+
+```mdl
+perf P-3: sorting ten numbers
+  run: Sort.isort [3, 1, 4, 1, 5, 9, 2, 6, 5, 3]
+  budget: 2000
+```
