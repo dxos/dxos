@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Option from 'effect/Option';
 import React, { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
@@ -14,6 +14,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Annotation, Filter, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
@@ -72,8 +73,11 @@ const COLLECTIONS_TEST_ID = 'spacePlugin.collectionsSection';
 /** Template application can take tens of seconds on a cold module graph. */
 const TIMEOUT = 60_000;
 
+/** Where a pending story is waiting, so a stall names its step instead of reading `pending`. */
+type Phase = 'identity' | 'create' | 'open';
+
 type TemplateState =
-  | { status: 'pending' }
+  | { status: 'pending'; phase: Phase }
   | { status: 'ready'; spaceId: string; labels: string[]; objects: number }
   | { status: 'error'; message: string };
 
@@ -100,7 +104,7 @@ const TemplateSpace = ({ template }: { template: string }) => {
   const client = useClient();
   const identity = useIdentity();
   const { invokePromise } = Hooks.useOperationInvoker();
-  const [state, setState] = useState<TemplateState>({ status: 'pending' });
+  const [state, setState] = useState<TemplateState>({ status: 'pending', phase: 'identity' });
   // Guards against re-entry while the create is in flight across re-renders.
   const started = useRef(false);
 
@@ -112,6 +116,7 @@ const TemplateSpace = ({ template }: { template: string }) => {
     started.current = true;
     void (async () => {
       try {
+        setState({ status: 'pending', phase: 'create' });
         const created = await invokePromise(SpaceOperation.Create, { template });
         if (created.error || !created.data) {
           throw created.error ?? new Error(`Space was not created: ${template}`);
@@ -122,10 +127,13 @@ const TemplateSpace = ({ template }: { template: string }) => {
           throw new Error(`Created space is not in the client: ${template}`);
         }
 
+        setState({ status: 'pending', phase: 'open' });
         await space.waitUntilReady();
         await invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
         setState({ status: 'ready', spaceId: space.id, ...(await getTemplateContent(space)) });
       } catch (error) {
+        // The status element is hidden, so the console is where a failed template shows up.
+        log.error('space template failed', { template, error });
         setState({ status: 'error', message: error instanceof Error ? error.message : String(error) });
       }
     })();
@@ -133,13 +141,15 @@ const TemplateSpace = ({ template }: { template: string }) => {
 
   return (
     <div
-      className='fixed bottom-2 right-2 z-50 p-2 rounded-sm text-xs dx-base-surface border border-separator'
+      // Hidden: the play test reads the state from these attributes, and the story shows only the app.
+      hidden
       data-testid={STATUS_TEST_ID}
       data-status={state.status}
+      data-phase={state.status === 'pending' ? state.phase : undefined}
       data-objects={state.status === 'ready' ? state.objects : undefined}
     >
       <div>{template}</div>
-      {state.status === 'error' && <div className='text-error-text'>{state.message}</div>}
+      {state.status === 'error' && <div>{state.message}</div>}
       {state.status === 'ready' &&
         state.labels.map((label) => (
           <div key={label} data-testid={LABEL_TEST_ID}>
@@ -148,6 +158,27 @@ const TemplateSpace = ({ template }: { template: string }) => {
         ))}
     </div>
   );
+};
+
+/** The path storybook serves the preview from. */
+const IFRAME_PATH = '/iframe.html';
+
+const resetIframePath = () => {
+  if (window.location.pathname !== IFRAME_PATH) {
+    window.history.replaceState(null, '', `${IFRAME_PATH}${window.location.search}`);
+  }
+};
+
+/**
+ * The deck keeps its navigation in the address bar (`/w/<space>/…`), which inside storybook is the
+ * preview iframe's own location, so a remount (HMR, an arg change) would boot the new ephemeral
+ * client against the previous client's workspace. The reset runs during render, ahead of the
+ * plugin manager's effects that boot the deck.
+ */
+const withIframePath: Decorator = (Story) => {
+  resetIframePath();
+  useEffect(() => resetIframePath, []);
+  return <Story />;
 };
 
 type StoryArgs = { template: string };
@@ -198,6 +229,7 @@ const meta = {
         ThreadPlugin.make(),
       ],
     }),
+    withIframePath,
   ],
   parameters: {
     layout: 'fullscreen',
@@ -221,8 +253,10 @@ type Story = StoryObj<typeof meta>;
 const play: Story['play'] = async ({ canvasElement }) => {
   const body = within(canvasElement.ownerDocument.body);
   const status = await body.findByTestId(STATUS_TEST_ID, undefined, { timeout: TIMEOUT });
-  await waitFor(() => expect(status.dataset.status).not.toBe('pending'), { timeout: TIMEOUT });
-  await expect(status.dataset.status).toBe('ready');
+  await waitFor(() => expect(status.dataset.status, `stalled in phase: ${status.dataset.phase}`).not.toBe('pending'), {
+    timeout: TIMEOUT,
+  });
+  await expect(status.dataset.status, status.textContent ?? '').toBe('ready');
 
   const labels = within(status)
     .queryAllByTestId(LABEL_TEST_ID)
