@@ -32,7 +32,7 @@
 - Hover card from companion message to Org "Alien Labs"
 - Navtree => Organizations => People
 - Navtree => Calendar
-- Scroll and select Event: XXX
+- Scroll and select Event: Sales Review
 - Navigate to Kanban from the description
 
 # 3. Projects (Dark mode: 20s)

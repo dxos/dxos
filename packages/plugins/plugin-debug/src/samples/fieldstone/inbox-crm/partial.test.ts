@@ -47,7 +47,7 @@ const dayOf = (iso: string) => Math.floor((Date.parse(iso) - Date.parse(REFERENC
 const uri = (id: string) => `echo:///${id}`;
 
 describe('Alien Labs inbox and CRM', () => {
-  test('seeds mail, contacts and a year of calendar', { timeout: 120_000 }, async ({ expect }) => {
+  test('seeds mail, contacts and nine months of calendar', { timeout: 120_000 }, async ({ expect }) => {
     const definition = SampleSpace.make({
       space: { name: 'Alien Labs inbox and CRM' },
       reference: REFERENCE,
@@ -128,11 +128,11 @@ describe('Alien Labs inbox and CRM', () => {
       expect(messages.filter((message) => staff.includes(message.sender?.email)).length, key).toBeGreaterThan(0);
     }
 
-    // 314 events, at least one in every week from −182d to +182d.
+    // 171 events: 153 from −182d to the reference date, 18 in the three months after it.
     const events = ofType(feedEntries, 'type.event:');
-    expect(countOf('type.event:')).toBe(314);
+    expect(countOf('type.event:')).toBe(171);
     // Notes on the one-offs, the team rituals and Hana's first 1:1s.
-    expect(events.filter((event) => event.description)).toHaveLength(168);
+    expect(events.filter((event) => event.description)).toHaveLength(99);
 
     // The 10 most recent events before the reference time carry full meeting notes with a task list.
     const recentEvents = events
@@ -145,10 +145,22 @@ describe('Alien Labs inbox and CRM', () => {
       expect(notes.split('\n').length, event.title).toBeGreaterThanOrEqual(25);
       expect(notes, event.title).toMatch(/^- \[ \] /m);
     }
+    // Every past week has an event; nothing is scheduled past +90d, and the future is at most a quarter as dense.
     const eventDays = events.map((event) => dayOf(event.startDate!));
-    for (let week = -182; week < 182; week += 7) {
+    for (let week = -182; week < 0; week += 7) {
       expect(eventDays.some((day) => day >= week && day < week + 7)).toBe(true);
     }
+    expect(Math.max(...eventDays)).toBeLessThanOrEqual(90);
+    const pastPerWeek = eventDays.filter((day) => day <= 0).length / (182 / 7);
+    const futurePerWeek = eventDays.filter((day) => day > 0).length / (90 / 7);
+    expect(futurePerWeek).toBeLessThanOrEqual(pastPerWeek / 4);
+
+    // The Sales Review is on a weekday next week.
+    const salesReview = events.find((event) => event.title === 'Sales Review');
+    const salesReviewDay = dayOf(salesReview!.startDate!);
+    expect(salesReviewDay).toBeGreaterThanOrEqual(5);
+    expect(salesReviewDay).toBeLessThanOrEqual(11);
+    expect([1, 2, 3, 4, 5]).toContain(new Date(salesReview!.startDate!).getUTCDay());
 
     // The 10 most recent messages each have a detailed summary in the annotations feed.
     const summaryOf = new Map(

@@ -36,18 +36,15 @@ export type EventKey =
   | 'halcyonIntro'
   | 'kestrelDiscovery'
   | 'vantageDiscovery'
-  | 'vantageDeepDive'
   | 'meridianProposal'
   | 'tidewaterSecurity'
   | 'tidewaterMsa'
   | 'lumenValidation'
-  | 'lumenCheckIn'
   | 'pallasDemo'
   | 'corvidEvaluation'
   | 'larkspurDemo'
   | 'aldermoorReview'
   | 'cloudflareCall'
-  | 'cloudflareReview'
   | 'northpineQbr'
   | 'offsite'
   | 'salesReview';
@@ -85,7 +82,18 @@ const REPORTS: Array<{ readonly key: PersonKey; readonly time: readonly [number,
 const ROTATION: PersonKey[] = ['june', 'tomas', 'omar', 'felix'];
 
 const FIRST = -182;
-const LAST = 182;
+/** Nothing is scheduled more than three months ahead. */
+const LAST = 90;
+/** The team sync continues only this far past the reference date, so the future reads as a light schedule. */
+const SERIES_LAST = 14;
+
+/** Occurrences on or before `last`. */
+const until = (offsets: number[], last: number): number[] => offsets.filter((offset) => offset <= last);
+
+/** Enough weekly occurrences from {@link FIRST} to reach {@link LAST}. */
+const WEEKS = Math.ceil((LAST - FIRST) / 7) + 1;
+/** Enough monthly occurrences from {@link FIRST} to reach {@link LAST}. */
+const MONTHS = Math.ceil((LAST - FIRST) / 30) + 1;
 
 type Timed = {
   readonly title: string;
@@ -96,7 +104,7 @@ type Timed = {
 };
 
 /**
- * Astrid's calendar for a year around the reference date. `Event` has no recurrence, so each series
+ * Astrid's calendar, dense for six months back and light for three months ahead. `Event` has no recurrence, so each series
  * is one Event per occurrence.
  */
 /** Agendas for the weekly team sync, in rotation. */
@@ -143,14 +151,8 @@ const NORTHPINE_NOTES = [
   'Cache hit rate on their Bazel monorepo; next quarter’s plans.',
 ];
 
-/** Notes for Hana's first five 1:1s. */
-const HANA_NOTES = [
-  'First week: laptop, accounts, the cache-engine walkthrough with Omar.',
-  'First month: the flaky-test task, on-call shadowing, questions so far.',
-  'Taking a Builder review on her own; first solo on-call week.',
-  'Owning the regression suite; what to pick up next quarter.',
-  'Six-month check-in: growth plan and the 1.9 work she wants.',
-];
+/** Notes for Hana's first 1:1, the only one before the reference date. */
+const HANA_NOTES = ['First week: laptop, accounts, the cache-engine walkthrough with Omar.'];
 
 /**
  * The half-year sales review's agenda, which links the pipeline board by its id so the reader opens it from the event.
@@ -236,21 +238,22 @@ export const makeCalendar = (
 
     const events: Events = {
       teamSync: rotating(
-        weekly(clock, { weekday: 1, from: FIRST, count: 52 }),
+        until(weekly(clock, { weekday: 1, from: FIRST, count: WEEKS }), SERIES_LAST),
         { title: 'Team sync', attendees: TEAM_SYNC, time: [10, 0], minutes: 30 },
         TEAM_SYNC_NOTES,
       ),
       sprintPlanning: rotating(
-        weekly(clock, { weekday: 2, from: FIRST, count: 26, everyWeeks: 2 }),
+        until(weekly(clock, { weekday: 2, from: FIRST, count: WEEKS, everyWeeks: 2 }), 0),
         { title: 'Sprint planning', attendees: ENGINEERING, time: [14, 0], minutes: 60 },
         SPRINT_NOTES,
       ),
       retro: rotating(
-        weekly(clock, { weekday: 5, from: FIRST, count: 26, everyWeeks: 2 }),
+        until(weekly(clock, { weekday: 5, from: FIRST, count: WEEKS, everyWeeks: 2 }), 0),
         { title: 'Retro', attendees: RETRO, time: [14, 0], minutes: 45 },
         RETRO_NOTES,
       ),
-      oncall: weekly(clock, { weekday: 5, from: FIRST, count: 52 }).map((offset, week) => {
+      // Only this week's handoff is booked ahead.
+      oncall: until(weekly(clock, { weekday: 5, from: FIRST, count: WEEKS }), 7).map((offset, week) => {
         const incoming = ROTATION[week % ROTATION.length];
         return timed(offset, {
           title: 'On-call handoff',
@@ -260,20 +263,19 @@ export const makeCalendar = (
         });
       }),
       productReview: rotating(
-        monthly(clock, { from: -170, count: 12 }),
+        until(monthly(clock, { from: -170, count: MONTHS }), 0),
         { title: 'Product review', attendees: PRODUCT, time: [15, 0], minutes: 60 },
         PRODUCT_REVIEW_NOTES,
       ),
       northpineSync: rotating(
-        monthly(clock, { from: -165, count: 12 }),
+        until(monthly(clock, { from: -165, count: MONTHS }), 0),
         { title: 'Northpine sync', attendees: ['grace', 'marcus', 'astrid', 'june'], time: [16, 0], minutes: 45 },
         NORTHPINE_NOTES,
       ),
       oneOnOne: REPORTS.flatMap(({ key, time }, index) => {
         const from = key === 'hana' ? -HANA_JOINED_DAYS_AGO : FIRST + 2 + index * 3;
-        const count = key === 'hana' ? Math.floor((LAST - 3 - from) / 30) + 1 : 12;
         // Only Hana's first months carry notes: a ramp-up plan worth writing down.
-        return monthly(clock, { from, count }).map((offset, index) =>
+        return until(monthly(clock, { from, count: MONTHS }), 0).map((offset, index) =>
           timed(offset, {
             title: `Astrid / ${people[key].fullName?.split(' ')[0]} 1:1`,
             description: key === 'hana' ? HANA_NOTES[index] : undefined,
@@ -339,8 +341,8 @@ export const makeCalendar = (
       ],
       salesReview: pipeline
         ? [
-            // The calendar lists newest first, so the year's last date puts the review at the top.
-            timed(176, {
+            // Thursday of next week, the quietest weekday on the coming week's calendar.
+            timed(8, {
               title: 'Sales Review',
               description: salesReviewNotes(pipeline.id),
               attendees: ['astrid', 'kofi', 'lucia', 'june'],
@@ -420,7 +422,7 @@ export const makeCalendar = (
         }),
       ],
       aldermoorReview: [
-        timed(14, {
+        timed(-19, {
           title: 'Aldermoor Bank proposal review',
           description:
             'From the thread "Aldermoor Bank: Enterprise proposal": procurement questions on EU residency and customer-managed keys.',
@@ -446,16 +448,6 @@ export const makeCalendar = (
           attendees: ['claire', 'astrid', 'lucia'],
           time: [17, 0],
           minutes: 45,
-        }),
-      ],
-      vantageDeepDive: [
-        timed(13, {
-          title: 'Vantage technical deep dive',
-          description:
-            'From the thread "Vantage: US-only data residency": US-only storage, access and the shared control plane.',
-          attendees: ['claire', 'omar', 'anika', 'astrid'],
-          time: [16, 0],
-          minutes: 90,
         }),
       ],
       meridianProposal: [
@@ -495,15 +487,6 @@ export const makeCalendar = (
           minutes: 60,
         }),
       ],
-      lumenCheckIn: [
-        timed(1, {
-          title: 'Lumen rollout check-in',
-          description: 'From the thread "Lumen rollout: second pipeline group": hit rates for the imaging pipelines.',
-          attendees: ['tobias', 'kofi', 'june'],
-          time: [13, 0],
-          minutes: 30,
-        }),
-      ],
       pallasDemo: [
         timed(-36, {
           title: 'Pallas Retail demo',
@@ -515,19 +498,12 @@ export const makeCalendar = (
         }),
       ],
       cloudflareCall: [
+        // One call answers both threads: the Tuesday after the release is also the week after next.
         timed(6, {
-          title: 'Cloudflare R2 pricing call',
-          description: 'From the thread "Cloudflare R2 egress pricing": enterprise commit and operation costs.',
-          attendees: ['ines', 'omar', 'felix'],
-          time: [15, 0],
-          minutes: 30,
-        }),
-      ],
-      cloudflareReview: [
-        timed(8, {
-          title: 'Cloudflare architecture review',
-          description: 'From the thread "Cloudflare credits and an annual commit": size the commit and the new region.',
-          attendees: ['elena', 'anika', 'astrid'],
+          title: 'Cloudflare commit and architecture review',
+          description:
+            'From the threads "Cloudflare R2 egress pricing" and "Cloudflare credits and an annual commit": operation costs, then size the commit and the new region.',
+          attendees: ['ines', 'elena', 'omar', 'felix', 'astrid'],
           time: [15, 0],
           minutes: 60,
         }),

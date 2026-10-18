@@ -1,6 +1,6 @@
 # Alien Labs inbox and CRM
 
-Astrid's inbox, contacts and calendar. Two months of mail, a year of calendar, and every contact who
+Astrid's inbox, contacts and calendar. Two months of mail, six dense months of calendar and a light three ahead, and every contact who
 writes in also turns up on the calendar.
 
 - Code: `organizations.ts`, `contacts.ts`, `views.ts`, `pipeline.ts`, `mail.ts`, `calendar.ts`, `util.ts`, `partial.ts`,
@@ -8,7 +8,7 @@ writes in also turns up on the calendar.
 - Requires: [team](../team/CONTENT.md) (`orgs.fieldstone`, `people.*`, `agents.scribe`)
 - Provides: `orgs.<key>`, `people.<key>` for the contacts below, `mailbox`, `calendar`,
   `threads.<key>`, `events.<key>`, `pipeline` (the Sales pipeline Kanban)
-- Clock: every timed event falls on a weekday. Mail runs from −60d to the reference date. The calendar runs from −182d to +182d. The
+- Clock: every timed event falls on a weekday. Mail runs from −60d to the reference date. The calendar runs from −182d to +90d. The
   reference date should fall on a Wednesday.
 - Used by: Alien Labs (`../FieldstoneSpace.ts`)
 
@@ -161,39 +161,41 @@ writes in also turns up on the calendar.
 ### Calendar
 
 - 1 `Calendar` "Alien Labs", the only calendar in the space. `Calendar` has no owner field: every
-  `Event.owner` is Astrid. 314 `Event`s from −182d to +182d, so the calendar
-  scrolls through a full year. Attendees are `Actor`s with `contact: Ref<Person>`; no event has more than 5.
+  `Event.owner` is Astrid. 171 `Event`s from −182d to +90d: 153 up to
+  the reference date and 18 after it, so the past is dense and the next three months are a light
+  schedule. Attendees are `Actor`s with `contact: Ref<Person>`; no event has more than 5.
 - `Event` has no recurrence field, so each repeating series is stored as one `Event` per
   occurrence. Occurrences of a series share title, time of day, duration and attendees, except that
   the on-call handoff's incoming engineer rotates weekly. Monthly series repeat every 30 days, moved
   off weekends.
-- Repeating series, 283 events:
-  - `teamSync` Team sync, weekly on Monday at 10:00, Astrid, Omar, June, Anika, Lucía, 52
-  - `sprintPlanning` Sprint planning, every other Tuesday, Astrid, Omar, Felix, June, Tomás, 26
-  - `retro` Retro, every other Friday, Astrid, Omar, Felix, Hana, Anika, 26
-  - `oneOnOne.<key>` Astrid's monthly 1:1 with each of her 9 reports, 103. Hana's start at her join
+- Repeating series, 143 events. Each starts at −182d; only the team sync (to +14d) and the on-call
+  handoff (to +7d) continue past the reference date, the others stop at it:
+  - `teamSync` Team sync, weekly on Monday at 10:00, Astrid, Omar, June, Anika, Lucía, 28
+  - `sprintPlanning` Sprint planning, every other Tuesday, Astrid, Omar, Felix, June, Tomás, 13
+  - `retro` Retro, every other Friday, Astrid, Omar, Felix, Hana, Anika, 13
+  - `oneOnOne.<key>` Astrid's monthly 1:1 with each of her 9 reports, 50. Hana's start at her join
     date.
-  - `oncall` On-call handoff, weekly on Friday at 15:00, Anika and the incoming engineer, 52
-  - `productReview` Product review, monthly, Astrid, Lucía, Ben, Kofi, June, 12
-  - `northpineSync` Northpine sync, monthly, Grace, Marcus, Astrid, June, 12
-- One-off events, 30:
+  - `oncall` On-call handoff, weekly on Friday at 15:00, Anika and the incoming engineer, 27
+  - `productReview` Product review, monthly, Astrid, Lucía, Ben, Kofi, June, 6
+  - `northpineSync` Northpine sync, monthly, Grace, Marcus, Astrid, June, 6
+- One-off events, 28:
   - Past: Cairn 1.7 release (all-day, −75d, Astrid, Omar, Felix, Anika, Kofi), Northpine SSO kickoff (−40d), Okapi postmortem review
     (−26d), Stripe billing working session (−20d), Hana onboarding day one (−14d), Meridian security
     review (−6d), 2 interviews (−30d, −9d)
   - Upcoming: Cairn 1.8 release (all-day, +2d, Astrid, Omar, Felix, Kofi and Sofia, whose partner
-    listing goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare pricing
-    call (+6d), Cloudflare architecture review (+8d), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
-    Omar, Astrid), team offsite at Saltmarsh Lodge
+    listing goes live with it), Brightwater intro call (+5d), 2 interviews (+7d, +9d), Cloudflare commit
+    and architecture review (+6d, from both Cloudflare threads), Northpine QBR (+12d), Okapi alerting follow-up (+7d 16:00, Nadia, Sam,
+    Omar, Astrid), `salesReview` Sales Review (+8d 11:00, Astrid, Kofi, Lucía, June; the agenda links
+    the Sales pipeline), team offsite at Saltmarsh Lodge
     (all-day, +34d to +36d, Astrid, Lucía, Ben and Wren, location set)
   - Sales pipeline, one or two per new customer: Pallas Retail demo (−36d), Lumen Biotech
-    validation results (−29d), Tidewater security review (−22d), Vantage Aerospace discovery
-    (−15d), Tidewater MSA review (+1d), Lumen rollout check-in (+1d), Halcyon Freight intro call
-    (+6d), Meridian proposal review (+7d), Kestrel Energy discovery call (+9d), Vantage technical
-    deep dive (+13d), Corvid Analytics technical evaluation (+8d), Larkspur Media demo (+12d),
-    Aldermoor Bank proposal review (+14d)
-- 168 events have a description: every one-off names the thread it came from; team syncs, sprint
+    validation results (−29d), Tidewater security review (−22d), Aldermoor Bank proposal review (−19d), Vantage
+    Aerospace discovery (−15d), Tidewater MSA review (+1d), Halcyon Freight intro call (+6d),
+    Meridian proposal review (+7d), Kestrel Energy discovery call (+9d), Corvid Analytics technical
+    evaluation (+8d), Larkspur Media demo (+12d)
+- 99 events have a description: every one-off names the thread it came from; team syncs, sprint
   planning, retros, product reviews and Northpine syncs rotate through agenda notes, so no two
-  occurrences read alike; Hana's first five 1:1s carry her ramp-up plan. On-call handoffs and the
+  occurrences read alike; Hana's first 1:1 carries her ramp-up plan. On-call handoffs and the
   other 1:1s have none, except as below.
 - The 10 most recent events before the reference date carry full markdown meeting notes instead
   (`event-notes.ts`): attendees, agenda, discussion, decisions and a task list of action items
@@ -230,7 +232,9 @@ These must work end to end in the app.
 - Every organization has a distinct logo; each pipeline customer shows its own WebP poster
   (`logos/`, regenerated into `logo-images.ts`), the others a generated SVG mark.
 - 188 messages in 103 threads. The oldest is at −60d and the newest at the reference date.
-- 314 events. Every week from −182d to +182d has at least one.
+- 171 events. Every week from −182d to the reference date has at least one; none is after +90d,
+  and the weeks after the reference date average at most a quarter as many events as the weeks before.
+- The Sales Review falls on a weekday next week (+5d to +11d).
 - Every message from a person in the space has a sender Actor with `contact` set.
 - Every external contact with a thread attends at least one event.
 - Nadia attends an event after the reference date: the Okapi alerting follow-up.
