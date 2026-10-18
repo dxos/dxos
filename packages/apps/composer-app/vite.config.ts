@@ -838,7 +838,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**

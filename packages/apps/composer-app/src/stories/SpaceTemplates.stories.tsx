@@ -1,0 +1,270 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Option from 'effect/Option';
+import React, { useEffect, useRef, useState } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Annotation, Filter, Obj } from '@dxos/echo';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
+import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
+import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
+import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
+import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
+import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
+import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
+import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
+import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
+import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
+import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as ScriptPlugin from '@dxos/plugin-script/ScriptPlugin';
+import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
+import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
+import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { isNonNullable } from '@dxos/util';
+
+/** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
+const TEMPLATES = {
+  architecture: 'org.dxos.plugin.canvas.template.architecture',
+  fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
+  incident: 'org.dxos.plugin-debug.template.incident',
+  pipeline: 'org.dxos.plugin-debug.template.pipeline',
+  review: 'org.dxos.plugin-debug.template.review',
+  stockfish: 'org.dxos.plugin-debug.template.stockfish',
+  tidepool: 'org.dxos.plugin-debug.template.tidepool',
+  weather: 'org.dxos.plugin-debug.template.weather',
+  worker: 'org.dxos.plugin-debug.template.worker',
+} as const;
+
+const STATUS_TEST_ID = 'spaceTemplates.status';
+const LABEL_TEST_ID = 'spaceTemplates.label';
+const HEADING_TEST_ID = 'treeItem.heading';
+const COLLECTIONS_TEST_ID = 'spacePlugin.collectionsSection';
+
+/** Template application can take tens of seconds on a cold module graph. */
+const TIMEOUT = 60_000;
+
+type TemplateState =
+  | { status: 'pending' }
+  | { status: 'ready'; spaceId: string; labels: string[]; objects: number }
+  | { status: 'error'; message: string };
+
+/**
+ * What the template wrote: the labels of the root collection's objects (the navtree's Collections
+ * section) and the number of objects besides the root collection itself.
+ */
+const getTemplateContent = async (space: Space): Promise<{ labels: string[]; objects: number }> => {
+  const ref = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined);
+  const collection = await ref?.load();
+  const children = await Promise.all((collection?.objects ?? []).map((object) => object.load()));
+  const objects = await space.db.query(Filter.everything()).run();
+  return {
+    labels: children.map((object) => Obj.getLabel(object)).filter(isNonNullable),
+    objects: objects.filter((object) => object.id !== collection?.id).length,
+  };
+};
+
+/**
+ * Creates a space from the template through `space.create` — the path the Create Space dialog
+ * takes — and opens it in the deck, so its navtree and objects can be browsed.
+ */
+const TemplateSpace = ({ template }: { template: string }) => {
+  const client = useClient();
+  const identity = useIdentity();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [state, setState] = useState<TemplateState>({ status: 'pending' });
+  // Guards against re-entry while the create is in flight across re-renders.
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!identity || started.current) {
+      return;
+    }
+
+    started.current = true;
+    void (async () => {
+      try {
+        const created = await invokePromise(SpaceOperation.Create, { template });
+        if (created.error || !created.data) {
+          throw created.error ?? new Error(`Space was not created: ${template}`);
+        }
+
+        const space = client.spaces.get(created.data.space.id);
+        if (!space) {
+          throw new Error(`Created space is not in the client: ${template}`);
+        }
+
+        await space.waitUntilReady();
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
+        setState({ status: 'ready', spaceId: space.id, ...(await getTemplateContent(space)) });
+      } catch (error) {
+        setState({ status: 'error', message: error instanceof Error ? error.message : String(error) });
+      }
+    })();
+  }, [client, identity, invokePromise, template]);
+
+  return (
+    <div
+      className='fixed bottom-2 right-2 z-50 p-2 rounded-sm text-xs dx-base-surface border border-separator'
+      data-testid={STATUS_TEST_ID}
+      data-status={state.status}
+      data-objects={state.status === 'ready' ? state.objects : undefined}
+    >
+      <div>{template}</div>
+      {state.status === 'error' && <div className='text-error-text'>{state.message}</div>}
+      {state.status === 'ready' &&
+        state.labels.map((label) => (
+          <div key={label} data-testid={LABEL_TEST_ID}>
+            {label}
+          </div>
+        ))}
+    </div>
+  );
+};
+
+type StoryArgs = { template: string };
+
+const meta = {
+  title: 'apps/composer-app/SpaceTemplates',
+  render: ({ template }) => <TemplateSpace template={template} />,
+  decorators: [
+    withPluginManager({
+      plugins: [
+        // Core: the subset of `getCorePlugins` the deck and navtree need, without onboarding,
+        // observability or the PWA, which assume a real deployment.
+        AttentionPlugin.make(),
+        ClientPlugin.make({
+          onClientInitialized: ({ client }) => initializeIdentity(client),
+        }),
+        ConnectorPlugin.make(),
+        DeckPlugin.make({ platform: 'desktop' }),
+        GraphPlugin.make(),
+        NavTreePlugin.make(),
+        PreviewPlugin.make(),
+        ProcessManagerPlugin.make(),
+        RoutinePlugin.make(),
+        SettingsPlugin.make(),
+        SpacePlugin.make({}),
+        ThemePlugin.make({ appName: 'Composer', platform: 'desktop' }),
+
+        // Content: the plugins whose objects the templates seed, and which contribute them.
+        // Required by projects and chess respectively.
+        AssistantPlugin.make(),
+        GamePlugin.make(),
+        BoardPlugin.make(),
+        CanvasPlugin.make(),
+        ChessPlugin.make(),
+        CrmPlugin.make(),
+        DebugPlugin.make({}),
+        IllustratorPlugin.make(),
+        InboxPlugin.make(),
+        KanbanPlugin.make(),
+        MarkdownPlugin.make(),
+        PipelinePlugin.make(),
+        ProjectsPlugin.make(),
+        ReviewPlugin.make(),
+        ScriptPlugin.make(),
+        SheetPlugin.make(),
+        TablePlugin.make(),
+        TasksPlugin.make(),
+        ThreadPlugin.make(),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
+  argTypes: {
+    template: {
+      control: 'select',
+      options: Object.values(TEMPLATES),
+    },
+  },
+} satisfies Meta<StoryArgs>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/**
+ * Asserts the template applied without error and wrote objects, and that the navtree's Collections
+ * section lists every labelled collection the template added to the space root.
+ */
+const play: Story['play'] = async ({ canvasElement }) => {
+  const body = within(canvasElement.ownerDocument.body);
+  const status = await body.findByTestId(STATUS_TEST_ID, undefined, { timeout: TIMEOUT });
+  await waitFor(() => expect(status.dataset.status).not.toBe('pending'), { timeout: TIMEOUT });
+  await expect(status.dataset.status).toBe('ready');
+
+  const labels = within(status)
+    .queryAllByTestId(LABEL_TEST_ID)
+    .map((element) => element.textContent ?? '');
+  await expect(Number(status.dataset.objects)).toBeGreaterThan(0);
+  if (labels.length === 0) {
+    return;
+  }
+
+  // The section starts collapsed; its branch trigger is the only control that discloses it.
+  const section = await body.findByTestId(COLLECTIONS_TEST_ID, undefined, { timeout: TIMEOUT });
+  if (section.getAttribute('aria-expanded') !== 'true') {
+    const trigger = section.querySelector<HTMLElement>('.dx-tree-branch-trigger');
+    await expect(trigger).not.toBeNull();
+    trigger?.click();
+  }
+
+  await waitFor(
+    async () => {
+      const headings = body.queryAllByTestId(HEADING_TEST_ID).map((element) => element.textContent?.trim());
+      for (const label of labels) {
+        await expect(headings).toContain(label);
+      }
+    },
+    { timeout: TIMEOUT },
+  );
+};
+
+export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
+
+export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
+
+export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play };
+
+export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
+
+export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
+
+export const Review: Story = { args: { template: TEMPLATES.review }, play };
+
+export const Stockfish: Story = { args: { template: TEMPLATES.stockfish }, play };
+
+export const Tidepool: Story = { args: { template: TEMPLATES.tidepool }, play };
+
+export const Weather: Story = { args: { template: TEMPLATES.weather }, play };
