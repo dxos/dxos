@@ -35,8 +35,9 @@ export const PLUGIN_METRICS: ReadonlyArray<
 
 const COLUMNS = 'ABCDE';
 
-/** The plugin-name column's width: half again the grid's 180px default, so the longest names fit. */
-const PLUGIN_COLUMN_SIZE = 270;
+/** Column widths: the plugin names take the room the longest one needs; the counts need far less than the grid's 180px default. */
+const PLUGIN_COLUMN_SIZE = 310;
+const COUNT_COLUMN_SIZE = 110;
 
 /** Plugin size and activity as a sheet, charted as horizontal bars: plugins down the y axis, one series per measure. */
 export const makePluginMetrics = (): Sheet.Sheet => {
@@ -70,7 +71,9 @@ export const makePluginMetrics = (): Sheet.Sheet => {
     ],
   });
   Obj.update(sheet, (sheet) => {
-    sheet.columnMeta[sheet.columns[0]] = { size: PLUGIN_COLUMN_SIZE };
+    sheet.columns.forEach((column, index) => {
+      sheet.columnMeta[column] = { size: index === 0 ? PLUGIN_COLUMN_SIZE : COUNT_COLUMN_SIZE };
+    });
   });
   return sheet;
 };
