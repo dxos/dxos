@@ -13,10 +13,10 @@
  * Lines play one after another, `gap` seconds apart, after a silent `leadIn`, except a line with `at`, which starts
  * that many seconds after the lead-in; a line with no `text` is a silent gesture. Between their lines a participant
  * shows `listen-<id>-<n>.mp4` (their n-th gap of 2.5s or more, retimed to fit; `--plan` lists them) or, for a shorter
- * pause, `still-<id>.png`; without those they fall back to their looping
- * listening clip whenever someone else is speaking. Every track starts on the same lead-in, so tracks started
- * together stay in step: `fake-media.mjs` loops the lead-in until its cue and `CallSimulation.start()` plays from
- * the top on join.
+ * pause, `still-<id>.png`; without those they fall back to their looping listening clip. A `take-<id>.mp4` (one
+ * continuous render lip-synced to the participant's whole track) replaces all of that stitching. Every track starts
+ * on the same lead-in, so tracks started together stay in step: `fake-media.mjs` loops the lead-in until its cue and
+ * `CallSimulation.start()` plays from the top on join.
  *
  * Writes `<out>/<participant>.webm` (VP9 + Opus, which Chromium decodes), `<out>/conversation.wav` (every voice,
  * mixed, to lay under the screen recording, which captures no sound) and `<out>/timeline.json` (each spoken line's
@@ -38,6 +38,7 @@ const { values: options } = parseArgs({
     fps: { type: 'string', default: '25' },
     plan: { type: 'boolean', default: false },
     screenshare: { type: 'string', multiple: true, default: [] },
+    xfade: { type: 'string', default: '0' },
   },
 });
 if (!options.conversation || !options.clips) {
@@ -148,11 +149,11 @@ const MIN_LISTEN = 2.5;
 const plan = [];
 
 /**
- * Seconds of crossfade at each join between a line and the footage around it: two renders of the same still never
- * frame it quite alike, so a hard cut reads as a jump. The filler is rendered that much longer on each side it meets a
- * line, so the lines keep their exact times.
+ * Seconds of crossfade at each join between a line and the footage around it (`--xfade`). Clips aligned to the
+ * participant's still (`align.py`) cut cleanly, so the default is none; for unaligned renders a fade hides the jump.
+ * The filler is rendered that much longer on each side it meets a line, so the lines keep their exact times.
  */
-const XFADE = 0.3;
+const XFADE = Number(options.xfade);
 
 const tracks = Object.keys(conversation.participants).map((id) => {
   /** `{ fixed: file }` for a line, or `{ seconds, render(seconds, file) }` for the footage that fills a gap. */
@@ -203,16 +204,19 @@ const tracks = Object.keys(conversation.participants).map((id) => {
     return undefined;
   }
 
-  // Video: each part, fillers lengthened into the crossfades they take part in.
-  const videos = parts.map((part, index) => {
-    if (part.fixed) {
-      return part.fixed;
-    }
-    const file = path.join(work, `${id}-${index}.mkv`);
-    const fades = (index > 0 ? 1 : 0) + (index < parts.length - 1 ? 1 : 0);
-    part.render(part.seconds + fades * XFADE, file);
-    return file;
-  });
+  // A single continuous take of the participant (`take-<id>.mp4`, lip-synced to their whole track) beats any stitching.
+  const take = path.join(options.clips, `take-${id}.mp4`);
+  const videos = existsSync(take)
+    ? [take]
+    : parts.map((part, index) => {
+        if (part.fixed) {
+          return part.fixed;
+        }
+        const file = path.join(work, `${id}-${index}.mkv`);
+        const fades = (index > 0 ? 1 : 0) + (index < parts.length - 1 ? 1 : 0);
+        part.render(part.seconds + fades * XFADE, file);
+        return file;
+      });
   // Audio: each line's own sound and exact silences, so speech keeps its time whatever the picture does.
   const audios = parts.map((part, index) => {
     const file = path.join(work, `${id}-${index}.wav`);
@@ -238,13 +242,22 @@ const tracks = Object.keys(conversation.participants).map((id) => {
 
   let chain = '';
   let label = '0:v';
-  let length = duration(videos[0]);
-  videos.slice(1).forEach((file, index) => {
-    const next = `v${index + 1}`;
-    chain += `[${label}][${index + 1}:v]xfade=transition=fade:duration=${XFADE}:offset=${(length - XFADE).toFixed(3)}[${next}];`;
-    label = next;
-    length += duration(file) - XFADE;
-  });
+  if (existsSync(take)) {
+    // The take may stop short of the end; its last frame holds.
+    chain = `[0:v]tpad=stop_mode=clone:stop_duration=${total.toFixed(2)},${video}[v];`;
+    label = 'v';
+  } else if (XFADE > 0) {
+    let length = duration(videos[0]);
+    videos.slice(1).forEach((file, index) => {
+      const next = `v${index + 1}`;
+      chain += `[${label}][${index + 1}:v]xfade=transition=fade:duration=${XFADE}:offset=${(length - XFADE).toFixed(3)}[${next}];`;
+      label = next;
+      length += duration(file) - XFADE;
+    });
+  } else if (videos.length > 1) {
+    chain = `${videos.map((_, index) => `[${index}:v]`).join('')}concat=n=${videos.length}:v=1:a=0[v];`;
+    label = 'v';
+  }
   const track = path.join(options.out, `${id}.webm`);
   run([
     ...videos.flatMap((file) => ['-i', file]),
