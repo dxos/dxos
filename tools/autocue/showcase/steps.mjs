@@ -134,10 +134,8 @@ export const closeCompanion = async (page) => {
   const close = page.locator('[data-testid="plankHeading.closeCompanion"]');
   if (await visible(close, 6_000)) {
     await close.first().click();
-    await close
-      .first()
-      .waitFor({ state: 'hidden', timeout: 5_000 })
-      .catch(() => {});
+    // A companion still open would start the clip mid-flicker, so let the take fail and be retried.
+    await close.first().waitFor({ state: 'hidden', timeout: 5_000 });
   }
 };
 

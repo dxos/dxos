@@ -905,7 +905,7 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
 
-test QA-14: Showcase clip
+test QA-15: Showcase clip
   desc: |
     The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: composer` step.

@@ -5,7 +5,7 @@
 /**
  * Showcase clip (20s): Select a shape in the Composer architecture drawing, read its properties, and rename it.
  *
- * @mdl packages/plugins/plugin-canvas/PLUGIN.mdl test QA-3
+ * @mdl packages/plugins/plugin-canvas/PLUGIN.mdl test QA-4
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
  * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
@@ -23,8 +23,7 @@ export const steps = showcase({
   setup: async ({ page }) => {
     await fromTemplate(page, 'DXOS Architecture');
     await reveal(page, ['Collections', 'Architecture']);
-    // The collection lists the documents before the drawings, so the second Composer is the drawing.
-    await page.locator('[data-testid="treeItem.heading"]:text-is("Composer")').nth(1).click();
+    await page.locator('[data-testid="treeItem.heading"]:text-is("Overview")').first().click();
     await page.waitForTimeout(3_000);
   },
   clip: async ({ page }) => {

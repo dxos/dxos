@@ -94,7 +94,7 @@ test QA-2: Draw a nested architecture diagram of composer-app
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
 
-test QA-3: Showcase clip
+test QA-4: Showcase clip
   desc: |
     The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
     count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: canvas` step.

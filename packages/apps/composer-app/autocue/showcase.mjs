@@ -5,7 +5,7 @@
 /**
  * Showcase clip (20s): Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-14
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-15
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
  * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
