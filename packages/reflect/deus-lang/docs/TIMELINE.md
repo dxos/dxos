@@ -358,6 +358,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 348 | 10-20 10:50 | 30m 00s | f74b879035 | An export keeps only the cached views it read: 51 MB to 13 MB (D323) |
 | 349 | 10-20 11:50 | 1h 00m | 4778cee3dd | Long `&&` and `||` chains print one operand per line; exported views are keyed by the CLI that printed them (D324) |
 | 350 | 10-20 12:40 | 50m 00s | c95ffa99ae | Long `++` and arithmetic chains fill their lines, each continued line led by the operator (D325) |
-| 351 | 10-20 13:30 | 50m 00s | this commit | A long definition, test or match arm body starts on the next line: long printed lines 129 to 53 (D326) |
+| 351 | 10-20 13:30 | 50m 00s | aa14d25a23 | A long definition, test or match arm body starts on the next line: long printed lines 129 to 53 (D326) |
 
 Total from stage 1 to stage 351: 152h 40m.
