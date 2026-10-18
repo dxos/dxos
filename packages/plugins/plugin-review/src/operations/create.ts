@@ -12,12 +12,12 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities, CommentOperation } from '#types';
 
+import { commentAgentConfig } from '../comment-agent-config.ts';
 import { CommentNotPersistedError, InvalidCommentRangeError, RangeAnchorSubjectError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
@@ -28,18 +28,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
       const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const subjectId = Obj.getURI(subject);
 
-      // Inherit the markdown plugin's `commentAgentMode` setting when the
-      // subject is a Markdown.Document, so new comment threads on docs are
-      // opted-in (or not) based on the user's preference. Non-markdown
-      // subjects always get an un-opted thread (no agent).
-      const markdownSettingsAtoms = yield* Capability.getAll(MarkdownCapabilities.Settings);
-      const markdownSettingsAtom = markdownSettingsAtoms[0];
-      const commentAgentMode =
-        markdownSettingsAtom && Obj.instanceOf(Markdown.Document, subject)
-          ? registry.get(markdownSettingsAtom).commentAgentMode
-          : undefined;
-      const agent =
-        commentAgentMode && commentAgentMode !== 'off' ? { enabled: true, mode: commentAgentMode } : undefined;
+      // A thread on a Markdown document starts opted in (or not) per the user's `commentAgentMode` setting.
+      const agent = yield* commentAgentConfig(subject);
 
       const thread = Thread.make({ name, agent });
       const anchor = Relation.make(AnchoredTo.AnchoredTo, {

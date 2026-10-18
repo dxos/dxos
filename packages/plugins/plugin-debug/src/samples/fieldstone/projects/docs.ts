@@ -87,7 +87,7 @@ const BILLING_PLAN = trim`
 const SOC2_POLICIES = trim`
   # SOC 2 policy set
 
-  Drafted by Scribe from how Fieldstone works today; each policy names its owner. Gaps are flagged where we found them rather than papered over.
+  Drafted by Scribe from how Alien Labs works today; each policy names its owner. Gaps are flagged where we found them rather than papered over.
 
   ## Access control (approved, owner Anika Rao)
 
@@ -103,7 +103,7 @@ const SOC2_POLICIES = trim`
 
   ## Vendor management (in review, owner Anika Rao)
 
-  Five vendors touch customer data: AWS, Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
+  Four vendors touch customer data: Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
 
   ## Data retention (draft, owner Anika Rao)
 

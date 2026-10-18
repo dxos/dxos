@@ -3,7 +3,7 @@
 //
 
 /**
- * Hello Worker: create the space from its template, have an agent draw the Worker as a Mermaid diagram and file
+ * Hello Worker: create the space from its template, have an agent draw the proposed architecture on the canvas and file
  * it on the project, open the diagram, then hand the sandbox and code tasks to a second chat and watch the Gantt
  * fill in. Stops before the deploy, whose claim URL is a bearer credential the take must not show.
  *
@@ -14,7 +14,7 @@
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * The dev environment enables plugin-debug (the template) and Sandbox; Mermaid is enabled off camera.
+ * The dev environment enables plugin-debug (the template) and Sandbox; Illustrator and Canvas are on by default.
  */
 
 const TEMPLATE = 'Hello Worker';
@@ -23,7 +23,7 @@ const PROJECT = 'Hello Worker';
 /** The Assistant's remote model; Composer's default left delegated chats silent on EDGE preview. */
 const MODEL = 'DeepSeek V4 Pro';
 
-const DIAGRAM_TASK = 'Draw the Worker as a diagram';
+const DIAGRAM_TASK = 'Draw the proposed architecture';
 const CODE_TASKS = ['Create a sandbox and install wrangler', 'Write the Worker'];
 
 const FINISHED = ['done', 'review'];
@@ -140,7 +140,7 @@ const caption = (demo, value) => demo.caption({ value, subtitle: 'Hello Worker t
 
 export const steps = [
   {
-    name: 'Prep (off camera): dismiss notices, enable Mermaid, pick the model',
+    name: 'Prep (off camera): dismiss notices, pick the model',
     setup: true,
     run: async ({ demo, page }) => {
       const notice = page.locator(
@@ -149,21 +149,6 @@ export const steps = [
       if (await visible(notice, 8_000)) {
         await notice.first().click();
       }
-
-      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-      const filter = page.locator('input[placeholder="Filter…"]').first();
-      await filter.waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Mermaid', hud: false });
-      // The switch's input is visually hidden; its label is what takes the click and carries the state.
-      const toggle = page.locator('[data-testid="pluginList.org.dxos.plugin.mermaid"] label[data-scope="switch"]');
-      await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-      if ((await toggle.getAttribute('data-state')) !== 'checked') {
-        await toggle.click();
-        await page
-          .locator('[data-testid="pluginList.org.dxos.plugin.mermaid"] label[data-state="checked"]')
-          .waitFor({ timeout: 10_000 });
-      }
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
 
       // A delegated chat runs on the settings' default model, not the chat picker's.
       await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
@@ -208,7 +193,7 @@ export const steps = [
   {
     name: 'Assign the diagram task to the agent',
     run: async ({ demo, page }) => {
-      await caption(demo, 'First, the agent draws the Worker');
+      await caption(demo, 'First, the agent draws the proposed architecture');
       await delegate(demo, page, [DIAGRAM_TASK]);
       await closeCompanion(page);
       await page.waitForTimeout(BEAT);
@@ -237,12 +222,15 @@ export const steps = [
         selector: '[data-testid="projectsPlugin.artifacts"] :is(button,a,[role="button"],[data-scope="card"]) >> nth=0',
         label: 'Diagram',
       });
-      await page
-        .locator(
-          '[data-testid="deck.plank"] svg[id^="mermaid"], [data-testid="deck.plank"] .cm-mermaid svg, [data-testid="deck.plank"] [class*="mermaid"] svg',
-        )
-        .first()
-        .waitFor({ state: 'visible', timeout: 30_000 });
+      // The drawing opens in the project's plank, under its breadcrumb, once its canvas has laid out.
+      await page.waitForFunction(
+        () =>
+          [...document.querySelectorAll('[data-testid="deck.plank"] :is(svg, canvas)')].some(
+            (element) => element.getBoundingClientRect().width > 400,
+          ),
+        undefined,
+        { timeout: 30_000 },
+      );
       await page.waitForTimeout(BEAT * 3);
     },
   },

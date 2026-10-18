@@ -12,16 +12,15 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import {
-  buildMailboxSelection,
-  buildSystemTagSelection,
-  buildThreadSemiJoin,
-  getSearchText,
-} from './mailbox-search.ts';
+import { type SearchSelectionOptions, buildSearchSelection, getSearchText } from '../../util/index.ts';
+import { buildSystemTagSelection, buildThreadSemiJoin } from './mailbox-search.ts';
+
+const buildMailboxSelection = (text: string, filter: Filter.Any | undefined, options?: SearchSelectionOptions) =>
+  buildSearchSelection(Filter.type(Message.Message), text, filter, options);
 
 const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
 
-describe('buildMailboxSelection', () => {
+describe('buildSearchSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
 
   test('blank input selects all messages by type', () => {

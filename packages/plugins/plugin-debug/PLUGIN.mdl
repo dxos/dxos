@@ -298,9 +298,9 @@ test QA-3: Walk the review-queue demo space
 ```
 
 ```mdl
-test QA-4: Fieldstone — a customer asks for one more thing
+test QA-4: Alien Labs — a customer asks for one more thing
   desc: |
-    The first Fieldstone vignette, a working moment for Astrid Holm, engineering manager. Okapi had a
+    The first Alien Labs vignette, a working moment for Astrid Holm, engineering manager. Okapi had a
     cache-corruption incident, and their engineering director has replied to the postmortem with one
     more request. Astrid reads it, checks who is asking, and finds the follow-up meeting already on
     the calendar. Recorded by autocue/fieldstone-customer-followup.mjs.
@@ -309,10 +309,10 @@ test QA-4: Fieldstone — a customer asks for one more thing
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with the navtree expanded
+    - space: a space created from the "Alien Labs" template, open, with the navtree expanded
   steps:
     - name: Look at the week
-      do: Open the Fieldstone calendar, scroll the month grid a little ahead and back, then pick Monday 12 October, Wednesday 21 October and Wednesday 14 October in turn.
+      do: Open the Alien Labs calendar, scroll the month grid a little ahead and back, then pick Monday 12 October, Wednesday 21 October and Wednesday 14 October in turn.
       expect: days ringed for their events; each pick moves the event list to that day, with the Okapi follow-up on the 21st
       note: The grid's highlighted "today" is the wall clock's, not the template's reference date.
     - name: Open an event
@@ -335,13 +335,13 @@ test QA-4: Fieldstone — a customer asks for one more thing
       expect: her contact opens, with her related messages and events
     - name: Find the follow-up
       do: Open "Okapi alerting follow-up" from her upcoming events.
-      expect: the follow-up a week out, with Nadia, Sam, Omar and Astrid, on the Fieldstone calendar
+      expect: the follow-up a week out, with Nadia, Sam, Omar and Astrid, on the Alien Labs calendar
 ```
 
 ```mdl
-test QA-5: Fieldstone — what the agents did this week
+test QA-5: Alien Labs — what the agents did this week
   desc: |
-    The second Fieldstone vignette. Astrid checks on the Cairn 1.8 release work, most of which agents
+    The second Alien Labs vignette. Astrid checks on the Cairn 1.8 release work, most of which agents
     do: the project's Gantt shows each Builder and Reviewer run, one run's chat shows the work, and the
     failed R2 task shows where a person stepped in. Recorded by autocue/fieldstone-agents-week.mjs.
   actors: human
@@ -349,7 +349,7 @@ test QA-5: Fieldstone — what the agents did this week
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Projects expanded
+    - space: a space created from the "Alien Labs" template, open, with Projects expanded
   steps:
     - name: Open the release project
       do: Open "Cairn 1.8: remote cache v2" and its Tasks tab.
@@ -366,9 +366,9 @@ test QA-5: Fieldstone — what the agents did this week
 ```
 
 ```mdl
-test QA-6: Fieldstone — the customer pipeline
+test QA-6: Alien Labs — the customer pipeline
   desc: |
-    The third Fieldstone vignette, Fieldstone's accounts as structured data: the CRM section's
+    The third Alien Labs vignette, Alien Labs' accounts as structured data: the CRM section's
     organizations and people, the pricing sheet behind a quote, and a customer note whose links lead to
     its contacts. Recorded by autocue/fieldstone-customer-pipeline.mjs.
   actors: human
@@ -376,7 +376,7 @@ test QA-6: Fieldstone — the customer pipeline
   given:
     - an identity exists, on a fresh profile
     - plugin-debug and plugin-crm are enabled (dev-only default for plugin-debug)
-    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Planning and Customers expanded
+    - space: a space created from the "Alien Labs" template, open, with Collections, Planning and Customers expanded
   steps:
     - name: The accounts
       do: Open Organizations in the CRM section.
@@ -396,9 +396,9 @@ test QA-6: Fieldstone — the customer pipeline
 ```
 
 ```mdl
-test QA-7: Fieldstone — after the incident
+test QA-7: Alien Labs — after the incident
   desc: |
-    The fourth Fieldstone vignette, the documents an incident leaves behind: the postmortem with its
+    The fourth Alien Labs vignette, the documents an incident leaves behind: the postmortem with its
     timeline sheet embedded, the runbook with its escalation drawing, and the decision log the fix fed.
     Recorded by autocue/fieldstone-after-the-incident.mjs.
   actors: human
@@ -406,7 +406,7 @@ test QA-7: Fieldstone — after the incident
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Incidents and Handbook expanded
+    - space: a space created from the "Alien Labs" template, open, with Collections, Incidents and Handbook expanded
   steps:
     - name: The postmortem
       do: Open "Okapi cache-corruption postmortem" in the Incidents collection.
@@ -423,9 +423,9 @@ test QA-7: Fieldstone — after the incident
 ```
 
 ```mdl
-test QA-8: Fieldstone — how Cairn plugs into DXOS
+test QA-8: Alien Labs — how Cairn plugs into DXOS
   desc: |
-    The fifth Fieldstone vignette. Cairn's dashboard is a Composer plugin and its agents run on EDGE
+    The fifth Alien Labs vignette. Cairn's dashboard is a Composer plugin and its agents run on EDGE
     compute, so the team's architecture doc leads into the DXOS diagrams: plugin anatomy for the
     dashboard, EDGE's compute service for the agents. Recorded by autocue/fieldstone-cairn-on-dxos.mjs.
   actors: human
@@ -433,7 +433,7 @@ test QA-8: Fieldstone — how Cairn plugs into DXOS
   given:
     - an identity exists, on a fresh profile
     - plugin-debug is enabled (dev-only default)
-    - space: a space created from the "Fieldstone Labs" template, open, with Collections, Handbook and Architecture expanded
+    - space: a space created from the "Alien Labs" template, open, with Collections, Handbook and Architecture expanded
   steps:
     - name: Cairn's own architecture
       do: Open "Cairn architecture" in the Handbook collection and scroll to how Cairn sits on DXOS.
@@ -450,31 +450,31 @@ test QA-8: Fieldstone — how Cairn plugs into DXOS
 ```mdl
 test QA-9: Hello Worker — a diagram, then the code
   desc: |
-    The Hello Worker template run on camera: an agent draws the Worker as a Mermaid flowchart and files
-    it on the project, then a second chat creates the sandbox and writes the Worker while the Gantt
+    The Hello Worker template run on camera: an agent draws the proposed architecture on the canvas and
+    files it on the project, then a second chat creates the sandbox and writes the Worker while the Gantt
     fills in. Stops before the deploy, whose claim URL is a bearer credential. Recorded by
     autocue/hello-worker.mjs.
   actors: human
   status: unverified
   given:
     - an identity exists, on a fresh profile, talking to an EDGE whose AI service serves the chosen model
-    - plugin-debug, Sandbox and Mermaid are enabled
+    - plugin-debug and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
   steps:
     - name: Create a space from the Hello Worker template
       do: Add a space and pick the "Hello Worker" template.
       expect: the space opens with the "Hello Worker" project in the navtree
     - name: Open the project and its tasks
       do: Open the project and its Tasks tab.
-      expect: six todo tasks, "Draw the Worker as a diagram" first and the claim, assigned to you, last
+      expect: six todo tasks, "Draw the proposed architecture" first and the claim, assigned to you, last
     - name: Assign the diagram task to the agent
-      do: Tick "Draw the Worker as a diagram" and assign it to the agent.
+      do: Tick "Draw the proposed architecture" and assign it to the agent.
       expect: the Gantt opens with one band for the chat and a lane for the task
     - name: Wait for the diagram
       do: Wait for the agent.
       expect: the task is done or in review
     - name: Open the diagram from the project
       do: Open the project's Overview and the first artifact.
-      expect: a document whose Mermaid block renders as a flowchart of the request path
+      expect: a drawing of the sandbox, the Worker, the temporary Cloudflare account and the client's request and JSON response
     - name: Assign the sandbox and code tasks to the agent
       do: Back on Tasks, tick "Create a sandbox and install wrangler" and "Write the Worker" and assign them.
       expect: a second band on the Gantt, its lanes starting as the agent picks each task up

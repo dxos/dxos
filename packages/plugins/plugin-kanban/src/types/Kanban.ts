@@ -67,6 +67,7 @@ export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
 export class Kanban extends Type.makeObject<Kanban>(DXN.make('org.dxos.type.kanban', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
+    description: Schema.String.pipe(Schema.optional),
     arrangement: Arrangement,
     /** How this kanban sources its items. Discriminated by `spec.kind`. */
     spec: KanbanSpec,
@@ -89,6 +90,7 @@ export const isKanbanItems = (kanban: Kanban): kanban is KanbanItems => kanban.s
 
 type MakeViewProps = {
   name?: string;
+  description?: string;
   view: View.View;
   arrangement?: Arrangement;
 };
@@ -97,11 +99,12 @@ type MakeViewProps = {
  * Make a view-variant kanban (items sourced via the View's query).
  */
 export const make = (props: MakeViewProps): Kanban => {
-  const { name, view, arrangement } = props;
+  const { name, description, view, arrangement } = props;
   const order = arrangement?.order ?? [];
   const columns = arrangement?.columns ?? {};
   return Obj.make(Kanban, {
     name,
+    ...(description ? { description } : {}),
     arrangement: { order, columns },
     spec: { kind: 'view' as const, view: Ref.make(view) },
   });
@@ -109,6 +112,7 @@ export const make = (props: MakeViewProps): Kanban => {
 
 type MakeItemsProps = {
   name?: string;
+  description?: string;
   arrangement?: Arrangement;
   pivotField: string;
   items?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
@@ -118,11 +122,12 @@ type MakeItemsProps = {
  * Make an items-variant kanban (items list owned by the kanban itself, e.g. populated by a sync integration).
  */
 export const makeItems = (props: MakeItemsProps): Kanban => {
-  const { name, arrangement, pivotField, items = [] } = props;
+  const { name, description, arrangement, pivotField, items = [] } = props;
   const order = arrangement?.order ?? [];
   const columns = arrangement?.columns ?? {};
   return Obj.make(Kanban, {
     name,
+    ...(description ? { description } : {}),
     arrangement: { order, columns },
     spec: { kind: 'items' as const, pivotField, items },
   });

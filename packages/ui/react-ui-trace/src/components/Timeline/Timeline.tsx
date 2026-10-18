@@ -423,14 +423,14 @@ const TimelineRowView = memo(
         {showIcon && <CommitIcon commit={commit} />}
         <div
           className={mx(
-            'text-sm truncate cursor-pointer text-fg-muted font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
+            'text-sm truncate cursor-pointer group-aria-current/row:text-current-fg hover:text-current-fg',
             hasLink && 'underline decoration-dotted underline-offset-2',
           )}
         >
           {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
         </div>
         {showTimestamp && (
-          <div className='text-xs tabular-nums items-center text-fg-muted font-thin'>
+          <div className='text-xs tabular-nums items-center'>
             {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
           </div>
         )}

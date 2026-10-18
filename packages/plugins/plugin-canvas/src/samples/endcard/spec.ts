@@ -181,8 +181,8 @@ const logoAt = (scale: number): { center: Point; size: Size } => {
 
 /** A fade and a rise of `rise` scene units from `from` to `to` seconds, as `EndCard` gives each line. */
 const entrance = (target: string, rest: Point, from: number, to: number, rise: number, opacity = 1): KeySpec[] => [
-  { target, property: 'opacity', t: from, value: 0 },
-  { target, property: 'opacity', t: to, value: opacity, easing: OUT },
+  { target, property: 'style.opacity', t: from, value: 0 },
+  { target, property: 'style.opacity', t: to, value: opacity, easing: OUT },
   { target, property: 'center', t: from, value: { x: rest.x, y: rest.y + rise } },
   { target, property: 'center', t: to, value: rest, easing: OUT },
 ];
@@ -200,8 +200,8 @@ export const endCardKeys = (): KeySpec[] => {
     [DURATION, 1.012, 'linear'],
   ];
   return [
-    { target: LOGO, property: 'opacity', t: 0, value: 0 },
-    { target: LOGO, property: 'opacity', t: 0.3, value: 1, easing: OUT },
+    { target: LOGO, property: 'style.opacity', t: 0, value: 0 },
+    { target: LOGO, property: 'style.opacity', t: 0.3, value: 1, easing: OUT },
     ...scales.flatMap(([t, scale, easing]): KeySpec[] => {
       const { center, size } = logoAt(scale);
       return [

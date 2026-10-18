@@ -45,7 +45,7 @@ describe('Worker template', () => {
     expect(countOf('type.instructions')).toBe(1);
     expect(countOf('type.taskSet')).toBe(1);
     expect(countOf('type.task:')).toBe(6);
-    // The diagram, the URL and the response body are what the run produces, so the space ships no documents.
+    // The URL and the response body are what the run produces, so the space ships no documents.
     expect(countOf('type.document')).toBe(0);
   });
 
@@ -72,7 +72,7 @@ describe('Worker template', () => {
     const tasks = await taskArchive(WorkerSpace.make());
 
     expect(tasks.map((task) => task.title)).toEqual([
-      'Draw the Worker as a diagram',
+      'Draw the proposed architecture',
       'Create a sandbox and install wrangler',
       'Write the Worker',
       'Deploy it with no Cloudflare login',

@@ -6,11 +6,14 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
 import { Organization } from '@dxos/types';
 
+import { LOGO_IMAGES } from '../logo-images.ts';
+import { type LogoMark, makeLogo } from '../logo.ts';
 import { type Make } from '../util.ts';
 
 const ORG_SEEDS = [
   {
     key: 'github',
+    logo: { color: '#24292f', mark: 'ring' },
     name: 'GitHub',
     status: 'active',
     website: 'https://github.com',
@@ -18,27 +21,24 @@ const ORG_SEEDS = [
   },
   {
     key: 'stripe',
+    logo: { color: '#635bff', mark: 'bars' },
     name: 'Stripe',
     status: 'active',
     website: 'https://stripe.com',
     description: 'Billing and payments. Moving Cairn plans to usage-based billing.',
   },
   {
-    key: 'aws',
-    name: 'Amazon Web Services',
-    status: 'active',
-    website: 'https://aws.amazon.com',
-    description: 'Primary cloud: cache nodes, object storage and the control plane.',
-  },
-  {
     key: 'cloudflare',
+    logo: { color: '#c2410c', mark: 'arc' },
     name: 'Cloudflare',
     status: 'active',
     website: 'https://cloudflare.com',
-    description: 'DNS and CDN. Evaluating R2 as the read tier for cache artifacts.',
+    description:
+      'Primary cloud: DNS, edge Workers, cache nodes and the control plane. Evaluating R2 as the read tier for cache artifacts.',
   },
   {
     key: 'northpine',
+    logo: { color: '#14532d', mark: 'peaks' },
     name: 'Northpine Robotics',
     status: 'active',
     website: 'https://northpinerobotics.com',
@@ -47,6 +47,7 @@ const ORG_SEEDS = [
   },
   {
     key: 'meridian',
+    logo: { color: '#0e7490', mark: 'cross' },
     name: 'Meridian Health Data',
     status: 'qualified',
     website: 'https://meridianhealthdata.com',
@@ -55,6 +56,7 @@ const ORG_SEEDS = [
   },
   {
     key: 'okapi',
+    logo: { color: '#9d174d', mark: 'diamond' },
     name: 'Okapi Payments',
     status: 'active',
     website: 'https://okapipay.com',
@@ -63,6 +65,7 @@ const ORG_SEEDS = [
   },
   {
     key: 'brightwater',
+    logo: { color: '#0369a1', mark: 'wave' },
     name: 'Brightwater Games',
     status: 'prospect',
     website: 'https://brightwatergames.com',
@@ -70,7 +73,95 @@ const ORG_SEEDS = [
     location: [-73.5674, 45.5019],
   },
   {
+    key: 'halcyon',
+    logo: { color: '#1e3a8a', mark: 'chevron' },
+    name: 'Halcyon Freight',
+    status: 'prospect',
+    website: 'https://halcyonfreight.com',
+    description:
+      'Freight logistics, 30 Android and Kotlin engineers on Gradle. Inbound lead from the Monorepo Notes newsletter.',
+    location: [4.4777, 51.9244],
+  },
+  {
+    key: 'kestrel',
+    logo: { color: '#b91c1c', mark: 'wing' },
+    name: 'Kestrel Energy',
+    status: 'prospect',
+    website: 'https://kestrelenergy.com',
+    description: 'Grid-management software on a Bazel monorepo, 140 engineers. Inbound lead after a Cache Line issue.',
+    location: [-104.9903, 39.7392],
+  },
+  {
+    key: 'vantage',
+    logo: { color: '#312e81', mark: 'star' },
+    name: 'Vantage Aerospace',
+    status: 'qualified',
+    website: 'https://vantageaero.com',
+    description:
+      'Flight software for small satellites, 300 engineers on CMake. Qualified; needs US-only data residency.',
+    location: [-118.3965, 33.9192],
+  },
+  {
+    key: 'tidewater',
+    logo: { color: '#155e75', mark: 'circle' },
+    name: 'Tidewater Insurance',
+    status: 'qualified',
+    website: 'https://tidewaterins.com',
+    description: 'Insurance carrier, 220 engineers on Java and Bazel. Security review passed; MSA in redlines.',
+    location: [-72.6851, 41.7637],
+  },
+  {
+    key: 'lumen',
+    logo: { color: '#6d28d9', mark: 'rings' },
+    name: 'Lumen Biotech',
+    status: 'active',
+    website: 'https://lumenbio.com',
+    description: 'Computational biology, 150 seats on Enterprise. Signed three weeks ago; rollout in progress.',
+    location: [0.1218, 52.2053],
+  },
+  {
+    key: 'pallas',
+    logo: { color: '#be185d', mark: 'hexagon' },
+    name: 'Pallas Retail Group',
+    status: 'reject',
+    website: 'https://pallasretail.com',
+    description:
+      'Retail group in Madrid. Lost to a self-hosted cache: build output must stay in their own data centre.',
+    location: [-3.7038, 40.4168],
+  },
+  {
+    key: 'corvid',
+    logo: { color: '#111827', mark: 'bolt' },
+    name: 'Corvid Analytics',
+    status: 'qualified',
+    website: 'https://corvidanalytics.com',
+    description:
+      'Fraud-detection platform, 180 engineers on a Python and Rust monorepo built with Pants. Qualified; budget approved for a technical evaluation.',
+    location: [-97.7431, 30.2672],
+  },
+  {
+    key: 'larkspur',
+    logo: { color: '#0f766e', mark: 'dots' },
+    name: 'Larkspur Media',
+    status: 'prospect',
+    website: 'https://larkspurmedia.com',
+    description:
+      'Streaming apps for web, TV and mobile, 120 engineers on an Nx TypeScript monorepo. Demo of the Nx remote cache booked.',
+    location: [-122.3321, 47.6062],
+  },
+  {
+    key: 'aldermoor',
+    logo: { color: '#7c2d12', mark: 'square' },
+    name: 'Aldermoor Bank',
+    status: 'qualified',
+    website: 'https://aldermoorbank.com',
+    description:
+      'Retail bank, 400 engineers moving from Maven to Bazel. Proposal for Enterprise in the EU region with procurement.',
+    location: [10.7522, 59.9139],
+  },
+  {
     key: 'saltmarsh',
+    logo: { color: '#57534e', mark: 'triangle' },
     name: 'Saltmarsh Lodge',
     status: 'active',
     website: 'https://saltmarshlodge.pt',
@@ -80,7 +171,8 @@ const ORG_SEEDS = [
 ] as const satisfies ReadonlyArray<{
   key: string;
   name: string;
-  status: 'active' | 'qualified' | 'prospect';
+  logo: { color: string; mark: LogoMark };
+  status: 'active' | 'qualified' | 'prospect' | 'reject';
   website: string;
   description: string;
   location?: readonly [number, number];
@@ -98,6 +190,8 @@ export const makeOrganizations = (): Make<Orgs> =>
         status: seed.status,
         website: seed.website,
         description: seed.description,
+        // A customer's own logo where one exists; the generated mark otherwise (vendors, the venue).
+        image: LOGO_IMAGES[seed.name] ?? makeLogo(seed.name, seed.logo.color, seed.logo.mark),
         ...('location' in seed ? { location: [...seed.location] } : {}),
       }),
     ),

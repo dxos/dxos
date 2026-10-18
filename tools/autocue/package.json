@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@remotion/bundler": "catalog:",
     "@remotion/player": "catalog:",

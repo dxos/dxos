@@ -6,10 +6,11 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
+import { AVATAR_IMAGES } from '../avatar-images.ts';
 import { type Make } from '../util.ts';
 import { type OrgKey, type Orgs } from './organizations.ts';
 
-const CONTACT_SEEDS = [
+export const CONTACT_SEEDS = [
   {
     key: 'dana',
     fullName: 'Dana Whitfield',
@@ -21,8 +22,8 @@ const CONTACT_SEEDS = [
   {
     key: 'elena',
     fullName: 'Elena Marsh',
-    email: 'elena.marsh@amazon.com',
-    org: 'aws',
+    email: 'elena.marsh@cloudflare.com',
+    org: 'cloudflare',
     jobTitle: 'Solutions Architect',
     department: 'Sales',
   },
@@ -94,6 +95,64 @@ const CONTACT_SEEDS = [
     jobTitle: 'Engineering Manager',
     department: 'Engineering',
   },
+  { key: 'priya', fullName: 'Priya Raman', email: 'priya.raman@halcyonfreight.com', org: 'halcyon' },
+  { key: 'owen', fullName: 'Owen Fairley', email: 'owen.fairley@kestrelenergy.com', org: 'kestrel' },
+  {
+    key: 'claire',
+    fullName: 'Claire Dubois',
+    email: 'claire.dubois@vantageaero.com',
+    org: 'vantage',
+    jobTitle: 'Director of Software Engineering',
+    department: 'Engineering',
+  },
+  {
+    key: 'rohan',
+    fullName: 'Rohan Mehta',
+    email: 'rohan.mehta@tidewaterins.com',
+    org: 'tidewater',
+    jobTitle: 'VP Platform Engineering',
+    department: 'Leadership',
+  },
+  {
+    key: 'tobias',
+    fullName: 'Tobias Lindqvist',
+    email: 'tobias.lindqvist@lumenbio.com',
+    org: 'lumen',
+    jobTitle: 'Head of Research Computing',
+    department: 'Engineering',
+  },
+  {
+    key: 'carmen',
+    fullName: 'Carmen Ruiz',
+    email: 'carmen.ruiz@pallasretail.com',
+    org: 'pallas',
+    jobTitle: 'Engineering Director',
+    department: 'Engineering',
+  },
+  {
+    key: 'daniel',
+    fullName: 'Daniel Okafor',
+    email: 'daniel.okafor@corvidanalytics.com',
+    org: 'corvid',
+    jobTitle: 'Head of Developer Productivity',
+    department: 'Engineering',
+  },
+  {
+    key: 'yuki',
+    fullName: 'Yuki Tanaka',
+    email: 'yuki.tanaka@larkspurmedia.com',
+    org: 'larkspur',
+    jobTitle: 'Staff Engineer, Developer Experience',
+    department: 'Engineering',
+  },
+  {
+    key: 'henrik',
+    fullName: 'Henrik Solberg',
+    email: 'henrik.solberg@aldermoorbank.com',
+    org: 'aldermoor',
+    jobTitle: 'Director of Engineering Platforms',
+    department: 'Leadership',
+  },
   { key: 'wren', fullName: 'Wren Calloway', email: 'wren.calloway@saltmarshlodge.pt', org: 'saltmarsh' },
 ] as const satisfies ReadonlyArray<{
   key: string;
@@ -124,6 +183,7 @@ export const makeContacts = (orgs: Orgs): Make<Contacts> =>
       'jobTitle' in seed
         ? Person.make({
             fullName: seed.fullName,
+            ...(AVATAR_IMAGES[seed.fullName] && { image: AVATAR_IMAGES[seed.fullName] }),
             jobTitle: seed.jobTitle,
             department: seed.department,
             emails: [{ label: 'Work', value: seed.email }],
@@ -131,6 +191,7 @@ export const makeContacts = (orgs: Orgs): Make<Contacts> =>
           })
         : Person.make({
             fullName: seed.fullName,
+            ...(AVATAR_IMAGES[seed.fullName] && { image: AVATAR_IMAGES[seed.fullName] }),
             emails: [{ value: seed.email }],
             organization: Ref.make(orgs[seed.org]),
           }),

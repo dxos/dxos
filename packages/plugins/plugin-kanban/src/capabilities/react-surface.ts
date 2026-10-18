@@ -11,7 +11,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Position from '@dxos/util/Position';
 
-import { KanbanArticle, KanbanProperties } from '#containers';
+import { KanbanArticle, KanbanCard, KanbanProperties } from '#containers';
 import { Kanban } from '#types';
 
 import { PivotColumnAnnotationId } from '../types/KanbanSchema.ts';
@@ -28,6 +28,12 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
         component: KanbanArticle,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'kanbanCard',
+        filter: AppSurface.object(AppSurface.CardContent, Kanban.Kanban),
+        component: KanbanCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({

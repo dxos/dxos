@@ -13,6 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type Tool } from '../../model/types.ts';
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 import { nodeDragData } from '../../utils/dnd.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key?: string };
@@ -159,7 +160,7 @@ export const Palette = ({
     <div
       ref={ref}
       // The host's frame spans the room the rail may take and lets the canvas below it take the pointer.
-      className='flex flex-col w-fit rounded-sm bg-modal-surface border border-separator divide-y divide-separator pointer-events-auto'
+      className={mx('flex flex-col w-fit divide-y divide-separator pointer-events-auto', FLOATING_PANEL)}
       data-testid='palette'
       data-collapsed={collapsed || undefined}
     >

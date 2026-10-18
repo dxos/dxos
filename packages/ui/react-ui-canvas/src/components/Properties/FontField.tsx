@@ -8,7 +8,7 @@ import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { FONT_FAMILIES, type FontFamily, NodeStyle } from '../../model/types.ts';
+import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, NodeStyle } from '../../model/types.ts';
 
 const FAMILY_LABELS: Record<FontFamily, string> = { default: 'Default', monospace: 'Monospace' };
 
@@ -58,7 +58,8 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
           disabled={!!readonly}
           {...FONT_SIZE}
           formatOptions={{ maximumFractionDigits: 0 }}
-          value={typeof size === 'number' ? String(size) : ''}
+          // Unset shows the size the shape draws at.
+          value={String(typeof size === 'number' ? size : DEFAULT_FONT_SIZE)}
           onValueChange={(_, fontSize) => {
             if (!Number.isNaN(fontSize)) {
               // A stepper press never blurs, so each value commits itself.

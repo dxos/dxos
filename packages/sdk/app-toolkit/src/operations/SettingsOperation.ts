@@ -46,6 +46,10 @@ export const OpenPluginRegistry = Operation.make({
     icon: 'ph--plugs--regular',
   },
   services: [Capability.Service],
-  input: Schema.Void,
+  input: Schema.Struct({
+    filter: Schema.optional(
+      Schema.String.annotate({ description: 'Initial search text for the plugin list (e.g. a fence language).' }),
+    ),
+  }),
   output: Schema.Void,
 });
