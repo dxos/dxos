@@ -8,10 +8,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
-import { AboutInspector } from './About.tsx';
+import { AboutInspector } from './AboutInspector.tsx';
 
 const meta: Meta<typeof AboutInspector> = {
-  title: 'ui/react-ui-canvas/components/panels/About',
+  title: 'ui/react-ui-canvas/components/panels/AboutInspector',
   component: AboutInspector,
   decorators: [
     withInspectorFrame({ id: 'about', title: 'About', icon: 'ph--info--regular', order: 0, show: 'never' }),

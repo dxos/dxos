@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './About/index.ts';
+export * from './AboutInspector/index.ts';
 export * from './InspectorMenu/index.ts';
 export * from './InspectorPanel/index.ts';
 export * from './Layers/index.ts';

@@ -155,7 +155,7 @@ import {
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { AboutInspector, type AboutStat } from '../panels/About/index.ts';
+import { AboutInspector, type AboutStat } from '../panels/AboutInspector/index.ts';
 import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/InspectorPanel/index.ts';
 import { LayersInspector } from '../panels/Layers/index.ts';
 import { ObjectsInspector } from '../panels/Objects/index.ts';
