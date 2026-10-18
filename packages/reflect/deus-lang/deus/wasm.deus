@@ -125,6 +125,17 @@ def substitute (binding : Sexp -> Option Sexp) (t : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (substitute binding) items)
   | _ => t
 
+/-- Whether `t` holds a type variable, which `substitute` could replace. -/
+def hasTypeVar (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", _] => true
+  | Sexp.list items => List.any hasTypeVar items
+  | _ => false
+
+test hasTypeVarFindsNestedVariables :=
+  let v := Sexp.list [Sexp.sym "tvar", Sexp.int 0]
+  hasTypeVar (Sexp.list [Sexp.sym "tapp", tref "#List", v]) && not (hasTypeVar (Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Int"]))
+
 /-- The variables of `pattern` that `actual` fixes, as (variable, type). -/
 def matchType (pattern : Sexp) (actual : Sexp) : List (Sexp, Sexp) :=
   match (pattern, actual) with
@@ -280,8 +291,11 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     | some f =>
       match peel (List.length args) f.fnType with
       | (params, result) =>
-        let bound := List.concatMap (fun pair => matchType (fst pair) (typeOf scope env (snd pair))) (List.zip params args)
-        substitute (fun v => List.lookup v bound) result
+        -- Without a type variable the result is what it is; typing every argument, at every call in a nest, costs
+        -- the back end time in the size of the nest each time (D322).
+        if not (hasTypeVar result) then result else
+          let bound := List.concatMap (fun pair => matchType (fst pair) (typeOf scope env (snd pair))) (List.zip params args)
+          substitute (fun v => List.lookup v bound) result
     | none => unknown
   | _ => unknown
 

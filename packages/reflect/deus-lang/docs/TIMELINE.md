@@ -354,5 +354,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 344 | 10-20 07:30 | 40m 00s | 86ecbe93ee | The js target makes only functions that wait `async`: field accessors are plain functions again (D319) |
 | 345 | 10-20 08:20 | 50m 00s | dacf53dbe8 | The js target calls primitives directly: the hub summary of a head is twice as fast (D320) |
 | 346 | 10-20 09:00 | 40m 00s | 3a0c99e322 | The js target calls local functions directly: 487 `rt.ap` calls in the Worker down to 158 (D321) |
+| 347 | 10-20 10:10 | 1h 10m | this commit | The C back end asks only which owned locals the rest of a body uses: `build --c` 36 s to 29 s on node, 3.5 s to 3.1 s natively (D322) |
 
-Total from stage 1 to stage 346: 148h 20m.
+Total from stage 1 to stage 347: 149h 30m.

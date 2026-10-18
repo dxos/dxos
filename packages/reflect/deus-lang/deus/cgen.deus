@@ -1000,6 +1000,35 @@ def freeLocals (env : List Int) (e : Sexp) : List Int :=
 
 def isIn (xs : List Int) (x : Int) : Bool := List.contains x xs
 
+/-- Which of `locals` occur free in `e` under `env`, in their order: `freeLocals` kept to `locals`, without listing every
+  use, and stopping once all are found. The back end asks this of the rest of a body at each binding (D322). -/
+def usedOf (env : List Int) (locals : List Int) (e : Sexp) : List Int :=
+  let indexed := List.mapIndexed (fun i x => (i, x)) env
+  let slotsOf := fun (l : Int) => if l < 0 then [] else List.filterMap (fun pair => if snd pair == l then Option.some (fst pair) else Option.none) indexed
+  let left := CGen.unseen 0 e (List.concatMap slotsOf locals)
+  List.filter (fun l => List.any (fun i => not (isIn left i)) (slotsOf l)) locals
+
+/-- `slots`, the indices of `env` that `usedOf` looks for, less those `e` reads below `depth` binders. -/
+def unseen (depth : Int) (e : Sexp) (slots : List Int) : List Int :=
+  if List.isEmpty slots then slots else
+    match e with
+    | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= depth then List.filter (fun j => j != i - depth) slots else slots
+    | Sexp.list [Sexp.sym "let", v, b] => CGen.unseen (depth + 1) b (CGen.unseen depth v slots)
+    | Sexp.list [Sexp.sym "lam", b] => CGen.unseen (depth + 1) b slots
+    | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+      List.foldl (fun left c =>
+        match c with
+        | Sexp.list [Sexp.sym "case", pat, b] => CGen.unseen (depth + binders pat) b left
+        | _ => left) (CGen.unseen depth scrutinee slots) cases
+    | Sexp.list items => List.foldl (fun left x => CGen.unseen depth x left) slots items
+    | _ => slots
+
+test usedOfIsFreeLocalsKeptToTheLocals :=
+  let var := fun (i : Int) => Sexp.list [Sexp.sym "var", Sexp.int i]
+  let e := Sexp.list [Sexp.sym "let", var 2, Sexp.list [Sexp.sym "app", var 0, var 3, Sexp.list [Sexp.sym "lam", var 4]]]
+  let env := [7, -1, 5, 9, 8]
+  List.all (fun locals => usedOf env locals e == List.filter (isIn (freeLocals env e)) locals) [[], [7], [5, 9, 8], [8, 5], [7, 9]]
+
 /-- Whether `e` builds a block of `n` fields, which a dead block of that size can become. -/
 def wants (n : Int) (e : Sexp) : Bool :=
   match e with
@@ -1034,7 +1063,7 @@ def consumes (borrow : Dict Int (List Bool)) (table : Dict Text (Int, Wasm.Fn)) 
   match e with
   | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
   | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow table self param (-1 :: env) l b
-  | Sexp.list [Sexp.sym "lam", b] => isIn (freeLocals (-1 :: env) b) l
+  | Sexp.list [Sexp.sym "lam", b] => not (List.isEmpty (usedOf (-1 :: env) [l] b))
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
     again scrutinee || List.any (fun c =>
       match c with
@@ -1123,9 +1152,8 @@ def before (tail : Bool) (pre : Text) (body : Text) : Text :=
   In tail position the result is statements that return `e` (a call to itself becomes a jump);
   otherwise it is an expression, using GNU statement expressions. -/
 def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option CGen.Token) (e : Sexp) : {Throw Text} Text :=
-  let used := freeLocals env e
-  let live := List.filter (isIn used) owned
-  let dead := Text.concat (List.map (dropLocal ctx) (List.filter (fun l => not (isIn used l)) owned))
+  let live := usedOf env owned e
+  let dead := Text.concat (List.map (dropLocal ctx) (List.filter (fun l => not (isIn live l)) owned))
   match token with
   | Option.some t => if wants t.tokFields e then before tail dead (form ctx env tail live token e) else before
       tail
@@ -1147,7 +1175,7 @@ def mover (ctx : FnCtx) (env : List Int) (xs : List Sexp) (l : Int) : Option Int
   and the drops to run after the values are used. An argument in a position `borrows` marks is
   not counted: a local is passed as it is, and anything else is dropped afterwards. -/
 def sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (borrows : List Bool) (xs : List Sexp) : {Throw Text} (Text, (List Text, Text)) :=
-  let last := CGen.split owned (List.map (freeLocals env) xs)
+  let last := CGen.split owned (List.map (usedOf env owned) xs)
   let movers := List.map (fun l => (l, mover ctx env xs l)) owned
   let shares := mapIndexed (fun k here => List.filter (fun l =>
     match Option.bind (List.lookup l movers) (fun m => m) with
@@ -1282,7 +1310,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
       | Option.some l => if isIn owned l || scalarLocal ctx l then ret (CGen.local l) else ret ("deus_dup(" ++ CGen.local l ++ ")")
       | Option.none => Throw.throw ("unbound variable " ++ Int.toText i)
   | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) =>
-      let branches := freeLocals env t ++ freeLocals env f
+      let branches := usedOf env owned t ++ usedOf env owned f
       let mine := List.filter (fun l => not (isIn branches l)) owned
       let rest := List.filter (isIn branches) owned
       let cond := CGen.expr ctx env false mine Option.none c
@@ -1290,7 +1318,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
         CGen.expr ctx env true rest token f ++ " }" else "(" ++ cond ++ " ? " ++ CGen.expr ctx env false rest token t ++ " : " ++
         CGen.expr ctx env false rest token f ++ ")"
   | Sexp.list (Sexp.sym "seq" :: a :: b :: []) =>
-      let later := freeLocals env b
+      let later := usedOf env owned b
       let mine := List.filter (fun l => not (isIn later l)) owned
       let rest := List.filter (isIn later) owned
       let first := if wants (getOr (Option.map (fun t => t.tokFields) token) 0) a then token else Option.none
@@ -1302,7 +1330,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
       let consumed := if uncounted (Wasm.typeOf ctx.cScope env a) then "(void)" ++ value ++ "; " else "deus_drop(" ++ value ++ "); "
       before tail consumed (CGen.expr ctx env tail rest second b)
   | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
-      let later := freeLocals (-1 :: env) b
+      let later := usedOf (-1 :: env) owned b
       let mine := List.filter (fun l => not (isIn later l)) owned
       let rest := List.filter (isIn later) owned
       let first := if wants (getOr (Option.map (fun t => t.tokFields) token) 0) v then token else Option.none
@@ -1622,7 +1650,7 @@ def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option 
   becomes the case's reuse token; if it is shared, the case `deus_dup`s the fields it uses and
   decrements the block. -/
 def matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option CGen.Token) (scrutinee : Sexp) (cases : List Sexp) : {Throw Text} Text :=
-  let inCases := freeLocals env (Sexp.list (Sexp.sym "match" :: Sexp.list [Sexp.sym "int", Sexp.int 0] :: cases))
+  let inCases := usedOf env owned (Sexp.list (Sexp.sym "match" :: Sexp.list [Sexp.sym "int", Sexp.int 0] :: cases))
   -- A local is matched where it is: the cases own it if the code does, else they borrow it.
   let named :=
     match scrutinee with
@@ -1644,11 +1672,11 @@ def matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (t
     match c with
     | Sexp.list (Sexp.sym "case" :: pat :: body :: []) =>
         let (guard, bound, loads) := CGen.pattern ctx v env pat
-        let usedInBody := freeLocals bound body
-        let vUsed := isIn usedInBody v
         let loaded := List.map (fun triple =>
           let (l, _, _) := triple
           l) loads
+        let usedInBody := usedOf bound (v :: loaded) body
+        let vUsed := isIn usedInBody v
         let usedLoads := List.filter (isIn usedInBody) loaded
         let n := blockFields pat
         let ownedInBody := List.filter (fun l => l != v) rest ++ usedLoads ++ (if vUsed && vOwned then [v] else [])
