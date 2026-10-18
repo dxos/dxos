@@ -1,5 +1,5 @@
 {
-  "$comment": "Fieldstone Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user, who joins late and waves; Lucía leads and shares her screen. Each `image` is a Higgsfield still that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures. Lucía shares her screen (the cost-chart-screenshare.mjs recording) `screenshare.at` seconds after the lead-in.",
+  "$comment": "Alien Labs (plugin-debug's Fieldstone sample space) scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user, who joins late and waves; Lucía leads and shares her screen. Each `image` is a Higgsfield still that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures. Lucía shares her screen (the cost-chart-screenshare.mjs recording) `screenshare.at` seconds after the lead-in.",
   "leadIn": 2,
   "gap": 0.4,
   "tail": 3,

@@ -72,7 +72,7 @@ export const steps = [
         { timeout: 30_000, polling: 100 },
       );
       state.startedAt = Date.now() - (await played.jsonValue()) * 1_000;
-      await demo.caption({ value: 'Fieldstone Labs scopes the Cairn dashboard plugin', subtitle: 'SimulatedCall' });
+      await demo.caption({ value: 'Alien Labs scopes the Cairn dashboard plugin', subtitle: 'SimulatedCall' });
     },
   },
   {

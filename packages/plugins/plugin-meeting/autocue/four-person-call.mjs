@@ -3,12 +3,12 @@
 //
 
 /**
- * Fieldstone Labs scopes the Cairn dashboard plugin on a four-person call: Astrid (the local user) joins a Meeting's
+ * Alien Labs scopes the Cairn dashboard plugin on a four-person call: Astrid (the local user) joins a Meeting's
  * call after Lucía, Ben and Tomás have started, waves and is greeted; Lucía shares the cost chart, which Astrid
  * maximizes, and Astrid writes the action items into the meeting notes.
  *
  * @mdl packages/plugins/plugin-meeting/PLUGIN.mdl test QA-2
- * @app composer-app dev build (plugin-debug's Fieldstone template, Calls and Meetings on), via
+ * @app composer-app dev build (plugin-debug's Alien Labs template, Calls and Meetings on), via
  *   `DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  *
  * The colleagues are plugin-calls' simulated participants and Astrid's camera and microphone are a video too, so
@@ -46,12 +46,12 @@ const TIMELINE = JSON.parse(readFileSync(path.join(TRACKS, 'timeline.json'), 'ut
 const LOCAL = 'astrid';
 const COLLEAGUES = ['lucia', 'ben', 'tomas'];
 const MEETING_NAME = 'Cairn dashboard plugin: scoping';
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 const ACTION_ITEMS = ['Ben: share the sketch', 'Tomás: build the plank', 'Lucía: check it with Okapi'];
 
 const CALLS = 'org.dxos.plugin.calls';
 const MEETINGS = 'org.dxos.plugin.meeting';
-/** Contributes the Fieldstone Labs space template. */
+/** Contributes the Alien Labs space template. */
 const DEBUG = 'org.dxos.plugin.debug';
 const PLANK = '[data-testid="deck.plank"]';
 const COMPANION = '[data-testid="deck.companion"]';
@@ -83,7 +83,7 @@ const state = {};
 
 export const steps = [
   {
-    name: 'Prep (off camera): fake media, plugins, profile, the Fieldstone space and the meeting',
+    name: 'Prep (off camera): fake media, plugins, profile, the Alien Labs space and the meeting',
     setup: true,
     run: async ({ demo, page }) => {
       // Init scripts apply from the next navigation, so install them and reload before anything else.
@@ -240,7 +240,7 @@ export const steps = [
     name: 'Join with camera and microphone on',
     narration: 'Astrid opens the meeting and joins its call. Lucía, Ben and Tomás are already there.',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Fieldstone Labs scopes the Cairn dashboard plugin');
+      await caption(demo, 'Alien Labs scopes the Cairn dashboard plugin');
       await demo.click({ selector: `${PLANK} button[aria-label="Call"]`, label: 'Call' });
       await demo.click({ selector: `${PLANK} button[aria-label="Turn camera on"]`, label: 'Camera on' });
       await demo.click({ selector: `${PLANK} button[aria-label="Unmute"]`, label: 'Unmute' });

@@ -376,7 +376,7 @@ test QA-2: A four-person meeting call, with notes taken during it
   status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with Higgsfield characters voiced by HeyGen, light mode; outline and transcript entry on each line's speaker
   given:
     - an identity exists, with display name "Astrid Holm"
-    - space: the Fieldstone Labs sample space (plugin-debug template) is open
+    - space: the Alien Labs sample space (plugin-debug template) is open
     - plugin-calls and plugin-meeting are enabled — both default ON only in dev builds
     - the runtime config names an EDGE calls endpoint (the Call tab and Join need one configured,
       not reachable)
@@ -410,7 +410,9 @@ test QA-2: A four-person meeting call, with notes taken during it
         "Hi. We just got started."
     - name: Lucía shares her screen
       do: When Lucía's screenshare tile appears, a couple of seconds into her opening line, click its expand button.
-      expect: the shared Cloud cost forecast sheet, charted, fills the call view
+      expect: |
+        the shared DXOS Architecture "Plugin metrics" sheet fills the call view, and its chart switches from
+        horizontal to vertical bars as Lucía edits it
     - name: The conversation runs
       do: Watch the call until the last line ("… Thanks, everyone.").
       expect: |

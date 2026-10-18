@@ -158,6 +158,8 @@ const XFADE = Number(options.xfade);
 const tracks = Object.keys(conversation.participants).map((id) => {
   /** `{ fixed: file }` for a line, or `{ seconds, render(seconds, file) }` for the footage that fills a gap. */
   const parts = [];
+  // A single continuous take of the participant (`take-<id>.mp4`, lip-synced to their whole track) beats any stitching.
+  const take = path.join(options.clips, `take-${id}.mp4`);
   let position = 0;
   let idleOffset = 0;
   let listened = 0;
@@ -169,8 +171,9 @@ const tracks = Object.keys(conversation.participants).map((id) => {
       if (clip) {
         plan.push({ id, clip: path.basename(clip), seconds: Number(seconds.toFixed(2)), exists: existsSync(clip) });
       }
-      if (options.plan) {
-        // Only the gaps are wanted.
+      if (options.plan || existsSync(take)) {
+        // Only the gaps' timing is wanted: the plan lists them, and a take fills them itself.
+        parts.push({ seconds });
       } else if (clip && existsSync(clip)) {
         parts.push({ seconds, render: (length, file) => listenSegment(clip, length, file) });
       } else if (!clip && existsSync(still)) {
@@ -204,8 +207,6 @@ const tracks = Object.keys(conversation.participants).map((id) => {
     return undefined;
   }
 
-  // A single continuous take of the participant (`take-<id>.mp4`, lip-synced to their whole track) beats any stitching.
-  const take = path.join(options.clips, `take-${id}.mp4`);
   const videos = existsSync(take)
     ? [take]
     : parts.map((part, index) => {
