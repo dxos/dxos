@@ -4,7 +4,7 @@ import * as rt from "./deus-runtime.mjs";
 function Worker$Writes$request(path, body, author, assets) {
   const attached = List$length(lib$web$Js$toList(assets));
   const base = ({ "Worker.Writes.request/\u03bb": (kind) => rt.cons(new rt.Con("#Pair", 0, ["kind", lib$web$Js$text(kind)]), rt.cons(new rt.Con("#Pair", 0, ["by", lib$web$Js$text(author)]), rt.NIL)) })["Worker.Writes.request/\u03bb"];
-  const made = ({ "Worker.Writes.request/\u03bb": (pairs) => lib$web$Js$obj(rt.ap(rt.prims["append"], pairs, rt.cons(new rt.Con("#Pair", 0, ["assets", assets]), rt.NIL))) })["Worker.Writes.request/\u03bb"];
+  const made = ({ "Worker.Writes.request/\u03bb": (pairs) => lib$web$Js$obj(rt.prims["append"](pairs, rt.cons(new rt.Con("#Pair", 0, ["assets", assets]), rt.NIL))) })["Worker.Writes.request/\u03bb"];
   if ((path === "/api/comment")) {
     const subject = Worker$Writes$text(lib$web$Js$get(body, "subject"), 500);
     if (not(Worker$Writes$isSubject(subject))) {
@@ -17,14 +17,14 @@ function Worker$Writes$request(path, body, author, assets) {
         }
         if (t0.tag === 1) {
           const given = t0.fields[0];
-          return rt.ap(made, rt.ap(rt.prims["append"], rt.ap(base, "comment"), rt.cons(new rt.Con("#Pair", 0, ["subject", lib$web$Js$text(subject)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given)]), rt.NIL))));
+          return rt.ap(made, rt.prims["append"](rt.ap(base, "comment"), rt.cons(new rt.Con("#Pair", 0, ["subject", lib$web$Js$text(subject)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given)]), rt.NIL))));
         }
         rt.nomatch(t0);
       }
     }
   } else {
     if ((path === "/api/task")) {
-      const title = rt.ap(rt.prims["Text.trim"], Worker$Writes$text(lib$web$Js$get(body, "title"), 300));
+      const title = rt.prims["Text.trim"](Worker$Writes$text(lib$web$Js$get(body, "title"), 300));
       if (Text$isEmpty(title)) {
         return Worker$Writes$refuse(400, "a task needs a title");
       } else {
@@ -39,9 +39,9 @@ function Worker$Writes$request(path, body, author, assets) {
             if (List$isEmpty(given_1)) {
               labelled = rt.NIL;
             } else {
-              labelled = rt.cons(new rt.Con("#Pair", 0, ["labels", lib$web$Js$text(rt.ap(rt.prims["Text.join"], ",", given_1))]), rt.NIL);
+              labelled = rt.cons(new rt.Con("#Pair", 0, ["labels", lib$web$Js$text(rt.prims["Text.join"](",", given_1))]), rt.NIL);
             }
-            return rt.ap(made, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(base, "task"), rt.cons(new rt.Con("#Pair", 0, ["title", lib$web$Js$text(title)]), rt.cons(new rt.Con("#Pair", 0, ["details", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "details"), 20000))]), rt.cons(new rt.Con("#Pair", 0, ["link", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "link"), 500))]), rt.NIL)))), labelled));
+            return rt.ap(made, rt.prims["append"](rt.prims["append"](rt.ap(base, "task"), rt.cons(new rt.Con("#Pair", 0, ["title", lib$web$Js$text(title)]), rt.cons(new rt.Con("#Pair", 0, ["details", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "details"), 20000))]), rt.cons(new rt.Con("#Pair", 0, ["link", lib$web$Js$text(Worker$Writes$text(lib$web$Js$get(body, "link"), 500))]), rt.NIL)))), labelled));
           }
           rt.nomatch(t2);
         }
@@ -59,7 +59,7 @@ function Worker$Writes$request(path, body, author, assets) {
             }
             if (t4.tag === 1) {
               const given_2 = t4.fields[0];
-              return rt.ap(made, rt.ap(rt.prims["append"], rt.ap(base, "task-comment"), rt.cons(new rt.Con("#Pair", 0, ["task", lib$web$Js$text(task)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given_2)]), rt.NIL))));
+              return rt.ap(made, rt.prims["append"](rt.ap(base, "task-comment"), rt.cons(new rt.Con("#Pair", 0, ["task", lib$web$Js$text(task)]), rt.cons(new rt.Con("#Pair", 0, ["note", lib$web$Js$text(given_2)]), rt.NIL))));
             }
             rt.nomatch(t4);
           }
@@ -102,7 +102,7 @@ rt.named(Worker$Writes$attachment, "Worker.Writes.attachment");
 function Worker$Writes$attachmentName(given, hash, type) {
   let r0;
   if (Text$isEmpty(given)) {
-    r0 = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Text$take(10, hash), "."), Text$drop(((rt.ap(rt.prims["Text.indexOf"], type, "/", 0) + 1) | 0), type));
+    r0 = rt.prims["append"]((Text$take(10, hash) + "."), Text$drop(((rt.prims["Text.indexOf"](type, "/", 0) + 1) | 0), type));
   } else {
     r0 = given;
   }
@@ -170,7 +170,7 @@ rt.named(not, "not");
 function Worker$Writes$isSubject(subject) {
   let r0;
   if (Text$startsWith("def:", subject)) {
-    if ((rt.ap(rt.prims["Text.length"], subject) > 4)) {
+    if ((rt.prims["Text.length"](subject) > 4)) {
       if (not(Text$contains("\n", subject))) {
         r0 = not(Text$contains("\u000d", subject));
       } else {
@@ -202,7 +202,7 @@ rt.named(Worker$Writes$refuse, "Worker.Writes.refuse");
 function Worker$Writes$note(body, attached) {
   const given = Worker$Writes$text(lib$web$Js$get(body, "note"), 20000);
   let r0;
-  if (Text$isEmpty(rt.ap(rt.prims["Text.trim"], given))) {
+  if (Text$isEmpty(rt.prims["Text.trim"](given))) {
     r0 = (attached === 0);
   } else {
     r0 = false;
@@ -216,12 +216,12 @@ function Worker$Writes$note(body, attached) {
 rt.named(Worker$Writes$note, "Worker.Writes.note");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
 function Worker$Writes$labels(value) {
-  const given = List$filter(({ "Worker.Writes.labels/\u03bb": (label) => not(Text$isEmpty(label)) })["Worker.Writes.labels/\u03bb"], List$map(rt.prims["Text.trim"], rt.ap(rt.prims["Text.split"], Worker$Writes$text(value, 200), ",")));
+  const given = List$filter(({ "Worker.Writes.labels/\u03bb": (label) => not(Text$isEmpty(label)) })["Worker.Writes.labels/\u03bb"], List$map(rt.prims["Text.trim"], rt.prims["Text.split"](Worker$Writes$text(value, 200), ",")));
   let r0;
   if ((List$length(given) > 5)) {
     r0 = true;
@@ -250,8 +250,8 @@ function List$isEmpty(v) {
 rt.named(List$isEmpty, "List.isEmpty");
 
 function Worker$Writes$isTaskId(id) {
-  if ((rt.ap(rt.prims["Text.length"], id) >= 1)) {
-    if ((rt.ap(rt.prims["Text.length"], id) <= 64)) {
+  if ((rt.prims["Text.length"](id) >= 1)) {
+    if ((rt.prims["Text.length"](id) <= 64)) {
       return List$all(({ "Worker.Writes.isTaskId/\u03bb": (c) => {
       if (Text$isDigit(c)) {
         return true;
@@ -262,7 +262,7 @@ function Worker$Writes$isTaskId(id) {
           return false;
         }
       }
-    } })["Worker.Writes.isTaskId/\u03bb"], rt.ap(rt.prims["Text.utf8"], id));
+    } })["Worker.Writes.isTaskId/\u03bb"], rt.prims["Text.utf8"](id));
     } else {
       return false;
     }
@@ -273,7 +273,7 @@ function Worker$Writes$isTaskId(id) {
 rt.named(Worker$Writes$isTaskId, "Worker.Writes.isTaskId");
 
 function Worker$Writes$mediaType(contentType) {
-  return rt.ap(rt.prims["Text.trim"], Option$getOr(List$head$p(rt.ap(rt.prims["Text.split"], contentType, ";")), ""));
+  return rt.prims["Text.trim"](Option$getOr(List$head$p(rt.prims["Text.split"](contentType, ";")), ""));
 }
 rt.named(Worker$Writes$mediaType, "Worker.Writes.mediaType");
 
@@ -285,7 +285,7 @@ function Worker$Writes$uploadProblem(type, size) {
     if ((size === 0)) {
       r0 = true;
     } else {
-      r0 = rt.ap(rt.prims["gt"], size, Worker$Writes$maxAssetBytes());
+      r0 = rt.prims["gt"](size, Worker$Writes$maxAssetBytes());
     }
     if (r0) {
       return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [413, "an attachment must be under 10 MB"])]);
@@ -297,7 +297,7 @@ function Worker$Writes$uploadProblem(type, size) {
 rt.named(Worker$Writes$uploadProblem, "Worker.Writes.uploadProblem");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -308,7 +308,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -321,12 +321,12 @@ function Worker$Writes$safeName(name) {
 rt.named(Worker$Writes$safeName, "Worker.Writes.safeName");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
@@ -342,8 +342,8 @@ const lib$web$Js$typeOf = rt.importFn(rt, "js.typeOf", [['raw']], ['text'], "lib
 const lib$web$Js$toText = rt.importFn(rt, "js.as.toText", [['raw']], ['text'], "lib.web.Js.toText");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -351,7 +351,7 @@ function Text$startsWith(prefix, t) {
 rt.named(Text$startsWith, "Text.startsWith");
 
 function Text$contains(part, t) {
-  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+  return (rt.prims["Text.indexOf"](t, part, 0) >= 0);
 }
 rt.named(Text$contains, "Text.contains");
 
@@ -447,7 +447,7 @@ function Worker$Writes$isLabel(label) {
     return Text$isDigit(c);
   }
 } })["Worker.Writes.isLabel/\u03bb"];
-  const t1 = rt.ap(rt.prims["Text.utf8"], label);
+  const t1 = rt.prims["Text.utf8"](label);
   m2: {
     if (t1.tag === 1) {
       const first = t1.fields[0];
@@ -516,7 +516,7 @@ rt.named(List$head$p, "List.head?");
 const Worker$Writes$maxAssetBytes = rt.lazy("Worker.Writes.maxAssetBytes", () => Math.imul(Math.imul(10, 1024), 1024));
 
 function Text$replace(old, _new, t) {
-  return rt.ap(rt.prims["Text.join"], _new, rt.ap(rt.prims["Text.split"], t, old));
+  return rt.prims["Text.join"](_new, rt.prims["Text.split"](t, old));
 }
 rt.named(Text$replace, "Text.replace");
 

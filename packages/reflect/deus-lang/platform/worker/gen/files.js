@@ -4,7 +4,7 @@ rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "
 
 async function Worker$Files$serve(request, bucket, project, folder, rest, authorize) {
   const $stack = rt.handlers();
-  const under = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/"), folder), "/");
+  const under = (rt.prims["append"]((project + "/"), folder) + "/");
   const verb = Worker$Http$method(request);
   let r0;
   if (rt.equal(rest, rt.NIL)) {
@@ -22,8 +22,8 @@ async function Worker$Files$serve(request, bucket, project, folder, rest, author
     if (not(List$all(Worker$Paths$isSegment, rest))) {
       return Worker$Http$problem(400, "invalid key");
     } else {
-      const name = rt.ap(rt.prims["Text.join"], "/", rest);
-      const key = rt.ap(rt.prims["append"], under, name);
+      const name = rt.prims["Text.join"]("/", rest);
+      const key = rt.prims["append"](under, name);
       if ((verb === "GET")) {
         const t1 = rt.resumed($stack, await Worker$R2$get(bucket, key));
         m2: {
@@ -106,7 +106,7 @@ rt.named(Worker$R2$listFolders, "Worker.R2.listFolders");
 
 async function Worker$R2$toTrash(bucket, project, folder, name) {
   const $stack = rt.handlers();
-  const key = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/"), folder), "/"), name);
+  const key = rt.prims["append"]((rt.prims["append"]((project + "/"), folder) + "/"), name);
   const t0 = rt.resumed($stack, await Worker$R2$get(bucket, key));
   m1: {
     if (t0.tag === 0) {
@@ -117,7 +117,7 @@ async function Worker$R2$toTrash(bucket, project, folder, name) {
       const body = Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(lib$web$Js$get(object, "body"), rt.NIL)), "arrayBuffer", rt.NIL)));
       const deletedAt = lib$web$Js$toText(lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL));
       const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$get(object, "httpMetadata")]), rt.cons(new rt.Con("#Pair", 0, ["customMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["deletedAt", lib$web$Js$text(deletedAt)]), rt.NIL))]), rt.NIL)));
-      rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/trash/"), folder), "/"), name)), rt.cons(body, rt.cons(options, rt.NIL)))));
+      rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.prims["append"]((rt.prims["append"]((project + "/trash/"), folder) + "/"), name)), rt.cons(body, rt.cons(options, rt.NIL)))));
       return rt.resumed($stack, await Worker$R2$delete(bucket, key));
     }
     rt.nomatch(t0);
@@ -131,7 +131,7 @@ function Worker$Http$method(request) {
 rt.named(Worker$Http$method, "Worker.Http.method");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.prims["Text.concat"](List$map(({ "Worker.Http.lines/\u03bb": (name) => (name + "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
@@ -174,7 +174,7 @@ function List$all(p$, v$) {
 rt.named(List$all, "List.all");
 
 function Worker$Paths$isSegment(segment) {
-  const t0 = rt.ap(rt.prims["Text.utf8"], segment);
+  const t0 = rt.prims["Text.utf8"](segment);
   m1: {
     if (t0.tag === 1) {
       const first = t0.fields[0];
@@ -232,7 +232,7 @@ async function Worker$R2$get(bucket, key) {
 rt.named(Worker$R2$get, "Worker.R2.get");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -243,7 +243,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -357,10 +357,10 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
   const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
-  const skip = rt.ap(rt.prims["Text.length"], prefix);
+  const skip = rt.prims["Text.length"](prefix);
   const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
-    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+    return rt.prims["append"](keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
     return keys;
   }
@@ -375,7 +375,7 @@ rt.named(List$sort, "List.sort");
 async function Worker$R2$foldersFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
   const at = Option$getOr(Option$map(({ "Worker.R2.foldersFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.foldersFrom/\u03bb"], cursor), rt.NIL);
-  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.ap(rt.prims["append"], rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), rt.cons(new rt.Con("#Pair", 0, ["delimiter", lib$web$Js$text("/")]), rt.NIL)), at)), rt.NIL)));
+  const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.prims["append"](rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), rt.cons(new rt.Con("#Pair", 0, ["delimiter", lib$web$Js$text("/")]), rt.NIL)), at)), rt.NIL)));
   let folders;
   const t0 = lib$web$Js$toOption(lib$web$Js$get(page, "delimitedPrefixes"));
   m1: {
@@ -391,7 +391,7 @@ async function Worker$R2$foldersFrom(bucket, prefix, cursor) {
     rt.nomatch(t0);
   }
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
-    return rt.ap(rt.prims["append"], folders, rt.resumed($stack, await Worker$R2$foldersFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+    return rt.prims["append"](folders, rt.resumed($stack, await Worker$R2$foldersFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
     return folders;
   }
@@ -528,14 +528,14 @@ function Option$map(f, v) {
 rt.named(Option$map, "Option.map");
 
 function Worker$Crypto$hex(bytes) {
-  return rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
+  return rt.prims["Text.concat"](List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
 
 const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
@@ -599,8 +599,8 @@ function List$reverse(xs) {
 rt.named(List$reverse, "List.reverse");
 
 function Worker$Crypto$hexByte(byte) {
-  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
-  return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
+  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.prims["Text.slice"]("0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
+  return rt.prims["append"](rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
 
@@ -610,7 +610,7 @@ function List$range(lo, hi) {
   function go(acc$, i$) {
     for (;;) {
       const acc = acc$, i = i$;
-      if (rt.ap(rt.prims["lt"], i, lo)) {
+      if (rt.prims["lt"](i, lo)) {
         return acc;
       } else {
         acc$ = rt.cons(i, acc);
@@ -635,10 +635,10 @@ function List$merge(cmp, xs, ys) {
       const t0 = new rt.Con("#Pair", 0, [l, r]);
       m1: {
         if (t0.tag === 0 && t0.fields[0].tag === 0) {
-          return rt.ap(rt.prims["append"], List$reverse(acc), r);
+          return rt.prims["append"](List$reverse(acc), r);
         }
         if (t0.tag === 0 && t0.fields[1].tag === 0) {
-          return rt.ap(rt.prims["append"], List$reverse(acc), l);
+          return rt.prims["append"](List$reverse(acc), l);
         }
         if (t0.tag === 0 && t0.fields[0].tag === 1 && t0.fields[1].tag === 1) {
           const x = t0.fields[0].fields[0];

@@ -77,9 +77,9 @@ function Worker$Site$key(prefix, version, path) {
     r0 = false;
   }
   if (r0) {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], prefix, "/site/v/"), version), path);
+    return rt.prims["append"](rt.prims["append"]((prefix + "/site/v/"), version), path);
   } else {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], prefix, "/site"), path);
+    return rt.prims["append"]((prefix + "/site"), path);
   }
 }
 rt.named(Worker$Site$key, "Worker.Site.key");
@@ -114,7 +114,7 @@ rt.named(Worker$Site$pageOnMiss, "Worker.Site.pageOnMiss");
 
 function Worker$Site$isTopLevel(path) {
   if (Text$startsWith("/", path)) {
-    return (rt.ap(rt.prims["Text.indexOf"], path, "/", 1) < 0);
+    return (rt.prims["Text.indexOf"](path, "/", 1) < 0);
   } else {
     return false;
   }
@@ -131,8 +131,8 @@ function not(b) {
 rt.named(not, "not");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -159,7 +159,7 @@ function Worker$Site$demo(path) {
 rt.named(Worker$Site$demo, "Worker.Site.demo");
 
 function Text$contains(part, t) {
-  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+  return (rt.prims["Text.indexOf"](t, part, 0) >= 0);
 }
 rt.named(Text$contains, "Text.contains");
 
@@ -169,19 +169,19 @@ function List$contains(x, xs) {
 rt.named(List$contains, "List.contains");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
 const Worker$Site$appFiles = rt.lazy("Worker.Site.appFiles", () => rt.cons("app.js", rt.cons("app.css", rt.NIL)));
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
 function Worker$Site$isFile(path) {
-  const t0 = List$reverse(rt.ap(rt.prims["Text.split"], path, "."));
+  const t0 = List$reverse(rt.prims["Text.split"](path, "."));
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1) {
       const suffix = t0.fields[0];

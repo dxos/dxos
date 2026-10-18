@@ -63,7 +63,7 @@ async function Worker$Names$resolveWith(read, causal, name) {
   const t0 = rt.resumed($stack, await rt.ap(read, causal));
   m1: {
     if (t0.tag === 0) {
-      return rt.ap(without, "missing", rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "the head ", causal), " is in no pack yet"));
+      return rt.ap(without, "missing", (("the head " + causal) + " is in no pack yet"));
     }
     if (t0.tag === 1) {
       const node = t0.fields[0];
@@ -178,14 +178,14 @@ async function Worker$Names$answer(verb, path, headOf, nameAt) {
           const t2 = rt.resumed($stack, await rt.ap(headOf, branch));
           m3: {
             if (t2.tag === 0) {
-              return new rt.Con("1c11ec8852d5808680b3cd8d7b263a0e142d54ffdd6fa8145f054ae0d7b67365", 1, [404, rt.ap(rt.prims["append"], "no branch ", branch)]);
+              return new rt.Con("1c11ec8852d5808680b3cd8d7b263a0e142d54ffdd6fa8145f054ae0d7b67365", 1, [404, ("no branch " + branch)]);
             }
             if (t2.tag === 1) {
               const causal = t2.fields[0];
               const t4 = rt.resumed($stack, await rt.ap(nameAt, causal, name));
               m5: {
                 if (t4.tag === 0) {
-                  return new rt.Con("1c11ec8852d5808680b3cd8d7b263a0e142d54ffdd6fa8145f054ae0d7b67365", 1, [404, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "no ", name), " on "), branch)]);
+                  return new rt.Con("1c11ec8852d5808680b3cd8d7b263a0e142d54ffdd6fa8145f054ae0d7b67365", 1, [404, rt.prims["append"]((("no " + name) + " on "), branch)]);
                 }
                 if (t4.tag === 1) {
                   const found = t4.fields[0];
@@ -256,7 +256,7 @@ function lib$base$Sexp$read(t) {
       return form;
     }
     if (true) {
-      return rt.ap(rt.prims["defect"], "sexp: expected exactly one form");
+      return rt.prims["defect"]("sexp: expected exactly one form");
     }
     rt.nomatch(t0);
   }
@@ -264,7 +264,7 @@ function lib$base$Sexp$read(t) {
 rt.named(lib$base$Sexp$read, "lib.base.Sexp.read");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -483,7 +483,7 @@ function lib$base$Sexp$asText(s) {
       return name;
     }
     if (true) {
-      return rt.ap(rt.prims["defect"], rt.ap(rt.prims["append"], "sexp: expected text, got ", lib$base$Sexp$print(s)));
+      return rt.prims["defect"](("sexp: expected text, got " + lib$base$Sexp$print(s)));
     }
     rt.nomatch(s);
   }
@@ -505,20 +505,20 @@ function List$head$p(v) {
 rt.named(List$head$p, "List.head?");
 
 function lib$base$Sexp$readAll(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   function readString(i$, start$, acc$) {
     for (;;) {
       const i = i$, start = start$, acc = acc$;
-      const c = rt.ap(rt.prims["Text.code"], t, i);
+      const c = rt.prims["Text.code"](t, i);
       if ((c === (-1))) {
-        return rt.ap(rt.prims["defect"], "sexp: unterminated string");
+        return rt.prims["defect"]("sexp: unterminated string");
       } else {
         if ((c === 34)) {
-          return new rt.Con("#Pair", 0, [rt.ap(rt.prims["Text.concat"], List$reverse(rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc))), ((i + 1) | 0)]);
+          return new rt.Con("#Pair", 0, [rt.prims["Text.concat"](List$reverse(rt.cons(rt.prims["Text.slice"](t, start, i), acc))), ((i + 1) | 0)]);
         } else {
           if ((c === 92)) {
-            const e = rt.ap(rt.prims["Text.code"], t, ((i + 1) | 0));
-            const piece = rt.ap(rt.prims["Text.slice"], t, start, i);
+            const e = rt.prims["Text.code"](t, ((i + 1) | 0));
+            const piece = rt.prims["Text.slice"](t, start, i);
             if ((e === 110)) {
               i$ = ((i + 2) | 0);
               start$ = ((i + 2) | 0);
@@ -538,15 +538,15 @@ function lib$base$Sexp$readAll(t) {
                   continue;
                 } else {
                   if ((e === 117)) {
-                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 5) | 0)))) | 0);
+                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 5) | 0)))) | 0);
                     i$ = ((i + 6) | 0);
                     start$ = ((i + 6) | 0);
-                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], code), rt.cons(piece, acc));
+                    acc$ = rt.cons(rt.prims["Text.fromCode"](code), rt.cons(piece, acc));
                     continue;
                   } else {
                     i$ = ((i + 2) | 0);
                     start$ = ((i + 2) | 0);
-                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], e), rt.cons(piece, acc));
+                    acc$ = rt.cons(rt.prims["Text.fromCode"](e), rt.cons(piece, acc));
                     continue;
                   }
                 }
@@ -565,7 +565,7 @@ function lib$base$Sexp$readAll(t) {
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
-      if (lib$base$Sexp$isDelimiter(rt.ap(rt.prims["Text.code"], t, i_1))) {
+      if (lib$base$Sexp$isDelimiter(rt.prims["Text.code"](t, i_1))) {
         return i_1;
       } else {
         i_1$ = ((i_1 + 1) | 0);
@@ -576,14 +576,14 @@ function lib$base$Sexp$readAll(t) {
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
-      const c_1 = rt.ap(rt.prims["Text.code"], t, i_2);
-      if (rt.ap(rt.prims["ge"], i_2, n)) {
+      const c_1 = rt.prims["Text.code"](t, i_2);
+      if (rt.prims["ge"](i_2, n)) {
         m0: {
           if (stack.tag === 0) {
             return List$reverse(done);
           }
           if (true) {
-            return rt.ap(rt.prims["defect"], "sexp: unbalanced (");
+            return rt.prims["defect"]("sexp: unbalanced (");
           }
           rt.nomatch(stack);
         }
@@ -609,7 +609,7 @@ function lib$base$Sexp$readAll(t) {
           continue;
         } else {
           if ((c_1 === 59)) {
-            const j = rt.ap(rt.prims["Text.indexOf"], t, "\n", i_2);
+            const j = rt.prims["Text.indexOf"](t, "\n", i_2);
             let r2;
             if ((j < 0)) {
               r2 = n;
@@ -630,7 +630,7 @@ function lib$base$Sexp$readAll(t) {
               if ((c_1 === 41)) {
                 m3: {
                   if (stack.tag === 0) {
-                    return rt.ap(rt.prims["defect"], "sexp: unbalanced )");
+                    return rt.prims["defect"]("sexp: unbalanced )");
                   }
                   if (stack.tag === 1) {
                     const top = stack.fields[0];
@@ -674,9 +674,9 @@ function lib$base$Sexp$readAll(t) {
                   }
                 } else {
                   const j_2 = rt.ap(atomEnd, i_2);
-                  const atom = rt.ap(rt.prims["Text.slice"], t, i_2, j_2);
+                  const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
-                  const t10 = rt.ap(rt.prims["Int.fromText"], atom);
+                  const t10 = rt.prims["Int.fromText"](atom);
                   m11: {
                     if (t10.tag === 1) {
                       const value_1 = t10.fields[0];
@@ -791,7 +791,7 @@ function lib$toolchain$Codebase$lookupFormWith(read$, h$, name$) {
 rt.named(lib$toolchain$Codebase$lookupFormWith, "lib.toolchain.Codebase.lookupFormWith");
 
 function lib$base$Sexp$print(s) {
-  return rt.ap(rt.prims["Text.concat"], List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
+  return rt.prims["Text.concat"](List$reverse(lib$base$Sexp$emit(s, rt.NIL)));
 }
 rt.named(lib$base$Sexp$print, "lib.base.Sexp.print");
 
@@ -894,7 +894,7 @@ function lib$toolchain$Codebase$nodeItemsWith(read, h) {
   const t0 = rt.ap(read, h);
   m1: {
     if (t0.tag === 0) {
-      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
+      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [("missing namespace #" + h)]);
     }
     if (t0.tag === 1) {
       const form = t0.fields[0];
@@ -952,12 +952,12 @@ function List$filterMap(f, xs) {
 rt.named(List$filterMap, "List.filterMap");
 
 function lib$toolchain$Codebase$splitName(name) {
-  const i = rt.ap(rt.prims["Text.indexOf"], name, ".", 1);
+  const i = rt.prims["Text.indexOf"](name, ".", 1);
   let r0;
   if ((i < 1)) {
     r0 = true;
   } else {
-    r0 = rt.ap(rt.prims["ge"], ((i + 1) | 0), rt.ap(rt.prims["Text.length"], name));
+    r0 = rt.prims["ge"](((i + 1) | 0), rt.prims["Text.length"](name));
   }
   if (r0) {
     return rt.con0("#Option", 0);
@@ -971,7 +971,7 @@ function lib$base$Sexp$emit(s, acc) {
   m0: {
     if (s.tag === 0) {
       const n = s.fields[0];
-      return rt.cons(rt.ap(rt.prims["Int.toText"], n), acc);
+      return rt.cons(rt.prims["Int.toText"](n), acc);
     }
     if (s.tag === 1) {
       const name = s.fields[0];
@@ -1022,27 +1022,27 @@ function List$concatMap(f, xs) {
 rt.named(List$concatMap, "List.concatMap");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
 function lib$base$Sexp$quote(t) {
   if (lib$base$Sexp$plain(t)) {
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", t), "\"");
+    return (("\"" + t) + "\"");
   } else {
-    const n = rt.ap(rt.prims["Text.length"], t);
+    const n = rt.prims["Text.length"](t);
     function go(start$, i$, acc$) {
       for (;;) {
         const start = start$, i = i$, acc = acc$;
-        if (rt.ap(rt.prims["ge"], i, n)) {
-          return rt.cons(rt.ap(rt.prims["Text.slice"], t, start, n), acc);
+        if (rt.prims["ge"](i, n)) {
+          return rt.cons(rt.prims["Text.slice"](t, start, n), acc);
         } else {
-          const c = rt.ap(rt.prims["Text.code"], t, i);
+          const c = rt.prims["Text.code"](t, i);
           let r0;
           if ((c === 34)) {
             r0 = true;
@@ -1060,7 +1060,7 @@ function lib$base$Sexp$quote(t) {
           if (r0) {
             start$ = ((i + 1) | 0);
             i$ = ((i + 1) | 0);
-            acc$ = rt.cons(lib$base$Sexp$quoteCode(c), rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc));
+            acc$ = rt.cons(lib$base$Sexp$quoteCode(c), rt.cons(rt.prims["Text.slice"](t, start, i), acc));
             continue;
           } else {
             start$ = start;
@@ -1071,25 +1071,25 @@ function lib$base$Sexp$quote(t) {
         }
       }
     }
-    return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "\"", rt.ap(rt.prims["Text.concat"], List$reverse(rt.ap(go, 0, 0, rt.NIL)))), "\"");
+    return (("\"" + rt.prims["Text.concat"](List$reverse(rt.ap(go, 0, 0, rt.NIL)))) + "\"");
   }
 }
 rt.named(lib$base$Sexp$quote, "lib.base.Sexp.quote");
 
 function List$concat(xss) {
-  return List$foldr(({ "List.concat/\u03bb": (xs, acc) => rt.ap(rt.prims["append"], xs, acc) })["List.concat/\u03bb"], rt.NIL, xss);
+  return List$foldr(({ "List.concat/\u03bb": (xs, acc) => rt.prims["append"](xs, acc) })["List.concat/\u03bb"], rt.NIL, xss);
 }
 rt.named(List$concat, "List.concat");
 
 function lib$base$Sexp$plain(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   function go(i$) {
     for (;;) {
       const i = i$;
-      if (rt.ap(rt.prims["ge"], i, n)) {
+      if (rt.prims["ge"](i, n)) {
         return true;
       } else {
-        const c = rt.ap(rt.prims["Text.code"], t, i);
+        const c = rt.prims["Text.code"](t, i);
         let r0;
         if ((c === 34)) {
           r0 = true;
@@ -1140,9 +1140,9 @@ function lib$base$Sexp$quoteCode(c) {
               r0 = (c === 127);
             }
             if (r0) {
-              return rt.ap(rt.prims["append"], "\\u", lib$base$Sexp$hex4(c));
+              return ("\\u" + lib$base$Sexp$hex4(c));
             } else {
-              return rt.ap(rt.prims["Text.fromCode"], c);
+              return rt.prims["Text.fromCode"](c);
             }
           }
         }
@@ -1158,7 +1158,7 @@ function List$foldr(f, init, xs) {
 rt.named(List$foldr, "List.foldr");
 
 function lib$base$Sexp$hex4(c) {
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], lib$base$Sexp$hexDigit(((c >> 12) & 15)), lib$base$Sexp$hexDigit(((c >> 8) & 15))), lib$base$Sexp$hexDigit(((c >> 4) & 15))), lib$base$Sexp$hexDigit((c & 15)));
+  return rt.prims["append"](rt.prims["append"](rt.prims["append"](lib$base$Sexp$hexDigit(((c >> 12) & 15)), lib$base$Sexp$hexDigit(((c >> 8) & 15))), lib$base$Sexp$hexDigit(((c >> 4) & 15))), lib$base$Sexp$hexDigit((c & 15)));
 }
 rt.named(lib$base$Sexp$hex4, "lib.base.Sexp.hex4");
 
@@ -1184,7 +1184,7 @@ function List$foldl(f$, init$, xs$) {
 rt.named(List$foldl, "List.foldl");
 
 function lib$base$Sexp$hexDigit(n) {
-  return rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0));
+  return rt.prims["Text.slice"]("0123456789abcdef", n, ((n + 1) | 0));
 }
 rt.named(lib$base$Sexp$hexDigit, "lib.base.Sexp.hexDigit");
 
@@ -1275,7 +1275,7 @@ async function lib$toolchain$Codebase$nodeItemsWith$wait(read, h) {
   const t0 = rt.resumed($stack, await rt.ap(read, h));
   m1: {
     if (t0.tag === 0) {
-      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [rt.ap(rt.prims["append"], "missing namespace #", h)]);
+      return rt.perform("f20b6775216aa447fc3486874bcbfb55fb8300b659681644fac9b331bda37e0a", 0, [("missing namespace #" + h)]);
     }
     if (t0.tag === 1) {
       const form = t0.fields[0];

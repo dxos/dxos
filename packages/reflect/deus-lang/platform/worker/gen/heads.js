@@ -34,7 +34,7 @@ async function Worker$Heads$readHead(bucket, db, project, branch) {
 rt.named(Worker$Heads$readHead, "Worker.Heads.readHead");
 
 function Worker$Heads$headLogKey(project, branch) {
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/headlog/"), branch), "/");
+  return (rt.prims["append"]((project + "/headlog/"), branch) + "/");
 }
 rt.named(Worker$Heads$headLogKey, "Worker.Heads.headLogKey");
 
@@ -110,7 +110,7 @@ async function Worker$Heads$serveLog(request, bucket, project, rest) {
     return Worker$Http$problem(405, "the head log is written only by pushes");
   } else {
     const segments = List$filter(({ "Worker.Heads.serveLog/\u03bb": (segment) => not(Text$isEmpty(segment)) })["Worker.Heads.serveLog/\u03bb"], rest);
-    const branch = rt.ap(rt.prims["Text.join"], "/", List$map(({ "Worker.Heads.serveLog/\u03bb": (part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))) })["Worker.Heads.serveLog/\u03bb"], segments));
+    const branch = rt.prims["Text.join"]("/", List$map(({ "Worker.Heads.serveLog/\u03bb": (part) => lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(part), rt.NIL))) })["Worker.Heads.serveLog/\u03bb"], segments));
     if (not(Worker$Heads$isBranch(branch))) {
       return Worker$Http$problem(404, "the head log is read as /headlog/<branch>");
     } else {
@@ -187,7 +187,7 @@ async function Worker$Heads$readStored(bucket, project, branch) {
     if (t0.tag === 1) {
       const object = t0.fields[0];
       const text = lib$web$Js$toText(rt.resumed($stack, await lib$web$Js$method(object, "text", rt.NIL)));
-      return new rt.Con("#Option", 1, [new rt.Con("caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", 0, [rt.ap(rt.prims["Text.trim"], text), lib$web$Js$toText(lib$web$Js$get(object, "etag")), lib$web$Js$get(object, "uploaded")])]);
+      return new rt.Con("#Option", 1, [new rt.Con("caa303f903c93d1234cc479049025283bc97e9a14cbeb3832a0e496e2516494a", 0, [rt.prims["Text.trim"](text), lib$web$Js$toText(lib$web$Js$get(object, "etag")), lib$web$Js$get(object, "uploaded")])]);
     }
     rt.nomatch(t0);
   }
@@ -236,20 +236,20 @@ rt.named(Worker$Heads$preferStored, "Worker.Heads.preferStored");
 const lib$web$Js$undefined = rt.importValue(rt, "js.undefined", ['raw'], "lib.web.Js.undefined");
 
 function lib$base$Sexp$readAll(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   function readString(i$, start$, acc$) {
     for (;;) {
       const i = i$, start = start$, acc = acc$;
-      const c = rt.ap(rt.prims["Text.code"], t, i);
+      const c = rt.prims["Text.code"](t, i);
       if ((c === (-1))) {
-        return rt.ap(rt.prims["defect"], "sexp: unterminated string");
+        return rt.prims["defect"]("sexp: unterminated string");
       } else {
         if ((c === 34)) {
-          return new rt.Con("#Pair", 0, [rt.ap(rt.prims["Text.concat"], List$reverse(rt.cons(rt.ap(rt.prims["Text.slice"], t, start, i), acc))), ((i + 1) | 0)]);
+          return new rt.Con("#Pair", 0, [rt.prims["Text.concat"](List$reverse(rt.cons(rt.prims["Text.slice"](t, start, i), acc))), ((i + 1) | 0)]);
         } else {
           if ((c === 92)) {
-            const e = rt.ap(rt.prims["Text.code"], t, ((i + 1) | 0));
-            const piece = rt.ap(rt.prims["Text.slice"], t, start, i);
+            const e = rt.prims["Text.code"](t, ((i + 1) | 0));
+            const piece = rt.prims["Text.slice"](t, start, i);
             if ((e === 110)) {
               i$ = ((i + 2) | 0);
               start$ = ((i + 2) | 0);
@@ -269,15 +269,15 @@ function lib$base$Sexp$readAll(t) {
                   continue;
                 } else {
                   if ((e === 117)) {
-                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.ap(rt.prims["Text.code"], t, ((i + 5) | 0)))) | 0);
+                    const code = ((((((Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 2) | 0))), 4096) + Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 3) | 0))), 256)) | 0) + Math.imul(lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 4) | 0))), 16)) | 0) + lib$base$Sexp$hexValue(rt.prims["Text.code"](t, ((i + 5) | 0)))) | 0);
                     i$ = ((i + 6) | 0);
                     start$ = ((i + 6) | 0);
-                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], code), rt.cons(piece, acc));
+                    acc$ = rt.cons(rt.prims["Text.fromCode"](code), rt.cons(piece, acc));
                     continue;
                   } else {
                     i$ = ((i + 2) | 0);
                     start$ = ((i + 2) | 0);
-                    acc$ = rt.cons(rt.ap(rt.prims["Text.fromCode"], e), rt.cons(piece, acc));
+                    acc$ = rt.cons(rt.prims["Text.fromCode"](e), rt.cons(piece, acc));
                     continue;
                   }
                 }
@@ -296,7 +296,7 @@ function lib$base$Sexp$readAll(t) {
   function atomEnd(i_1$) {
     for (;;) {
       const i_1 = i_1$;
-      if (lib$base$Sexp$isDelimiter(rt.ap(rt.prims["Text.code"], t, i_1))) {
+      if (lib$base$Sexp$isDelimiter(rt.prims["Text.code"](t, i_1))) {
         return i_1;
       } else {
         i_1$ = ((i_1 + 1) | 0);
@@ -307,14 +307,14 @@ function lib$base$Sexp$readAll(t) {
   function go(i_2$, stack$, done$) {
     for (;;) {
       const i_2 = i_2$, stack = stack$, done = done$;
-      const c_1 = rt.ap(rt.prims["Text.code"], t, i_2);
-      if (rt.ap(rt.prims["ge"], i_2, n)) {
+      const c_1 = rt.prims["Text.code"](t, i_2);
+      if (rt.prims["ge"](i_2, n)) {
         m0: {
           if (stack.tag === 0) {
             return List$reverse(done);
           }
           if (true) {
-            return rt.ap(rt.prims["defect"], "sexp: unbalanced (");
+            return rt.prims["defect"]("sexp: unbalanced (");
           }
           rt.nomatch(stack);
         }
@@ -340,7 +340,7 @@ function lib$base$Sexp$readAll(t) {
           continue;
         } else {
           if ((c_1 === 59)) {
-            const j = rt.ap(rt.prims["Text.indexOf"], t, "\n", i_2);
+            const j = rt.prims["Text.indexOf"](t, "\n", i_2);
             let r2;
             if ((j < 0)) {
               r2 = n;
@@ -361,7 +361,7 @@ function lib$base$Sexp$readAll(t) {
               if ((c_1 === 41)) {
                 m3: {
                   if (stack.tag === 0) {
-                    return rt.ap(rt.prims["defect"], "sexp: unbalanced )");
+                    return rt.prims["defect"]("sexp: unbalanced )");
                   }
                   if (stack.tag === 1) {
                     const top = stack.fields[0];
@@ -405,9 +405,9 @@ function lib$base$Sexp$readAll(t) {
                   }
                 } else {
                   const j_2 = rt.ap(atomEnd, i_2);
-                  const atom = rt.ap(rt.prims["Text.slice"], t, i_2, j_2);
+                  const atom = rt.prims["Text.slice"](t, i_2, j_2);
                   let form;
-                  const t10 = rt.ap(rt.prims["Int.fromText"], atom);
+                  const t10 = rt.prims["Int.fromText"](atom);
                   m11: {
                     if (t10.tag === 1) {
                       const value_1 = t10.fields[0];
@@ -618,7 +618,7 @@ rt.named(Worker$Heads$r2Heads, "Worker.Heads.r2Heads");
 const lib$web$Js$int = rt.importFn(rt, "js.as.int", [['int']], ['raw'], "lib.web.Js.int");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -641,12 +641,12 @@ function Worker$Heads$refusalMessage(refusal) {
       const branch = refusal.fields[0];
       const required = refusal.fields[1];
       const sent = refusal.fields[2];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], branch, " needs a deus with data-safety epoch "), rt.ap(rt.prims["Int.toText"], required)), " (Safety.epoch) or newer, and this one has "), rt.ap(rt.prims["Int.toText"], sent)), ": its merge or push may lose data; update deus by merging #13952, then push again");
+      return (rt.prims["append"]((rt.prims["append"]((branch + " needs a deus with data-safety epoch "), rt.prims["Int.toText"](required)) + " (Safety.epoch) or newer, and this one has "), rt.prims["Int.toText"](sent)) + ": its merge or push may lose data; update deus by merging #13952, then push again");
     }
     if (refusal.tag === 3) {
       const branch_1 = refusal.fields[0];
       const head = refusal.fields[1];
-      return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], branch_1, " moved to #"), Text$take(10, head)), " since you pulled; run `deus pull` and `deus merge`, then push again");
+      return (rt.prims["append"]((branch_1 + " moved to #"), Text$take(10, head)) + " since you pulled; run `deus pull` and `deus merge`, then push again");
     }
     rt.nomatch(refusal);
   }
@@ -728,7 +728,7 @@ function lib$web$Js$global(name) {
 rt.named(lib$web$Js$global, "lib.web.Js.global");
 
 function Worker$Heads$isBranch(t) {
-  const t0 = rt.ap(rt.prims["Text.utf8"], t);
+  const t0 = rt.prims["Text.utf8"](t);
   m1: {
     if (t0.tag === 1) {
       const first = t0.fields[0];
@@ -780,18 +780,18 @@ function Worker$Heads$isBranch(t) {
 rt.named(Worker$Heads$isBranch, "Worker.Heads.isBranch");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.prims["Text.concat"](List$map(({ "Worker.Http.lines/\u03bb": (name) => (name + "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
 function Worker$Heads$isLogged(name) {
-  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
+  const t0 = rt.prims["Text.split"](name, "-");
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
       const at = t0.fields[0];
       const head = t0.fields[1].fields[0];
-      if ((rt.ap(rt.prims["Text.length"], at) === 13)) {
-        if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], at))) {
+      if ((rt.prims["Text.length"](at) === 13)) {
+        if (List$all(Text$isDigit, rt.prims["Text.utf8"](at))) {
           return Worker$Heads$isHash(head);
         } else {
           return false;
@@ -817,7 +817,7 @@ rt.named(Worker$R2$listAll, "Worker.R2.listAll");
 const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['list', ['raw']]], ['raw'], "lib.web.Js.method");
 
 function Worker$Heads$headKey(project, branch) {
-  return rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/heads/"), branch);
+  return rt.prims["append"]((project + "/heads/"), branch);
 }
 rt.named(Worker$Heads$headKey, "Worker.Heads.headKey");
 
@@ -938,7 +938,7 @@ function List$contains(x, xs) {
 rt.named(List$contains, "List.contains");
 
 function Worker$Heads$parseClaim(header) {
-  const t0 = rt.ap(rt.prims["Text.split"], header, " ");
+  const t0 = rt.prims["Text.split"](header, " ");
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 1 && t0.fields[1].fields[1].fields[1].tag === 0) {
       const branch = t0.fields[0];
@@ -948,7 +948,7 @@ function Worker$Heads$parseClaim(header) {
       if ((bases === "-")) {
         based = rt.NIL;
       } else {
-        based = rt.ap(rt.prims["Text.split"], bases, ",");
+        based = rt.prims["Text.split"](bases, ",");
       }
       let r2;
       if (Worker$Heads$isBranch(branch)) {
@@ -980,9 +980,9 @@ function Worker$Heads$sentEpoch(header) {
     if (t0.tag === 1) {
       const digits = t0.fields[0];
       let r2;
-      if ((rt.ap(rt.prims["Text.length"], digits) >= 1)) {
-        if ((rt.ap(rt.prims["Text.length"], digits) <= 9)) {
-          r2 = List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], digits));
+      if ((rt.prims["Text.length"](digits) >= 1)) {
+        if ((rt.prims["Text.length"](digits) <= 9)) {
+          r2 = List$all(Text$isDigit, rt.prims["Text.utf8"](digits));
         } else {
           r2 = false;
         }
@@ -990,7 +990,7 @@ function Worker$Heads$sentEpoch(header) {
         r2 = false;
       }
       if (r2) {
-        return Option$getOr(rt.ap(rt.prims["Int.fromText"], digits), 0);
+        return Option$getOr(rt.prims["Int.fromText"](digits), 0);
       } else {
         return 0;
       }
@@ -1125,7 +1125,7 @@ function Worker$Heads$verdict(current, claim, required, sent) {
       if (rt.equal(head, Worker$Heads$Claim$head(claim))) {
         return "same";
       } else {
-        if (rt.ap(rt.prims["lt"], sent, required)) {
+        if (rt.prims["lt"](sent, required)) {
           return "epoch";
         } else {
           if (List$contains(head, Worker$Heads$Claim$bases(claim))) {
@@ -1137,7 +1137,7 @@ function Worker$Heads$verdict(current, claim, required, sent) {
       }
     }
     if (current.tag === 0) {
-      if (rt.ap(rt.prims["lt"], sent, required)) {
+      if (rt.prims["lt"](sent, required)) {
         return "epoch";
       } else {
         return "write";
@@ -1204,7 +1204,7 @@ async function Worker$Heads$logHead(bucket, project, branch, causal, previous, k
   const orNull = ({ "Worker.Heads.logHead/\u03bb": (value) => Option$getOr(Option$map(lib$web$Js$text, value), lib$web$Js$null()) })["Worker.Heads.logHead/\u03bb"];
   const entry = lib$web$Js$stringify(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["causal", lib$web$Js$text(causal)]), rt.cons(new rt.Con("#Pair", 0, ["previous", rt.ap(orNull, previous)]), rt.cons(new rt.Con("#Pair", 0, ["at", at]), rt.cons(new rt.Con("#Pair", 0, ["key", rt.ap(orNull, keyId)]), rt.NIL))))));
   const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["contentType", lib$web$Js$text("application/json")]), rt.NIL))]), rt.NIL));
-  rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))), "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
+  rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.prims["append"]((rt.prims["append"](Worker$Heads$headLogKey(project, branch), Worker$Heads$padded(13, lib$web$Js$toText(at))) + "-"), causal)), rt.cons(lib$web$Js$text(entry), rt.cons(options, rt.NIL)))));
   return undefined;
 }
 rt.named(Worker$Heads$logHead, "Worker.Heads.logHead");
@@ -1218,7 +1218,7 @@ rt.named(Worker$Http$response, "Worker.Http.response");
 const lib$web$Js$stringify = rt.importFn(rt, "js.stringify", [['raw']], ['text'], "lib.web.Js.stringify");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 
@@ -1299,7 +1299,7 @@ function List$all(p$, v$) {
 rt.named(List$all, "List.all");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -1310,7 +1310,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -1321,10 +1321,10 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
   const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
-  const skip = rt.ap(rt.prims["Text.length"], prefix);
+  const skip = rt.prims["Text.length"](prefix);
   const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
-    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+    return rt.prims["append"](keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
     return keys;
   }
@@ -1378,12 +1378,12 @@ function lib$web$Js$path(o, keys) {
 rt.named(lib$web$Js$path, "lib.web.Js.path");
 
 function Worker$Heads$padded(width, t) {
-  return rt.ap(rt.prims["append"], Text$repeat(((width - rt.ap(rt.prims["Text.length"], t)) | 0), "0"), t);
+  return rt.prims["append"](Text$repeat(((width - rt.prims["Text.length"](t)) | 0), "0"), t);
 }
 rt.named(Worker$Heads$padded, "Worker.Heads.padded");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
@@ -1411,7 +1411,7 @@ function List$foldl(f$, init$, xs$) {
 rt.named(List$foldl, "List.foldl");
 
 function Text$repeat(n, t) {
-  return rt.ap(rt.prims["Text.concat"], List$replicate(n, t));
+  return rt.prims["Text.concat"](List$replicate(n, t));
 }
 rt.named(Text$repeat, "Text.repeat");
 

@@ -481,8 +481,22 @@ def inlinePrim (p : Text) (args : List Text) : Option Text :=
     else if p == "le" && (scalar a || scalar b) then some ("(" ++ a ++ " <= " ++ b ++ ")")
     else if p == "gt" && (scalar a || scalar b) then some ("(" ++ a ++ " > " ++ b ++ ")")
     else if p == "ge" && (scalar a || scalar b) then some ("(" ++ a ++ " >= " ++ b ++ ")")
+    else if p == "append" then textAppend args
     else none
   | _ => none
+
+/-- How many arguments primitive `p` takes in `platform/js/runtime.mjs`, for those a call names directly, or 0.
+  `src/js-async.test.ts` checks each against the runtime. -/
+def directArity (p : Text) : Int :=
+  if List.contains p ["Ref.get", "Ref.new", "defect"] then 1 else if p == "Ref.set" then 2 else CGen.primArity p
+
+/-- `a ++ b` on texts, as JavaScript's `+`, when one side is a text literal; else none. -/
+def textAppend (args : List Text) : Option Text :=
+  match args with
+  | [a, b] => if Text.startsWith "\"" a || Text.startsWith "\"" b then Option.some ("(" ++ a ++ " + " ++ b ++ ")") else Option.none
+  | _ => Option.none
+
+test textAppendNeedsALiteral := textAppend ["\"a\"", "x"] == Option.some "(\"a\" + x)" && textAppend ["x", "y"] == Option.none
 
 /-- A primitive as a value. JavaScript has no Core machine, so a `Code` primitive (loading and running Core, as the
   compiler's elaborators do) is a function that fails if called: code that only reaches one still builds. -/
@@ -847,7 +861,10 @@ def app (ctx : JsCtx) (env : List Text) (f : Sexp) (args : List Sexp) : {Throw T
       let values := operands ctx env args
       match inlinePrim p values with
       | Option.some code => code
-      | Option.none => "rt.ap(" ++ primValue p ++ ", " ++ join ", " values ++ ")"
+      | Option.none =>
+          -- A primitive given all its arguments is called directly, not through `rt.ap`'s arity check (D320).
+          if n > 0 && n == directArity p then primValue p ++ "(" ++ join ", " values ++ ")"
+          else "rt.ap(" ++ primValue p ++ ", " ++ join ", " values ++ ")"
   | Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int k :: []) =>
       let values := operands ctx env args
       if k == n then if t == "#List" then "rt.cons(" ++ join ", " values ++ ")" else "new rt.Con(" ++ JsGen.quote t ++ ", " ++ Int.toText tag ++ ", [" ++ join ", " values ++ "])" else "rt.ap(" ++ JsGen.expr ctx env f ++ ", " ++ join ", " values ++ ")"

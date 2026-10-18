@@ -4,16 +4,16 @@ rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "
 
 async function Worker$Bundles$serve(request, bucket, project, rest, verify, authorize, moveHead) {
   const $stack = rt.handlers();
-  const logged = rt.ap(rt.prims["Ref.new"], lib$web$Js$undefined());
+  const logged = rt.prims["Ref.new"](lib$web$Js$undefined());
   const reply = rt.resumed($stack, await Worker$Bundles$answer(Worker$Bundles$r2Store(bucket, project), Worker$Http$method(request), rest, verify, ({ "Worker.Bundles.serve/\u03bb": async (v) => {
   const $stack = rt.handlers();
   return Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(request, "arrayBuffer", rt.NIL)));
 } })["Worker.Bundles.serve/\u03bb"], ({ "Worker.Bundles.serve/\u03bb": async (scope) => {
   const $stack = rt.handlers();
-  return rt.ap(rt.prims["Ref.set"], logged, rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, scope))));
+  return rt.prims["Ref.set"](logged, rt.resumed($stack, await rt.resumed($stack, await rt.ap(authorize, scope))));
 } })["Worker.Bundles.serve/\u03bb"], ({ "Worker.Bundles.serve/\u03bb": async (v_1) => {
   const $stack = rt.handlers();
-  return lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(moveHead, rt.ap(rt.prims["Ref.get"], logged)))));
+  return lib$web$Js$toOption(rt.resumed($stack, await rt.resumed($stack, await rt.ap(moveHead, rt.prims["Ref.get"](logged)))));
 } })["Worker.Bundles.serve/\u03bb"]));
   m0: {
     if (reply.tag === 0) {
@@ -29,7 +29,7 @@ async function Worker$Bundles$serve(request, bucket, project, rest, verify, auth
       const field = reply.fields[1];
       const value = reply.fields[2];
       const status = reply.fields[3];
-      return lib$web$Js$call(rt.ap(rt.prims["Ref.get"], logged), rt.cons(Worker$Bundles$report(name, field, value, status), rt.NIL));
+      return lib$web$Js$call(rt.prims["Ref.get"](logged), rt.cons(Worker$Bundles$report(name, field, value, status), rt.NIL));
     }
     if (reply.tag === 3) {
       const status_1 = reply.fields[0];
@@ -38,7 +38,7 @@ async function Worker$Bundles$serve(request, bucket, project, rest, verify, auth
     }
     if (reply.tag === 4) {
       const refusal = reply.fields[0];
-      return lib$web$Js$call(rt.ap(rt.prims["Ref.get"], logged), rt.cons(refusal, rt.NIL));
+      return lib$web$Js$call(rt.prims["Ref.get"](logged), rt.cons(refusal, rt.NIL));
     }
     rt.nomatch(reply);
   }
@@ -97,13 +97,13 @@ async function Worker$Bundles$answer(store, verb, rest, verify, body, authorize,
 rt.named(Worker$Bundles$answer, "Worker.Bundles.answer");
 
 function Worker$Bundles$r2Store(bucket, project) {
-  const folder = rt.ap(rt.prims["append"], project, "/bundles/");
+  const folder = (project + "/bundles/");
   return new rt.Con("e78d22915bc95521d8894bee0819412613104fe0d219c8520b45c5b0e256865e", 0, [({ "Worker.Bundles.r2Store/\u03bb": async (v) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$R2$listAll(bucket, folder));
 } })["Worker.Bundles.r2Store/\u03bb"], ({ "Worker.Bundles.r2Store/\u03bb": async (name) => {
   const $stack = rt.handlers();
-  const t0 = rt.resumed($stack, await Worker$R2$get(bucket, rt.ap(rt.prims["append"], folder, name)));
+  const t0 = rt.resumed($stack, await Worker$R2$get(bucket, rt.prims["append"](folder, name)));
   m1: {
     if (t0.tag === 0) {
       return rt.con0("#Option", 0);
@@ -116,10 +116,10 @@ function Worker$Bundles$r2Store(bucket, project) {
   }
 } })["Worker.Bundles.r2Store/\u03bb"], ({ "Worker.Bundles.r2Store/\u03bb": async (name_1) => {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await Worker$R2$exists(bucket, rt.ap(rt.prims["append"], folder, name_1)));
+  return rt.resumed($stack, await Worker$R2$exists(bucket, rt.prims["append"](folder, name_1)));
 } })["Worker.Bundles.r2Store/\u03bb"], ({ "Worker.Bundles.r2Store/\u03bb": async (name_2, bytes) => {
   const $stack = rt.handlers();
-  return rt.resumed($stack, await Worker$R2$put(bucket, rt.ap(rt.prims["append"], folder, name_2), bytes, "application/gzip"));
+  return rt.resumed($stack, await Worker$R2$put(bucket, rt.prims["append"](folder, name_2), bytes, "application/gzip"));
 } })["Worker.Bundles.r2Store/\u03bb"], ({ "Worker.Bundles.r2Store/\u03bb": async (name_3) => {
   const $stack = rt.handlers();
   return rt.resumed($stack, await Worker$R2$toTrash(bucket, project, "bundles", name_3));
@@ -155,7 +155,7 @@ const lib$web$Js$method = rt.importFn(rt, "js.method", [['raw'], ['text'], ['lis
 const lib$web$Js$toOption = rt.importFn(rt, "js.as.toOption", [['raw']], ['option', ['raw']], "lib.web.Js.toOption");
 
 function Worker$Http$lines(names) {
-  return Worker$Http$response(lib$web$Js$text(rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Http.lines/\u03bb": (name) => rt.ap(rt.prims["append"], name, "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
+  return Worker$Http$response(lib$web$Js$text(rt.prims["Text.concat"](List$map(({ "Worker.Http.lines/\u03bb": (name) => (name + "\n") })["Worker.Http.lines/\u03bb"], names))), 200, rt.cons(new rt.Con("#Pair", 0, ["content-type", "text/plain; charset=utf-8"]), rt.cons(new rt.Con("#Pair", 0, ["cache-control", "no-store"]), rt.NIL)));
 }
 rt.named(Worker$Http$lines, "Worker.Http.lines");
 
@@ -197,14 +197,14 @@ function not(b) {
 rt.named(not, "not");
 
 function Worker$Paths$isBundle(name) {
-  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
+  const t0 = rt.prims["Text.split"](name, "-");
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
       const level = t0.fields[0];
       const hash = t0.fields[1].fields[0];
-      if ((rt.ap(rt.prims["Text.length"], level) >= 1)) {
-        if ((rt.ap(rt.prims["Text.length"], level) <= 3)) {
-          if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], level))) {
+      if ((rt.prims["Text.length"](level) >= 1)) {
+        if ((rt.prims["Text.length"](level) <= 3)) {
+          if (List$all(Text$isDigit, rt.prims["Text.utf8"](level))) {
             return Worker$Heads$isHash(hash);
           } else {
             return false;
@@ -325,7 +325,7 @@ rt.named(Worker$R2$put, "Worker.R2.put");
 
 async function Worker$R2$toTrash(bucket, project, folder, name) {
   const $stack = rt.handlers();
-  const key = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/"), folder), "/"), name);
+  const key = rt.prims["append"]((rt.prims["append"]((project + "/"), folder) + "/"), name);
   const t0 = rt.resumed($stack, await Worker$R2$get(bucket, key));
   m1: {
     if (t0.tag === 0) {
@@ -336,7 +336,7 @@ async function Worker$R2$toTrash(bucket, project, folder, name) {
       const body = Worker$R2$bytes(rt.resumed($stack, await lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("Response"), rt.cons(lib$web$Js$get(object, "body"), rt.NIL)), "arrayBuffer", rt.NIL)));
       const deletedAt = lib$web$Js$toText(lib$web$Js$call(lib$web$Js$path(lib$web$Js$globalThis(), rt.cons("Date", rt.cons("now", rt.NIL))), rt.NIL));
       const options = lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["httpMetadata", lib$web$Js$get(object, "httpMetadata")]), rt.cons(new rt.Con("#Pair", 0, ["customMetadata", lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["deletedAt", lib$web$Js$text(deletedAt)]), rt.NIL))]), rt.NIL)));
-      rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], project, "/trash/"), folder), "/"), name)), rt.cons(body, rt.cons(options, rt.NIL)))));
+      rt.resumed($stack, await lib$web$Js$method(bucket, "put", rt.cons(lib$web$Js$text(rt.prims["append"]((rt.prims["append"]((project + "/trash/"), folder) + "/"), name)), rt.cons(body, rt.cons(options, rt.NIL)))));
       return rt.resumed($stack, await Worker$R2$delete(bucket, key));
     }
     rt.nomatch(t0);
@@ -477,7 +477,7 @@ function Text$isDigit(c) {
 rt.named(Text$isDigit, "Text.isDigit");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -488,7 +488,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -518,7 +518,7 @@ function Worker$Bundles$pushProblem(name, digest) {
     }
     if (digest.tag === 1) {
       const digest_1 = digest.fields[0];
-      if (rt.equal(new rt.Con("#Option", 1, [digest_1]), List$get$p(rt.ap(rt.prims["Text.split"], name, "-"), 1))) {
+      if (rt.equal(new rt.Con("#Option", 1, [digest_1]), List$get$p(rt.prims["Text.split"](name, "-"), 1))) {
         return rt.con0("#Option", 0);
       } else {
         return new rt.Con("#Option", 1, [new rt.Con("#Pair", 0, [400, "the bundle does not hash to its name"])]);
@@ -565,10 +565,10 @@ async function Worker$R2$listFrom(bucket, prefix, cursor) {
   const $stack = rt.handlers();
   const at = Option$getOr(Option$map(({ "Worker.R2.listFrom/\u03bb": (c) => rt.cons(new rt.Con("#Pair", 0, ["cursor", lib$web$Js$text(c)]), rt.NIL) })["Worker.R2.listFrom/\u03bb"], cursor), rt.NIL);
   const page = rt.resumed($stack, await lib$web$Js$method(bucket, "list", rt.cons(lib$web$Js$obj(rt.cons(new rt.Con("#Pair", 0, ["prefix", lib$web$Js$text(prefix)]), at)), rt.NIL)));
-  const skip = rt.ap(rt.prims["Text.length"], prefix);
+  const skip = rt.prims["Text.length"](prefix);
   const keys = List$map(({ "Worker.R2.listFrom/\u03bb": (object) => Text$drop(skip, lib$web$Js$toText(lib$web$Js$get(object, "key"))) })["Worker.R2.listFrom/\u03bb"], lib$web$Js$toList(lib$web$Js$get(page, "objects")));
   if (lib$web$Js$toBool(lib$web$Js$get(page, "truncated"))) {
-    return rt.ap(rt.prims["append"], keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
+    return rt.prims["append"](keys, rt.resumed($stack, await Worker$R2$listFrom(bucket, prefix, new rt.Con("#Option", 1, [lib$web$Js$toText(lib$web$Js$get(page, "cursor"))]))));
   } else {
     return keys;
   }
@@ -612,7 +612,7 @@ function Option$map(f, v) {
 rt.named(Option$map, "Option.map");
 
 function Worker$Crypto$hex(bytes) {
-  return rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
+  return rt.prims["Text.concat"](List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
 
@@ -680,7 +680,7 @@ function Option$getOr(o, fallback) {
 rt.named(Option$getOr, "Option.getOr");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
@@ -710,8 +710,8 @@ function List$foldl(f$, init$, xs$) {
 rt.named(List$foldl, "List.foldl");
 
 function Worker$Crypto$hexByte(byte) {
-  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
-  return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
+  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.prims["Text.slice"]("0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
+  return rt.prims["append"](rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
 
@@ -721,7 +721,7 @@ function List$range(lo, hi) {
   function go(acc$, i$) {
     for (;;) {
       const acc = acc$, i = i$;
-      if (rt.ap(rt.prims["lt"], i, lo)) {
+      if (rt.prims["lt"](i, lo)) {
         return acc;
       } else {
         acc$ = rt.cons(i, acc);

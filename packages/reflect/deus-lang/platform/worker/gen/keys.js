@@ -5,7 +5,7 @@ function Worker$Keys$parseKey(header) {
   if (not(Text$startsWith("Bearer deus_", header))) {
     return rt.con0("#Option", 0);
   } else {
-    const t0 = rt.ap(rt.prims["Text.split"], Text$drop(12, header), "_");
+    const t0 = rt.prims["Text.split"](Text$drop(12, header), "_");
     m1: {
       if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
         const id = t0.fields[0];
@@ -51,7 +51,7 @@ function Worker$Keys$mintProblem(label, scopes, known) {
       r0 = not(List$all(({ "Worker.Keys.mintProblem/\u03bb": (scope) => List$contains(scope, known) })["Worker.Keys.mintProblem/\u03bb"], scopes));
     }
     if (r0) {
-      return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "scopes are some of ", rt.ap(rt.prims["Text.join"], ", ", known))]);
+      return new rt.Con("#Option", 1, [("scopes are some of " + rt.prims["Text.join"](", ", known))]);
     } else {
       return rt.con0("#Option", 0);
     }
@@ -83,7 +83,7 @@ function Worker$Keys$judge(row, secretHash, now, scope, folder) {
         return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [401, "this API key has expired"]);
       } else {
         if (not(Worker$Keys$allows(List$map(lib$web$Js$toText, lib$web$Js$toList(lib$web$Js$parse(lib$web$Js$toText(lib$web$Js$get(row, "scopes"))))), scope))) {
-          return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "this API key lacks the ", scope), " scope")]);
+          return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, (("this API key lacks the " + scope) + " scope")]);
         } else {
           const projects = lib$web$Js$parse(lib$web$Js$toText(lib$web$Js$get(row, "projects")));
           let everywhere;
@@ -105,7 +105,7 @@ function Worker$Keys$judge(row, secretHash, now, scope, folder) {
           if (r2) {
             return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [0, ""]);
           } else {
-            return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, rt.ap(rt.prims["append"], "this API key cannot write to ", Option$getOr(lib$toolchain$Address$addressOfFolder(folder), folder))]);
+            return new rt.Con("712fd97b283dfad85d8e11d9ed421a01b575a2ffdc2a4111249e69ad8a40e585", 0, [403, ("this API key cannot write to " + Option$getOr(lib$toolchain$Address$addressOfFolder(folder), folder))]);
           }
         }
       }
@@ -124,8 +124,8 @@ function not(b) {
 rt.named(not, "not");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -133,12 +133,12 @@ function Text$startsWith(prefix, t) {
 rt.named(Text$startsWith, "Text.startsWith");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
 function Worker$Keys$isHex(count, t) {
-  if (rt.equal(rt.ap(rt.prims["Text.length"], t), count)) {
+  if (rt.equal(rt.prims["Text.length"](t), count)) {
     return List$all(({ "Worker.Keys.isHex/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -149,7 +149,7 @@ function Worker$Keys$isHex(count, t) {
         return false;
       }
     }
-  } })["Worker.Keys.isHex/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Keys.isHex/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -162,7 +162,7 @@ function List$contains(x, xs) {
 rt.named(List$contains, "List.contains");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -206,8 +206,8 @@ rt.named(List$all, "List.all");
 const lib$web$Js$isNull = rt.importFn(rt, "js.isNull", [['raw']], ['bool'], "lib.web.Js.isNull");
 
 function Worker$Keys$sameText(a, b) {
-  if (rt.equal(rt.ap(rt.prims["Text.length"], a), rt.ap(rt.prims["Text.length"], b))) {
-    return (List$foldl(({ "Worker.Keys.sameText/\u03bb": (acc, pair) => (acc | (fst(pair) ^ snd(pair))) })["Worker.Keys.sameText/\u03bb"], 0, List$zip(rt.ap(rt.prims["Text.utf8"], a), rt.ap(rt.prims["Text.utf8"], b))) === 0);
+  if (rt.equal(rt.prims["Text.length"](a), rt.prims["Text.length"](b))) {
+    return (List$foldl(({ "Worker.Keys.sameText/\u03bb": (acc, pair) => (acc | (fst(pair) ^ snd(pair))) })["Worker.Keys.sameText/\u03bb"], 0, List$zip(rt.prims["Text.utf8"](a), rt.prims["Text.utf8"](b))) === 0);
   } else {
     return false;
   }
@@ -262,7 +262,7 @@ function lib$toolchain$Address$grants(projects, folder) {
         m0: {
           if (address.tag === 1) {
             const a = address.fields[0];
-            return Text$startsWith(Text$take(((rt.ap(rt.prims["Text.length"], granted) - 1) | 0), granted), a);
+            return Text$startsWith(Text$take(((rt.prims["Text.length"](granted) - 1) | 0), granted), a);
           }
           if (address.tag === 0) {
             return false;
@@ -295,7 +295,7 @@ rt.named(Option$getOr, "Option.getOr");
 function lib$toolchain$Address$addressOfFolder(folder) {
   return Option$orElse(lib$toolchain$Address$legacyAddress(folder), ({ "lib.toolchain.Address.addressOfFolder/\u03bb": (v) => {
   if (Text$contains("/", folder)) {
-    return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "@", folder)]);
+    return new rt.Con("#Option", 1, [("@" + folder)]);
   } else {
     return rt.con0("#Option", 0);
   }
@@ -430,10 +430,10 @@ function List$reverse(xs) {
 rt.named(List$reverse, "List.reverse");
 
 function Text$endsWith(suffix, t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
-  const m = rt.ap(rt.prims["Text.length"], suffix);
-  if (rt.ap(rt.prims["le"], m, n)) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, ((n - m) | 0), n), suffix);
+  const n = rt.prims["Text.length"](t);
+  const m = rt.prims["Text.length"](suffix);
+  if (rt.prims["le"](m, n)) {
+    return rt.equal(rt.prims["Text.slice"](t, ((n - m) | 0), n), suffix);
   } else {
     return false;
   }
@@ -441,7 +441,7 @@ function Text$endsWith(suffix, t) {
 rt.named(Text$endsWith, "Text.endsWith");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 
@@ -465,7 +465,7 @@ function lib$toolchain$Address$legacyAddress(folder) {
 rt.named(lib$toolchain$Address$legacyAddress, "lib.toolchain.Address.legacyAddress");
 
 function Text$contains(part, t) {
-  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+  return (rt.prims["Text.indexOf"](t, part, 0) >= 0);
 }
 rt.named(Text$contains, "Text.contains");
 

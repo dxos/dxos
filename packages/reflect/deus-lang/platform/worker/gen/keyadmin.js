@@ -45,7 +45,7 @@ async function Worker$KeyAdmin$mint(u) {
   const id = Worker$KeyAdmin$randomHex(8);
   const secret = Worker$KeyAdmin$randomHex(32);
   const encoded = lib$web$Js$method(lib$web$Js$construct(lib$web$Js$global("TextEncoder"), rt.NIL), "encode", rt.cons(lib$web$Js$text(secret), rt.NIL));
-  return new rt.Con("94c1d8dbb856ad5e672944e976556b6c284d3ec81256cc1aa39371ed45daa9e5", 0, [id, rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "deus_", id), "_"), secret), rt.resumed($stack, await Worker$Crypto$sha256(encoded))]);
+  return new rt.Con("94c1d8dbb856ad5e672944e976556b6c284d3ec81256cc1aa39371ed45daa9e5", 0, [id, rt.prims["append"]((("deus_" + id) + "_"), secret), rt.resumed($stack, await Worker$Crypto$sha256(encoded))]);
 }
 rt.named(Worker$KeyAdmin$mint, "Worker.KeyAdmin.mint");
 
@@ -102,7 +102,7 @@ async function Worker$KeyAdmin$create(db, request, known, logged) {
   const labelValue = lib$web$Js$get(asked, "label");
   let label;
   if (Worker$KeyAdmin$isText(labelValue)) {
-    label = Text$take(200, rt.ap(rt.prims["Text.trim"], lib$web$Js$toText(labelValue)));
+    label = Text$take(200, rt.prims["Text.trim"](lib$web$Js$toText(labelValue)));
   } else {
     label = "";
   }
@@ -124,7 +124,7 @@ async function Worker$KeyAdmin$create(db, request, known, logged) {
   if (List$all(Worker$KeyAdmin$isText, scopes)) {
     problem = Worker$Keys$mintProblem(label, List$map(lib$web$Js$toText, scopes), known);
   } else {
-    problem = new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "scopes are some of ", rt.ap(rt.prims["Text.join"], ", ", known))]);
+    problem = new rt.Con("#Option", 1, [("scopes are some of " + rt.prims["Text.join"](", ", known))]);
   }
   let everywhere;
   if (Worker$KeyAdmin$isText(projects)) {
@@ -290,7 +290,7 @@ function Worker$KeyAdmin$isText(value) {
 rt.named(Worker$KeyAdmin$isText, "Worker.KeyAdmin.isText");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 
@@ -336,7 +336,7 @@ function Worker$Keys$mintProblem(label, scopes, known) {
       r0 = not(List$all(({ "Worker.Keys.mintProblem/\u03bb": (scope) => List$contains(scope, known) })["Worker.Keys.mintProblem/\u03bb"], scopes));
     }
     if (r0) {
-      return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "scopes are some of ", rt.ap(rt.prims["Text.join"], ", ", known))]);
+      return new rt.Con("#Option", 1, [("scopes are some of " + rt.prims["Text.join"](", ", known))]);
     } else {
       return rt.con0("#Option", 0);
     }
@@ -345,7 +345,7 @@ function Worker$Keys$mintProblem(label, scopes, known) {
 rt.named(Worker$Keys$mintProblem, "Worker.Keys.mintProblem");
 
 function lib$toolchain$Address$isGrantable(project) {
-  const segments = rt.ap(rt.prims["Text.split"], project, "/");
+  const segments = rt.prims["Text.split"](project, "/");
   m0: {
     if (segments.tag === 1 && segments.fields[1].tag === 1 && segments.fields[1].fields[0] === "*" && segments.fields[1].fields[1].tag === 0) {
       const owner = segments.fields[0];
@@ -451,7 +451,7 @@ rt.named(lib$web$Js$path, "lib.web.Js.path");
 const lib$web$Js$globalThis = rt.importValue(globalThis, "", ['raw'], "lib.web.Js.globalThis");
 
 function Worker$Crypto$hex(bytes) {
-  return rt.ap(rt.prims["Text.concat"], List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
+  return rt.prims["Text.concat"](List$map(({ "Worker.Crypto.hex/\u03bb": (at) => Worker$Crypto$hexByte(Worker$Bytes$u8(bytes, at)) })["Worker.Crypto.hex/\u03bb"], List$range(0, Worker$Bytes$length(bytes))));
 }
 rt.named(Worker$Crypto$hex, "Worker.Crypto.hex");
 
@@ -487,7 +487,7 @@ const lib$web$Js$fn = rt.importFn(rt, "js.as.fn", [['fn', [['raw']], ['raw']]], 
 const lib$web$Js$toBool = rt.importFn(rt, "js.as.toBool", [['raw']], ['bool'], "lib.web.Js.toBool");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -525,9 +525,9 @@ function lib$toolchain$Address$namesAddress(segments) {
 rt.named(lib$toolchain$Address$namesAddress, "lib.toolchain.Address.namesAddress");
 
 function lib$toolchain$Address$isLegacy(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   const ok = ({ "lib.toolchain.Address.isLegacy/\u03bb": (i) => {
-  const c = rt.ap(rt.prims["Text.code"], t, i);
+  const c = rt.prims["Text.code"](t, i);
   let r0;
   if ((c >= 97)) {
     r0 = (c <= 122);
@@ -567,8 +567,8 @@ function lib$toolchain$Address$isLegacy(t) {
 rt.named(lib$toolchain$Address$isLegacy, "lib.toolchain.Address.isLegacy");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -619,8 +619,8 @@ function List$foldl(f$, init$, xs$) {
 rt.named(List$foldl, "List.foldl");
 
 function Worker$Crypto$hexByte(byte) {
-  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.ap(rt.prims["Text.slice"], "0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
-  return rt.ap(rt.prims["append"], rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
+  const digit = ({ "Worker.Crypto.hexByte/\u03bb": (n) => rt.prims["Text.slice"]("0123456789abcdef", n, ((n + 1) | 0)) })["Worker.Crypto.hexByte/\u03bb"];
+  return rt.prims["append"](rt.ap(digit, rt.div(byte, 16)), rt.ap(digit, rt.mod(byte, 16)));
 }
 rt.named(Worker$Crypto$hexByte, "Worker.Crypto.hexByte");
 
@@ -630,7 +630,7 @@ function List$range(lo, hi) {
   function go(acc$, i$) {
     for (;;) {
       const acc = acc$, i = i$;
-      if (rt.ap(rt.prims["lt"], i, lo)) {
+      if (rt.prims["lt"](i, lo)) {
         return acc;
       } else {
         acc$ = rt.cons(i, acc);
@@ -686,8 +686,8 @@ function lib$toolchain$Address$projectAt(segments) {
     if (not(r0)) {
       return rt.con0("#Option", 0);
     } else {
-      const address = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "@", owner), "/"), second);
-      return new rt.Con("#Option", 1, [new rt.Con("9616e8db27ab0c6125e8b5db30c614a27723659ad56a7d6c2c4631080fe08a22", 0, [new rt.Con("#Option", 1, [address]), Option$getOr(List$lookup(address, lib$toolchain$Address$legacyFolders()), rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], owner, "/"), second)), 2])]);
+      const address = rt.prims["append"]((("@" + owner) + "/"), second);
+      return new rt.Con("#Option", 1, [new rt.Con("9616e8db27ab0c6125e8b5db30c614a27723659ad56a7d6c2c4631080fe08a22", 0, [new rt.Con("#Option", 1, [address]), Option$getOr(List$lookup(address, lib$toolchain$Address$legacyFolders()), rt.prims["append"]((owner + "/"), second)), 2])]);
     }
   } else {
     if (lib$toolchain$Address$isLegacy(first)) {
@@ -764,7 +764,7 @@ function List$drop(n$, xs$) {
 rt.named(List$drop, "List.drop");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
@@ -811,9 +811,9 @@ function lib$toolchain$Address$legacyAddress(folder) {
 rt.named(lib$toolchain$Address$legacyAddress, "lib.toolchain.Address.legacyAddress");
 
 function lib$toolchain$Address$isSlug(max, t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   const ok = ({ "lib.toolchain.Address.isSlug/\u03bb": (i) => {
-  const c = rt.ap(rt.prims["Text.code"], t, i);
+  const c = rt.prims["Text.code"](t, i);
   let r0;
   if ((c >= 97)) {
     r0 = (c <= 122);
@@ -834,7 +834,7 @@ function lib$toolchain$Address$isSlug(max, t) {
     } else {
       if ((c === 45)) {
         if ((i > 0)) {
-          return rt.ap(rt.prims["lt"], i, ((n - 1) | 0));
+          return rt.prims["lt"](i, ((n - 1) | 0));
         } else {
           return false;
         }
@@ -845,7 +845,7 @@ function lib$toolchain$Address$isSlug(max, t) {
   }
 } })["lib.toolchain.Address.isSlug/\u03bb"];
   if ((n > 0)) {
-    if (rt.ap(rt.prims["le"], n, max)) {
+    if (rt.prims["le"](n, max)) {
       return List$all(ok, List$range(0, n));
     } else {
       return false;

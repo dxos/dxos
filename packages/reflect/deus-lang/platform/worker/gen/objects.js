@@ -4,7 +4,7 @@ rt.ability("46c2141a2798df2c627e5d30f56163d1b04bcfd9b0bbe16173ddfd5a16216415", "
 
 async function Worker$Objects$serve(request, area, rest, lookup) {
   const $stack = rt.handlers();
-  const id = lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(rt.ap(rt.prims["Text.join"], "/", rest)), rt.NIL)));
+  const id = lib$web$Js$toText(lib$web$Js$call(lib$web$Js$global("decodeURIComponent"), rt.cons(lib$web$Js$text(rt.prims["Text.join"]("/", rest)), rt.NIL)));
   if ((Worker$Http$method(request) !== "GET")) {
     return Worker$Http$problem(405, "method not allowed");
   } else {
@@ -34,10 +34,10 @@ async function Worker$Objects$serve(request, area, rest, lookup) {
           } else {
             r6 = "object";
           }
-          const t7 = rt.ap(rt.prims["append"], "no ", r6);
-          const t8 = rt.ap(rt.prims["append"], t7, " ");
-          const t9 = rt.ap(rt.prims["append"], t8, id);
-          const t10 = rt.ap(rt.prims["append"], t9, " in this project's packs");
+          const t7 = ("no " + r6);
+          const t8 = (t7 + " ");
+          const t9 = rt.prims["append"](t8, id);
+          const t10 = (t9 + " in this project's packs");
           return Worker$Http$problem(404, t10);
         }
         if (t4.tag === 1) {
@@ -136,7 +136,7 @@ rt.named(Worker$Http$json, "Worker.Http.json");
 const lib$web$Js$obj = rt.importFn(rt, "js.object", [['list', ['tuple', [['text'], ['raw']]]]], ['raw'], "lib.web.Js.obj");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -147,7 +147,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }
@@ -155,7 +155,7 @@ function Worker$Heads$isHash(t) {
 rt.named(Worker$Heads$isHash, "Worker.Heads.isHash");
 
 function Worker$Objects$isBuiltin(id) {
-  const t0 = rt.ap(rt.prims["Text.utf8"], id);
+  const t0 = rt.prims["Text.utf8"](id);
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1) {
       const hash = t0.fields[0];
@@ -198,15 +198,15 @@ function Worker$Objects$isBuiltin(id) {
 rt.named(Worker$Objects$isBuiltin, "Worker.Objects.isBuiltin");
 
 function Worker$Objects$isMember(id) {
-  const t0 = rt.ap(rt.prims["Text.split"], id, ".");
+  const t0 = rt.prims["Text.split"](id, ".");
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
       const hash = t0.fields[0];
       const index = t0.fields[1].fields[0];
       if (Worker$Heads$isHash(hash)) {
-        if ((rt.ap(rt.prims["Text.length"], index) >= 1)) {
-          if ((rt.ap(rt.prims["Text.length"], index) <= 6)) {
-            return List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], index));
+        if ((rt.prims["Text.length"](index) >= 1)) {
+          if ((rt.prims["Text.length"](index) <= 6)) {
+            return List$all(Text$isDigit, rt.prims["Text.utf8"](index));
           } else {
             return false;
           }

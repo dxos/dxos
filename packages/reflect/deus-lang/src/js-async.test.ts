@@ -132,6 +132,46 @@ describe('Js.Async on the js target', () => {
     expect(clash.stderr).toContain('Wait.sum and Wait.sum would both be exported as sum');
   });
 
+  // D320: a primitive given all its arguments is called directly, so `JsGen.directArity` must match the runtime's.
+  test('calls primitives directly with the arity the runtime gives them', { timeout: 240_000 }, async ({ expect }) => {
+    process.env.DEUS_HOME = root;
+    const c = ['--codebase', join(scratch, 'prims')];
+    expect(deus('init', ...c).code).toBe(0);
+    const source = [
+      'namespace Prims',
+      'def all (u : Unit) : Text :=',
+      '  let s := "  a,b,c  "',
+      '  let t := Text.trim s',
+      '  let r := Ref.new 1',
+      '  let _ := Ref.set r (Ref.get r + Text.length t)',
+      '  let m := MutMap.new ()',
+      '  let _ := MutMap.set m "k" 2',
+      '  let _ := MutMap.set m "j" 3',
+      '  let _ := MutMap.delete m "j"',
+      '  let d := Dict.fromList [("x", 1), ("y", 2)]',
+      '  Text.concat [',
+      '    Text.join "|" (Text.split t ","), " ", Text.slice t 1 3, " ", Int.toText (Text.code t 0), " ",',
+      '    Int.toText (Text.indexOf t "c" 0), " ", Text.fromCode 65, Text.fromCodes [66, 67], " ", show (Text.utf8 "é"),',
+      '    " ", show (Int.fromText "12"), " ", show (compare "a" "b"), " ", Int.toText (Ref.get r), " ",',
+      '    show (MutMap.get m "k"), " ", show (MutMap.has m "j"), " ", Int.toText (MutMap.size m), " ", show (MutMap.keys m),',
+      '    " ", show (Dict.lookup "y" d), " ", show (Dict.contains "z" d), " ", Int.toText (Dict.size d), " ",',
+      '    show (Dict.keys d), " ", Text.take 8 (Text.sha256 "abc"), " ", "<" ++ t, t ++ ">"]',
+      'end Prims',
+      '',
+    ].join('\n');
+    expect(deus('add', file('prims.deus', source), ...c).stderr).toBe('');
+    const out = join(scratch, 'prims-out', 'prims.mjs');
+    const built = deus('build', 'Prims.all', '-o', out, '--js', ...c);
+    expect(built.stderr).toBe('');
+    const code = readFileSync(out, 'utf8');
+    expect(code).not.toContain('rt.ap(rt.prims');
+    expect(code).toContain('("<" + t)');
+    const prims = await import(pathToFileURL(out).href);
+    expect(prims.all()).toBe(
+      'a|b|c ,b 97 4 ABC [195, 169] (some 12) -1 6 (some 2) false 1 ["k"] (some 2) false 2 ["x", "y"] ba7816bf <a,b,ca,b,c>',
+    );
+  });
+
   // Task 86d7b02a: with no checkout under $DEUS_HOME, the codebase's embedded copy of the runtime is written out.
   test('builds from the codebase alone, with the runtime it embeds', { timeout: 240_000 }, ({ expect }) => {
     process.env.DEUS_HOME = root;

@@ -15,8 +15,8 @@ function Address$projectAt(segments) {
     if (lib$base$not(r0)) {
       return rt.con0("#Option", 0);
     } else {
-      const address = rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], "@", owner), "/"), second);
-      return new rt.Con("#Option", 1, [new rt.Con("9616e8db27ab0c6125e8b5db30c614a27723659ad56a7d6c2c4631080fe08a22", 0, [new rt.Con("#Option", 1, [address]), lib$base$Option$getOr(lib$base$List$lookup(address, Address$legacyFolders()), rt.ap(rt.prims["append"], rt.ap(rt.prims["append"], owner, "/"), second)), 2])]);
+      const address = rt.prims["append"]((("@" + owner) + "/"), second);
+      return new rt.Con("#Option", 1, [new rt.Con("9616e8db27ab0c6125e8b5db30c614a27723659ad56a7d6c2c4631080fe08a22", 0, [new rt.Con("#Option", 1, [address]), lib$base$Option$getOr(lib$base$List$lookup(address, Address$legacyFolders()), rt.prims["append"]((owner + "/"), second)), 2])]);
     }
   } else {
     if (Address$isLegacy(first)) {
@@ -31,7 +31,7 @@ rt.named(Address$projectAt, "Address.projectAt");
 function Address$addressOfFolder(folder) {
   return lib$base$Option$orElse(Address$legacyAddress(folder), ({ "Address.addressOfFolder/\u03bb": (v) => {
   if (lib$base$Text$contains("/", folder)) {
-    return new rt.Con("#Option", 1, [rt.ap(rt.prims["append"], "@", folder)]);
+    return new rt.Con("#Option", 1, [("@" + folder)]);
   } else {
     return rt.con0("#Option", 0);
   }
@@ -40,7 +40,7 @@ function Address$addressOfFolder(folder) {
 rt.named(Address$addressOfFolder, "Address.addressOfFolder");
 
 function Address$isGrantable(project) {
-  const segments = rt.ap(rt.prims["Text.split"], project, "/");
+  const segments = rt.prims["Text.split"](project, "/");
   m0: {
     if (segments.tag === 1 && segments.fields[1].tag === 1 && segments.fields[1].fields[0] === "*" && segments.fields[1].fields[1].tag === 0) {
       const owner = segments.fields[0];
@@ -79,7 +79,7 @@ function Address$grants(projects, folder) {
         m0: {
           if (address.tag === 1) {
             const a = address.fields[0];
-            return lib$base$Text$startsWith(lib$base$Text$take(((rt.ap(rt.prims["Text.length"], granted) - 1) | 0), granted), a);
+            return lib$base$Text$startsWith(lib$base$Text$take(((rt.prims["Text.length"](granted) - 1) | 0), granted), a);
           }
           if (address.tag === 0) {
             return false;
@@ -147,8 +147,8 @@ function lib$base$List$drop(n$, xs$) {
 rt.named(lib$base$List$drop, "lib.base.List.drop");
 
 function lib$base$Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -156,7 +156,7 @@ function lib$base$Text$startsWith(prefix, t) {
 rt.named(lib$base$Text$startsWith, "lib.base.Text.startsWith");
 
 function lib$base$Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(lib$base$Text$drop, "lib.base.Text.drop");
 
@@ -207,9 +207,9 @@ rt.named(lib$base$List$lookup, "lib.base.List.lookup");
 const Address$legacyFolders = rt.lazy("Address.legacyFolders", () => rt.cons(new rt.Con("#Pair", 0, ["@dxos/toolchain", "toolchain"]), rt.NIL));
 
 function Address$isLegacy(t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   const ok = ({ "Address.isLegacy/\u03bb": (i) => {
-  const c = rt.ap(rt.prims["Text.code"], t, i);
+  const c = rt.prims["Text.code"](t, i);
   let r0;
   if ((c >= 97)) {
     r0 = (c <= 122);
@@ -268,7 +268,7 @@ function lib$base$Option$orElse(o, other) {
 rt.named(lib$base$Option$orElse, "lib.base.Option.orElse");
 
 function lib$base$Text$contains(part, t) {
-  return (rt.ap(rt.prims["Text.indexOf"], t, part, 0) >= 0);
+  return (rt.prims["Text.indexOf"](t, part, 0) >= 0);
 }
 rt.named(lib$base$Text$contains, "lib.base.Text.contains");
 
@@ -334,10 +334,10 @@ function lib$base$List$any(p$, v$) {
 rt.named(lib$base$List$any, "lib.base.List.any");
 
 function lib$base$Text$endsWith(suffix, t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
-  const m = rt.ap(rt.prims["Text.length"], suffix);
-  if (rt.ap(rt.prims["le"], m, n)) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, ((n - m) | 0), n), suffix);
+  const n = rt.prims["Text.length"](t);
+  const m = rt.prims["Text.length"](suffix);
+  if (rt.prims["le"](m, n)) {
+    return rt.equal(rt.prims["Text.slice"](t, ((n - m) | 0), n), suffix);
   } else {
     return false;
   }
@@ -345,14 +345,14 @@ function lib$base$Text$endsWith(suffix, t) {
 rt.named(lib$base$Text$endsWith, "lib.base.Text.endsWith");
 
 function lib$base$Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(lib$base$Text$take, "lib.base.Text.take");
 
 function Address$isSlug(max, t) {
-  const n = rt.ap(rt.prims["Text.length"], t);
+  const n = rt.prims["Text.length"](t);
   const ok = ({ "Address.isSlug/\u03bb": (i) => {
-  const c = rt.ap(rt.prims["Text.code"], t, i);
+  const c = rt.prims["Text.code"](t, i);
   let r0;
   if ((c >= 97)) {
     r0 = (c <= 122);
@@ -373,7 +373,7 @@ function Address$isSlug(max, t) {
     } else {
       if ((c === 45)) {
         if ((i > 0)) {
-          return rt.ap(rt.prims["lt"], i, ((n - 1) | 0));
+          return rt.prims["lt"](i, ((n - 1) | 0));
         } else {
           return false;
         }
@@ -384,7 +384,7 @@ function Address$isSlug(max, t) {
   }
 } })["Address.isSlug/\u03bb"];
   if ((n > 0)) {
-    if (rt.ap(rt.prims["le"], n, max)) {
+    if (rt.prims["le"](n, max)) {
       return lib$base$List$all(ok, lib$base$List$range(0, n));
     } else {
       return false;
@@ -423,7 +423,7 @@ function lib$base$List$range(lo, hi) {
   function go(acc$, i$) {
     for (;;) {
       const acc = acc$, i = i$;
-      if (rt.ap(rt.prims["lt"], i, lo)) {
+      if (rt.prims["lt"](i, lo)) {
         return acc;
       } else {
         acc$ = rt.cons(i, acc);

@@ -56,13 +56,13 @@ function Worker$Routes$scoped(pathname) {
     return rt.con0("#Option", 0);
   } else {
     const rest = Text$drop(1, pathname);
-    const slash = rt.ap(rt.prims["Text.indexOf"], rest, "/", 0);
+    const slash = rt.prims["Text.indexOf"](rest, "/", 0);
     if ((slash < 2)) {
       return rt.con0("#Option", 0);
     } else {
       const owner = Text$take(slash, rest);
       const after = Text$drop(((slash + 1) | 0), rest);
-      const next = rt.ap(rt.prims["Text.indexOf"], after, "/", 0);
+      const next = rt.prims["Text.indexOf"](after, "/", 0);
       let project;
       if ((next < 0)) {
         project = after;
@@ -88,7 +88,7 @@ function Worker$Routes$scoped(pathname) {
 rt.named(Worker$Routes$scoped, "Worker.Routes.scoped");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -114,7 +114,7 @@ function Worker$Routes$pinned(path) {
     const version = Text$take(16, rest);
     const after = Text$drop(16, rest);
     let r0;
-    if ((rt.ap(rt.prims["Text.length"], version) === 16)) {
+    if ((rt.prims["Text.length"](version) === 16)) {
       if (List$all(({ "Worker.Routes.pinned/\u03bb": (c) => {
       if (Text$isDigit(c)) {
         return true;
@@ -125,7 +125,7 @@ function Worker$Routes$pinned(path) {
           return false;
         }
       }
-    } })["Worker.Routes.pinned/\u03bb"], rt.ap(rt.prims["Text.utf8"], version))) {
+    } })["Worker.Routes.pinned/\u03bb"], rt.prims["Text.utf8"](version))) {
         r0 = Text$startsWith("/", after);
       } else {
         r0 = false;
@@ -170,8 +170,8 @@ function Worker$Routes$areaOf(path) {
 rt.named(Worker$Routes$areaOf, "Worker.Routes.areaOf");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -188,12 +188,12 @@ function not(b) {
 rt.named(not, "not");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
 function Text$take(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, 0, n);
+  return rt.prims["Text.slice"](t, 0, n);
 }
 rt.named(Text$take, "Text.take");
 

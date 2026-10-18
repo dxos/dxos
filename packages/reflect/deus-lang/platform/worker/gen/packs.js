@@ -5,7 +5,7 @@ function Worker$Packs$parseRange(header) {
   if (not(Text$startsWith("bytes=", header))) {
     return rt.con0("#Option", 0);
   } else {
-    const t0 = rt.ap(rt.prims["Text.split"], Text$drop(6, header), "-");
+    const t0 = rt.prims["Text.split"](Text$drop(6, header), "-");
     m1: {
       if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
         const first = t0.fields[0];
@@ -46,7 +46,7 @@ rt.named(Worker$Packs$parseRange, "Worker.Packs.parseRange");
 function Worker$Packs$checkIndex(bytes) {
   const size = Worker$Bytes$length(bytes);
   let r0;
-  if (rt.ap(rt.prims["lt"], size, Worker$Packs$fanout())) {
+  if (rt.prims["lt"](size, Worker$Packs$fanout())) {
     r0 = true;
   } else {
     r0 = (rt.mod(((size - Worker$Packs$fanout()) | 0), Worker$Packs$record()) !== 0);
@@ -84,10 +84,10 @@ function Worker$Packs$checkCombined(bytes) {
     if ((start < 12)) {
       r2 = true;
     } else {
-      if (rt.ap(rt.prims["gt"], start, size)) {
+      if (rt.prims["gt"](start, size)) {
         r2 = true;
       } else {
-        if (rt.ap(rt.prims["lt"], ((size - start) | 0), Worker$Packs$fanout())) {
+        if (rt.prims["lt"](((size - start) | 0), Worker$Packs$fanout())) {
           r2 = true;
         } else {
           r2 = (rt.mod(((((size - start) | 0) - Worker$Packs$fanout()) | 0), Worker$Packs$record()) !== 0);
@@ -112,7 +112,7 @@ function Worker$Packs$search(records, first, last, key, kind) {
   function go(low$, high$) {
     for (;;) {
       const low = low$, high = high$;
-      if (rt.ap(rt.prims["gt"], low, high)) {
+      if (rt.prims["gt"](low, high)) {
         return (-1);
       } else {
         const middle = (((low + high) | 0) >> 1);
@@ -159,10 +159,10 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
       for (;;) {
         const offset_1 = offset_1$, step = step$, best = best$;
         let r0;
-        if (rt.ap(rt.prims["lt"], offset_1, Math.imul(first, Worker$Packs$record()))) {
+        if (rt.prims["lt"](offset_1, Math.imul(first, Worker$Packs$record()))) {
           r0 = true;
         } else {
-          if (rt.ap(rt.prims["gt"], offset_1, Math.imul(last, Worker$Packs$record()))) {
+          if (rt.prims["gt"](offset_1, Math.imul(last, Worker$Packs$record()))) {
             r0 = true;
           } else {
             r0 = not(rt.ap(same, offset_1));
@@ -173,7 +173,7 @@ function Worker$Packs$newestAt(records, at, first, last, key, kind) {
         } else {
           const t1 = ((offset_1 + step) | 0);
           let r2;
-          if (rt.ap(rt.prims["gt"], Worker$Bytes$u32(records, ((offset_1 + 32) | 0)), Worker$Bytes$u32(records, ((best + 32) | 0)))) {
+          if (rt.prims["gt"](Worker$Bytes$u32(records, ((offset_1 + 32) | 0)), Worker$Bytes$u32(records, ((best + 32) | 0)))) {
             r2 = offset_1;
           } else {
             r2 = best;
@@ -200,8 +200,8 @@ function not(b) {
 rt.named(not, "not");
 
 function Text$startsWith(prefix, t) {
-  if (rt.ap(rt.prims["le"], rt.ap(rt.prims["Text.length"], prefix), rt.ap(rt.prims["Text.length"], t))) {
-    return rt.equal(rt.ap(rt.prims["Text.slice"], t, 0, rt.ap(rt.prims["Text.length"], prefix)), prefix);
+  if (rt.prims["le"](rt.prims["Text.length"](prefix), rt.prims["Text.length"](t))) {
+    return rt.equal(rt.prims["Text.slice"](t, 0, rt.prims["Text.length"](prefix)), prefix);
   } else {
     return false;
   }
@@ -209,15 +209,15 @@ function Text$startsWith(prefix, t) {
 rt.named(Text$startsWith, "Text.startsWith");
 
 function Text$drop(n, t) {
-  return rt.ap(rt.prims["Text.slice"], t, n, rt.ap(rt.prims["Text.length"], t));
+  return rt.prims["Text.slice"](t, n, rt.prims["Text.length"](t));
 }
 rt.named(Text$drop, "Text.drop");
 
 function Worker$Packs$digits(t) {
   let r0;
   if (not(Text$isEmpty(t))) {
-    if ((rt.ap(rt.prims["Text.length"], t) <= 9)) {
-      r0 = List$all(({ "Worker.Packs.digits/\u03bb": (c) => Text$isDigit(c) })["Worker.Packs.digits/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+    if ((rt.prims["Text.length"](t) <= 9)) {
+      r0 = List$all(({ "Worker.Packs.digits/\u03bb": (c) => Text$isDigit(c) })["Worker.Packs.digits/\u03bb"], rt.prims["Text.utf8"](t));
     } else {
       r0 = false;
     }
@@ -225,7 +225,7 @@ function Worker$Packs$digits(t) {
     r0 = false;
   }
   if (r0) {
-    return rt.ap(rt.prims["Int.fromText"], t);
+    return rt.prims["Int.fromText"](t);
   } else {
     return rt.con0("#Option", 0);
   }
@@ -233,7 +233,7 @@ function Worker$Packs$digits(t) {
 rt.named(Worker$Packs$digits, "Worker.Packs.digits");
 
 function Text$isEmpty(t) {
-  return (rt.ap(rt.prims["Text.length"], t) === 0);
+  return (rt.prims["Text.length"](t) === 0);
 }
 rt.named(Text$isEmpty, "Text.isEmpty");
 
@@ -272,7 +272,7 @@ function Worker$Packs$fanoutProblem(bytes, start, records) {
         }
       } else {
         const count = Worker$Bytes$u32(bytes, ((start + Math.imul(byte, 4)) | 0));
-        if (rt.ap(rt.prims["lt"], count, previous)) {
+        if (rt.prims["lt"](count, previous)) {
           return new rt.Con("#Option", 1, ["the fanout decreases"]);
         } else {
           byte$ = ((byte + 1) | 0);
@@ -343,7 +343,7 @@ function List$range(lo, hi) {
   function go(acc$, i$) {
     for (;;) {
       const acc = acc$, i = i$;
-      if (rt.ap(rt.prims["lt"], i, lo)) {
+      if (rt.prims["lt"](i, lo)) {
         return acc;
       } else {
         acc$ = rt.cons(i, acc);

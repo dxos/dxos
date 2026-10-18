@@ -2,14 +2,14 @@
 import * as rt from "./deus-runtime.mjs";
 
 function Worker$Paths$isBundle(name) {
-  const t0 = rt.ap(rt.prims["Text.split"], name, "-");
+  const t0 = rt.prims["Text.split"](name, "-");
   m1: {
     if (t0.tag === 1 && t0.fields[1].tag === 1 && t0.fields[1].fields[1].tag === 0) {
       const level = t0.fields[0];
       const hash = t0.fields[1].fields[0];
-      if ((rt.ap(rt.prims["Text.length"], level) >= 1)) {
-        if ((rt.ap(rt.prims["Text.length"], level) <= 3)) {
-          if (List$all(Text$isDigit, rt.ap(rt.prims["Text.utf8"], level))) {
+      if ((rt.prims["Text.length"](level) >= 1)) {
+        if ((rt.prims["Text.length"](level) <= 3)) {
+          if (List$all(Text$isDigit, rt.prims["Text.utf8"](level))) {
             return Worker$Heads$isHash(hash);
           } else {
             return false;
@@ -30,7 +30,7 @@ function Worker$Paths$isBundle(name) {
 rt.named(Worker$Paths$isBundle, "Worker.Paths.isBundle");
 
 function Worker$Paths$isSegment(segment) {
-  const t0 = rt.ap(rt.prims["Text.utf8"], segment);
+  const t0 = rt.prims["Text.utf8"](segment);
   m1: {
     if (t0.tag === 1) {
       const first = t0.fields[0];
@@ -169,7 +169,7 @@ function Text$isDigit(c) {
 rt.named(Text$isDigit, "Text.isDigit");
 
 function Worker$Heads$isHash(t) {
-  if ((rt.ap(rt.prims["Text.length"], t) === 64)) {
+  if ((rt.prims["Text.length"](t) === 64)) {
     return List$all(({ "Worker.Heads.isHash/\u03bb": (c) => {
     if (Text$isDigit(c)) {
       return true;
@@ -180,7 +180,7 @@ function Worker$Heads$isHash(t) {
         return false;
       }
     }
-  } })["Worker.Heads.isHash/\u03bb"], rt.ap(rt.prims["Text.utf8"], t));
+  } })["Worker.Heads.isHash/\u03bb"], rt.prims["Text.utf8"](t));
   } else {
     return false;
   }

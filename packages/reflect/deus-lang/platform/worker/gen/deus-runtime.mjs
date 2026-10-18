@@ -699,7 +699,8 @@ const sha256 = (s) => {
   return Array.from(h, (x) => x.toString(16).padStart(8, '0')).join('');
 };
 
-const prim = (arity, fn) => fixed(arity, fn);
+// A primitive that already takes `arity` arguments is its own function, so a call spreads no arrays (D320).
+const prim = (arity, fn) => (fn.length === arity ? fn : fixed(arity, fn));
 
 /** A primitive JavaScript cannot run (`Code.run` needs a Core machine): a function that fails when called. */
 export const unavailable = (name) => () => {
