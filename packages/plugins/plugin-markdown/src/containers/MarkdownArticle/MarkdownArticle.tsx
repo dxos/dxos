@@ -221,7 +221,7 @@ const MarkdownArticleImpl = forwardRef<
         canEnable: (pluginId) => names.has(pluginId) && !enabled.includes(pluginId),
         onSelect: ({ language }) => void invokePromise(SettingsOperation.OpenPluginRegistry, { filter: language }),
         label: t('enable-plugin.label'),
-        title: (pluginId) => t('enable-plugin.title', { plugin: names.get(pluginId) ?? pluginId }),
+        tooltip: t('enable-plugin.tooltip'),
       });
     }, [manager, enabled, invokePromise, t]);
 

@@ -5,6 +5,8 @@
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
+import { Domino } from '@dxos/ui';
+
 /**
  * Fenced-code languages rendered by a plugin's own editor extension, keyed by the fence's info
  * string; a fence in one of these languages offers to enable the plugin while it is off.
@@ -66,8 +68,8 @@ export type PluginFencesOptions = {
   onSelect: (fence: Pick<PluginFence, 'language' | 'pluginId'>) => void;
   /** Button text. */
   label: string;
-  /** Button tooltip for a plugin. */
-  title?: (pluginId: string) => string;
+  /** Shown on hover, in the app's tooltip style rather than the browser's `title`. */
+  tooltip: string;
 };
 
 /** Decorations for the fences whose plugin can be enabled. */
@@ -90,7 +92,7 @@ export const buildPluginFenceDecorations = (state: EditorState, options: PluginF
 };
 
 /**
- * Shows an "Open the plugin registry" button on fences whose language is rendered by a disabled plugin.
+ * Shows an "Enable plugin" button, which opens the plugin registry, on fences whose language is rendered by a disabled plugin.
  * The host reconfigures the extension when the enabled set changes, so the button goes away once
  * the plugin (and with it the extension that renders the fence) is on.
  */
@@ -109,6 +111,18 @@ export const pluginFences = (options: PluginFencesOptions): Extension => [
       top: '4px',
       right: '4px',
       zIndex: '1',
+    },
+    // Drawn only while the pointer is over the button, above its end edge.
+    '& .cm-plugin-fence-tooltip': {
+      position: 'absolute',
+      bottom: 'calc(100% + 4px)',
+      right: '0',
+      whiteSpace: 'nowrap',
+      pointerEvents: 'none',
+      visibility: 'hidden',
+    },
+    '& .cm-plugin-fence-button:hover .cm-plugin-fence-tooltip': {
+      visibility: 'visible',
     },
   }),
 ];
@@ -132,14 +146,15 @@ class EnablePluginWidget extends WidgetType {
   }
 
   override toDOM() {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'dx-control dx-button cm-plugin-fence-button';
-    button.setAttribute('data-size', 'sm');
-    button.setAttribute('data-variant', 'valence');
-    button.setAttribute('data-valence', 'info');
-    button.textContent = this._options.label;
-    button.title = this._options.title?.(this._pluginId) ?? this._pluginId;
+    const button = Domino.of('button')
+      .classNames('dx-control dx-button cm-plugin-fence-button')
+      .attributes({ 'type': 'button', 'data-size': 'sm', 'data-variant': 'valence', 'data-valence': 'info' })
+      // The plugin registry's own icon, so the button reads as the way to the registry.
+      .append(Domino.svg('ph--squares-four--regular'))
+      .append(
+        Domino.of('span').text(this._options.label),
+        Domino.of('span').classNames('dx-popup dx-tooltip cm-plugin-fence-tooltip').text(this._options.tooltip),
+      ).root;
     button.addEventListener('mousedown', (event) => event.preventDefault());
     button.addEventListener('click', (event) => {
       event.preventDefault();
