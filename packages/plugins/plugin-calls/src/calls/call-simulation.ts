@@ -75,15 +75,26 @@ export class CallSimulation extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    for (const [index, props] of this.#props.entries()) {
-      this.#participants.push(await this.#load(index, props));
+    // A failed open is never closed and the manager never stores it, so it releases what it loaded itself.
+    try {
+      for (const [index, props] of this.#props.entries()) {
+        this.#participants.push(await this.#load(index, props));
+      }
+    } catch (err) {
+      await this.#release();
+      throw err;
     }
   }
 
   protected override async _close(): Promise<void> {
+    await this.#release();
+  }
+
+  async #release(): Promise<void> {
     this.#stopClock();
-    for (const { video, stream, monitor, screenshare } of this.#participants) {
+    for (const { video, stream, audioTrack, monitor, screenshare } of this.#participants) {
       await monitor.close();
+      audioTrack.stop();
       for (const { stream: tracks, video: player } of [{ stream, video }, ...(screenshare ? [screenshare] : [])]) {
         tracks.getTracks().forEach((track) => track.stop());
         player.pause();
@@ -235,10 +246,21 @@ export class CallSimulation extends Resource {
       trackName: screenshareTrackName,
       on: false,
       tracks,
-      ...(await loadMediaFile(this.#audioContext, share.src).then(({ video, videoTrack }) => {
-        holdLastFrame(video);
-        return { video, stream: new MediaStream([videoTrack]) };
-      })),
+      ...(await loadMediaFile(this.#audioContext, share.src).then(
+        ({ video: screen, videoTrack: screenTrack }) => {
+          holdLastFrame(screen);
+          return { video: screen, stream: new MediaStream([screenTrack]) };
+        },
+        async (err) => {
+          // This participant is not in the list yet, so the open's rollback would miss its camera and monitor.
+          await monitor.close();
+          videoTrack.stop();
+          audioTrack.stop();
+          video.pause();
+          video.remove();
+          throw err;
+        },
+      )),
     };
     const user: UserState = { id, name, joined: true, raisedHand: false, speaking: false, tracks, activities: {} };
 
