@@ -6,10 +6,11 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { Person } from '@dxos/types';
 
+import { AVATAR_IMAGES } from '../avatar-images.ts';
 import { type Make } from '../util.ts';
 import { type OrgKey, type Orgs } from './organizations.ts';
 
-const CONTACT_SEEDS = [
+export const CONTACT_SEEDS = [
   {
     key: 'dana',
     fullName: 'Dana Whitfield',
@@ -182,6 +183,7 @@ export const makeContacts = (orgs: Orgs): Make<Contacts> =>
       'jobTitle' in seed
         ? Person.make({
             fullName: seed.fullName,
+            ...(AVATAR_IMAGES[seed.fullName] && { image: AVATAR_IMAGES[seed.fullName] }),
             jobTitle: seed.jobTitle,
             department: seed.department,
             emails: [{ label: 'Work', value: seed.email }],
@@ -189,6 +191,7 @@ export const makeContacts = (orgs: Orgs): Make<Contacts> =>
           })
         : Person.make({
             fullName: seed.fullName,
+            ...(AVATAR_IMAGES[seed.fullName] && { image: AVATAR_IMAGES[seed.fullName] }),
             emails: [{ value: seed.email }],
             organization: Ref.make(orgs[seed.org]),
           }),
