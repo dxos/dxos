@@ -220,7 +220,7 @@
   }
   /* A section heading reads as a small caps eyebrow over its rows, in the subdued colour, rather than another row. */
   .dx-tree-group-label {
-    font-size: 0.6875rem;
+    font-size: var(--text-xs, 0.75rem);
     font-weight: 500;
     line-height: var(--dx-label-line-height);
     letter-spacing: 0.04em;
