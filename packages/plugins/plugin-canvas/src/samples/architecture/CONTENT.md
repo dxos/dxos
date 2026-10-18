@@ -45,7 +45,7 @@ and link them, and a sheet of plugin metrics with a bar chart.
     end to end".
   - **EDGE**: embeds the `edge` drawing; a mermaid sequence diagram "A device connecting".
   - Each has a `## Reading the code` section. Links use space-relative `echo:///<id>` URIs.
-- 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, PRs, Tests, Open issues, Closed issues; 20 rows, one per real
+- 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, PRs, Tests, Closed issues, Open issues; 20 rows, one per real
   `packages/plugins` package, with made-up figures. One chart on the sheet: `bar` over `A1:E21`, `header`,
   `horizontal` and `stacked`, so plugins run down the y axis and the four measures stack into one bar along the x axis. The chart
   shows in the sheet's Charts companion.
