@@ -4,7 +4,7 @@
 
 /**
  * Alien Labs scopes the Cairn dashboard plugin on a four-person call: Astrid (the local user) joins a Meeting's
- * call after Lucía, Ben and Tomás have started, waves and is greeted; Lucía shares the cost chart, which Astrid
+ * call after Lucía, Ben and Tomás have started, waves and is greeted; Lucía shares the Plugin metrics sheet, which Astrid
  * maximizes, and Astrid writes the action items into the meeting notes.
  *
  * @mdl packages/plugins/plugin-meeting/PLUGIN.mdl test QA-2
@@ -12,24 +12,8 @@
  *   `DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  *
  * The colleagues are plugin-calls' simulated participants and Astrid's camera and microphone are a video too, so
- * the take needs no camera and no EDGE. Make the tracks first (HeyGen avatars; see the scripts' doc comments):
- *
- *   set -a; . .secrets/heygen.env; set +a
- *   node .agents/skills/autocue/scripts/heygen.mjs --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --out /tmp/meeting
- *   node .agents/skills/autocue/scripts/conversation.mjs --conversation packages/plugins/plugin-meeting/autocue/fieldstone-dashboard.conversation.json --clips /tmp/meeting/clips --out /tmp/meeting/tracks
- *
- * Record in light mode with no captions (the hidden players need autoplay; `MEETING_TRACKS` defaults to
- * /tmp/meeting/tracks):
- *
- *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/meeting/take \
- *     --theme light --captions off --chromium-args --autoplay-policy=no-user-gesture-required
- *
- * The recording has no sound. Lay `<tracks>/conversation.wav` under the trimmed video so that the first line's caption
- * (in the trimmer's `.vtt`) sits `leadIn` seconds into the audio: delay it by (that caption's time − `leadIn`). The
- * call's moving video keeps the trimmer from cutting anything after the join, so the two stay in step:
- *
- *   ffmpeg -i demo.webm -i /tmp/meeting/tracks/conversation.wav -filter_complex "[1]adelay=<ms>:all=1,apad[a]" \
- *     -map 0:v -map "[a]" -shortest -c:v copy -c:a libopus demo.voiced.webm
+ * the take needs no camera and no EDGE. `README.md` beside this file covers making the tracks, recording this take
+ * (light, no captions, autoplay allowed, `MEETING_TRACKS` naming the tracks) and laying the sound under it.
  */
 
 import { readFileSync } from 'node:fs';
@@ -267,7 +251,7 @@ export const steps = [
   {
     name: 'The conversation runs',
     narration:
-      'They talk it through. Whoever is speaking is outlined, the transcript fills in beside the call, and Lucía shares the cost chart.',
+      'They talk it through. Whoever is speaking is outlined, the transcript fills in beside the call, and Lucía shares the Plugin metrics sheet.',
     run: async ({ demo, page }) => {
       // Each line is captioned as it is spoken, and each shared screen maximized once it appears, from the timeline
       // the tracks were cut to.

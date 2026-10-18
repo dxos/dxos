@@ -14,7 +14,8 @@
  * that many seconds after the lead-in; a line with no `text` is a silent gesture. Between their lines a participant
  * shows `listen-<id>-<n>.mp4` (their n-th gap of 2.5s or more, retimed to fit; `--plan` lists them) or, for a shorter
  * pause, `still-<id>.png`; without those they fall back to their looping listening clip. A `take-<id>.mp4` (one
- * continuous render lip-synced to the participant's whole track) replaces all of that stitching. Every track starts
+ * continuous render lip-synced to the participant's whole track) replaces all of that stitching; `--audio` writes each
+ * speaker's whole track as `<out>/<id>.wav` for `heygen.mjs --takes` to render those from. Every track starts
  * on the same lead-in, so tracks started together stay in step: `fake-media.mjs` loops the lead-in until its cue and
  * `CallSimulation.start()` plays from the top on join.
  *
@@ -37,6 +38,7 @@ const { values: options } = parseArgs({
     height: { type: 'string', default: '720' },
     fps: { type: 'string', default: '25' },
     plan: { type: 'boolean', default: false },
+    audio: { type: 'boolean', default: false },
     screenshare: { type: 'string', multiple: true, default: [] },
     xfade: { type: 'string', default: '0' },
   },
@@ -155,6 +157,42 @@ const plan = [];
  */
 const XFADE = Number(options.xfade);
 
+/**
+ * Writes a participant's audio as a concat list: each line's own sound and exact silences, so speech keeps its time
+ * whatever the picture does.
+ */
+const audioParts = (id, parts) => {
+  const audios = parts.map((part, index) => {
+    const file = path.join(work, `${id}-${index}.wav`);
+    if (part.fixed) {
+      run(['-i', part.fixed, '-vn', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', file]);
+    } else {
+      run([
+        ...['-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo'],
+        ...['-t', part.seconds.toFixed(3), '-c:a', 'pcm_s16le', file],
+      ]);
+    }
+    return file;
+  });
+  const audioList = path.join(work, `${id}-audio.txt`);
+  writeFileSync(audioList, audios.map((file) => `file '${path.resolve(file)}'`).join('\n'));
+  return audioList;
+};
+
+/**
+ * `--audio`: a speaker's whole voice track as `<out>/<id>.wav`, for `heygen.mjs --takes` to lip-sync one continuous
+ * take to; it stops a second after the last spoken line, since the take's last frame holds through the tail.
+ */
+const speech = (id, parts) => {
+  if (!lines.some((line) => line.speaker === id && line.text)) {
+    return undefined;
+  }
+  const file = path.join(options.out, `${id}.wav`);
+  const end = Math.max(...timeline.map((entry) => entry.end)) + 1;
+  run(['-f', 'concat', '-safe', '0', '-i', audioParts(id, parts), '-t', end.toFixed(3), '-ac', '1', file]);
+  return file;
+};
+
 const tracks = Object.keys(conversation.participants).map((id) => {
   /** `{ fixed: file }` for a line, or `{ seconds, render(seconds, file) }` for the footage that fills a gap. */
   const parts = [];
@@ -171,8 +209,9 @@ const tracks = Object.keys(conversation.participants).map((id) => {
       if (clip) {
         plan.push({ id, clip: path.basename(clip), seconds: Number(seconds.toFixed(2)), exists: existsSync(clip) });
       }
-      if (options.plan || existsSync(take)) {
-        // Only the gaps' timing is wanted: the plan lists them, and a take fills them itself.
+      if (options.plan || options.audio || existsSync(take)) {
+        // Only the gaps' timing is wanted: the plan lists them, and a take (or the audio a take is rendered to) fills
+        // them itself.
         parts.push({ seconds });
       } else if (clip && existsSync(clip)) {
         parts.push({ seconds, render: (length, file) => listenSegment(clip, length, file) });
@@ -206,6 +245,9 @@ const tracks = Object.keys(conversation.participants).map((id) => {
   if (options.plan) {
     return undefined;
   }
+  if (options.audio) {
+    return speech(id, parts);
+  }
 
   const videos = existsSync(take)
     ? [take]
@@ -218,28 +260,7 @@ const tracks = Object.keys(conversation.participants).map((id) => {
         part.render(part.seconds + fades * XFADE, file);
         return file;
       });
-  // Audio: each line's own sound and exact silences, so speech keeps its time whatever the picture does.
-  const audios = parts.map((part, index) => {
-    const file = path.join(work, `${id}-${index}.wav`);
-    if (part.fixed) {
-      run(['-i', part.fixed, '-vn', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', file]);
-    } else {
-      run([
-        '-f',
-        'lavfi',
-        '-i',
-        'anullsrc=r=48000:cl=stereo',
-        '-t',
-        part.seconds.toFixed(3),
-        '-c:a',
-        'pcm_s16le',
-        file,
-      ]);
-    }
-    return file;
-  });
-  const audioList = path.join(work, `${id}-audio.txt`);
-  writeFileSync(audioList, audios.map((file) => `file '${path.resolve(file)}'`).join('\n'));
+  const audioList = audioParts(id, parts);
 
   let chain = '';
   let label = '0:v';
@@ -273,6 +294,10 @@ const tracks = Object.keys(conversation.participants).map((id) => {
 
 if (options.plan) {
   console.log(JSON.stringify(plan, null, 2));
+  process.exit(0);
+}
+if (options.audio) {
+  console.log(JSON.stringify({ speech: tracks.filter(Boolean) }, null, 2));
   process.exit(0);
 }
 

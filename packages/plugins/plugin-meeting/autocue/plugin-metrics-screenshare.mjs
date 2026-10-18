@@ -11,7 +11,7 @@
  *
  * Recorded without the action feed or captions, since it plays inside a call tile as a screenshare:
  *
- *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/meeting/screenshare \
+ *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out temp/meeting/screenshare \
  *     --theme light --captions off --overlay off --width 1600 --height 1000
  *
  * Trim it, then hand the result to `conversation.mjs` as `--screenshare lucia=<demo.webm>`.

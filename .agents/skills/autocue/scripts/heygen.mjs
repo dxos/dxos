@@ -18,6 +18,9 @@
  * person moves; listening clips lip-sync to silence with the `listening` motion prompt, and a line with no `text`
  * is a silent gesture of `seconds` directed by its `motion` (a wave, a nod). Files already in
  * `<out>/clips` are not regenerated.
+ *
+ * `--takes <dir>` then renders one continuous take per speaker, `<out>/clips/take-<id>.mp4`, lip-synced to their whole
+ * track (`<dir>/<id>.wav`, from `conversation.mjs --audio`) with the `TAKE` motion prompt, so the track has no cuts.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -33,6 +36,12 @@ const TIMEOUT_MS = 30 * 60_000;
 const IDLE_SECONDS = 10;
 const LISTENING =
   'Listening on a video call: attentive, smiling, small nods and natural blinks, mouth closed, hands resting.';
+/** Low expressiveness and a "while silent" direction keep a whole-track take from acting or staring. */
+const TAKE =
+  'A real person on a business video call, one continuous take, fixed camera. While they speak: calm, natural, ' +
+  'small conversational mouth movements and an occasional small hand gesture. While they are silent: mouth closed, ' +
+  'they listen, nod now and then, glance down at their desk and type notes on a keyboard below the frame, then look ' +
+  'back at the camera. Professional and understated.';
 
 const { values: options } = parseArgs({
   options: {
@@ -40,11 +49,14 @@ const { values: options } = parseArgs({
     'out': { type: 'string', default: 'heygen-out' },
     'resolution': { type: 'string', default: '720p' },
     'cast-only': { type: 'boolean', default: false },
+    'takes': { type: 'string' },
   },
 });
 const key = process.env.HEYGEN_API_KEY;
 if (!options.conversation || !key) {
-  console.error('usage: HEYGEN_API_KEY=… heygen.mjs --conversation <file.json> [--out <dir>] [--cast-only]');
+  console.error(
+    'usage: HEYGEN_API_KEY=… heygen.mjs --conversation <file.json> [--out <dir>] [--cast-only] [--takes <audio dir>]',
+  );
   process.exit(2);
 }
 
@@ -197,38 +209,53 @@ if (options['cast-only']) {
   process.exit(0);
 }
 
-const jobs = [
-  ...Object.keys(conversation.participants).map((id) => ({
-    file: path.join(clipsDir, `idle-${id}.mp4`),
-    speaker: id,
-    listening: true,
-  })),
-  ...conversation.lines.map((line, index) => ({
-    file: path.join(clipsDir, `${String(index).padStart(2, '0')}-${line.speaker}.mp4`),
-    speaker: line.speaker,
-    text: line.text,
-    gesture: line.text ? undefined : { motion: line.motion, seconds: line.seconds },
-  })),
-].filter(({ file }) => !existsSync(file));
+const takes = (dir) =>
+  Object.keys(conversation.participants)
+    .filter((id) => existsSync(path.join(dir, `${id}.wav`)))
+    .map((id) => ({ file: path.join(clipsDir, `take-${id}.mp4`), speaker: id, take: path.join(dir, `${id}.wav`) }));
+
+const jobs = (
+  options.takes
+    ? takes(options.takes)
+    : [
+        ...Object.keys(conversation.participants).map((id) => ({
+          file: path.join(clipsDir, `idle-${id}.mp4`),
+          speaker: id,
+          listening: true,
+        })),
+        ...conversation.lines.map((line, index) => ({
+          file: path.join(clipsDir, `${String(index).padStart(2, '0')}-${line.speaker}.mp4`),
+          speaker: line.speaker,
+          text: line.text,
+          gesture: line.text ? undefined : { motion: line.motion, seconds: line.seconds },
+        })),
+      ]
+).filter(({ file }) => !existsSync(file));
 
 // HeyGen renders submissions concurrently, so waiting on them together takes as long as the slowest.
 // Submissions are staggered: the API allows 10 requests per second, polls included.
 const results = await Promise.allSettled(
-  jobs.map(async ({ file, speaker, text, listening, gesture }, index) => {
+  jobs.map(async ({ file, speaker, text, listening, gesture, take }, index) => {
     await new Promise((resolve) => setTimeout(resolve, index * SUBMIT_SPACING_MS));
     const participant = conversation.participants[speaker];
     return generate(file, {
       avatar_id: roster[speaker].avatarId,
-      ...(listening
-        ? { audio_asset_id: await silence(IDLE_SECONDS), motion_prompt: LISTENING, expressiveness: 'low' }
-        : gesture
-          ? { audio_asset_id: await silence(gesture.seconds), motion_prompt: gesture.motion, expressiveness: 'medium' }
-          : {
-              script: text,
-              voice_id: roster[speaker].voiceId,
-              ...(participant.motion ? { motion_prompt: participant.motion } : {}),
-              expressiveness: participant.expressiveness ?? 'medium',
-            }),
+      ...(take
+        ? { audio_asset_id: await upload(take, 'audio/wav'), motion_prompt: TAKE, expressiveness: 'low' }
+        : listening
+          ? { audio_asset_id: await silence(IDLE_SECONDS), motion_prompt: LISTENING, expressiveness: 'low' }
+          : gesture
+            ? {
+                audio_asset_id: await silence(gesture.seconds),
+                motion_prompt: gesture.motion,
+                expressiveness: 'medium',
+              }
+            : {
+                script: text,
+                voice_id: roster[speaker].voiceId,
+                ...(participant.motion ? { motion_prompt: participant.motion } : {}),
+                expressiveness: participant.expressiveness ?? 'medium',
+              }),
     });
   }),
 );
