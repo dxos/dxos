@@ -359,5 +359,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 349 | 10-20 11:50 | 1h 00m | 4778cee3dd | Long `&&` and `||` chains print one operand per line; exported views are keyed by the CLI that printed them (D324) |
 | 350 | 10-20 12:40 | 50m 00s | c95ffa99ae | Long `++` and arithmetic chains fill their lines, each continued line led by the operator (D325) |
 | 351 | 10-20 13:30 | 50m 00s | aa14d25a23 | A long definition, test or match arm body starts on the next line: long printed lines 129 to 53 (D326) |
+| 352 | 10-20 14:10 | 40m 00s | this commit | The node kernel looks before reading a file that may be missing: adding the toolchain about 1 s faster (D327) |
 
-Total from stage 1 to stage 351: 152h 40m.
+Total from stage 1 to stage 352: 153h 20m.

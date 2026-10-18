@@ -65,12 +65,18 @@ export const createHost = ({ args, stdout, stderr }: HostOptions): HostHandler =
       case 'eprint':
         err(text(a));
         return UNIT;
-      case 'readFile':
+      case 'readFile': {
+        // A missing file is common (a store asks for metadata it may not hold), and a thrown error costs more than a look.
+        const path = text(a);
+        if (!existsSync(path)) {
+          return NONE;
+        }
         try {
-          return some(readFileSync(text(a), 'utf8'));
+          return some(readFileSync(path, 'utf8'));
         } catch {
           return NONE;
         }
+      }
       case 'writeFile':
         mkdirSync(dirname(text(a)), { recursive: true });
         writeFileSync(text(a), text(b));
