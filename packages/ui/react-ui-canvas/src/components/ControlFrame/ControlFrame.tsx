@@ -12,14 +12,12 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
+import { type ControlPointRef, type Drag, type Handle, isMoving } from '../../engine/index.ts';
 import {
   type Bounds,
   type Capabilities,
-  type ControlPointRef,
-  type Drag,
   type ElementId,
   type Endpoint,
-  type Handle,
   type Link,
   type LinkId,
   type Node,
@@ -29,7 +27,6 @@ import {
   type Scene,
   type SplineLink,
   endpointNode,
-  isMoving,
   isPointEndpoint,
   nodeDef,
 } from '../../model/index.ts';

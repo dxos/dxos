@@ -4,14 +4,13 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
+import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
-  type CanvasAtoms,
   type Capabilities,
   type ElementId,
   type LinkRegistry,
   type NodeRegistry,
-  type Projection,
   type Scene,
   type Size,
   isToolKey,

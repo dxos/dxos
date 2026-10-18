@@ -30,10 +30,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
+import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry } from '../../hooks/index.ts';
 import {
   BaseNode,
-  type CanvasAtoms,
   CurveLink,
   type Element,
   type Layer,
@@ -43,12 +43,10 @@ import {
   type Node,
   type NodeRegistry,
   type NodeStyle,
-  type Projection,
   SmartLink,
   SplineLink,
   type StyleClass,
   type StyleMap,
-  defaultNodeRegistry,
   getElement,
   isFrameNode,
   isLink,
@@ -61,15 +59,18 @@ import {
   type SceneOption,
   classedLink,
   classedNode,
+  commonSchema,
   elementLayer,
   flipLink,
+  mergeValues,
+  patchValues,
   portsPerSideOf,
   resolveStyle,
   sceneLayers,
   splitClassEdit,
 } from '../../utils/index.ts';
-import { commonSchema, mergeValues, patchValues } from '../../utils/properties.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
+import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';

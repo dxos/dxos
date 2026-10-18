@@ -9,18 +9,27 @@
 //
 
 import {
+  type Bounds,
+  type Capabilities,
+  type ElementId,
+  type Intent,
+  type Node,
+  type Scene,
+} from '../../model/index.ts';
+import {
   DEFAULT_LATTICE,
   type LatticeSpec,
   cellBounds,
   collides,
   coveredCells,
+  nodeBounds,
   occupancy,
   onLattice,
   quantize,
   resizeCell,
+  resizeNode,
   toCell,
-} from '../../utils/lattice.ts';
-import { nodeBounds, resizeNode } from '../../utils/shapes.ts';
+} from '../../utils/index.ts';
 import {
   type FreehandProjectionOptions,
   type Projection,
@@ -28,7 +37,6 @@ import {
   freehandCapabilities,
   reduceIntent,
 } from '../projection.ts';
-import { type Bounds, type Capabilities, type ElementId, type Intent, type Node, type Scene } from '../types.ts';
 
 /** Freehand, without auto layout: arranging by a layout engine would not respect the lattice. */
 export const latticeCapabilities: Capabilities = { ...freehandCapabilities, layout: false };

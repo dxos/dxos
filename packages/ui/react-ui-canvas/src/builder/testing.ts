@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 import { type Box, type BuilderElement, SceneBuilder, type SceneElement, type SceneTree } from './builder.ts';
-import { portId } from './ports.ts';
-import { DEFAULT_SIZES } from './shapes.ts';
 
 //
 // A three-level model diagram, one box per class: the fixture for anything that needs a scene tree to look

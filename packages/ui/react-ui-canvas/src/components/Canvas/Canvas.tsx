@@ -27,6 +27,18 @@ import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
+import {
+  type CanvasAtoms,
+  type Drag,
+  type FreehandProjectionOptions,
+  type InspectorMode,
+  type Projection,
+  animate,
+  createCanvasAtoms,
+  isMoving,
+  readonlyCapabilities,
+  reduceIntent,
+} from '../../engine/index.ts';
 import { type GeneratorCompiler, type GeneratorSource } from '../../generator/index.ts';
 import {
   SCENE_OVERLAY_ATTRIBUTE,
@@ -43,13 +55,9 @@ import {
   type BackgroundGrid,
   type Bounds,
   type Camera,
-  type CanvasAtoms,
   DEFAULT_GRID,
-  type Drag,
   type ElementId,
   type Endpoint,
-  type FreehandProjectionOptions,
-  type InspectorMode,
   type InstanceNode,
   type Intent,
   type Layer,
@@ -64,34 +72,26 @@ import {
   OPACITY_PATH,
   PLAIN_BACKGROUND,
   type Point,
-  type Projection,
   type Scene,
   type SceneId,
   type SceneStore,
   type ThemeRegistry,
   type Timeline,
-  animate,
   applyCameraKey,
   cameraKey,
   clampTime,
-  createCanvasAtoms,
   createTimeline,
-  defaultLinkRegistry,
-  defaultNodeRegistry,
   defaultThemeRegistry,
   frameTimeAttribute,
   getPath,
   isFrameNode,
   isInstanceNode,
-  isMoving,
   isPointEndpoint,
   keyAction,
   keyTimes,
   nodeAnimatable,
   nodeDef,
   exposeClock as publishClock,
-  readonlyCapabilities,
-  reduceIntent,
   removeKey,
   resolveBackground,
   resolveLook,
@@ -160,7 +160,13 @@ import { LayersPanel } from '../Layers/index.ts';
 import { ObjectsPanel } from '../Objects/index.ts';
 import { Palette } from '../Palette/index.ts';
 import { Properties, type PropertiesProps } from '../Properties/index.ts';
-import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/index.ts';
+import {
+  type ElementHandlers,
+  MAX_LIVE_DEPTH,
+  SceneLayer,
+  defaultLinkRegistry,
+  defaultNodeRegistry,
+} from '../SceneLayer/index.ts';
 import { ThemeBar } from '../ThemeBar/index.ts';
 import { TimelineBar } from '../Timeline/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';

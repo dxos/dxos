@@ -5,19 +5,23 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { UnknownNodeView } from '../components/SceneLayer/SceneLayer.tsx';
-import { nodePorts } from '../utils/ports.ts';
-import { createNode, nodeBounds, nominalSize } from '../utils/shapes.ts';
-import { nodeDef } from './node-def.ts';
 import {
   type CreateProps,
+  type NodeBase,
   type NodeDef,
   type NodeRegistry,
-  boxPrototype,
+  NoteNode,
+  RectNode,
+  Scene,
   createNodeRegistry,
-  defaultNodeRegistry,
-} from './registry.ts';
-import { type NodeBase, NoteNode, RectNode, Scene, createSceneSchema, isBuiltinNode, nodeBase } from './types.ts';
+  createSceneSchema,
+  isBuiltinNode,
+  nodeBase,
+  nodeDef,
+} from '../../model/index.ts';
+import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
+import { boxPrototype, defaultNodeRegistry } from './registry.ts';
+import { UnknownNodeView } from './SceneLayer.tsx';
 
 /** A host type: a compute function with typed input and output ports. */
 const FunctionNode = Schema.Struct({ type: Schema.Literal('function'), ...nodeBase, fn: Schema.String });

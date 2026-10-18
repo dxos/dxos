@@ -5,13 +5,10 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../utils/builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { type Intent, type Scene, createClock, createMemoryStore, createTimeline, setKey } from '../model/index.ts';
 import { animate, rewriteIntent } from './animate.ts';
-import { createClock } from './clock.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
-import { createMemoryStore } from './store.ts';
-import { createTimeline, setKey } from './timeline.ts';
-import { type Intent, type Scene } from './types.ts';
 
 const {
   scenes: [base],

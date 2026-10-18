@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { solve } from '../model/projections/constrained.ts';
-import { layoutGraph } from '../model/projections/dynamic.ts';
-import { MAJOR_GRID, type Point, type Scene } from '../model/types.ts';
-import { nodeBounds } from './shapes.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { layoutGraph, solve } from '../engine/index.ts';
+import { MAJOR_GRID, type Point, type Scene } from '../model/index.ts';
+import { nodeBounds } from '../utils/index.ts';
 import { createModelSceneTree, createSceneTree } from './testing.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
@@ -80,13 +80,16 @@ describe('generated layouts straddle the origin', () => {
 });
 
 const constrained = (): Scene =>
-  solve({
-    nodes: [{ id: 'A' }, { id: 'B' }, { id: 'C' }],
-    constraints: [
-      { subject: 'B', relation: 'east', object: 'A' },
-      { subject: 'C', relation: 'south', object: 'A' },
-    ],
-  });
+  solve(
+    {
+      nodes: [{ id: 'A' }, { id: 'B' }, { id: 'C' }],
+      constraints: [
+        { subject: 'B', relation: 'east', object: 'A' },
+        { subject: 'C', relation: 'south', object: 'A' },
+      ],
+    },
+    { nodes: defaultNodeRegistry },
+  );
 
 const dynamic = (): Scene =>
   layoutGraph(
@@ -98,4 +101,5 @@ const dynamic = (): Scene =>
       ],
     },
     { positions: {} },
+    { nodes: defaultNodeRegistry },
   );

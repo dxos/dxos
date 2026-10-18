@@ -4,7 +4,7 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type FrameNode } from '../model/types.ts';
+import { type Bounds, type Camera, type FrameNode } from '../model/index.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,

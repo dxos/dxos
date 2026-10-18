@@ -6,7 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type Scene } from '../types.ts';
+import { defaultNodeRegistry } from '../../components/SceneLayer/index.ts';
+import { type Scene } from '../../model/index.ts';
 import { type GraphModel, type Overlay, createDynamicProjection, layoutGraph, pruneOverlay } from './dynamic.ts';
 
 const graph: GraphModel = {
@@ -28,7 +29,7 @@ const centerOf = (scene: Scene, id: string) => {
 
 describe('dynamic projection', () => {
   test('layoutGraph ranks rows along the edges and emits links', ({ expect }) => {
-    const scene = layoutGraph(graph, { positions: {} });
+    const scene = layoutGraph(graph, { positions: {} }, { nodes: defaultNodeRegistry });
     expect(centerOf(scene, 'left').y).toBeGreaterThan(centerOf(scene, 'root').y);
     expect(centerOf(scene, 'leaf').y).toBeGreaterThan(centerOf(scene, 'left').y);
     expect(centerOf(scene, 'left').y).toBe(centerOf(scene, 'right').y);
@@ -40,7 +41,12 @@ describe('dynamic projection', () => {
     const registry = Registry.make();
     const graphAtom = Atom.keepAlive(Atom.make<GraphModel>(graph));
     const overlayAtom = Atom.keepAlive(Atom.make<Overlay>({ positions: {} }));
-    const projection = createDynamicProjection({ registry, graph: graphAtom, overlay: overlayAtom });
+    const projection = createDynamicProjection({
+      registry,
+      graph: graphAtom,
+      overlay: overlayAtom,
+      options: { nodes: defaultNodeRegistry },
+    });
     const before = centerOf(registry.get(projection.scene), 'right');
     projection.apply({ kind: 'move', ids: ['right'], delta: { x: 500, y: 0 } });
     expect(centerOf(registry.get(projection.scene), 'right')).toEqual({ x: before.x + 500, y: before.y });
@@ -62,7 +68,12 @@ describe('dynamic projection', () => {
     const registry = Registry.make();
     const graphAtom = Atom.keepAlive(Atom.make<GraphModel>(graph));
     const overlayAtom = Atom.keepAlive(Atom.make<Overlay>({ positions: {} }));
-    const projection = createDynamicProjection({ registry, graph: graphAtom, overlay: overlayAtom });
+    const projection = createDynamicProjection({
+      registry,
+      graph: graphAtom,
+      overlay: overlayAtom,
+      options: { nodes: defaultNodeRegistry },
+    });
     projection.apply({
       kind: 'link',
       link: { type: 'curve', id: 'e4', z: 'z', source: { node: 'right' }, target: { node: 'leaf' } },

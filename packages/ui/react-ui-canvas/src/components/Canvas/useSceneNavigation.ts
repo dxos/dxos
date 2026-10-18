@@ -4,14 +4,12 @@
 
 import { type MutableRefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { type CanvasAtoms, type Drag, type HistoryEntry } from '../../engine/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
   type Bounds,
   type Camera,
-  type CanvasAtoms,
-  type Drag,
   type ElementId,
-  type HistoryEntry,
   type Node,
   type NodeRegistry,
   type Scene,

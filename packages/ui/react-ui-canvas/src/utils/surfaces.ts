@@ -7,8 +7,7 @@
 // so every class is spelled out; the `theme` variant pairs the light classes with `dark:` ones so it follows the app.
 //
 
-import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/style-set.ts';
-import { type StyleHue } from '../model/types.ts';
+import { type LookTone, type NodeSurface, type Opacity, type Radius, type StyleHue } from '../model/index.ts';
 
 export type SurfaceClasses = { surface: string; text: string; border: string };
 

@@ -27,7 +27,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { FLOATING_PANEL } from '../../utils/chrome.ts';
+import { FLOATING_PANEL } from '../../utils/index.ts';
 
 /** A panel's section in the dock. */
 export type DockSection = {

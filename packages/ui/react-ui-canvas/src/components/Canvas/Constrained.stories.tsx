@@ -9,16 +9,17 @@ import React, { useCallback, useMemo } from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { useSceneProjection } from '../../hooks/index.ts';
 import {
   CONSTRAINED_SCENE_ID,
   type ConstrainedModel,
   type FreehandProjectionOptions,
   createCanvasAtoms,
   createConstrainedProjection,
-  createMemoryStore,
-} from '../../model/index.ts';
+} from '../../engine/index.ts';
+import { useSceneProjection } from '../../hooks/index.ts';
+import { createMemoryStore } from '../../model/index.ts';
 import { Properties } from '../Properties/index.ts';
+import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /**
@@ -66,7 +67,8 @@ const DefaultStory = () => {
   const model = useMemo(() => Atom.keepAlive(Atom.make<ConstrainedModel>(INITIAL)), []);
   const store = useMemo(() => createMemoryStore([]), []);
   const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) => createConstrainedProjection({ registry, model }),
+    ({ registry }: FreehandProjectionOptions) =>
+      createConstrainedProjection({ registry, model, options: { nodes: defaultNodeRegistry } }),
     [model],
   );
   const atoms = useMemo(() => createCanvasAtoms(CONSTRAINED_SCENE_ID), []);

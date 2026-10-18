@@ -8,7 +8,7 @@
 // the polyline.
 //
 
-import { type Bounds, type Point } from '../model/types.ts';
+import { type Bounds, type Point } from '../model/index.ts';
 
 /** Segments a curve is cut into when flattened; enough that the error is far under a pixel at the sizes drawn. */
 const CURVE_STEPS = 16;

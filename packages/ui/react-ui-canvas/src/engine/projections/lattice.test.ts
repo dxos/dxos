@@ -5,10 +5,8 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { DEFAULT_LATTICE } from '../../utils/lattice.ts';
-import { createNode, nodeBounds } from '../../utils/shapes.ts';
-import { createMemoryStore } from '../store.ts';
-import { type Node, type Scene } from '../types.ts';
+import { type Node, type Scene, createMemoryStore } from '../../model/index.ts';
+import { DEFAULT_LATTICE, createNode, nodeBounds } from '../../utils/index.ts';
 import { constrainIntent, createLatticeProjection } from './lattice.ts';
 
 const spec = DEFAULT_LATTICE;

@@ -10,14 +10,11 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import {
-  type BackgroundGrid,
-  type InspectorMode,
-  createLatticeProjection,
-  createMemoryStore,
-} from '../../model/index.ts';
-import { type Box, DEFAULT_LATTICE, DEFAULT_SHAPE_SIZE, SceneBuilder, TONES, cellBounds } from '../../utils/index.ts';
-import { createModelSceneTree, createSceneTree } from '../../utils/testing.ts';
+import { type Box, SceneBuilder } from '../../builder/index.ts';
+import { createModelSceneTree, createSceneTree } from '../../builder/testing.ts';
+import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
+import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
+import { DEFAULT_LATTICE, DEFAULT_SHAPE_SIZE, TONES, cellBounds } from '../../utils/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /**

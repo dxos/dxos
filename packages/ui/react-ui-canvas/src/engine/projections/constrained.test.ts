@@ -6,7 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type EllipseNode, type NoteNode, type Scene, isEllipseNode, isNoteNode } from '../types.ts';
+import { defaultNodeRegistry } from '../../components/SceneLayer/index.ts';
+import { type EllipseNode, type NoteNode, type Scene, isEllipseNode, isNoteNode } from '../../model/index.ts';
 import { type ConstrainedModel, createConstrainedProjection, rewriteForDrop, solve } from './constrained.ts';
 
 const model: ConstrainedModel = {
@@ -30,7 +31,7 @@ const centerOf = (scene: Scene, id: string) => {
 
 describe('constrained projection', () => {
   test('solve honours east/west, north/south and aligned', ({ expect }) => {
-    const scene = solve(model);
+    const scene = solve(model, { nodes: defaultNodeRegistry });
     const a = centerOf(scene, 'A');
     const b = centerOf(scene, 'B');
     const c = centerOf(scene, 'C');
@@ -43,19 +44,22 @@ describe('constrained projection', () => {
   });
 
   test('nodes sharing a row without an ordering never overlap', ({ expect }) => {
-    const scene = solve({
-      nodes: [{ id: 'X' }, { id: 'Y' }, { id: 'Z' }],
-      constraints: [
-        { subject: 'Y', relation: 'aligned', object: 'X' },
-        { subject: 'Z', relation: 'aligned', object: 'X' },
-      ],
-    });
+    const scene = solve(
+      {
+        nodes: [{ id: 'X' }, { id: 'Y' }, { id: 'Z' }],
+        constraints: [
+          { subject: 'Y', relation: 'aligned', object: 'X' },
+          { subject: 'Z', relation: 'aligned', object: 'X' },
+        ],
+      },
+      { nodes: defaultNodeRegistry },
+    );
     const xs = ['X', 'Y', 'Z'].map((id) => centerOf(scene, id).x);
     expect(new Set(xs).size).toBe(3);
   });
 
   test('a mostly horizontal drop rewrites to east/west + aligned with the nearest node', ({ expect }) => {
-    const scene = solve(model);
+    const scene = solve(model, { nodes: defaultNodeRegistry });
     const a = centerOf(scene, 'A');
     const c = centerOf(scene, 'C');
     // Drop C to the left of A, on A's row.
@@ -65,13 +69,13 @@ describe('constrained projection', () => {
       { subject: 'C', relation: 'west', object: 'A' },
       { subject: 'C', relation: 'aligned', object: 'A' },
     ]);
-    const resolved = solve(next);
+    const resolved = solve(next, { nodes: defaultNodeRegistry });
     expect(centerOf(resolved, 'C').x).toBeLessThan(centerOf(resolved, 'A').x);
     expect(centerOf(resolved, 'C').y).toBe(centerOf(resolved, 'A').y);
   });
 
   test('a mostly vertical drop rewrites to north/south', ({ expect }) => {
-    const scene = solve(model);
+    const scene = solve(model, { nodes: defaultNodeRegistry });
     const b = centerOf(scene, 'B');
     const d = centerOf(scene, 'D');
     const next = rewriteForDrop(model, scene, 'D', { x: b.x - d.x, y: b.y - 150 - d.y });
@@ -82,13 +86,13 @@ describe('constrained projection', () => {
 
   test('a drop with no neighbour is rejected', ({ expect }) => {
     const alone: ConstrainedModel = { nodes: [{ id: 'A' }], constraints: [] };
-    expect(rewriteForDrop(alone, solve(alone), 'A', { x: 100, y: 0 })).toBe(alone);
+    expect(rewriteForDrop(alone, solve(alone, { nodes: defaultNodeRegistry }), 'A', { x: 100, y: 0 })).toBe(alone);
   });
 
   test('the projection re-solves after a move and drops constraints on delete', ({ expect }) => {
     const registry = Registry.make();
     const atom = Atom.keepAlive(Atom.make<ConstrainedModel>(model));
-    const projection = createConstrainedProjection({ registry, model: atom });
+    const projection = createConstrainedProjection({ registry, model: atom, options: { nodes: defaultNodeRegistry } });
     const before = registry.get(projection.scene);
     const a = centerOf(before, 'A');
     const c = centerOf(before, 'C');
@@ -106,7 +110,7 @@ describe('constrained projection', () => {
   test('created nodes keep their type and label field', ({ expect }) => {
     const registry = Registry.make();
     const atom = Atom.keepAlive(Atom.make<ConstrainedModel>({ nodes: [{ id: 'A' }], constraints: [] }));
-    const projection = createConstrainedProjection({ registry, model: atom });
+    const projection = createConstrainedProjection({ registry, model: atom, options: { nodes: defaultNodeRegistry } });
     const ellipse: EllipseNode = {
       type: 'ellipse',
       id: 'E',
@@ -137,7 +141,7 @@ describe('constrained projection', () => {
   test('update records style alongside the label', ({ expect }) => {
     const registry = Registry.make();
     const atom = Atom.keepAlive(Atom.make<ConstrainedModel>(model));
-    const projection = createConstrainedProjection({ registry, model: atom });
+    const projection = createConstrainedProjection({ registry, model: atom, options: { nodes: defaultNodeRegistry } });
     projection.apply({ kind: 'update', id: 'A', values: { style: { hue: 'teal', rounded: true } } });
     expect(registry.get(projection.scene).nodes.A.style).toEqual({ hue: 'teal', rounded: true });
     projection.apply({ kind: 'update', id: 'A', values: { label: 'Alpha' } });

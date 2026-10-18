@@ -14,23 +14,20 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 
-import { centeredOrigin } from '../../utils/layout.ts';
-import { initialKeys } from '../../utils/order.ts';
-import { withTitle } from '../../utils/parts.ts';
-import { createNode } from '../../utils/shapes.ts';
-import { type Projection } from '../projection.ts';
-import { defaultNodeRegistry } from '../registry.ts';
 import {
   type BuiltinNodeType,
   type Capabilities,
   type Intent,
   type Link,
   type Node,
+  type NodeRegistry,
   type Point,
   type Scene,
   type Size,
   endpointNode,
-} from '../types.ts';
+} from '../../model/index.ts';
+import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
+import { type Projection } from '../projection.ts';
 import { labelOf } from './constrained.ts';
 
 export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
@@ -47,6 +44,8 @@ export type Overlay = {
 };
 
 export type DynamicOptions = {
+  /** The node types, for the part each created node's title goes in. */
+  nodes: NodeRegistry;
   pitch?: Size;
   size?: Size;
   /** The first slot's centre; by default the layout straddles the origin. */
@@ -54,7 +53,7 @@ export type DynamicOptions = {
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
-const DEFAULTS: Required<Omit<DynamicOptions, 'origin'>> = {
+const DEFAULTS: Required<Omit<DynamicOptions, 'origin' | 'nodes'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
 };
@@ -62,7 +61,7 @@ const DEFAULTS: Required<Omit<DynamicOptions, 'origin'>> = {
 export const DYNAMIC_SCENE_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions = {}): Scene => {
+export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): Scene => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
@@ -97,7 +96,7 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
       y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
     };
     nodes[node.id] = withTitle(
-      defaultNodeRegistry,
+      options.nodes,
       createNode({ type: node.type ?? 'rect', id: node.id, z: keys[graph.edges.length + index], center, size }),
       node.label ?? node.id,
     );
@@ -135,7 +134,7 @@ export type DynamicProjectionOptions = {
   registry: Registry.AtomRegistry;
   graph: Atom.Writable<GraphModel>;
   overlay: Atom.Writable<Overlay>;
-  options?: DynamicOptions;
+  options: DynamicOptions;
 };
 
 export const createDynamicProjection = ({

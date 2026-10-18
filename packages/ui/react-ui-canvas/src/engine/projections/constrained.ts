@@ -13,24 +13,21 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 
-import { centeredOrigin } from '../../utils/layout.ts';
-import { initialKeys } from '../../utils/order.ts';
-import { withTitle } from '../../utils/parts.ts';
-import { createNode } from '../../utils/shapes.ts';
-import { type Projection } from '../projection.ts';
-import { defaultNodeRegistry } from '../registry.ts';
 import {
   type BuiltinNodeType,
   type Capabilities,
   type Intent,
   type Node,
+  type NodeRegistry,
   type NodeStyle,
   type Point,
   type Scene,
   type Size,
   isBuiltinNode,
   isFrameNode,
-} from '../types.ts';
+} from '../../model/index.ts';
+import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
+import { type Projection } from '../projection.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
 export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
@@ -46,6 +43,8 @@ export type ConstrainedModel = {
 };
 
 export type ConstrainedOptions = {
+  /** The node types, for the part each created node's title goes in. */
+  nodes: NodeRegistry;
   /** Distance between grid slots. */
   pitch?: Size;
   /** Every node has the same size (§3: equal sizes, snapped to the grid). */
@@ -55,7 +54,7 @@ export type ConstrainedOptions = {
 };
 
 /** Multiples of the major grid, so a solved layout is already snapped. */
-const DEFAULTS: Required<Omit<ConstrainedOptions, 'origin'>> = {
+const DEFAULTS: Required<Omit<ConstrainedOptions, 'origin' | 'nodes'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
 };
@@ -180,7 +179,7 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
 };
 
 /** Solve the model to a positioned scene. */
-export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {}): Scene => {
+export const solve = (model: ConstrainedModel, options: ConstrainedOptions): Scene => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const { rows, columns } = solveRanks(model);
   const extent = {
@@ -196,7 +195,7 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions = {})
       y: origin.y + (rows.get(node.id) ?? 0) * pitch.height,
     };
     const solved = withTitle(
-      defaultNodeRegistry,
+      options.nodes,
       createNode({ type: node.type ?? 'rect', id: node.id, z: keys[index], center, size }),
       node.label ?? node.id,
     );
@@ -266,7 +265,7 @@ export const constrainedCapabilities: Capabilities = { move: true, create: true,
 export type ConstrainedProjectionOptions = {
   registry: Registry.AtomRegistry;
   model: Atom.Writable<ConstrainedModel>;
-  options?: ConstrainedOptions;
+  options: ConstrainedOptions;
 };
 
 export const createConstrainedProjection = ({ registry, model, options }: ConstrainedProjectionOptions): Projection => {

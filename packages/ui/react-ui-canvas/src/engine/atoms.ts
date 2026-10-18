@@ -9,13 +9,10 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 
-import { type Clipboard } from '../utils/clipboard.ts';
-import { type PartKey } from '../utils/parts.ts';
-import { type UndoState, emptyUndo } from '../utils/undo.ts';
-import { type Clock, createClock } from './clock.ts';
 import {
   type Bounds,
   type Camera,
+  type Clock,
   type ElementId,
   type Endpoint,
   type LayerId,
@@ -27,7 +24,9 @@ import {
   type SceneId,
   type Side,
   type Tool,
-} from './types.ts';
+  createClock,
+} from '../model/index.ts';
+import { type Clipboard, type PartKey, type UndoState, emptyUndo } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 

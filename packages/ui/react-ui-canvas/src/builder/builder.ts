@@ -12,7 +12,7 @@
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-import { type NodeRegistry, defaultNodeRegistry } from '../model/registry.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
 import {
   type BuiltinNode,
   type BuiltinNodeType,
@@ -22,14 +22,13 @@ import {
   type LinkType,
   type Node,
   type NodeBase,
+  type NodeRegistry,
   type NodeStyle,
   type Point,
   type Scene,
   type SceneId,
-} from '../model/types.ts';
-import { DEFAULT_LAYER } from './layers.ts';
-import { initialKeys } from './order.ts';
-import { createNode } from './shapes.ts';
+} from '../model/index.ts';
+import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
 
 /** Top-left box geometry; the builder stores the centre. */
 export type Box = { x: number; y: number; width: number; height: number };

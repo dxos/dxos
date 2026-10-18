@@ -10,9 +10,11 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { SceneBuilder } from '../../builder/index.ts';
+import { createCanvasAtoms } from '../../engine/index.ts';
 import { useRegistry } from '../../hooks/index.ts';
-import { type Layer, createCanvasAtoms, createMemoryStore } from '../../model/index.ts';
-import { SceneBuilder, between } from '../../utils/index.ts';
+import { type Layer, createMemoryStore } from '../../model/index.ts';
+import { between } from '../../utils/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });

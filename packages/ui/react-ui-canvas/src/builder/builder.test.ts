@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { isEllipseNode, isFrameNode, isNoteNode, isRectNode } from '../model/types.ts';
+import { isEllipseNode, isFrameNode, isNoteNode, isRectNode } from '../model/index.ts';
+import { DEFAULT_LAYER } from '../utils/index.ts';
 import { SceneBuilder } from './builder.ts';
-import { DEFAULT_LAYER } from './layers.ts';
 
 const box = (x: number, y: number) => ({ x, y, width: 200, height: 100 });
 

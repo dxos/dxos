@@ -4,15 +4,9 @@
 
 import { useCallback } from 'react';
 
+import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
-import {
-  type CanvasAtoms,
-  type Capabilities,
-  type ElementId,
-  type Point,
-  type Projection,
-  type Scene,
-} from '../../model/index.ts';
+import { type Capabilities, type ElementId, type Point, type Scene } from '../../model/index.ts';
 import { activeLayer, between, clipboardBounds, copySelection, pasteFragment, topZ } from '../../utils/index.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 

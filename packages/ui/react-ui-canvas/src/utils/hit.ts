@@ -7,7 +7,7 @@
 // same for every renderer.
 //
 
-import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../model/types.ts';
+import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../model/index.ts';
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 

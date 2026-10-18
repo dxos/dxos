@@ -18,7 +18,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type Capabilities, type NodeRegistry, type NodeType, type SceneId, shortcutFor } from '../../model/index.ts';
-import { FLOATING_PANEL } from '../../utils/chrome.ts';
+import { FLOATING_PANEL } from '../../utils/index.ts';
 import { Breadcrumbs } from '../Breadcrumbs/index.ts';
 
 /** What the toolbars can ask of the view; a missing action hides or disables its control. */

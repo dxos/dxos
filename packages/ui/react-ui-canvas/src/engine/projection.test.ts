@@ -5,10 +5,9 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createSceneTree } from '../utils/testing.ts';
+import { createSceneTree } from '../builder/testing.ts';
+import { type Point, type Scene, createMemoryStore, isRectNode, updateScene } from '../model/index.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
-import { createMemoryStore, updateScene } from './store.ts';
-import { type Point, type Scene, isRectNode } from './types.ts';
 
 const fixture = (): Scene => {
   const { scenes, root } = createSceneTree(1, 'r');

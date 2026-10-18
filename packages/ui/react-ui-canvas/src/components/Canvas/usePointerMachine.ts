@@ -12,17 +12,14 @@ import {
   useState,
 } from 'react';
 
+import { type CanvasAtoms, type ControlPointRef, type Drag, type Handle, type Projection } from '../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
 import {
   type Camera,
-  type CanvasAtoms,
   type Capabilities,
-  type ControlPointRef,
   type CreateProps,
-  type Drag,
   type ElementId,
   type Endpoint,
-  type Handle,
   type Link,
   type Node,
   type NodeId,
@@ -30,7 +27,6 @@ import {
   type NodeType,
   type Point,
   type Port,
-  type Projection,
   type Scene,
   type SceneStore,
   type SplineLink,

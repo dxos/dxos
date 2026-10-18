@@ -9,8 +9,8 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { SceneBuilder } from '../../builder/index.ts';
 import { type BackgroundGrid, THEME_IDS, createMemoryStore } from '../../model/index.ts';
-import { SceneBuilder } from '../../utils/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 const cell = (x: number, y: number, width = 4, height = 2) => ({

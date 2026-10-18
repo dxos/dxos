@@ -6,25 +6,27 @@ import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
+import {
+  type CanvasAtoms,
+  type ControlPointRef,
+  type Drag,
+  type EditingPart,
+  type InspectorMode,
+  type Isolation,
+  type Projection,
+} from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Bounds,
   type Camera,
-  type CanvasAtoms,
   type Capabilities,
-  type ControlPointRef,
-  type Drag,
-  type EditingPart,
   type ElementId,
-  type InspectorMode,
-  type Isolation,
   type LinkId,
   type LinkRegistry,
   type NodeId,
   type NodeRegistry,
-  type Projection,
   type Scene,
   type SceneId,
   type SceneLook,

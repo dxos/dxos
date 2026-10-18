@@ -10,7 +10,6 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { useSceneProjection } from '../../hooks/index.ts';
 import {
   DYNAMIC_SCENE_ID,
   type FreehandProjectionOptions,
@@ -18,9 +17,11 @@ import {
   type Overlay,
   createCanvasAtoms,
   createDynamicProjection,
-  createMemoryStore,
-} from '../../model/index.ts';
+} from '../../engine/index.ts';
+import { useSceneProjection } from '../../hooks/index.ts';
+import { createMemoryStore } from '../../model/index.ts';
 import { Properties } from '../Properties/index.ts';
+import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /**
@@ -105,7 +106,8 @@ const DefaultStory = () => {
   const overlay = useMemo(() => Atom.keepAlive(Atom.make<Overlay>({ positions: {} })), []);
   const store = useMemo(() => createMemoryStore([]), []);
   const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) => createDynamicProjection({ registry, graph, overlay }),
+    ({ registry }: FreehandProjectionOptions) =>
+      createDynamicProjection({ registry, graph, overlay, options: { nodes: defaultNodeRegistry } }),
     [graph, overlay],
   );
   const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_SCENE_ID), []);

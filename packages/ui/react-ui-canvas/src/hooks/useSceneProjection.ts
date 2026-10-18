@@ -9,9 +9,9 @@ import {
   type CanvasAtoms,
   type FreehandProjectionOptions,
   type Projection,
-  type SceneStore,
   createFreehandProjection,
-} from '../model/index.ts';
+} from '../engine/index.ts';
+import { type SceneStore } from '../model/index.ts';
 import { withUndo } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 

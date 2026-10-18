@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../utils/builder.ts';
-import { reduceIntent } from './projection.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
 import {
   BASE_ANIMATABLE,
   animatableProperties,

@@ -8,13 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import {
-  type NodeRegistry,
-  type Tool,
-  defaultLinkRegistry,
-  defaultNodeRegistry,
-  freehandCapabilities,
-} from '../../model/index.ts';
+import { freehandCapabilities } from '../../engine/index.ts';
+import { type NodeRegistry, type Tool } from '../../model/index.ts';
+import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Palette, type PaletteProps } from './Palette.tsx';
 
 const ICONS = [

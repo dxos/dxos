@@ -12,12 +12,6 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
-import { type LatticeSpec } from '../utils/lattice.ts';
-import { reduceLayerIntent } from '../utils/layers.ts';
-import { layoutScene } from '../utils/layout.ts';
-import { resizeNode } from '../utils/shapes.ts';
-import { type SceneStore, putScene, updateScene } from './store.ts';
-import { removeTargets } from './timeline.ts';
 import {
   type Capabilities,
   type Intent,
@@ -26,8 +20,13 @@ import {
   OpenScene,
   type Scene,
   type SceneId,
+  type SceneStore,
   endpointNode,
-} from './types.ts';
+  putScene,
+  removeTargets,
+  updateScene,
+} from '../model/index.ts';
+import { type LatticeSpec, layoutScene, reduceLayerIntent, resizeNode } from '../utils/index.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */

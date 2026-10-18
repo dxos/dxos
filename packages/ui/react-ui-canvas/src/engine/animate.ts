@@ -11,11 +11,15 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { resizeNode } from '../utils/shapes.ts';
-import { type Clock } from './clock.ts';
-import { type Projection } from './projection.ts';
 import {
+  type AnimatableKind,
   BASE_ANIMATABLE,
+  type Clock,
+  type Intent,
+  type Node,
+  type NodeValues,
+  type Scene,
+  type Timeline,
   createTimeline,
   getPath,
   hasTrack,
@@ -23,8 +27,9 @@ import {
   sampleScene,
   setKey,
   setPath,
-} from './timeline.ts';
-import { type AnimatableKind, type Intent, type Node, type NodeValues, type Scene, type Timeline } from './types.ts';
+} from '../model/index.ts';
+import { resizeNode } from '../utils/index.ts';
+import { type Projection } from './projection.ts';
 
 export type AnimateOptions = {
   registry: Registry.AtomRegistry;

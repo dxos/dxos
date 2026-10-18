@@ -24,45 +24,65 @@ import React, {
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeneratorFrames } from '../../generator/host.ts';
-import { type GeneratorStatus, type Shape } from '../../generator/types.ts';
-import { useSceneLook } from '../../hooks/useSceneLook.ts';
-import { frameTimeAttribute } from '../../model/clock.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
-import { NO_STYLES, type SceneStore } from '../../model/store.ts';
-import { type LinkKind, styleVariant } from '../../model/style-set.ts';
+import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
+import { useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
   type Link,
   type LinkId,
+  type LinkKind,
   MAJOR_GRID_RATIO,
   type Marker,
+  NO_STYLES,
   type Node,
   type NodeId,
+  type NodeRegistry,
+  type NodeViewProps,
   type Scene,
+  type SceneStore,
   type StyleMap,
+  frameTimeAttribute,
   isFrameNode,
   isGeneratorNode,
   isInstanceNode,
   isNoteNode,
   isPathNode,
   linkMarkers,
+  nodeDef,
   showsContents,
-} from '../../model/types.ts';
-import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
-import { compositeBounds, instanceScene, instanceTransform } from '../../utils/compose.ts';
-import { contentBounds } from '../../utils/hit.ts';
-import { type LatticeSpec } from '../../utils/lattice.ts';
-import { elementLayer, sceneLayers, visibleScene } from '../../utils/layers.ts';
-import { sortByZ } from '../../utils/order.ts';
-import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
-import { sceneLinkGeometry } from '../../utils/route.ts';
-import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { alignClasses, classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
-import { BORDER_CLASSES, CANVAS_FILLS, CAPTION_TEXT } from '../../utils/surfaces.ts';
-import { TextPart } from '../PartEditor/PartEditor.tsx';
+  styleVariant,
+} from '../../model/index.ts';
+import {
+  BORDER_CLASSES,
+  CANVAS_FILLS,
+  CAPTION_TEXT,
+  DEFAULT_CELL,
+  type LatticeSpec,
+  type PartEditing,
+  type PartKey,
+  alignClasses,
+  classedLink,
+  classedNode,
+  compositeBounds,
+  contentBounds,
+  elementLayer,
+  frameClasses,
+  instanceScene,
+  instanceTransform,
+  isMultiline,
+  lineClasses,
+  nodeBounds,
+  nodeParts,
+  portalFrame,
+  portalScale,
+  portalTransform,
+  sceneLayers,
+  sceneLinkGeometry,
+  sortByZ,
+  visibleScene,
+} from '../../utils/index.ts';
+import { TextPart } from '../PartEditor/index.ts';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
