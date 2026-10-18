@@ -5,16 +5,16 @@ group entry "Entrypoints" {
   node Registry "SpaceRegistry" ref="edge/packages/services/db-service/src/worker/space-registry/space-registry-object.ts"
 }
 group objects "Durable Objects" {
-  node Ssm "SpaceStateMachine" ref="edge/packages/services/db-service/src/worker/space/space-state-machine.ts"
-  node Subduction "Subduction repl." ref="edge/packages/services/db-service/src/worker/subduction"
+  node Ssm "SpaceStateMachine" ref="edge/packages/services/db-service/src/worker/space/space-state-machine.ts" color=violet
+  node Subduction "Subduction repl." ref="edge/packages/services/db-service/src/worker/subduction" color=orange
   node FeedSpace "FeedSpace" ref="edge/packages/services/db-service/src/worker/feed-space/feed-space.ts"
   node FeedRep "FeedReplicator" ref="edge/packages/services/db-service/src/worker/feed/feed-replicator.ts"
   node Indexer "Indexer" ref="edge/packages/services/db-service/src/worker/indexer/indexer.ts"
-  node Query "QueryExecutor" ref="edge/packages/services/db-service/src/worker/query/query-executor.ts"
+  node Query "QueryExecutor" ref="edge/packages/services/db-service/src/worker/query/query-executor.ts" color=light-red
   node Meta "SpaceMetadata" ref="edge/packages/services/db-service/src/worker/space-metadata/space-metadata.ts"
 }
 group bindings "Bindings" color=light-violet {
-  node R2 "R2 space-backups" ref="edge/packages/services/db-service/src/worker/bindings.ts"
+  node R2 "R2 space-backups" ref="edge/packages/services/db-service/src/worker/bindings.ts" color=green
   node Ext "router / kms / compute" ref="edge/packages/services"
 }
 edge Entry -> Ssm "credentials"

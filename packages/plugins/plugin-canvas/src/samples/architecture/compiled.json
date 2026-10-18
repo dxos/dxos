@@ -412,7 +412,18 @@
         "origin": { "x": -128, "y": -64 },
         "scale": 1,
         "ref": "packages/plugins/plugin-assistant",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "plugin-assistant" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "plugin-assistant",
+            "color": "blue"
+          }
+        ]
       }
     },
     {
@@ -462,7 +473,9 @@
         "origin": { "x": 640, "y": -64 },
         "scale": 1,
         "ref": "packages/core/compute/ai",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ai" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ai", "color": "violet" }
+        ]
       }
     },
     {
@@ -482,7 +495,18 @@
         "origin": { "x": 1024, "y": 320 },
         "scale": 1,
         "ref": "packages/core/compute/compute-runtime",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "compute-runtime" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "compute-runtime",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -512,7 +536,9 @@
         "origin": { "x": 1024, "y": 128 },
         "scale": 1,
         "ref": "packages/core/compute/edge-compute",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "edge-compute" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "edge-compute", "color": "orange" }
+        ]
       }
     },
     {
@@ -522,7 +548,9 @@
         "origin": { "x": 1408, "y": 320 },
         "scale": 1,
         "ref": "packages/core/echo/echo-client",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "echo-client" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "echo-client", "color": "green" }
+        ]
       }
     },
     {
@@ -700,7 +728,9 @@
         "origin": { "x": 1408, "y": -64 },
         "scale": 1,
         "ref": "packages/sdk/react-client",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "React Client" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "React Client", "color": "blue" }
+        ]
       }
     },
     {
@@ -750,7 +780,9 @@
         "origin": { "x": 640, "y": 320 },
         "scale": 1,
         "ref": "packages/core/echo/echo-host/src/db-host",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "echo-host" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "echo-host", "color": "green" }
+        ]
       }
     },
     {
@@ -790,7 +822,9 @@
         "origin": { "x": 256, "y": 512 },
         "scale": 1,
         "ref": "packages/common/sql-sqlite",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SQLite / OPFS" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SQLite / OPFS", "color": "green" }
+        ]
       }
     },
     {
@@ -810,7 +844,9 @@
         "origin": { "x": -128, "y": 128 },
         "scale": 1,
         "ref": "packages/core/mesh/edge-client",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EDGE Client" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EDGE Client", "color": "orange" }
+        ]
       }
     },
     {
@@ -1001,7 +1037,9 @@
         "origin": { "x": 256, "y": -64 },
         "scale": 1,
         "ref": "packages/core/echo/echo-host/src/db-host/echo-host.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EchoHost" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "EchoHost", "color": "violet" }
+        ]
       }
     },
     {
@@ -1081,7 +1119,18 @@
         "origin": { "x": 1024, "y": 128 },
         "scale": 1,
         "ref": "packages/core/echo/echo-host/src/query/query-executor.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "QueryExecutor" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "QueryExecutor",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -1121,7 +1170,18 @@
         "origin": { "x": 1024, "y": 896 },
         "scale": 1,
         "ref": "packages/core/echo/echo-host/src/automerge/echo-network-adapter.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "NetworkAdapter" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "NetworkAdapter",
+            "color": "orange"
+          }
+        ]
       }
     },
     {
@@ -1131,7 +1191,9 @@
         "origin": { "x": 640, "y": 1088 },
         "scale": 1,
         "ref": "packages/core/echo/echo-host/src/automerge/sqlite-storage-adapter.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SqliteStorage" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SqliteStorage", "color": "green" }
+        ]
       }
     },
     {
@@ -1373,7 +1435,18 @@
         "origin": { "x": 640, "y": 512 },
         "scale": 1,
         "ref": "packages/sdk/app-framework/src/core/plugin-manager",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "PluginManager" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "PluginManager",
+            "color": "violet"
+          }
+        ]
       }
     },
     {
@@ -1433,7 +1506,9 @@
         "origin": { "x": 1792, "y": 320 },
         "scale": 1,
         "ref": "packages/sdk/app-framework/src/ui/components/Surface",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Surface" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Surface", "color": "blue" }
+        ]
       }
     },
     {
@@ -1443,7 +1518,18 @@
         "origin": { "x": 1792, "y": 512 },
         "scale": 1,
         "ref": "packages/core/compute/operation/src/OperationInvoker.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "OperationInvoker" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "OperationInvoker",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -1473,7 +1559,9 @@
         "origin": { "x": 1792, "y": -64 },
         "scale": 1,
         "ref": "packages/plugins/plugin-deck",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Deck" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Deck", "color": "blue" }
+        ]
       }
     },
     {
@@ -1685,7 +1773,9 @@
         "origin": { "x": 256, "y": -64 },
         "scale": 1,
         "ref": "packages/plugins/plugin-canvas/src/CanvasPlugin.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "CanvasPlugin" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "CanvasPlugin", "color": "violet" }
+        ]
       }
     },
     {
@@ -1715,7 +1805,9 @@
         "origin": { "x": 256, "y": 512 },
         "scale": 1,
         "ref": "packages/plugins/plugin-canvas/src/capabilities/react-surface.tsx",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "react-surface" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "react-surface", "color": "blue" }
+        ]
       }
     },
     {
@@ -1755,7 +1847,18 @@
         "origin": { "x": 640, "y": 320 },
         "scale": 1,
         "ref": "packages/plugins/plugin-chess/src/operations",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Operations" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "Operations",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -1775,7 +1878,9 @@
         "origin": { "x": 1024, "y": 512 },
         "scale": 1,
         "ref": "packages/plugins/plugin-canvas/src/model",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Model" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Model", "color": "green" }
+        ]
       }
     },
     {
@@ -1795,7 +1900,18 @@
         "origin": { "x": 640, "y": 704 },
         "scale": 1,
         "ref": "packages/ui/react-ui-canvas",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "react-ui-canvas" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "react-ui-canvas",
+            "color": "blue"
+          }
+        ]
       }
     },
     {
@@ -2321,7 +2437,9 @@
         "origin": { "x": -128, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/compute-service/src/triggers",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "triggers" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "triggers", "color": "orange" }
+        ]
       }
     },
     {
@@ -2351,7 +2469,9 @@
         "origin": { "x": 256, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/compute-service/src/triggers/scheduler-object.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Scheduler DO" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Scheduler DO", "color": "violet" }
+        ]
       }
     },
     {
@@ -2371,7 +2491,18 @@
         "origin": { "x": 256, "y": 512 },
         "scale": 1,
         "ref": "edge/packages/services/compute-service/src/runtime",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Fn runtime" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "Fn runtime",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -2401,7 +2532,9 @@
         "origin": { "x": 640, "y": 512 },
         "scale": 1,
         "ref": "edge/packages/services/compute-service/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "D1 + R2" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "D1 + R2", "color": "green" }
+        ]
       }
     },
     {
@@ -2607,7 +2740,18 @@
         "origin": { "x": 256, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/space/space-state-machine.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SpaceStateMachine" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "SpaceStateMachine",
+            "color": "violet"
+          }
+        ]
       }
     },
     {
@@ -2617,7 +2761,18 @@
         "origin": { "x": 1024, "y": 512 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/subduction",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Subduction repl." }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "Subduction repl.",
+            "color": "orange"
+          }
+        ]
       }
     },
     {
@@ -2657,7 +2812,18 @@
         "origin": { "x": 640, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/query/query-executor.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "QueryExecutor" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "QueryExecutor",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {
@@ -2677,7 +2843,18 @@
         "origin": { "x": 1408, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/bindings.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "R2 space-backups" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "R2 space-backups",
+            "color": "green"
+          }
+        ]
       }
     },
     {
@@ -2907,7 +3084,9 @@
         "origin": { "x": 256, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/hub-service/src/api",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "account API" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "account API", "color": "blue" }
+        ]
       }
     },
     {
@@ -2927,7 +3106,18 @@
         "origin": { "x": -128, "y": 128 },
         "scale": 1,
         "ref": "edge/packages/services/hub-service/src/mailbox/mailbox-object.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "MailboxObject" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "MailboxObject",
+            "color": "orange"
+          }
+        ]
       }
     },
     {
@@ -2947,7 +3137,18 @@
         "origin": { "x": 640, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/hub-service/wrangler.jsonc",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "D1 + SESSION_KV" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "D1 + SESSION_KV",
+            "color": "green"
+          }
+        ]
       }
     },
     {
@@ -3085,7 +3286,9 @@
         "origin": { "x": 640, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/edge/src/api.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Hono API" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Hono API", "color": "blue" }
+        ]
       }
     },
     {
@@ -3105,7 +3308,9 @@
         "origin": { "x": 1024, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/edge/src/backups/api.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "backups API" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "backups API", "color": "green" }
+        ]
       }
     },
     {
@@ -3155,7 +3360,9 @@
         "origin": { "x": 256, "y": -64 },
         "scale": 1,
         "ref": "edge/packages/services/router/src/worker/router/router.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "RouterObject" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "RouterObject", "color": "orange" }
+        ]
       }
     },
     {
@@ -3165,7 +3372,9 @@
         "origin": { "x": -128, "y": -64 },
         "scale": 1,
         "ref": "edge/packages/services/router/src/worker/swarm/swarm.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SwarmObject" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SwarmObject", "color": "orange" }
+        ]
       }
     },
     {
@@ -3359,7 +3568,9 @@
         "origin": { "x": -128, "y": 704 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/subduction/subduction-transport.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Transport" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Transport", "color": "orange" }
+        ]
       }
     },
     {
@@ -3369,7 +3580,18 @@
         "origin": { "x": -128, "y": 896 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/subduction/do-sedimentree-storage.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SedimentreeStore" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "SedimentreeStore",
+            "color": "green"
+          }
+        ]
       }
     },
     {
@@ -3389,7 +3611,9 @@
         "origin": { "x": 256, "y": -64 },
         "scale": 1,
         "ref": "edge/packages/services/db-service/src/worker/indexer/indexer.ts",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Indexer" }]
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Indexer", "color": "violet" }
+        ]
       }
     },
     {
@@ -3439,7 +3663,18 @@
         "origin": { "x": 640, "y": 896 },
         "scale": 1,
         "ref": "edge/packages/sdk/edge-automerge",
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "subduction-wasm" }]
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "subduction-wasm",
+            "color": "light-red"
+          }
+        ]
       }
     },
     {

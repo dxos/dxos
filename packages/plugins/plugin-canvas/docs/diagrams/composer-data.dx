@@ -1,21 +1,21 @@
 diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group client "Client" {
-  node ReactClient "React Client" ref="packages/sdk/react-client"
+  node ReactClient "React Client" ref="packages/sdk/react-client" color=blue
   node Client "Client" ref="packages/sdk/client"
   node EchoClient "echo-client" ref="packages/core/echo/echo-client"
   node EchoApi "echo (schema)" ref="packages/core/echo/echo"
 }
 group host "Services (worker)" {
   node Services "ServiceStack" ref="packages/sdk/client-services"
-  node EchoHost "echo-host" ref="packages/core/echo/echo-host/src/db-host"
+  node EchoHost "echo-host" ref="packages/core/echo/echo-host/src/db-host" color=green
   node Automerge "Automerge Host" ref="packages/core/echo/echo-host/src/automerge"
   node Index "Indexing" ref="packages/core/echo/index-core"
   node Feed "Feed" ref="packages/core/echo/feed"
-  node Sqlite "SQLite / OPFS" ref="packages/common/sql-sqlite"
+  node Sqlite "SQLite / OPFS" ref="packages/common/sql-sqlite" color=green
 }
 group sync "Sync" color=light-violet {
   node Replicator "Edge Replicator" ref="packages/core/echo/echo-host/src/edge"
-  node EdgeClient "EDGE Client" ref="packages/core/mesh/edge-client"
+  node EdgeClient "EDGE Client" ref="packages/core/mesh/edge-client" color=orange
 }
 edge ReactClient -> Client
 edge Client -> Services "services"
