@@ -280,7 +280,9 @@ test.describe('SceneView', () => {
   test('the properties panel edits the selected node', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Label', 'Style']));
+    expect(labels).toEqual(expect.arrayContaining(['Label']));
+    // The style swatches sit under the Style section's heading rather than a field label of their own.
+    await expect(page.locator('[data-testid="properties"] [data-testid="style-grid"]')).toBeVisible();
     // Geometry is two labelled number fields per row.
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
@@ -291,15 +293,15 @@ test.describe('SceneView', () => {
     const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
     // An unstyled node matches no swatch.
     await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
-    // Tone 1 is the strongest fill.
-    await option('blue:1').click();
-    await expect(option('blue:1')).toHaveAttribute('aria-checked', 'true');
-    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-500/);
+    // The default (flat) set's last tone is its strongest fill.
+    await option('blue:3').click();
+    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-300/);
     await option('neutral:0').click();
     await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
-    // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
+    // Tone 0 is clear: the fill goes (the selected frame's border shows the selection, not the hue).
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
-    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-500/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-300/);
   });
 
   test('the geometry fields step by the grid and move the node', async () => {

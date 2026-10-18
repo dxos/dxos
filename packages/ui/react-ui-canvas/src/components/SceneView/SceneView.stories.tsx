@@ -13,6 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type InspectorMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
+import { type BackgroundGrid } from '../../model/style-set.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
@@ -63,6 +64,8 @@ const Editor = ({
   // The args are where the view starts; the palette's toggle and the inspectors' menus change it from there.
   const [readonly, setReadonly] = useState(initialReadonly);
   const [inspectors, setInspectors] = useState(initialInspectors);
+  const [theme, setTheme] = useState<string>();
+  const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
   return (
     <SceneView.Root
       store={store}
@@ -71,12 +74,17 @@ const Editor = ({
       onReadonlyChange={setReadonly}
       inspectors={inspectors}
       onInspectorsChange={setInspectors}
+      theme={theme}
+      onThemeChange={setTheme}
+      backgroundGrid={backgroundGrid}
+      onBackgroundGridChange={setBackgroundGrid}
       createProjection={lattice ? createLatticeProjection : undefined}
     >
       <SceneView.Canvas liveDepth={liveDepth} />
       <SceneView.Navigation />
       <SceneView.Actions />
       <SceneView.Debug />
+      <SceneView.Theme />
       <SceneView.Palette />
       <SceneView.Properties />
       <SceneView.Layers />
