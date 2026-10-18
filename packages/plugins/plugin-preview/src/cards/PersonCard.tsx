@@ -50,8 +50,8 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
     <Card.Body>
       {image && (
         <Card.Row>
-          {/* A square headshot up to the poster cap, so a face is neither stretched nor cropped to a banner. */}
-          <Card.Poster alt={name ?? ''} src={image} aspectRatio='1 / 1' classNames='w-full max-w-[200px] rounded-sm' />
+          {/* A fixed square headshot, so a face is neither stretched nor cropped to a banner. */}
+          <Card.Poster alt={name ?? ''} src={image} aspectRatio='1 / 1' classNames='size-[120px] rounded-sm' />
         </Card.Row>
       )}
       {organizationName && (
