@@ -45,9 +45,9 @@ and link them, and a sheet of plugin metrics with a bar chart.
     end to end".
   - **EDGE**: embeds the `edge` drawing; a mermaid sequence diagram "A device connecting".
   - Each has a `## Reading the code` section. Links use space-relative `echo:///<id>` URIs.
-- 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, LOC, PRs, Tests; 20 rows, one per real
+- 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, KLOC (thousands of lines), PRs, Tests; 20 rows, one per real
   `packages/plugins` package, with made-up figures. One chart on the sheet: `bar` over `A1:D21`, `header` and
-  `horizontal`, so plugins run down the y axis and LOC, PRs and Tests are bar series along the x axis. The chart
+  `horizontal`, so plugins run down the y axis and KLOC, PRs and Tests are bar series along the x axis. The chart
   shows in the sheet's Charts companion.
 - 1 `Collection` "Architecture" on the space root, in order: Composer, DXOS, EDGE (docs), Overview,
   CF Workers (drawings), Plugin metrics (sheet).
