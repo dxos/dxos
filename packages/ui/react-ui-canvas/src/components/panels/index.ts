@@ -3,7 +3,7 @@
 //
 
 export * from './InspectorPanel/index.ts';
-export * from './Theme/index.ts';
-export * from './Timeline/index.ts';
-export * from './Tools/index.ts';
+export * from './ThemePanel/index.ts';
+export * from './TimelinePanel/index.ts';
+export * from './ToolsPanel/index.ts';
 export * from './types.ts';

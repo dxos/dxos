@@ -160,9 +160,9 @@ import { ObjectsInspector } from '../inspectors/ObjectsInspector/index.ts';
 import { PropertiesInspector, type PropertiesInspectorProps } from '../inspectors/PropertiesInspector/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/InspectorPanel/index.ts';
-import { ThemePanel } from '../panels/Theme/index.ts';
-import { TimelinePanel } from '../panels/Timeline/index.ts';
-import { ToolsPanel } from '../panels/Tools/index.ts';
+import { ThemePanel } from '../panels/ThemePanel/index.ts';
+import { TimelinePanel } from '../panels/TimelinePanel/index.ts';
+import { ToolsPanel } from '../panels/ToolsPanel/index.ts';
 import {
   type ElementHandlers,
   MAX_LIVE_DEPTH,

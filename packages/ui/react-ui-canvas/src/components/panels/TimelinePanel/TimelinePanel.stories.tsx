@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { useClock, useRegistry } from '../../../hooks/index.ts';
 import { createClock } from '../../../model/index.ts';
-import { TimelinePanel, keyAt } from './Timeline.tsx';
+import { TimelinePanel, keyAt } from './TimelinePanel.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
 
@@ -44,7 +44,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/components/panels/Timeline',
+  title: 'ui/react-ui-canvas/components/panels/TimelinePanel',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },

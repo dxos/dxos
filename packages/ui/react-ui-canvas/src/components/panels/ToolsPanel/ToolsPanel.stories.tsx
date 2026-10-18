@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { freehandCapabilities } from '../../../engine/index.ts';
 import { type NodeRegistry, type Tool } from '../../../model/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../../SceneLayer/index.ts';
-import { ToolsPanel, type ToolsPanelProps } from './Tools.tsx';
+import { ToolsPanel, type ToolsPanelProps } from './ToolsPanel.tsx';
 
 const ICONS = [
   'ph--brain--regular',
@@ -75,7 +75,7 @@ const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/components/panels/Tools',
+  title: 'ui/react-ui-canvas/components/panels/ToolsPanel',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   args: { collapse: 'auto', flyout: 'list', many: false, height: 640 },

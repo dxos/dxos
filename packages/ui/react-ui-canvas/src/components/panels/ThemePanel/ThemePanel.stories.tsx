@@ -38,7 +38,7 @@ const DefaultStory = () => {
  * 2. The grid buttons pick dots, lines or none; picking the theme's own grid again clears the override.
  */
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/components/panels/Theme',
+  title: 'ui/react-ui-canvas/components/panels/ThemePanel',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },
