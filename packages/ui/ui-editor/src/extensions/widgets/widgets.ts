@@ -8,7 +8,7 @@
 // host renders portals from, widget state and context effects, and bookmark navigation. What is
 // matched is a matcher's business: `xmlTags` claims XML elements, `objectLinks` object links.
 
-import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
   type Extension,
@@ -435,7 +435,7 @@ type WidgetDecorationSet = {
   notifier: WidgetNotifier;
 };
 
-/** Ceiling on parsing ahead of the background parser; past it `parseCompletionPlugin` rebuilds. */
+/** Ceiling on parsing ahead of the background parser; past it `parseProgressPlugin` rebuilds. */
 const PARSE_BUDGET = 50;
 
 /**
@@ -637,25 +637,26 @@ const scrollJumpMonitor = (() => {
 })();
 
 /**
- * Re-decorate once the whole document has parsed. `StateField.create` (and incremental rebuilds) only
- * see the syntax tree parsed so far, so a block past CodeMirror's initial background-parse window is
- * not decorated until some later transaction — previously it appeared only after the first edit. This
- * dispatches a one-shot rebuild when the full tree becomes available (re-armed on each edit).
+ * Re-decorate whenever the syntax tree changes. `StateField.create` (and incremental rebuilds) see
+ * only the tree parsed so far: background parsing extends it later, and a parse that runs out of time
+ * skips ranges outside the viewport and parses them as they scroll in, neither with a document change.
+ * Edits rebuild too: the incremental merge duplicates a widget appended after the last one (see the
+ * `xml-tags` invariant tests), and this rebuild settles it. Rebuilds within one task coalesce.
  */
-const parseCompletionPlugin = ViewPlugin.fromClass(
+const parseProgressPlugin = ViewPlugin.fromClass(
   class {
-    #rebuiltForLength = -1;
+    #pending = false;
 
     update(update: ViewUpdate) {
-      if (update.docChanged) {
-        this.#rebuiltForLength = -1;
+      if (this.#pending || syntaxTree(update.startState) === syntaxTree(update.state)) {
+        return;
       }
-      const length = update.state.doc.length;
-      if (this.#rebuiltForLength !== length && syntaxTreeAvailable(update.state, length)) {
-        this.#rebuiltForLength = length;
-        // Defer: cannot dispatch during an update.
-        queueMicrotask(() => update.view.dispatch({ effects: widgetRebuildEffect.of(null) }));
-      }
+      this.#pending = true;
+      // Defer: cannot dispatch during an update.
+      queueMicrotask(() => {
+        this.#pending = false;
+        update.view.dispatch({ effects: widgetRebuildEffect.of(null) });
+      });
     }
   },
 );
@@ -798,7 +799,7 @@ export const widgetsCore: Extension = [
   widgetStateMapStateField,
   widgetDecorationsField,
   widgetUpdatePlugin,
-  parseCompletionPlugin,
+  parseProgressPlugin,
   navigationEffectPlugin,
   keyHandlers,
   scrollJumpMonitor,

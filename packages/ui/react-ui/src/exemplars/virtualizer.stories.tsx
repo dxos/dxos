@@ -9,10 +9,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Button } from '../next/components/Button/Button.tsx';
-import * as Panel from '../next/components/Panel/Panel.tsx';
-import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
-import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
+import { Button } from '../components/Button/Button.tsx';
+import * as Panel from '../components/Panel/Panel.tsx';
+import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
 
 random.seed(999);
 

@@ -117,7 +117,7 @@ export type InboxResult = { mailbox: Mailbox.Mailbox; messages: Message.Message[
  * what the mailbox's folders resolve against. Feed messages are immutable, so tag membership lives
  * in the mailbox's child `TagIndex`.
  */
-export const Inbox: SampleSpace.Phase<InboxResult> = SampleSpace.phase('inbox', {
+export const Inbox: SampleSpace.Partial<InboxResult> = SampleSpace.partial('inbox', {
   schemas: [Mailbox.Mailbox, Message.Message, TagIndex.TagIndex, Tag.Tag, Feed.Feed],
   run: () =>
     Effect.gen(function* () {

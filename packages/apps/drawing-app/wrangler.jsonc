@@ -1,0 +1,11 @@
+// app.drawing.sh: the app bundle, served as static assets from a Worker on the drawing.sh zone.
+// Deploy: `moon run drawing-app:bundle && pnpm exec wrangler deploy -c packages/apps/drawing-app/wrangler.jsonc`.
+{
+  "name": "drawing-app",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./out/drawing-app",
+    "not_found_handling": "single-page-application",
+  },
+  "routes": [{ "pattern": "app.drawing.sh", "custom_domain": true }],
+}

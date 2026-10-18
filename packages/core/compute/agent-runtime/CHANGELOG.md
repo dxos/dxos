@@ -1,5 +1,46 @@
 # @dxos/agent-runtime
 
+## 0.15.0
+
+### Patch Changes
+
+- b7504c9: A chat switched to another agent before its first message now runs that message on the chosen agent; previously the agent process started when the chat opened kept answering on the default assistant until a later turn.
+- Updated dependencies [5490cbc]
+- Updated dependencies [6488905]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [45ab961]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/mcp-client@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

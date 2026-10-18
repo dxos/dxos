@@ -127,7 +127,7 @@ export const ObjectFrame: Story = {
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
         scene: id,
-        object: Ref.make(document),
+        link: { object: Ref.make(document) },
         role,
       },
     });

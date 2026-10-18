@@ -57,11 +57,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
     >
       <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
         <Layout.Flex gap='md' align='center'>
-          {status.running && (
-            <span className='text-sm text-fg-muted'>
-              {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
-            </span>
-          )}
+          {status.running && <span className='text-sm text-fg-muted font-mono'>{status.origin}</span>}
           <Field.Root>
             <Input.Switch
               checked={status.running}

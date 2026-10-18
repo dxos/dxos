@@ -9,7 +9,8 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
+import { DEFAULT_DAYS, DISCORD_SOURCE } from '../constants.ts';
+import { snowflakeForTimestamp } from '../services/discord-message.ts';
 
 const MAX_DAYS = 365 * 3;
 const MESSAGE_PAGE_LIMIT = 100;

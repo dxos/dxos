@@ -1,5 +1,19 @@
 # @dxos/brain
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [278f49c]
+- Updated dependencies [bc72a37]
+- Updated dependencies [35030a7]
+- Updated dependencies [55bdf55]
+- Updated dependencies [2208806]
+  - @dxos/pipeline-rdf@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/datalog@0.15.0
+  - @dxos/errors@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

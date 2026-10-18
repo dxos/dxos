@@ -1,5 +1,11 @@
 # @dxos/web-context-solid
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/web-context@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

@@ -4,16 +4,8 @@
 
 import { type ReactNode, useMemo } from 'react';
 
-import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
-
 import { type DockSection, useDockSection } from './Dock.tsx';
 import { useSceneViewContext } from './SceneViewContext.ts';
-
-/** Where a floating inspector sits: the top right, sized to its content up to the view's height. */
-export const INSPECTOR_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)]';
-
-const FLOATING_CHROME = 'rounded-sm bg-modal-surface border border-separator';
 
 /**
  * An inspector: a panel beside the canvas (properties, layers, about) that docks as one section of the dock or floats
@@ -30,34 +22,20 @@ export type InspectorChrome = {
 };
 
 /**
- * Places an inspector's panel: docked, into its section of the dock; floating, over the canvas when `def.float` says
- * so; read-only, nowhere, as the inspectors edit the scene.
+ * Places an inspector's panel in its section of the dock, whose one scrolling column holds the inspectors whether it
+ * sits beside the canvas (docked) or floats over it. Floating, a section shows while `def.float` says so; read-only,
+ * none does, as the inspectors edit the scene.
  */
-export const useInspector = (
-  def: InspectorDef,
-  render: (chrome: InspectorChrome) => ReactNode,
-  classNames: Util.ThemedClassName<{}>['classNames'] = INSPECTOR_CLASSES,
-): ReactNode | null => {
+export const useInspector = (def: InspectorDef, render: (chrome: InspectorChrome) => ReactNode): ReactNode | null => {
   const { readonly, selection, inspectors, onInspectorsChange } = useSceneViewContext('SceneView.Inspector');
   const docked = inspectors === 'docked';
   const onDockedChange = useMemo(
     () => onInspectorsChange && ((next: boolean) => onInspectorsChange(next ? 'docked' : 'floating')),
     [onInspectorsChange],
   );
-  const panel = render({ docked, classNames: docked ? 'h-auto' : mx(FLOATING_CHROME, classNames), onDockedChange });
-  const dockedPanel = useDockSection(def, docked, panel);
-  if (docked) {
-    return dockedPanel;
-  }
-  if (readonly) {
-    return null;
-  }
-  switch (def.float) {
-    case 'selection':
-      return selection.size > 0 ? panel : null;
-    case 'empty':
-      return selection.size === 0 ? panel : null;
-    case 'never':
-      return null;
-  }
+  const floats =
+    !readonly &&
+    (def.float === 'selection' ? selection.size > 0 : def.float === 'empty' ? selection.size === 0 : false);
+  const panel = render({ docked, classNames: 'h-auto', onDockedChange });
+  return useDockSection(def, docked || floats, panel);
 };

@@ -38,10 +38,12 @@ export type ExportArgs = {
   spaceId: Option.Option<Key.SpaceId>;
   output: Option.Option<string>;
   format: Format;
+  /** Export only these feeds (`Feed` object ids); the archive is then JSON. */
+  feeds?: readonly string[];
 };
 
 /** Exports a space in the given archive format and writes it to disk. */
-export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportArgs) {
+export const handler = Effect.fn(function* ({ spaceId, output, format, feeds = [] }: ExportArgs) {
   const { json } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -64,6 +66,7 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
         Match.when('json', () => SpacesService.SpaceArchiveFormat.enums.JSON),
         Match.exhaustive,
       ),
+      ...(feeds.length > 0 ? { feedIds: feeds } : {}),
     }),
   );
   const outputPath = yield* resolveOutputPath(output, archive.filename);
@@ -99,6 +102,12 @@ export const exportSpace = Command.make(
       Options.withAlias('o'),
       Options.withDescription('Output file, or a directory to write the generated filename into.'),
       Options.optional,
+    ),
+    feeds: Options.String('feed').pipe(
+      Options.withDescription(
+        'Export only this feed (a Feed object id) and its messages, as a JSON archive. Repeat to export several.',
+      ),
+      Options.atLeast(0),
     ),
   },
   (args) => handler(args).pipe(withTimeout),

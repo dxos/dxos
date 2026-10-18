@@ -102,11 +102,10 @@ describe('instances', () => {
       center: { x: 0, y: 0 },
       size: { width: 100, height: 50 },
       composite: 'obj',
-      overrides: { a: { style: { hue: 'blue' }, opacity: 0.5 } },
+      overrides: { a: { style: { hue: 'blue', opacity: 0.5 } } },
     };
     expect(instanceScene(instance, composite).nodes.a).toMatchObject({
-      opacity: 0.5,
-      style: { hue: 'blue', rounded: true },
+      style: { hue: 'blue', rounded: true, opacity: 0.5 },
     });
   });
 });
@@ -145,12 +144,12 @@ describe('compose and ungroup', () => {
       throw new Error('no composition');
     }
     const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
-    const instance = { ...instanceOf(parent, 'i'), overrides: { a: { opacity: 0.5 } } };
+    const instance = { ...instanceOf(parent, 'i'), overrides: { a: { style: { opacity: 0.5 } } } };
     const { composite, rename } = copyComposite(composition.composite, 'obj2', counter());
     const unique = retargetInstance(instance, 'obj2', rename);
     expect(composite.id).toBe('obj2');
     expect(Object.keys(composite.nodes)).toEqual(['node-0', 'node-1']);
-    expect(unique.overrides).toEqual({ 'node-0': { opacity: 0.5 } });
+    expect(unique.overrides).toEqual({ 'node-0': { style: { opacity: 0.5 } } });
     expect(unique.ports?.map((port) => port.id)).toEqual(['node-1']);
     expect(instanceCounts({ s: { ...parent, nodes: { ...parent.nodes, j: unique } } })).toEqual({ obj: 1, obj2: 1 });
   });

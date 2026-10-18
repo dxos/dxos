@@ -68,10 +68,18 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
-          <Card.Root grid ref={forwardedRef} data-testid='board-item'>
+          <Card.Root
+            grid
+            // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
+            classNames='not-data-selected:border-separator-subtle'
+            ref={forwardedRef}
+            data-testid='board-item'
+          >
             <Card.Header ref={cardRef}>
               <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>
+                {label}
+              </Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>

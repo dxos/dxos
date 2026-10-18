@@ -121,7 +121,8 @@ export const RenameFilter = Operation.make({
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
-    mailbox: Schema.Any,
+    /** The mailbox or calendar holding the saved filter. */
+    owner: Schema.Any,
     name: Schema.String,
     caller: Schema.optional(Schema.String),
   }),

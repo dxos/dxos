@@ -124,7 +124,7 @@ export class SceneElement {
     return new SceneElement(this.id, this.elements, box, this.sceneName, this.portal);
   }
 
-  /** The scene shape's own properties (label, contents, style). */
+  /** The scene shape's own properties (label, link, style). */
   properties(values: NodeProperties<FrameNode>): SceneElement {
     return new SceneElement(this.id, this.elements, this.frame, this.sceneName, {
       ...this.portal,

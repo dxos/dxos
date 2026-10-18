@@ -21,7 +21,10 @@ export default Config2.make({
     icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'green' },
     screenshots: [
       { light: 'https://assets.composer.space/demos/2026-10-16-plugin-terra.mp4?v=6687a7c1' },
-      { light: 'https://assets.composer.space/demos/2026-10-16-plugin-terra-views.mp4?v=78678d26' },
+      {
+        light: 'https://assets.composer.space/demos/2026-10-16-plugin-terra-views-light.mp4?v=8bf5dc36',
+        dark: 'https://assets.composer.space/demos/2026-10-16-plugin-terra-views.mp4?v=e8bbc5da',
+      },
     ],
     tags: ['labs'],
   },

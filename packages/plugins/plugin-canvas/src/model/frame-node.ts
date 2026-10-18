@@ -3,7 +3,7 @@
 //
 
 //
-// The canvas's own frame: the engine's frame plus an optional `object`, a reference to any ECHO object. Unset,
+// The canvas's own frame: the engine's frame plus an optional `link.object`, a reference to any ECHO object. Unset,
 // the frame opens its child scene in this drawing. Set to a canvas drawing, it shows that drawing's root scene,
 // which the store binds alongside this one (`store.ts`); set to anything else, it shows the object's surface in
 // the chosen `role`.
@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { FrameNode, type NodeBase, type SceneId } from '@dxos/react-ui-canvas/scene';
+import { FrameNode, type NodeBase, type SceneId, frameLinkFields } from '@dxos/react-ui-canvas/scene';
 
 import { Canvas } from '#types';
 
@@ -23,10 +23,17 @@ export const FRAME_ROLES = ['card', 'section', 'article'] as const;
 export const FrameRole = Schema.Literals(FRAME_ROLES);
 export type FrameRole = Schema.Schema.Type<typeof FrameRole>;
 
-export const CanvasFrameNode = Schema.Struct({
-  ...FrameNode.fields,
+/** The engine's frame link with the object it links to first, so the Link section reads Object, then Show contents. */
+export const CanvasFrameLink = Schema.Struct({
   /** An object the frame shows instead of its own child scene. */
   object: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ title: 'Object' })),
+  ...frameLinkFields,
+}).annotate({ title: 'Link' });
+export type CanvasFrameLink = Schema.Schema.Type<typeof CanvasFrameLink>;
+
+export const CanvasFrameNode = Schema.Struct({
+  ...FrameNode.fields,
+  link: Schema.optional(CanvasFrameLink),
   /** The surface a non-drawing object is shown as; unset is a card. */
   role: Schema.optional(FrameRole.annotate({ title: 'Role' })),
 });
@@ -47,9 +54,15 @@ export const parseLinkedSceneId = (id: SceneId): { uri: string; scene: SceneId }
   return index < 0 ? undefined : { uri: id.slice(0, index), scene: id.slice(index + 1) };
 };
 
-/** The URI a frame's `object` names, whether it is a live `Ref` or its stored (encoded) form. */
+/** A frame's `link.object` as stored: a live `Ref`, its encoded form, or nothing. */
+const linkedObject = (node: NodeBase): unknown => {
+  const link: unknown = Reflect.get(node, 'link');
+  return typeof link === 'object' && link !== null ? Reflect.get(link, 'object') : undefined;
+};
+
+/** The URI a frame's `link.object` names, whether it is a live `Ref` or its stored (encoded) form. */
 export const objectUri = (node: NodeBase): URI.URI | undefined => {
-  const object: unknown = Reflect.get(node, 'object');
+  const object = linkedObject(node);
   if (Ref.isRef(object)) {
     return object.uri;
   }
@@ -61,7 +74,7 @@ export const objectUri = (node: NodeBase): URI.URI | undefined => {
 };
 
 /**
- * A frame's `object` as a `Ref` that resolves: made by `db` when given, since a ref fresh from the object picker
+ * A frame's `link.object` as a `Ref` that resolves: made by `db` when given, since a ref fresh from the object picker
  * has no resolver until the store writes it back.
  */
 export const objectRef = (node: NodeBase, db?: Database.Database): Ref.Ref<Obj.Unknown> | undefined => {
@@ -69,7 +82,7 @@ export const objectRef = (node: NodeBase, db?: Database.Database): Ref.Ref<Obj.U
   if (db && uri) {
     return db.makeRef<Obj.Unknown>(uri);
   }
-  const object: unknown = Reflect.get(node, 'object');
+  const object = linkedObject(node);
   return Ref.isRef(object) ? object : undefined;
 };
 

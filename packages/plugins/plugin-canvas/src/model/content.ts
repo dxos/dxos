@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import { type ContentMap } from '@dxos/diagram';
 import {
   BackgroundGrid,
+  CAMERA_TARGET,
   DEFAULT_LAYER,
   type FrameNode,
   Layer,
@@ -20,6 +21,7 @@ import {
   Link,
   type Node,
   NodeBase,
+  OPACITY_PATH,
   type Scene,
   type SceneId,
   SceneKind,
@@ -30,6 +32,7 @@ import {
   elementLayer,
   isFrameNode,
   sortByZ,
+  trackId,
 } from '@dxos/react-ui-canvas/headless';
 
 /**
@@ -416,6 +419,56 @@ const withLegacyLine = (link: Link): Link => {
   return Object.keys(style).length > 0 ? { ...link, style } : link;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/**
+ * A node saved before its opacity moved into its style, or a frame saved before its `object` and `contents` moved
+ * into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
+ * place.
+ */
+const withLegacyNode = (node: Node): Node => {
+  const opacity: unknown = Reflect.get(node, 'opacity');
+  const object: unknown = Reflect.get(node, 'object');
+  const contents: unknown = Reflect.get(node, 'contents');
+  Reflect.deleteProperty(node, 'opacity');
+  let style = node.style;
+  if (typeof opacity === 'number' && style?.opacity === undefined) {
+    style = { ...style, opacity };
+  }
+  // Only a frame ever carried `object` and `contents`; on another type they are a host's own fields.
+  const framed = isFrameNode(node) && (object !== undefined || contents !== undefined);
+  if (!framed) {
+    return style === node.style ? node : { ...node, style };
+  }
+  Reflect.deleteProperty(node, 'object');
+  Reflect.deleteProperty(node, 'contents');
+  const current: unknown = Reflect.get(node, 'link');
+  const link = {
+    ...(object !== undefined ? { object } : {}),
+    ...(typeof contents === 'boolean' ? { contents } : {}),
+    ...(isRecord(current) ? current : {}),
+  };
+  return Object.assign({}, node, style ? { style } : {}, { link });
+};
+
+/** A timeline saved before a node's opacity moved into its style keys `style.opacity` where it keyed `opacity`. */
+const withLegacyTimeline = (timeline: Timeline): Timeline => {
+  const legacy = Object.values(timeline.tracks).some(
+    (track) => track.property === 'opacity' && track.target !== CAMERA_TARGET,
+  );
+  if (!legacy) {
+    return timeline;
+  }
+  const tracks = Object.fromEntries(
+    Object.entries(timeline.tracks).map(([id, track]) =>
+      track.property === 'opacity' && track.target !== CAMERA_TARGET
+        ? [trackId(track.target, OPACITY_PATH), { ...track, property: OPACITY_PATH }]
+        : [id, track],
+    ),
+  );
+  return { ...timeline, tracks };
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
@@ -430,7 +483,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = clone(record.node);
+      nodes[record.scene][record.node.id] = withLegacyNode(clone(record.node));
     } else if (isLinkRecord(record) && links[record.scene]) {
       links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }
@@ -444,7 +497,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
-      ...(header.timeline ? { timeline: clone(header.timeline) } : {}),
+      ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
     };
   }
   return scenes;

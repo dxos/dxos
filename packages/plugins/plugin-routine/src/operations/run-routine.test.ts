@@ -35,6 +35,7 @@ const TestMonitor = Layer.succeed(Trigger.ManagerService, {
   triggers: Atom.make<readonly Trigger.State[]>([]),
   localDispatcherEnabled: false,
   invokeTrigger: ({ trigger }) => Effect.sync(() => void monitorInvocations.push(trigger.id)),
+  resetTrigger: () => Effect.void,
 });
 
 /**

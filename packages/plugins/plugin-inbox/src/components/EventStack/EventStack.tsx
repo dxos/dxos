@@ -83,8 +83,8 @@ export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+          <ScrollArea.Root width='regular'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}
@@ -92,7 +92,8 @@ export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
-                gap={4}
+                gap={8}
+                inset={false}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -144,7 +145,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
       />
       <Card.Body>
-        <EventDetails event={event} title={false} maxAttendees={8} />
+        <EventDetails event={event} title={false} description maxAttendees={3} />
       </Card.Body>
     </CardTile.Root>
   );

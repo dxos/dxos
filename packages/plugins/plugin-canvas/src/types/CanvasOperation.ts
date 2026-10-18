@@ -132,7 +132,7 @@ export const SetTimelineKey = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.setTimelineKey'),
     name: 'Set timeline key',
     description:
-      'Sets a keyframe on a scene timeline: a node property (center, size, opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
+      'Sets a keyframe on a scene timeline: a node property (center, size, style.opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
     icon: 'ph--diamond--regular',
   },
   input: Schema.Struct({

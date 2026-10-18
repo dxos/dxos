@@ -241,6 +241,24 @@ test QA-1: A Mermaid fence renders and re-renders after edit
       do: Right-click "QA Mermaid" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and the open plank closes
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: A diagram in a document grows as edges are typed. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: mermaid` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-mermaid enabled
+  steps:
+    - name: Add a mermaid block
+      do: In a document, insert a mermaid graph with one edge.
+      expect: the diagram renders below the block
+    - name: Grow the diagram
+      do: Add four edges one at a time.
+      expect: the diagram re-renders after each edge
 ```
 
 ---

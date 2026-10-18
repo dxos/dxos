@@ -1,5 +1,44 @@
 # @dxos/react-ui-task
 
+## 0.15.0
+
+### Patch Changes
+
+- f1e7396: Task list rows and the task detail pane repaint when a task's status, priority or estimate changes. Under the React Compiler these controls kept showing the old value until the list remounted. `Task.isAgentWorking` also accepts a task snapshot.
+- Updated dependencies [3b03db7]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [55bdf55]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/react-ui-markdown@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

@@ -12,6 +12,7 @@ export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordOperation.MaterializeDiscordTarget.pipe(Operation.lazyHandler(() => import('./materialize-target.ts'))),
   DiscordOperation.SyncDiscordChannel.pipe(Operation.lazyHandler(() => import('./sync.ts'))),
   DiscordOperation.CrawlDiscordChannels.pipe(Operation.lazyHandler(() => import('./crawl.ts'))),
+  DiscordOperation.ConfigureBackIndex.pipe(Operation.lazyHandler(() => import('./configure-back-index.ts'))),
   DiscordAdminOperation.ListManagedGuilds.pipe(Operation.lazyHandler(() => import('./admin/list-managed-guilds.ts'))),
   DiscordAdminOperation.ListBotGuilds.pipe(Operation.lazyHandler(() => import('./admin/list-bot-guilds.ts'))),
   DiscordAdminOperation.ListGuildChannels.pipe(Operation.lazyHandler(() => import('./admin/list-guild-channels.ts'))),

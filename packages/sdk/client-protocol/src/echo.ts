@@ -50,9 +50,9 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   ): Promise<Space>;
 
   /**
-   * Creates a space from the given archive.
+   * Imports an archive as a new space, or, with `into`, merges a JSON archive into that existing space.
    */
-  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
+  import(archive: SpacesService.SpaceArchive, options?: { tags?: string[]; into?: SpaceId }): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.

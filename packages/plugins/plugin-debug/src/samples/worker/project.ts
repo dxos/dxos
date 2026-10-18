@@ -21,8 +21,9 @@ const INSTRUCTIONS = `Deploy the Worker described by the task list, working the 
 setting each one's status as you finish it: the task list is how I follow this run.
 
 What the Worker does is the whole specification — one fetch handler, JSON out, a greeting and the \
-current UTC time. There is no design stage and nothing to choose. If a step starts to look like \
-architecture, it is the wrong step.
+current UTC time. The first task draws that plan as a diagram on the canvas, through the Drawing \
+skill (\`org.dxos.skill.drawing\`), and files it on this project; past that there is nothing to \
+choose. If a later step starts to look like architecture, it is the wrong step.
 
 Write the code yourself in one sandbox, driving it through the Sandbox skill \
 (\`org.dxos.skill.sandbox\`). The sandbox image ships a coding agent of its own; do not delegate to \
@@ -37,13 +38,13 @@ This project needs no Cloudflare login and no API keys. If a step seems to need 
 wrong step.`;
 
 /**
- * The work-stream. It adopts the task set the tasks phase built (`Project.make` would otherwise
+ * The work-stream. It adopts the task set the tasks partial built (`Project.make` would otherwise
  * create its own empty one), and starts with no artifacts: the URL and the response are what the
  * run produces, and seeding either would name something that does not exist.
  */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   // Neither `Outline.Outline` nor `Text.Text` is created here directly: `Project.make` builds an
-  // outline for the project, and the instructions' prose is stored as a Text. A phase has to declare
+  // outline for the project, and the instructions' prose is stored as a Text. A partial has to declare
   // every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline, Text.Text],
   run: ({ tasks }: ProjectInput) =>

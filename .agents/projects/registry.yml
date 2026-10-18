@@ -6,16 +6,26 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: autocue-ui
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-16
+    summary: 'Factor the on-screen UI of autocue (frame/title band, captions, action feed, cursor) into a private tools/autocue package: each piece a plain-DOM core the skill injects into recorded pages, plus a React wrapper with a storybook. the DXOS ident (formerly tools/ident) lives in it too, in src/ident.'
+    tasks: .agents/projects/autocue-ui/TASKS.md
+    design: .agents/projects/autocue-ui/DESIGN.md
+    prs: [14028]
+    resume: 'Draft PR #14028. Phase 1: Frame (title band + content slot + caption band) built in tools/autocue; driver captions use it. NEXT: feed/cursor, stage.html, compose.mjs bands.'
   - name: showcase
     status: active
     user: burdon
     host: Mac
     created: 2026-10-15
-    summary: 'Composer showcase video: GridZoom story tours three autocue demos at full frame, slides between them, and zooms out to a 6x6 grid of plugin clips, rendered frame by frame at 60 fps; plus the plugin autocue flows (Terra, Chess, Spacetime) and the Terra fixes they surfaced.'
+    summary: 'Composer showcase video: Grid story tours three autocue demos at full frame, slides between them, and zooms out to a 6x6 grid of plugin clips, rendered frame by frame at 60 fps; plus the plugin autocue flows (Terra, Chess, Spacetime) and the Terra fixes they surfaced.'
     tasks: .agents/projects/showcase/TASKS.md
     design: .agents/projects/showcase/DESIGN.md
-    prs: [14026, 14027]
-    resume: '#14026 merged; follow-up #14027 (Terra light mode + telemetry list, Spacetime empty-scene fix, Terra/Spacetime flows). NEXT: upload the Terra-views and Spacetime videos (1Password approval timed out) and link them; open issues in TASKS.md phase 3.'
+    prs: [14026, 14027, 14029]
+    resume: 'Overnight run recorded 48/52 and rendered the composite; publish failed on masked keys. NEXT: re-cache keys with op run --no-masking, run publish.mjs --run temp/showcase/overnight, commit dx.config.ts; then real gestures for the 8 static clips.'
   - name: canvas-animation
     status: active
     user: burdon
@@ -826,8 +836,8 @@ projects:
     host: burdon-mbp-2141
     created: 2026-09-28
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
-    tasks: packages/ui/react-ui/src/next/TASKS.md
-    design: packages/ui/react-ui/src/next/DESIGN.md
+    tasks: packages/ui/react-ui/docs/TASKS.md
+    design: packages/ui/react-ui/docs/DESIGN.md
     prs: [13502, 13504, 13512]
     resume: '#13512 OPEN: Phase 4 steps 0-4 (Field follow-ups, Next.Panel, popup size inheritance, Next.Listbox, DragHandle/DropIndicator/DragPreview) + AUDIT.md §6 decision points. NEXT: react-ui-list/next (Listbox, OrderedList) with plugin-registry pilot; then answer AUDIT §6 open points and start react-ui-form/next core.'
 

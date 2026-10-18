@@ -157,7 +157,7 @@ export default Capability.makeModule(
           ? {
               actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
               actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
-              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry, {}),
             }
           : {}),
       };

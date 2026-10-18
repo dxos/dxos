@@ -181,6 +181,13 @@ const surfaces: [surface: string, foreground: string, label: string][] = [
   ['bg-scrim-surface',   'text-fg',     'scrim'],
 ];
 
+// OKLCH lightness when the computed colour carries it (every theme token does), so near-equal tones still sort exactly;
+// any other colour falls back to its canvas luminance.
+const colorLightness = (css: string): number => {
+  const match = /^oklch\(([\d.]+)/.exec(css);
+  return match ? Number(match[1]) : colorLuminance(css);
+};
+
 // Resolve any CSS color (oklch, light-dark(), rgb, ...) to a 0-1 luminance via a 1x1 canvas.
 const colorLuminance = (css: string): number => {
   const canvas = document.createElement('canvas');
@@ -199,17 +206,16 @@ const colorLuminance = (css: string): number => {
 export const Surfaces = {
   render: () => {
     const rowRefs = useRef(new Map<string, HTMLDivElement>());
-    const [order, setOrder] = useState(surfaces);
+    const [order, setOrder] = useState(surfaces.map((row) => ({ row, lightness: 0 })));
     useLayoutEffect(() => {
-      // Sort lightest -> darkest by the resolved background; re-runs when the theme toggles.
+      // Sort lightest -> darkest (least to most intense in light mode) by the resolved background; re-runs when the theme toggles.
       const sort = () => {
         const ranked = surfaces
           .map((row) => {
             const element = rowRefs.current.get(row[2]);
-            return { row, luminance: element ? colorLuminance(getComputedStyle(element).backgroundColor) : 0 };
+            return { row, lightness: element ? colorLightness(getComputedStyle(element).backgroundColor) : 0 };
           })
-          .sort((a, b) => b.luminance - a.luminance)
-          .map(({ row }) => row);
+          .sort((a, b) => b.lightness - a.lightness);
         setOrder(ranked);
       };
       sort();
@@ -224,7 +230,7 @@ export const Surfaces = {
     return (
       <div className='dx-cover overflow-auto bg-white dark:bg-black'>
         <div className='flex flex-col'>
-          {order.map(([surface, foreground, label]) => (
+          {order.map(({ row: [surface, foreground, label], lightness }) => (
             <div
               key={label}
               ref={(element) => {
@@ -236,7 +242,7 @@ export const Surfaces = {
             >
               <span className='text-sm'>{label}</span>
               <span className='text-xs opacity-60'>
-                {surface} · {foreground}
+                L {lightness.toFixed(3)} · {surface} · {foreground}
               </span>
             </div>
           ))}

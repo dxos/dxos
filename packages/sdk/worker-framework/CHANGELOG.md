@@ -1,5 +1,19 @@
 # @dxos/worker-framework
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [1e9c017]
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/log@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
