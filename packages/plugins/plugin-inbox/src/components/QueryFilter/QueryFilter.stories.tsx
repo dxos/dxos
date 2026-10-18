@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -72,7 +73,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...queryTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -101,6 +102,16 @@ export const Test: Story = {
     }
 
     await userEvent.click(editor);
+
+    // Focused and empty, the editor shows only the filter's own placeholder — not the trigger hint too.
+    // The hint is a delayed placeholder (3s after focus), so wait past its delay before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 3_500));
+    await waitFor(() =>
+      expect(
+        Array.from(canvasElement.querySelectorAll('.cm-placeholder'), (element) => element.textContent).join(''),
+      ).toBe('Enter text to filter, or a query (e.g., "#tag")'),
+    );
+
     await userEvent.type(editor, '#important');
 
     // Typing in the editor round-trips through `onChange` into the story's own `value` state, proved

@@ -50,6 +50,8 @@ export const QueryFilter = ({
         value={value}
         onChange={onChange}
         onFilterChange={({ filter }) => onFilterChange(filter)}
+        // The editor's own placeholder already names `#`; the trigger hint would render run into it.
+        commandHint={false}
         ref={editorRef}
       />
       <Button.Root
