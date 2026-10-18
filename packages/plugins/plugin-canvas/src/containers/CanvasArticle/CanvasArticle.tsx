@@ -98,7 +98,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const {
     camera: savedCamera,
     readonly: viewReadonly,
-    floating = false,
+    floating = true,
     grid: snap,
     guides,
     fit,

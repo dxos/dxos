@@ -343,11 +343,11 @@ export const Lattice: Story = {
 };
 
 /**
- * The inspectors dock by default: one accordion section each beside the canvas; a section collapses to its header, and
- * the dock's close button floats the same column over the canvas.
+ * Docked inspectors: one accordion section each beside the canvas; a section collapses to its header, and the dock's
+ * close button floats the same column over the canvas.
  */
 export const Docked: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // 1. The dock holds the properties and layers sections, both open.
@@ -368,7 +368,7 @@ export const Docked: Story = {
   },
 };
 
-/** Floating inspectors: the dock's column over the canvas, the layers until something is selected; their menu docks them. */
+/** Floating inspectors (the default): the dock's column over the canvas, the layers until something is selected; their menu docks them. */
 export const Floating: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
