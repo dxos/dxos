@@ -35,25 +35,25 @@ let storySpace: Space | undefined;
 
 const decorators = createDecorators({
   lazyPlugins: async () => {
-    const [{ Drawing }, IllustratorPlugin, { Tldraw }, TldrawPlugin] = await Promise.all([
+    const [{ Drawing }, IllustratorPlugin, CanvasPlugin] = await Promise.all([
       import('@dxos/plugin-illustrator'),
       import('@dxos/plugin-illustrator/IllustratorPlugin'),
-      import('@dxos/plugin-tldraw'),
-      import('@dxos/plugin-tldraw/TldrawPlugin'),
+      import('@dxos/plugin-canvas/CanvasPlugin'),
     ]);
     return {
-      plugins: [IllustratorPlugin.make(), TldrawPlugin.make()],
+      plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
       types: [Drawing.Drawing, Drawing.Canvas],
     };
   },
   onInit: async ({ space }) => {
     storySpace = space;
-    const [{ Drawing }, { Tldraw }] = await Promise.all([
+    const [{ Drawing }, { Canvas }] = await Promise.all([
       import('@dxos/plugin-illustrator'),
-      import('@dxos/plugin-tldraw'),
+      import('@dxos/plugin-canvas'),
     ]);
+    // Empty content: the canvas variant seeds its root scene on first bind or first edit.
     const drawing = space.db.add(
-      Drawing.make({ name: 'Drawing', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
+      Drawing.make({ name: 'Drawing', canvas: Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA }) }),
     );
     addToRootCollection(space, [drawing]);
     return [[StoryRole.Chat], [Cell.article(drawing)], [AppSurface.deckCompanion('trace')]];
@@ -66,7 +66,7 @@ const decorators = createDecorators({
   skills: [AssistantSkill.key, DrawingSkill.key],
 });
 
-/** Count canvas shape records belonging to a world object (`meta.object`), or all managed shapes. */
+/** Count canvas node and link records belonging to a world object (`dsl.object`), or all managed records. */
 const countObjectRecords = async (objectId?: string): Promise<number> => {
   if (!storySpace) {
     return 0;
@@ -78,13 +78,15 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
     return (
       count +
       records.filter(
-        (record) => record?.typeName === 'shape' && (objectId ? record.meta?.object === objectId : record.meta?.object),
+        (record) =>
+          (record?.kind === 'node' || record?.kind === 'link') &&
+          (objectId ? record.dsl?.object === objectId : record.dsl?.object),
       ).length
     );
   }, 0);
 };
 
-/** Poll until the canvas contains at least `min` shape records for the given world object. */
+/** Poll until the canvas contains at least `min` element records for the given world object. */
 const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeout = 240_000): Promise<number> => {
   const deadline = Date.now() + timeout;
   let count = 0;
@@ -100,8 +102,9 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
 
 /**
  * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
- * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
- * "Add a hat", then "Make the smile bigger".
+ * through the scene DSL (read/edit operations by object id). The canvas renders boxes, ellipses,
+ * text and bound arrows only — lines, curves and arcs are dropped. Try: "Draw a web server talking
+ * to a database", then "Add a cache between them", then "Make the database green".
  */
 export const Default: Story = {
   decorators,
@@ -118,13 +121,14 @@ export const Reflection: Story = {
     // Single line: typed newlines insert literal line breaks in the prompt editor.
     const prompt = trim`
       Draw how I feel about this project. I spent tonight building the drawing language you
-      are using right now, so draw: a long winding path (a dotted curve) from three small
-      labeled boxes — "PIC", "D2", "SVG" — arriving at a small bright machine; above it a
-      face mid-thought with one raised eyebrow and half a smile, because the best moment of
-      the night was realizing the reader has to derive origins from bounding boxes or the
-      model's memory breaks the instant a human drags a shape; and an arrow looping from the
-      machine back to the face labeled "it draws". Warm colors. Compose it from a few world
-      objects and take your time with the layout.
+      are using right now, so draw: three small labeled boxes — "PIC", "D2", "SVG" — each
+      joined by an arrow to a small bright "machine" box; above it a face mid-thought built
+      from ellipses (two eyes, one larger than the other), because the best moment of the
+      night was realizing the reader has to derive origins from bounding boxes or the model's
+      memory breaks the instant a human drags a shape; and an
+      arrow from the machine back to the face labeled "it draws". Warm colors. This canvas
+      draws boxes, ellipses, text and arrows bound to elements only — no lines, curves or
+      arcs. Compose it from a few world objects and take your time with the layout.
     `.replace(/\s*\n\s*/g, ' ');
     await submitPrompt(canvasElement, prompt);
     // The model chooses its own object ids for a creative prompt; any managed object counts.
@@ -134,7 +138,7 @@ export const Reflection: Story = {
 
 /**
  * End-to-end mental-model test: the agent draws a face, then — from its own read of the scene,
- * not the tldraw records — adds a hat WITHOUT redrawing the face. Asserts that the face's shape
+ * not the canvas records — adds a hat WITHOUT redrawing the face. Asserts that the face's shape
  * records survive the second edit (an agent that rebuilt the canvas would replace them).
  *
  * Live AI and slow, so excluded from CI test runs (`tags: ['!test']`); run manually in storybook
@@ -144,7 +148,10 @@ export const DrawAndUpdateTest: Story = {
   decorators,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
-    await submitPrompt(canvasElement, 'Draw a simple smiley face as a world object with id "face".');
+    await submitPrompt(
+      canvasElement,
+      'Draw a simple face as a world object with id "face", using only ellipses and text.',
+    );
     const faceShapes = await waitForObjectRecords('face', 3);
 
     await submitPrompt(canvasElement, 'Now add a hat (object id "hat") on top of the face. Do not redraw the face.');
