@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type SceneId } from '../../../model/index.ts';
-import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
-import { type ObjectEntry, ObjectsInspector } from './Objects.tsx';
+import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { type ObjectEntry, ObjectsInspector } from './ObjectsInspector.tsx';
 
 /** Three composites, one not yet placed anywhere. */
 const OBJECTS: ObjectEntry[] = [
@@ -59,7 +59,7 @@ const DefaultStory = () => {
  * 2. The toolbar groups a new object, and its menu places, duplicates and deletes the selected one.
  */
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/components/panels/Objects',
+  title: 'ui/react-ui-canvas/components/inspectors/ObjectsInspector',
   render: DefaultStory,
   decorators: [
     withInspectorFrame({ id: 'objects', title: 'Objects', icon: 'ph--cube--regular', order: 0, show: 'never' }),

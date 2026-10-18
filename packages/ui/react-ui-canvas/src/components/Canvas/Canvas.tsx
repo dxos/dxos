@@ -154,12 +154,12 @@ import {
 } from '../Background/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
+import { AboutInspector, type AboutStat } from '../inspectors/AboutInspector/index.ts';
+import { LayersInspector } from '../inspectors/LayersInspector/index.ts';
+import { ObjectsInspector } from '../inspectors/ObjectsInspector/index.ts';
+import { PropertiesInspector, type PropertiesInspectorProps } from '../inspectors/PropertiesInspector/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { AboutInspector, type AboutStat } from '../panels/AboutInspector/index.ts';
 import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/InspectorPanel/index.ts';
-import { LayersInspector } from '../panels/Layers/index.ts';
-import { ObjectsInspector } from '../panels/Objects/index.ts';
-import { PropertiesInspector, type PropertiesInspectorProps } from '../panels/Properties/index.ts';
 import { ThemePanel } from '../panels/Theme/index.ts';
 import { TimelinePanel } from '../panels/Timeline/index.ts';
 import { ToolsPanel } from '../panels/Tools/index.ts';

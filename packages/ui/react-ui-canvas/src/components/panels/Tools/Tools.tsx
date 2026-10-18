@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } from '../../../model/index.ts';
 import { FLOATING_PANEL, nodeDragData } from '../../../utils/index.ts';
-import { type PanelProps } from '../types.ts';
+import { type PanelProps } from '../index.ts';
 
 type Entry = { tool: Tool; icon: string; label: string; key?: string };
 

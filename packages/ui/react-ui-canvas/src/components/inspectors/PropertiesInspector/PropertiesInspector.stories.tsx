@@ -18,8 +18,8 @@ import { createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
 import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { InspectorFrame } from '../InspectorPanel/testing.tsx';
-import { PropertiesInspector } from './Properties.tsx';
+import { InspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { PropertiesInspector } from './PropertiesInspector.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 
@@ -86,7 +86,7 @@ const PROPERTIES = {
 } as const;
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/components/panels/Properties',
+  title: 'ui/react-ui-canvas/components/inspectors/PropertiesInspector',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'column', classNames: 'w-[50rem]' })],
   args: { select: ['a'] },

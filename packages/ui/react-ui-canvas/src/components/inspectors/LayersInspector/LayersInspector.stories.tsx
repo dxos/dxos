@@ -12,8 +12,8 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type Layer, type LayerId } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { withInspectorFrame } from '../InspectorPanel/testing.tsx';
-import { LayersInspector } from './Layers.tsx';
+import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { LayersInspector } from './LayersInspector.tsx';
 
 /** Three layers, bottom first, the middle one hidden. */
 const LAYERS: Layer[] = (() => {
@@ -67,7 +67,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/components/panels/Layers',
+  title: 'ui/react-ui-canvas/components/inspectors/LayersInspector',
   render: DefaultStory,
   decorators: [
     withInspectorFrame({ id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 0, show: 'empty' }),

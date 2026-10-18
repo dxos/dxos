@@ -13,4 +13,5 @@ export * from './PartEditor/index.ts';
 export * from './SceneLayer/index.ts';
 export * from './StyleGrid/index.ts';
 export * from './Toolbar/index.ts';
+export * from './inspectors/index.ts';
 export * from './panels/index.ts';

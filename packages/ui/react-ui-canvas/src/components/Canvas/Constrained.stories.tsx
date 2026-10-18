@@ -18,7 +18,7 @@ import {
 } from '../../engine/index.ts';
 import { useSceneProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
-import { PropertiesInspector } from '../panels/Properties/index.ts';
+import { PropertiesInspector } from '../inspectors/PropertiesInspector/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 

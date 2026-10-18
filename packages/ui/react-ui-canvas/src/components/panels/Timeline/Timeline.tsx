@@ -8,7 +8,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { type PanelProps } from '../types.ts';
+import { type PanelProps } from '../index.ts';
 
 export type TimelinePanelProps = PanelProps & {
   /** Seconds. */

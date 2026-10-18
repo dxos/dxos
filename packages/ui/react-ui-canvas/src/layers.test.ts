@@ -28,13 +28,13 @@ const sources = (dir: string): string[] =>
 
 const layerOf = (path: string): number => LAYERS.indexOf(relative(SRC, path).split('/')[0] as (typeof LAYERS)[number]);
 
-/** The unit a module belongs to: a layer, or one component's (or panel's) folder within the components layer. */
+/** The unit a module belongs to: a layer, or one component's (or panel's, or inspector's) folder within the components layer. */
 const unitOf = (path: string): string => {
   const [top, next, panel] = relative(SRC, path).split('/');
   if (top !== 'components') {
     return top;
   }
-  return next === 'panels' ? `${top}/${next}/${panel}` : `${top}/${next}`;
+  return next === 'panels' || next === 'inspectors' ? `${top}/${next}/${panel}` : `${top}/${next}`;
 };
 
 type Edge = { from: string; to: string; names: string[] };

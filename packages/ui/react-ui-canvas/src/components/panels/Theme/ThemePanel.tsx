@@ -23,7 +23,7 @@ import {
   styleVariant,
 } from '../../../model/index.ts';
 import { BACKGROUND_FILLS, FLOATING_PANEL, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
-import { type PanelProps } from '../types.ts';
+import { type PanelProps } from '../index.ts';
 
 /** The canvas colour behind a swatch in its theme's mode. */
 const SWATCH_CANVAS: Record<LookTone, string> = {
