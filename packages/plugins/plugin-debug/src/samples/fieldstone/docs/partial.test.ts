@@ -9,6 +9,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { addressFromA1Notation } from '@dxos/compute-hyperformula/types';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
 import * as Team from '../team/index.ts';
@@ -16,7 +17,13 @@ import { REFERENCE } from '../util.ts';
 import { Partial } from './partial.ts';
 import { type SheetKey } from './sheets.ts';
 
-type ArchiveObject = { 'id': string; '@type': string; 'content'?: string | { '/': string } };
+type ArchiveObject = {
+  'id': string;
+  '@type': string;
+  'content'?: string | { '/': string };
+  'canvas'?: { '/': string };
+  'schema'?: string;
+};
 
 const LINK = /(!?)\[[^\]]*\]\(echo:\/\/\/([0-9A-Z]+)\)/g;
 
@@ -32,19 +39,19 @@ const cellsIn = (range: string): string[] => {
 
 const DERIVED: ReadonlyArray<[SheetKey, string[]]> = [
   ['pricing', ['F2:F5']],
-  ['vendorSpend', ['N2:N5', 'B6:N6']],
+  ['vendorSpend', ['N2:N4', 'B5:N5']],
   ['cloudCost', ['D2:D8', 'B3:C8', 'B9:D9']],
   ['incidentTimeline', ['E2:E21', 'E23']],
   ['hiring', ['E2:E6']],
 ];
 
-describe('Fieldstone docs', () => {
+describe('Alien Labs docs', () => {
   test(
     'builds linked documents, sheets and drawings without the optional partials',
     { timeout: 120_000 },
     async ({ expect }) => {
       const definition = SampleSpace.make({
-        space: { name: 'Fieldstone docs' },
+        space: { name: 'Alien Labs docs' },
         reference: REFERENCE,
         partials: { team: Team.Partial, docs: Partial },
         build: (partials) =>
@@ -68,6 +75,10 @@ describe('Fieldstone docs', () => {
       expect(count(typeOf(docs.handbook.id))).toBe(11);
       expect(count(typeOf(sheets.pricing.id))).toBe(5);
       expect(count(typeOf(drawings.orgChart.id))).toBe(5);
+      for (const drawing of Object.values(drawings)) {
+        const canvas = objects.get(drawing.id)?.canvas?.['/'].replace('echo:///', '');
+        expect(canvas && objects.get(canvas)?.schema).toBe(Canvas.SCENE_SCHEMA);
+      }
 
       const references = Object.values(docs).map((doc) => {
         const text = objects.get(doc.id)?.content;

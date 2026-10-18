@@ -13,7 +13,7 @@ group router "router" {
   node SwarmDO "SwarmObject" ref="edge/packages/services/router/src/worker/swarm/swarm.ts"
   node Inbox "Inbox" ref="edge/packages/services/router/src/worker/inbox/inbox.ts"
 }
-group ext "Services" {
+group ext "Services" color=light-violet {
   node Services "db / hub / kms ..." ref="edge/packages/services"
 }
 edge Api -> RouterApi "mount /"

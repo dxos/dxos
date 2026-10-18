@@ -13,7 +13,7 @@ group consumers "Consumers" {
   node AppGraph "App Graph" ref="packages/sdk/app-graph/src/AppGraph.ts"
   node Toolkit "App Toolkit" ref="packages/sdk/app-toolkit/src/app-framework"
 }
-group shell "Shell plugins" {
+group shell "Shell plugins" color=light-violet {
   node Deck "Deck" ref="packages/plugins/plugin-deck"
   node Navtree "NavTree" ref="packages/plugins/plugin-navtree"
 }

@@ -13,6 +13,7 @@ import {
   deleteStyleClass,
   hasLegacyRoot,
   hasUnplacedLayers,
+  isNodeRecord,
   migrateContent,
   migrateLayers,
   readScenes,
@@ -34,9 +35,9 @@ describe('content', () => {
     const timeline = {
       duration: 3,
       tracks: {
-        'a:opacity': {
+        'a:style.opacity': {
           target: 'a',
-          property: 'opacity',
+          property: 'style.opacity',
           keys: [
             { t: 0, value: 0 },
             { t: 1, value: 1 },
@@ -59,6 +60,53 @@ describe('content', () => {
     const content: ContentMap = {};
     expect(seedContent(content)).toBe('root');
     expect(Object.keys(content).sort()).toEqual(['canvas', 'scene:root']);
+  });
+
+  test('a node saved with a top-level opacity, and a frame with its link fields, read in the current shape', ({
+    expect,
+  }) => {
+    const object = { '/': 'dxn:echo:@:01J00000000000000000000000' };
+    const content: ContentMap = {
+      'canvas': { kind: 'canvas', root: 'root' },
+      'scene:root': {
+        kind: 'scene',
+        id: 'root',
+        timeline: {
+          duration: 1,
+          tracks: { 'a:opacity': { target: 'a', property: 'opacity', keys: [{ t: 0, value: 0 }] } },
+        },
+      },
+      'scene:f': { kind: 'scene', id: 'f' },
+      'node:a': {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'a', type: 'rect', ...box, opacity: 0.5, style: { hue: 'red' } },
+      },
+      'node:f': {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'f', type: 'frame', scene: 'f', ...box, opacity: 0.25, contents: true, object },
+      },
+    };
+    const scenes = readScenes(content);
+    expect(scenes.root.nodes.a).toEqual({ id: 'a', type: 'rect', ...box, style: { hue: 'red', opacity: 0.5 } });
+    expect(scenes.root.nodes.f).toEqual({
+      id: 'f',
+      type: 'frame',
+      scene: 'f',
+      ...box,
+      style: { opacity: 0.25 },
+      link: { object, contents: true },
+    });
+    expect(scenes.root.timeline?.tracks).toEqual({
+      'a:style.opacity': { target: 'a', property: 'style.opacity', keys: [{ t: 0, value: 0 }] },
+    });
+
+    // The next write stores the current shape.
+    expect(writeScenes(content, scenes)).toBe(true);
+    const record = content['node:f'];
+    expect(isNodeRecord(record) && record.node).toMatchObject({ link: { object, contents: true } });
+    expect(isNodeRecord(record) ? Reflect.has(record.node, 'contents') : true).toBe(false);
   });
 
   test('a canvas saved with the legacy root id is renamed in place', ({ expect }) => {

@@ -10,7 +10,7 @@ group objects "Durable Objects" {
   node Mailbox "MailboxObject" ref="edge/packages/services/hub-service/src/mailbox/mailbox-object.ts"
   node Metering "UserMetering" ref="edge/packages/services/hub-service/src/entrypoint/hub-metering.ts"
 }
-group bindings "Bindings" {
+group bindings "Bindings" color=light-violet {
   node Stores "D1 + SESSION_KV" ref="edge/packages/services/hub-service/wrangler.jsonc"
   node DbService "db-service" ref="edge/packages/services/db-service"
 }

@@ -24,7 +24,7 @@ const partials = {
   architecture: Architecture.Partial,
 };
 
-/** Fieldstone Labs: a software team that runs on agents, with Cairn's architecture diagrams alongside. */
+/** Alien Labs: a software team that runs on agents, with Cairn's architecture diagrams alongside. */
 export type Result = {
   readonly team: Team.Provides;
   readonly inboxCrm: InboxCrm.Provides;
@@ -35,7 +35,7 @@ export type Result = {
 
 export const make = (): SampleSpace.Definition<typeof partials, Result> =>
   SampleSpace.make({
-    space: { name: 'Fieldstone Labs', icon: 'users-three', hue: 'teal' },
+    space: { name: 'Alien Labs', icon: 'users-three', hue: 'teal' },
     reference: REFERENCE,
     partials,
     build: (partials) =>

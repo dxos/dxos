@@ -10,6 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
 import { canvasRecordOf } from '#model';
 
@@ -45,8 +46,17 @@ describe('ArchitectureSpace', () => {
       'Composer',
       'DXOS',
       'EDGE',
-      'Composer',
-      'EDGE',
+      'Overview',
+      'CF Workers',
+      'Plugin metrics',
+    ]);
+
+    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
+    const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
+    expect(metrics?.rows).toHaveLength(21);
+    expect(metrics?.columns).toHaveLength(5);
+    expect(metrics?.charts).toEqual([
+      expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
     ]);
 
     // The root document links the other two by id and embeds the Composer drawing.
@@ -54,7 +64,7 @@ describe('ArchitectureSpace', () => {
     const byName = (name: string) => docs.find((doc) => doc.name === name);
     const [composer, dxos, edge] = ['Composer', 'DXOS', 'EDGE'].map(byName);
     const content = (await composer?.content.load())?.content ?? '';
-    const composerDrawing = drawings.find((drawing) => drawing.name === 'Composer');
+    const composerDrawing = drawings.find((drawing) => drawing.name === 'Overview');
     expect(content).toContain(`React UI, on the [DXOS](echo:///${dxos?.id}) SDK`);
 
     // Every paragraph is one line: a line break inside one renders as a break in the editor. Fenced code (the sequence

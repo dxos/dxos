@@ -324,7 +324,7 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
           data-testid={testId}
           ref={forwardedRef}
         >
-          <ScrollArea.Viewport ref={viewportRef}>
+          <ScrollArea.Viewport classNames='px-2' ref={viewportRef}>
             <Mosaic.Stack
               Tile={ConversationMessageTile}
               classNames='dx-document gap-2 py-2'
@@ -362,7 +362,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
   const { id, message } = data;
   return (
     <Mosaic.Tile {...tileProps} data={data} asChild>
-      <Card.Root grid classNames='dx-attention-surface overflow-hidden'>
+      <Card.Root grid border={false} classNames='dx-attention-surface overflow-hidden rounded-md'>
         {DraftMessage.instanceOf(message) ? (
           // The composer isn't rail-aligned; it spans the whole tile.
           <div className='col-span-full'>
@@ -410,9 +410,10 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
     // The same rail card as a message tile, so the heading and text line up with the senders and bodies above.
     <Card.Root
       grid
+      border={false}
       role='complementary'
       aria-label={t('conversation-summary.title')}
-      classNames='dx-document dx-attention-surface overflow-hidden mt-2'
+      classNames='dx-document dx-attention-surface overflow-hidden rounded-md mt-2'
       data-testid='conversation.summary'
     >
       <Card.Row icon='ph--text-align-left--regular'>
@@ -567,7 +568,11 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           <h2 className='text-lg min-w-0'>
             {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
             <Collapsible.Trigger
-              classNames='text-lg flex-row-reverse justify-end'
+              // A conversation of one has nothing to fold, so it shows no caret.
+              classNames={mx(
+                'text-lg flex-row-reverse justify-end',
+                !onExpandedChange && '[&>[data-part=indicator]]:hidden',
+              )}
               data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
             >
               <span className='line-clamp-2'>{sender}</span>

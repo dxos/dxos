@@ -329,6 +329,24 @@ test QA-2: Build a typed table and sort it
     - name: Sort by rating
       do: Open the Rating column's menu and choose Sort Descending.
       expect: the rows reorder to Neuromancer, Foundation, Dune, Snow Crash, and the header shows a sort icon
+
+test QA-3: Showcase clip
+  desc: |
+    The 10s showcase clip: Open a new table. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: table` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-table enabled
+  steps:
+    - name: Create the object
+      do: Create a table object from the + menu.
+      expect: it opens in the plank
+    - name: Work in it
+      do: Click across it as the clip gesture does.
+      expect: the object responds to each click
 ```
 
 ## Appendix: Extension Definitions

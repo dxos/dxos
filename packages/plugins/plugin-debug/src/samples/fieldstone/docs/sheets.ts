@@ -49,12 +49,11 @@ const makePricing = () =>
     ]),
   });
 
-// R2 took over hot-blob serving three months before the reference date, which is where AWS dips.
+// R2 took over hot-blob serving three months before the reference date, which is where the Cloudflare line flattens.
 const VENDOR_SPEND = [
   ['GitHub', 410, 410, 430, 430, 450, 450, 450, 470, 470, 490, 490, 510],
   ['Stripe', 290, 310, 330, 360, 380, 410, 450, 480, 520, 560, 610, 650],
-  ['AWS', 9800, 10100, 10400, 10900, 11300, 11800, 12400, 12900, 11600, 11900, 12300, 12700],
-  ['Cloudflare', 600, 600, 620, 640, 650, 680, 700, 720, 1900, 2100, 2300, 2500],
+  ['Cloudflare', 10400, 10700, 11020, 11540, 11950, 12480, 13100, 13620, 13500, 14000, 14600, 15200],
 ] as const;
 
 const makeVendorSpend = (now: Date) => {
@@ -66,12 +65,12 @@ const makeVendorSpend = (now: Date) => {
   ]);
   const totalRow = [
     'Total',
-    ...Array.from({ length: 13 }, (_, index) => `=SUM(${COLUMNS[index + 1]}2:${COLUMNS[index + 1]}5)`),
+    ...Array.from({ length: 13 }, (_, index) => `=SUM(${COLUMNS[index + 1]}2:${COLUMNS[index + 1]}4)`),
   ];
 
   return Sheet.make({
     name: 'Vendor spend, last 12 months',
-    rows: 6,
+    rows: 5,
     columns: 14,
     cells: table([['Vendor', ...months, 'Total'], ...vendorRows, totalRow]),
   });
@@ -84,7 +83,7 @@ const makeCloudCost = (now: Date) =>
     columns: 7,
     cells: {
       ...table([
-        ['Month', 'AWS', 'Cloudflare', 'Total'],
+        ['Month', 'Compute and S3', 'Workers and R2', 'Total'],
         [`${monthLabel(now, 0)} (actual)`, 12700, 2500, '=B2+C2'],
         ...Array.from({ length: 6 }, (_, index) => {
           const row = index + 3;
@@ -93,9 +92,9 @@ const makeCloudCost = (now: Date) =>
         ['Next 6 months', '=SUM(B3:B8)', '=SUM(C3:C8)', '=SUM(D3:D8)'],
       ]),
       F1: { value: 'Growth / month' },
-      F2: { value: 'AWS' },
+      F2: { value: 'Compute and S3' },
       G2: { value: 0.03 },
-      F3: { value: 'Cloudflare' },
+      F3: { value: 'Workers and R2' },
       G3: { value: 0.08 },
     },
   });

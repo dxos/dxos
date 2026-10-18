@@ -13,6 +13,7 @@ import {
   DEFAULT_THEMES,
   FLAT_THEME,
   GLASS_STYLE_SET,
+  OUTLINE_STYLE_SET,
   PAPER_BACKGROUND,
   PLAIN_BACKGROUND,
   StyleSet,
@@ -80,8 +81,11 @@ describe('themes', () => {
     expect(styleVariant(CLASSIC_STYLE_SET, undefined).id).toBe('medium');
     expect(styleVariant(CLASSIC_STYLE_SET, 0).id).toBe('outline');
     expect(styleVariant(GLASS_STYLE_SET, undefined).id).toBe('frost');
-    // Past the set's last variant, the last.
+    expect(styleVariant(DEFAULT_STYLE_SETS.flat, undefined).id).toBe('muted');
+    expect(styleVariant(DEFAULT_STYLE_SETS.flat, 0).id).toBe('clear');
     expect(styleVariant(DEFAULT_STYLE_SETS.flat, 3).id).toBe('solid');
+    // Past the set's last variant, the last.
+    expect(styleVariant(OUTLINE_STYLE_SET, 3).id).toBe('dashed');
   });
 
   test("a host's themes extend the built-ins and override one of the same id", ({ expect }) => {

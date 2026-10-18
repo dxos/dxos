@@ -10,7 +10,7 @@ group caps "Capabilities" {
   node Settings "settings" ref="packages/plugins/plugin-canvas/src/capabilities/settings.ts"
   node OpHandler "operation-handler" ref="packages/plugins/plugin-chess/src/capabilities/operation-handler.ts"
 }
-group code "Code" {
+group code "Code" color=light-violet {
   node Ops "Operations" ref="packages/plugins/plugin-chess/src/operations"
   node Containers "Containers" ref="packages/plugins/plugin-canvas/src/containers"
   node Model "Model" ref="packages/plugins/plugin-canvas/src/model"

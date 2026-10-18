@@ -13,7 +13,7 @@ group services "RPC services" {
   node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts"
   node Planner "QueryPlanner" ref="packages/core/echo/echo-host/src/query/query-planner.ts"
 }
-group automerge "Automerge" {
+group automerge "Automerge" color=light-violet {
   node AmHost "AutomergeHost" ref="packages/core/echo/echo-host/src/automerge/automerge-host.ts"
   node CollSync "CollectionSync" ref="packages/core/echo/echo-host/src/automerge/collection-synchronizer.ts"
   node Network "NetworkAdapter" ref="packages/core/echo/echo-host/src/automerge/echo-network-adapter.ts"

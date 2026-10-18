@@ -190,6 +190,8 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
     pagination?: VirtualizerPaginationController;
     /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
     paginationThreshold?: number;
+    /** Pads the first and last item by `gap`; `false` when the scroll viewport already pads its content. @default true. */
+    inset?: boolean;
   };
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
@@ -206,6 +208,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       gap,
       pagination,
       paginationThreshold,
+      inset = true,
       onChange,
       draggable = true,
       debug,
@@ -246,8 +249,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       estimateSize: wrappedEstimateSize,
       gap,
       // Inset by `gap` (inter-item spacing) plus any pagination spacer; see `useVirtualizerPagination`.
-      paddingStart: (gap ?? 0) + leadingSpace,
-      paddingEnd: gap,
+      paddingStart: (inset ? (gap ?? 0) : 0) + leadingSpace,
+      paddingEnd: inset ? gap : 0,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
       getItemKey: draggable

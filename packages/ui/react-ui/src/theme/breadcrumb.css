@@ -57,4 +57,9 @@
     align-items: center;
     color: var(--color-fg-muted);
   }
+  /* Sized to the text rather than the scope's icon, so the caret reads as punctuation between crumbs. */
+  .dx-breadcrumb-separator .dx-icon {
+    width: 0.75em;
+    height: 0.75em;
+  }
 }

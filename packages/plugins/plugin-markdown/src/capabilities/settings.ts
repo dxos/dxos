@@ -22,6 +22,7 @@ export default Capability.makeModule(() =>
         numberedHeadings: true,
         folding: true,
         experimental: false,
+        commentAgentMode: 'mention' as const,
       }),
     });
 

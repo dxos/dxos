@@ -8,8 +8,10 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
+
 /** The bar the canvas's own toolbars sit in, so the controls match them. */
-const BAR = 'gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+const BAR = mx('gap-1 px-2 py-1', FLOATING_PANEL);
 
 export type FrameHeaderProps = {
   title: string;

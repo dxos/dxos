@@ -171,15 +171,16 @@ Easing = 'linear' | 'step' | 'ease-in' | 'ease-out' | 'ease-in-out' | { bezier: 
 ```
 
 A property is animatable when its node type's schema marks it so (`Schema.annotations({ animatable: 'number' })`).
-The engine supplies one interpolator per value kind:
+A struct-valued property that is not itself marked is searched for marked fields, keyed by dot path
+(`style.opacity`). The engine supplies one interpolator per value kind:
 
-| Kind       | Properties (built-in types)                         | Interpolation                                     |
-| ---------- | --------------------------------------------------- | ------------------------------------------------- |
-| `number`   | `opacity`, `rotation`, a generator's numeric params | linear, then eased                                |
-| `point`    | `center`, spline `points[i]`                        | per axis                                          |
-| `size`     | `size`                                              | per axis                                          |
-| `color`    | `style.hue` is discrete; a raw fill colour          | in OKLCH, so mid-points keep their lightness      |
-| `discrete` | `label`, `style.*`, `hidden`, `layer`               | holds the earlier key until the next one (`step`) |
+| Kind       | Properties (built-in types)                               | Interpolation                                     |
+| ---------- | --------------------------------------------------------- | ------------------------------------------------- |
+| `number`   | `style.opacity`, `rotation`, a generator's numeric params | linear, then eased                                |
+| `point`    | `center`, spline `points[i]`                              | per axis                                          |
+| `size`     | `size`                                                    | per axis                                          |
+| `color`    | `style.hue` is discrete; a raw fill colour                | in OKLCH, so mid-points keep their lightness      |
+| `discrete` | `label`, `style.*`, `hidden`, `layer`                     | holds the earlier key until the next one (`step`) |
 
 Before the first key and after the last, a track holds the end value. A property with no track keeps the value
 stored on the node, which is the **base value**.
@@ -442,12 +443,12 @@ Generator state, checkpoints and the clock are never stored. Older readers ignor
 Phase 1 is the user-facing tool with no code: build composite objects in a scene and tween them. Programmatic
 generators follow in phase 2.
 
-| Phase | Delivers                                                                                                                                                                                                                                                                                                                                  | Proves                                                                                                                              |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1 ✓   | Composite objects (§4): composite scenes, `instance` node, group, ungroup, duplicate, make unique, `ObjectsPanel` with isolation view. Timeline (§5.1 to §5.5, §5.8 collapsed): clock, `Timeline` model, `sampleScene`, animated projection, keys on `center`, `size`, `opacity` of nodes and instances, camera. Export by seeking (§7.2) | A user groups three nodes into an object, clones it twice, keys each copy along a different path and fade, plays it, and exports it |
-| 2 ✓   | Generators (§6): `Generator` object, worker runtime with budgets, bindings, checkpoints, `Shape` layer, motion library, generator operations and the `canvas-generators` skill                                                                                                                                                            | An agent writes a looping orbit generator from a prompt; it scrubs both ways and exports identically                                |
-| 3     | The flow generator (ported from `simulation.ts` and `morph.ts`), markers and caption overlay (§5.6), nested time (§5.7)                                                                                                                                                                                                                   | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code                                       |
-| 4     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                                                                                                                                                                                                                            | A host plugin keys its own node type's properties                                                                                   |
+| Phase | Delivers                                                                                                                                                                                                                                                                                                                                        | Proves                                                                                                                              |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1 ✓   | Composite objects (§4): composite scenes, `instance` node, group, ungroup, duplicate, make unique, `ObjectsPanel` with isolation view. Timeline (§5.1 to §5.5, §5.8 collapsed): clock, `Timeline` model, `sampleScene`, animated projection, keys on `center`, `size`, `style.opacity` of nodes and instances, camera. Export by seeking (§7.2) | A user groups three nodes into an object, clones it twice, keys each copy along a different path and fade, plays it, and exports it |
+| 2 ✓   | Generators (§6): `Generator` object, worker runtime with budgets, bindings, checkpoints, `Shape` layer, motion library, generator operations and the `canvas-generators` skill                                                                                                                                                                  | An agent writes a looping orbit generator from a prompt; it scrubs both ways and exports identically                                |
+| 3     | The flow generator (ported from `simulation.ts` and `morph.ts`), markers and caption overlay (§5.6), nested time (§5.7)                                                                                                                                                                                                                         | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code                                       |
+| 4     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                                                                                                                                                                                                                                  | A host plugin keys its own node type's properties                                                                                   |
 
 ## 10. Testing
 
@@ -477,7 +478,7 @@ generators follow in phase 2.
 
 | Piece                                                                                              | Code                                                                                                                        |
 | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `opacity`, `exposed`        | `src/model/types.ts`                                                                                                        |
+| `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `style.opacity`, `exposed`  | `src/model/types.ts`                                                                                                        |
 | Easing, keys, `sampleScene`, camera keys                                                           | `src/model/timeline.ts` (+ `timeline.test.ts`)                                                                              |
 | `animate(projection, clock)` and the intent rewrite                                                | `src/model/animate.ts` (+ `animate.test.ts`)                                                                                |
 | Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `SceneViewAtoms.clock`, `autoKey`, `isolation`                               |

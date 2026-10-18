@@ -13,7 +13,7 @@ group objects "Durable Objects" {
   node Query "QueryExecutor" ref="edge/packages/services/db-service/src/worker/query/query-executor.ts"
   node Meta "SpaceMetadata" ref="edge/packages/services/db-service/src/worker/space-metadata/space-metadata.ts"
 }
-group bindings "Bindings" {
+group bindings "Bindings" color=light-violet {
   node R2 "R2 space-backups" ref="edge/packages/services/db-service/src/worker/bindings.ts"
   node Ext "router / kms / compute" ref="edge/packages/services"
 }

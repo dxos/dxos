@@ -6,6 +6,7 @@ import { type DevtoolsHook, mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type CompactDocumentsResult } from '@dxos/migrations';
 
 import { type RecoveryDiagnosticsResult } from './diagnostics.ts';
+import { type ResetResult } from './reset-storage.ts';
 import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics.ts';
 
 /** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
@@ -35,7 +36,7 @@ export type RecoveryHelpers = {
   downloadLogs: () => Promise<{ byteLength: number; saved: boolean }>;
   importSqlite: () => Promise<{ byteLength: number }>;
   importProfileFromUrl: (url: string) => Promise<{ byteLength: number; opfsFilename: string }>;
-  reset: () => Promise<void>;
+  reset: () => Promise<ResetResult>;
   log: (message: string) => void;
   status: () => Record<string, unknown>;
   compactDocuments: (options?: {

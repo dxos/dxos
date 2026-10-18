@@ -20,6 +20,7 @@ import { mx } from '@dxos/ui-theme';
 import { shortcutFor } from '../../model/keys.ts';
 import { type NodeRegistry } from '../../model/registry.ts';
 import { type Capabilities, type NodeType, type SceneId } from '../../model/types.ts';
+import { FLOATING_PANEL } from '../../utils/chrome.ts';
 import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
 
 /** What the toolbars can ask of the view; a missing action hides or disables its control. */
@@ -38,8 +39,6 @@ export type ToolbarActions = {
   zoomOut: () => void;
   snap: boolean;
   toggleSnap: () => void;
-  guides: boolean;
-  toggleGuides: () => void;
   /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; absent elsewhere. */
   lattice?: boolean;
   toggleLattice?: () => void;
@@ -63,7 +62,7 @@ export type ToolbarActions = {
 
 // A bar fills the frame its host floats it in and scrolls what does not fit; the toolbar's own layout
 // supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
-const barClasses = 'w-full gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
+const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
 
 const readoutClasses = 'text-fg-muted font-mono text-sm whitespace-nowrap';
 
@@ -161,15 +160,6 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         classNames={mx(actions.snap && 'bg-primary-500/20')}
         data-testid='toolbar-snap'
         onClick={actions.toggleSnap}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--frame-corners--regular'
-        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
-        classNames={mx(actions.guides && 'bg-primary-500/20')}
-        data-testid='toolbar-guides'
-        onClick={actions.toggleGuides}
       />
       {actions.toggleLattice && (
         <Button.Root
