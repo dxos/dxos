@@ -42,6 +42,7 @@ import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
+import { workerEntryLoader } from './src/vite/worker-entry-loader.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -558,7 +559,7 @@ export default defineConfig((env) => ({
   worker: {
     format: 'es' as const,
 
-    plugins: () => [...sharedPlugins(env)],
+    plugins: () => [...sharedPlugins(env), workerEntryLoader()],
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
