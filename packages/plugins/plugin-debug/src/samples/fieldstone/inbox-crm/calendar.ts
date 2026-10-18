@@ -153,13 +153,13 @@ const HANA_NOTES = [
 ];
 
 /**
- * The weekly sales review's notes, which link the pipeline board by its id so the reader opens it from the event.
+ * The half-year sales review's agenda, which links the pipeline board by its id so the reader opens it from the event.
  */
 const salesReviewNotes = (pipelineId: string) =>
   [
     '## Sales Review',
     '',
-    `Walked the [Sales pipeline](echo:///${pipelineId}) column by column, oldest movement first.`,
+    `Walk the [Sales pipeline](echo:///${pipelineId}) column by column, oldest movement first.`,
     '',
     '## Attendees',
     '',
@@ -168,7 +168,7 @@ const salesReviewNotes = (pipelineId: string) =>
     '- Lucía Ferreira',
     '- June Okonkwo',
     '',
-    '## Pipeline',
+    '## Pre-read: where each deal stands',
     '',
     '- **Lead:** Halcyon Freight and Kestrel Energy both came in from the Bazel cache post; intro calls are booked.',
     '- **Qualified:** Vantage Aerospace needs US-only data residency; Corvid Analytics and Larkspur Media have evaluations scheduled.',
@@ -177,12 +177,12 @@ const salesReviewNotes = (pipelineId: string) =>
     '- **Negotiation:** Northpine Robotics renewal hinges on the dedicated region; Tidewater Insurance is in MSA redlines.',
     '- **Closed:** Okapi Payments and Lumen Biotech are live; Pallas Retail chose a self-hosted cache.',
     '',
-    '## Decisions',
+    '## To decide',
     '',
-    '- Hold list price for Tidewater; offer a 12-month term instead of a discount.',
-    '- Treat EU-only data and customer-managed keys as one Enterprise add-on, priced once.',
+    '- Whether to hold list price for Tidewater and offer a 12-month term instead of a discount.',
+    '- Whether EU-only data and customer-managed keys become one Enterprise add-on, priced once.',
     '',
-    '## Action items',
+    '## Prep',
     '',
     '- [ ] Kofi: send Vantage the US-region architecture note before the deep dive.',
     '- [ ] June: draft the Enterprise add-on pricing for Aldermoor and Meridian.',
@@ -339,7 +339,8 @@ export const makeCalendar = (
       ],
       salesReview: pipeline
         ? [
-            timed(-1, {
+            // The calendar lists newest first, so the year's last date puts the review at the top.
+            timed(176, {
               title: 'Sales Review',
               description: salesReviewNotes(pipeline.id),
               attendees: ['astrid', 'kofi', 'lucia', 'june'],
