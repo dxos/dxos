@@ -67,9 +67,9 @@ export const KanbanBoardRoot = ({
   const pivotFieldId = view?.projection?.pivotFieldId;
   const columnFieldPath = useMemo(() => {
     // Items-variant kanbans use the property name itself as the pivot field
-    // (no view/projection translation layer).
+    // (no view/projection translation layer); an empty one means the arrangement alone places cards.
     if (kanban?.spec.kind === 'items') {
-      return kanban.spec.pivotField;
+      return kanban.spec.pivotField === '' ? undefined : kanban.spec.pivotField;
     }
     if (pivotFieldId === undefined || !projection) {
       return undefined;

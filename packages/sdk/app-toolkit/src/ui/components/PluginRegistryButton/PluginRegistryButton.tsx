@@ -43,7 +43,7 @@ const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonP
         label={t('open-plugin-registry.label')}
         onClick={(event) => {
           onClick?.(event);
-          void invokePromise(SettingsOperation.OpenPluginRegistry);
+          void invokePromise(SettingsOperation.OpenPluginRegistry, {});
         }}
       />
     );

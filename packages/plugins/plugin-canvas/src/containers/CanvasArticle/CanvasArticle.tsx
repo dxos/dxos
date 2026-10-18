@@ -98,7 +98,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const {
     camera: savedCamera,
     readonly: viewReadonly,
-    floating = false,
+    floating = true,
     grid: snap,
     guides,
     fit,
@@ -107,6 +107,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
   // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
+  // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
+  const article = role === AppSurface.Article.role;
   const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
@@ -161,7 +163,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
           !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
       );
       return {
-        ...(locked ? { object: { readonly: true } } : {}),
+        ...(locked ? { 'link.object': { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
         ...(surfaced ? {} : { role: { hidden: true } }),
       };
@@ -180,6 +182,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
           <CanvasDatabaseContext.Provider value={db}>
             <SceneView.Root
               key={bound.root}
+              classNames={article ? 'border-t border-separator-subtle' : undefined}
               store={bound.store}
               root={bound.root}
               nodes={nodes}
@@ -189,15 +192,16 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               defaultTheme={look.defaultTheme}
               styleSet={look.styleSet}
               background={look.background}
-              backgroundGrid={look.backgroundGrid}
+              backgroundGrid={article ? look.backgroundGrid : 'none'}
               onThemeChange={section ? undefined : handleThemeChange}
               onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
               readonly={readonly}
               onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
-              initialDisplay={{ snap, guides, fit }}
-              onDisplayChange={handleDisplayChange}
+              initialDisplay={{ snap, guides: article && guides, fit }}
+              // Outside the article the guides are forced off, so this view must not write that back as the setting.
+              onDisplayChange={article ? handleDisplayChange : undefined}
               inspectors={floating ? 'floating' : 'docked'}
               onInspectorsChange={handleInspectorsChange}
               generators={generators}

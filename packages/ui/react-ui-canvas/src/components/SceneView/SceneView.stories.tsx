@@ -13,6 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type InspectorMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
+import { type BackgroundGrid } from '../../model/style-set.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
 import { DEFAULT_LATTICE, cellBounds } from '../../utils/lattice.ts';
 import { DEFAULT_SHAPE_SIZE } from '../../utils/shapes.ts';
@@ -63,6 +64,8 @@ const Editor = ({
   // The args are where the view starts; the palette's toggle and the inspectors' menus change it from there.
   const [readonly, setReadonly] = useState(initialReadonly);
   const [inspectors, setInspectors] = useState(initialInspectors);
+  const [theme, setTheme] = useState<string>();
+  const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
   return (
     <SceneView.Root
       store={store}
@@ -71,12 +74,17 @@ const Editor = ({
       onReadonlyChange={setReadonly}
       inspectors={inspectors}
       onInspectorsChange={setInspectors}
+      theme={theme}
+      onThemeChange={setTheme}
+      backgroundGrid={backgroundGrid}
+      onBackgroundGridChange={setBackgroundGrid}
       createProjection={lattice ? createLatticeProjection : undefined}
     >
       <SceneView.Canvas liveDepth={liveDepth} />
       <SceneView.Navigation />
       <SceneView.Actions />
       <SceneView.Debug />
+      <SceneView.Theme />
       <SceneView.Palette />
       <SceneView.Properties />
       <SceneView.Layers />
@@ -343,11 +351,11 @@ export const Lattice: Story = {
 };
 
 /**
- * The inspectors dock by default: one accordion section each beside the canvas; a section collapses to its header, and
- * the dock's close button floats them.
+ * Docked inspectors: one accordion section each beside the canvas; a section collapses to its header, and the dock's
+ * close button floats the same column over the canvas.
  */
 export const Docked: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // 1. The dock holds the properties and layers sections, both open.
@@ -361,21 +369,21 @@ export const Docked: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 3. Closing the dock floats the inspectors: the layers over the canvas while nothing is selected.
+    // 3. Closing the dock floats the inspectors in the same column: the layers over the canvas while nothing is selected.
     await userEvent.click(within(dock).getByTestId('dock-close'));
-    await waitFor(() => expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument());
-    await expect(await canvas.findByTestId('layers')).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating'));
+    await expect(within(canvas.getByTestId('scene-view-dock')).getByTestId('layers')).toBeVisible();
   },
 };
 
-/** Floating inspectors: no dock, the layers over the canvas until something is selected; their menu docks them. */
+/** Floating inspectors (the default): the dock's column over the canvas, the layers until something is selected; their menu docks them. */
 export const Floating: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
-    await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
-    // About lives only in the dock.
+    await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
+    // About shows only while docked.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
     // The layers' menu docks the inspectors.
     await userEvent.click(canvas.getByTestId('layers-menu'));
@@ -389,7 +397,7 @@ export const Floating: Story = {
       return expect(menu).toHaveFocus();
     });
     await userEvent.keyboard('{End}{Enter}');
-    await expect(await canvas.findByTestId('scene-view-dock')).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
     await expect(await canvas.findByTestId('about')).toBeVisible();
   },
 };

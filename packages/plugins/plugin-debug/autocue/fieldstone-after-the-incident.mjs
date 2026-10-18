@@ -3,7 +3,7 @@
 //
 
 /**
- * Fieldstone vignette: after the incident. The Okapi postmortem with its timeline sheet embedded, the on-call runbook with its escalation drawing, and the decision log.
+ * Alien Labs vignette: after the incident. The Okapi postmortem with its timeline sheet embedded, the on-call runbook with its escalation drawing, and the decision log.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-7
  * @app composer-app bundled dev build, served by `vite preview` on :4187
@@ -28,7 +28,7 @@
  * Not yet run: written ahead of its first take, so selectors past the setup are unverified.
  */
 
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -94,7 +94,7 @@ const closeCompanion = async (page) => {
   }
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Fieldstone Labs' });
+const caption = (demo, value) => demo.caption({ value, subtitle: 'Alien Labs' });
 
 /** The companion's message card for `sender` whose body starts with `text`. */
 const messageCard = (page, sender, text) =>

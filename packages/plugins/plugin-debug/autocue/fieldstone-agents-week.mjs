@@ -3,7 +3,7 @@
 //
 
 /**
- * Fieldstone vignette: what the agents did this week. The release project's Gantt, one agent run's chat, and the failed task where a person stepped in.
+ * Alien Labs vignette: what the agents did this week. The release project's Gantt, one agent run's chat, and the failed task where a person stepped in.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-5
  * @app composer-app bundled dev build, served by `vite preview` on :4187
@@ -28,7 +28,7 @@
  * Not yet run: written ahead of its first take, so selectors past the setup are unverified.
  */
 
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 const PROJECT = 'Cairn 1.8: remote cache v2';
 
 /** A beat for the viewer after a visible change. */
@@ -95,7 +95,7 @@ const closeCompanion = async (page) => {
   }
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Fieldstone Labs' });
+const caption = (demo, value) => demo.caption({ value, subtitle: 'Alien Labs' });
 
 /** The companion's message card for `sender` whose body starts with `text`. */
 const messageCard = (page, sender, text) =>
@@ -215,7 +215,7 @@ export const steps = [
   },
   {
     name: 'Open the release project',
-    narration: "Most of Fieldstone's release work is done by agents. Here is the Cairn 1.8 project.",
+    narration: "Most of Alien Labs' release work is done by agents. Here is the Cairn 1.8 project.",
     run: async ({ demo, page }) => {
       await caption(demo, 'Cairn 1.8: most of the work is done by agents');
       await openProject(demo, page, PROJECT);

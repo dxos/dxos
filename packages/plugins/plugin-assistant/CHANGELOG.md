@@ -1,5 +1,128 @@
 # @dxos/plugin-assistant
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3b03db7]
+- Updated dependencies [5490cbc]
+- Updated dependencies [b7504c9]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [008b18c]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [1f72729]
+- Updated dependencies [1eaa8b4]
+- Updated dependencies [019891d]
+- Updated dependencies [5bbc891]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ad4c7cf]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [afba7ce]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [f1e7396]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/plugin-registry@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/plugin-deck@0.15.0
+  - @dxos/devtools@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/observability@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-task@0.15.0
+  - @dxos/plugin-attention@0.15.0
+  - @dxos/plugin-tasks@0.15.0
+  - @dxos/plugin-transcription@0.15.0
+  - @dxos/react-ui-assistant@0.15.0
+  - @dxos/react-ui-chat@0.15.0
+  - @dxos/react-ui-feed@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-trace@0.15.0
+  - @dxos/react-ui-transcription@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/conductor@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-observability@0.15.0
+  - @dxos/plugin-status-bar@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-experimental@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/mcp-client@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/halo-react@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/react-list@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

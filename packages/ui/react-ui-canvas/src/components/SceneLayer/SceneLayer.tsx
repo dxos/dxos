@@ -826,7 +826,7 @@ const NodeFrame = memo(
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       ...fade,
-      ...nodeOpacity(node, fade),
+      ...nodeOpacity(drawn, fade),
     };
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
@@ -893,7 +893,7 @@ const NodeFrame = memo(
               transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
               transformOrigin: 'bottom right',
               ...fade,
-              ...nodeOpacity(node, fade),
+              ...nodeOpacity(drawn, fade),
             }}
             data-testid='node-toolbar'
             onPointerDown={(event) => event.stopPropagation()}
@@ -909,13 +909,14 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-/** The node's own opacity under any fade the layer applies, or nothing when it is fully opaque. */
+/** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
-  if (node.opacity === undefined || node.opacity >= 1) {
+  const opacity = node.style?.opacity;
+  if (opacity === undefined || opacity >= 1) {
     return undefined;
   }
   const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
-  return { opacity: Math.max(0, node.opacity) * faded };
+  return { opacity: Math.max(0, opacity) * faded };
 };
 
 /** A node of a `bare` type: no fill or border unless its style sets them. */
@@ -941,7 +942,8 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       'whitespace-pre-wrap',
       LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
-      sizeClass(node, 'text-lg'),
+      // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
+      sizeClass(node, 'text-[24px]'),
     )}
   >
     {label}

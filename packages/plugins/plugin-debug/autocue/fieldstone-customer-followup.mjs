@@ -3,7 +3,7 @@
 //
 
 /**
- * Fieldstone vignette: a customer asks for one more thing. Astrid opens the Okapi postmortem thread,
+ * Alien Labs vignette: a customer asks for one more thing. Astrid opens the Okapi postmortem thread,
  * reads Nadia's reply, checks who she is from her card, opens her contact and finds the follow-up
  * meeting on the calendar.
  *
@@ -28,7 +28,7 @@
  * starts on the space's Home with every branch the vignette needs already open.
  */
 
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 const THREAD = 'Okapi cache-corruption postmortem';
 const CONTACT = 'Nadia Petrov';
 /** Nadia's reply, by the start of its body. */
@@ -119,7 +119,7 @@ const closeCompanion = async (page) => {
   }
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Fieldstone Labs' });
+const caption = (demo, value) => demo.caption({ value, subtitle: 'Alien Labs' });
 
 /** The companion's message card for `sender` whose body starts with `text`. */
 const messageCard = (page, sender, text) =>
@@ -170,7 +170,7 @@ export const steps = [
       'Astrid runs engineering at Fieldstone. Her calendar: team rituals, one-on-ones, customers, and a follow-up with Okapi next week.',
     run: async ({ demo, page }) => {
       await caption(demo, 'Astrid’s calendar');
-      await demo.click({ selector: node('Fieldstone'), label: 'Fieldstone calendar' });
+      await demo.click({ selector: node('Alien Labs'), label: 'Alien Labs calendar' });
       await page
         .locator('[data-testid="deck.plank"] [data-date]')
         .first()
@@ -332,7 +332,7 @@ export const steps = [
           label: EVENT,
         });
       } else {
-        await demo.click({ selector: node('Fieldstone'), label: 'Fieldstone calendar' });
+        await demo.click({ selector: node('Alien Labs'), label: 'Alien Labs calendar' });
       }
       await page.getByText(EVENT).first().waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT * 4);

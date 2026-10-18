@@ -305,12 +305,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
+  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[]; into?: SpaceId }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc,
       'SpacesService.importSpace',
-      { archive, tags: options?.tags },
+      { archive, tags: options?.tags, ...(options?.into ? { targetSpaceId: options.into } : {}) },
       { timeout: IMPORT_SPACE_TIMEOUT },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');

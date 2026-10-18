@@ -71,7 +71,7 @@ const PROJECT_SEEDS: Record<ProjectKey, ProjectSeed> = {
           'size-aware edge tier, as written in "Remote cache v2 design".',
         ),
         paragraph(
-          'Code lives in fieldstone/cairn: the server is Go under internal/, the CLI is TypeScript under cli/. Open one',
+          'Code lives in alien-labs/cairn: the server is Go under internal/, the CLI is TypeScript under cli/. Open one',
           'pull request per task and name the task in its description. Omar Haddad owns the cache engine and reviews',
           'anything that touches the index; hand index changes to Reviewer before asking him.',
         ),
@@ -101,13 +101,13 @@ const PROJECT_SEEDS: Record<ProjectKey, ProjectSeed> = {
     ],
   },
   soc2: {
-    description: 'Policies, evidence and an auditor, so Fieldstone can pass a SOC 2 Type I audit.',
+    description: 'Policies, evidence and an auditor, so Alien Labs can pass a SOC 2 Type I audit.',
     repo: 'policies',
     artifacts: ['soc2Policies'],
     instructions: (links) =>
       [
         paragraph(
-          'This project gets Fieldstone ready for a SOC 2 Type I audit. Write policies from how the team works today,',
+          'This project gets Alien Labs ready for a SOC 2 Type I audit. Write policies from how the team works today,',
           'not from templates, into "SOC 2 policy set"; flag a gap instead of inventing a process to cover it.',
         ),
         paragraph(
@@ -152,8 +152,8 @@ export const makeProjects = ({ team, taskSets, artifacts, inboxCrm }: ProjectsIn
       Database.add(
         Repo.make({
           name: seed.name,
-          owner: 'fieldstone',
-          url: `https://github.com/fieldstone/${seed.name}`,
+          owner: 'alien-labs',
+          url: `https://github.com/alien-labs/${seed.name}`,
           description: seed.description,
           defaultBranch: 'main',
           organization: Ref.make(team.orgs.fieldstone),

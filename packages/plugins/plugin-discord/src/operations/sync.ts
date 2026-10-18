@@ -19,8 +19,9 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
-import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
+import { DEFAULT_DAYS, DISCORD_SOURCE } from '../constants.ts';
 import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors.ts';
+import { snowflakeForTimestamp } from '../services/discord-message.ts';
 import { makeDiscordLayerFromToken, resolveDiscordToken } from '../services/index.ts';
 
 /**

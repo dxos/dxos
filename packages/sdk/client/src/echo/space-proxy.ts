@@ -870,6 +870,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     const { archive } = await runServiceCall(this._runtime, this._clientServices.rpc, 'SpacesService.exportSpace', {
       spaceId: this.id,
       format: options?.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY,
+      ...(options?.feedIds ? { feedIds: [...options.feedIds] } : {}),
     });
     return archive;
   }

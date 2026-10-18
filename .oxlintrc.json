@@ -239,7 +239,7 @@
   },
   "overrides": [
     {
-      "files": ["packages/ui/react-ui/src/next/recipes.ts"],
+      "files": ["packages/ui/react-ui/src/recipes.ts"],
       "rules": {
         "perfectionist/sort-objects": [
           "error",

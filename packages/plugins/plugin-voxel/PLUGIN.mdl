@@ -526,6 +526,24 @@ test QA-1: Build and query a shape agent-only
       do: Right-click "QA World" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Orbit a voxel world. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: voxel` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-voxel enabled
+  steps:
+    - name: Create the object
+      do: Create a voxel object from the + menu.
+      expect: it renders in the plank
+    - name: Orbit it
+      do: Drag slowly across it.
+      expect: the view turns or pans smoothly
 ```
 
 ---

@@ -19,7 +19,7 @@ import { type ProjectKey } from './tasks.ts';
 const NIGHTLY_TRIAGE = [
   'Sweep what came in since the last run and file a task for anything that needs one.',
   [
-    'Read the inbox and the open issues in fieldstone/cairn that no task covers. For each one that asks for work,',
+    'Read the inbox and the open issues in alien-labs/cairn that no task covers. For each one that asks for work,',
     'file a task in the project it belongs to (cache, billing or SOC 2), assign it to the person or agent who owns',
     'that area, and label the issue triaged. File nothing for newsletters, CI noise or anything already tracked.',
   ].join(' '),

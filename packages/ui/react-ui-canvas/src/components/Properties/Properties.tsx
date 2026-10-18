@@ -12,6 +12,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database } from '@dxos/echo';
@@ -66,6 +67,7 @@ import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
+import { LineStyleField } from './LineStyleField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
@@ -104,6 +106,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
+  'style.lineStyle': LineStyleField,
   'scene': SceneField,
   'layer': LayerClassField,
 };
@@ -142,7 +145,7 @@ const formValues = (
         layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
-        ...(isFrameNode(element) ? { contents: showsContents(element) } : {}),
+        ...(isFrameNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
 
 /**
@@ -151,7 +154,8 @@ const formValues = (
  * grid at `style.hue` also sets `style.tone`, which has no field of its own.
  */
 const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
-  'style.hue': { label: 'Style' },
+  // The swatches sit under the Style section's own heading, which names them.
+  'style.hue': { label: 'Style', hideLabel: true },
   'style.tone': { hidden: true },
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
@@ -222,6 +226,19 @@ export const Properties = ({
   const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
+  // A shape's text names it, so its label leads, ahead of the shared fields (style) its type's own fields follow.
+  const fieldOrder = useMemo(() => {
+    const names =
+      schema && SchemaAST.isObjects(schema.ast) ? schema.ast.propertySignatures.map(({ name }) => String(name)) : [];
+    const style = names.indexOf('style');
+    return names.includes('label') && style >= 0
+      ? [
+          ...names.slice(0, style).filter((name) => name !== 'label'),
+          'label',
+          ...names.slice(style).filter((name) => name !== 'label'),
+        ]
+      : undefined;
+  }, [schema]);
   const { values, fieldOverrides } = useMemo(() => {
     const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
@@ -393,7 +410,7 @@ export const Properties = ({
                       the panels together, so the form keeps no scroll of its own (it would hold the wheel). */}
                   <Form.Viewport scroll={!docked}>
                     <Form.Content>
-                      <Form.Fields exclude={HIDDEN} />
+                      <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
                     </Form.Content>
                   </Form.Viewport>
                 </Form.Root>

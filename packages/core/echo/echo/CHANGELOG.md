@@ -1,5 +1,54 @@
 # @dxos/echo
 
+## 0.15.0
+
+### Minor Changes
+
+- 419bf9a: The 50 object documents this client edited most recently stay loaded. Any other loaded object document that nothing changes for 30 seconds goes back to its stored changes, subscribed passive, and leaves memory. The object stays live, kept current by the host's JSON, and the next write or document read loads the document again. Only a document holding just that object, on the main branch, with no editor attached, is released. `constructDatabase` takes `documentRetention: { ttl, budget }` to set both.
+- ed8df23: Query rows on the `QueryService` wire (`query.proto`) carry the `heads`, `bytes`, `created_at` and `updated_at` a client needs to show an object without loading its document, and `document_json` is specified as the `objectStructureToJson` format. `@dxos/index-core` can store a document's bytes with its snapshot (`IndexerObject.bytes`, returned by `queryBackings`), `isBackable` and `backingJson` move to `@dxos/echo-protocol`, and the Cloudflare functions runtime no longer fetches documents for passive subscriptions.
+- 0f6457d: Query results are backed by the index's JSON copy of each object, with the object's Automerge document held as stored changes the tab has not loaded. Each held object's document is subscribed passive: the worker sends every change with the object's JSON, so the object stays current without loading. The first write or document read (cursors, history, version checkout) loads the stored changes synchronously and makes the first write at the heads the object was shown at. This is how every query loads its results; there is no switch back.
+
+  - The index keeps each object's meta and the heads its JSON was read at; existing databases re-index once to fill them. A row's document changes are read from storage when the row is sent, not copied into the index.
+  - A query names the objects the tab already holds, and the host sends their rows without JSON or document changes.
+  - `Uint8Array` values in an object's indexed JSON use the `{ '/': { bytes } }` form the feed serializer writes.
+
+- 94d4f85: Add `Order.annotation(annotation, direction, path?)`, which orders query results by an entity annotation's value (or a scalar inside a struct-valued annotation) with unannotated entities last, so queries can be paged by annotation with `.limit()`/`.skip()` and `usePagination`.
+- b6ae19d: Live queries reflect a local write before the writing call returns: subscribers are notified synchronously, once per `Obj.update` or `db.add`, and an index result never re-adds an object a local edit has disqualified. Adds `Query.characteristics()` and `completeness`/`sources` on `QueryResult`. Behaviour change: a subscriber that writes from its callback now does so after the triggering write has committed but before it returns, rather than on a later microtask. The inbox message header now reads its tag chips reactively from the tag index, which it had only seen through a late query notification.
+- 16bde33: Blobs written through the `edge` storage are now stored on the device first, in the client services database, and a write is confirmed as soon as it is stored there. When an EDGE URL is configured, the client services host replicates stored blobs to EDGE asynchronously and fills local misses from it; without one, clients store and read blobs locally, and the `edge` backend is the default storage either way. `createEdgeBlobBackend` now takes a `store` (`createMemoryBlobStore` from `@dxos/blob` for tests) and an optional `finalizeUpload` instead of a transport; replication lives in `createBlobReplicator` and `withReadThrough` in `@dxos/blob/hosted`.
+- 7b47951: On a cached, signed-out load, Composer reaches `startup:ready` about 2.1s sooner (3,022ms → 901ms median in a headless benchmark), mostly by no longer draining plugin activation messages one per 4ms timer. Its client is ready about 0.3s sooner on a reload because the dedicated worker now spawns at main start.
+
+  - `@dxos/app-framework`: the `useApp` listener and the plugin manager's failure supervisor drain activation messages without a yield per message; fibers are tracked with exit observers instead of a forked waiter each; the slow-module warning is one shared watcher instead of a sleeping fiber per module.
+  - `@dxos/echo`: `Obj.make` takes `{ skipValidation }` for props built from already-typed values.
+  - `@dxos/client`: `Client` opens its services alongside its proxy imports; `@dxos/client/lock-key` exports the leader lock key for code that runs before the client loads.
+  - `@dxos/app-framework`, `@dxos/app-toolkit`: plugin assets activate on a new `PluginAssetsRequested` event, and `AppCapability.pluginAsset` takes `content` as a loader (`() => import('…?raw')`) instead of a string. A plugin passing a string must switch to a loader.
+  - `@dxos/compute`: `Operation.serialize` forwards `Obj.make` options.
+  - `@dxos/observability`: the PostHog extension takes `sessionRecordingStart`, a promise that holds session recording back until it settles.
+  - `@dxos/plugin-routine`: operations are serialized into the registry after boot, without validation.
+  - `@dxos/plugin-markdown`, `@dxos/plugin-inbox`, `@dxos/plugin-google`, `@dxos/plugin-jmap`, `@dxos/plugin-transcription`: modules read only on demand (anchor, comment and tour contributions, mailbox processors, mail send, tour fragments) activate on their feature's start event instead of at idle.
+
+- 2b6a93a: Edits the client worker has not saved are no longer lost without warning. The new `EchoDatabase.hasUnsavedChanges()` reports changes still in flight, documents not yet created and unsent feed appends, and the save-state event counts them too. Composer shows "Error saving changes." while sends fail. The browser, the desktop app's tray Quit and window close, and the updater's relaunch save those changes first, or ask before leaving; on macOS, Cmd+Q and the Dock's Quit are not held yet. After a leader handover, a tab's ECHO client reconnects to the new worker and hands it every change the old worker had not taken. A worker whose SQLite connection stops answering for two minutes is replaced, and a worker shutdown no longer waits indefinitely on a teardown that hangs.
+
+  Breaking: `EchoDatabase` gains the required `hasUnsavedChanges()` method, and `SaveStateChangedEvent` gains the required `pendingCreations` and `failing` fields, so code that implements the interface or constructs the event must add them.
+
+### Patch Changes
+
+- 9b2a2c0: `Cursor.writeSnapshot` no longer rewrites a connector cursor's whole snapshot map on every call, and skips writes whose snapshot is unchanged. GitHub, Linear and Trello syncs had grown cursors to tens of millions of Automerge operations, enough to run Composer out of WASM memory.
+- 3aed53a: A document whose heads overlap a peer's counts as synced again, so collection sync stops reporting it as not converging. If the peer also advertises a change this replica lacks, one sync round is still run to fetch it.
+- Updated dependencies [d0728d8]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ce8f092]
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

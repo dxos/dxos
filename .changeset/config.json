@@ -59,6 +59,7 @@
       "@dxos/discord-worker",
       "@dxos/display-name",
       "@dxos/drawing",
+      "@dxos/drawing-site",
       "@dxos/dx-tools",
       "@dxos/dx-trace-imports",
       "@dxos/echo",

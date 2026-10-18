@@ -12,7 +12,7 @@ import * as FieldstoneSpace from './FieldstoneSpace.ts';
 const LINK = /echo:\/\/\/([0-9A-Z]{26})/g;
 
 /** The partials' own suites assert their content; this asserts what holds only once they are composed. */
-describe('Fieldstone template', () => {
+describe('Alien Labs template', () => {
   test('applies every partial into one space', { timeout: 300_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(FieldstoneSpace.make()));
     const counts = histogram(json);
@@ -21,20 +21,26 @@ describe('Fieldstone template', () => {
         .filter(([type]) => type.includes(typename))
         .reduce((total, [, count]) => total + count, 0);
 
-    expect(countOf('type.organization')).toBe(10);
-    expect(countOf('type.person')).toBe(25);
+    expect(countOf('type.organization')).toBe(18);
+    expect(countOf('type.person')).toBe(34);
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);
-    expect(countOf('type.event')).toBe(300);
-    // 15 Fieldstone documents, 5 project artifacts, 3 architecture guides.
+    expect(countOf('type.event')).toBe(171);
+    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides.
     expect(countOf('type.document')).toBe(23);
-    // 5 Fieldstone drawings and 12 architecture diagrams.
+    // 5 Alien Labs drawings and 12 architecture diagrams.
     expect(countOf('type.drawing')).toBe(17);
     expect(Object.keys(result.docs.docs)).toHaveLength(15);
 
     // Links across partials resolve to an object or a feed entry in the same space.
     const archive: {
-      objects: Array<{ id: string; content?: string | { '/': string } }>;
+      objects: Array<{
+        'id': string;
+        '@type'?: string;
+        'name'?: string;
+        'content'?: string | { '/': string };
+        'objects'?: Array<{ '/': string }>;
+      }>;
       feeds?: Array<{ messages?: Array<{ id: string }> }>;
     } = JSON.parse(json);
     const ids = new Set([
@@ -56,6 +62,12 @@ describe('Fieldstone template', () => {
     for (const key of ['composer-plugin', 'edge-compute']) {
       expect(text).toMatch(new RegExp(`!\\[[^\\]]*\\]\\(echo:///${drawings.get(key)?.id}\\)`));
     }
+
+    // The Sales pipeline Kanban is in the navigation, first under Customers.
+    const customers = archive.objects.find(
+      (object) => object['@type']?.includes('type.collection') && object.name === 'Customers',
+    );
+    expect(customers?.objects?.[0]?.['/']).toBe(`echo:///${result.inboxCrm.pipeline.kanban.id}`);
 
     const subject = result.inboxCrm.threads.okapiIncident[0].properties?.subject;
     expect(result.projects.tasks.cacheKeyCollision.description).toContain(subject);

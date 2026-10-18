@@ -1,5 +1,12 @@
 # @dxos/storybook-addon-logger
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/react-error-boundary@0.15.0
+  - @dxos/log@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

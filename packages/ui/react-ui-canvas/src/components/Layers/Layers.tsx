@@ -70,7 +70,7 @@ const LayerName = ({ layer, readonly, editing, onEditingChange, onRename }: Laye
     {/* Flush with the drag handle: the control's inline padding would indent the name from the row. */}
     <Editable.Preview classNames='px-0 cursor-pointer' data-testid={`layer-name-${layer.id}`} />
     <Editable.Input
-      classNames='px-0'
+      classNames='-ms-2 w-[calc(100%+0.5rem)] ps-2'
       aria-label='Layer name'
       data-testid={`layer-input-${layer.id}`}
       // While a name is typed, the list's keys (typeahead, arrows, selection) must not take its keys; otherwise the

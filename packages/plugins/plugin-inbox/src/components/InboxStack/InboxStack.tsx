@@ -37,8 +37,7 @@ export type InboxStackAction =
   | { type: 'star'; messageId: string }
   | { type: 'archive'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
-  | { type: 'create-topic'; messageId: string }
-  | { type: 'save'; filter: string };
+  | { type: 'create-topic'; messageId: string };
 
 export type InboxStackActionHandler = (action: InboxStackAction) => void;
 
@@ -285,8 +284,8 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
           selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root>
-            <ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root width='regular'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}
@@ -294,7 +293,8 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 getId={getItemId}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
-                gap={4}
+                gap={8}
+                inset={false}
                 pagination={pagination}
               />
               {loading && (
@@ -535,10 +535,12 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
+        // Stopped so the tile does not also open the whole conversation; the tile's current/selected update is made here.
         event.stopPropagation();
+        handleCurrentChange();
         onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
-      [onAction],
+      [handleCurrentChange, onAction],
     );
 
     const handleToggleStar = useCallback(
@@ -635,15 +637,17 @@ const ConversationMessageRow = ({
       classNames='items-start'
       leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
     >
-      <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
-        <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
+      {/* Text, not buttons: the tile is the stack's one focus stop, so the arrows move between tiles; a click still opens
+          this message. */}
+      <div className='flex flex-col cursor-pointer' onClick={(event) => onMessageClick(event, message.id)}>
+        <div className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-        </button>
+        </div>
         {snippet && (
-          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
+          <div className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-          </button>
+          </div>
         )}
       </div>
     </Card.Row>

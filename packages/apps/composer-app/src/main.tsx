@@ -74,6 +74,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import { watchWindowCorners } from './util/window-corners.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -346,6 +347,8 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
     restoreDragRegionFocus();
   }
+  // Rails that reach the window's bottom corners round to match a rounded macOS window instead of being cut off.
+  void watchWindowCorners(isTauri);
 
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
   // instrumentation (session recorder, dead-clicks autocapture) at init time —

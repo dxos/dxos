@@ -1,5 +1,18 @@
 # @dxos/halo
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [0420f87]
+- Updated dependencies [45ab961]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

@@ -238,4 +238,22 @@ test QA-3: Render a diagram from the terminal and import it into a space
     - name: List the drawings
       do: Run `dx drawing list`.
       expect: '"pipeline" is listed with the id the import printed'
+
+test QA-4: Showcase clip
+  desc: |
+    The 10s showcase clip: Draw shapes on an SVG drawing. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: illustrator` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-illustrator enabled
+  steps:
+    - name: Create a drawing
+      do: Create a Drawing with the svg variant.
+      expect: an empty drawing opens
+    - name: Draw shapes
+      do: Pick shapes from the palette and drag them out.
+      expect: each shape appears
 ```
