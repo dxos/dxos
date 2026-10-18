@@ -352,6 +352,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 342 | 10-20 05:50 | 40m 00s | c94aaa6d0b | A pull stops noting the metadata it receives as written locally (D317) |
 | 343 | 10-20 06:50 | 1h 00m | 0d3ed97189 | A seed change rebuilds the native CLI in 80 s instead of 195 s: the previous native CLI writes the C, checked, and -O2 uses every core (D318) |
 | 344 | 10-20 07:30 | 40m 00s | 86ecbe93ee | The js target makes only functions that wait `async`: field accessors are plain functions again (D319) |
-| 345 | 10-20 08:20 | 50m 00s | this commit | The js target calls primitives directly: the hub summary of a head is twice as fast (D320) |
+| 345 | 10-20 08:20 | 50m 00s | dacf53dbe8 | The js target calls primitives directly: the hub summary of a head is twice as fast (D320) |
 
 Total from stage 1 to stage 345: 147h 40m.
