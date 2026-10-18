@@ -11,6 +11,7 @@
  *
  *   node tools/autocue/showcase/assemble.mjs --clips /Volumes/SSD1/Media/Showcase/2026-10-17 [--hold 20000] [--still 3]
  *     [--full] [--overlap 12000] [--zoom 15000] [--reuse-tours] [--once map,spacetime] [--min 3] [--theme light]
+ *     [--pin explorer@3,2] [--supersample 2]
  *
  * `--full` holds each tour for its own clip's length instead of `--hold`; `--overlap` starts the zoom-out that long
  * before the last tour ends, so its clip plays on as the grid is revealed; `--zoom` is the zoom-out's length.
@@ -37,6 +38,8 @@ const { values: options } = parseArgs({
     'zoom': { type: 'string' },
     'reuse-tours': { type: 'boolean', default: false },
     'once': { type: 'string' },
+    'pin': { type: 'string', multiple: true, default: [] },
+    'supersample': { type: 'string', default: '1' },
     'min': { type: 'string', default: '3' },
     'theme': { type: 'string', default: 'light' },
     'storybook': { type: 'string', default: 'http://localhost:9009' },
@@ -106,6 +109,7 @@ const layout = await run(process.execPath, [
   ...['--run', path.relative(ROOT, RUN), '--tour', tours.map(name).join(','), '--tours', String(tours.length)],
   ...['--min', options.min, ...(options['reuse-tours'] ? ['--reuse-tours'] : [])],
   ...(options.once ? ['--once', options.once] : []),
+  ...options.pin.flatMap((pin) => ['--pin', pin]),
 ]);
 console.log(layout.output.trim());
 if (layout.code !== 0) {
@@ -126,6 +130,7 @@ const timing = [
   ...(options.full ? ['--holds', holds.join(',')] : ['--hold', options.hold]),
   ...(options.overlap ? ['--overlap', options.overlap] : []),
   ...(options.zoom ? ['--duration', options.zoom] : []),
+  ...['--supersample', options.supersample],
 ];
 
 const book = await storybook({ root: ROOT, url: options.storybook, env, log });

@@ -46,8 +46,12 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
   - `--full` holds each tour for its whole clip; `--overlap <ms>` starts the zoom-out that long before the last tour
     ends, so it plays on as the grid is revealed; `--zoom <ms>` sets the zoom-out's length.
   - `--reuse-tours` lets the tour clips fill grid cells too when there are few other clips, `--once a,b` places those
-    clips in one cell only, and `--min` sets how close two copies may sit. The 2026-10-18 session:
-    `--full --overlap 73083 --zoom 15000 --reuse-tours --once map,spacetime --min 2` (the zoom starts 2s into meeting).
+    clips in one cell only, `--pin <clip>@<col>,<row>` fixes a clip to a cell, and `--min` sets how close two copies
+    may sit.
+  - `--supersample 2` renders each frame at twice the pixel density and area-averages it down, so tiles do not alias
+    during the zoom-out (about twice the render time).
+  - The 2026-10-18 session: `--full --overlap 73083 --zoom 15000 --reuse-tours --once map,spacetime --pin explorer@3,2
+--min 2 --supersample 2` (the zoom starts 2s into meeting, with explorer above it).
 
 ## Recording it
 

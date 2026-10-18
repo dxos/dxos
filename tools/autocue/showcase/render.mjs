@@ -8,10 +8,12 @@
  * move judder however the result is re-encoded.
  *
  *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light] [--hold 20000]
- *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000]
+ *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000] [--supersample 2]
  *
  * `--holds` sets each tour cell's hold in turn (one cell per entry), `--overlap` starts the zoom-out that long before
  * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
+ * `--supersample 2` screenshots each frame at twice the pixel density and area-averages it down, so the tiles do not
+ * alias as the camera zooms out.
  */
 
 import { chromium } from '@playwright/test';
@@ -32,6 +34,7 @@ const { values } = parseArgs({
     holds: { type: 'string' },
     overlap: { type: 'string' },
     duration: { type: 'string' },
+    supersample: { type: 'string', default: '1' },
   },
 });
 
@@ -51,7 +54,13 @@ const url =
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
-const page = await browser.newPage({ viewport: size, colorScheme: values.theme === 'dark' ? 'dark' : 'light' });
+const supersample = Number(values.supersample);
+// A higher device scale keeps the story's layout in CSS pixels and only adds pixels to downsample from.
+const page = await browser.newPage({
+  viewport: size,
+  deviceScaleFactor: supersample,
+  colorScheme: values.theme === 'dark' ? 'dark' : 'light',
+});
 /** Waits for the stepped story and every clip in it to load. */
 const settle = async () => {
   await page.waitForFunction(() => window.grid !== undefined, undefined, { timeout: 120_000 });
@@ -75,6 +84,7 @@ const ffmpeg = spawn(
   [
     ...['-hide_banner', '-loglevel', 'error', '-y'],
     ...['-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-'],
+    ...(supersample > 1 ? ['-vf', `scale=${size.width}:${size.height}:flags=area`] : []),
     ...['-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'],
     values.out,
   ],

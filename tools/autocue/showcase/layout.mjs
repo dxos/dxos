@@ -11,10 +11,11 @@
  *
  *   node tools/autocue/showcase/layout.mjs --run temp/showcase/<run> [--tour markdown,canvas,projects,composer] [--min 3]
  *     [--tours 3] [--reuse-tours] [--once map,spacetime]
+ *     [--pin explorer@3,2]
  *
  * The `--tours` tour cells take the first of `--tour` that recorded, so one failed tour flow does not block the
  * composite. `--reuse-tours` lets the tour clips fill grid cells too, for a run with few other clips, and `--once`
- * names clips placed at most once.
+ * names clips placed at most once. Each `--pin <clip>@<col>,<row>` puts a clip on that cell before the rest are laid out.
  *
  * Exits non-zero when two copies of a clip end up closer than `--min` cells (Chebyshev distance: a diagonal
  * neighbour is 1), so a run with too few clips is caught before the composite is rendered.
@@ -39,6 +40,7 @@ const { values: options } = parseArgs({
     'tours': { type: 'string', default: '3' },
     'reuse-tours': { type: 'boolean', default: false },
     'once': { type: 'string', default: '' },
+    'pin': { type: 'string', multiple: true, default: [] },
   },
 });
 
@@ -79,15 +81,25 @@ const distance = ([ac, ar], [bc, br]) => Math.max(Math.abs(ac - bc), Math.abs(ar
 
 /** Where each clip already sits; a tour clip sits on its tour cell. */
 const placed = new Map(tour.map((name, step) => [name, [TOUR_CELLS[step]]]));
+const pins = options.pin.map((pin) => {
+  const [name, at = ''] = pin.split('@');
+  const [col, row] = at.split(',').map(Number);
+  if (!available.includes(name) || !Number.isInteger(col) || !Number.isInteger(row)) {
+    console.error(`bad --pin ${pin}: expected <clip>@<col>,<row> with a recorded clip`);
+    process.exit(2);
+  }
+  placed.set(name, [...(placed.get(name) ?? []), [col, row]]);
+  return { index: row * COLS + col, cell: [col, row], name, pinned: true };
+});
 const uses = (name) => placed.get(name)?.length ?? 0;
 const nearest = (name, cell) => Math.min(Infinity, ...(placed.get(name) ?? []).map((other) => distance(cell, other)));
 
 const isTour = (cell) => TOUR_CELLS.slice(0, tour.length).some((other) => distance(cell, other) === 0);
-const grid = [];
+const grid = [...pins];
 for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {
     const cell = [col, row];
-    if (isTour(cell)) {
+    if (isTour(cell) || pins.some((pin) => distance(pin.cell, cell) === 0)) {
       continue;
     }
     // Farthest from its own nearest copy first, then the least used, then by name so a layout is repeatable.
@@ -123,7 +135,7 @@ for (let improved = true; improved;) {
   improved = false;
   for (const a of grid) {
     for (const b of grid) {
-      if (a.name === b.name) {
+      if (a.name === b.name || a.pinned || b.pinned) {
         continue;
       }
       const before = score();
