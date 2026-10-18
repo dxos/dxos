@@ -8,6 +8,10 @@
  * move judder however the result is re-encoded.
  *
  *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light] [--hold 20000]
+ *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000]
+ *
+ * `--holds` sets each tour cell's hold in turn (one cell per entry), `--overlap` starts the zoom-out that long before
+ * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
  */
 
 import { chromium } from '@playwright/test';
@@ -25,28 +29,43 @@ const { values } = parseArgs({
     height: { type: 'string', default: '1080' },
     // How long the camera holds on each tour cell; it should match the tour clips' length.
     hold: { type: 'string' },
+    holds: { type: 'string' },
+    overlap: { type: 'string' },
+    duration: { type: 'string' },
   },
 });
 
 const fps = Number(values.fps);
 const size = { width: Number(values.width), height: Number(values.height) };
+const args = [
+  'controls:!false',
+  'stepped:!true',
+  ...(values.hold ? [`hold:${Number(values.hold)}`] : []),
+  ...(values.holds?.split(',').map((ms, step) => `holds[${step}]:${Math.round(Number(ms))}`) ?? []),
+  ...(values.overlap ? [`overlap:${Number(values.overlap)}`] : []),
+  ...(values.duration ? [`duration:${Number(values.duration)}`] : []),
+];
 const url =
   `${values.url}/iframe.html?id=tools-autocue-grid--default&viewMode=story` +
-  `&args=controls:!false;stepped:!true${values.hold ? `;hold:${Number(values.hold)}` : ''}&globals=theme:${values.theme}`;
+  `&args=${args.join(';')}&globals=theme:${values.theme}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
 const page = await browser.newPage({ viewport: size, colorScheme: values.theme === 'dark' ? 'dark' : 'light' });
+/** Waits for the stepped story and every clip in it to load. */
+const settle = async () => {
+  await page.waitForFunction(() => window.grid !== undefined, undefined, { timeout: 120_000 });
+  await page.waitForFunction(
+    () => {
+      const videos = [...document.querySelectorAll('video')];
+      return videos.length > 0 && videos.every((video) => video.readyState >= 2);
+    },
+    undefined,
+    { timeout: 120_000 },
+  );
+};
 await page.goto(url);
-await page.waitForFunction(() => window.grid !== undefined, undefined, { timeout: 120_000 });
-await page.waitForFunction(
-  () => {
-    const videos = [...document.querySelectorAll('video')];
-    return videos.length > 0 && videos.every((video) => video.readyState >= 2);
-  },
-  undefined,
-  { timeout: 120_000 },
-);
+await settle();
 const total = await page.evaluate(() => window.grid.total);
 const frames = Math.ceil((total / 1_000) * fps);
 console.log(`rendering ${frames} frames (${(total / 1_000).toFixed(1)}s at ${fps} fps) to ${values.out}`);
@@ -74,7 +93,19 @@ try {
     if (failure) {
       throw failure;
     }
-    await page.evaluate((ms) => window.grid.seek(ms), (frame * 1_000) / fps);
+    // The shared storybook reloads the story when any file it serves changes; the frame is retried once it is back.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await page.evaluate((ms) => window.grid.seek(ms), (frame * 1_000) / fps);
+        break;
+      } catch (err) {
+        if (attempt >= 3) {
+          throw err;
+        }
+        console.log(`story reloaded at frame ${frame} (${err.message.split('\n')[0]}); waiting for it`);
+        await settle();
+      }
+    }
     const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
     if (!ffmpeg.stdin.write(jpeg)) {
       await once(ffmpeg.stdin, 'drain');

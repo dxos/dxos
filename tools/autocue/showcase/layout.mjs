@@ -10,8 +10,10 @@
  * placed on its tour cell, so it does not reappear next to the tour either.
  *
  *   node tools/autocue/showcase/layout.mjs --run temp/showcase/<run> [--tour markdown,canvas,projects,composer] [--min 3]
+ *     [--tours 3] [--reuse-tours]
  *
- * The tour cells take the first of `--tour` that recorded, so one failed tour flow does not block the composite.
+ * The `--tours` tour cells take the first of `--tour` that recorded, so one failed tour flow does not block the
+ * composite. `--reuse-tours` lets the tour clips fill grid cells too, for a run with few other clips.
  *
  * Exits non-zero when two copies of a clip end up closer than `--min` cells (Chebyshev distance: a diagonal
  * neighbour is 1), so a run with too few clips is caught before the composite is rendered.
@@ -28,11 +30,13 @@ const ROOT = execFileSync('git', ['-C', HERE, 'rev-parse', '--show-toplevel'], {
 
 const { values: options } = parseArgs({
   options: {
-    run: { type: 'string' },
-    tour: { type: 'string', default: 'markdown,canvas,projects,composer' },
-    min: { type: 'string', default: '3' },
-    cols: { type: 'string', default: '6' },
-    rows: { type: 'string', default: '6' },
+    'run': { type: 'string' },
+    'tour': { type: 'string', default: 'markdown,canvas,projects,composer' },
+    'min': { type: 'string', default: '3' },
+    'cols': { type: 'string', default: '6' },
+    'rows': { type: 'string', default: '6' },
+    'tours': { type: 'string', default: '3' },
+    'reuse-tours': { type: 'boolean', default: false },
   },
 });
 
@@ -46,12 +50,8 @@ const GRID = path.join(ROOT, 'temp', 'grid-zoom');
 const COLS = Number(options.cols);
 const ROWS = Number(options.rows);
 
-/** Grid's DEFAULT_TOUR: three cells of row 3, the last in the bottom-left quadrant. */
-const TOUR_CELLS = [
-  [0, 3],
-  [1, 3],
-  [2, 3],
-];
+/** Grid's default tour: one cell of row 3 per tour from the left; three end in the bottom-left quadrant. */
+const TOUR_CELLS = Array.from({ length: Number(options.tours) }, (_, col) => [col, 3]);
 
 const available = readdirSync(CLIPS)
   .filter((file) => file.endsWith('.mp4'))
@@ -66,7 +66,7 @@ if (tour.length < TOUR_CELLS.length) {
   console.error(`only ${tour.length} of the tour clips (${options.tour}) recorded; ${TOUR_CELLS.length} are needed`);
   process.exit(1);
 }
-const pool = available.filter((name) => !tour.includes(name));
+const pool = options['reuse-tours'] ? available : available.filter((name) => !tour.includes(name));
 if (pool.length === 0) {
   console.error('no grid clips besides the tour clips');
   process.exit(1);

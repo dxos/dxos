@@ -42,6 +42,11 @@ The grid can also be built from clips recorded by hand in Screen Studio: three 2
       1920x1080 at 60 fps (a screenshot becomes a 3s still clip), lays out the grid (`tour-1`..`tour-3` on the tour
       cells; other clips repeat only far from themselves), renders the composite from the Grid story with a 20s hold
       per tour, and writes `composite.mp4` back to the folder.
+  - Any number of tours, `tour-1`..`tour-<n>`, sit side by side in row 3; the camera pans right from each to the next.
+  - `--full` holds each tour for its whole clip; `--overlap <ms>` starts the zoom-out that long before the last tour
+    ends, so it plays on as the grid is revealed; `--zoom <ms>` sets the zoom-out's length.
+  - `--reuse-tours` lets the tour clips fill grid cells too when there are few other clips, and `--min` sets how close
+    two copies may sit. The 2026-10-18 session: `--full --overlap 12000 --zoom 15000 --reuse-tours --min 2`.
 
 ## Recording it
 
@@ -109,7 +114,8 @@ Every showcase clip and every take of the composite follows these:
    plank.
 7. **Full resolution.** Record at `--scale 2` and encode every clip at 1920x1080, so a tour cell filling the frame is
    shown 1:1 rather than upscaled.
-8. **Near-black between tiles.** The grid's ground and gutters are near black, in either theme.
+8. **Themed ground.** The grid's ground and gutters follow the story's theme global (light for the composite), and
+   `assemble.mjs` letterboxes a clip that is not 16:9 in the theme's page colour (`--theme`).
 9. **Render the composite frame by frame.** `render.mjs` seeks the story's stepped mode and screenshots each frame at
    exactly 60 fps. A live screencast of the story delivers about 25 fps at 1080p, so camera moves judder.
 
