@@ -54,7 +54,16 @@ import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/index.ts';
-import { useCanvasContext } from './CanvasContext.ts';
+import {
+  useCanvasEditing,
+  useCanvasGesture,
+  useCanvasLook,
+  useCanvasNavigation,
+  useCanvasSelection,
+  useCanvasServices,
+  useCanvasTime,
+  useCanvasTools,
+} from './CanvasContext.ts';
 import { DOTS_RANGE, ZOOM_SETTLE } from './constants.ts';
 import { PREVIEW_NODE_ID } from './usePointerMachine.ts';
 import { GRID_LEVELS, GRID_RANGE } from './useSceneSnap.ts';
@@ -74,39 +83,19 @@ export type CanvasViewportProps = {
 
 /** The scene itself under the camera: the grid, the layer, the control frame and the menu a gesture opens. */
 export const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds }: CanvasViewportProps) => {
+  const { registry, atoms, store, capabilities, readonly, projection, nodeRegistry, grid, objectActions } =
+    useCanvasServices('Canvas.Viewport');
   const {
-    registry,
-    atoms,
-    store,
-    capabilities,
-    readonly,
-    projection,
-    nodeRegistry,
     displayScene,
     blocked,
     bounds,
     measured,
     viewport,
-    grid,
-    snapEnabled,
-    guides,
-    latticeOn,
-    selection,
-    editing,
-    active,
-    clipboard,
-    drag,
-    debug,
     createFrame,
     landing,
     handlers,
-    linkHover,
-    select,
     navigating,
     opening,
-    copy,
-    cut,
-    paste,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
@@ -117,18 +106,31 @@ export const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, background
     menu,
     closeMenu,
     menuAnchorRef,
-    look: viewLook,
-    time,
-    isolation,
-    objectActions,
-    drillIn,
-    childFrame,
-    generated,
-    toolbarActions,
-  } = useCanvasContext('Canvas.Viewport');
-  const camera = useAtomValue(atoms.camera);
-  const hover = useAtomValue(atoms.hover);
-  const selectedPoint = useAtomValue(atoms.point);
+  } = useCanvasGesture('Canvas.Viewport');
+  const { look: viewLook } = useCanvasLook('Canvas.Viewport');
+  const navigation = useCanvasNavigation('Canvas.Viewport');
+  const tools = useCanvasTools('Canvas.Viewport');
+  const selectionAspect = useCanvasSelection('Canvas.Viewport');
+  const editingAspect = useCanvasEditing('Canvas.Viewport');
+  const timeAspect = useCanvasTime('Canvas.Viewport');
+  const snapEnabled = useAtomValue(tools.atoms.snap);
+  const guides = useAtomValue(tools.atoms.guides);
+  const latticeOn = useAtomValue(tools.atoms.lattice);
+  const debug = useAtomValue(tools.atoms.debug);
+  const selection = useAtomValue(selectionAspect.atoms.selection);
+  const linkHover = useAtomValue(selectionAspect.atoms.linkHover);
+  const editing = useAtomValue(editingAspect.atoms.editing);
+  const active = useAtomValue(editingAspect.atoms.active);
+  const clipboard = useAtomValue(editingAspect.atoms.clipboard);
+  const isolation = useAtomValue(navigation.atoms.isolation);
+  const time = useAtomValue(timeAspect.atoms.time);
+  const drag = useAtomValue(atoms.drag);
+  const { generated } = timeAspect;
+  const { copy, cut, paste } = editingAspect.commands;
+  const { drillIn, childFrame } = navigation.commands;
+  const camera = useAtomValue(navigation.atoms.camera);
+  const hover = useAtomValue(selectionAspect.atoms.hover);
+  const selectedPoint = useAtomValue(selectionAspect.atoms.point);
   // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
   // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
   const latticeBounds = useMemo(
@@ -403,7 +405,7 @@ export const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, background
               <Menu.Item
                 data-testid='menu-delete'
                 disabled={!capabilities.delete}
-                onSelect={toolbarActions.delete}
+                onSelect={selectionAspect.commands.delete}
                 item={{ value: 'Delete', label: 'Delete' }}
               />
               <Menu.Separator />

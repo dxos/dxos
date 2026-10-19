@@ -19,6 +19,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -59,7 +60,23 @@ type InspectorPanelContextValue = {
   onDockedChange?: (docked: boolean) => void;
 };
 
-const InspectorPanelContext = createContext<InspectorPanelContextValue | undefined>(undefined);
+/**
+ * The panel's state behind a stable handle: a section subscribes to its own slot, so a change that leaves its slot as
+ * it was (the selection, another section's slot, the panel's actions) does not re-render the inspector inside it.
+ */
+type InspectorPanelHandle = {
+  get: () => InspectorPanelContextValue;
+  subscribe: (listener: () => void) => () => void;
+  register: InspectorPanelContextValue['register'];
+};
+
+const InspectorPanelContext = createContext<InspectorPanelHandle | undefined>(undefined);
+
+const usePanelState = (handle: InspectorPanelHandle | undefined): InspectorPanelContextValue | undefined =>
+  useSyncExternalStore(
+    useCallback((listener: () => void) => handle?.subscribe(listener) ?? (() => {}), [handle]),
+    () => handle?.get(),
+  );
 
 export type InspectorPanelRootProps = PropsWithChildren<{
   /** Beside the canvas, rather than floating over it. */
@@ -114,7 +131,23 @@ const InspectorPanelRoot = ({
     () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, actions, onDockedChange }),
     [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, onDockedChange],
   );
-  return <InspectorPanelContext.Provider value={value}>{children}</InspectorPanelContext.Provider>;
+  // Read during render by the subscribers, which are then told of the change once it commits.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const listeners = useRef(new Set<() => void>());
+  const handle = useMemo<InspectorPanelHandle>(
+    () => ({
+      get: () => valueRef.current,
+      subscribe: (listener) => {
+        listeners.current.add(listener);
+        return () => listeners.current.delete(listener);
+      },
+      register,
+    }),
+    [register],
+  );
+  useLayoutEffect(() => listeners.current.forEach((listener) => listener()), [value]);
+  return <InspectorPanelContext.Provider value={handle}>{children}</InspectorPanelContext.Provider>;
 };
 
 InspectorPanelRoot.displayName = 'InspectorPanel.Root';
@@ -142,7 +175,7 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
  * none shows.
  */
 const InspectorPanelContent = () => {
-  const context = useContext(InspectorPanelContext);
+  const context = usePanelState(useContext(InspectorPanelContext));
   const visible = useMemo(
     () => context?.sections.filter((section) => context.shows(section)) ?? [],
     [context?.sections, context?.shows],
@@ -257,6 +290,11 @@ export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectio
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
   const { id, title, icon, order, show, defaultOpen } = section;
+  const subscribe = useCallback((listener: () => void) => panel?.subscribe(listener) ?? (() => {}), [panel]);
+  const slot = useSyncExternalStore(subscribe, () => {
+    const state = panel?.get();
+    return state?.shows(section) ? state.slots[id] : undefined;
+  });
   useLayoutEffect(() => {
     if (!panel) {
       return;
@@ -268,6 +306,5 @@ export const InspectorSection = ({ section, children }: InspectorSectionProps) =
   if (!panel) {
     return <>{children}</>;
   }
-  const slot = panel.shows(section) ? panel.slots[id] : undefined;
   return slot ? createPortal(children, slot) : null;
 };

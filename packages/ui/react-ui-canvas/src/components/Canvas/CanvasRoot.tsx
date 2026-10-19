@@ -11,6 +11,7 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
@@ -113,19 +114,23 @@ import {
 } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { type ElementHandlers, defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
-import { type ToolbarActions } from '../Toolbar/index.ts';
-import { CanvasProvider } from './CanvasContext.ts';
+import {
+  CanvasEditingProvider,
+  CanvasGestureProvider,
+  CanvasLookProvider,
+  CanvasServicesProvider,
+  CanvasTimeProvider,
+  type DocumentCommands,
+} from './CanvasContext.ts';
 import {
   CAMERA_SETTLE_MS,
   DEFAULT_MARGIN,
   FIT_DEBOUNCE_MS,
   LIGHT_MODE,
   LINK_HOVER_GRACE_MS,
-  OBJECTS_CRUMB,
   PREVIEW_LINK_ID,
   type SceneDisplay,
   SETTLE_MS,
-  ZOOM_STEP,
 } from './constants.ts';
 import { PREVIEW_NODE_ID, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
@@ -292,6 +297,8 @@ export const CanvasRoot = ({
   const scene = useAtomValue(projection.scene);
   const baseScene = useAtomValue(baseProjection.scene);
   const timeline = baseScene.timeline;
+  // The timeline alone, so the parts that read it do not re-render on every other edit.
+  const timelineAtom = useMemo(() => Atom.make((get) => get(baseProjection.scene).timeline), [baseProjection]);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene: baseScene,
@@ -300,8 +307,6 @@ export const CanvasRoot = ({
     compile: compileGenerator,
     createWorker: createGeneratorWorker,
   });
-  const playing = useAtomValue(atoms.clock.playing);
-  const isolation = useAtomValue(atoms.isolation);
   useClock(atoms.clock, { duration: timeline?.duration, loop: timeline?.loop });
   const visible = useMemo(() => visibleScene(scene), [scene]);
   const scenes = useAtomValue(store.scenes);
@@ -316,9 +321,6 @@ export const CanvasRoot = ({
   const cell = grid * MAJOR_GRID_RATIO;
 
   const drag = useAtomValue(atoms.drag);
-  const undoState = useAtomValue(atoms.undo);
-  const clipboard = useAtomValue(atoms.clipboard);
-  const editing = useAtomValue(atoms.editing);
   const active = useAtomValue(atoms.active);
   // A node's content stays live only while the node is the selection; selecting anything else makes it inert again.
   useEffect(() => {
@@ -326,12 +328,14 @@ export const CanvasRoot = ({
       registry.set(atoms.active, undefined);
     }
   }, [active, selection, registry, atoms.active]);
-  const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
   // Fit mode keeps the current scene framed as the view resizes or opens another scene, until the user pans or zooms.
   // A view opens fitted, in fit mode, unless the host restores it with fit mode off (and then its camera).
-  const [fitting, setFitting] = useState(() => initialDisplay?.fit ?? true);
-  const exitFit = useCallback(() => setFitting(false), []);
+  // An atom rather than state, so the camera bar reads it without the root's context changing with it.
+  const [fittingAtom] = useState(() => Atom.keepAlive(Atom.make<boolean>(initialDisplay?.fit ?? true)));
+  const fitting = useAtomValue(fittingAtom);
+  const setFitting = useCallback((value: boolean) => registry.set(fittingAtom, value), [registry, fittingAtom]);
+  const exitFit = useCallback(() => setFitting(false), [setFitting]);
   // Seeded once per atoms, before the host hears of any change, so restoring the toggles reports nothing back.
   const reportedRef = useRef<SceneDisplay | undefined>(undefined);
   useLayoutEffect(() => {
@@ -356,10 +360,7 @@ export const CanvasRoot = ({
     reportedRef.current = { snap: snapEnabled, guides, fit: fitting };
     onDisplayChange({ snap: snapEnabled, guides, fit: fitting });
   }, [onDisplayChange, snapEnabled, guides, fitting]);
-  const latticeOn = useAtomValue(atoms.lattice);
   const sceneId = path[path.length - 1];
-  const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
-  const canRedo = !readonly && undoState.key === sceneId && undoState.future.length > 0;
 
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
@@ -647,8 +648,6 @@ export const CanvasRoot = ({
   // Timeline.
   //
 
-  const fps = timelineFps(timeline);
-  const { seek } = controller.time;
   const timelineKeys = useMemo(
     () => ({
       active: timeline !== undefined,
@@ -750,7 +749,8 @@ export const CanvasRoot = ({
           return;
         }
         const camera = registry.get(atoms.camera);
-        const center = screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 });
+        const { width, height } = liveRef.current.viewport;
+        const center = screenToScene(camera, { x: width / 2, y: height / 2 });
         const frame = {
           x: center.x - content.width / 2,
           y: center.y - content.height / 2,
@@ -800,7 +800,7 @@ export const CanvasRoot = ({
         recordStoreStep(registry, atoms.undo, sceneId(), model, before);
       },
     };
-  }, [registry, atoms, store.scenes, baseProjection, root, select, viewport, navigation]);
+  }, [registry, atoms, store.scenes, baseProjection, root, select, navigation]);
 
   //
   // Navigation.
@@ -1048,7 +1048,6 @@ export const CanvasRoot = ({
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 
   // Leaving a link waits a moment before it clears, so the pointer can reach the end handles drawn over it.
-  const linkHover = useAtomValue(atoms.linkHover);
   const linkHoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const onLinkHover = useCallback(
     (id: LinkId | undefined) => {
@@ -1166,87 +1165,46 @@ export const CanvasRoot = ({
     });
   }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
 
-  const deleteSelection = controller.selection.delete;
-
   /** A default-sized node of `type` centred in the view, its top-left on the grid. */
-  const createAtCentre = useCallback(
-    (type: NodeType) => {
-      const def = nodeRegistry[type];
-      if (!def || !capabilities.create) {
-        return;
-      }
-      const size = nominalSize(def.defaultSize, cell);
-      // The camera is read when the command runs, so the command keeps its identity while the view moves.
-      const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
-      const from = { x: snapMinor(centre.x - size.width / 2), y: snapMinor(centre.y - size.height / 2) };
-      // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
-      const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
-      if (node) {
-        commitCreated(node);
-      }
-    },
-    [nodeRegistry, capabilities.create, cell, snapMinor, registry, atoms.camera, viewport, createdNode, commitCreated],
+  const createAtCentre = (type: NodeType) => {
+    const def = nodeRegistry[type];
+    if (!def || !capabilities.create) {
+      return;
+    }
+    const size = nominalSize(def.defaultSize, cell);
+    const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
+    const from = { x: snapMinor(centre.x - size.width / 2), y: snapMinor(centre.y - size.height / 2) };
+    // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
+    const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
+    if (node) {
+      commitCreated(node);
+    }
+  };
+  // Read when a command runs, so the commands keep their identity while the view moves and the scene is edited.
+  const documentRef = useRef({ onUndo, onRedo, createAtCentre });
+  documentRef.current = { onUndo, onRedo, createAtCentre };
+  const documentCommands = useMemo<DocumentCommands>(
+    () => ({
+      undo: () => documentRef.current.onUndo(),
+      redo: () => documentRef.current.onRedo(),
+      create: (type) => documentRef.current.createAtCentre(type),
+      // A selection of two or more is what the user asked to tidy; one node alone means the board.
+      layout: () => {
+        const selection = registry.get(atoms.selection);
+        liveRef.current.projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined });
+      },
+    }),
+    [registry, atoms.selection],
   );
 
-  const toolbarActions = useMemo<ToolbarActions>(
-    () => ({
-      // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
-      path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
-      nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : nameOf(id)),
-      onPath: navigation.openPath,
-      fit: navigation.fit,
-      fitting,
-      zoomReset: () => navigation.zoomTo(NOMINAL_ZOOM),
-      zoomIn: () => navigation.zoomBy(ZOOM_STEP),
-      zoomOut: () => navigation.zoomBy(1 / ZOOM_STEP),
-      snap: snapEnabled,
-      toggleSnap,
-      // Only a lattice scene has a lattice to snap to.
-      ...(projection.lattice ? { lattice: latticeOn, toggleLattice } : {}),
-      debug,
-      toggleDebug,
-      canUndo,
-      canRedo,
-      undo: onUndo,
-      redo: onRedo,
-      hasSelection: selection.size > 0,
-      hasClipboard: clipboard !== undefined,
-      cut,
-      copy,
-      paste: () => paste(),
-      delete: deleteSelection,
-      create: createAtCentre,
-      // A selection of two or more is what the user asked to tidy; one node alone means the board.
-      layout: capabilities.layout
-        ? () => projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined })
-        : undefined,
-    }),
-    [
-      path,
-      nameOf,
-      isolation,
-      navigation,
-      fitting,
-      snapEnabled,
-      toggleSnap,
-      latticeOn,
-      toggleLattice,
-      debug,
-      toggleDebug,
-      canUndo,
-      canRedo,
-      onUndo,
-      onRedo,
-      selection,
-      clipboard,
-      cut,
-      copy,
-      paste,
-      deleteSelection,
-      createAtCentre,
-      capabilities.layout,
-      projection,
-    ],
+  // Once per atoms, so the providers' values hold still while the root re-renders.
+  const timeAtoms = useMemo(
+    () => ({ time: atoms.clock.time, playing: atoms.clock.playing, autoKey: atoms.autoKey }),
+    [atoms],
+  );
+  const editingAtoms = useMemo(
+    () => ({ editing: atoms.editing, active: atoms.active, clipboard: atoms.clipboard }),
+    [atoms],
   );
 
   // Commands on the selection, at the start of the inspector panel's toolbar.
@@ -1284,121 +1242,105 @@ export const CanvasRoot = ({
     );
 
   return (
-    <CanvasProvider
+    <CanvasServicesProvider
       registry={registry}
       controller={controller}
       atoms={atoms}
       store={store}
       projection={projection}
+      baseProjection={baseProjection}
       capabilities={capabilities}
       readonly={readonly}
       onReadonlyChange={onReadonlyChange}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
-      scene={scene}
-      displayScene={displayScene}
-      blocked={blocked}
-      bounds={bounds}
-      path={path}
-      measured={measured}
-      viewport={viewport}
       grid={grid}
-      snapEnabled={snapEnabled}
-      guides={guides}
-      toggleGuides={toggleGuides}
-      latticeOn={latticeOn}
-      selection={selection}
-      editing={editing}
-      active={active}
-      clipboard={clipboard}
-      drag={drag}
-      tool={tool}
-      debug={debug}
-      // Read-only, nothing is edited, so there is no dock taking room from the canvas and no inspector floats over it.
-      createFrame={createFrame}
-      landing={landing}
-      handlers={handlers}
-      linkHover={linkHover}
-      select={select}
-      toolbarActions={toolbarActions}
-      navigating={navigating}
-      opening={opening}
-      drillIn={navigation.drillIn}
-      childFrame={navigation.childFrame}
-      copy={copy}
-      cut={cut}
-      paste={paste}
-      onHandlePointerDown={onHandlePointerDown}
-      onPortPointerDown={onPortPointerDown}
-      onEndPointerDown={onEndPointerDown}
-      onPointPointerDown={onPointPointerDown}
-      onMidpointPointerDown={onMidpointPointerDown}
-      onPointContextMenu={onPointContextMenu}
-      setTool={setTool}
-      removePoint={removePoint}
-      menu={menu}
-      closeMenu={closeMenu}
-      menuAnchorRef={menuAnchorRef}
-      look={look}
-      themes={themes}
-      themeOverride={theme}
-      themeGrid={themeGrid}
-      onThemeChange={onThemeChange}
-      onBackgroundGridChange={onBackgroundGridChange}
-      baseProjection={baseProjection}
-      timeline={timeline}
-      time={time}
-      playing={playing}
-      fps={fps}
-      seek={seek}
-      timelineKeys={timelineKeys}
-      isolation={isolation}
-      isolate={navigation.isolate}
+      fitting={fittingAtom}
+      timeline={timelineAtom}
+      document={documentCommands}
       objectActions={objectActions}
-      generated={generated}
     >
-      <SceneLookContext.Provider value={look}>
-        <InspectorPanel.Root
-          docked={!readonly && inspectors === 'docked'}
-          readonly={readonly}
-          selected={selection.size > 0}
-          actions={inspectorActions}
-          onDockedChange={onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))}
-        >
-          {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
+      <CanvasLookProvider
+        look={look}
+        themes={themes}
+        themeOverride={theme}
+        themeGrid={themeGrid}
+        // The pickers show only when the host takes their changes.
+        setTheme={onThemeChange && controller.look.setTheme}
+        setBackgroundGrid={onBackgroundGridChange && controller.look.setBackgroundGrid}
+      >
+        <CanvasTimeProvider atoms={timeAtoms} commands={controller.time} timeline={timelineAtom} generated={generated}>
+          <CanvasEditingProvider atoms={editingAtoms} commands={controller.editing}>
+            <CanvasGestureProvider
+              displayScene={displayScene}
+              blocked={blocked}
+              createFrame={createFrame}
+              landing={landing}
+              handlers={handlers}
+              bounds={bounds}
+              viewport={viewport}
+              measured={measured}
+              navigating={navigating}
+              opening={opening}
+              onHandlePointerDown={onHandlePointerDown}
+              onPortPointerDown={onPortPointerDown}
+              onEndPointerDown={onEndPointerDown}
+              onPointPointerDown={onPointPointerDown}
+              onMidpointPointerDown={onMidpointPointerDown}
+              onPointContextMenu={onPointContextMenu}
+              removePoint={removePoint}
+              menu={menu}
+              closeMenu={closeMenu}
+              menuAnchorRef={menuAnchorRef}
+            >
+              <SceneLookContext.Provider value={look}>
+                <InspectorPanel.Root
+                  docked={!readonly && inspectors === 'docked'}
+                  readonly={readonly}
+                  selected={selection.size > 0}
+                  actions={inspectorActions}
+                  onDockedChange={
+                    onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))
+                  }
+                >
+                  {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-          <div className={mx('relative flex dx-fill overflow-clip bg-base-surface', classNames)}>
-            <div
-              ref={rootRef}
-              tabIndex={0}
-              className={mx(
-                'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
-                // A theme with a mode takes it over the app's, for everything over the canvas.
-                look.tone === 'dark' && 'dark',
-                tool.kind === 'hand' && 'cursor-grab',
-                tool.kind === 'node' && 'cursor-crosshair',
-              )}
-              style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
-              data-testid='scene-view'
-              data-mode={look.tone === 'theme' ? undefined : look.tone}
-              onPointerDown={onBackgroundPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-              onPointerCancel={cancelDrag}
-              onPointerLeave={() => updateHover(undefined)}
-              onDoubleClick={onDoubleClick}
-              onContextMenu={onContextMenu}
-              onKeyDown={onKeyDown}
-            >
-              {children}
-            </div>
-            <InspectorPanel.Content />
-          </div>
-        </InspectorPanel.Root>
-      </SceneLookContext.Provider>
-    </CanvasProvider>
+                  <div className={mx('relative flex dx-fill overflow-clip bg-base-surface', classNames)}>
+                    <div
+                      ref={rootRef}
+                      tabIndex={0}
+                      className={mx(
+                        'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                        // A theme with a mode takes it over the app's, for everything over the canvas.
+                        look.tone === 'dark' && 'dark',
+                        tool.kind === 'hand' && 'cursor-grab',
+                        tool.kind === 'node' && 'cursor-crosshair',
+                      )}
+                      style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
+                      data-testid='scene-view'
+                      data-mode={look.tone === 'theme' ? undefined : look.tone}
+                      onPointerDown={onBackgroundPointerDown}
+                      onPointerMove={onPointerMove}
+                      onPointerUp={onPointerUp}
+                      // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+                      onPointerCancel={cancelDrag}
+                      onPointerLeave={() => updateHover(undefined)}
+                      onDoubleClick={onDoubleClick}
+                      onContextMenu={onContextMenu}
+                      onKeyDown={onKeyDown}
+                    >
+                      {children}
+                    </div>
+                    <InspectorPanel.Content />
+                  </div>
+                </InspectorPanel.Root>
+              </SceneLookContext.Provider>
+            </CanvasGestureProvider>
+          </CanvasEditingProvider>
+        </CanvasTimeProvider>
+      </CanvasLookProvider>
+    </CanvasServicesProvider>
   );
 };
 

@@ -42,7 +42,7 @@ import {
 } from '../inspectors/index.ts';
 import { InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
-import { useCanvasContext } from './CanvasContext.ts';
+import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasServices } from './CanvasContext.ts';
 
 //
 // Properties
@@ -55,8 +55,9 @@ export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'd
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
 export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
-    useCanvasContext('Canvas.Properties');
+  const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.Properties');
+  const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
+  const path = useAtomValue(useCanvasNavigation('Canvas.Properties').atoms.path);
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
@@ -133,7 +134,7 @@ const ABOUT_INSPECTOR: InspectorSectionDef = {
  * turns). Each edit is one intent, so one undo step.
  */
 export const CanvasLayers = () => {
-  const { registry, projection, atoms, capabilities } = useCanvasContext('Canvas.Layers');
+  const { registry, projection, atoms, capabilities } = useCanvasServices('Canvas.Layers');
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
   const layers = useMemo(() => sceneLayers(scene), [scene]);
@@ -211,7 +212,7 @@ const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into a row's thumbnail. */
 const ObjectThumbnail = ({ id }: { id: SceneId }) => {
-  const { store, nodeRegistry } = useCanvasContext('Canvas.Objects');
+  const { store, nodeRegistry } = useCanvasDocument('Canvas.Objects');
   const composite = useAtomValue(store.scene(id));
   const content = composite && compositeBounds(composite);
   if (!composite || !content) {
@@ -234,16 +235,19 @@ const ObjectThumbnail = ({ id }: { id: SceneId }) => {
 export const CanvasObjects = () => {
   const {
     store,
+    projection,
     readonly,
     capabilities,
-    selection,
-    displayScene,
-    isolation,
-    isolate,
-    objectActions,
     baseProjection,
-    timeline,
-  } = useCanvasContext('Canvas.Objects');
+    timeline: timelineAtom,
+  } = useCanvasDocument('Canvas.Objects');
+  const { objectActions } = useCanvasServices('Canvas.Objects');
+  const navigation = useCanvasNavigation('Canvas.Objects');
+  const selection = useAtomValue(useCanvasSelection('Canvas.Objects').atoms.selection);
+  const isolation = useAtomValue(navigation.atoms.isolation);
+  const timeline = useAtomValue(timelineAtom);
+  // The scene as stored rather than as a gesture draws it: a gesture never changes which object an instance shows.
+  const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.scenes);
   const objects = useMemo(() => {
     const counts = instanceCounts(scenes);
@@ -259,9 +263,9 @@ export const CanvasObjects = () => {
       return isolation.composite;
     }
     const [only] = selection.size === 1 ? [...selection] : [];
-    const node = only === undefined ? undefined : displayScene.nodes[only];
+    const node = only === undefined ? undefined : scene.nodes[only];
     return node && isInstanceNode(node) ? node.composite : undefined;
-  }, [isolation, selection, displayScene]);
+  }, [isolation, selection, scene]);
   const editable = capabilities.create === true && capabilities.delete === true;
   return (
     <InspectorSection section={OBJECTS_INSPECTOR}>
@@ -269,7 +273,7 @@ export const CanvasObjects = () => {
         objects={objects}
         selected={selected}
         readonly={!editable}
-        onSelect={isolate}
+        onSelect={navigation.commands.isolate}
         onRename={objectActions.rename}
         onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
         onPlace={isolation ? undefined : objectActions.place}
@@ -294,7 +298,8 @@ CanvasObjects.displayName = 'Canvas.Objects';
 
 /** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
 export const CanvasAbout = () => {
-  const { scene, store } = useCanvasContext('Canvas.About');
+  const { store, projection } = useCanvasDocument('Canvas.About');
+  const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.scenes);
   const stats = useMemo<AboutStat[]>(
     () => [
