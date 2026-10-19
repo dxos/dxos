@@ -104,7 +104,7 @@ export type TimeCommands = {
   setAutoKey: (autoKey: boolean) => void;
   /** Moves the playhead by whole frames. */
   step: (frames: number) => void;
-  /** Moves the playhead to the selection's next (1) or previous (-1) key. */
+  /** Moves the playhead to the selection's next (1) or previous (-1) key, or to the end (or start) when there is none. */
   jumpKey: (direction: 1 | -1) => void;
   /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there. */
   addKey: () => void;
@@ -287,10 +287,11 @@ export const createCanvasController = ({
     jumpKey: (direction) => {
       const now = registry.get(atoms.clock.time);
       const times = keyTimes(timeline(), registry.get(atoms.selection));
-      const target = direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6);
-      if (target !== undefined) {
-        seek(target);
-      }
+      // No key that way: the end (or the start), so the jump always goes somewhere.
+      const target =
+        (direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6)) ??
+        (direction > 0 ? (timeline()?.duration ?? now) : 0);
+      seek(target);
     },
     addKey: () => {
       const shown = currentScene();

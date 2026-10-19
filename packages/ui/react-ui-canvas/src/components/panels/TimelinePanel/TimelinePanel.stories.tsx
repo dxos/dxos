@@ -121,14 +121,24 @@ export const Test: Story = {
       ),
     );
 
-    // 6. From the play button: Right and Left jump to the ends, Space keys the playhead once, Delete removes that key.
+    // 6. From the play button: ⌘ with an arrow walks the keys and then reaches the end (or the start), a plain arrow
+    // scrubs a frame, Space keys the playhead once and Delete removes that key.
     const play = canvas.getByTestId('timeline-play');
     play.focus();
-    await userEvent.keyboard('{ArrowRight}');
+    const keyCount = canvas.getAllByTestId('timeline-key').length;
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    }
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('4.00 / 4.00'));
-    await userEvent.keyboard('{ArrowLeft}');
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    }
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('0.00 / 4.00'));
     await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('0.01 / 4.00'));
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    }
     const count = canvas.getAllByTestId('timeline-key').length;
     await userEvent.keyboard(' ');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1));

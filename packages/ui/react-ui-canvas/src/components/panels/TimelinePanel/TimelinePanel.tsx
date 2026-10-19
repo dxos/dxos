@@ -31,9 +31,17 @@ export type TimelinePanelProps = PanelProps & {
   onMoveKey?: (from: number, to: number) => void;
 };
 
+/** The timeline's controls show no focus ring: focus is visible as the playhead and keys respond to the keyboard. */
+const NO_RING = 'focus-visible:ring-0';
+
 /** The key at time `t`, if one is within half a frame of it. */
 export const keyAt = (keys: readonly number[], t: number, fps: number): number | undefined =>
   keys.find((key) => Math.abs(key - t) < 0.5 / fps);
+
+/** Where ⌘ with an arrow goes from `t`: the next (or previous) key, else the end (or start) when there is none that way. */
+export const jumpTarget = (keys: readonly number[], t: number, fps: number, duration: number, back: boolean): number =>
+  (back ? [...keys].reverse().find((key) => key < t - 0.5 / fps) : keys.find((key) => key > t + 0.5 / fps)) ??
+  (back ? 0 : duration);
 
 /** `t` as `s.ff`, seconds and frames, as an editor's timecode reads. */
 export const formatTime = (t: number, fps: number): string => {
@@ -46,8 +54,8 @@ export const formatTime = (t: number, fps: number): string => {
  * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
- * previous or next key, and Delete removes the key under the playhead. On the play button, Left and Right jump to the
- * start and end, Space keys the playhead and Delete removes the key there.
+ * previous or next key (the start or end when there is none that way), and Delete removes the key under the playhead. On the play button, Left and Right jump to the
+ * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Space keys the playhead and Delete removes the key there.
  */
 export const TimelinePanel = ({
   classNames,
@@ -105,12 +113,7 @@ export const TimelinePanel = ({
         event.stopPropagation();
         const back = event.key === 'ArrowLeft';
         if (event.metaKey || event.ctrlKey) {
-          const target = back
-            ? [...keys].reverse().find((key) => key < time - 0.5 / fps)
-            : keys.find((key) => key > time + 0.5 / fps);
-          if (target !== undefined) {
-            onTimeChange?.(target);
-          }
+          onTimeChange?.(jumpTarget(keys, time, fps, duration, back));
           return;
         }
         const step = event.shiftKey ? 1 : 1 / fps;
@@ -129,17 +132,25 @@ export const TimelinePanel = ({
       <Button.Root
         variant='ghost'
         iconOnly
+        classNames={NO_RING}
         icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
         label={playing ? 'Pause' : 'Play'}
         data-testid='timeline-play'
-        // Focused, the button drives the playhead and keys: Left and Right jump to the ends, Space keys the playhead
-        // (when it is not on a key already) and Delete removes the key there; Enter still plays and pauses.
+        // Focused, the button drives the playhead and keys: Left and Right scrub a frame (Shift, a second), with ⌘ or
+        // Ctrl they jump to the next key, or the end when there is none; Space keys the playhead (unless it is on a key) and Delete removes the key there.
+        // Enter still plays and pauses.
         onKeyDown={(event) => {
           if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             event.preventDefault();
             event.stopPropagation();
             onPlayingChange?.(false);
-            onTimeChange?.(event.key === 'ArrowLeft' ? 0 : duration);
+            const back = event.key === 'ArrowLeft';
+            if (event.metaKey || event.ctrlKey) {
+              onTimeChange?.(jumpTarget(keys, time, fps, duration, back));
+            } else {
+              const step = event.shiftKey ? 1 : 1 / fps;
+              onTimeChange?.(Math.min(duration, Math.max(0, time + (back ? -step : step))));
+            }
           } else if (event.key === ' ') {
             event.preventDefault();
             event.stopPropagation();
@@ -171,7 +182,7 @@ export const TimelinePanel = ({
         aria-valuemax={duration}
         aria-valuenow={time}
         aria-valuetext={`${formatTime(time, fps)} s`}
-        className='relative grow h-6 mx-2 cursor-pointer touch-none dx-focus-ring rounded-xs'
+        className='relative grow h-6 mx-2 cursor-pointer touch-none outline-none rounded-xs'
         data-testid='timeline-track'
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -240,6 +251,7 @@ export const TimelinePanel = ({
           <Button.Root
             variant='ghost'
             iconOnly
+            classNames={NO_RING}
             icon={current !== undefined ? 'ph--diamond--fill' : 'ph--diamond--regular'}
             label={current !== undefined ? 'Remove key (Delete)' : 'Add key (K)'}
             disabled={current !== undefined ? !onRemoveKey : !onAddKey}
@@ -253,7 +265,7 @@ export const TimelinePanel = ({
             iconOnly
             icon={autoKey ? 'ph--record--fill' : 'ph--record--regular'}
             label={autoKey ? 'Auto-key on: edits away from the start make keys' : 'Auto-key off'}
-            classNames={autoKey ? 'text-error-text' : 'text-fg-muted'}
+            classNames={mx(NO_RING, autoKey ? 'text-error-text' : 'text-fg-muted')}
             data-testid='timeline-auto-key'
             data-state={autoKey ? 'on' : 'off'}
             onClick={() => onAutoKeyChange?.(!autoKey)}
