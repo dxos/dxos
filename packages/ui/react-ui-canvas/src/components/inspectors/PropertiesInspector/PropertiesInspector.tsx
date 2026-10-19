@@ -79,8 +79,9 @@ import { LineStyleField } from './LineStyleField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
-// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'exposed'];
+// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached;
+// an instance's `overrides` have no editor until the canvas can set them.
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'exposed', 'overrides'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
