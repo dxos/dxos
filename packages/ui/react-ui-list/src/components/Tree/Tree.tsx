@@ -22,6 +22,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -30,9 +31,12 @@ import React, {
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
+  type Ref,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -84,7 +88,25 @@ export type TreeSelectEvent<T extends { id: string } = any> = {
   path: string[];
   /** The state the row is taken to: in `multiple` mode a meta-click reports the toggled state. */
   current: boolean;
+  /**
+   * A shift-click in `multiple` mode: every selectable row from the anchor (the last row activated without shift) to
+   * this one, in row order and both ends included; with `meta` too, the consumer adds it to the selection.
+   */
+  range?: { item: T; path: string[] }[];
 } & SelectModifiers;
+
+export type TreeRevealOptions = {
+  /** Move focus to the row (the default); off, the row is only scrolled into view and made the tabstop. */
+  focus?: boolean;
+};
+
+export type TreeRootHandle = {
+  /**
+   * Opens the row's ancestors (through `onOpenChange`) and scrolls the row into view, mounting it first when windowed.
+   * `path` is the row's full path, as `onSelect` reports it.
+   */
+  reveal: (path: string[], options?: TreeRevealOptions) => void;
+};
 
 /** The disclosure (half a block), icon, label and trailing tracks every row lays out on. */
 const DEFAULT_COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) auto';
@@ -179,6 +201,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    */
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   onDrop?: (event: TreeDropEvent<T>) => void;
+  ref?: Ref<TreeRootHandle>;
   children?: ReactNode;
 };
 
@@ -215,6 +238,7 @@ const TreeRoot = <T extends { id: string }>({
   onItemHover,
   onKeyDown,
   onDrop,
+  ref,
   children,
 }: TreeRootProps<T>) => {
   const { t } = Hooks.useTranslation();
@@ -345,6 +369,24 @@ const TreeRoot = <T extends { id: string }>({
     [canSelect],
   );
 
+  // Where a shift-click's range starts: the last row activated without shift.
+  const anchorRef = useRef<string | null>(null);
+
+  /** The selectable rows from the anchor to `node` in row order, or just `node` with no anchor on screen. */
+  const rangeTo = useCallback(
+    (node: TreeNode<T>) => {
+      const { rows, rowIndex } = walkRef.current;
+      const from = anchorRef.current === null ? undefined : rowIndex.get(anchorRef.current);
+      const to = rowIndex.get(node.value);
+      const span =
+        from === undefined || to === undefined ? [node] : rows.slice(Math.min(from, to), Math.max(from, to) + 1);
+      return span.flatMap((row) =>
+        row.item && !row.disabled && allowsSelect(row) ? [{ item: row.item, path: row.path }] : [],
+      );
+    },
+    [allowsSelect],
+  );
+
   const selectNode = useCallback(
     (node: TreeNode<T>, activation: RowActivation) => {
       if (node.disabled || node.group || !node.item) {
@@ -353,10 +395,14 @@ const TreeRoot = <T extends { id: string }>({
       if (node.branch && (activation.option || !allowsSelect(node))) {
         toggleOpen(node);
       } else if (allowsSelect(node)) {
-        onSelect?.({ item: node.item, path: node.path, ...activation });
+        const range = activation.shift && selectionMode === 'multiple' ? rangeTo(node) : undefined;
+        if (!range) {
+          anchorRef.current = node.value;
+        }
+        onSelect?.({ item: node.item, path: node.path, ...activation, ...(range && { range }) });
       }
     },
-    [allowsSelect, onSelect, toggleOpen],
+    [allowsSelect, onSelect, toggleOpen, selectionMode, rangeTo],
   );
 
   const handleSelectionChange = useCallback(
@@ -384,7 +430,13 @@ const TreeRoot = <T extends { id: string }>({
    * A row awaiting DOM focus, with its id as well as its value: a drop that reparents the row changes its path, so the
    * value captured when the drag started may no longer match anything.
    */
-  const pendingFocusRef = useRef<{ id: string; value: string; revealed?: boolean } | null>(null);
+  const pendingFocusRef = useRef<{
+    id: string;
+    value: string;
+    revealed?: boolean;
+    /** How `reveal` asked for the row: `focus` takes focus wherever it is, `scroll` only brings the row into view. */
+    reveal?: 'focus' | 'scroll';
+  } | null>(null);
 
   const focusNode = useCallback((nodeId: string, value: string) => {
     pendingFocusRef.current = { id: nodeId, value };
@@ -393,13 +445,23 @@ const TreeRoot = <T extends { id: string }>({
   }, []);
 
   const claimFocus = useCallback((value: string, row: HTMLElement) => {
-    if (pendingFocusRef.current?.value !== value) {
+    const pending = pendingFocusRef.current;
+    if (pending?.value !== value) {
       return;
     }
     pendingFocusRef.current = null;
+    if (pending.reveal === 'scroll') {
+      row.scrollIntoView({ block: 'nearest' });
+      return;
+    }
     // Only while focus is still where the drag or key left it: the reader may have clicked elsewhere meanwhile.
     const active = document.activeElement;
-    if (!active || active === document.body || (rootRef.current?.contains(active) ?? false)) {
+    if (
+      pending.reveal === 'focus' ||
+      !active ||
+      active === document.body ||
+      (rootRef.current?.contains(active) ?? false)
+    ) {
       row.focus();
     }
   }, []);
@@ -471,6 +533,40 @@ const TreeRoot = <T extends { id: string }>({
       }
     },
     [],
+  );
+
+  const registry = useContext(RegistryContext);
+  useImperativeHandle(
+    ref,
+    () => ({
+      reveal: (path, { focus = true } = {}) => {
+        const id = path.at(-1);
+        if (
+          id === undefined ||
+          path.length <= rootPath.length ||
+          rootPath.some((part, index) => path[index] !== part)
+        ) {
+          return;
+        }
+        // Every ancestor below the root; a group header is always open.
+        for (let end = rootPath.length + 1; end < path.length; end++) {
+          const ancestor = path.slice(0, end);
+          if (
+            registry.get(model.itemProps(ancestor)).disposition === 'group' ||
+            registry.get(model.itemOpen(ancestor))
+          ) {
+            continue;
+          }
+          const item = registry.get(model.item(ancestor[ancestor.length - 1]));
+          item && onOpenChangeRef.current?.({ item, path: ancestor, open: true });
+        }
+        const value = Path.create(...path);
+        pendingFocusRef.current = { id, value, reveal: focus ? 'focus' : 'scroll' };
+        focusedValueRef.current = value;
+        setFocusedValue(value);
+      },
+    }),
+    [registry, model, rootPath],
   );
 
   //
@@ -1074,17 +1170,19 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     [current, node, selectNode],
   );
 
-  // In `multiple` mode a plain click selects the row alone and a meta-click toggles it, which the machine's own
-  // multiple selection (click adds) does not.
+  // In `multiple` mode a plain click selects the row alone, a meta-click toggles it and a shift-click reports the range
+  // from the anchor, which the machine's own multiple selection (click adds) does not.
   const handleClickCapture = useCallback(
     (event: MouseEvent) => {
-      if (selectionMode !== 'multiple' || event.shiftKey || event.altKey || isInnerControl(event.target)) {
+      if (selectionMode !== 'multiple' || event.altKey || isInnerControl(event.target)) {
         return;
       }
       event.stopPropagation();
       event.preventDefault();
       const meta = event.metaKey || event.ctrlKey;
-      selectNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
+      // A shift-click selects the range (the row with it), so it never toggles the row alone.
+      const shift = event.shiftKey;
+      selectNode(node, { option: false, shift, meta, current: meta && !shift ? !current : true });
     },
     [selectionMode, node, current, selectNode],
   );
