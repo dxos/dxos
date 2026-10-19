@@ -32,15 +32,20 @@ import { fileName, importDrawing, openDrawing, openSpace, toDxSvg } from '../mod
 
 type Opened = { space: Space; drawing: Drawing.Drawing };
 
-/** Reads `?src=<url>` once, so a reload after editing reopens the edited copy rather than importing again. */
-const takeSourceParam = (): string | undefined => {
+/**
+ * Reads `?src=<url>` and `?d=<share id>` once, so a reload after editing reopens the edited copy rather than
+ * importing again.
+ */
+const takeSourceParams = (): { src?: string; share?: string } => {
   const url = new URL(window.location.href);
   const src = url.searchParams.get('src') ?? undefined;
-  if (src) {
+  const share = url.searchParams.get('d') ?? undefined;
+  if (src || share) {
     url.searchParams.delete('src');
+    url.searchParams.delete('d');
     window.history.replaceState(null, '', url);
   }
-  return src;
+  return { src, share };
 };
 
 const isDxSvg = (file: File) => file.name.endsWith('.svg') || file.type === 'image/svg+xml';
@@ -124,14 +129,14 @@ export const DrawingRoot = () => {
       return;
     }
     startedRef.current = true;
-    const src = takeSourceParam();
+    const { src, share } = takeSourceParams();
     run(
       Effect.gen(function* () {
         // The edit actions need the operation handlers (Idle) and every variant (the illustrator's start) before any surface asks.
         yield* manager.activate(ActivationEvents.Idle);
         yield* manager.activate(IllustratorEvents.Start);
         const space = yield* openSpace(client);
-        const drawing = yield* openDrawing({ space, src });
+        const drawing = yield* openDrawing({ space, src, share });
         return { space, drawing };
       }),
     );

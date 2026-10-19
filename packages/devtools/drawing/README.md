@@ -20,16 +20,25 @@ package ships it too.
 
 ```bash
 DRAWING=https://pkg.pr.new/dxos/dxos/@dxos/drawing@main
-npx -y $DRAWING render arch.dx          # writes arch.dx.svg and prints the layout report
-npx -y $DRAWING render arch.dx --plain  # a bare arch.svg
-npx -y $DRAWING check arch.dx --json    # the report only
-npx -y $DRAWING source arch.dx.svg      # the .dx the SVG carries
+npx -y $DRAWING render arch.dx                 # writes arch.dx.svg and prints the layout report
+npx -y $DRAWING render - -o docs/arch.dx.svg   # the .dx from stdin
+npx -y $DRAWING render arch.dx --plain         # a bare arch.svg
+npx -y $DRAWING check arch.dx --json           # the report only
+npx -y $DRAWING source arch.dx.svg             # the .dx the SVG carries (-o writes it to a file)
+npx -y $DRAWING open arch.dx.svg               # a link that opens it in app.drawing.sh (--print: don't launch)
 ```
 
 `@main` is the latest build of `main`; `@<sha>` (e.g. `@dxos/drawing@c201f2c`) pins a specific commit. From npm,
 `npm i -g @dxos/drawing` puts `drawing` on PATH, and `npx -y @dxos/drawing` runs the release.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.
+
+## Open it in app.drawing.sh
+
+`drawing open arch.dx.svg` uploads the diagram's `.dx` source (never the SVG) to app.drawing.sh's share API,
+prints a `https://app.drawing.sh/?d=<id>` link and opens it in the browser, where the drawing is an editable
+canvas. The id is 128 random bits, so the link is the only way in; it expires 30 days after it was last opened.
+`DRAWING_APP_URL` points the command at another drawing app, such as a local `wrangler dev`.
 
 ## Open it in Composer
 
