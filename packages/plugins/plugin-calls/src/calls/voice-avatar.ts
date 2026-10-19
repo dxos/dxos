@@ -72,6 +72,16 @@ export const TUNING_PRESETS = {
     separation: 0.005,
     thickness: 2.3,
   },
+  /** Five widely spaced strands drifting slowly, like orbits, that thicken while speaking. */
+  orbits: {
+    waveAmplitude: 0.2,
+    jitter: 1,
+    waveSpeed: 0.7,
+    particles: 14,
+    strands: 5,
+    separation: 0.06,
+    thickness: 1.9,
+  },
 } satisfies Record<string, VoiceAvatarTuning>;
 
 /**

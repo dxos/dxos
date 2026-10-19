@@ -202,3 +202,7 @@ export const Etching: Story = {
 export const Brush: Story = {
   args: { variant: 'ink', ...TUNING_PRESETS.brush },
 };
+
+export const Orbits: Story = {
+  args: { variant: 'ink', ...TUNING_PRESETS.orbits },
+};
