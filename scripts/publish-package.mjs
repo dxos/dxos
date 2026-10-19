@@ -176,10 +176,17 @@ const endOpSession = async () => {
   const { dir, token } = session;
   session = undefined;
   try {
-    await fetch(`${NPM_REGISTRY}/-/user/token/${token}`, {
+    const response = await fetch(`${NPM_REGISTRY}/-/user/token/${token}`, {
       method: 'DELETE',
       headers: { authorization: `Bearer ${token}` },
     });
+    if (!response.ok) {
+      console.warn(
+        `WARNING: revoking the npm session token failed (status ${response.status}); revoke it on npmjs.com.`,
+      );
+    } else {
+      console.log('npm session token revoked.');
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
