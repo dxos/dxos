@@ -48,6 +48,7 @@ import {
   ObjectsInspector,
   PropertiesInspector,
   type PropertiesInspectorProps,
+  ViewsInspector,
 } from '../inspectors/index.ts';
 import { InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
@@ -162,12 +163,21 @@ const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   defaultOpen: true,
 };
 
+// The hierarchy is a dock section only (VIEWS.md §4), as it is as tall as the drawing.
+const VIEWS_INSPECTOR: InspectorSectionDef = {
+  id: 'views',
+  title: 'Views',
+  icon: 'ph--tree-structure--regular',
+  order: 1,
+  show: 'never',
+};
+
 // Floating, the layers take the properties' place while nothing is selected.
 const LAYERS_INSPECTOR: InspectorSectionDef = {
   id: 'layers',
   title: 'Layers',
   icon: 'ph--stack--regular',
-  order: 1,
+  order: 2,
   show: 'empty',
 };
 
@@ -176,7 +186,7 @@ const OBJECTS_INSPECTOR: InspectorSectionDef = {
   id: 'objects',
   title: 'Objects',
   icon: 'ph--cube--regular',
-  order: 2,
+  order: 3,
   show: 'never',
 };
 
@@ -185,9 +195,46 @@ const ABOUT_INSPECTOR: InspectorSectionDef = {
   id: 'about',
   title: 'About',
   icon: 'ph--info--regular',
-  order: 3,
+  order: 4,
   show: 'never',
 };
+
+//
+// Views
+//
+
+/**
+ * The hierarchy under the root (VIEWS.md §4): rows select on the canvas, opening their View first; a View row opens it;
+ * a drag restacks a row among its siblings in the open View, as one intent.
+ */
+export const CanvasViews = () => {
+  const { store, root, readonly, capabilities, intents } = useCanvasDocument('Canvas.Views');
+  const navigation = useCanvasNavigation('Canvas.Views');
+  const selection = useAtomValue(useCanvasSelection('Canvas.Views').atoms.selection);
+  const path = useAtomValue(navigation.atoms.path);
+  const isolation = useAtomValue(navigation.atoms.isolation);
+  const scenes = useAtomValue(store.scenes);
+  const { openView } = navigation.commands;
+  return (
+    <InspectorSection section={VIEWS_INSPECTOR}>
+      <ViewsInspector
+        scenes={scenes}
+        root={root}
+        path={isolation ? undefined : path}
+        selected={selection}
+        onSelect={({ path, ids }) => openView(path, { animate: false, select: ids })}
+        onOpen={openView}
+        onReorder={
+          readonly || !capabilities.update
+            ? undefined
+            : ({ container, element, target, position }) => intents.restack(container, element, target, position)
+        }
+      />
+    </InspectorSection>
+  );
+};
+
+CanvasViews.displayName = 'Canvas.Views';
 
 //
 // Layers

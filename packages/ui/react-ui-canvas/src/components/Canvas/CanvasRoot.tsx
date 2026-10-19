@@ -442,6 +442,7 @@ export const CanvasRoot = ({
       controller={controller}
       atoms={atoms}
       store={store}
+      root={root}
       projection={projection}
       baseProjection={baseProjection}
       capabilities={capabilities}

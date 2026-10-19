@@ -17,7 +17,7 @@ import {
   CanvasTimeline,
   CanvasTools,
 } from './CanvasBars.tsx';
-import { CanvasAbout, CanvasLayers, CanvasObjects, CanvasProperties } from './CanvasInspectors.tsx';
+import { CanvasAbout, CanvasLayers, CanvasObjects, CanvasProperties, CanvasViews } from './CanvasInspectors.tsx';
 import { CanvasRoot } from './CanvasRoot.tsx';
 import { CanvasViewport } from './CanvasViewport.tsx';
 
@@ -30,6 +30,7 @@ export const Canvas = {
   Theme: CanvasTheme,
   Tools: CanvasTools,
   Properties: CanvasProperties,
+  Views: CanvasViews,
   Layers: CanvasLayers,
   Objects: CanvasObjects,
   Timeline: CanvasTimeline,

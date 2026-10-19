@@ -33,6 +33,7 @@ import {
   type LinkRegistry,
   type NodeRegistry,
   type Scene,
+  type SceneId,
   type SceneLook,
   type SceneStore,
   type Size,
@@ -51,6 +52,8 @@ export type CanvasServices = {
   controller: CanvasController;
   atoms: CanvasAtoms;
   store: SceneStore;
+  /** The canvas's root View, which navigation starts from. */
+  root: SceneId;
   projection: Projection;
   /** The projection under the animated one: what keys and timeline edits are written through. */
   baseProjection: Projection;
@@ -78,9 +81,32 @@ export type CanvasAspect<Atoms, Commands> = { atoms: Atoms; commands: Commands }
 
 /** What the canvas shows, and the one write path. */
 export const useCanvasDocument = (consumer: string) => {
-  const { store, projection, baseProjection, capabilities, readonly, nodeRegistry, linkRegistry, timeline, document } =
-    useCanvasServices(consumer);
-  return { store, projection, baseProjection, capabilities, readonly, nodeRegistry, linkRegistry, timeline, document };
+  const {
+    store,
+    root,
+    projection,
+    baseProjection,
+    capabilities,
+    readonly,
+    nodeRegistry,
+    linkRegistry,
+    timeline,
+    document,
+    controller,
+  } = useCanvasServices(consumer);
+  return {
+    store,
+    root,
+    projection,
+    baseProjection,
+    capabilities,
+    readonly,
+    nodeRegistry,
+    linkRegistry,
+    timeline,
+    document,
+    intents: controller.document,
+  };
 };
 
 /** Where the camera is and which View is open. */

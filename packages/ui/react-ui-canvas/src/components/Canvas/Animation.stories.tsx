@@ -66,6 +66,7 @@ const DefaultStory = ({ keyed = true }: StoryArgs) => {
       <Canvas.Tools />
       <Canvas.Timeline />
       <Canvas.Properties />
+      <Canvas.Views />
       <Canvas.Layers />
       <Canvas.Objects />
     </Canvas.Root>

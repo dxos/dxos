@@ -89,6 +89,7 @@ const Editor = ({
       <Canvas.Theme />
       <Canvas.Tools />
       <Canvas.Properties />
+      <Canvas.Views />
       <Canvas.Layers />
       <Canvas.About />
     </Canvas.Root>
@@ -259,5 +260,61 @@ export const Frame: Story = {
     await userEvent.click(await canvas.findByTestId('portal-open'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
+  },
+};
+
+/** An element's row, as the Views section lists it. */
+const viewRow = (root: HTMLElement, id: string) => within(root).getByTestId(`views-row-${id}`);
+
+/** Whether a row shows as selected: a branch carries the state on its tree item, around the row. */
+const rowSelected = (root: HTMLElement, id: string) =>
+  viewRow(root, id).closest('[role="treeitem"]')?.getAttribute('aria-selected') === 'true';
+
+/**
+ * The Views section over a nested scene: a row selects on the canvas (opening its View first), the canvas selection
+ * marks its rows, a View row's Open drills in, and the filter narrows the rows.
+ */
+export const Views: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'nested', inspectors: 'docked' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dock = await canvas.findByTestId('scene-view-dock');
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="a"]')).not.toBeNull());
+    // 1. The Views section opens on the root View's rows.
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-views')).getByRole('button', { name: 'Views' }),
+    );
+    const views = await within(dock).findByTestId('views');
+    await waitFor(() => expect(viewRow(views, 'b')).toBeVisible());
+
+    // 2. A row selects its element on the canvas: the properties section appears and the row is marked.
+    await userEvent.click(viewRow(views, 'b'));
+    await waitFor(() => expect(within(dock).getByTestId('dock-section-properties')).toBeInTheDocument());
+    await waitFor(() => expect(rowSelected(views, 'b')).toBe(true));
+
+    // 3. The canvas selection marks its rows: select all from the canvas.
+    canvas.getByTestId('scene-view').focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await waitFor(() => expect(rowSelected(views, 'a')).toBe(true));
+    await expect(rowSelected(views, 'c')).toBe(true);
+
+    // 4. The filter narrows the rows to the matches and their Views.
+    const filter = within(views).getByTestId('views-filter');
+    await userEvent.type(filter, 'D');
+    await waitFor(() => expect(within(views).queryByTestId('views-row-a')).toBeNull());
+    await expect(viewRow(views, 'c')).toBeInTheDocument();
+    await expect(viewRow(views, 'c/d')).toBeInTheDocument();
+    await userEvent.clear(filter);
+    await waitFor(() => expect(viewRow(views, 'a')).toBeInTheDocument());
+
+    // 5. A View row's Open drills the canvas into it.
+    await userEvent.hover(viewRow(views, 'c'));
+    await userEvent.click(within(views).getByTestId('views-open-c'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
+
+    // 6. A row in another View opens that View first, then selects there.
+    await userEvent.click(viewRow(views, 'a'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
+    await waitFor(() => expect(rowSelected(views, 'a')).toBe(true));
   },
 };
