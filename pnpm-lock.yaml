@@ -21696,9 +21696,18 @@ importers:
 
   packages/stories/stories-compute:
     dependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -21708,12 +21717,24 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -21726,9 +21747,18 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-trace':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-trace
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
@@ -21748,9 +21778,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute
