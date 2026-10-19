@@ -101,9 +101,13 @@ const modifiersOf = (event: { altKey: boolean; shiftKey: boolean; metaKey: boole
   meta: event.metaKey || event.ctrlKey,
 });
 
-/** Whether an event started on a real control inside a row, which keeps its own activation. */
+/**
+ * Whether an event started on a real control inside a row, which keeps its own activation. The disclosure counts: it
+ * is the machine's branch trigger, a `div` with the button role, so a row's own click handling must leave it be.
+ */
 const isInnerControl = (target: EventTarget | null) =>
-  target instanceof Element && !!target.closest('button, input, textarea, [contenteditable="true"]');
+  target instanceof Element &&
+  !!target.closest('button, input, textarea, [contenteditable="true"], [data-part="branch-trigger"]');
 
 //
 // Root
@@ -737,6 +741,12 @@ type TreeContentProps = {
    * from the row's edges as its icon sits from its cell; on by default. Off for rows whose edge cells are blocks.
    */
   rowInset?: boolean;
+  /**
+   * Whether the rows scroll in a scroll area of their own; on by default. Off, they lay out at full height for an
+   * outer container to scroll (an inspector panel), which a scroll area of its own would trap the wheel from; a
+   * windowed tree (`virtual`) needs its own.
+   */
+  scroll?: boolean;
 };
 
 const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
@@ -752,7 +762,7 @@ const SETTLED_ROWS = `${ROWS}:not([data-disclosure])`;
  * nested in `BranchContent`: zag navigates the collection rather than the DOM, so the flat list serves both the whole
  * tree and a window of it, and `aria-level`/`aria-expanded` carry the hierarchy.
  */
-const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
+const TreeContent = ({ children, gutter, rowInset, scroll = true }: TreeContentProps) => {
   const { treeId, walk, virtual, scrollToIndexRef, focusedValue, draggable, dropAtEnd } =
     useTreeContext('Tree.Content');
   const renderRow = typeof children === 'function' ? children : renderDefaultRow;
@@ -791,15 +801,19 @@ const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
   }
   content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(next, rows.length)} />);
 
+  const element = (
+    <TreeContentElement gutter={gutter} rowInset={rowInset} ref={windowing.listRef}>
+      {content}
+      {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
+      {trailing}
+    </TreeContentElement>
+  );
+  if (!scroll && !windowed) {
+    return element;
+  }
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport asChild>
-        <TreeContentElement gutter={gutter} rowInset={rowInset} ref={windowing.listRef}>
-          {content}
-          {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
-          {trailing}
-        </TreeContentElement>
-      </ScrollArea.Viewport>
+      <ScrollArea.Viewport asChild>{element}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };

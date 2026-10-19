@@ -112,6 +112,7 @@ type StoryArgs = SizeArgs & {
   /** Ids of rows that cannot be selected; activating such a branch toggles it. */
   unselectable?: string[];
   selectionFollowsFocus?: boolean;
+  selectionMode?: 'single' | 'multiple';
   dropAtEnd?: boolean;
   dropBelowExpanded?: boolean;
   onSelect?: Mock<(event: TreeSelectEvent<TestItem>) => void>;
@@ -231,6 +232,7 @@ const DefaultStory = ({
   multiline,
   unselectable,
   selectionFollowsFocus,
+  selectionMode,
   dropAtEnd,
   dropBelowExpanded,
   onSelect: onSelectSpy,
@@ -260,6 +262,7 @@ const DefaultStory = ({
         indentGuides={indentGuides}
         animate={animate}
         selectionFollowsFocus={selectionFollowsFocus}
+        selectionMode={selectionMode}
         dropAtEnd={dropAtEnd}
         dropBelowExpanded={dropBelowExpanded}
         columns={columns ? COLUMNS : undefined}
@@ -566,6 +569,24 @@ export const StaticTest: Story = {
     await expect(recorder.events('Banana')).toEqual(['mounted', 'removed']);
     await expect(recorder.phases()).toEqual([]);
     recorder.stop();
+  },
+};
+
+/** `selectionMode='multiple'`: a click on a branch's disclosure opens and closes it, rather than selecting the row. */
+export const MultipleTest: Story = {
+  args: { tree: createFixedTree, animate: false, selectionMode: 'multiple' },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const fruit = () => within(tree).getByRole('treeitem', { name: /Fruit/ });
+    const disclosure = () => fruit().querySelector<HTMLElement>('[data-part="branch-trigger"]');
+    // 1. The disclosure opens the branch.
+    await userEvent.click(disclosure() ?? tree);
+    await waitFor(() => expect(fruit()).toHaveAttribute('aria-expanded', 'true'));
+    await expect(rows(tree)).toHaveLength(5);
+    // 2. And closes it again.
+    await userEvent.click(disclosure() ?? tree);
+    await waitFor(() => expect(fruit()).toHaveAttribute('aria-expanded', 'false'));
+    await expect(rows(tree)).toHaveLength(3);
   },
 };
 
