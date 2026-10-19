@@ -3,12 +3,17 @@
 // Copyright 2026 DXOS.org
 //
 
-// Fails when a publishable workspace package has never been published to npm.
+// Fails when CI cannot publish a publishable workspace package to npm.
 //
-// `publish-all.yml` publishes through npm trusted publishing (OIDC), which npm can only attach to a
-// package that already exists on the registry. A never-published package therefore fails with
-// ENEEDAUTH mid-publish, after the others have shipped, leaving a partial release. The publish job
-// runs this first so the run stops before building anything.
+// `publish-all.yml` publishes through npm trusted publishing (OIDC). A package that was never published,
+// or whose trusted publisher is not configured, fails with ENEEDAUTH mid-publish, after the others have
+// shipped, leaving a partial release. The publish workflow runs this first so the run stops before
+// building anything.
+//
+// Everywhere, it checks that each package exists on the registry. Inside GitHub Actions with
+// `id-token: write` it also performs the same OIDC token exchange `npm publish` does, which succeeds
+// only when the package's trusted publisher matches the calling workflow; it publishes nothing. Run
+// from `publish-all.yml`, since npm matches the trusted publisher against the workflow filename.
 //
 // Usage: bun scripts/check-packages-published.ts
 
@@ -23,6 +28,8 @@ const PATTERNS = ['{packages,tools,vendor}/**/package.json', 'docs/package.json'
 const IGNORED = /(^|\/)(node_modules|__fixtures__|dist|build|out)\//;
 
 type PublicPackage = { name: string; file: string };
+
+type Problem = PublicPackage & { reason: 'unpublished' | 'untrusted' };
 
 const findPublicPackages = async (): Promise<PublicPackage[]> => {
   const packages: PublicPackage[] = [];
@@ -49,23 +56,19 @@ const findPublicPackages = async (): Promise<PublicPackage[]> => {
   return packages;
 };
 
-// npm exposes no public API for whether a trusted publisher is configured, so "has been published" stands
-// in for it: the bootstrap script (`scripts/publish-package.mjs`) publishes and configures one together.
-const isPublished = async (name: string): Promise<boolean> => {
-  const url = `${NPM_REGISTRY}/${encodeURIComponent(name)}`;
+/**
+ * Sends a request, retrying a dropped connection, timeout or 5xx; any other status is the answer.
+ */
+const request = async (url: string, init: RequestInit = {}): Promise<Response> => {
   for (let attempt = 0; ; attempt++) {
     let failure: string;
     try {
-      const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-      if (response.status === 404) {
-        return false;
-      }
-      if (response.ok) {
-        return true;
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      if (response.status < 500) {
+        return response;
       }
       failure = `unexpected status ${response.status}`;
     } catch (error) {
-      // A dropped connection or timeout is as transient as a 5xx, so it takes the same retries.
       failure = error instanceof Error ? error.message : String(error);
     }
     if (attempt >= RETRIES) {
@@ -74,14 +77,56 @@ const isPublished = async (name: string): Promise<boolean> => {
   }
 };
 
+const isPublished = async (name: string): Promise<boolean> => {
+  const response = await request(`${NPM_REGISTRY}/${encodeURIComponent(name)}`, { method: 'HEAD' });
+  if (response.status === 404) {
+    return false;
+  }
+  if (!response.ok) {
+    throw new Error(`unexpected status ${response.status} looking up ${name}`);
+  }
+  return true;
+};
+
+// GitHub's OIDC request credentials exist only in a job granted `id-token: write`.
+const oidcRequest =
+  process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+    ? { url: process.env.ACTIONS_ID_TOKEN_REQUEST_URL, token: process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }
+    : undefined;
+
+/**
+ * Mirrors npm's own OIDC flow (`lib/utils/oidc.js`): a fresh GitHub ID token per package, exchanged for a
+ * short-lived npm token that is discarded; npm refuses the exchange when no matching trusted publisher exists.
+ */
+const isTrusted = async (name: string, oidc: { url: string; token: string }): Promise<boolean> => {
+  const idTokenUrl = new URL(oidc.url);
+  idTokenUrl.searchParams.append('audience', `npm:${new URL(NPM_REGISTRY).hostname}`);
+  const idTokenResponse = await request(idTokenUrl.href, {
+    headers: { Accept: 'application/json', Authorization: `Bearer ${oidc.token}` },
+  });
+  const { value: idToken } = (await idTokenResponse.json()) as { value?: string };
+  if (!idTokenResponse.ok || !idToken) {
+    throw new Error(`GitHub refused an OIDC ID token (status ${idTokenResponse.status})`);
+  }
+
+  const escapedName = name.replace('/', '%2f');
+  const exchange = await request(`${NPM_REGISTRY}/-/npm/v1/oidc/token/exchange/package/${escapedName}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', Authorization: `Bearer ${idToken}` },
+  });
+  return exchange.ok && Boolean(((await exchange.json()) as { token?: string }).token);
+};
+
 const packages = await findPublicPackages();
-const unpublished: PublicPackage[] = [];
+const problems: Problem[] = [];
 let cursor = 0;
 const worker = async () => {
   while (cursor < packages.length) {
     const entry = packages[cursor++];
     if (!(await isPublished(entry.name))) {
-      unpublished.push(entry);
+      problems.push({ ...entry, reason: 'unpublished' });
+    } else if (oidcRequest && !(await isTrusted(entry.name, oidcRequest))) {
+      problems.push({ ...entry, reason: 'untrusted' });
     }
   }
 };
@@ -93,18 +138,20 @@ try {
   process.exit(1);
 }
 
-if (unpublished.length > 0) {
-  console.error('ERROR: these publishable packages have never been published to npm, so CI cannot publish them:');
+if (problems.length > 0) {
+  console.error('ERROR: CI cannot publish these packages to npm:');
   console.error('');
-  for (const { name, file } of unpublished.sort((a, b) => a.name.localeCompare(b.name))) {
-    console.error(`  ${name} (${file})`);
+  for (const { name, file, reason } of problems.sort((a, b) => a.name.localeCompare(b.name))) {
+    const why = reason === 'unpublished' ? 'never published' : 'no trusted publisher for publish-all.yml';
+    console.error(`  ${name} (${file}): ${why}`);
   }
   console.error('');
-  console.error(
-    'Bootstrap each one (`node scripts/publish-package.mjs <name> --trust`, see the npm-publishing skill),',
-  );
-  console.error('or mark it `"private": true` until it is ready.');
+  console.error('Run `node scripts/publish-package.mjs <name> --trust` for each (see the npm-publishing skill); it');
+  console.error('publishes a missing package and configures its trusted publisher. Or mark it `"private": true`.');
   process.exit(1);
 }
 
-console.log(`OK: all ${packages.length} publishable packages are published to npm.`);
+const scope = oidcRequest
+  ? 'published and trust publish-all.yml'
+  : 'published (trusted publishers not checked outside CI)';
+console.log(`OK: all ${packages.length} publishable packages are ${scope}.`);
