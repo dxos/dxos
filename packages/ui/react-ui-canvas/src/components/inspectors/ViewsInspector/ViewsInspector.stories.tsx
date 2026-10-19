@@ -13,7 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
 import { type ViewTreeItem } from '../../../utils/index.ts';
-import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { withInspectorFrame } from '../../panels/testing.ts';
 import { ViewsInspector } from './ViewsInspector.tsx';
 
 const FIXTURES = {

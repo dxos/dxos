@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { SceneBuilder } from '../builder/index.ts';
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { type Link, type Scene } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import {

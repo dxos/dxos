@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { layoutGraph, solve } from '../engine/index.ts';
 import { MAJOR_GRID, type Point, type Scene } from '../model/index.ts';
 import { nodeBounds } from '../utils/index.ts';

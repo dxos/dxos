@@ -12,7 +12,7 @@
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import {
   type BuiltinNode,
   type BuiltinNodeType,

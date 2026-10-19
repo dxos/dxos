@@ -5,7 +5,7 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 ## Order (agreed 2026-10-18)
 
 1. Land PR #14030; then the held canvas changes (grid crossfade, text-node leading, Nested story) as their own PR.
-2. Barrels: once `@dxos/eslint-plugin-rules/folder-barrel-imports` lands, enable it for react-ui-canvas and fix its violations.
+2. ~~Barrels~~ Done 2026-10-18: `folder-barrel-imports` (PR #14048) is on for react-ui-canvas (`.oxlintrc.json` override, `src/headless.ts` allowed); its 30 violations fixed; the barrel half of `layers.test.ts` removed.
 3. Phase 0 below: refactor `CanvasRoot` and its context.
 4. Phases 1-6.
 

@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type Layer, type LayerId } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { withInspectorFrame } from '../../panels/testing.ts';
 import { LayersInspector } from './LayersInspector.tsx';
 
 /** Three layers, bottom first, the middle one hidden. */

@@ -6,6 +6,4 @@ export * from './animate.ts';
 export * from './atoms.ts';
 export * from './controller.ts';
 export * from './projection.ts';
-export * from './projections/constrained.ts';
-export * from './projections/dynamic.ts';
-export * from './projections/lattice.ts';
+export * from './projections/index.ts';

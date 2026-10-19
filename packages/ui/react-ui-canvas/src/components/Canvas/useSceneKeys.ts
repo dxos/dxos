@@ -18,7 +18,7 @@ import {
   nodeDef,
 } from '../../model/index.ts';
 import { NOMINAL_ZOOM, fitBounds, nodeBounds, unionBounds, zoomAt } from '../../utils/index.ts';
-import { toolForKey } from '../panels/ToolsPanel/index.ts';
+import { toolForKey } from '../panels/index.ts';
 import { type TimelineKeys } from './CanvasContext.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';

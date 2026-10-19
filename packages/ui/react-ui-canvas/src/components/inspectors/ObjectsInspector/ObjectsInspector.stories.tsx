@@ -12,7 +12,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type SceneId } from '../../../model/index.ts';
 import { createObjectsTree } from '../../../testing/index.ts';
 import { compositeScenes, instanceCounts } from '../../../utils/index.ts';
-import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { withInspectorFrame } from '../../panels/testing.ts';
 import { type ObjectEntry, ObjectsInspector } from './ObjectsInspector.tsx';
 
 /** The objects of the shared fixture: Logo placed three times (once inside Card), Card once, Badge nowhere. */

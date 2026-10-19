@@ -162,15 +162,23 @@ import {
 } from '../Background/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { GridComponent } from '../Grid/index.ts';
-import { AboutInspector, type AboutStat } from '../inspectors/AboutInspector/index.ts';
-import { LayersInspector } from '../inspectors/LayersInspector/index.ts';
-import { ObjectsInspector } from '../inspectors/ObjectsInspector/index.ts';
-import { PropertiesInspector, type PropertiesInspectorProps } from '../inspectors/PropertiesInspector/index.ts';
+import {
+  AboutInspector,
+  type AboutStat,
+  LayersInspector,
+  ObjectsInspector,
+  PropertiesInspector,
+  type PropertiesInspectorProps,
+} from '../inspectors/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
-import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/InspectorPanel/index.ts';
-import { ThemePanel } from '../panels/ThemePanel/index.ts';
-import { TimelinePanel } from '../panels/TimelinePanel/index.ts';
-import { ToolsPanel } from '../panels/ToolsPanel/index.ts';
+import {
+  InspectorPanel,
+  InspectorSection,
+  type InspectorSectionDef,
+  ThemePanel,
+  TimelinePanel,
+  ToolsPanel,
+} from '../panels/index.ts';
 import {
   type ElementHandlers,
   MAX_LIVE_DEPTH,

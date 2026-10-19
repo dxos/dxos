@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { type ConstrainedModel, createConstrainedProjection, createFreehandProjection } from '../engine/index.ts';
 import { createMemoryStore } from '../model/index.ts';
 import { createSceneTree } from '../testing/index.ts';

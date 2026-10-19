@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { type Link, type Node, type Scene } from '../model/index.ts';
 import { gutterRoute } from './gutter-route.ts';
 import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';

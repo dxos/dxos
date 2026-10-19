@@ -18,7 +18,7 @@ import { createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
 import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { InspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });

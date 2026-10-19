@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { SceneBuilder } from '../builder/index.ts';
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
 import { frameClasses, hueClasses, resolveStyle } from './style.ts';
