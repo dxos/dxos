@@ -70,11 +70,6 @@ export const CreateConnectionPanel = ({
   });
 
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Continue is ready without a pick; kept among the visible results so a filter
-  // never leaves Continue acting on a row it hid.
-  const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
-  const selection = useMemo(() => ({ connectorId: pickedId }), [pickedId]);
-
   const groups = useMemo(
     () =>
       KIND_ORDER.map((kind) => ({ kind, entries: results.filter((entry) => entry.kind === kind) })).filter(
@@ -82,6 +77,11 @@ export const CreateConnectionPanel = ({
       ),
     [results],
   );
+
+  // Preselected so Continue is ready without a pick: the first row shown, and kept among the visible
+  // results so a filter never leaves Continue acting on a row it hid.
+  const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : groups[0]?.entries[0]?.id;
+  const selection = useMemo(() => ({ connectorId: pickedId }), [pickedId]);
 
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
