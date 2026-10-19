@@ -627,6 +627,33 @@ export const RevealTest: Story = {
   },
 };
 
+/** ⌘↑ moves focus to the parent row; ⌘↓ to the parent's next sibling (or, at the top level, past the row's subtree). */
+export const ParentKeysTest: Story = {
+  args: { tree: createFixedTree, animate: false, open: true },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const focus = (name: RegExp) => {
+      const item = within(tree).getByRole('treeitem', { name });
+      // A branch's treeitem holds its children too, so focus goes to its own row.
+      (item.querySelector<HTMLElement>('[data-tree-row]') ?? item).focus();
+    };
+    focus(/Banana/);
+    await userEvent.keyboard('{Meta>}{ArrowUp}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Fruit/));
+    focus(/Apple/);
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Vegetables/));
+    focus(/Carrot/);
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Grain/));
+    // Nothing further: focus stays.
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await expect(focusedName()).toMatch(/^Grain/);
+    await userEvent.keyboard('{Meta>}{ArrowUp}{/Meta}');
+    await expect(focusedName()).toMatch(/^Grain/);
+  },
+};
+
 /** `selectionMode='multiple'`: a shift-click reports the rows from the anchor (the last plain click) to the row. */
 export const RangeTest: Story = {
   args: { tree: createFixedTree, animate: false, open: true, selectionMode: 'multiple', onSelect: fn() },

@@ -573,7 +573,10 @@ const TreeRoot = <T extends { id: string }>({
   // Keyboard
   //
 
-  /** Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing) and Space toggles. */
+  /**
+   * Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing), Space toggles, and ⌘↑ / ⌘↓
+   * jump to the parent and to the parent's next sibling.
+   */
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
@@ -584,6 +587,18 @@ const TreeRoot = <T extends { id: string }>({
         // A consumer's restructuring key remounts the row under its new parent, and the unmount drops DOM focus.
         const node = value ? walk.byValue.get(value) : undefined;
         node && focusNode(node.id, node.value);
+        return;
+      }
+      if (
+        (event.key === 'ArrowUp' || event.key === 'ArrowDown') &&
+        (event.metaKey || event.ctrlKey) &&
+        !isInnerControl(event.target)
+      ) {
+        const focused = value ?? focusedValueRef.current;
+        const node = focused ? walk.byValue.get(focused) : undefined;
+        const next = node && (event.key === 'ArrowUp' ? parentRow(walk, node) : rowAfterParent(walk, node));
+        event.preventDefault();
+        next && focusNode(next.id, next.value);
         return;
       }
       if ((event.key !== 'Enter' && event.key !== ' ') || isInnerControl(event.target)) {
@@ -753,6 +768,30 @@ const dropEvent = (walk: TreeWalk, source: TreeData, data: Record<string | symbo
     return null;
   }
   return { instruction, source, target: data, item: data.item };
+};
+
+/** The row of `node`'s parent, past any group header (a section is not a row the keyboard stops on). */
+const parentRow = <T extends { id: string }>(walk: TreeWalk<T>, node: TreeNode<T>): TreeNode<T> | undefined => {
+  for (let end = node.path.length - 1; end > walk.root.path.length; end--) {
+    const parent = walk.byValue.get(Path.create(...node.path.slice(0, end)));
+    if (parent) {
+      return parent;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The first row after the subtree of `node`'s parent (its next sibling, else the nearest ancestor's), or after `node`'s
+ * own subtree at the top level.
+ */
+const rowAfterParent = <T extends { id: string }>(walk: TreeWalk<T>, node: TreeNode<T>): TreeNode<T> | undefined => {
+  const from = parentRow(walk, node) ?? node;
+  const index = walk.rowIndex.get(from.value);
+  if (index === undefined) {
+    return undefined;
+  }
+  return walk.rows.slice(index + 1).find((row) => !row.group && row.depth <= from.depth);
 };
 
 /** The disclosure duration the tree's CSS resolves (the theme token, 0 under reduced motion), in milliseconds. */
