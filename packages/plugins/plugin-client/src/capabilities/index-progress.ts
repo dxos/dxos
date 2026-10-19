@@ -23,19 +23,21 @@ const ACTIVITY_LANES: readonly { lane: keyof DataService.IndexActivity; label: s
 
 const followLane = (registry: Pick<AppCapabilities.ProgressRegistry, 'register'>, key: string) => {
   let latest: { label: string; progress: DataService.IndexProgress } | undefined;
-  let monitor: AppCapabilities.ProgressMonitor | undefined;
+  let monitor: { label: string; handle: AppCapabilities.ProgressMonitor } | undefined;
   let debounce: ReturnType<typeof setTimeout> | undefined;
 
   const show = ({ label, progress }: { label: string; progress: DataService.IndexProgress }) => {
-    monitor ??= registry.register(key, { label });
-    monitor.total(progress.total > 0 ? progress.total : undefined);
-    monitor.set(progress.done);
+    if (monitor?.label !== label) {
+      monitor = { label, handle: registry.register(key, { label }) };
+    }
+    monitor.handle.total(progress.total > 0 ? progress.total : undefined);
+    monitor.handle.set(progress.done);
   };
 
   const hide = () => {
     clearTimeout(debounce);
     debounce = undefined;
-    monitor?.remove();
+    monitor?.handle.remove();
     monitor = undefined;
   };
 

@@ -90,15 +90,24 @@ export const timeoutUnlessProgress = <T>(
 ): Promise<T> => {
   const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
   return new Promise<T>((resolve, reject) => {
-    let timeoutId = setTimeout(() => reject(throwable), timeout);
+    let timeoutId: NodeJS.Timeout;
+    const arm = () => {
+      timeoutId = setTimeout(() => {
+        release();
+        reject(throwable);
+      }, timeout);
+      unrefTimeout(timeoutId);
+    };
     const unsubscribe = progress.on(() => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => reject(throwable), timeout);
+      arm();
     });
-    void promise.then(resolve, reject).finally(() => {
+    const release = () => {
       clearTimeout(timeoutId);
       unsubscribe();
-    });
+    };
+    arm();
+    void promise.then(resolve, reject).finally(release);
   });
 };
 

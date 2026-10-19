@@ -69,6 +69,18 @@ describe('followIndexProgress', () => {
     cleanup();
   });
 
+  test('a migration that runs straight into a rebuild relabels its entry', async () => {
+    const { emit, register, cleanup } = await setup();
+    emit({ phase: 'migrating', done: 0, total: 2 });
+    vi.advanceTimersByTime(INDEX_PROGRESS_DEBOUNCE);
+    emit({ phase: 'indexing', done: 0, total: 1_000 });
+    expect(register.mock.calls.map(([, options]) => options?.label)).toEqual([
+      'Migrating database',
+      'Updating database index',
+    ]);
+    cleanup();
+  });
+
   test('catch-up and full-text work each show and end on their own', async () => {
     const { emitActivity, register, monitors, cleanup } = await setup();
     emitActivity({ catchUp: { done: 0, total: 200 }, fullText: { done: 0, total: 900 } });

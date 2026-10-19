@@ -32,6 +32,12 @@ describe('timeoutUnlessProgress', () => {
     await expect(timeoutUnlessProgress(new Promise(() => {}), 50, new Event(), error)).rejects.toBe(error);
   });
 
+  test('stops following progress once the deadline expires', async () => {
+    const progress = new Event();
+    await expect(timeoutUnlessProgress(new Promise(() => {}), 10, progress)).rejects.toThrow();
+    expect(progress.listenerCount()).toBe(0);
+  });
+
   test('each progress event restarts the deadline', async () => {
     const progress = new Event();
     const work = (async () => {
