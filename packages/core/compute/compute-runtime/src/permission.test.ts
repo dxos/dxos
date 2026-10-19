@@ -65,6 +65,7 @@ const Escalate = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.escalate'), name: 'Escalate' },
   input: Schema.Struct({ command: Schema.String }),
   output: Schema.String,
+  services: [Process.ManagerService],
 });
 
 const handlers = OperationHandlerSet.make(
@@ -116,7 +117,7 @@ const run = <I, O>(op: Operation.Definition<I, O>, input: I, options?: Process.S
   Process.spawn(OperationProcess.make(op), input, options).pipe(Effect.flatMap(Process.awaitOutput), Effect.exit);
 
 /** The refusal's message when the run died with `OperationDeniedError`, else undefined. */
-const denial = <A>(exit: Exit.Exit<A>): string | undefined => {
+const denial = <A, E>(exit: Exit.Exit<A, E>): string | undefined => {
   if (Exit.isSuccess(exit)) {
     return undefined;
   }
