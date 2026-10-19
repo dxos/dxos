@@ -19,7 +19,6 @@ import { mx } from '@dxos/ui-theme';
 
 import {
   type CanvasAtoms,
-  type ControllerGrid,
   type Drag,
   type FreehandProjectionOptions,
   type InspectorMode,
@@ -90,6 +89,7 @@ import {
   createLink,
   duplicateSelection,
   fitBounds,
+  fitFrame,
   hitTest,
   instanceCounts,
   instancePorts,
@@ -290,30 +290,6 @@ export const CanvasRoot = ({
     [baseProjection, registry, atoms, nodeRegistry],
   );
   const scene = useAtomValue(projection.scene);
-  // The commands read the latest projection, mode and grid when they run, so the controller is made once per canvas.
-  const projectionRef = useRef(projection);
-  projectionRef.current = projection;
-  const readonlyRef = useRef(readonly);
-  readonlyRef.current = readonly;
-  const baseProjectionRef = useRef(baseProjection);
-  baseProjectionRef.current = baseProjection;
-  const nodeRegistryRef = useRef(nodeRegistry);
-  nodeRegistryRef.current = nodeRegistry;
-  const gridRef = useRef<ControllerGrid>({ major: 0, snap: (value) => value });
-  const controller = useMemo(
-    () =>
-      createCanvasController({
-        registry,
-        atoms,
-        store,
-        projection: () => projectionRef.current,
-        baseProjection: () => baseProjectionRef.current,
-        nodeRegistry: () => nodeRegistryRef.current,
-        readonly: () => readonlyRef.current,
-        grid: () => gridRef.current,
-      }),
-    [registry, atoms, store],
-  );
   const baseScene = useAtomValue(baseProjection.scene);
   const timeline = baseScene.timeline;
   const time = useAtomValue(atoms.clock.time);
@@ -400,7 +376,6 @@ export const CanvasRoot = ({
     isNavigating,
     isAnimating,
     cameraTarget,
-    setNavigation,
     touchNavigation,
     opening,
     setOpening,
@@ -410,6 +385,59 @@ export const CanvasRoot = ({
   // effect, so the fit lands before the first paint instead of one frame after it.
   // A restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
+  // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
+  // camera holds still under someone editing.
+  const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
+  const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
+  const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
+
+  // The commands read the view as it is when they run, so the controller is made once per canvas.
+  const live = {
+    projection,
+    baseProjection,
+    nodeRegistry,
+    readonly,
+    grid: { major, snap },
+    viewport,
+    inset,
+    frame,
+    camera: { animateTo, target: cameraTarget, setOpening },
+    fit: {
+      // Fit frames the scene now and keeps it framed (fit mode) until the user pans or zooms.
+      enterFit: () => {
+        setFitting(true);
+        fittedRef.current = { scene: sceneId, key: fitKey };
+      },
+      exitFit,
+      takeOver: () => {
+        interactedRef.current = true;
+      },
+    },
+    look: { onThemeChange, onBackgroundGridChange },
+  };
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const controller = useMemo(
+    () =>
+      createCanvasController({
+        registry,
+        atoms,
+        store,
+        projection: () => liveRef.current.projection,
+        baseProjection: () => liveRef.current.baseProjection,
+        nodeRegistry: () => liveRef.current.nodeRegistry,
+        readonly: () => liveRef.current.readonly,
+        grid: () => liveRef.current.grid,
+        viewport: () => liveRef.current.viewport,
+        inset: () => liveRef.current.inset,
+        frame: () => liveRef.current.frame,
+        camera: () => liveRef.current.camera,
+        fit: () => liveRef.current.fit,
+        look: () => liveRef.current.look,
+      }),
+    [registry, atoms, store],
+  );
+  const { navigation } = controller;
 
   // Read-only, nothing is selected: a selection only exists to be edited.
   const select = controller.selection.select;
@@ -419,36 +447,20 @@ export const CanvasRoot = ({
     }
   }, [readonly, select]);
 
-  const {
-    nameOf,
-    portalTo,
-    bounds,
-    childFrame,
-    fitTarget: sceneFitTarget,
-    pushHistory,
-    drillIn: drillInto,
-    drillOut,
-    goHistory,
-  } = useSceneNavigation({
+  const { nameOf, bounds } = useSceneNavigation({
     registry,
     atoms,
+    navigation,
     nodeRegistry,
-    store,
     scenes,
     scene,
     path,
     camera,
     viewport,
-    inset,
     drag,
-    interactedRef,
-    select,
-    animateTo,
-    setCamera,
-    setOpening,
     isAnimating,
   });
-  const fitTarget = frame ?? sceneFitTarget;
+  const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
 
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
@@ -461,10 +473,6 @@ export const CanvasRoot = ({
 
   // In fit mode the first fit lands before the first paint; opening another scene animates to its frame, and a resize
   // animates to the new fit once the view has stopped changing size for `FIT_DEBOUNCE_MS`.
-  // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
-  // camera holds still under someone editing.
-  const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
-  const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
     if (fitting && measured && !fittedRef.current) {
       // Measured now, not from the observed size: a docked inspector mounting in the same frame narrows the canvas
@@ -592,13 +600,6 @@ export const CanvasRoot = ({
       }
     }
   }, [drag?.kind, exitFit, hasCameraTrack, registry, atoms.clock]);
-  // Fit frames the scene now and keeps it framed (fit mode) until the user pans or zooms.
-  const enterFit = useCallback(() => {
-    setFitting(true);
-    fittedRef.current = { scene: sceneId, key: fitKey };
-    animateTo(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
-  }, [fitTarget, viewport, inset, animateTo, sceneId, fitKey]);
-
   // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
   const atRoot = path.length === 1;
   useEffect(() => {
@@ -640,53 +641,6 @@ export const CanvasRoot = ({
       },
       [setCamera, cancelAnimation, touchNavigation, exitFit, hasCameraTrack, registry, atoms.clock],
     ),
-  );
-
-  //
-  // Isolation (ANIMATION.md §4.3).
-  //
-
-  /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
-  const isolate = useCallback(
-    (composite: SceneId) => {
-      const definition = registry.get(store.scenes)[composite];
-      if (!definition) {
-        return;
-      }
-      const back = registry.get(atoms.isolation)?.back ?? {
-        path: registry.get(atoms.path),
-        camera: registry.get(atoms.camera),
-      };
-      registry.set(atoms.isolation, { composite, back });
-      exitFit();
-      select([]);
-      registry.set(atoms.path, [composite]);
-      const content = compositeBounds(definition);
-      if (content) {
-        setCamera(fitBounds(content, viewport, inset, NOMINAL_ZOOM));
-      }
-    },
-    [registry, store.scenes, atoms, exitFit, select, setCamera, viewport, inset],
-  );
-  const exitIsolation = useCallback(() => {
-    const current = registry.get(atoms.isolation);
-    if (!current) {
-      return;
-    }
-    registry.set(atoms.isolation, undefined);
-    select([]);
-    registry.set(atoms.path, current.back.path);
-    setCamera(current.back.camera);
-  }, [registry, atoms, select, setCamera]);
-  /** Opens a node: an instance in isolation, a frame by drilling in. */
-  const drillIn = useCallback(
-    (node: Node, animated?: boolean) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animated)),
-    [isolate, drillInto],
-  );
-  /** Backs out a level: out of isolation first. */
-  const back = useCallback(
-    () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
-    [registry, atoms.isolation, exitIsolation, drillOut],
   );
 
   //
@@ -839,14 +793,14 @@ export const CanvasRoot = ({
             used.length > 0 ? reduceIntent(scene, { kind: 'delete', ids: used.map((node) => node.id) }) : scene;
         }
         if (registry.get(atoms.isolation)?.composite === composite) {
-          exitIsolation();
+          navigation.exitIsolation();
         }
         const model = baseProjection.snapshot();
         registry.set(store.scenes, scenes);
         recordStoreStep(registry, atoms.undo, sceneId(), model, before);
       },
     };
-  }, [registry, atoms, store.scenes, baseProjection, root, select, viewport, exitIsolation]);
+  }, [registry, atoms, store.scenes, baseProjection, root, select, viewport, navigation]);
 
   //
   // Navigation.
@@ -868,8 +822,6 @@ export const CanvasRoot = ({
   // Pointer state machine.
   //
 
-  const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
-  gridRef.current = { major, snap };
   const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
   const {
     onBackgroundPointerDown,
@@ -945,8 +897,7 @@ export const CanvasRoot = ({
     linkRegistry,
     projection,
     capabilities,
-    viewport,
-    inset,
+    navigation,
     grid,
     select,
     toggleSnap,
@@ -955,12 +906,6 @@ export const CanvasRoot = ({
     toggleDebug,
     onUndo,
     onRedo,
-    onFit: enterFit,
-    onExitFit: exitFit,
-    animateTo,
-    drillIn,
-    drillOut: back,
-    goHistory,
     major,
     copy,
     cut,
@@ -1127,7 +1072,7 @@ export const CanvasRoot = ({
       onLinkContextMenu,
       onPartCommit,
       onPartCancel,
-      onNodeOpen: drillIn,
+      onNodeOpen: navigation.drillIn,
     }),
     [
       onNodePointerDown,
@@ -1137,7 +1082,7 @@ export const CanvasRoot = ({
       onLinkContextMenu,
       onPartCommit,
       onPartCancel,
-      drillIn,
+      navigation,
     ],
   );
 
@@ -1170,10 +1115,10 @@ export const CanvasRoot = ({
         select([node.id]);
         registry.set(atoms.editing, { id: node.id, part });
       } else if (nodeDef(nodeRegistry, node)?.openable) {
-        drillIn(node);
+        navigation.drillIn(node);
       }
     },
-    [scene, toScene, nodeRegistry, drillIn, capabilities.update, select, registry, atoms.editing],
+    [scene, toScene, nodeRegistry, navigation, capabilities.update, select, registry, atoms.editing],
   );
 
   // A node type dragged in (from the palette or a host's draggable) previews as a create drag would and
@@ -1221,19 +1166,6 @@ export const CanvasRoot = ({
     });
   }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
 
-  const zoomTo = useCallback(
-    (zoom: number) => {
-      interactedRef.current = true;
-      exitFit();
-      const centre = { x: viewport.width / 2, y: viewport.height / 2 };
-      // From where the camera is headed, so a click during an animation retargets it rather than stepping from midway.
-      animateTo(zoomAt(cameraTarget(), centre, zoom));
-    },
-    [viewport, animateTo, cameraTarget, exitFit],
-  );
-  // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
-  const zoomBy = useCallback((factor: number) => zoomTo(cameraTarget().zoom * factor), [zoomTo, cameraTarget]);
-
   const deleteSelection = controller.selection.delete;
 
   /** A default-sized node of `type` centred in the view, its top-left on the grid. */
@@ -1261,12 +1193,12 @@ export const CanvasRoot = ({
       // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
       path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
       nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : nameOf(id)),
-      onPath: (index) => (isolation ? index === 0 && exitIsolation() : drillOut(path.length - 1 - index)),
-      fit: enterFit,
+      onPath: navigation.openPath,
+      fit: navigation.fit,
       fitting,
-      zoomReset: () => zoomTo(NOMINAL_ZOOM),
-      zoomIn: () => zoomBy(ZOOM_STEP),
-      zoomOut: () => zoomBy(1 / ZOOM_STEP),
+      zoomReset: () => navigation.zoomTo(NOMINAL_ZOOM),
+      zoomIn: () => navigation.zoomBy(ZOOM_STEP),
+      zoomOut: () => navigation.zoomBy(1 / ZOOM_STEP),
       snap: snapEnabled,
       toggleSnap,
       // Only a lattice scene has a lattice to snap to.
@@ -1292,13 +1224,9 @@ export const CanvasRoot = ({
     [
       path,
       nameOf,
-      drillOut,
       isolation,
-      exitIsolation,
-      enterFit,
+      navigation,
       fitting,
-      zoomBy,
-      zoomTo,
       snapEnabled,
       toggleSnap,
       latticeOn,
@@ -1395,8 +1323,8 @@ export const CanvasRoot = ({
       toolbarActions={toolbarActions}
       navigating={navigating}
       opening={opening}
-      drillIn={drillIn}
-      childFrame={childFrame}
+      drillIn={navigation.drillIn}
+      childFrame={navigation.childFrame}
       copy={copy}
       cut={cut}
       paste={paste}
@@ -1425,7 +1353,7 @@ export const CanvasRoot = ({
       seek={seek}
       timelineKeys={timelineKeys}
       isolation={isolation}
-      isolate={isolate}
+      isolate={navigation.isolate}
       objectActions={objectActions}
       generated={generated}
     >

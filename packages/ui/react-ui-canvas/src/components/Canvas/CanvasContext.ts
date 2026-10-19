@@ -11,6 +11,7 @@ import {
   type EditingCommands,
   type EditingPart,
   type Isolation,
+  type NavigationCommands,
   type Projection,
   type ToolsCommands,
 } from '../../engine/index.ts';
@@ -40,7 +41,6 @@ import { type ElementHandlers } from '../SceneLayer/index.ts';
 import { type ToolbarActions } from '../Toolbar/index.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
-import { type SceneNavigation } from './useSceneNavigation.ts';
 
 /**
  * What `Canvas.Root` composes and every part reads. The parts are a view onto one machine rather than
@@ -153,7 +153,7 @@ export type CanvasContextValue = {
   /** What the scene's generators drew, and for which time. */
   generated: GeneratorFrames | undefined;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
-  Pick<SceneNavigation, 'childFrame'> &
+  Pick<NavigationCommands, 'childFrame'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<
     PointerMachine,

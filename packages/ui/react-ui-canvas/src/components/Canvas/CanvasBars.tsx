@@ -80,8 +80,17 @@ CanvasDebug.displayName = 'Canvas.Debug';
 
 /** The theme picker and the grid over its background, at the bottom right. */
 export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
-  const { look, themes, themeOverride, themeGrid, guides, toggleGuides, onThemeChange, onBackgroundGridChange } =
-    useCanvasContext('Canvas.Theme');
+  const {
+    controller,
+    look,
+    themes,
+    themeOverride,
+    themeGrid,
+    guides,
+    toggleGuides,
+    onThemeChange,
+    onBackgroundGridChange,
+  } = useCanvasContext('Canvas.Theme');
   return (
     <div className={mx(barFrame, classNames)}>
       <ThemePanel
@@ -90,8 +99,9 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
         override={themeOverride}
         grid={look.background.grid}
         themeGrid={themeGrid}
-        onThemeChange={onThemeChange}
-        onGridChange={onBackgroundGridChange}
+        // The pickers show only when the host takes their changes.
+        onThemeChange={onThemeChange && controller.look.setTheme}
+        onGridChange={onBackgroundGridChange && controller.look.setBackgroundGrid}
         guides={guides}
         onGuidesToggle={toggleGuides}
       />

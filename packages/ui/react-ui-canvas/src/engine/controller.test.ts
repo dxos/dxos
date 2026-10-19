@@ -5,22 +5,39 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
+import { SceneBuilder, type SceneTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { createMemoryStore, createTimeline, isFrameNode, keyTimes } from '../model/index.ts';
+import { type BackgroundGrid, createMemoryStore, createTimeline, isFrameNode, keyTimes } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
-import { createCanvasController } from './controller.ts';
+import { type LookHandlers, createCanvasController } from './controller.ts';
 import { createFreehandProjection } from './projection.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 
+const VIEWPORT = { width: 1024, height: 768 };
+
 /** Two rectangles and a link between them, on a store with no classes yet. */
-const setup = ({ readonly = false } = {}) => {
-  const tree = SceneBuilder.scene('root', [
+const flat = () =>
+  SceneBuilder.scene('root', [
     SceneBuilder.rect('a', box(0)).properties({ label: 'A' }),
     SceneBuilder.rect('b', box(512)).properties({ label: 'B' }),
     SceneBuilder.link('line', 'a', 'b'),
   ]).build();
+
+/** A rectangle beside a frame onto a child scene with one rectangle of its own. */
+const nested = () =>
+  SceneBuilder.scene('root', [
+    SceneBuilder.rect('a', box(0)),
+    SceneBuilder.scene('child', [SceneBuilder.rect('c', box(0))])
+      .name('Child')
+      .at({ x: 512, y: 0, width: 512, height: 256 }),
+  ]).build();
+
+const setup = ({
+  readonly = false,
+  tree = flat(),
+  look = {},
+}: { readonly?: boolean; tree?: SceneTree; look?: LookHandlers } = {}) => {
   const registry = Registry.make();
   const store = createMemoryStore(tree.scenes);
   const atoms = createCanvasAtoms(tree.root);
@@ -35,6 +52,9 @@ const setup = ({ readonly = false } = {}) => {
     nodeRegistry: () => defaultNodeRegistry,
     readonly: () => readonly,
     grid: () => ({ major: 64, snap: (value) => Math.round(value / 16) * 16 }),
+    viewport: () => VIEWPORT,
+    inset: () => 0,
+    look: () => look,
     createId: (prefix) => `${prefix}-${next++}`,
   });
   const scene = () => registry.get(projection.scene);
@@ -43,6 +63,100 @@ const setup = ({ readonly = false } = {}) => {
 };
 
 describe('CanvasController', () => {
+  describe('navigation', () => {
+    test("drillIn opens a frame's scene, records it in the history and clears the selection", ({ expect }) => {
+      const { registry, atoms, controller, scene } = setup({ tree: nested() });
+      controller.selection.select(['a']);
+      controller.navigation.drillIn(scene().nodes.child);
+      expect(registry.get(atoms.path)).toEqual(['root', 'child']);
+      expect(registry.get(atoms.selection).size).toBe(0);
+      const history = registry.get(atoms.history);
+      expect(history.entries.map((entry) => entry.path)).toEqual([['root', 'child']]);
+      expect(registry.get(atoms.camera)).toEqual(history.entries[0].camera);
+    });
+
+    test('drillOut and openPath return to the parent through the frame the child was entered with', ({ expect }) => {
+      const { registry, store, atoms, controller, scene } = setup({ tree: nested() });
+      const portal = scene().nodes.child;
+      const before = { x: 10, y: 20, zoom: 0.5 };
+      registry.set(atoms.camera, before);
+      controller.navigation.drillIn(portal, false);
+      const child = registry.get(store.scenes).child;
+      expect(controller.navigation.frame(registry.get(atoms.path), child)).toEqual(
+        controller.navigation.childFrame(portal, child),
+      );
+      controller.navigation.drillOut(1, false);
+      expect(registry.get(atoms.path)).toEqual(['root']);
+      const after = registry.get(atoms.camera);
+      expect([after.x, after.y, after.zoom].map((value) => Math.round(value * 1e6) / 1e6)).toEqual([10, 20, 0.5]);
+      controller.navigation.drillIn(portal, false);
+      controller.navigation.openPath(0);
+      expect(registry.get(atoms.path)).toEqual(['root']);
+    });
+
+    test('goHistory moves back and forward along the visited paths', ({ expect }) => {
+      const { registry, atoms, controller, scene } = setup({ tree: nested() });
+      controller.navigation.drillIn(scene().nodes.child, false);
+      controller.navigation.drillOut(1, false);
+      controller.navigation.goHistory(-1);
+      expect(registry.get(atoms.path)).toEqual(['root', 'child']);
+      controller.navigation.goHistory(1);
+      expect(registry.get(atoms.path)).toEqual(['root']);
+      controller.navigation.goHistory(1);
+      expect(registry.get(atoms.path)).toEqual(['root']);
+    });
+
+    test('isolate opens a scene on its own and back returns to where the view was', ({ expect }) => {
+      const { registry, atoms, controller } = setup({ tree: nested() });
+      const camera = { x: 10, y: 20, zoom: 2 };
+      registry.set(atoms.camera, camera);
+      controller.navigation.isolate('child');
+      expect(registry.get(atoms.path)).toEqual(['child']);
+      expect(registry.get(atoms.isolation)?.composite).toBe('child');
+      expect(registry.get(atoms.camera)).not.toEqual(camera);
+      controller.navigation.back();
+      expect(registry.get(atoms.isolation)).toBeUndefined();
+      expect(registry.get(atoms.path)).toEqual(['root']);
+      expect(registry.get(atoms.camera)).toEqual(camera);
+    });
+
+    test("zoomTo and zoomBy zoom about the view's centre; resetZoom returns to true size", ({ expect }) => {
+      const { registry, atoms, controller } = setup();
+      controller.navigation.zoomTo(2);
+      expect(registry.get(atoms.camera).zoom).toBe(2);
+      controller.navigation.zoomBy(2);
+      expect(registry.get(atoms.camera).zoom).toBe(4);
+      controller.navigation.resetZoom();
+      expect(registry.get(atoms.camera).zoom).toBe(1);
+    });
+
+    test("fit frames the scene's shapes; fitSelection frames the selection", ({ expect }) => {
+      const { registry, atoms, controller } = setup();
+      // Both rectangles span x 0–768 and y 0–128; at most true size, each frame is centred in the 1024 × 768 view.
+      controller.navigation.fit();
+      expect(registry.get(atoms.camera)).toEqual({ zoom: 1, x: 128, y: 320 });
+      controller.selection.select(['a']);
+      controller.navigation.fitSelection();
+      expect(registry.get(atoms.camera)).toEqual({ zoom: 1, x: 384, y: 320 });
+    });
+  });
+
+  describe('look', () => {
+    test("the look commands call the host's handlers, and do nothing without them", ({ expect }) => {
+      const themes: (string | undefined)[] = [];
+      const grids: (BackgroundGrid | undefined)[] = [];
+      const { controller } = setup({
+        look: { onThemeChange: (theme) => themes.push(theme), onBackgroundGridChange: (grid) => grids.push(grid) },
+      });
+      controller.look.setTheme('paper');
+      controller.look.setTheme(undefined);
+      controller.look.setBackgroundGrid('dots');
+      expect(themes).toEqual(['paper', undefined]);
+      expect(grids).toEqual(['dots']);
+      expect(() => setup().controller.look.setTheme('paper')).not.toThrow();
+    });
+  });
+
   describe('selection', () => {
     test('select sets the selection and clears the control point; read-only selects nothing', ({ expect }) => {
       const { registry, atoms, controller } = setup();

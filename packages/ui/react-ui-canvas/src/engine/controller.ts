@@ -6,45 +6,91 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
+  type BackgroundGrid,
+  type Bounds,
+  type Camera,
   type Capabilities,
   type ElementId,
+  type Node,
   type NodeRegistry,
   OPACITY_PATH,
   type Point,
+  type Scene,
   type SceneId,
   type SceneStore,
+  type Size,
   type StyleClass,
   type Tool,
   clampTime,
   createTimeline,
   getElement,
   getPath,
+  isFrameNode,
+  isInstanceNode,
   isLink,
   keyTimes,
   moveKeys,
   nodeAnimatable,
+  nodeDef,
   removeKey as removeTimelineKey,
   setKey,
   timelineFps,
 } from '../model/index.ts';
 import {
+  DRILL_ANIMATION_MS,
+  EMPTY_FRAME,
+  NOMINAL_ZOOM,
   activeLayer,
   between,
+  childFrame,
   classedLink,
   classedNode,
   clipboardBounds,
+  compositeBounds,
+  contentBounds,
   copySelection,
   createId,
+  enterPortal,
+  exitPortal,
+  fitBounds,
+  fitFrame,
   groupIntoScene,
+  nodeBounds,
   pasteFragment,
   recordScenes,
   topZ,
+  unionBounds,
+  zoomAt,
 } from '../utils/index.ts';
-import { type CanvasAtoms } from './atoms.ts';
+import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
 import { type Projection } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
 export type ControllerGrid = { major: number; snap: (value: number) => number };
+
+/** How the view moves its camera; without one the camera jumps, as nothing animates it. */
+export type CameraMotion = {
+  /** Animates to `target`, calling `done` when the last frame lands; `duration` fixes its length in ms. */
+  animateTo: (target: Camera, done?: () => void, duration?: number) => void;
+  /** Where the camera is headed: an animation's target while one is in flight, else the camera itself. */
+  target: () => Camera;
+  /** The portal a drill-in is zooming into, while it is. */
+  setOpening: (id: ElementId | undefined) => void;
+};
+
+/** What the view does around a camera move: it owns fit mode and whether the user has taken the camera over. */
+export type ViewFit = {
+  enterFit: () => void;
+  exitFit: () => void;
+  /** The user took the camera over, so the view stops fitting itself as it settles. */
+  takeOver: () => void;
+};
+
+/** The host's handlers for the look; a command whose handler is absent does nothing, as the host owns the value. */
+export type LookHandlers = {
+  onThemeChange?: (theme: string | undefined) => void;
+  onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
+};
 
 export type CanvasControllerOptions = {
   registry: Registry.AtomRegistry;
@@ -59,8 +105,54 @@ export type CanvasControllerOptions = {
   /** Read when a command runs: the host may toggle it. */
   readonly: () => boolean;
   grid: () => ControllerGrid;
+  /** The view's size in screen px. */
+  viewport: () => Size;
+  /** Least gap between a fitted frame and each viewport edge, in scene units. */
+  inset: () => number;
+  /** What Fit frames instead of the scene's shapes, when the host gives one. */
+  frame?: () => Bounds | undefined;
+  camera?: () => CameraMotion;
+  fit?: () => ViewFit;
+  look?: () => LookHandlers;
   /** Fresh ids; injectable so tests are deterministic. */
   createId?: (prefix: string) => string;
+};
+
+/** Where the camera is and which View is open (DESIGN.md §13.1, the Navigation aspect). */
+export type NavigationCommands = {
+  /** Opens a node: an instance's composite in isolation, a frame's scene by drilling in, or the host's own view of it. */
+  drillIn: (node: Node, animate?: boolean) => void;
+  /** Backs out `levels` scenes, each through the frame it was entered with. */
+  drillOut: (levels?: number, animate?: boolean) => void;
+  /** Backs out a level: out of isolation first. */
+  back: () => void;
+  goHistory: (offset: number) => void;
+  /** Opens the breadcrumb at `index`; in isolation the first leads back out. */
+  openPath: (index: number) => void;
+  /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
+  isolate: (composite: SceneId) => void;
+  exitIsolation: () => void;
+  /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
+  fit: () => void;
+  /** Frames the selected nodes, leaving fit mode. */
+  fitSelection: () => void;
+  /** Zooms about the view's centre from where the camera is headed, so quick clicks compound rather than jump. */
+  zoomTo: (zoom: number) => void;
+  zoomBy: (factor: number) => void;
+  /** Back to true size about the view's centre, from where the camera is now. */
+  resetZoom: () => void;
+  /** A child scene's frame inside its portal, as drilling in maps it. */
+  childFrame: (portal: Node, child: Scene) => Bounds;
+  /** The frame of the scene at the head of `path`: once entered through a portal, the one it arrived with. */
+  frame: (path: SceneId[], scene: Scene) => Bounds;
+};
+
+/** Theme and background (DESIGN.md §13.1, the Look aspect). */
+export type LookCommands = {
+  /** Picks the drawing's theme, or `undefined` for the default. */
+  setTheme: (theme: string | undefined) => void;
+  /** Picks the background's grid, or `undefined` for the background's own. */
+  setBackgroundGrid: (grid: BackgroundGrid | undefined) => void;
 };
 
 /** What is selected (DESIGN.md §13.1, the Selection aspect). */
@@ -119,6 +211,8 @@ export type TimeCommands = {
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
  */
 export type CanvasController = {
+  navigation: NavigationCommands;
+  look: LookCommands;
   selection: SelectionCommands;
   editing: EditingCommands;
   tools: ToolsCommands;
@@ -134,6 +228,12 @@ export const createCanvasController = ({
   nodeRegistry,
   readonly,
   grid,
+  viewport,
+  inset,
+  frame,
+  camera: cameraMotion,
+  fit: viewFit,
+  look: lookHandlers,
   createId: newId = createId,
 }: CanvasControllerOptions): CanvasController => {
   const capabilities = (): Capabilities => projection().capabilities;
@@ -348,5 +448,211 @@ export const createCanvasController = ({
     },
   };
 
-  return { selection, editing, tools, time };
+  const setCamera = (next: Camera) => registry.set(atoms.camera, next);
+  const jump: CameraMotion = {
+    animateTo: (target, done) => {
+      setCamera(target);
+      done?.();
+    },
+    target: () => registry.get(atoms.camera),
+    setOpening: () => {},
+  };
+  const camera = () => cameraMotion?.() ?? jump;
+  const noFit: ViewFit = { enterFit: () => {}, exitFit: () => {}, takeOver: () => {} };
+  const fitMode = () => viewFit?.() ?? noFit;
+  const centre = () => ({ x: viewport().width / 2, y: viewport().height / 2 });
+  const frameIn = (portal: Node, child: Scene) => childFrame(portal, child, viewport());
+
+  const portalTo = (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
+    const parent = parentId ? registry.get(store.scenes)[parentId] : undefined;
+    return parent ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === childId) : undefined;
+  };
+  const frameOf = (path: SceneId[], current: Scene): Bounds => {
+    const portal = portalTo(path[path.length - 2], current.id);
+    return portal ? frameIn(portal, current) : (contentBounds(current) ?? EMPTY_FRAME);
+  };
+  // A scene entered through a portal keeps the frame it arrived with. Deriving it from the content on every edit moves
+  // the child under the user as they work, and maps a drill-out differently from the drill-in that opened it; the root
+  // has no portal to sit in, so its bounds stay derived. Kept for every level of the path, so drilling back out of a
+  // nested frame finds each parent as it was entered.
+  const frames = new Map<string, Bounds>();
+
+  const pushHistory = (entry: HistoryEntry) => {
+    const history = registry.get(atoms.history);
+    const entries = [...history.entries.slice(0, history.index + 1), entry];
+    registry.set(atoms.history, { entries, index: entries.length - 1 });
+  };
+
+  const drillInto = (portal: Node, animate = true) => {
+    const open = nodeDef(nodeRegistry(), portal)?.hostOpen?.(portal);
+    if (open) {
+      open();
+      return;
+    }
+    const child = isFrameNode(portal) ? registry.get(store.scenes)[portal.scene] : undefined;
+    if (!child) {
+      return;
+    }
+    fitMode().takeOver();
+    // The zoom is into the child, so the portal's selection outline and ports go before it starts.
+    select([]);
+    registry.set(atoms.hover, undefined);
+    registry.set(atoms.editing, undefined);
+    const childBounds = frameIn(portal, child);
+    const swap = (next: Camera) => {
+      const entered = enterPortal(next, portal, childBounds);
+      registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
+      setCamera(entered);
+      camera().setOpening(undefined);
+      pushHistory({ path: registry.get(atoms.path), camera: entered });
+    };
+    if (animate) {
+      // Land the child where fitting it would, margin and all, but never past 1:1, so its text lands at its natural
+      // size rather than magnified to fill the view. Expressed in the child's own space and mapped back out, so the
+      // zoom ends exactly where the swap puts the camera. An empty child lands where Fit puts it (the origin at 1:1),
+      // which its viewport-sized frame fills exactly, so fit mode has nothing left to animate once the scenes swap.
+      const target = exitPortal(fitBounds(fitFrame(child), viewport(), inset(), NOMINAL_ZOOM), portal, childBounds);
+      camera().animateTo(target, () => swap(target), DRILL_ANIMATION_MS);
+      camera().setOpening(portal.id);
+    } else {
+      swap(registry.get(atoms.camera));
+    }
+  };
+
+  const drillOut = (levels = 1, animate = true) => {
+    const current = registry.get(atoms.path);
+    if (current.length < 2 || levels < 1) {
+      return;
+    }
+    const scenes = registry.get(store.scenes);
+    let next = current;
+    let exited = registry.get(atoms.camera);
+    for (let level = 0; level < levels && next.length > 1; level++) {
+      const child = scenes[next[next.length - 1]];
+      const portal = child && portalTo(next[next.length - 2], child.id);
+      if (!child || !portal) {
+        break;
+      }
+      // The level being left exits through the frame it was entered with, so the camera lands where the drill-in took
+      // it from however the child was edited in between.
+      exited = exitPortal(exited, portal, frames.get(next.join(' ')) ?? frameIn(portal, child));
+      next = next.slice(0, -1);
+    }
+    registry.set(atoms.path, next);
+    select([]);
+    setCamera(exited);
+    const parent = scenes[next[next.length - 1]];
+    if (animate && parent) {
+      camera().animateTo(fitBounds(fitFrame(parent), viewport(), inset(), NOMINAL_ZOOM), undefined, DRILL_ANIMATION_MS);
+    }
+    pushHistory({ path: next, camera: exited });
+  };
+
+  const isolate = (composite: SceneId) => {
+    const definition = registry.get(store.scenes)[composite];
+    if (!definition) {
+      return;
+    }
+    const back = registry.get(atoms.isolation)?.back ?? {
+      path: registry.get(atoms.path),
+      camera: registry.get(atoms.camera),
+    };
+    registry.set(atoms.isolation, { composite, back });
+    fitMode().exitFit();
+    select([]);
+    registry.set(atoms.path, [composite]);
+    const content = compositeBounds(definition);
+    if (content) {
+      setCamera(fitBounds(content, viewport(), inset(), NOMINAL_ZOOM));
+    }
+  };
+
+  const exitIsolation = () => {
+    const current = registry.get(atoms.isolation);
+    if (!current) {
+      return;
+    }
+    registry.set(atoms.isolation, undefined);
+    select([]);
+    registry.set(atoms.path, current.back.path);
+    setCamera(current.back.camera);
+  };
+
+  const zoomTo = (zoom: number) => {
+    fitMode().takeOver();
+    fitMode().exitFit();
+    // From where the camera is headed, so a click during an animation retargets it rather than stepping from midway.
+    camera().animateTo(zoomAt(camera().target(), centre(), zoom));
+  };
+
+  const navigation: NavigationCommands = {
+    drillIn: (node, animate) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animate)),
+    drillOut,
+    back: () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
+    goHistory: (offset) => {
+      const history = registry.get(atoms.history);
+      const index = history.index + offset;
+      const entry = history.entries[index];
+      if (!entry) {
+        return;
+      }
+      registry.set(atoms.history, { ...history, index });
+      registry.set(atoms.path, entry.path);
+      select([]);
+      camera().animateTo(entry.camera);
+    },
+    openPath: (index) => {
+      if (registry.get(atoms.isolation)) {
+        if (index === 0) {
+          exitIsolation();
+        }
+      } else {
+        drillOut(registry.get(atoms.path).length - 1 - index);
+      }
+    },
+    isolate,
+    exitIsolation,
+    fit: () => {
+      fitMode().enterFit();
+      camera().animateTo(fitBounds(frame?.() ?? fitFrame(currentScene()), viewport(), inset(), NOMINAL_ZOOM));
+    },
+    fitSelection: () => {
+      const scene = currentScene();
+      const nodes = [...registry.get(atoms.selection)].flatMap((id) => scene.nodes[id] ?? []);
+      const union = unionBounds(nodes.map(nodeBounds));
+      if (union) {
+        fitMode().exitFit();
+        camera().animateTo(fitBounds(union, viewport(), inset(), NOMINAL_ZOOM));
+      }
+    },
+    zoomTo,
+    // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
+    zoomBy: (factor) => zoomTo(camera().target().zoom * factor),
+    resetZoom: () => {
+      fitMode().exitFit();
+      camera().animateTo(zoomAt(registry.get(atoms.camera), centre(), NOMINAL_ZOOM));
+    },
+    childFrame: frameIn,
+    frame: (path, scene) => {
+      const key = path.join(' ');
+      for (const kept of [...frames.keys()]) {
+        if (key !== kept && !key.startsWith(`${kept} `)) {
+          frames.delete(kept);
+        }
+      }
+      if (path.length < 2) {
+        return frameOf(path, scene);
+      }
+      const kept = frames.get(key) ?? frameOf(path, scene);
+      frames.set(key, kept);
+      return kept;
+    },
+  };
+
+  const look: LookCommands = {
+    setTheme: (theme) => lookHandlers?.().onThemeChange?.(theme),
+    setBackgroundGrid: (grid) => lookHandlers?.().onBackgroundGridChange?.(grid),
+  };
+
+  return { navigation, look, selection, editing, tools, time };
 };
