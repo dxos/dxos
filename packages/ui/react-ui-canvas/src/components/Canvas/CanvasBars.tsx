@@ -52,8 +52,8 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
     return null;
   }
   return (
-    // Centred, it keeps clear of the camera bar (about 15rem with its inset) on both sides, scrolling beyond that.
-    <div className={mx(barFrame, 'max-w-[calc(100%-30rem)]', classNames)}>
+    // Its natural width, never scrolled: the actions are few and fixed, and a scrolled bar hides its last ones.
+    <div className={mx(barFrame, 'max-w-none', classNames)}>
       <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
     </div>
   );
