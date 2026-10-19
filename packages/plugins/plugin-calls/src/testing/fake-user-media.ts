@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { loadMediaFile } from '../calls/call-simulation.ts';
+import { holdLastFrame, loadMediaFile } from '../calls/call-simulation.ts';
 
 /**
  * Replaces the browser's camera and microphone with a video file, so the local tile of a story's call shows a
@@ -15,6 +15,7 @@ export const fakeUserMedia = async (src: string): Promise<{ start: () => Promise
     void audioContext.close();
     throw err;
   });
+  holdLastFrame(video);
   const mediaDevices = navigator.mediaDevices;
   const { getUserMedia, enumerateDevices } = mediaDevices;
   const devices = [

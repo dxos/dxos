@@ -119,6 +119,7 @@ export class CallSimulation extends Resource {
     await this.#audioContext.resume();
     await Promise.all(
       this.#participants.map(({ video }) => {
+        finished.delete(video);
         video.currentTime = 0;
         return video.play();
       }),
@@ -165,7 +166,8 @@ export class CallSimulation extends Resource {
     let position = 0;
     let sampledAt = performance.now();
     const now = () => {
-      const playing = players.filter((video) => !video.paused);
+      // A finished player loops its last frame, so only the ones still playing through count.
+      const playing = players.filter((video) => !video.paused && !finished.has(video));
       if (playing.length === 0) {
         return position + (performance.now() - sampledAt) / 1_000;
       }
@@ -285,10 +287,20 @@ export class CallSimulation extends Resource {
   }
 }
 
-/** A finished player stops producing frames and its tile goes black; hold the last frame instead. */
-const holdLastFrame = (video: HTMLVideoElement) =>
-  video.addEventListener('ended', () => {
-    video.currentTime = Math.max(0, video.duration - 0.1);
+/** Players that have reached their end and now loop their last frame. */
+const finished = new WeakSet<HTMLVideoElement>();
+
+/**
+ * A player that reaches its end ends the stream it was capturing, and its tile goes black for good, so it never does:
+ * within half a second of the end it jumps back to loop that last stretch, a near-still picture that keeps arriving.
+ * `timeupdate` fires at least every quarter-second, inside that margin.
+ */
+export const holdLastFrame = (video: HTMLVideoElement) =>
+  video.addEventListener('timeupdate', () => {
+    if (Number.isFinite(video.duration) && video.currentTime >= video.duration - 0.5) {
+      finished.add(video);
+      video.currentTime = Math.max(0, video.duration - 1);
+    }
   });
 
 /**
