@@ -17,6 +17,7 @@ import {
   libraryViews,
   promoted,
   promotedBy,
+  removeComposite,
   retargetInstance,
   ungroupInstance,
 } from './compose.ts';
@@ -195,5 +196,54 @@ describe('anonymous Objects', () => {
       return;
     }
     expect(copyComposite(group.composite, 'g2', counter()).composite.anonymous).toBeUndefined();
+  });
+});
+
+describe('removeComposite', () => {
+  const instance = (id: string, composite: string): InstanceNode => ({
+    type: 'instance',
+    id,
+    z: 'a',
+    center: { x: 0, y: 0 },
+    size: { width: 100, height: 50 },
+    composite,
+  });
+  const view = (id: string, nodes: View['nodes'], links: View['links'] = {}, extra: Partial<View> = {}): View => ({
+    id,
+    nodes,
+    links,
+    ...extra,
+  });
+  // The root places Card (linked to a box); Card places an anonymous Object; Logo is a named Object placed nowhere.
+  const views = {
+    'root': view(
+      'root',
+      {
+        card: instance('card', 'card-def'),
+        box: { type: 'rect', id: 'box', z: 'b', center: { x: 0, y: 0 }, size: { width: 10, height: 10 } },
+      },
+      { l: { type: 'line', id: 'l', z: 'a', source: { node: 'box' }, target: { node: 'card' } } },
+    ),
+    'card-def': view('card-def', { inner: instance('inner', 'anon') }, {}, { kind: 'composite', name: 'Card' }),
+    'anon': view('anon', {}, {}, { kind: 'composite', anonymous: true }),
+    'logo': view('logo', {}, {}, { kind: 'composite', name: 'Logo' }),
+  };
+
+  test('with its instances, the Object, its Instances and their links go, and so do records only they pointed at', ({
+    expect,
+  }) => {
+    const next = removeComposite(views, 'card-def', { instances: true, roots: ['root'] });
+    expect(Object.keys(next ?? {}).sort()).toEqual(['logo', 'root']);
+    expect(Object.keys(next?.root.nodes ?? {})).toEqual(['box']);
+    expect(next?.root.links).toEqual({});
+  });
+
+  test('without, a placed Object stays and an unplaced one goes alone', ({ expect }) => {
+    expect(removeComposite(views, 'card-def', { instances: false, roots: ['root'] })).toBeUndefined();
+    expect(Object.keys(removeComposite(views, 'logo', { instances: false, roots: ['root'] }) ?? {}).sort()).toEqual([
+      'anon',
+      'card-def',
+      'root',
+    ]);
   });
 });

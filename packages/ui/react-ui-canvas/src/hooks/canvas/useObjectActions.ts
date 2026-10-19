@@ -4,7 +4,7 @@
 
 import { useMemo, useRef } from 'react';
 
-import { type CanvasAtoms, type NavigationCommands, type Projection, reduceIntent } from '../../engine/index.ts';
+import { type CanvasAtoms, type NavigationCommands, type Projection } from '../../engine/index.ts';
 import {
   type ElementId,
   type InstanceNode,
@@ -21,12 +21,12 @@ import {
   compositeBounds,
   copyComposite,
   createId,
-  instanceCounts,
   instancePorts,
   isAnonymous,
   promoted,
   recordStoreStep,
   recordViews,
+  removeComposite,
   renamePortLinks,
   retargetInstance,
   screenToScene,
@@ -161,23 +161,17 @@ export const useObjectActions = ({
       /** Removes a composite; with `instances`, every instance of it in the drawing too, else only an unused one. */
       remove: (composite: ViewId, instances: boolean) => {
         const before = registry.get(store.views);
-        if (!instances && (instanceCounts(before)[composite] ?? 0) > 0) {
+        const path = registry.get(atoms.isolation)?.back.path ?? registry.get(atoms.path);
+        const roots = [...path.slice(0, 1), ...Object.keys(before).filter((id) => store.isRoot?.(id))];
+        const next = removeComposite(before, composite, { instances, roots });
+        if (!next) {
           return;
-        }
-        const { [composite]: _, ...rest } = before;
-        const scenes: Record<ViewId, View> = {};
-        for (const [id, scene] of Object.entries(rest)) {
-          const used = Object.values(scene.nodes).filter(
-            (node) => isInstanceNode(node) && node.composite === composite,
-          );
-          scenes[id] =
-            used.length > 0 ? reduceIntent(scene, { kind: 'delete', ids: used.map((node) => node.id) }) : scene;
         }
         if (registry.get(atoms.isolation)?.composite === composite) {
           navigation.exitIsolation();
         }
         const model = baseProjection.snapshot();
-        registry.set(store.views, scenes);
+        registry.set(store.views, next);
         recordStoreStep(registry, atoms.undo, sceneId(), model, before);
       },
     };

@@ -28,6 +28,7 @@ import {
   type ViewMap,
   endpointNode,
   isInstanceNode,
+  pruneOrphaned,
 } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
@@ -84,6 +85,44 @@ export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
     }
   }
   return counts;
+};
+
+/**
+ * `views` without the composite `composite` and, with `instances`, without every Instance of it and the links on them;
+ * the records only those Instances pointed at (an anonymous Object or a View inside one) go too. Undefined when the
+ * composite is still placed and `instances` is off, as deleting it would leave Instances drawing nothing.
+ */
+export const removeComposite = (
+  views: ViewMap,
+  composite: ViewId,
+  { instances, roots }: { instances: boolean; roots: readonly ViewId[] },
+): ViewMap | undefined => {
+  if (!instances && (instanceCounts(views)[composite] ?? 0) > 0) {
+    return undefined;
+  }
+  const { [composite]: _, ...rest } = views;
+  const next = Object.fromEntries(
+    Object.entries(rest).map(([id, view]): [ViewId, View] => {
+      const gone = new Set(
+        Object.values(view.nodes).flatMap((node) =>
+          isInstanceNode(node) && node.composite === composite ? [node.id] : [],
+        ),
+      );
+      if (gone.size === 0) {
+        return [id, view];
+      }
+      const touches = (link: Link) => [link.source, link.target].some((end) => gone.has(endpointNode(end) ?? ''));
+      return [
+        id,
+        {
+          ...view,
+          nodes: Object.fromEntries(Object.entries(view.nodes).filter(([nodeId]) => !gone.has(nodeId))),
+          links: Object.fromEntries(Object.entries(view.links).filter(([, link]) => !touches(link))),
+        },
+      ];
+    }),
+  );
+  return pruneOrphaned(views, next, roots);
 };
 
 /** The box a composite's nodes fill, unpadded: what an instance scales into its frame. */
