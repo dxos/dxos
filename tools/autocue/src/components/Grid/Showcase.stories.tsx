@@ -13,6 +13,10 @@ import { ComposerIntro, EndOnly, TIMING, loadBrandFont } from '../Ident/index.ts
 import { Grid } from './Grid.tsx';
 
 type ShowcaseProps = {
+  /** Hides the Grid's toolbar. */
+  controls?: boolean;
+  /** Renders the Grid one frame at a time through `window.grid.seek`, for `showcase/render.mjs`. */
+  stepped?: boolean;
   /** Each of the three tour clips' close-up, in ms, from landing to the next landing. */
   slot?: number;
   /** The closing drift of the zoomed-out wall, in ms. */
@@ -20,6 +24,41 @@ type ShowcaseProps = {
   /** The drift's speed, in cells per second. */
   drift?: number;
 };
+
+/** The showcase's grid part: three tour close-ups, then the zoomed-out wall drifting down. */
+const ShowcaseGrid = ({
+  slot = 10_000,
+  driftMs = 12_000,
+  drift = 0.2,
+  controls,
+  stepped,
+  onEnded,
+}: ShowcaseProps & { onEnded?: () => void }) => (
+  <Grid
+    cols={6}
+    rows={6}
+    gap={12}
+    tour={[
+      [0, 3],
+      [1, 3],
+      [2, 3],
+    ]}
+    hold={slot}
+    pan={1_500}
+    duration={12_000}
+    variant='shift'
+    content='clips'
+    tourSlot={slot}
+    montage={[]}
+    zoomMs={600}
+    shiftMs={600}
+    drift={drift}
+    driftAfter={driftMs}
+    controls={controls}
+    stepped={stepped}
+    onEnded={onEnded}
+  />
+);
 
 /**
  * The showcase cut: the Composer ident; the first tour clip close up, shifting to the second and the third; the wall
@@ -43,30 +82,7 @@ const ShowcaseStory = ({ slot = 10_000, driftMs = 12_000, drift = 0.2 }: Showcas
         />
       );
     case 'grid':
-      return (
-        <Grid
-          cols={6}
-          rows={6}
-          gap={12}
-          tour={[
-            [0, 3],
-            [1, 3],
-            [2, 3],
-          ]}
-          hold={slot}
-          pan={1_500}
-          duration={12_000}
-          variant='shift'
-          content='clips'
-          tourSlot={slot}
-          montage={[]}
-          zoomMs={600}
-          shiftMs={600}
-          drift={drift}
-          driftAfter={driftMs}
-          onEnded={() => setPhase('outro')}
-        />
-      );
+      return <ShowcaseGrid slot={slot} driftMs={driftMs} drift={drift} onEnded={() => setPhase('outro')} />;
     case 'outro':
       return (
         <IdentPlayer
@@ -96,3 +112,12 @@ export default meta;
 type Story = StoryObj<ShowcaseProps>;
 
 export const Default: Story = {};
+
+/** The grid part alone, so `showcase/render.mjs` can step it; the ident and end card are rendered by Remotion. */
+export const GridOnly: Story = {
+  render: (args) => <ShowcaseGrid {...args} />,
+  argTypes: {
+    controls: { type: { name: 'boolean' }, control: 'boolean' },
+    stepped: { type: { name: 'boolean' }, control: 'boolean' },
+  },
+};

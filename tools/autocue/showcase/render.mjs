@@ -15,7 +15,7 @@
  * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
  * `--supersample 2` screenshots each frame at twice the pixel density and area-averages it down, so the tiles do not
  * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `mosaic-tours`, …; see
- * GRID-TRANSITIONS.md) and `--args` adds story args in Storybook's `key:value;…` URL form.
+ * GRID-TRANSITIONS.md), or any stepped story by its full id, and `--args` adds story args in Storybook's `key:value;…` URL form.
  */
 
 import { chromium } from '@playwright/test';
@@ -53,9 +53,10 @@ const args = [
   ...(values.duration ? [`duration:${Number(values.duration)}`] : []),
   ...(values.args ? values.args.split(';') : []),
 ];
+// A full story id (`tools-autocue-showcase--grid-only`) renders a story outside Grid.stories.tsx.
+const storyId = values.story.includes('--') ? values.story : `tools-autocue-grid--${values.story}`;
 const url =
-  `${values.url}/iframe.html?id=tools-autocue-grid--${values.story}&viewMode=story` +
-  `&args=${args.join(';')}&globals=theme:${values.theme}`;
+  `${values.url}/iframe.html?id=${storyId}&viewMode=story` + `&args=${args.join(';')}&globals=theme:${values.theme}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
