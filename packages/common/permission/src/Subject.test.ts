@@ -32,8 +32,11 @@ describe('Principal', () => {
   test('kinds', ({ expect }) => {
     expect(Principal.kind(Principal.identity('did:halo:ABC'))).toBe('identity');
     expect(Principal.kind(Principal.space(SPACE_ID))).toBe('space');
-    expect(Principal.kind(Principal.process(`echo://${SPACE_ID}/01PROC`))).toBe('process');
+    expect(Principal.kind(Principal.process(`process://local/${crypto.randomUUID()}`))).toBe('other');
+    expect(Principal.kind(Principal.process(`echo://${SPACE_ID}/01PROC`))).toBe('other');
     expect(() => Principal.make('bob')).toThrow();
+    expect(() => Principal.make('did:halo:')).toThrow();
+    expect(() => Principal.make('echo://lowercase')).toThrow();
   });
 });
 

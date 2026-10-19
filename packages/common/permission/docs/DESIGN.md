@@ -206,13 +206,13 @@ grants.
 Everything a permission points at is named with a URI the platform already has. Nothing new is
 invented.
 
-| Thing                          | URI                                  | Notes                                                                                                             |
-| ------------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| a space                        | `echo://<spaceId>`                   | the space itself, as a subject or as an audience                                                                  |
-| an object                      | `echo://<spaceId>/<objectId>`        | a document, a mailbox, a sandbox, a plugin record, an agent                                                       |
-| an identity (user or agent)    | `did:halo:<id>`                      | key-backed                                                                                                        |
-| a process                      | `echo://<spaceId>/<processObjectId>` | the process record the runtime keeps in the space; app-level processes with no space use the runtime's own record |
-| every subject the issuer holds | `*`                                  | UCAN's powerline, resolved against the issuer's grants at check time                                              |
+| Thing                          | URI                           | Notes                                                                                                 |
+| ------------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| a space                        | `echo://<spaceId>`            | the space itself, as a subject or as an audience                                                      |
+| an object                      | `echo://<spaceId>/<objectId>` | a document, a mailbox, a sandbox, a plugin record, an agent                                           |
+| an identity (user or agent)    | `did:halo:<id>`               | key-backed                                                                                            |
+| a process                      | open (see Open questions)     | a process has no record in a space today, only a `Process.ID` (a UUID) in its runtime's process store |
+| every subject the issuer holds | `*`                           | UCAN's powerline, resolved against the issuer's grants at check time                                  |
 
 A service like email or a sandbox is not a new kind of name: it is the object that represents it
 (the mailbox, the sandbox object, the access-token record), and the command carries the verb. So
@@ -221,11 +221,13 @@ A service like email or a sandbox is not a new kind of name: it is the object th
 
 ### Principals
 
-A principal is who holds a grant (its audience) or issues one (its issuer). Three kinds:
+A principal is who holds a grant (its audience) or issues one (its issuer). It is any URI; two
+kinds carry meaning for the evaluator and everything else is opaque:
 
 - **Identity** `did:halo:<id>`: a user or an agent. Key-backed; grants to it are signed.
-- **Process** `echo://<spaceId>/<processId>`: not key-backed; grants to it are attested by the
-  runtime that spawned it.
+- **Process**: not key-backed; grants to it are attested by the runtime that spawned it. How a
+  process is named is open (see Open questions): it has no record in a space, so no echo URI
+  names it today. The schema accepts any URI so the choice can be made without a format change.
 - **Space** `echo://<spaceId>`: a grant whose audience is a space is held by every member of that
   space. The policy narrows it by role through the check context (`.caller.role`), so 'editors of
   this space' is audience `echo://<spaceId>` with policy
@@ -671,9 +673,11 @@ annotation), `Grant` (schema, `make`, canonical form, id, `attenuate`), `Require
 2. Should `delegable` default to true (UCAN) or false (safer for agents)?
 3. Consent lifetime: once, session or standing. Does the requirement decide, or the user at the
    prompt?
-4. A process's URI: is the runtime's process record an ECHO object in the space (so
-   `echo://<spaceId>/<processId>` is real), or does an app-level process with no space need the
-   runtime to hold the record?
+4. How principals map through processes. A principal is any URI (`did:halo:` and `echo:` are
+   validated, others are opaque). A process has no record in a space, only a `Process.ID` in its
+   runtime's store, so the candidates are: a runtime URI (`process://<runtime>/<pid>`), an echo
+   record created per spawn, or no process principal at all, with the process acting for the
+   identity that spawned it and the grants carried as attenuation only. (Dmytro: keep open.)
 5. The name, and whether the package stands alone or joins `@dxos/credentials`. See Naming.
    (Rich.)
 

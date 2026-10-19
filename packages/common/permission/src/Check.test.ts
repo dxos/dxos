@@ -27,7 +27,7 @@ const bob = Principal.identity('did:halo:BOB');
 const agent = Principal.identity('did:halo:AGENT');
 const space = Principal.space(SPACE_ID);
 const runtime = Principal.identity('did:halo:RUNTIME');
-const childProcess = Principal.process(`echo://${SPACE_ID}/01PROCESS`);
+const childProcess = Principal.process('process://local/0f8fad5b-d9cb-469f-a165-70867728950e');
 
 const mailbox = Subject.object(SPACE_ID, MAILBOX_ID);
 
@@ -643,7 +643,7 @@ describe('Check', () => {
           expiresAt: Grant.inHours(1, NOW),
         }),
       );
-      const grandchild = Principal.process(`echo://${SPACE_ID}/01GRANDCHILD`);
+      const grandchild = Principal.process('process://local/7c9e6679-7425-40de-944b-e07fc1f90ae7');
       const toGrandchild = await run(
         Grant.attenuate(
           [toProcess],
