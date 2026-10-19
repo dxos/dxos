@@ -8,7 +8,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type Point } from '../../model/index.ts';
+import { type Bounds, type Point } from '../../model/index.ts';
+import { easedStops } from '../Background/index.ts';
 
 const gridRatios = [1 / 4, 1, 4, 16];
 
@@ -43,6 +44,8 @@ export type GridProps = Util.ThemedClassName<{
   variant?: 'lines' | 'dots';
   /** The dots' fill, as the stroke colours the lines. */
   dotsClassName?: string;
+  /** In screen px, the field the grid fades out towards the edges of, as a background with `fade` asks. */
+  fade?: Bounds;
 }>;
 
 /** Multi-level grid in screen space, fed the camera's scale and offset. */
@@ -57,6 +60,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       range = defaultRange,
       variant = 'lines',
       dotsClassName = 'fill-neutral-500',
+      fade,
       classNames,
     },
     forwardedRef,
@@ -88,6 +92,18 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       >
         {/* NOTE: The pattern is offset so that the middle of the pattern aligns with the grid. */}
         <defs>
+          {fade && (
+            <>
+              <radialGradient id={`${createId(instanceId, 0)}-fade-gradient`} r={0.5}>
+                {easedStops(1, 0.3).map(({ offset, opacity }) => (
+                  <stop key={offset} offset={offset} stopColor='white' stopOpacity={opacity} />
+                ))}
+              </radialGradient>
+              <mask id={`${createId(instanceId, 0)}-fade`} maskUnits='userSpaceOnUse' {...fade}>
+                <rect {...fade} fill={`url(#${createId(instanceId, 0)}-fade-gradient)`} />
+              </mask>
+            </>
+          )}
           {grids.map(({ id, size }) => (
             <GridPattern
               key={id}
@@ -105,7 +121,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
             <line x1={offset.x} y1={0} x2={offset.x} y2={height} className='stroke-neutral-500 opacity-40' />
           </>
         )}
-        <g>
+        <g mask={fade ? `url(#${createId(instanceId, 0)}-fade)` : undefined}>
           {grids.map(({ id, size }) => (
             <rect
               key={id}

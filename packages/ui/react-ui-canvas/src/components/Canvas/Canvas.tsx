@@ -1835,6 +1835,16 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
           showAxes={false}
           ratios={GRID_LEVELS}
           range={DOTS_RANGE}
+          fade={
+            look.background.fade
+              ? {
+                  x: (field.x + camera.x) * camera.zoom,
+                  y: (field.y + camera.y) * camera.zoom,
+                  width: field.width * camera.zoom,
+                  height: field.height * camera.zoom,
+                }
+              : undefined
+          }
         />
       )}
       <div
