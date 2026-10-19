@@ -7,10 +7,14 @@ import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type VoiceAvatar, type VoiceAvatarVariant, createVoiceAvatar } from '../../calls/voice-avatar.ts';
+import { Lobby } from '../Lobby/index.ts';
 import { VideoObject } from '../Media/index.ts';
+import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
 
 type StoryProps = {
   /** Audio file the avatar speaks. */
@@ -69,23 +73,30 @@ const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
   };
 
   return (
-    <div className='relative grid h-full place-items-center'>
-      <VideoObject videoStream={voice?.avatar.stream} muted contain classNames='dx-fill rounded-md' />
-      {/* Overlaid, so the picture is centred in the whole viewport. */}
-      <div className='absolute bottom-4'>
-        {playing ? (
-          <Button.Root icon='ph--stop--regular' label='Stop' onClick={handleStop} />
-        ) : (
-          <Button.Root
-            variant='primary'
-            icon='ph--play--regular'
-            label='Speak'
-            disabled={!voice}
-            onClick={() => void handlePlay().catch((err) => log.catch(err))}
-          />
-        )}
-      </div>
-    </div>
+    <Lobby.Root>
+      <Layout.Grid classNames='grow p-4'>
+        <ResponsivePanel>
+          <VideoObject videoStream={voice?.avatar.stream} muted classNames='rounded-md' />
+        </ResponsivePanel>
+      </Layout.Grid>
+      <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
+        <Layout.Flex justify='center' classNames='z-20 m-8'>
+          <Toolbar.Root classNames='p-2 dx-modal-surface rounded-md shadow-md'>
+            {playing ? (
+              <Button.Root icon='ph--stop--regular' label='Stop' onClick={handleStop} />
+            ) : (
+              <Button.Root
+                variant='primary'
+                icon='ph--play--regular'
+                label='Speak'
+                disabled={!voice}
+                onClick={() => void handlePlay().catch((err) => log.catch(err))}
+              />
+            )}
+          </Toolbar.Root>
+        </Layout.Flex>
+      </Layout.Flex>
+    </Lobby.Root>
   );
 };
 
