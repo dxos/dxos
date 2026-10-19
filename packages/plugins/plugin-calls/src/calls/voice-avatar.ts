@@ -7,8 +7,22 @@ import * as THREE from 'three';
 export type VoiceAvatar = {
   /** The avatar's picture, to stand in for a camera. */
   stream: MediaStream;
+  /** Adjusts the animation while it runs. */
+  tune: (tuning: Partial<VoiceAvatarTuning>) => void;
   close: () => void;
 };
+
+/** Animation settings that can change while the avatar runs. */
+export type VoiceAvatarTuning = {
+  /** Scales the passive wave (the ink ring's wobble, the spectrum row's wave); 0 stills it. */
+  waveAmplitude: number;
+  /** A fine, fast tremble over the ink ring's passive wobble; 0 is smooth. */
+  jitter: number;
+  /** Blots a fully loud band of the ink ring sheds per second. */
+  particles: number;
+};
+
+export const DEFAULT_TUNING: VoiceAvatarTuning = { waveAmplitude: 1, jitter: 0, particles: 6 };
 
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
@@ -24,6 +38,7 @@ export type VoiceAvatarOptions = {
   color?: string;
   /** Colour it glows toward while speaking loudly. */
   speakingColor?: string;
+  tuning?: Partial<VoiceAvatarTuning>;
 };
 
 /** Seconds for a level to rise toward a louder voice and fall back; speech rises fast and decays slowly. */
@@ -38,7 +53,7 @@ const HIGHEST_HZ = 8_000;
 /** What the analyser hears on one frame, every value smoothed and in 0..1. */
 type Hearing = { time: number; delta: number; level: number; low: number; high: number; bands: number[] };
 
-type Shape = { update: (hearing: Hearing) => void; dispose: () => void };
+type Shape = { update: (hearing: Hearing, tuning: VoiceAvatarTuning) => void; dispose: () => void };
 
 type Palette = { silent: THREE.Color; loud: THREE.Color };
 
@@ -55,6 +70,7 @@ export const createVoiceAvatar = (
     height = 360,
     color = '#5b8cff',
     speakingColor = '#2ecc71',
+    tuning: initialTuning,
   }: VoiceAvatarOptions = {},
 ): VoiceAvatar => {
   const analyser = audioContext.createAnalyser();
@@ -87,6 +103,7 @@ export const createVoiceAvatar = (
   scene.add(key);
 
   const palette = { silent: new THREE.Color(color), loud: new THREE.Color(speakingColor) };
+  const tuning: VoiceAvatarTuning = { ...DEFAULT_TUNING, ...initialTuning };
   const shape =
     variant === 'spectrum'
       ? spectrumShape(scene, palette)
@@ -123,7 +140,7 @@ export const createVoiceAvatar = (
       const energy = Math.max(0, Math.min(1, (band(edges[index], edges[index + 1]) - 0.25) / 0.5));
       hearing.bands[index] = smooth(value, energy, delta);
     });
-    shape.update(hearing);
+    shape.update(hearing, tuning);
     renderer.render(scene, camera);
     frame = requestAnimationFrame(render);
   };
@@ -132,6 +149,7 @@ export const createVoiceAvatar = (
   const stream = canvas.captureStream(30);
   return {
     stream,
+    tune: (changes) => Object.assign(tuning, changes),
     close: () => {
       cancelAnimationFrame(frame);
       stream.getTracks().forEach((track) => track.stop());
@@ -215,7 +233,7 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
   });
 
   return {
-    update: ({ time, level, bands }) => {
+    update: ({ time, level, bands }, { waveAmplitude }) => {
       // The wave fades as the voice takes over, so speech reads as the bands and not the swell.
       const idle = Math.max(0, 1 - level * 4);
       blobs.forEach((blob, index) => {
@@ -224,7 +242,7 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
         const stretch = 1 + energy * 2.2;
         const squeeze = 1 / Math.sqrt(stretch);
         mesh.scale.set(squeeze, stretch, squeeze);
-        mesh.position.y = Math.sin(time * 1.4 - index * 0.45) * idle * 0.08;
+        mesh.position.y = Math.sin(time * 1.4 - index * 0.45) * idle * 0.08 * waveAmplitude;
 
         // An hourglass: the equator narrows most, the poles not at all.
         const pinch = Math.min(0.55, energy * 0.8);
@@ -256,7 +274,8 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
 
 /** Angular samples around the ink ring. */
 const INK_SEGMENTS = 360;
-const INK_BLOTS = 48;
+/** Enough blots for a high emission rate; a spawn past the pool reuses the oldest. */
+const INK_BLOTS = 240;
 
 /**
  * An ink ring on pale mist. Each band owns an arc (lowest at the top, rising clockwise), which thickens with the
@@ -306,7 +325,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
 
   let spawned = 0;
   return {
-    update: ({ time, delta, level, bands }) => {
+    update: ({ time, delta, level, bands }, { waveAmplitude, jitter, particles }) => {
       // Passive, the circle drifts in an irregular wave: undulations whose speeds share no common period, fading out
       // as the voice takes over.
       const idle = Math.max(0, 1 - level * 4);
@@ -316,9 +335,14 @@ const inkShape = (scene: THREE.Scene): Shape => {
         const centre =
           radius +
           idle *
-            (Math.sin(angle * 2 + time * 0.9) * 0.03 +
-              Math.sin(angle * 3 - time * 1.37 + 1) * 0.02 +
-              Math.sin(angle * 5 + time * 2.11 + 2) * 0.012);
+            (waveAmplitude *
+              (Math.sin(angle * 2 + time * 0.9) * 0.03 +
+                Math.sin(angle * 3 - time * 1.37 + 1) * 0.02 +
+                Math.sin(angle * 5 + time * 2.11 + 2) * 0.012) +
+              jitter *
+                (Math.sin(angle * 13 + time * 7.3) * 0.006 +
+                  Math.sin(angle * 23 - time * 11.9 + 3) * 0.004 +
+                  Math.sin(angle * 37 + time * 17.1 + 1) * 0.003));
         // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
         const inner = centre - width * 0.35;
         const outer = centre + width * 0.65;
@@ -330,9 +354,14 @@ const inkShape = (scene: THREE.Scene): Shape => {
       geometry.computeBoundingSphere();
       ring.rotation.z -= delta * (0.04 + level * 0.1);
 
-      // Loud bands shed blots; how often follows how loud.
+      // Loud bands shed blots; how often follows how loud. A high rate can owe several blots in one frame.
       bands.forEach((energy, index) => {
-        if (energy > 0.35 && Math.random() < energy * delta * 6) {
+        if (energy <= 0.35) {
+          return;
+        }
+        const owed = energy * delta * particles;
+        const count = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
+        for (let spawn = 0; spawn < count; spawn++) {
           const blot = blots[spawned++ % blots.length];
           blot.angle = (index / bands.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
           blot.distance = radius + 0.05;

@@ -11,7 +11,13 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { type VoiceAvatar, type VoiceAvatarVariant, createVoiceAvatar } from '../../calls/voice-avatar.ts';
+import {
+  DEFAULT_TUNING,
+  type VoiceAvatar,
+  type VoiceAvatarTuning,
+  type VoiceAvatarVariant,
+  createVoiceAvatar,
+} from '../../calls/voice-avatar.ts';
 import { Lobby } from '../Lobby/index.ts';
 import { VideoObject } from '../Media/index.ts';
 import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
@@ -20,12 +26,12 @@ type StoryProps = {
   /** Audio file the avatar speaks. */
   src: string;
   variant?: VoiceAvatarVariant;
-};
+} & Partial<VoiceAvatarTuning>;
 
 type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioContext };
 
 /** The abstract avatar on its own, moving with a voice file that plays through the speakers. */
-const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
+const VoiceAvatarStory = ({ src, variant, waveAmplitude, jitter, particles }: StoryProps) => {
   const [voice, setVoice] = useState<Voice>();
   const [playing, setPlaying] = useState(false);
 
@@ -54,6 +60,15 @@ const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
       setPlaying(false);
     };
   }, [src, variant]);
+
+  // Tuning applies to the running avatar, so moving a slider does not restart it.
+  useEffect(() => {
+    voice?.avatar.tune({
+      ...(waveAmplitude !== undefined ? { waveAmplitude } : {}),
+      ...(jitter !== undefined ? { jitter } : {}),
+      ...(particles !== undefined ? { particles } : {}),
+    });
+  }, [voice, waveAmplitude, jitter, particles]);
 
   const handlePlay = async () => {
     if (!voice) {
@@ -115,8 +130,11 @@ const meta = {
   },
   argTypes: {
     variant: { control: 'select', options: ['torus', 'spectrum', 'ink'] satisfies VoiceAvatarVariant[] },
+    waveAmplitude: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
+    jitter: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
+    particles: { control: { type: 'range', min: 0, max: 60, step: 1 } },
   },
-  args: { src: '/simulated-call/agent-voice.webm', variant: 'spectrum' },
+  args: { src: '/simulated-call/agent-voice.webm', variant: 'ink', ...DEFAULT_TUNING },
 } satisfies Meta<typeof VoiceAvatarStory>;
 
 export default meta;
