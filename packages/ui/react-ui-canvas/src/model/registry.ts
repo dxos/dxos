@@ -99,6 +99,8 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
+  unclipped?: boolean;
 };
 
 /**

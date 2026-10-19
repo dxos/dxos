@@ -7,6 +7,7 @@ export * from './chrome.ts';
 export * from './clipboard.ts';
 export * from './compose.ts';
 export * from './diagram.ts';
+export * from './diagram-shape.ts';
 export * from './dnd.ts';
 export * from './group.ts';
 export * from './hit.ts';
