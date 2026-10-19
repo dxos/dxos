@@ -118,7 +118,7 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
 
 /**
  * A popover with the default arrow and one with `arrow={false}`, a modal one with a scrolling Body portalled into a
- * local element, and one anchored to a span; the content takes the trigger row's size (Phase 4 decision 2), except
+ * local element, and one anchored to a span; the content takes the trigger row's size, except
  * the arrowless one, which is `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
@@ -175,7 +175,7 @@ export const Test: Story = {
 
     await userEvent.click(byTestId(canvasElement, 'popover-sm-trigger'));
     const small = await body.findByRole('dialog');
-    // The popover takes its trigger's row size (Phase 4 decision 2).
+    // The popover takes its trigger's row size.
     await expectPopupSize(small, 'sm');
     const header = small.querySelector<HTMLElement>('[data-part="header"]');
     await expect(header?.getBoundingClientRect().height).toBeCloseTo(GEOMETRY.sm.block, 0);

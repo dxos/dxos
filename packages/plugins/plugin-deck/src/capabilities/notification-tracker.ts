@@ -65,7 +65,7 @@ export default Capability.makeModule(
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
-      ).catch(() => {});
+      ).catch((err) => log.catch(err));
 
     //
     // Notifications — driven by the process monitor.

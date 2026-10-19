@@ -1494,7 +1494,7 @@ export class AutomergeHost extends Resource {
     // Read the spaceKey iff the document is already loaded; otherwise let the share policy
     // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
     // `isDocumentInRemoteCollection` check on the caller.
-    const handle = this._repo.getHandle(documentId as any);
+    const handle = this._repo.getHandle(documentId as DocumentId);
     if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
       const doc = handle.doc();
       if (doc) {

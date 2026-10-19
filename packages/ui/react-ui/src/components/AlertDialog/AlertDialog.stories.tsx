@@ -132,7 +132,7 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('alertdialog')).toBeNull());
     await expect(byTestId(canvasElement, 'deleted-md')).toHaveTextContent('Deleted 1');
 
-    // The dialog takes its trigger's row size (Phase 4 decision 2).
+    // The dialog takes its trigger's row size.
     await userEvent.click(byTestId(canvasElement, 'confirm-sm-trigger'));
     dialog = await body.findByRole('alertdialog');
     await expectPopupSize(dialog, 'sm');

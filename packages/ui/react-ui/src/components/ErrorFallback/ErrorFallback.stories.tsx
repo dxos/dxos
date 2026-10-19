@@ -10,6 +10,7 @@ import { expect, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
+import { Flex } from '../../layout/Flex/Flex.tsx';
 import { sizeRow } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
@@ -34,10 +35,10 @@ const FRAMES: ErrorStackFrame[] = [
 ];
 
 const DefaultStory = ({ title, message }: StoryArgs) => (
-  <div className='flex flex-col'>
+  <Flex column>
     <ErrorFallback title={title} error={new Error(message)} data={{ plank: 'deck', attempt: 2 }} />
     <ErrorStack frames={FRAMES} />
-  </div>
+  </Flex>
 );
 
 const meta = {
