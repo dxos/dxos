@@ -146,8 +146,9 @@ export const WithoutPlugin: Story = {
   decorators: decorators([]),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
-    await expect(await canvas.findByText('Ship it')).toBeInTheDocument();
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    // On the drawing itself: the Views panel lists the task by its label too.
+    await expect(await within(view).findByText('Ship it')).toBeInTheDocument();
     await expect(canvas.queryAllByTestId('task-node')).toHaveLength(0);
   },
 };
