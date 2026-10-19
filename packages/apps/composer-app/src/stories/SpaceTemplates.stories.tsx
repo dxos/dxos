@@ -57,7 +57,7 @@ import { isNonNullable } from '@dxos/util';
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
-  chessClub: 'org.dxos.plugin-debug.template.chess-club',
+  demo: 'org.dxos.plugin-debug.template.demo',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
@@ -292,7 +292,7 @@ const play: Story['play'] = async ({ canvasElement }) => {
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
 
-export const ChessClub: Story = { args: { template: TEMPLATES.chessClub }, play };
+export const Demo: Story = { args: { template: TEMPLATES.demo }, play };
 
 export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
 

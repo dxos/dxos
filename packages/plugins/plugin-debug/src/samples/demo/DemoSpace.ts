@@ -32,7 +32,7 @@ const partials = {
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
-    space: { name: 'Chess Club', icon: 'crown', hue: 'indigo' },
+    space: { name: 'Demo', icon: 'crown', hue: 'indigo' },
     reference: REFERENCE,
     partials,
     build: (partials) =>
@@ -50,7 +50,7 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
 
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
-    id: 'org.dxos.plugin-debug.template.chess-club',
+    id: 'org.dxos.plugin-debug.template.demo',
     description:
       'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper and a voxel town.',
     definition: make(),

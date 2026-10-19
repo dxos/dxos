@@ -98,10 +98,10 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
-    "./ChessClubSpace": {
-      "source": "./src/samples/chess-club/ChessClubSpace.ts",
-      "types": "./dist/types/src/samples/chess-club/ChessClubSpace.d.ts",
-      "import": "./dist/lib/ChessClubSpace.mjs"
+    "./DemoSpace": {
+      "source": "./src/samples/demo/DemoSpace.ts",
+      "types": "./dist/types/src/samples/demo/DemoSpace.d.ts",
+      "import": "./dist/lib/DemoSpace.mjs"
     },
     "./FieldstoneSpace": {
       "source": "./src/samples/fieldstone/FieldstoneSpace.ts",

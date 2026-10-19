@@ -8,14 +8,14 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import * as ChessClubSpace from './ChessClubSpace.ts';
 import { DATA_CENTERS } from './data-centers.ts';
+import * as DemoSpace from './DemoSpace.ts';
 import { GAMES } from './games.ts';
 import { TOUR } from './map.ts';
 import { creeper } from './sculpture.ts';
 import { TOWN, town } from './town.ts';
 
-describe('Chess Club template', () => {
+describe('Demo template', () => {
   test('every game is legal to its last move and in the stage it claims', ({ expect }) => {
     expect(GAMES).toHaveLength(16);
     const stages = new Set(GAMES.map((game) => game.stage));
@@ -48,7 +48,7 @@ describe('Chess Club template', () => {
   });
 
   test('builds the games and a map pinned on every data centre', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(ChessClubSpace.make()));
+    const { json } = await EffectEx.runPromise(buildArchive(DemoSpace.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
       Object.entries(counts)
