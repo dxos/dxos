@@ -69,19 +69,22 @@ const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
   };
 
   return (
-    <div className='grid h-full grid-rows-[1fr_min-content] place-items-center gap-4 p-4'>
+    <div className='relative grid h-full place-items-center'>
       <VideoObject videoStream={voice?.avatar.stream} muted contain classNames='dx-fill rounded-md' />
-      {playing ? (
-        <Button.Root icon='ph--stop--regular' label='Stop' onClick={handleStop} />
-      ) : (
-        <Button.Root
-          variant='primary'
-          icon='ph--play--regular'
-          label='Speak'
-          disabled={!voice}
-          onClick={() => void handlePlay().catch((err) => log.catch(err))}
-        />
-      )}
+      {/* Overlaid, so the picture is centred in the whole viewport. */}
+      <div className='absolute bottom-4'>
+        {playing ? (
+          <Button.Root icon='ph--stop--regular' label='Stop' onClick={handleStop} />
+        ) : (
+          <Button.Root
+            variant='primary'
+            icon='ph--play--regular'
+            label='Speak'
+            disabled={!voice}
+            onClick={() => void handlePlay().catch((err) => log.catch(err))}
+          />
+        )}
+      </div>
     </div>
   );
 };

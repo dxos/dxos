@@ -10,7 +10,7 @@ export type VoiceAvatar = {
   close: () => void;
 };
 
-/** `torus`: one ring that swells with the voice; `spectrum`: a row of blobs, one per frequency band. */
+/** `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band. */
 export type VoiceAvatarVariant = 'torus' | 'spectrum';
 
 export type VoiceAvatarOptions = {
@@ -28,7 +28,7 @@ const ATTACK = 0.04;
 const RELEASE = 0.25;
 
 /** The spectrum variant's bands: log-spaced across the voice's range, as hearing is. */
-const BANDS = 8;
+const BANDS = 16;
 const LOWEST_HZ = 80;
 const HIGHEST_HZ = 8_000;
 
@@ -190,8 +190,8 @@ const torusShape = (scene: THREE.Scene, palette: Palette): Shape => {
 
 /** A row of blobs, lowest band on the left, each stretched upward and narrowed (keeping its volume) by its band. */
 const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
-  const geometry = new THREE.SphereGeometry(0.26, 32, 16);
-  const spacing = 0.7;
+  const geometry = new THREE.SphereGeometry(0.12, 24, 12);
+  const spacing = 0.27;
   const blobs = Array.from({ length: BANDS }, (_, index) => {
     const material = new THREE.MeshStandardMaterial({ color: palette.silent, roughness: 0.35, metalness: 0.1 });
     const mesh = new THREE.Mesh(geometry, material);
@@ -201,12 +201,17 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
   });
 
   return {
-    update: ({ time, bands }) => {
+    update: ({ time, level, bands }) => {
+      // Silent, the blobs jitter so the row reads as alive; the jitter fades as the voice takes over.
+      const idle = Math.max(0, 1 - level * 4);
       blobs.forEach(({ mesh, material }, index) => {
         const energy = bands[index];
-        const stretch = 1 + energy * 1.6 + Math.sin(time * 1.5 + index * 0.7) * 0.02;
+        const jitter =
+          (Math.sin(time * 11 + index * 2.3) * Math.sin(time * 7.3 + index * 5.1) + Math.sin(time * 17 + index)) * 0.5;
+        const stretch = 1 + energy * 2.2 + jitter * idle * 0.12;
         const squeeze = 1 / Math.sqrt(stretch);
         mesh.scale.set(squeeze, stretch, squeeze);
+        mesh.position.y = Math.sin(time * 9 + index * 3.7) * Math.sin(time * 5.3 + index) * idle * 0.03;
         material.color.copy(palette.silent).lerp(palette.loud, Math.min(1, energy * 1.2));
         material.emissive.copy(material.color).multiplyScalar(energy * 0.25);
       });
