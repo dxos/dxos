@@ -18,7 +18,7 @@ import { CanvasOperationHandlerSet } from '#operations';
 import { Canvas, CanvasOperation } from '#types';
 
 import { frameWithChildren } from '../import/testing.ts';
-import { readScenes, rootOf } from '../model/content.ts';
+import { readViews, rootOf } from '../model/content.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CanvasOperationHandlerSet.handlers,
@@ -48,9 +48,9 @@ describe('ImportTldraw', () => {
         const canvas = yield* Database.load(drawing.canvas);
         expect(canvas.schema).toBe(Canvas.SCENE_SCHEMA);
         const root = rootOf(canvas.content) ?? '';
-        const scenes = readScenes(canvas.content);
-        expect(Object.keys(scenes[root].nodes).sort()).toEqual(['frame', 'outside']);
-        expect(scenes['frame-scene'].links['inner-arrow']).toMatchObject({
+        const views = readViews(canvas.content);
+        expect(Object.keys(views[root].nodes).sort()).toEqual(['frame', 'outside']);
+        expect(views['frame-view'].links['inner-arrow']).toMatchObject({
           source: { node: 'inner-a' },
           target: { node: 'inner-b' },
         });

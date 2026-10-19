@@ -13,8 +13,8 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { Canvas, CanvasOperation } from '#types';
 
-import { tldrawToScenes } from '../import/index.ts';
-import { seedContent, writeScenes } from '../model/content.ts';
+import { tldrawToViews } from '../import/index.ts';
+import { seedContent, writeViews } from '../model/content.ts';
 import { DrawingDialectError } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.ImportTldraw> = CanvasOperation.ImportTldraw.pipe(
@@ -30,19 +30,19 @@ const handler: Operation.WithHandler<typeof CanvasOperation.ImportTldraw> = Canv
 
       const content: ContentMap = {};
       const root = seedContent(content);
-      const { scenes, skipped, approximated } = tldrawToScenes(sourceCanvas.content, { root });
-      writeScenes(content, scenes);
+      const { views, skipped, approximated } = tldrawToViews(sourceCanvas.content, { root });
+      writeViews(content, views);
 
       const canvas = yield* Database.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
       const drawing = Drawing.make({ name: name ?? source.name, canvas });
       // Filed where a new drawing goes by default (the space's root collection), so it shows in the navigator.
       yield* ContainerModel.add({ object: drawing, target: yield* DefaultParent.resolve(drawing) });
 
-      const elements = Object.values(scenes);
+      const all = Object.values(views);
       return {
         drawing: Ref.make(drawing),
-        nodes: elements.reduce((sum, scene) => sum + Object.keys(scene.nodes).length, 0),
-        links: elements.reduce((sum, scene) => sum + Object.keys(scene.links).length, 0),
+        nodes: all.reduce((sum, view) => sum + Object.keys(view.nodes).length, 0),
+        links: all.reduce((sum, view) => sum + Object.keys(view.links).length, 0),
         skipped,
         approximated,
       };

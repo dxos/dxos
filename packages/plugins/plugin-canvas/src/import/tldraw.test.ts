@@ -7,15 +7,15 @@ import { describe, test } from 'vitest';
 import { sortByZ } from '@dxos/react-ui-canvas/headless';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
-import { nearestHue, tldrawToScenes } from './tldraw.ts';
+import { nearestHue, tldrawToViews } from './tldraw.ts';
 
-describe('tldrawToScenes', () => {
+describe('tldrawToViews', () => {
   test('geo shapes map to rect and ellipse nodes, and a bound arrow to a link between them', ({ expect }) => {
-    const { root, scenes, skipped, approximated } = tldrawToScenes(shapesAndArrow());
+    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow());
     expect(root).toBe('root');
     expect(skipped).toEqual({});
     expect(approximated).toEqual({});
-    const { nodes, links } = scenes.root;
+    const { nodes, links } = views.root;
 
     expect(nodes.box).toMatchObject({
       type: 'rect',
@@ -48,10 +48,10 @@ describe('tldrawToScenes', () => {
   });
 
   test('text becomes a note, a sticky a filled rect, and an unbound arrow a link with free ends', ({ expect }) => {
-    const { scenes, skipped, approximated } = tldrawToScenes(textNoteAndFreeArrow());
-    const { nodes, links } = scenes.root;
+    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow());
+    const { nodes, links } = views.root;
     expect(skipped).toEqual({ draw: 1 });
-    expect(approximated).toEqual({ 'geo:star': 1 });
+    expect(approximated).toEqual({ 'geo:star': 1, 'geo:hexagon': 1 });
 
     expect(nodes.text).toMatchObject({
       type: 'note',
@@ -68,6 +68,8 @@ describe('tldrawToScenes', () => {
     });
     expect(nodes.sticky.style).not.toHaveProperty('tone');
     expect(nodes.star).toMatchObject({ type: 'rect' });
+    expect(nodes.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
+    expect(nodes.hexagon).toMatchObject({ type: 'polygon', sides: 6 });
     expect(links.free).toMatchObject({
       type: 'curve',
       source: { point: { x: 10, y: 300 } },
@@ -76,46 +78,62 @@ describe('tldrawToScenes', () => {
     });
   });
 
-  test('a frame becomes a frame node over a child scene; links bind only within a scene', ({ expect }) => {
-    const { scenes } = tldrawToScenes(frameWithChildren());
-    expect(Object.keys(scenes).sort()).toEqual(['frame-scene', 'root']);
+  test('a frame becomes a View node over a child View; links bind only within a View', ({ expect }) => {
+    const { views } = tldrawToViews(frameWithChildren());
+    expect(Object.keys(views).sort()).toEqual(['frame-view', 'root']);
 
-    const frame = scenes.root.nodes.frame;
+    const frame = views.root.nodes.frame;
     expect(frame).toMatchObject({
-      type: 'frame',
-      scene: 'frame-scene',
+      type: 'view',
+      scene: 'frame-view',
       label: 'Stage',
       link: { contents: true },
       center: { x: 300, y: 250 },
       size: { width: 400, height: 300 },
     });
 
-    const child = scenes['frame-scene'];
+    const child = views['frame-view'];
     expect(child.name).toBe('Stage');
-    // The child scene is centred on the frame: its top-left corner is at (-200, -150).
+    // The child View is centred on the frame: its top-left corner is at (-200, -150).
     expect(child.nodes['inner-a']).toMatchObject({ center: { x: -130, y: -80 }, label: 'A' });
     expect(child.nodes['inner-b']).toMatchObject({ center: { x: 100, y: 50 }, label: 'B' });
     expect(child.links['inner-arrow']).toMatchObject({ source: { node: 'inner-a' }, target: { node: 'inner-b' } });
 
-    // The arrow on the page is bound to a shape inside the frame, a different scene, so that end is left free.
-    expect(scenes.root.links.cross).toMatchObject({
+    // The arrow on the page is bound to a shape inside the frame, a different View, so that end is left free.
+    expect(views.root.links.cross).toMatchObject({
       source: { node: 'outside' },
       target: { point: { x: 300, y: 150 } },
     });
   });
 
-  test('a group is flattened into its container and rotation keeps the rotated centre', ({ expect }) => {
-    const { scenes, approximated } = tldrawToScenes(groupAndRotation());
-    const { nodes, links } = scenes.root;
-    expect(approximated).toEqual({ group: 1, rotation: 2 });
+  test('a group becomes an anonymous Object placed by an Instance; rotation carries over', ({ expect }) => {
+    const { views, approximated } = tldrawToViews(groupAndRotation());
+    const { nodes, links } = views.root;
+    expect(approximated).toEqual({});
 
-    // The group is turned a quarter about (1000, 0): the member's centre (50, 25) lands at (975, 50).
-    expect(nodes.member).toMatchObject({ type: 'rect', center: { x: 975, y: 50 }, size: { width: 100, height: 50 } });
-    expect(nodes).not.toHaveProperty('group');
-    // Half a turn about its corner: the centre is up and to the left of the origin.
-    expect(nodes.tilted).toMatchObject({ center: { x: -50, y: -30 }, size: { width: 100, height: 60 } });
+    // Half a turn about its corner: the centre is up and to the left of the origin, and the node keeps the turn.
+    expect(nodes.tilted).toMatchObject({ center: { x: -50, y: -30 }, size: { width: 100, height: 60 }, rotation: 180 });
 
-    // A straight polyline becomes a chain of line links with free ends.
+    // The group is replaced by an Instance over the members' bounds: turned a quarter about (1000, 0), the members'
+    // centres land at (975, 50) and (975, 250).
+    expect(nodes.group).toMatchObject({ type: 'instance', composite: 'group-object', center: { x: 975, y: 150 } });
+    expect(nodes).not.toHaveProperty('member');
+    expect(nodes).not.toHaveProperty('partner');
+
+    const object = views['group-object'];
+    expect(object).toMatchObject({ kind: 'composite', anonymous: true });
+    // Members keep the group's turn and are re-centred on the Instance.
+    expect(object.nodes.member).toMatchObject({ center: { x: 0, y: -100 }, rotation: 90, exposed: true });
+    expect(object.nodes.partner).toMatchObject({ center: { x: 0, y: 100 }, rotation: 90 });
+    expect(object.links.pair).toMatchObject({ source: { node: 'member' }, target: { node: 'partner' } });
+
+    // The arrow from outside stays in the root, attached to the Instance's port for the member it was bound to.
+    expect(links.tie).toMatchObject({ source: { node: 'neighbour' }, target: { node: 'group', port: 'member' } });
+    expect(nodes.group.ports).toEqual([expect.objectContaining({ id: 'member' })]);
+    // The Instance paints where its lowest member did, below the shapes drawn after the group.
+    expect(nodes.group.z < nodes.tilted.z).toBe(true);
+
+    // A polyline in the group joins no node, so it stays in the root: a chain of line links with free ends.
     expect(links.polyline).toMatchObject({
       type: 'line',
       source: { point: { x: 900, y: 0 } },
@@ -129,14 +147,14 @@ describe('tldrawToScenes', () => {
   });
 
   test('only the first page is imported', ({ expect }) => {
-    const { scenes, skipped } = tldrawToScenes(twoPages(), { root: 'main' });
-    expect(Object.keys(scenes)).toEqual(['main']);
-    expect(Object.keys(scenes.main.nodes)).toEqual(['first']);
+    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main' });
+    expect(Object.keys(views)).toEqual(['main']);
+    expect(Object.keys(views.main.nodes)).toEqual(['first']);
     expect(skipped).toEqual({ page: 1 });
   });
 
-  test('an empty document maps to an empty root scene', ({ expect }) => {
-    expect(tldrawToScenes({}).scenes).toEqual({ root: { id: 'root', nodes: {}, links: {} } });
+  test('an empty document maps to an empty root View', ({ expect }) => {
+    expect(tldrawToViews({}).views).toEqual({ root: { id: 'root', nodes: {}, links: {} } });
   });
 });
 

@@ -10,12 +10,12 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { createCanvas, rootOf, writeScenes } from '#model';
+import { createCanvas, rootOf, writeViews } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow } from './testing.ts';
-import { tldrawToScenes } from './tldraw.ts';
+import { tldrawToViews } from './tldraw.ts';
 
 // Each story maps a tldraw sample and opens the result through the illustrator's article surface, as the app does.
 const withImport = (records: Record<string, unknown>) =>
@@ -25,7 +25,7 @@ const withImport = (records: Record<string, unknown>) =>
     onInit: async ({ space }) => {
       const canvas = space.db.add(createCanvas());
       Obj.update(canvas, (canvas) => {
-        writeScenes(canvas.content, tldrawToScenes(records, { root: rootOf(canvas.content) }).scenes);
+        writeViews(canvas.content, tldrawToViews(records, { root: rootOf(canvas.content) }).views);
       });
       const drawing = space.db.add(Drawing.make({ name: 'Imported', canvas }));
       await space.db.flush();
@@ -69,7 +69,7 @@ export const TextNoteAndFreeArrow: Story = {
 
 /**
  * Test:
- * 1. The frame renders as a frame node over its child scene.
+ * 1. The frame renders as a View node over its child View.
  */
 export const Frame: Story = {
   decorators: withImport(frameWithChildren()),

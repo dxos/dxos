@@ -3,19 +3,20 @@
 //
 
 //
-// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas scenes. Pure and
-// React-free so it runs in an operation on any host. The canvas has no rotation and no groups: a rotated shape keeps
-// its rotated centre and unrotated size, and a group's children are placed in the group's container.
+// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas Views. Pure and
+// React-free so it runs in an operation on any host. A group becomes what the canvas's Group command makes (an
+// anonymous Object and its Instance), so arrows bound into it stay attached through the Instance's ports.
 //
 
 import * as Schema from 'effect/Schema';
 
 import {
   type BuiltinNode,
+  type CloudNode,
   type EllipseNode,
-  type Endpoint,
-  type FrameNode,
+  Endpoint,
   type HorizontalAlign,
+  type Intent,
   type LineStyle,
   type Link,
   type LinkEnds,
@@ -25,16 +26,19 @@ import {
   type NodeTone,
   type NoteNode,
   type Point,
+  type PolygonNode,
   type RectNode,
-  type Scene,
-  type SceneId,
-  type SceneMap,
   STYLE_HUES,
   type StyleHue,
+  type View,
+  type ViewId,
+  type ViewMap,
+  type ViewNode,
+  composeSelection,
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
 
-import { ROOT_SCENE_ID } from '../model/content.ts';
+import { ROOT_VIEW_ID } from '../model/content.ts';
 
 //
 // tldraw records (v3), read loosely: only the fields the mapper uses are checked.
@@ -77,15 +81,16 @@ const isArrowBinding = Schema.is(ArrowBinding);
 const isVec = Schema.is(Vec);
 const isLinePoint = Schema.is(LinePoint);
 const isLegacyBoundTerminal = Schema.is(LegacyBoundTerminal);
+const isEndpoint = Schema.is(Endpoint);
 
 //
 // Result.
 //
 
-/** The canvas scenes a tldraw document maps to, with what the mapping could not carry over. */
+/** The canvas Views a tldraw document maps to, with what the mapping could not carry over. */
 export type TldrawImport = {
-  root: SceneId;
-  scenes: SceneMap;
+  root: ViewId;
+  views: ViewMap;
   /** Shapes left out, by tldraw shape type (and `page` for shapes on any page after the first). */
   skipped: Record<string, number>;
   /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, …). */
@@ -93,8 +98,8 @@ export type TldrawImport = {
 };
 
 export type TldrawImportOptions = {
-  /** The root scene's id; the canvas's default root by default. */
-  root?: SceneId;
+  /** The root View's id; the canvas's default root by default. */
+  root?: ViewId;
 };
 
 //
@@ -143,28 +148,31 @@ const NOTE_SIZE = 200;
 /** Line height of tldraw's text, as a multiple of the font size. */
 const LINE_HEIGHT = 1.35;
 
+/** tldraw's polygon geos, by the sides of the regular polygon the canvas draws. */
+const POLYGON_SIDES: Readonly<Record<string, number>> = { triangle: 3, pentagon: 5, hexagon: 6, octagon: 8 };
+
 //
 // Mapper.
 //
 
-/** A scene under construction: its id and its elements in paint order (bottom first). */
-type Draft = { id: SceneId; name?: string; elements: Array<Node | PendingLink> };
+/** A View under construction: its id and its elements in paint order (bottom first). */
+type Draft = { id: ViewId; name?: string; elements: Array<Node | PendingLink> };
 
 /** An element built once every node is known, since an arrow binds to shapes anywhere in the document. */
 type PendingLink = { pending: true; build: (resolve: Resolver) => Link[] };
 
-/** Where a shape landed: its scene and node id, if it became a node. */
-type Resolver = (shapeId: string, scene: SceneId) => string | undefined;
+/** Where a shape landed: its View and node id, if it became a node. */
+type Resolver = (shapeId: string, view: ViewId) => string | undefined;
 
-/** A rigid transform from a shape's parent space into its scene's space. */
+/** A rigid transform from a shape's parent space into its View's space. */
 type Transform = { x: number; y: number; rotation: number };
 
 const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
 
-/** Maps a tldraw document's records to canvas scenes: the first page becomes the root scene, each frame a scene. */
-export const tldrawToScenes = (
+/** Maps a tldraw document's records to canvas Views: the first page becomes the root View, each frame a View node over a View of its own. */
+export const tldrawToViews = (
   content: Readonly<Record<string, unknown>>,
-  { root = ROOT_SCENE_ID }: TldrawImportOptions = {},
+  { root = ROOT_VIEW_ID }: TldrawImportOptions = {},
 ): TldrawImport => {
   const records = Object.values(content);
   const shapes = records.filter(isShapeRecord);
@@ -186,24 +194,28 @@ export const tldrawToScenes = (
   };
 
   const drafts: Draft[] = [];
-  /** Shape id → the scene and node it became. */
-  const placed = new Map<string, { scene: SceneId; node: string }>();
+  /** Shape id → the View and node it became. */
+  const placed = new Map<string, { view: ViewId; node: string }>();
+  /** Groups, innermost first, so an inner group's Instance is a member of the outer one. */
+  const groups: Array<{ view: ViewId; id: string; members: string[] }> = [];
 
   const visit = (shape: ShapeRecord, draft: Draft, transform: Transform) => {
-    const local = toScene(transform, shape);
-    if (local.rotation !== 0 && shape.type !== 'group' && shape.type !== 'arrow' && shape.type !== 'line') {
-      count(approximated, 'rotation');
-    }
+    const local = toView(transform, shape);
     const id = nodeId(shape.id);
+    // The canvas turns a node clockwise about its centre, in degrees; `centerOf` already places the turned centre.
+    const degrees = round(((local.rotation * 180) / Math.PI) % 360);
+    const rotation = degrees === 0 ? {} : { rotation: degrees };
     const add = (node: BuiltinNode) => {
       draft.elements.push(node);
-      placed.set(shape.id, { scene: draft.id, node: node.id });
+      placed.set(shape.id, { view: draft.id, node: node.id });
     };
 
     switch (shape.type) {
       case 'geo': {
         const geo = str(shape.props, 'geo', 'rectangle');
-        if (geo !== 'rectangle' && geo !== 'ellipse' && geo !== 'oval') {
+        const sides = POLYGON_SIDES[geo];
+        // A canvas polygon is regular, so tldraw's stretched polygons are approximations too.
+        if (geo !== 'rectangle' && geo !== 'ellipse' && geo !== 'oval' && geo !== 'cloud') {
           count(approximated, `geo:${geo}`);
         }
         const size = {
@@ -215,13 +227,18 @@ export const tldrawToScenes = (
           z: '',
           center: centerOf(local, size),
           size,
+          ...rotation,
           ...withStyle(shapeStyle(shape.props, LABEL_FONT_SIZES)),
           ...withLabel(shape.props),
         };
         add(
           geo === 'ellipse' || geo === 'oval'
             ? ({ ...base, type: 'ellipse' } satisfies EllipseNode)
-            : ({ ...base, type: 'rect' } satisfies RectNode),
+            : geo === 'cloud'
+              ? ({ ...base, type: 'cloud' } satisfies CloudNode)
+              : sides !== undefined
+                ? ({ ...base, type: 'polygon', sides } satisfies PolygonNode)
+                : ({ ...base, type: 'rect' } satisfies RectNode),
         );
         break;
       }
@@ -237,6 +254,7 @@ export const tldrawToScenes = (
           z: '',
           center: centerOf(local, size),
           size,
+          ...rotation,
           ...withStyle(style),
           ...withLabel(shape.props),
         } satisfies RectNode);
@@ -257,6 +275,7 @@ export const tldrawToScenes = (
           z: '',
           center: centerOf(local, size),
           size,
+          ...rotation,
           text,
           ...withStyle({ ...style, ...(align === 'start' ? {} : { alignHorizontal: horizontal(align) }) }),
         } satisfies NoteNode);
@@ -266,19 +285,20 @@ export const tldrawToScenes = (
       case 'frame': {
         const size = { width: num(shape.props, 'w', 0), height: num(shape.props, 'h', 0) };
         const name = str(shape.props, 'name', '');
-        const child: Draft = { id: `${id}-scene`, ...(name ? { name } : {}), elements: [] };
+        const child: Draft = { id: `${id}-view`, ...(name ? { name } : {}), elements: [] };
         drafts.push(child);
         add({
-          type: 'frame',
+          type: 'view',
           id,
           z: '',
           center: centerOf(local, size),
           size,
           scene: child.id,
+          ...rotation,
           // A named frame shows its name as a label, so it asks for its contents explicitly.
           ...(name ? { label: name, link: { contents: true } } : {}),
-        } satisfies FrameNode);
-        // A frame's children are in its own space; the child scene is centred on the frame.
+        } satisfies ViewNode);
+        // A frame's children are in its own space; the child View is centred on the frame.
         const inner: Transform = { x: -size.width / 2, y: -size.height / 2, rotation: 0 };
         for (const grandchild of children.get(shape.id) ?? []) {
           visit(grandchild, child, inner);
@@ -287,22 +307,27 @@ export const tldrawToScenes = (
       }
 
       case 'group': {
-        count(approximated, 'group');
-        for (const member of children.get(shape.id) ?? []) {
+        const members = children.get(shape.id) ?? [];
+        for (const member of members) {
           visit(member, draft, local);
+        }
+        // Only a group holding a node becomes an Object; arrows bound to it then attach to its Instance.
+        if (members.some((member) => placed.get(member.id)?.view === draft.id)) {
+          groups.push({ view: draft.id, id, members: members.map((member) => member.id) });
+          placed.set(shape.id, { view: draft.id, node: id });
         }
         break;
       }
 
       case 'arrow': {
-        const scene = draft.id;
+        const view = draft.id;
         const terminal =
           (name: 'start' | 'end') =>
           (resolve: Resolver): Endpoint => {
             const bound =
               bindings.find((binding) => binding.fromId === shape.id && binding.props.terminal === name)?.toId ??
               legacyBound(shape.props[name]);
-            const node = bound ? resolve(bound, scene) : undefined;
+            const node = bound ? resolve(bound, view) : undefined;
             return node ? { node } : { point: apply(local, vec(shape.props[name])) };
           };
         const start = terminal('start');
@@ -381,12 +406,12 @@ export const tldrawToScenes = (
     }
   }
 
-  const resolve: Resolver = (shapeId, scene) => {
+  const resolve: Resolver = (shapeId, view) => {
     const target = placed.get(shapeId);
-    return target && target.scene === scene ? target.node : undefined;
+    return target && target.view === view ? target.node : undefined;
   };
 
-  const scenes: Record<SceneId, Scene> = {};
+  const views: Record<ViewId, View> = {};
   for (const draft of drafts) {
     const elements = draft.elements.flatMap((element): Array<Node | Link> =>
       'pending' in element ? element.build(resolve) : [element],
@@ -402,18 +427,73 @@ export const tldrawToScenes = (
         nodes[element.id] = { ...element, z };
       }
     });
-    scenes[draft.id] = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
+    views[draft.id] = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
   }
 
-  return { root, scenes, skipped, approximated };
+  // A group becomes what the canvas's Group command makes: an anonymous Object, placed by one Instance.
+  for (const group of groups) {
+    const view = views[group.view];
+    const members = group.members.flatMap((member) => {
+      const target = placed.get(member);
+      return target && target.view === group.view && target.node !== group.id ? [target.node] : [];
+    });
+    const composition = composeSelection(view, members, {
+      compositeId: `${group.id}-object`,
+      instanceId: group.id,
+      anonymous: true,
+    });
+    if (composition) {
+      views[composition.composite.id] = composition.composite;
+      // The Instance paints where its lowest member did, not on top.
+      const z = members.map((member) => view.nodes[member].z).sort()[0];
+      views[group.view] = composition.intents.reduce((next, intent) => applyIntent(next, intent, z), view);
+    }
+  }
+
+  return { root, views, skipped, approximated };
+};
+
+/** Applies the intents `composeSelection` returns: the Instance's creation, re-attached links, the moved members' removal. */
+const applyIntent = (view: View, intent: Intent, z: string): View => {
+  switch (intent.kind) {
+    case 'create':
+      return { ...view, nodes: { ...view.nodes, [intent.node.id]: { ...intent.node, z } } };
+    case 'update': {
+      const link = view.links[intent.id];
+      const { source, target } = intent.values;
+      return link
+        ? {
+            ...view,
+            links: {
+              ...view.links,
+              [intent.id]: {
+                ...link,
+                ...(isEndpoint(source) ? { source } : {}),
+                ...(isEndpoint(target) ? { target } : {}),
+              },
+            },
+          }
+        : view;
+    }
+    case 'delete': {
+      const ids = new Set(intent.ids);
+      return {
+        ...view,
+        nodes: Object.fromEntries(Object.entries(view.nodes).filter(([id]) => !ids.has(id))),
+        links: Object.fromEntries(Object.entries(view.links).filter(([id]) => !ids.has(id))),
+      };
+    }
+    default:
+      return view;
+  }
 };
 
 //
 // Geometry.
 //
 
-/** The shape's own transform in scene space: its parent's transform applied to its position and rotation. */
-const toScene = (parent: Transform, shape: ShapeRecord): Transform => {
+/** The shape's own transform in View space: its parent's transform applied to its position and rotation. */
+const toView = (parent: Transform, shape: ShapeRecord): Transform => {
   const origin = apply(parent, { x: shape.x, y: shape.y });
   return { ...origin, rotation: parent.rotation + (shape.rotation ?? 0) };
 };

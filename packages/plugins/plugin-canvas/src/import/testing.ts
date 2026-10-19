@@ -116,7 +116,10 @@ export const shapesAndArrow = (): Records => ({
   ...binding('b2', 'arrow', 'oval', 'end'),
 });
 
-/** Free text, a sticky note, an unbound curved arrow, a star (approximated) and a freehand stroke (skipped). */
+/**
+ * Free text, a sticky note, an unbound curved arrow, a cloud, a hexagon and a star (both approximated), and a freehand
+ * stroke (skipped).
+ */
 export const textNoteAndFreeArrow = (): Records => ({
   ...document(),
   ...shape('text', 'text', {
@@ -163,6 +166,8 @@ export const textNoteAndFreeArrow = (): Records => ({
   }),
   ...shape('star', 'geo', { index: 'a4', x: 600, y: 0, props: geoProps({ geo: 'star' }) }),
   ...shape('scribble', 'draw', { index: 'a5', props: { segments: [] } }),
+  ...shape('cloud', 'geo', { index: 'a6', x: 600, y: 200, props: geoProps({ geo: 'cloud', text: 'Sky' }) }),
+  ...shape('hexagon', 'geo', { index: 'a7', x: 800, y: 200, props: geoProps({ geo: 'hexagon' }) }),
 });
 
 /** A frame holding two shapes and an arrow between them, plus an arrow from outside bound into the frame. */
@@ -180,11 +185,24 @@ export const frameWithChildren = (): Records => ({
   ...binding('c2', 'cross', 'inner-a', 'end'),
 });
 
-/** A rotated group holding a rectangle and a polyline, and a rotated rectangle on the page. */
+/**
+ * A rotated group holding two rectangles, an arrow between them and a polyline; an arrow from outside bound to one
+ * member; and a rotated rectangle on the page.
+ */
 export const groupAndRotation = (): Records => ({
   ...document(),
   ...shape('group', 'group', { index: 'a1', x: 1000, y: 0, rotation: Math.PI / 2, props: {} }),
   ...shape('member', 'geo', { parentId: 'shape:group', index: 'a1', x: 0, y: 0, props: geoProps({ w: 100, h: 50 }) }),
+  ...shape('partner', 'geo', {
+    parentId: 'shape:group',
+    index: 'a3',
+    x: 200,
+    y: 0,
+    props: geoProps({ w: 100, h: 50 }),
+  }),
+  ...shape('pair', 'arrow', { parentId: 'shape:group', index: 'a4', x: 100, y: 25, props: arrowProps({}) }),
+  ...binding('p1', 'pair', 'member', 'start'),
+  ...binding('p2', 'pair', 'partner', 'end'),
   ...shape('polyline', 'line', {
     parentId: 'shape:group',
     index: 'a2',
@@ -203,6 +221,10 @@ export const groupAndRotation = (): Records => ({
     },
   }),
   ...shape('tilted', 'geo', { index: 'a2', x: 0, y: 0, rotation: Math.PI, props: geoProps({ w: 100, h: 60 }) }),
+  ...shape('neighbour', 'geo', { index: 'a3', x: 700, y: 100, props: geoProps({}) }),
+  ...shape('tie', 'arrow', { index: 'a4', x: 800, y: 150, props: arrowProps({ end: { x: 175, y: -100 } }) }),
+  ...binding('t1', 'tie', 'neighbour', 'start'),
+  ...binding('t2', 'tie', 'member', 'end'),
 });
 
 /** Two pages: shapes on the second are left out. */

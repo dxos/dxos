@@ -132,7 +132,7 @@ test QA-5: Copy a tldraw drawing as a canvas
       expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
     - name: Read the copy
       do: Move the rectangle, then open the frame.
-      expect: the link follows the rectangle, and the frame opens onto a scene holding the frame's shapes
+      expect: the link follows the rectangle, and the frame opens onto a View holding the frame's shapes
 ```
 
 ```mdl
