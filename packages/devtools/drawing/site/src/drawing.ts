@@ -51,6 +51,12 @@ export const draw: (text: string, name?: string) => Effect.Effect<Drawing, Rende
   };
 });
 
+/** The editor's text as `.dx` source: as typed, or converted from Mermaid. */
+export const toDsl = (language: Language, text: string): Effect.Effect<string, ConvertError> =>
+  language === 'dx'
+    ? Effect.succeed(text)
+    : Dsl.convert(text).pipe(Effect.mapError((cause) => new ConvertError({ cause, context: { name: HERO } })));
+
 /**
  * Converts Mermaid to `.dx` text, then renders that, so the download carries editable `.dx` source whichever
  * language it was written in.
