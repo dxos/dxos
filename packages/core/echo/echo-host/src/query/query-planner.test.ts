@@ -2316,12 +2316,15 @@ describe('QueryPlanner', () => {
       }
     });
 
-    test('a skip is folded into the scanned page, which the SkipStep then drops from', () => {
-      const query = Query.select(Filter.everything()).orderBy(Order.natural()).skip(2).limit(3).from(feedScope);
+    test('a skip is folded into the scan, so no SkipStep drops rows after their documents load', () => {
+      const query = Query.select(Filter.everything()).orderBy(Order.natural('desc')).skip(2).limit(3).from(feedScope);
       const plan = planner.createPlan(query.ast);
 
-      expect(plan.steps.find((step) => step._tag === 'SelectStep')).toMatchObject({ limit: 5, feedScan: {} });
-      expect(plan.steps.some((step) => step._tag === 'SkipStep')).toBe(true);
+      expect(plan.steps.find((step) => step._tag === 'SelectStep')).toMatchObject({
+        limit: 3,
+        feedScan: { direction: 'desc', skip: 2 },
+      });
+      expect(plan.steps.some((step) => step._tag === 'SkipStep')).toBe(false);
     });
 
     test('the typename re-check beside a TypeSelector does not block the scan', () => {

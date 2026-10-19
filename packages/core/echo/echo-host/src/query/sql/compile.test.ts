@@ -528,6 +528,40 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('pages a feed in natural order inside the scan', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const sqlClient = yield* SqlClient.SqlClient;
+      const queueId = EntityId.random();
+      const ids = Array.from({ length: 6 }, () => EntityId.random()).sort();
+      const objects = ids.map((id): IndexerObject => ({
+        spaceId: fixture.spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: 1000,
+        updatedAt: 2000,
+        data: { id, [ATTR_TYPE]: TASK, [ATTR_DELETED]: false },
+      }));
+      const meta = new EntityMetaIndex(sqlClient);
+      yield* meta.update(objects);
+      yield* meta.lookupRecordIds(objects);
+      yield* new ObjectSnapshotIndex(sqlClient).update(objects);
+
+      const { rows } = yield* run(
+        fixture,
+        Query.select(Filter.everything())
+          .orderBy(Order.natural('desc'))
+          .skip(2)
+          .limit(3)
+          .from([{ _tag: 'feed' as const, feedUri: EID.make({ spaceId: fixture.spaceId, entityId: queueId }) }]),
+      );
+      expect(rows.map((row) => row.objectId)).toEqual([ids[3], ids[2], ids[1]]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('ships a body only for feed rows', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;

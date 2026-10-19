@@ -143,6 +143,8 @@ const WINDOWS: (QueueWindow | undefined)[] = [
   undefined,
   { kind: 'natural', direction: 'asc', limit: 5, deleted: false },
   { kind: 'natural', direction: 'desc', limit: 7 },
+  { kind: 'natural', direction: 'asc', limit: 4, skip: 3, deleted: false },
+  { kind: 'natural', direction: 'desc', limit: 5, skip: 6 },
   { kind: 'cursor', after: 2, limit: 6 },
   { kind: 'cursor', after: 0, before: 30 },
 ];

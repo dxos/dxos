@@ -2460,6 +2460,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
       kind: 'natural',
       direction: step.feedScan.direction,
       limit: step.limit,
+      ...(step.feedScan.skip !== undefined ? { skip: step.feedScan.skip } : {}),
       ...(step.feedScan.deleted !== undefined ? { deleted: step.feedScan.deleted } : {}),
     };
   }
