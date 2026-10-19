@@ -10,10 +10,10 @@ import {
   type Camera,
   type Node,
   type NodeRegistry,
-  type Scene,
-  type SceneId,
   type Size,
-  isFrameNode,
+  type View,
+  type ViewId,
+  isViewNode,
   nodeDef,
 } from '../../model/index.ts';
 import { coverage, nodeBounds } from '../../utils/index.ts';
@@ -30,9 +30,9 @@ export type UseSceneNavigationOptions = {
   atoms: CanvasAtoms;
   navigation: NavigationCommands;
   nodeRegistry: NodeRegistry;
-  scenes: Record<SceneId, Scene>;
-  scene: Scene;
-  path: SceneId[];
+  scenes: Record<ViewId, View>;
+  scene: View;
+  path: ViewId[];
   camera: Camera;
   viewport: Size;
   drag: Drag | undefined;
@@ -74,7 +74,7 @@ export const useSceneNavigation = ({
     }
     const timer = setTimeout(() => {
       const portal = Object.values(scene.nodes).find(
-        (node) => isFrameNode(node) && !hostOpen(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
+        (node) => isViewNode(node) && !hostOpen(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
       );
       if (portal) {
         navigation.drillIn(portal, false);

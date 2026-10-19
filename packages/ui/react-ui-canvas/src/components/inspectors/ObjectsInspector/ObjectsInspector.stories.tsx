@@ -9,18 +9,18 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type SceneId } from '../../../model/index.ts';
+import { type ViewId } from '../../../model/index.ts';
 import { createObjectsTree } from '../../../testing/index.ts';
-import { compositeScenes, instanceCounts } from '../../../utils/index.ts';
+import { compositeViews, instanceCounts } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { type ObjectEntry, ObjectsInspector } from './ObjectsInspector.tsx';
 
 /** The objects of the shared fixture: Logo placed three times (once inside Card), Card once, Badge nowhere. */
 const createObjects = (): ObjectEntry[] => {
   const tree = createObjectsTree();
-  const scenes = Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene]));
+  const scenes = Object.fromEntries(tree.views.map((scene) => [scene.id, scene]));
   const counts = instanceCounts(scenes);
-  return compositeScenes(scenes).map((scene) => ({
+  return compositeViews(scenes).map((scene) => ({
     id: scene.id,
     name: scene.name ?? scene.id,
     instances: counts[scene.id] ?? 0,
@@ -30,8 +30,8 @@ const createObjects = (): ObjectEntry[] => {
 /** The panel over local state, as a host keeps the drawing's composites. */
 const DefaultStory = () => {
   const [objects, setObjects] = useState(createObjects);
-  const [selected, setSelected] = useState<SceneId>();
-  const update = (id: SceneId, values: Partial<ObjectEntry>) =>
+  const [selected, setSelected] = useState<ViewId>();
+  const update = (id: ViewId, values: Partial<ObjectEntry>) =>
     setObjects((objects) => objects.map((entry) => (entry.id === id ? { ...entry, ...values } : entry)));
   return (
     <ObjectsInspector

@@ -13,7 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { createCanvasAtoms } from '../../engine/index.ts';
 import { useRegistry } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
-import { createSceneTree } from '../../testing/index.ts';
+import { createViewTree } from '../../testing/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** Commits per part, keyed by the Profiler id; read by the play function. */
@@ -42,8 +42,8 @@ const grownSince = (before: Map<string, number>, ids: readonly string[]) =>
 const DefaultStory = () => {
   const registry = useRegistry();
   const { store, root } = useMemo(() => {
-    const tree = createSceneTree(1);
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+    const tree = createViewTree(1);
+    return { store: createMemoryStore(tree.views), root: tree.root };
   }, []);
   const atoms = useMemo(() => createCanvasAtoms(root), [root]);
   // Exposed so the play function pans through the camera atom, as the wheel and the camera animation do.

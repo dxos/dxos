@@ -8,7 +8,7 @@ import { type ContentMap } from '@dxos/diagram';
 import { DEFAULT_LAYER } from '@dxos/react-ui-canvas/scene';
 
 import {
-  ROOT_SCENE_ID,
+  ROOT_VIEW_ID,
   canvasRecordOf,
   deleteStyleClass,
   hasLegacyRoot,
@@ -16,14 +16,14 @@ import {
   isNodeRecord,
   migrateContent,
   migrateLayers,
-  readScenes,
+  readViews,
   resolveDrawingLook,
   rootOf,
   seedContent,
   styleClassUses,
   updateCanvasRecord,
-  writeScenes,
   writeStyles,
+  writeViews,
 } from './content.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
@@ -45,11 +45,11 @@ describe('content', () => {
         },
       },
     };
-    writeScenes(content, {
+    writeViews(content, {
       root: { id: 'root', nodes: { a: { id: 'a', type: 'rect', ...box } }, links: {}, timeline },
       object: { id: 'object', kind: 'composite', name: 'Object', nodes: {}, links: {} },
     });
-    const scenes = readScenes(content);
+    const scenes = readViews(content);
     expect(scenes.root.timeline).toEqual(timeline);
     expect(scenes.object.kind).toBe('composite');
     // A plain scene stores no kind.
@@ -88,11 +88,11 @@ describe('content', () => {
         node: { id: 'f', type: 'frame', scene: 'f', ...box, opacity: 0.25, contents: true, object },
       },
     };
-    const scenes = readScenes(content);
+    const scenes = readViews(content);
     expect(scenes.root.nodes.a).toEqual({ id: 'a', type: 'rect', ...box, style: { hue: 'red', opacity: 0.5 } });
     expect(scenes.root.nodes.f).toEqual({
       id: 'f',
-      type: 'frame',
+      type: 'view',
       scene: 'f',
       ...box,
       style: { opacity: 0.25 },
@@ -103,10 +103,26 @@ describe('content', () => {
     });
 
     // The next write stores the current shape.
-    expect(writeScenes(content, scenes)).toBe(true);
+    expect(writeViews(content, scenes)).toBe(true);
     const record = content['node:f'];
     expect(isNodeRecord(record) && record.node).toMatchObject({ link: { object, contents: true } });
     expect(isNodeRecord(record) ? Reflect.has(record.node, 'contents') : true).toBe(false);
+  });
+
+  test('a node stored with the legacy `frame` type reads as a `view` node, and the next write stores `view`', ({
+    expect,
+  }) => {
+    const content: ContentMap = {
+      'canvas': { kind: 'canvas', root: 'root' },
+      'scene:root': { kind: 'scene', id: 'root' },
+      'scene:f': { kind: 'scene', id: 'f' },
+      'node:f': { kind: 'node', scene: 'root', node: { id: 'f', type: 'frame', scene: 'f', ...box } },
+    };
+    const views = readViews(content);
+    expect(views.root.nodes.f).toEqual({ id: 'f', type: 'view', scene: 'f', ...box });
+    expect(writeViews(content, views)).toBe(true);
+    const record = content['node:f'];
+    expect(isNodeRecord(record) && record.node.type).toBe('view');
   });
 
   test('a canvas saved with the legacy root id is renamed in place', ({ expect }) => {
@@ -127,13 +143,13 @@ describe('content', () => {
     expect(hasLegacyRoot(content)).toBe(true);
     expect(migrateContent(content)).toBe(true);
     expect(hasLegacyRoot(content)).toBe(false);
-    expect(rootOf(content)).toBe(ROOT_SCENE_ID);
+    expect(rootOf(content)).toBe(ROOT_VIEW_ID);
     expect(content['scene:scene:root']).toBeUndefined();
     expect(content['scene:root']).toEqual({ kind: 'scene', id: 'root', name: 'Root' });
 
-    const scenes = readScenes(content);
-    expect(Object.keys(scenes[ROOT_SCENE_ID].nodes).sort()).toEqual(['a', 'f']);
-    expect(Object.keys(scenes[ROOT_SCENE_ID].links)).toEqual(['a-f']);
+    const scenes = readViews(content);
+    expect(Object.keys(scenes[ROOT_VIEW_ID].nodes).sort()).toEqual(['a', 'f']);
+    expect(Object.keys(scenes[ROOT_VIEW_ID].links)).toEqual(['a-f']);
     expect(scenes.f.nodes.up).toMatchObject({ scene: 'root' });
     // Already migrated: nothing more to do.
     expect(migrateContent(content)).toBe(false);
@@ -142,17 +158,17 @@ describe('content', () => {
   test("a canvas saved before layers names its layers and every element's on load", ({ expect }) => {
     const top = { id: 'top', name: 'Top', z: 'a5' };
     const content: ContentMap = {
-      'canvas': { kind: 'canvas', root: ROOT_SCENE_ID },
-      'scene:root': { kind: 'scene', id: ROOT_SCENE_ID },
+      'canvas': { kind: 'canvas', root: ROOT_VIEW_ID },
+      'scene:root': { kind: 'scene', id: ROOT_VIEW_ID },
       // A scene with layers whose elements name none, or one it lacks.
       'scene:f': { kind: 'scene', id: 'f', layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER, top } },
-      'node:a': { kind: 'node', scene: ROOT_SCENE_ID, node: { id: 'a', type: 'rect', ...box } },
+      'node:a': { kind: 'node', scene: ROOT_VIEW_ID, node: { id: 'a', type: 'rect', ...box } },
       'node:b': { kind: 'node', scene: 'f', node: { id: 'b', type: 'rect', ...box } },
       'node:c': { kind: 'node', scene: 'f', node: { id: 'c', type: 'rect', layer: 'gone', ...box } },
       'node:d': { kind: 'node', scene: 'f', node: { id: 'd', type: 'rect', layer: 'top', ...box } },
       'link:a-a': {
         kind: 'link',
-        scene: ROOT_SCENE_ID,
+        scene: ROOT_VIEW_ID,
         link: { id: 'a-a', type: 'line', z: 'a1', source: { node: 'a' }, target: { point: { x: 0, y: 0 } } },
       },
     };
@@ -160,10 +176,10 @@ describe('content', () => {
     expect(migrateLayers(content)).toBe(true);
     expect(hasUnplacedLayers(content)).toBe(false);
 
-    const scenes = readScenes(content);
-    expect(scenes[ROOT_SCENE_ID].layers).toEqual({ [DEFAULT_LAYER.id]: DEFAULT_LAYER });
-    expect(scenes[ROOT_SCENE_ID].nodes.a.layer).toBe(DEFAULT_LAYER.id);
-    expect(scenes[ROOT_SCENE_ID].links['a-a'].layer).toBe(DEFAULT_LAYER.id);
+    const scenes = readViews(content);
+    expect(scenes[ROOT_VIEW_ID].layers).toEqual({ [DEFAULT_LAYER.id]: DEFAULT_LAYER });
+    expect(scenes[ROOT_VIEW_ID].nodes.a.layer).toBe(DEFAULT_LAYER.id);
+    expect(scenes[ROOT_VIEW_ID].links['a-a'].layer).toBe(DEFAULT_LAYER.id);
     // Each element keeps the layer it was drawn on: the bottom one, unless it names one its scene has.
     expect([scenes.f.nodes.b.layer, scenes.f.nodes.c.layer, scenes.f.nodes.d.layer]).toEqual([
       DEFAULT_LAYER.id,
@@ -178,11 +194,11 @@ describe('content', () => {
     const content: ContentMap = {};
     seedContent(content);
     updateCanvasRecord(content, { lattice: true, grid: 24 });
-    writeScenes(content, readScenes(content));
-    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true, grid: 24 });
+    writeViews(content, readViews(content));
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_VIEW_ID, lattice: true, grid: 24 });
     // An unset value removes its key rather than storing `undefined`.
     updateCanvasRecord(content, { grid: undefined });
-    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID, lattice: true });
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_VIEW_ID, lattice: true });
   });
 
   test("a drawing's theme wins over the user's default, and its overrides over the theme's parts", ({ expect }) => {
@@ -199,7 +215,7 @@ describe('content', () => {
     });
     expect(resolveDrawingLook(undefined, {}).theme).toBeUndefined();
     updateCanvasRecord(content, { theme: undefined, styleSet: undefined });
-    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_SCENE_ID });
+    expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_VIEW_ID });
   });
 
   test('a link saved with a line reads it as its style', ({ expect }) => {
@@ -207,7 +223,7 @@ describe('content', () => {
     seedContent(content);
     content['link:l'] = {
       kind: 'link',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       link: {
         type: 'line',
         id: 'l',
@@ -217,7 +233,7 @@ describe('content', () => {
         line: { hue: 'red', dash: 'dotted' },
       },
     };
-    const link = readScenes(content)[ROOT_SCENE_ID].links.l;
+    const link = readViews(content)[ROOT_VIEW_ID].links.l;
     expect(link.style).toEqual({ hue: 'red', lineStyle: 'dotted' });
     expect('line' in link).toBe(false);
   });
@@ -227,7 +243,7 @@ describe('content', () => {
     seedContent(content);
     content['link:l'] = {
       kind: 'link',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       link: {
         type: 'line',
         id: 'l',
@@ -237,7 +253,7 @@ describe('content', () => {
         directed: true,
       },
     };
-    const link = readScenes(content)[ROOT_SCENE_ID].links.l;
+    const link = readViews(content)[ROOT_VIEW_ID].links.l;
     expect(link.ends).toEqual({ end: 'arrow' });
     expect('directed' in link).toBe(false);
   });
@@ -248,7 +264,7 @@ describe('content', () => {
     seedContent(content);
     const node = (id: string, values: object) => ({
       kind: 'node',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       node: { id, type: 'rect', z: 'a0', ...frame, ...values },
     });
     content['node:a'] = node('a', { class: 'warn', style: { rounded: true } });
@@ -256,7 +272,7 @@ describe('content', () => {
     content['node:c'] = node('c', {});
     content['link:l'] = {
       kind: 'link',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       link: { id: 'l', type: 'line', z: 'a0', source: { node: 'a' }, target: { node: 'b' }, class: 'warn' },
     };
     const styles: Record<string, unknown> = {
@@ -267,7 +283,7 @@ describe('content', () => {
     deleteStyleClass(content, styles, 'warn');
     expect(styles).toEqual({});
     expect(styleClassUses(content)).toEqual({});
-    const { nodes, links } = readScenes(content)[ROOT_SCENE_ID];
+    const { nodes, links } = readViews(content)[ROOT_VIEW_ID];
     expect(nodes.a.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
     expect(nodes.b.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
     expect(nodes.c.style).toBeUndefined();
@@ -288,9 +304,9 @@ describe('content', () => {
   test("a scene's layers are kept with its record", ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
-    const scenes = readScenes(content);
+    const scenes = readViews(content);
     const layers = { top: { id: 'top', name: 'Top', z: 'V' } };
-    writeScenes(content, { ...scenes, [ROOT_SCENE_ID]: { ...scenes[ROOT_SCENE_ID], layers } });
-    expect(readScenes(content)[ROOT_SCENE_ID].layers).toEqual(layers);
+    writeViews(content, { ...scenes, [ROOT_VIEW_ID]: { ...scenes[ROOT_VIEW_ID], layers } });
+    expect(readViews(content)[ROOT_VIEW_ID].layers).toEqual(layers);
   });
 });

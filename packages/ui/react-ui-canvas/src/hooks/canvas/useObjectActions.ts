@@ -10,23 +10,23 @@ import {
   type InstanceNode,
   type Intent,
   type NodeId,
-  type Scene,
-  type SceneId,
-  type SceneStore,
   type Size,
+  type View,
+  type ViewId,
+  type ViewStore,
   isInstanceNode,
 } from '../../model/index.ts';
 import {
   activeLayer,
   composeSelection,
   compositeBounds,
-  compositeScenes,
+  compositeViews,
   copyComposite,
   createId,
   instanceCounts,
   instancePorts,
-  recordScenes,
   recordStoreStep,
+  recordViews,
   renamePortLinks,
   retargetInstance,
   screenToScene,
@@ -40,19 +40,19 @@ export type ObjectActions = {
   compose: () => void;
   ungroup: (id: NodeId) => void;
   makeUnique: (id: NodeId) => void;
-  duplicate: (composite: SceneId) => void;
-  place: (composite: SceneId) => void;
-  rename: (composite: SceneId, name: string) => void;
-  remove: (composite: SceneId, instances: boolean) => void;
+  duplicate: (composite: ViewId) => void;
+  place: (composite: ViewId) => void;
+  rename: (composite: ViewId, name: string) => void;
+  remove: (composite: ViewId, instances: boolean) => void;
 };
 
 export type UseObjectActionsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: SceneStore;
+  store: ViewStore;
   baseProjection: Projection;
   /** The scene the view opened on, where a step is recorded when the path is empty. */
-  root: SceneId;
+  root: ViewId;
   select: (ids: Iterable<ElementId>) => void;
   navigation: NavigationCommands;
   viewport: Size;
@@ -75,10 +75,10 @@ export const useObjectActions = ({
   return useMemo<ObjectActions>(() => {
     const sceneId = () => registry.get(atoms.path).at(-1) ?? root;
     /** Writes `scenes` into the store, applies `intents`, and records both as one undo step. */
-    const commit = (scenes: Record<SceneId, Scene>, intents: Intent[]) => {
-      const before = registry.get(store.scenes);
+    const commit = (scenes: Record<ViewId, View>, intents: Intent[]) => {
+      const before = registry.get(store.views);
       const model = baseProjection.snapshot();
-      registry.set(store.scenes, { ...before, ...scenes });
+      registry.set(store.views, { ...before, ...scenes });
       if (intents.length > 0) {
         baseProjection.apply({ kind: 'batch', intents });
       }
@@ -86,14 +86,14 @@ export const useObjectActions = ({
       if (baseProjection.snapshot() === model) {
         recordStoreStep(registry, atoms.undo, sceneId(), model, before);
       } else {
-        recordScenes(registry, atoms.undo, sceneId(), before);
+        recordViews(registry, atoms.undo, sceneId(), before);
       }
     };
     return {
       /** Groups the selection as a new object, replaced by one instance of it. */
       compose: () => {
         const current = registry.get(baseProjection.scene);
-        const count = compositeScenes(registry.get(store.scenes)).length;
+        const count = compositeViews(registry.get(store.views)).length;
         const instanceId = createId('instance');
         const composition = composeSelection(current, registry.get(atoms.selection), {
           compositeId: createId('object'),
@@ -112,7 +112,7 @@ export const useObjectActions = ({
         const current = registry.get(baseProjection.scene);
         const instance = current.nodes[id];
         const composite =
-          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
+          instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
         if (!instance || !isInstanceNode(instance) || !composite) {
           return;
         }
@@ -125,7 +125,7 @@ export const useObjectActions = ({
         const current = registry.get(baseProjection.scene);
         const instance = current.nodes[id];
         const composite =
-          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
+          instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
         if (!instance || !isInstanceNode(instance) || !composite) {
           return;
         }
@@ -141,8 +141,8 @@ export const useObjectActions = ({
         ]);
       },
       /** Copies a composite's definition; no instance changes. */
-      duplicate: (composite: SceneId) => {
-        const definition = registry.get(store.scenes)[composite];
+      duplicate: (composite: ViewId) => {
+        const definition = registry.get(store.views)[composite];
         if (!definition) {
           return;
         }
@@ -150,8 +150,8 @@ export const useObjectActions = ({
         commit({ [copy.composite.id]: copy.composite }, []);
       },
       /** Places an instance of a composite at the centre of the view, at its own size. */
-      place: (composite: SceneId) => {
-        const definition = registry.get(store.scenes)[composite];
+      place: (composite: ViewId) => {
+        const definition = registry.get(store.views)[composite];
         const content = definition && compositeBounds(definition);
         if (!definition || !content || registry.get(atoms.isolation)) {
           return;
@@ -179,20 +179,20 @@ export const useObjectActions = ({
         baseProjection.apply({ kind: 'create', node: instance });
         select([instance.id]);
       },
-      rename: (composite: SceneId, name: string) => {
-        const definition = registry.get(store.scenes)[composite];
+      rename: (composite: ViewId, name: string) => {
+        const definition = registry.get(store.views)[composite];
         if (definition) {
           commit({ [composite]: { ...definition, name } }, []);
         }
       },
       /** Removes a composite; with `instances`, every instance of it in the drawing too, else only an unused one. */
-      remove: (composite: SceneId, instances: boolean) => {
-        const before = registry.get(store.scenes);
+      remove: (composite: ViewId, instances: boolean) => {
+        const before = registry.get(store.views);
         if (!instances && (instanceCounts(before)[composite] ?? 0) > 0) {
           return;
         }
         const { [composite]: _, ...rest } = before;
-        const scenes: Record<SceneId, Scene> = {};
+        const scenes: Record<ViewId, View> = {};
         for (const [id, scene] of Object.entries(rest)) {
           const used = Object.values(scene.nodes).filter(
             (node) => isInstanceNode(node) && node.composite === composite,
@@ -204,9 +204,9 @@ export const useObjectActions = ({
           navigation.exitIsolation();
         }
         const model = baseProjection.snapshot();
-        registry.set(store.scenes, scenes);
+        registry.set(store.views, scenes);
         recordStoreStep(registry, atoms.undo, sceneId(), model, before);
       },
     };
-  }, [registry, atoms, store.scenes, baseProjection, root, select, navigation]);
+  }, [registry, atoms, store.views, baseProjection, root, select, navigation]);
 };

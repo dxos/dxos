@@ -10,7 +10,7 @@ import { mx } from '@dxos/ui-theme';
 import { isMoving } from '../../engine/index.ts';
 import { PREVIEW_NODE_ID } from '../../hooks/index.ts';
 import { type Bounds, type Camera, type ElementId, MAJOR_GRID_RATIO, frameTimeAttribute } from '../../model/index.ts';
-import { MIN_ZOOM, cameraTransform, visibleScene } from '../../utils/index.ts';
+import { MIN_ZOOM, cameraTransform, visibleView } from '../../utils/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
@@ -73,7 +73,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
   // Handles and ports belong to what is drawn: a hidden layer's elements show none.
-  const shownScene = useMemo(() => visibleScene(displayScene), [displayScene]);
+  const shownScene = useMemo(() => visibleView(displayScene), [displayScene]);
 
   return (
     <div

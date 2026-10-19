@@ -15,10 +15,10 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { SceneBuilder } from '../../builder/index.ts';
+import { ViewBuilder } from '../../builder/index.ts';
 import { type CanvasAtoms, createCanvasAtoms } from '../../engine/index.ts';
-import { type Scene, type SceneId, type SceneStore, createMemoryStore } from '../../model/index.ts';
-import { createModelSceneTree } from '../../testing/index.ts';
+import { type View, type ViewId, type ViewStore, createMemoryStore } from '../../model/index.ts';
+import { createModelViewTree } from '../../testing/index.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
@@ -56,7 +56,7 @@ const PLATFORM = `
     Edge --> Echo
 `;
 
-type Seed = { scenes: Scene[]; root: SceneId; engine?: Objective.Evaluation };
+type Seed = { views: View[]; root: ViewId; engine?: Objective.Evaluation };
 
 /**
  * Places the diagram with the mermaid engine, then rebuilds it as editable nodes: groups become guide
@@ -82,22 +82,22 @@ const fromMermaid = async (source: string): Promise<Seed> => {
       const box = boxes.get(item.id);
       return box ? [{ item, box }] : [];
     });
-  const { scenes } = SceneBuilder.scene(ROOT, [
+  const { views } = ViewBuilder.view(ROOT, [
     // Frames first, so their lower z keeps members clickable on top of them. Unlabelled guides: a rect
     // centres its label, where the members would cover it.
     ...placed(graph.groups).map(({ item, box }) =>
-      SceneBuilder.rect(nodeId(item.id), box).properties({ style: { guide: true } }),
+      ViewBuilder.rect(nodeId(item.id), box).properties({ style: { guide: true } }),
     ),
     ...placed(graph.nodes).map(({ item, box }) =>
-      SceneBuilder.rect(nodeId(item.id), box).properties({ label: item.label }),
+      ViewBuilder.rect(nodeId(item.id), box).properties({ label: item.label }),
     ),
     ...graph.edges.map(({ from, to }, index) =>
-      SceneBuilder.link('smart', nodeId(from), nodeId(to))
+      ViewBuilder.link('smart', nodeId(from), nodeId(to))
         .id(nodeId(`${from}-${to}-${index}`))
         .properties({ ends: { end: 'arrow' } }),
     ),
   ]).build();
-  return { scenes, root: ROOT, engine: result.chosen.evaluation };
+  return { views, root: ROOT, engine: result.chosen.evaluation };
 };
 
 type Graded = {
@@ -105,7 +105,7 @@ type Graded = {
   layout: Objective.Layout;
 };
 
-const grade = (scene: Scene): Graded => {
+const grade = (scene: View): Graded => {
   const converted = toDiagramObjects(scene, defaultNodeRegistry);
   return { converted, layout: { objects: converted.objects, report: Diagnostics.analyze(converted.objects) } };
 };
@@ -162,8 +162,8 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 );
 
 type ScorecardProps = {
-  store: SceneStore;
-  root: SceneId;
+  store: ViewStore;
+  root: ViewId;
   atoms: CanvasAtoms;
   engine?: Objective.Evaluation;
   /** Every judge of the layout, of any kind; defaults to the objective's constraints and cost terms. */
@@ -173,7 +173,7 @@ type ScorecardProps = {
 /** Live grading of the scene the editor shows: re-derived from the store on every change. */
 const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: ScorecardProps) => {
   const registry = useContext(RegistryContext);
-  const scene = useAtomValue(store.scene(root));
+  const scene = useAtomValue(store.view(root));
   const graded = useMemo(() => (scene ? grade(scene) : undefined), [scene]);
   const [scores, setScores] = useState<readonly Score.Scored[]>();
   // The first scores, so Δ reads against the scene as it was first loaded.
@@ -301,7 +301,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
   );
 };
 
-type EditorProps = { store: SceneStore; root: SceneId; engine?: Objective.Evaluation };
+type EditorProps = { store: ViewStore; root: ViewId; engine?: Objective.Evaluation };
 
 const Editor = ({ store, root, engine }: EditorProps) => {
   const atoms = useMemo(() => createCanvasAtoms(root), [root]);
@@ -330,7 +330,7 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
   useEffect(() => {
     const key = `${fixture}:${source}`;
     if (fixture === 'model') {
-      setSeed({ ...createModelSceneTree(), key });
+      setSeed({ ...createModelViewTree(), key });
       setFailure(undefined);
       return;
     }
@@ -351,7 +351,7 @@ const DefaultStory = ({ source = BASIC, fixture = 'mermaid' }: StoryArgs) => {
       cancelled = true;
     };
   }, [source, fixture]);
-  const store = useMemo(() => seed && createMemoryStore(seed.scenes), [seed]);
+  const store = useMemo(() => seed && createMemoryStore(seed.views), [seed]);
 
   if (failure) {
     return <pre className='p-2 text-xs text-rose-500 whitespace-pre-wrap'>{failure}</pre>;

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Bounds, MAJOR_GRID_RATIO, type Node, type Scene, type Size } from '../model/index.ts';
+import { type Bounds, MAJOR_GRID_RATIO, type Node, type Size, type View } from '../model/index.ts';
 import { portalFrame } from './camera.ts';
 import { contentBounds } from './hit.ts';
 import { nodeBounds } from './shapes.ts';
@@ -23,8 +23,8 @@ export const emptyBounds = (portal: Node, viewport: Size): Bounds => {
 };
 
 /** The shapes of a scene, unpadded: what Fit frames, with its inset as the only margin. */
-export const fitFrame = (scene: Scene): Bounds => contentBounds(scene, 0, 1) ?? EMPTY_FRAME;
+export const fitFrame = (scene: View): Bounds => contentBounds(scene, 0, 1) ?? EMPTY_FRAME;
 
 /** A child scene's frame inside its portal, as drilling in maps it; an empty one stands in as the viewport. */
-export const childFrame = (portal: Node, child: Scene, viewport: Size): Bounds =>
+export const childFrame = (portal: Node, child: View, viewport: Size): Bounds =>
   portalFrame(portal, contentBounds(child) ?? emptyBounds(portal, viewport));

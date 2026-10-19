@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
 import {
   BASE_ANIMATABLE,
@@ -17,21 +17,21 @@ import {
   moveKeys,
   removeKey,
   sampleCamera,
-  sampleScene,
+  sampleView,
   setKey,
   trackValue,
 } from './timeline.ts';
-import { CAMERA_TARGET, InstanceNode, RectNode, type Scene } from './types.ts';
+import { CAMERA_TARGET, InstanceNode, RectNode, type View } from './types.ts';
 
 const {
-  scenes: [base],
-} = SceneBuilder.scene('s', [
-  SceneBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
-  SceneBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
+  views: [base],
+} = ViewBuilder.view('s', [
+  ViewBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
+  ViewBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
 ]).build();
 
 /** `a` moves from x 50 to 150 over two seconds, easing out, and fades in over the first second. */
-const animated = (): Scene => {
+const animated = (): View => {
   let timeline = createTimeline(4);
   timeline = setKey(timeline, 'a', 'center', { t: 0, value: { x: 50, y: 25 } });
   timeline = setKey(timeline, 'a', 'center', { t: 2, value: { x: 150, y: 25 }, easing: 'ease-out' });
@@ -59,14 +59,14 @@ describe('easing', () => {
   });
 });
 
-describe('sampleScene', () => {
+describe('sampleView', () => {
   test('a scene without a timeline is returned as it is', ({ expect }) => {
-    expect(sampleScene(base, 1)).toBe(base);
+    expect(sampleView(base, 1)).toBe(base);
   });
 
   test('tracked properties take their eased value; others keep the base value', ({ expect }) => {
     const scene = animated();
-    const at = (t: number) => sampleScene(scene, t).nodes.a;
+    const at = (t: number) => sampleView(scene, t).nodes.a;
     expect(at(0).center).toEqual({ x: 50, y: 25 });
     expect(at(2).center).toEqual({ x: 150, y: 25 });
     // Ease-out covers more than half the distance by half the time.
@@ -74,13 +74,13 @@ describe('sampleScene', () => {
     expect(at(0.5).style?.opacity).toBeCloseTo(0.5);
     // Past the last key a track holds its end value.
     expect(at(3.5).center).toEqual({ x: 150, y: 25 });
-    expect(sampleScene(scene, 1).nodes.b).toBe(scene.nodes.b);
+    expect(sampleView(scene, 1).nodes.b).toBe(scene.nodes.b);
     expect(at(1).id).toBe('a');
   });
 
   test('the same time samples once', ({ expect }) => {
     const scene = animated();
-    expect(sampleScene(scene, 1.25)).toBe(sampleScene(scene, 1.25));
+    expect(sampleView(scene, 1.25)).toBe(sampleView(scene, 1.25));
   });
 
   test('a discrete value holds until the next key', ({ expect }) => {

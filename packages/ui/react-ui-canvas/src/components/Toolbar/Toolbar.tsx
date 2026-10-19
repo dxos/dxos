@@ -17,15 +17,15 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type Capabilities, type NodeRegistry, type NodeType, type SceneId, shortcutFor } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, type NodeType, type ViewId, shortcutFor } from '../../model/index.ts';
 import { FLOATING_BAR } from '../../utils/index.ts';
 import { Breadcrumbs } from '../Breadcrumbs/index.ts';
 
 /** What the toolbars can ask of the view; a missing action hides or disables its control. */
 export type ToolbarActions = {
   /** Navigation: the scene path, a name per scene, and drill-out by path index. */
-  path: SceneId[];
-  nameOf: (id: SceneId) => string;
+  path: ViewId[];
+  nameOf: (id: ViewId) => string;
   onPath: (index: number) => void;
   /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;

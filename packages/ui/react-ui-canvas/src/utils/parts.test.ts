@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
@@ -34,11 +34,11 @@ describe('parts', () => {
     },
   };
   const {
-    scenes: [{ nodes }],
-  } = SceneBuilder.scene('s', [
-    SceneBuilder.rect('r', box),
-    SceneBuilder.note('n', box),
-    SceneBuilder.node('list', 'l', box).properties({ title: 'Todo', items: ['buy milk'] }),
+    views: [{ nodes }],
+  } = ViewBuilder.view('s', [
+    ViewBuilder.rect('r', box),
+    ViewBuilder.note('n', box),
+    ViewBuilder.node('list', 'l', box).properties({ title: 'Todo', items: ['buy milk'] }),
   ]).build(registry);
   const rect = nodes.r;
   const note = nodes.n;
@@ -75,16 +75,16 @@ describe('parts', () => {
   });
 
   test('a scene shape showing its contents is opaque even in outline', ({ expect }) => {
-    const { scenes } = SceneBuilder.scene('s', [
-      SceneBuilder.scene('open')
+    const { views } = ViewBuilder.view('s', [
+      ViewBuilder.view('open')
         .at(box)
         .properties({ style: { hue: 'green', tone: 0 } }),
-      SceneBuilder.scene('closed')
+      ViewBuilder.view('closed')
         .at(box)
         .properties({ label: 'Closed', style: { hue: 'green', tone: 0 } }),
     ]).build();
-    expect(classicFrame(scenes[0].nodes.open, false)[0]).toBe('bg-base-surface');
-    expect(classicFrame(scenes[0].nodes.closed, false)[0]).toBe('bg-transparent');
+    expect(classicFrame(views[0].nodes.open, false)[0]).toBe('bg-base-surface');
+    expect(classicFrame(views[0].nodes.closed, false)[0]).toBe('bg-transparent');
   });
 
   test('every tone keeps the hue border; tone 0 drops the fill, unset is tone 2', ({ expect }) => {

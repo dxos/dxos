@@ -12,7 +12,7 @@ import {
   type LinkId,
   type Node,
   type NodeRegistry,
-  type Scene,
+  type View,
   nodeDef,
 } from '../../model/index.ts';
 import { type PartKey, hitTest, partText, partValues } from '../../utils/index.ts';
@@ -44,7 +44,7 @@ export type UseElementHandlersOptions = {
   projection: Projection;
   capabilities: Capabilities;
   navigation: NavigationCommands;
-  scene: Scene;
+  scene: View;
   select: (ids: Iterable<ElementId>) => void;
 } & Pick<
   PointerMachine,

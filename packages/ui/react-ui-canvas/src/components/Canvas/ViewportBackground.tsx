@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { GRID_LEVELS, GRID_RANGE, useChanging } from '../../hooks/index.ts';
-import { type Bounds, type Camera, type ElementId, type SceneLook, isFrameNode } from '../../model/index.ts';
+import { type Bounds, type Camera, type ElementId, type SceneLook, isViewNode } from '../../model/index.ts';
 import { GRID_CLASSES, cameraTransform, enterPortal, nodeBounds, screenBounds } from '../../utils/index.ts';
 import {
   BackgroundField,
@@ -59,8 +59,8 @@ export const ViewportBackground = ({
   // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
   // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
   const focusNode = focus && focus.opacity < 1 ? displayScene.nodes[focus.id] : undefined;
-  const focusPortal = focusNode && isFrameNode(focusNode) ? focusNode : undefined;
-  const focusScene = useAtomValue(store.scene(focusPortal?.scene ?? ''));
+  const focusPortal = focusNode && isViewNode(focusNode) ? focusNode : undefined;
+  const focusScene = useAtomValue(store.view(focusPortal?.scene ?? ''));
   const subGrid = useMemo(() => {
     if (!focus || !focusPortal || !focusScene) {
       return undefined;

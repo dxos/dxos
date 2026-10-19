@@ -67,7 +67,7 @@ export type NodeId = string;
 export type LinkId = string;
 /** A node or link id; the two namespaces never collide within a scene. */
 export type ElementId = string;
-export type SceneId = string;
+export type ViewId = string;
 export type PortId = string;
 
 export const Side = Schema.Literals(['n', 'e', 's', 'w']);
@@ -268,23 +268,23 @@ export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
  * What a frame links to and how it shows it. A host extends the struct with its own target (an object reference)
  * ahead of these fields, so the panel's Link section lists the target before how it is shown.
  */
-export const frameLinkFields = {
-  /** Draw the linked scene inside the frame rather than the label; unset, it does so while there is no label. */
+export const viewLinkFields = {
+  /** Draw the linked View inside the node rather than the label; unset, it does so while there is no label. */
   contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
 };
 
-export const FrameLink = Schema.Struct(frameLinkFields).annotate({ title: 'Link' });
-export type FrameLink = Schema.Schema.Type<typeof FrameLink>;
+export const ViewLink = Schema.Struct(viewLinkFields).annotate({ title: 'Link' });
+export type ViewLink = Schema.Schema.Type<typeof ViewLink>;
 
-/** A frame onto the next depth: renders its child scene scaled into this node's bounds. */
-export const FrameNode = Schema.Struct({
-  type: Schema.Literal('frame'),
+/** A View onto the next depth: renders its child View (`scene`, the stored field name) scaled into its bounds. */
+export const ViewNode = Schema.Struct({
+  type: Schema.Literal('view'),
   ...nodeBase,
   ...boxFields,
   scene: Schema.String,
-  link: Schema.optional(FrameLink),
+  link: Schema.optional(ViewLink),
 });
-export type FrameNode = Schema.Schema.Type<typeof FrameNode>;
+export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
 /** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
 export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
@@ -340,7 +340,7 @@ export const BuiltinNode = Schema.Union([
   CloudNode,
   PolygonNode,
   NoteNode,
-  FrameNode,
+  ViewNode,
   InstanceNode,
   PathNode,
   GeneratorNode,
@@ -353,7 +353,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'cloud',
   'polygon',
   'note',
-  'frame',
+  'view',
   'instance',
   'path',
   'generator',
@@ -370,15 +370,24 @@ export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type 
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
-export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
+export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
 export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
 export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
-export const isBoxNode = (node: NodeBase): node is RectNode | FrameNode => isRectNode(node) || isFrameNode(node);
-/** Whether a frame draws its child scene: as set, else while it has no label to show instead. */
-export const showsContents = (node: FrameNode): boolean => node.link?.contents ?? node.label === undefined;
+export const isBoxNode = (node: NodeBase): node is RectNode | ViewNode => isRectNode(node) || isViewNode(node);
+/** Whether a view node draws its child View: as set, else while it has no label to show instead. */
+export const showsContents = (node: ViewNode): boolean => node.link?.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
+
+/** Node types stored under an earlier name: `frame` is what `view` was called before the View rename. */
+const LEGACY_NODE_TYPES: ReadonlyMap<string, BuiltinNodeType> = new Map([['frame', 'view']]);
+
+/** A node stored under an earlier type name reads as its current type; any other node is returned as it is. */
+export const withLegacyNodeType = (node: NodeBase): NodeBase => {
+  const type = LEGACY_NODE_TYPES.get(node.type);
+  return type ? { ...node, type } : node;
+};
 
 //
 // Links
@@ -545,52 +554,61 @@ export const Timeline = Schema.Struct({
 });
 export type Timeline = Schema.Schema.Type<typeof Timeline>;
 
-/** A plain scene, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
-export const SceneKind = Schema.Literals(['scene', 'composite']);
-export type SceneKind = Schema.Schema.Type<typeof SceneKind>;
+/** A plain View, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
+export const ViewKind = Schema.Literals(['view', 'composite']);
+export type ViewKind = Schema.Schema.Type<typeof ViewKind>;
 
 /**
- * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
+ * The View schema over a set of node schemas: a host composes it from its registry's types, so the
  * schema stays exact for every type while the engine only ever sees `NodeBase`.
  */
-export const createSceneSchema = <const Nodes extends readonly Schema.Codec<NodeBase, unknown>[]>(nodes: Nodes) =>
+export const createViewSchema = <const Nodes extends readonly Schema.Codec<NodeBase, unknown>[]>(nodes: Nodes) =>
   Schema.Struct({
     id: Schema.String,
     name: Schema.optional(Schema.String),
     nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
     links: Schema.Record(Schema.String, Link),
     layers: Schema.optional(Schema.Record(Schema.String, Layer)),
-    kind: Schema.optional(SceneKind),
+    kind: Schema.optional(ViewKind),
     timeline: Schema.optional(Timeline),
   });
 
-/** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([
+/** The View schema over the built-in node types. */
+export const View = createViewSchema([
   RectNode,
   EllipseNode,
   CloudNode,
   PolygonNode,
   NoteNode,
-  FrameNode,
+  ViewNode,
   InstanceNode,
   PathNode,
   GeneratorNode,
 ]);
 
-/** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
-export const OpenScene = createSceneSchema([NodeBase]);
-export type Scene = {
-  readonly id: SceneId;
+/** The View schema over any node with the shared fields: what the engine itself can validate for a host. */
+export const OpenView = createViewSchema([NodeBase]);
+export type View = {
+  readonly id: ViewId;
   readonly name?: string;
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
   readonly layers?: Readonly<Record<LayerId, Layer>>;
-  readonly kind?: SceneKind;
+  readonly kind?: ViewKind;
   readonly timeline?: Timeline;
 };
 
-/** A node or link of the scene by id. */
-export const getElement = (scene: Scene, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
+/** A View as stored before a rename, read in the current shape: its nodes' legacy type names mapped. */
+export const withLegacyView = (view: View): View =>
+  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type))
+    ? {
+        ...view,
+        nodes: Object.fromEntries(Object.entries(view.nodes).map(([id, node]) => [id, withLegacyNodeType(node)])),
+      }
+    : view;
+
+/** A node or link of the View by id. */
+export const getElement = (scene: View, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };

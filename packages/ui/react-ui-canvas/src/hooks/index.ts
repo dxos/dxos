@@ -8,6 +8,6 @@ export * from './useClock.ts';
 export * from './useGeneratorFrames.ts';
 export * from './useRegistry.ts';
 export * from './useSceneLook.ts';
-export * from './useSceneProjection.ts';
+export * from './useViewProjection.ts';
 export * from './useViewport.ts';
 export * from './useWheel.ts';

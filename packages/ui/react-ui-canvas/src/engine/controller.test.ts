@@ -5,9 +5,9 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { SceneBuilder, type SceneTree } from '../builder/index.ts';
+import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type BackgroundGrid, createMemoryStore, createTimeline, isFrameNode, keyTimes } from '../model/index.ts';
+import { type BackgroundGrid, createMemoryStore, createTimeline, isViewNode, keyTimes } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
 import { createFreehandProjection } from './projection.ts';
@@ -18,28 +18,28 @@ const VIEWPORT = { width: 1024, height: 768 };
 
 /** Two rectangles and a link between them, on a store with no classes yet. */
 const flat = () =>
-  SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)).properties({ label: 'A' }),
-    SceneBuilder.rect('b', box(512)).properties({ label: 'B' }),
-    SceneBuilder.link('line', 'a', 'b'),
+  ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)).properties({ label: 'A' }),
+    ViewBuilder.rect('b', box(512)).properties({ label: 'B' }),
+    ViewBuilder.link('line', 'a', 'b'),
   ]).build();
 
 /** A rectangle beside a frame onto a child scene with one rectangle of its own. */
 const nested = () =>
-  SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)),
-    SceneBuilder.scene('child', [SceneBuilder.rect('c', box(0))])
+  ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)),
+    ViewBuilder.view('child', [ViewBuilder.rect('c', box(0))])
       .name('Child')
       .at({ x: 512, y: 0, width: 512, height: 256 }),
   ]).build();
 
 /** Root holds A and a frame onto Child; Child holds C and a frame onto Grand, which holds G. */
 const deep = () =>
-  SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)),
-    SceneBuilder.scene('child', [
-      SceneBuilder.rect('c', box(0)),
-      SceneBuilder.scene('grand', [SceneBuilder.rect('g', box(0))]).at({ x: 512, y: 0, width: 512, height: 256 }),
+  ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)),
+    ViewBuilder.view('child', [
+      ViewBuilder.rect('c', box(0)),
+      ViewBuilder.view('grand', [ViewBuilder.rect('g', box(0))]).at({ x: 512, y: 0, width: 512, height: 256 }),
     ]).at({ x: 512, y: 0, width: 512, height: 256 }),
   ]).build();
 
@@ -47,9 +47,9 @@ const setup = ({
   readonly = false,
   tree = flat(),
   look = {},
-}: { readonly?: boolean; tree?: SceneTree; look?: LookHandlers } = {}) => {
+}: { readonly?: boolean; tree?: ViewTree; look?: LookHandlers } = {}) => {
   const registry = Registry.make();
-  const store = createMemoryStore(tree.scenes);
+  const store = createMemoryStore(tree.views);
   const atoms = createCanvasAtoms(tree.root);
   const projection = createFreehandProjection({ registry, store, sceneId: tree.root });
   let next = 0;
@@ -91,7 +91,7 @@ describe('CanvasController', () => {
       const before = { x: 10, y: 20, zoom: 0.5 };
       registry.set(atoms.camera, before);
       controller.navigation.drillIn(portal, false);
-      const child = registry.get(store.scenes).child;
+      const child = registry.get(store.views).child;
       expect(controller.navigation.frame(registry.get(atoms.path), child)).toEqual(
         controller.navigation.childFrame(portal, child),
       );
@@ -249,9 +249,9 @@ describe('CanvasController', () => {
       const id = controller.selection.group();
       expect(id).toBe('scene-0');
       const frame = id === undefined ? undefined : scene().nodes[id];
-      expect(frame && isFrameNode(frame) ? frame.scene : undefined).toBe(id);
+      expect(frame && isViewNode(frame) ? frame.scene : undefined).toBe(id);
       expect(scene().nodes.a).toBeUndefined();
-      expect(id && registry.get(store.scenes)[id]?.nodes.a).toBeDefined();
+      expect(id && registry.get(store.views)[id]?.nodes.a).toBeDefined();
       expect([...registry.get(atoms.selection)]).toEqual([id]);
     });
 

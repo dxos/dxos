@@ -20,7 +20,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../../hooks/index.ts';
-import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
+import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
 import {
   type ViewReorder,
   type ViewRowSelection,
@@ -35,17 +35,17 @@ import {
 import { type InspectorProps } from '../types.ts';
 
 export type ViewsInspectorProps = InspectorProps & {
-  scenes: SceneMap;
+  scenes: ViewMap;
   /** The canvas's root View. */
-  root: SceneId;
+  root: ViewId;
   /** The open View's path, root first; undefined while an object is open on its own. */
-  path?: readonly SceneId[];
+  path?: readonly ViewId[];
   /** The canvas selection, in the open View: the rows of these elements show as selected, and the first is revealed. */
   selected?: ReadonlySet<ElementId>;
   /** A row was activated: open `selection.path` and select `selection.ids` there; `item` is the row activated. */
   onSelect?: (selection: ViewRowSelection, item: ViewTreeItem) => void;
   /** Opens a View in the viewport, by its path from the root. */
-  onOpen?: (path: SceneId[]) => void;
+  onOpen?: (path: ViewId[]) => void;
   /** A row was dragged before or after a sibling in the open View: restack its element in `container`'s drawing order. */
   onReorder?: (event: ViewReorder) => void;
 };
@@ -57,7 +57,7 @@ const ICONS: Record<string, string> = {
   polygon: 'ph--hexagon--regular',
   note: 'ph--note--regular',
   path: 'ph--pen-nib--regular',
-  frame: 'ph--frame-corners--regular',
+  view: 'ph--frame-corners--regular',
   instance: 'ph--cube--regular',
 };
 

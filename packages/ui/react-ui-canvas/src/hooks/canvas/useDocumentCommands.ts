@@ -10,9 +10,9 @@ import {
   type ElementId,
   type NodeRegistry,
   type NodeType,
-  type SceneId,
-  type SceneStore,
   type Size,
+  type ViewId,
+  type ViewStore,
 } from '../../model/index.ts';
 import { createId, nominalSize, redo, screenToScene, undo } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
@@ -31,10 +31,10 @@ export type DocumentCommands = {
 export type UseDocumentCommandsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: SceneStore;
+  store: ViewStore;
   projection: Projection;
   readonly: boolean;
-  sceneId: SceneId;
+  sceneId: ViewId;
   select: (ids: Iterable<ElementId>) => void;
   nodeRegistry: NodeRegistry;
   capabilities: Capabilities;

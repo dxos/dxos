@@ -6,7 +6,7 @@
 // Node and link type definitions (decision 12): what a type's schema is, what it renders, where its
 // ports are, how it may be manipulated, and how the palette presents it. Per type, not per instance, so
 // the data stays small and ports come for free; a node may still carry its own `ports`. A host composes
-// its own registry (and with `createSceneSchema` its scene schema) from the built-ins and its types.
+// its own registry (and with `createViewSchema` its scene schema) from the built-ins and its types.
 //
 // A type may be built on a prototype (`extends`): it inherits every definition field it leaves unset, so
 // shapes that look and behave alike share one definition and differ only where they say so. Prototypes
@@ -19,7 +19,7 @@ import { type ComponentType } from 'react';
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
 import { type PartEditing, type PartField } from '../utils/index.ts';
-import { type SceneStore } from './store.ts';
+import { type ViewStore } from './store.ts';
 import {
   type LinkType,
   type Node,
@@ -27,14 +27,14 @@ import {
   type NodeType,
   type Point,
   type Port,
-  type Scene,
   type Size,
+  type View,
 } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: Scene;
-  store: SceneStore;
+  scene: View;
+  store: ViewStore;
   registry: NodeRegistry;
   /** Effective screen zoom of the layer (camera zoom × portal scales), for level-of-detail choices. */
   zoom: number;
@@ -63,7 +63,7 @@ export type NodeDef = {
   key?: string;
   /** Tools panel group; types without one share the default group. */
   group?: string;
-  /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */
+  /** The type's schema; the host's scene schema is the union of its registry's (`createViewSchema`). */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */

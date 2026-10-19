@@ -19,9 +19,9 @@ import {
   type Bounds,
   type Camera,
   type Point,
-  type SceneId,
   type Size,
   type Timeline,
+  type ViewId,
   applyCameraKey,
   sampleCamera,
 } from '../../model/index.ts';
@@ -48,7 +48,7 @@ export type UseSceneViewOptions = {
   viewport: Size;
   /** Set once the user takes the camera over, which stops the view re-fitting itself. */
   interactedRef: MutableRefObject<boolean>;
-  path: SceneId[];
+  path: ViewId[];
   camera: Camera;
   drag: Drag | undefined;
   timeline: Timeline | undefined;
@@ -145,7 +145,7 @@ export const useSceneView = ({
   // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
   // camera holds still under someone editing.
   const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
-  const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
+  const fittedRef = useRef<{ scene: ViewId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
     if (initialCamera && !fitting) {
       setCamera(initialCamera);

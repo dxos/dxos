@@ -3,7 +3,7 @@
 //
 
 //
-// The timeline (ANIMATION.md §5): keys on node and camera properties, and `sampleScene`, the one place time meets the
+// The timeline (ANIMATION.md §5): keys on node and camera properties, and `sampleView`, the one place time meets the
 // model. Everything here is pure, so the surface, hit testing, export and a generator's worker sample the same scene
 // for the same time.
 //
@@ -19,9 +19,9 @@ import {
   type Easing,
   type Keyframe,
   type Node,
-  type Scene,
   type Timeline,
   type Track,
+  type View,
 } from './types.ts';
 
 /** Frames per second of a timeline that names none. */
@@ -367,13 +367,13 @@ const sampleNode = (node: Node, tracks: readonly Track[], t: number): Node =>
   }, node);
 
 /** Per scene, the last time sampled and its result: playback samples each time once, and hit tests re-read it. */
-const sampled = new WeakMap<Scene, { t: number; scene: Scene }>();
+const sampled = new WeakMap<View, { t: number; scene: View }>();
 
 /**
  * The scene at time `t` (§5.3): every tracked property of every node set to its value then. Pure and memoised on the
  * scene and the time; a scene without a timeline is returned as it is.
  */
-export const sampleScene = (scene: Scene, t: number): Scene => {
+export const sampleView = (scene: View, t: number): View => {
   const { timeline } = scene;
   if (!timeline || Object.keys(timeline.tracks).length === 0) {
     return scene;

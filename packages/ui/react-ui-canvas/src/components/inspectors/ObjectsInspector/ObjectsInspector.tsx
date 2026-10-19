@@ -10,29 +10,29 @@ import * as Editable from '@dxos/react-ui/Editable';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { type SceneId } from '../../../model/index.ts';
+import { type ViewId } from '../../../model/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { type InspectorProps } from '../types.ts';
 
 /** A composite as the panel lists it. */
-export type ObjectEntry = { id: SceneId; name: string; instances: number };
+export type ObjectEntry = { id: ViewId; name: string; instances: number };
 
 export type ObjectsInspectorProps = InspectorProps & {
   objects: readonly ObjectEntry[];
   /** The composite open in isolation, or the one whose instance is selected. */
-  selected?: SceneId;
+  selected?: ViewId;
   /** Opens a composite in isolation. */
-  onSelect?: (id: SceneId) => void;
-  onRename?: (id: SceneId, name: string) => void;
+  onSelect?: (id: ViewId) => void;
+  onRename?: (id: ViewId, name: string) => void;
   /** Groups the canvas selection as a new object; absent while nothing on the canvas is selected. */
   onCompose?: () => void;
   /** Places an instance of the selected composite on the canvas. */
-  onPlace?: (id: SceneId) => void;
-  onDuplicate?: (id: SceneId) => void;
+  onPlace?: (id: ViewId) => void;
+  onDuplicate?: (id: ViewId) => void;
   /** Removes a composite; with `instances`, the instances of it too. */
-  onDelete?: (id: SceneId, instances: boolean) => void;
+  onDelete?: (id: ViewId, instances: boolean) => void;
   /** A small picture of a composite, drawn after its name. */
-  thumbnail?: (id: SceneId) => ReactNode;
+  thumbnail?: (id: ViewId) => ReactNode;
   /** Gives the scene a timeline; absent while it has one or cannot be edited. */
   onAnimate?: () => void;
 };
@@ -56,7 +56,7 @@ export const ObjectsInspector = ({
   thumbnail,
   onAnimate,
 }: ObjectsInspectorProps) => {
-  const [editingId, setEditingId] = useState<SceneId>();
+  const [editingId, setEditingId] = useState<ViewId>();
   const current = objects.find((entry) => entry.id === selected);
   return (
     <>

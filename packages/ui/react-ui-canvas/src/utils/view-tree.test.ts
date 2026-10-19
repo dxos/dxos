@@ -20,7 +20,7 @@ const labels = (items: { label: string }[]) => items.map((item) => item.label);
 describe('buildViewTree', () => {
   test('a view lists its nodes in drawing order, then its links; a frame is the view it opens', ({ expect }) => {
     const tree = createNestedSimpleTree();
-    const view = buildViewTree(Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), tree.root);
+    const view = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
     expect(view.kind).toBe('view');
     const kinds = view.children.map((item) => item.kind);
     expect(kinds.slice(0, 3)).toEqual(['node', 'node', 'view']);
@@ -32,7 +32,7 @@ describe('buildViewTree', () => {
 
   test('an instance shows its object read-only, under every placement, with ids unique per path', ({ expect }) => {
     const tree = createObjectsTree();
-    const scenes = Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene]));
+    const scenes = Object.fromEntries(tree.views.map((scene) => [scene.id, scene]));
     const view = buildViewTree(scenes, tree.root);
     const all = (items: ReturnType<typeof buildViewTree>[]): ReturnType<typeof buildViewTree>[] =>
       items.flatMap((item) => [item, ...all(item.children)]);
@@ -48,7 +48,7 @@ describe('buildViewTree', () => {
 
   test('restackZ moves an element just before or after a sibling, nodes among nodes', ({ expect }) => {
     const tree = createNestedSimpleTree();
-    const scene = tree.scenes.find((scene) => scene.id === tree.root);
+    const scene = tree.views.find((scene) => scene.id === tree.root);
     if (!scene) {
       throw new Error('fixture has no root scene');
     }
@@ -72,7 +72,7 @@ describe('buildViewTree', () => {
 
   test('selectRows selects a row in its View; meta toggles and a range stays in one View', ({ expect }) => {
     const tree = createNestedSimpleTree();
-    const views = buildViewTree(Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), tree.root);
+    const views = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
     const rows = new Map<string, ViewTreeItem>();
     const walk = (item: ViewTreeItem) => {
       rows.set(item.id, item);
@@ -106,7 +106,7 @@ describe('buildViewTree', () => {
 
   test('a drop restacks among siblings in the open View only, above or below', ({ expect }) => {
     const tree = createObjectsTree();
-    const views = buildViewTree(Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), tree.root);
+    const views = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
     const rows = new Map<string, ViewTreeItem>();
     const walk = (item: ViewTreeItem) => {
       rows.set(item.id, item);

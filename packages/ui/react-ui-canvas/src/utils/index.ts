@@ -22,7 +22,7 @@ export * from './ports.ts';
 export * from './properties.ts';
 export * from './resize.ts';
 export * from './route.ts';
-export * from './scenes.ts';
+export * from './views.ts';
 export * from './shapes.ts';
 export * from './style.ts';
 export * from './surfaces.ts';

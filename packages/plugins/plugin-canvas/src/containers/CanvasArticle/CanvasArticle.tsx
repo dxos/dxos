@@ -25,10 +25,10 @@ import {
   type InspectorMode,
   type Node,
   type SceneDisplay,
-  type SceneId,
+  type ViewId,
   createLatticeProjection,
-  isFrameNode,
   isLink,
+  isViewNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -40,13 +40,13 @@ import {
   isCanvasDrawing,
   objectRef,
   objectUri,
-  parseLinkedSceneId,
+  parseLinkedViewId,
   resolveDrawingLook,
   updateCanvasRecord,
 } from '#model';
 import { CanvasCapabilities } from '#types';
 
-import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
+import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -64,7 +64,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const openObject = useCallback(
     (node: Node) => {
       const object = objectRef(node, db)?.target;
-      if (!object || !isFrameNode(node) || parseLinkedSceneId(node.scene) || isCanvasDrawing(object) !== false) {
+      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene) || isCanvasDrawing(object) !== false) {
         return undefined;
       }
       return () => {
@@ -129,7 +129,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   // A shape opens a scene of this drawing, never one bound from a linked drawing.
-  const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
+  const isLocalScene = useCallback((id: ViewId) => !parseLinkedViewId(id), []);
 
   // A frame may show any object listed in the navigator but this drawing itself.
   const { t } = UiHooks.useTranslation();
@@ -146,9 +146,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // empty, so linking never hides what was drawn there.
   const overrides = useCallback(
     (elements: readonly Element[]): ReturnType<NonNullable<CanvasPropertiesProps['overrides']>> => {
-      const scenes = bound ? registry.get(bound.store.scenes) : {};
+      const scenes = bound ? registry.get(bound.store.views) : {};
       const locked = elements.some((element) => {
-        if (isLink(element) || !isFrameNode(element) || objectUri(element) || parseLinkedSceneId(element.scene)) {
+        if (isLink(element) || !isViewNode(element) || objectUri(element) || parseLinkedViewId(element.scene)) {
           return false;
         }
         const child = scenes[element.scene];

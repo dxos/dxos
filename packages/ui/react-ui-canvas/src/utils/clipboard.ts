@@ -17,7 +17,7 @@ import {
   type Link,
   type Node,
   type Point,
-  type Scene,
+  type View,
   isPointEndpoint,
 } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
@@ -33,7 +33,7 @@ export type Clipboard = {
 };
 
 /** The selected nodes and the links joining them; a link is copied whether or not it was selected. */
-export const copySelection = (scene: Scene, selection: Iterable<ElementId>): Clipboard | undefined => {
+export const copySelection = (scene: View, selection: Iterable<ElementId>): Clipboard | undefined => {
   const ids = new Set(selection);
   const nodes = Object.values(scene.nodes).filter((node) => ids.has(node.id));
   const nodeIds = new Set(nodes.map(({ id }) => id));
@@ -105,7 +105,7 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer
  * else, and the ids it creates; nothing when the selection holds no node.
  */
 export const duplicateSelection = (
-  scene: Scene,
+  scene: View,
   selection: Iterable<ElementId>,
   offset: Point,
   createId: (prefix: string) => string,

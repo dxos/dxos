@@ -24,8 +24,8 @@ import {
   type NodeRegistry,
   type Point,
   type Port,
-  type Scene,
   type SplineLink,
+  type View,
   endpointNode,
   isPointEndpoint,
   nodeDef,
@@ -40,7 +40,7 @@ import {
   nodePorts,
   oppositeSide,
   portPoint,
-  sceneLinkGeometry,
+  viewLinkGeometry,
 } from '../../utils/index.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -49,7 +49,7 @@ const cursorFor = (handle: Handle) =>
   ({ n: 'ns', s: 'ns', e: 'ew', w: 'ew', ne: 'nesw', sw: 'nesw', nw: 'nwse', se: 'nwse' })[handle] + '-resize';
 
 export type ControlFrameProps = {
-  scene: Scene;
+  scene: View;
   registry: NodeRegistry;
   /** What the view may do: no handle is drawn for a gesture that could not apply. */
   capabilities: Capabilities;
@@ -129,7 +129,7 @@ export const ControlFrame = memo(
     const lanes =
       lattice && (selectedLinks.length > 0 || linkUnder !== undefined)
         ? new Map(
-            sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
               geometry.link.id,
               geometry,
             ]),

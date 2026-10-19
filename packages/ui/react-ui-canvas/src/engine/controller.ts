@@ -15,19 +15,19 @@ import {
   type NodeRegistry,
   OPACITY_PATH,
   type Point,
-  type Scene,
-  type SceneId,
-  type SceneStore,
   type Size,
   type StyleClass,
   type Tool,
+  type View,
+  type ViewId,
+  type ViewStore,
   clampTime,
   createTimeline,
   getElement,
   getPath,
-  isFrameNode,
   isInstanceNode,
   isLink,
+  isViewNode,
   keyTimes,
   moveKeys,
   nodeAnimatable,
@@ -54,10 +54,10 @@ import {
   exitPortal,
   fitBounds,
   fitFrame,
-  groupIntoScene,
+  groupIntoView,
   nodeBounds,
   pasteFragment,
-  recordScenes,
+  recordViews,
   restackZ,
   topZ,
   unionBounds,
@@ -96,7 +96,7 @@ export type LookHandlers = {
 export type CanvasControllerOptions = {
   registry: Registry.AtomRegistry;
   atoms: CanvasAtoms;
-  store: SceneStore;
+  store: ViewStore;
   /** The open View's projection, read when a command runs: it changes as the View changes. */
   projection: () => Projection;
   /** The projection under the animated one, which keys and timeline edits are written through. */
@@ -132,11 +132,11 @@ export type NavigationCommands = {
    * Opens the View at `path` (root first) from wherever the view is: out to the shared ancestor, then in through each
    * frame, animating only the last step; then selects `select` there. A path the canvas cannot reach stops where it can.
    */
-  openView: (path: readonly SceneId[], options?: { animate?: boolean; select?: Iterable<ElementId> }) => void;
+  openView: (path: readonly ViewId[], options?: { animate?: boolean; select?: Iterable<ElementId> }) => void;
   /** Opens the breadcrumb at `index`; in isolation the first leads back out. */
   openPath: (index: number) => void;
   /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
-  isolate: (composite: SceneId) => void;
+  isolate: (composite: ViewId) => void;
   exitIsolation: () => void;
   /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
@@ -148,9 +148,9 @@ export type NavigationCommands = {
   /** Back to true size about the view's centre, from where the camera is now. */
   resetZoom: () => void;
   /** A child scene's frame inside its portal, as drilling in maps it. */
-  childFrame: (portal: Node, child: Scene) => Bounds;
+  childFrame: (portal: Node, child: View) => Bounds;
   /** The frame of the scene at the head of `path`: once entered through a portal, the one it arrived with. */
-  frame: (path: SceneId[], scene: Scene) => Bounds;
+  frame: (path: ViewId[], scene: View) => Bounds;
 };
 
 /** Theme and background (DESIGN.md §13.1, the Look aspect). */
@@ -179,7 +179,7 @@ export type DocumentIntentCommands = {
    * Moves `element` just before or after its sibling `target` in the drawing order of `container`, which must be the
    * open View, as one intent (one undo step); false when nothing moved.
    */
-  restack: (container: SceneId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
+  restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -255,7 +255,7 @@ export const createCanvasController = ({
   // A read-only canvas edits nothing whatever its projection allows, as `CanvasRoot` gates its own controls.
   const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : projection().capabilities);
   const currentScene = () => registry.get(projection().scene);
-  const currentView = (): SceneId | undefined => registry.get(atoms.path).at(-1);
+  const currentView = (): ViewId | undefined => registry.get(atoms.path).at(-1);
 
   const select = (ids: Iterable<ElementId>) => {
     registry.set(atoms.selection, new Set(readonly() ? [] : ids));
@@ -277,7 +277,7 @@ export const createCanvasController = ({
     group: () => {
       const id = newId('scene');
       const current = currentScene();
-      const group = groupIntoScene(
+      const group = groupIntoView(
         current,
         registry.get(atoms.selection),
         id,
@@ -286,20 +286,20 @@ export const createCanvasController = ({
       if (!group) {
         return undefined;
       }
-      const before = registry.get(store.scenes);
-      registry.set(store.scenes, { ...before, [id]: group.child });
+      const before = registry.get(store.views);
+      registry.set(store.views, { ...before, [id]: group.child });
       projection().apply({ kind: 'batch', intents: group.intents });
       // A projection may refuse the batch (`apply` reports nothing), so the frame's presence is the result: without
       // it the new scene would be an orphan, so it goes and the selection stays.
       if (!currentScene().nodes[id]) {
-        const { [id]: _, ...scenes } = registry.get(store.scenes);
-        registry.set(store.scenes, scenes);
+        const { [id]: _, ...scenes } = registry.get(store.views);
+        registry.set(store.views, scenes);
         return undefined;
       }
       // One undo step takes the new scene away with the frame that opens it.
       const view = currentView();
       if (view) {
-        recordScenes(registry, atoms.undo, view, before);
+        recordViews(registry, atoms.undo, view, before);
       }
       select([id]);
       return id;
@@ -478,13 +478,13 @@ export const createCanvasController = ({
   const noFit: ViewFit = { enterFit: () => {}, exitFit: () => {}, takeOver: () => {} };
   const fitMode = () => viewFit?.() ?? noFit;
   const centre = () => ({ x: viewport().width / 2, y: viewport().height / 2 });
-  const frameIn = (portal: Node, child: Scene) => childFrame(portal, child, viewport());
+  const frameIn = (portal: Node, child: View) => childFrame(portal, child, viewport());
 
-  const portalTo = (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
-    const parent = parentId ? registry.get(store.scenes)[parentId] : undefined;
-    return parent ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === childId) : undefined;
+  const portalTo = (parentId: ViewId | undefined, childId: ViewId): Node | undefined => {
+    const parent = parentId ? registry.get(store.views)[parentId] : undefined;
+    return parent ? Object.values(parent.nodes).find((node) => isViewNode(node) && node.scene === childId) : undefined;
   };
-  const frameOf = (path: SceneId[], current: Scene): Bounds => {
+  const frameOf = (path: ViewId[], current: View): Bounds => {
     const portal = portalTo(path[path.length - 2], current.id);
     return portal ? frameIn(portal, current) : (contentBounds(current) ?? EMPTY_FRAME);
   };
@@ -506,7 +506,7 @@ export const createCanvasController = ({
       open();
       return;
     }
-    const child = isFrameNode(portal) ? registry.get(store.scenes)[portal.scene] : undefined;
+    const child = isViewNode(portal) ? registry.get(store.views)[portal.scene] : undefined;
     if (!child) {
       return;
     }
@@ -541,7 +541,7 @@ export const createCanvasController = ({
     if (current.length < 2 || levels < 1) {
       return;
     }
-    const scenes = registry.get(store.scenes);
+    const scenes = registry.get(store.views);
     let next = current;
     let exited = registry.get(atoms.camera);
     for (let level = 0; level < levels && next.length > 1; level++) {
@@ -565,8 +565,8 @@ export const createCanvasController = ({
     pushHistory({ path: next, camera: exited });
   };
 
-  const isolate = (composite: SceneId) => {
-    const definition = registry.get(store.scenes)[composite];
+  const isolate = (composite: ViewId) => {
+    const definition = registry.get(store.views)[composite];
     if (!definition) {
       return;
     }

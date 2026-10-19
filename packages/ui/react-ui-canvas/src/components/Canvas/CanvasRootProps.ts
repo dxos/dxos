@@ -21,19 +21,19 @@ import {
   type LinkRegistry,
   type NodeRegistry,
   type Point,
-  type SceneId,
-  type SceneStore,
   type ThemeRegistry,
+  type ViewId,
+  type ViewStore,
 } from '../../model/index.ts';
 
 export type CanvasRootProps = Util.ThemedClassName<{
-  store: SceneStore;
-  root: SceneId;
+  store: ViewStore;
+  root: ViewId;
   nodes?: NodeRegistry;
   links?: LinkRegistry;
   /** Projection per scene; freehand (identity) by default. */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
-  /** A host-owned projection instead, shared with the host's panels (see `useSceneProjection`). */
+  /** A host-owned projection instead, shared with the host's panels (see `useViewProjection`). */
   projection?: Projection;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: CanvasAtoms;

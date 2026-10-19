@@ -16,7 +16,7 @@ import {
   type ElementId,
   type LinkRegistry,
   type NodeRegistry,
-  type Scene,
+  type View,
   isToolKey,
   keyAction,
   nodeDef,
@@ -42,7 +42,7 @@ export type TimelineKeys = {
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  scene: Scene;
+  scene: View;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
   projection: Projection;

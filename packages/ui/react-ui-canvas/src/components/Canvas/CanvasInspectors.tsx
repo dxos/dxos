@@ -21,9 +21,9 @@ import {
   type Intent,
   type Layer,
   type LayerId,
-  type Scene,
-  type SceneId,
-  type SceneStore,
+  type View,
+  type ViewId,
+  type ViewStore,
   createTimeline,
   getElement,
   isInstanceNode,
@@ -32,14 +32,14 @@ import {
 import {
   activeLayer,
   compositeBounds,
-  compositeScenes,
+  compositeViews,
   createId,
   createLayer,
   instanceCounts,
   mergeLayersIntent,
   moveLayer,
-  sceneLayers,
-  sceneOptions,
+  viewLayers,
+  viewOptions,
 } from '../../utils/index.ts';
 import {
   AboutInspector,
@@ -60,7 +60,7 @@ import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasSe
 
 export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
   /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
-  sceneFilter?: (id: SceneId) => boolean;
+  sceneFilter?: (id: ViewId) => boolean;
 };
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
@@ -68,8 +68,8 @@ export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilte
   const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.Properties');
   const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
   const path = useAtomValue(useCanvasNavigation('Canvas.Properties').atoms.path);
-  const scenes = useAtomValue(store.scenes);
-  const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
+  const scenes = useAtomValue(store.views);
+  const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
   // With nothing selected there is nothing to edit, so the section goes, docked or floating.
   if (selection.size === 0) {
@@ -85,7 +85,7 @@ export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilte
         db={db}
         getOptions={getOptions}
         overrides={overrides}
-        sceneOptions={options}
+        viewOptions={options}
         styles={store.styles}
         readonly={!capabilities.update}
       />
@@ -100,9 +100,9 @@ CanvasProperties.displayName = 'Canvas.Properties';
 //
 
 export type UseSelectionActionsOptions = {
-  scene: Scene;
+  scene: View;
   selection: ReadonlySet<ElementId>;
-  store: SceneStore;
+  store: ViewStore;
   capabilities: Capabilities;
   readonly: boolean;
   controller: CanvasController;
@@ -213,7 +213,7 @@ export const CanvasViews = () => {
   const selection = useAtomValue(useCanvasSelection('Canvas.Views').atoms.selection);
   const path = useAtomValue(navigation.atoms.path);
   const isolation = useAtomValue(navigation.atoms.isolation);
-  const scenes = useAtomValue(store.scenes);
+  const scenes = useAtomValue(store.views);
   const { openView } = navigation.commands;
   return (
     <InspectorSection section={VIEWS_INSPECTOR}>
@@ -248,7 +248,7 @@ export const CanvasLayers = () => {
   const { registry, projection, atoms, capabilities } = useCanvasServices('Canvas.Layers');
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
-  const layers = useMemo(() => sceneLayers(scene), [scene]);
+  const layers = useMemo(() => viewLayers(scene), [scene]);
   const readonly = !capabilities.update;
   const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
   const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
@@ -322,9 +322,9 @@ CanvasLayers.displayName = 'Canvas.Layers';
 const THUMBNAIL = { width: 40, height: 24 };
 
 /** A composite drawn small, read-only, fitted into a row's thumbnail. */
-const ObjectThumbnail = ({ id }: { id: SceneId }) => {
+const ObjectThumbnail = ({ id }: { id: ViewId }) => {
   const { store, nodeRegistry } = useCanvasDocument('Canvas.Objects');
-  const composite = useAtomValue(store.scene(id));
+  const composite = useAtomValue(store.view(id));
   const content = composite && compositeBounds(composite);
   if (!composite || !content) {
     return null;
@@ -359,10 +359,10 @@ export const CanvasObjects = () => {
   const timeline = useAtomValue(timelineAtom);
   // The scene as stored rather than as a gesture draws it: a gesture never changes which object an instance shows.
   const scene = useAtomValue(projection.scene);
-  const scenes = useAtomValue(store.scenes);
+  const scenes = useAtomValue(store.views);
   const objects = useMemo(() => {
     const counts = instanceCounts(scenes);
-    return compositeScenes(scenes).map((scene) => ({
+    return compositeViews(scenes).map((scene) => ({
       id: scene.id,
       name: scene.name ?? scene.id,
       instances: counts[scene.id] ?? 0,
@@ -411,7 +411,7 @@ CanvasObjects.displayName = 'Canvas.Objects';
 export const CanvasAbout = () => {
   const { store, projection } = useCanvasDocument('Canvas.About');
   const scene = useAtomValue(projection.scene);
-  const scenes = useAtomValue(store.scenes);
+  const scenes = useAtomValue(store.views);
   const stats = useMemo<AboutStat[]>(
     () => [
       { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },

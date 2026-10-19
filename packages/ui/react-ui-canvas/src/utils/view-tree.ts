@@ -6,11 +6,11 @@ import {
   type ElementId,
   type Link,
   type Node,
-  type Scene,
-  type SceneId,
-  type SceneMap,
-  isFrameNode,
+  type View,
+  type ViewId,
+  type ViewMap,
   isInstanceNode,
+  isViewNode,
 } from '../model/index.ts';
 import { between, sortByZ } from './order.ts';
 
@@ -25,9 +25,9 @@ export type ViewTreeItem = {
   /** The element (or, for a view, the frame node) this row is; undefined for the root view. */
   element?: ElementId;
   /** The View path the row belongs to, root first: what opening it, or selecting its element, navigates to. */
-  path: SceneId[];
+  path: ViewId[];
   /** The scene that holds the row's element, whose drawing order a restack changes; undefined for the root view. */
-  container?: SceneId;
+  container?: ViewId;
   label: string;
   /** The node or link type, for its icon. */
   type?: string;
@@ -53,17 +53,17 @@ const textOf = (element: Node | Link): string | undefined => {
  * children; an instance shows its object's contents, read-only. A scene reached twice on one branch is not expanded
  * again, so a cycle cannot recurse.
  */
-export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => {
+export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
   const contents = (
-    scene: Scene,
-    path: SceneId[],
+    scene: View,
+    path: ViewId[],
     prefix: string,
     readonly: boolean,
-    seen: Set<SceneId>,
+    seen: Set<ViewId>,
   ): ViewTreeItem[] => {
     const nodes = sortByZ(Object.values(scene.nodes)).map((node): ViewTreeItem => {
       const id = `${prefix}${node.id}`;
-      if (isFrameNode(node)) {
+      if (isViewNode(node)) {
         const child = scenes[node.scene];
         const childPath = [...path, node.scene];
         return {
@@ -138,7 +138,7 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
  * links), or undefined when the two are not siblings or the move changes nothing.
  */
 export const restackZ = (
-  scene: Scene,
+  scene: View,
   id: ElementId,
   target: ElementId,
   position: 'before' | 'after',
@@ -161,17 +161,17 @@ export const restackZ = (
 };
 
 /** The View path a row's element is drawn in: a View row's frame sits in its parent, every other row in its own. */
-export const rowView = (item: ViewTreeItem): SceneId[] => (item.kind === 'view' ? item.path.slice(0, -1) : item.path);
+export const rowView = (item: ViewTreeItem): ViewId[] => (item.kind === 'view' ? item.path.slice(0, -1) : item.path);
 
 /** Whether a row selects on the canvas: the root View has no element, and an object's contents are edited elsewhere. */
 export const isSelectableRow = (item: ViewTreeItem): boolean =>
   !item.readonly && item.element !== undefined && item.path.length > 0;
 
-const samePath = (left: readonly SceneId[] | undefined, right: readonly SceneId[]) =>
+const samePath = (left: readonly ViewId[] | undefined, right: readonly ViewId[]) =>
   left !== undefined && left.length === right.length && left.every((id, index) => id === right[index]);
 
 /** A canvas selection a row activation asks for: the View to open, and what to select there. */
-export type ViewRowSelection = { path: SceneId[]; ids: ElementId[] };
+export type ViewRowSelection = { path: ViewId[]; ids: ElementId[] };
 
 export type SelectRowsOptions = {
   item: ViewTreeItem;
@@ -184,7 +184,7 @@ export type SelectRowsOptions = {
   /** The canvas selection now. */
   selection: ReadonlySet<ElementId>;
   /** The open View's path; undefined in isolation, where no row's View is open. */
-  path?: readonly SceneId[];
+  path?: readonly ViewId[];
 };
 
 /**
@@ -220,7 +220,7 @@ export const selectRows = ({
 
 /** A row dropped before or after a sibling: restack `element` in `container`'s drawing order. */
 export type ViewReorder = {
-  container: SceneId;
+  container: ViewId;
   element: ElementId;
   target: ElementId;
   position: 'before' | 'after';
@@ -231,7 +231,7 @@ export type ViewReorder = {
  * drawing, which the open View's projection cannot restack), nodes among nodes and links among links, and neither an
  * object's contents.
  */
-export const canRestack = (from: ViewTreeItem, to: ViewTreeItem, view: SceneId | undefined): boolean =>
+export const canRestack = (from: ViewTreeItem, to: ViewTreeItem, view: ViewId | undefined): boolean =>
   !from.readonly &&
   !to.readonly &&
   from.element !== undefined &&

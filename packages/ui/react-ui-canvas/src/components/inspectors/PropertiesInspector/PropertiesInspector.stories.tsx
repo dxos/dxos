@@ -13,10 +13,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../../builder/index.ts';
+import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms } from '../../../engine/index.ts';
-import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
-import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
+import { useRegistry, useViewProjection } from '../../../hooks/index.ts';
+import { type ElementId, type Layer, type View, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';
@@ -31,15 +31,15 @@ const LAYERS: Layer[] = (() => {
   return [background, notes, diagram];
 })();
 
-const SCENE: Scene = (() => {
+const SCENE: View = (() => {
   const {
-    scenes: [scene],
-  } = SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
-    SceneBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
-    SceneBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
-    SceneBuilder.scene('f').at(box(400, 200)).properties({ label: 'Frame', layer: 'diagram' }),
-    SceneBuilder.link('curve', 'a', 'b')
+    views: [scene],
+  } = ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
+    ViewBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
+    ViewBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
+    ViewBuilder.view('f').at(box(400, 200)).properties({ label: 'Frame', layer: 'diagram' }),
+    ViewBuilder.link('curve', 'a', 'b')
       .id('ab')
       .properties({ layer: 'diagram', style: { lineStyle: 'dashed' } }),
   ]).build();
@@ -56,7 +56,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const store = useMemo(() => createMemoryStore([SCENE]), []);
   const atoms = useMemo(() => createCanvasAtoms(SCENE.id), []);
-  const projection = useSceneProjection({ store, atoms });
+  const projection = useViewProjection({ store, atoms });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);

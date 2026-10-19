@@ -32,13 +32,13 @@ import {
   type Capabilities,
   type LinkRegistry,
   type NodeRegistry,
-  type Scene,
-  type SceneId,
   type SceneLook,
-  type SceneStore,
   type Size,
   type ThemeRegistry,
   type Timeline,
+  type View,
+  type ViewId,
+  type ViewStore,
 } from '../../model/index.ts';
 
 /**
@@ -51,9 +51,9 @@ export type CanvasServices = {
   /** The canvas's commands by aspect, made once per canvas (DESIGN.md §13). */
   controller: CanvasController;
   atoms: CanvasAtoms;
-  store: SceneStore;
+  store: ViewStore;
   /** The canvas's root View, which navigation starts from. */
-  root: SceneId;
+  root: ViewId;
   projection: Projection;
   /** The projection under the animated one: what keys and timeline edits are written through. */
   baseProjection: Projection;
@@ -183,7 +183,7 @@ export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEdi
  */
 export type CanvasGesture = {
   /** The scene as drawn while a gesture is in flight. */
-  displayScene: Scene;
+  displayScene: View;
   /** The gesture in flight would be refused by the projection (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */

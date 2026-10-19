@@ -122,7 +122,7 @@ export const ObjectFrame: Story = {
       scene: rootOf(canvas.content),
       node: {
         id,
-        type: 'frame',
+        type: 'view',
         z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },

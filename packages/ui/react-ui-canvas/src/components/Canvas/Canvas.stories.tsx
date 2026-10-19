@@ -13,13 +13,13 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
 import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
 import {
-  createFrameTree,
   createLatticeTree,
-  createModelSceneTree,
+  createModelViewTree,
   createNestedDeepTree,
   createNestedSimpleTree,
-  createSceneTree,
+  createNestedViewTree,
   createSquareTree,
+  createViewTree,
 } from '../../testing/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -101,7 +101,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
       fixture === 'model'
-        ? createModelSceneTree()
+        ? createModelViewTree()
         : fixture === 'square'
           ? createSquareTree()
           : fixture === 'lattice'
@@ -109,11 +109,11 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
             : fixture === 'scenes'
               ? createNestedDeepTree()
               : fixture === 'frame'
-                ? createFrameTree()
+                ? createNestedViewTree()
                 : fixture === 'nested'
                   ? createNestedSimpleTree()
-                  : createSceneTree(depth);
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+                  : createViewTree(depth);
+    return { store: createMemoryStore(tree.views), root: tree.root };
   }, [depth, fixture]);
 
   // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.

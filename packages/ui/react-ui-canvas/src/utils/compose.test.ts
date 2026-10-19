@@ -4,16 +4,16 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Scene, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type InstanceNode, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
   copyComposite,
   instanceCounts,
-  instanceScene,
   instanceTransform,
+  instanceView,
   retargetInstance,
   ungroupInstance,
 } from './compose.ts';
@@ -21,13 +21,13 @@ import { nodeBounds } from './shapes.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 100, height: 50 });
 const {
-  scenes: [scene],
-} = SceneBuilder.scene('s', [
-  SceneBuilder.rect('a', box(0)),
-  SceneBuilder.rect('b', box(200)),
-  SceneBuilder.rect('c', box(400)),
-  SceneBuilder.link('line', 'a', 'b').id('ab'),
-  SceneBuilder.link('line', 'b', 'c').id('bc'),
+  views: [scene],
+} = ViewBuilder.view('s', [
+  ViewBuilder.rect('a', box(0)),
+  ViewBuilder.rect('b', box(200)),
+  ViewBuilder.rect('c', box(400)),
+  ViewBuilder.link('line', 'a', 'b').id('ab'),
+  ViewBuilder.link('line', 'b', 'c').id('bc'),
 ]).build();
 
 const counter = () => {
@@ -35,7 +35,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: Scene, id: string): InstanceNode => {
+const instanceOf = (parent: View, id: string): InstanceNode => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);
@@ -88,7 +88,7 @@ describe('instances', () => {
   });
 
   test('overrides apply per field, style per key', ({ expect }) => {
-    const composite: Scene = {
+    const composite: View = {
       id: 'obj',
       kind: 'composite',
       nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
@@ -103,7 +103,7 @@ describe('instances', () => {
       composite: 'obj',
       overrides: { a: { style: { hue: 'blue', opacity: 0.5 } } },
     };
-    expect(instanceScene(instance, composite).nodes.a).toMatchObject({
+    expect(instanceView(instance, composite).nodes.a).toMatchObject({
       style: { hue: 'blue', rounded: true, opacity: 0.5 },
     });
   });

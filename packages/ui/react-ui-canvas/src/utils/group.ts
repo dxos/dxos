@@ -6,20 +6,20 @@ import {
   type Element,
   type ElementId,
   type Endpoint,
-  type FrameNode,
   type Intent,
   type LayerId,
   type Link,
-  type Scene,
+  type View,
+  type ViewNode,
   endpointNode,
 } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
-import { elementLayer, sceneLayers } from './layers.ts';
+import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** What grouping a selection makes: the new scene, and the intents that replace the selection with its shape. */
-export type SceneGroup = { child: Scene; intents: Intent[] };
+export type ViewGroup = { child: View; intents: Intent[] };
 
 /** `end` moved onto the scene shape when it was on a grouped node; a port of the old node means nothing there. */
 const reattach = (end: Endpoint, inside: ReadonlySet<string>, portal: string): Endpoint => {
@@ -33,12 +33,12 @@ const reattach = (end: Endpoint, inside: ReadonlySet<string>, portal: string): E
  * The nodes keep their coordinates: the shape frames whatever the child holds. None when no node is selected, or
  * when a selected node is locked. The shape goes on `layer`; the new scene has the layers its elements were on.
  */
-export const groupIntoScene = (
-  scene: Scene,
+export const groupIntoView = (
+  scene: View,
   ids: Iterable<ElementId>,
   id: string,
   layer?: LayerId,
-): SceneGroup | undefined => {
+): ViewGroup | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
@@ -58,8 +58,8 @@ export const groupIntoScene = (
   const moved = links.filter((link) => isInside(link.source) && isInside(link.target));
   const crossing = links.filter((link) => !moved.includes(link));
 
-  const portal: FrameNode = {
-    type: 'frame',
+  const portal: ViewNode = {
+    type: 'view',
     id,
     z: topZ(Object.values(scene.nodes)),
     center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
@@ -68,7 +68,7 @@ export const groupIntoScene = (
     ...(layer !== undefined ? { layer } : {}),
   };
   // Each element names the layer it resolved to here, and the new scene has those layers, in their order.
-  const layers = sceneLayers(scene);
+  const layers = viewLayers(scene);
   const placed = <T extends Element>(element: T): T => ({ ...element, layer: elementLayer(element, layers) });
   const childNodes = nodes.map(placed);
   const childLinks = moved.map(placed);

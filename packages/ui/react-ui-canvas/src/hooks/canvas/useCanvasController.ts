@@ -14,7 +14,7 @@ import {
   type ViewFit,
   createCanvasController,
 } from '../../engine/index.ts';
-import { type Bounds, type NodeRegistry, type SceneStore, type Size } from '../../model/index.ts';
+import { type Bounds, type NodeRegistry, type Size, type ViewStore } from '../../model/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
 /** What the controller's commands read of the view when they run. */
@@ -35,7 +35,7 @@ export type CanvasControllerLive = {
 export type UseCanvasControllerOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: SceneStore;
+  store: ViewStore;
   /** The view as this render has it. */
   live: CanvasControllerLive;
 };

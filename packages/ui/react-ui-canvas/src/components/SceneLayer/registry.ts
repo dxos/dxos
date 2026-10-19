@@ -10,7 +10,6 @@
 import {
   CloudNode,
   EllipseNode,
-  FrameNode,
   GeneratorNode,
   InstanceNode,
   type LinkRegistry,
@@ -22,6 +21,7 @@ import {
   PolygonNode,
   RectNode,
   type Size,
+  ViewNode,
   createNodeRegistry,
   isCloudNode,
   isPolygonNode,
@@ -31,12 +31,12 @@ import {
   BoxNodeView,
   CloudNodeView,
   EllipseNodeView,
-  FrameNodeView,
   GeneratorNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
   PolygonNodeView,
+  ViewNodeView,
 } from './SceneLayer.tsx';
 
 const MIN_SIZE: Size = { width: 64, height: 32 };
@@ -119,15 +119,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  frame: {
+  view: {
     extends: 'box',
-    name: 'Frame',
+    name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
+    schema: ViewNode,
+    component: ViewNodeView,
+    create: (props) => createNode({ type: 'view', ...props }),
+    defaultSize: NOMINAL_SIZES.view,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { reduceIntent } from '../../../engine/index.ts';
-import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
+import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
 import { type ViewRowSelection, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
@@ -26,19 +26,19 @@ const FIXTURES = {
 type StoryArgs = {
   fixture: keyof typeof FIXTURES;
   onSelect?: (selection: ViewRowSelection) => void;
-  onOpen?: (path: SceneId[]) => void;
+  onOpen?: (path: ViewId[]) => void;
 };
 
 /** The views tree over a shared fixture; picking a row opens its View and selects its element, as the canvas would. */
 const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
-  const initial = useMemo((): { scenes: SceneMap; root: SceneId } => {
+  const initial = useMemo((): { scenes: ViewMap; root: ViewId } => {
     const tree = FIXTURES[fixture]();
-    return { scenes: Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), root: tree.root };
+    return { scenes: Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), root: tree.root };
   }, [fixture]);
   // Local state stands in for the store: a drag restacks the element in its scene.
   const [scenes, setScenes] = useState(initial.scenes);
   const [selected, setSelected] = useState<ReadonlySet<ElementId>>(new Set());
-  const [path, setPath] = useState<SceneId[]>([initial.root]);
+  const [path, setPath] = useState<ViewId[]>([initial.root]);
   return (
     <ViewsInspector
       scenes={scenes}

@@ -10,7 +10,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { type Bounds, type ElementId, PLAIN_BACKGROUND, isFrameNode, nodeDef } from '../../model/index.ts';
+import { type Bounds, type ElementId, PLAIN_BACKGROUND, isViewNode, nodeDef } from '../../model/index.ts';
 import { boundsFromPoints, layerOpacity, nodeBounds, sceneToScreen, screenToScene } from '../../utils/index.ts';
 import { MAX_LIVE_DEPTH } from '../SceneLayer/index.ts';
 import { useCanvasGesture, useCanvasLook, useCanvasNavigation, useCanvasServices } from './CanvasContext.ts';
@@ -55,7 +55,7 @@ export const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, background
     let best: { id: ElementId; opacity: number } | undefined;
     for (const node of Object.values(displayScene.nodes)) {
       // A frame the host opens itself (one showing an object) is no scene to zoom into, so it keeps its frame.
-      if (!isFrameNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
+      if (!isViewNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
         continue;
       }
       const bounds = nodeBounds(node);

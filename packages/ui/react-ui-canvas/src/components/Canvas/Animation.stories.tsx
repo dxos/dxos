@@ -10,8 +10,8 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../builder/index.ts';
-import { type Scene, type Timeline, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
+import { ViewBuilder } from '../../builder/index.ts';
+import { type Timeline, type View, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */
@@ -23,12 +23,12 @@ const topLevel = (root: HTMLElement, id: string) =>
 /** Three linked shapes on a four-second loop: A grows and shrinks, then C does. */
 const createTree = (keyed: boolean) => {
   const box = (x: number) => ({ x, y: -64, width: 128, height: 128 });
-  const tree = SceneBuilder.scene('scene:root', [
-    SceneBuilder.rect('a', box(-320)).properties({ label: 'A', style: { hue: 'blue' } }),
-    SceneBuilder.rect('b', box(-64)).properties({ label: 'B', style: { hue: 'amber' } }),
-    SceneBuilder.rect('c', box(192)).properties({ label: 'C', style: { hue: 'green' } }),
-    SceneBuilder.link('smart', 'a', 'b'),
-    SceneBuilder.link('smart', 'b', 'c'),
+  const tree = ViewBuilder.view('scene:root', [
+    ViewBuilder.rect('a', box(-320)).properties({ label: 'A', style: { hue: 'blue' } }),
+    ViewBuilder.rect('b', box(-64)).properties({ label: 'B', style: { hue: 'amber' } }),
+    ViewBuilder.rect('c', box(192)).properties({ label: 'C', style: { hue: 'green' } }),
+    ViewBuilder.link('smart', 'a', 'b'),
+    ViewBuilder.link('smart', 'b', 'c'),
   ])
     .name('Animation')
     .build();
@@ -41,7 +41,7 @@ const createTree = (keyed: boolean) => {
       timeline,
     );
   const timeline = pulse('c', 2)(pulse('a', 0)(createTimeline(4)));
-  const scenes = tree.scenes.map((scene): Scene =>
+  const scenes = tree.views.map((scene): View =>
     scene.id === tree.root ? { ...scene, timeline: keyed ? timeline : createTimeline(4) } : scene,
   );
   return { scenes, root: tree.root };

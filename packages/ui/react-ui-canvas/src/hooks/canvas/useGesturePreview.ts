@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { type Drag, type Projection, reduceIntent } from '../../engine/index.ts';
-import { type Bounds, type Endpoint, type Intent, type Point, type Scene, isPointEndpoint } from '../../model/index.ts';
+import { type Bounds, type Endpoint, type Intent, type Point, type View, isPointEndpoint } from '../../model/index.ts';
 import { createLink, duplicateSelection, nodeBounds, topZ } from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
 
@@ -16,7 +16,7 @@ const SETTLE_MS = 200;
 const PREVIEW_LINK_ID = 'preview-link';
 
 export type UseGesturePreviewOptions = {
-  scene: Scene;
+  scene: View;
   drag: Drag | undefined;
   projection: Projection;
   /** The finest grid level drawn: a link previews once it has gone this far. */
@@ -25,7 +25,7 @@ export type UseGesturePreviewOptions = {
 
 export type GesturePreview = {
   /** The scene as drawn while the gesture is in flight. */
-  displayScene: Scene;
+  displayScene: View;
   /** The gesture would be refused by the projection (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
@@ -65,7 +65,7 @@ export const useGesturePreview = ({
   }, [moveRaw?.x, moveRaw?.y]);
 
   const { displayScene, blocked, landing } = useMemo<{
-    displayScene: Scene;
+    displayScene: View;
     blocked: boolean;
     /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
     landing?: Bounds[];

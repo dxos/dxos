@@ -7,7 +7,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../../components/index.ts';
-import { type Scene } from '../../model/index.ts';
+import { type View } from '../../model/index.ts';
 import { type GraphModel, type Overlay, createDynamicProjection, layoutGraph, pruneOverlay } from './dynamic.ts';
 
 const graph: GraphModel = {
@@ -19,7 +19,7 @@ const graph: GraphModel = {
   ],
 };
 
-const centerOf = (scene: Scene, id: string) => {
+const centerOf = (scene: View, id: string) => {
   const node = scene.nodes[id];
   if (!node) {
     throw new Error(`no node ${id}`);

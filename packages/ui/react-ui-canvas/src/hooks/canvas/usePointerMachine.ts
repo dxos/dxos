@@ -34,12 +34,12 @@ import {
   type NodeType,
   type Point,
   type Port,
-  type Scene,
-  type SceneStore,
   type SplineLink,
+  type View,
+  type ViewStore,
   endpointNode,
-  isFrameNode,
   isPointEndpoint,
+  isViewNode,
   nodeDef,
 } from '../../model/index.ts';
 import {
@@ -102,7 +102,7 @@ const overCanvas = (target: EventTarget | null, root: HTMLElement | null): boole
 };
 
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
-const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
+const isDirected = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
     if (isPointEndpoint(end)) {
       return false;
@@ -119,8 +119,8 @@ export type UsePointerMachineOptions = {
   atoms: CanvasAtoms;
   /** Returns to Select once a creation gesture lands. */
   setTool: ToolsCommands['setTool'];
-  store: SceneStore;
-  scene: Scene;
+  store: ViewStore;
+  scene: View;
   nodeRegistry: NodeRegistry;
   projection: Projection;
   capabilities: Capabilities;
@@ -722,7 +722,7 @@ export const usePointerMachine = ({
       // drawn would open onto the ghost's one scene.
       const node: Node = !reused
         ? def.create(props)
-        : isFrameNode(reused) && pending && isFrameNode(pending.node) && pending.node.scene === pending.node.id
+        : isViewNode(reused) && pending && isViewNode(pending.node) && pending.node.scene === pending.node.id
           ? { ...reused, scene: id }
           : reused;
       pendingRef.current = { type: drag.type, node };
@@ -734,9 +734,9 @@ export const usePointerMachine = ({
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
   const addNode = useCallback(
     (node: Node) => {
-      if (isFrameNode(node)) {
-        registry.set(store.scenes, {
-          ...registry.get(store.scenes),
+      if (isViewNode(node)) {
+        registry.set(store.views, {
+          ...registry.get(store.views),
           [node.scene]: {
             id: node.scene,
             nodes: {},

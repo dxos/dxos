@@ -34,14 +34,14 @@ import {
   useSceneCamera,
   useSceneKeys,
   useSceneNavigation,
-  useSceneProjection,
   useSceneSnap,
   useSceneView,
   useSceneWheel,
   useViewport,
+  useViewProjection,
 } from '../../hooks/index.ts';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO, defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
-import { fitFrame, visibleScene } from '../../utils/index.ts';
+import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
@@ -103,7 +103,7 @@ export const CanvasRoot = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const baseProjection = useSceneProjection({ store, atoms, createProjection, projection: projectionProp });
+  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp });
   // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
   const projection = useMemo(
     () =>
@@ -129,8 +129,8 @@ export const CanvasRoot = ({
     createWorker: createGeneratorWorker,
   });
   useClock(atoms.clock, { duration: timeline?.duration, loop: timeline?.loop });
-  const visible = useMemo(() => visibleScene(scene), [scene]);
-  const scenes = useAtomValue(store.scenes);
+  const visible = useMemo(() => visibleView(scene), [scene]);
+  const scenes = useAtomValue(store.views);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
   const tool = useAtomValue(atoms.tool);

@@ -10,13 +10,13 @@ import React, { useCallback, useMemo } from 'react';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import {
-  CONSTRAINED_SCENE_ID,
+  CONSTRAINED_VIEW_ID,
   type ConstrainedModel,
   type FreehandProjectionOptions,
   createCanvasAtoms,
   createConstrainedProjection,
 } from '../../engine/index.ts';
-import { useSceneProjection } from '../../hooks/index.ts';
+import { useViewProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
 import { PropertiesInspector } from '../inspectors/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
@@ -71,11 +71,11 @@ const DefaultStory = () => {
       createConstrainedProjection({ registry, model, options: { nodes: defaultNodeRegistry } }),
     [model],
   );
-  const atoms = useMemo(() => createCanvasAtoms(CONSTRAINED_SCENE_ID), []);
-  const projection = useSceneProjection({ store, atoms, createProjection });
+  const atoms = useMemo(() => createCanvasAtoms(CONSTRAINED_VIEW_ID), []);
+  const projection = useViewProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <Canvas.Root store={store} root={CONSTRAINED_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+      <Canvas.Root store={store} root={CONSTRAINED_VIEW_ID} atoms={atoms} createProjection={createProjection}>
         <Canvas.Viewport />
         <Canvas.Navigation />
         <Canvas.Actions />

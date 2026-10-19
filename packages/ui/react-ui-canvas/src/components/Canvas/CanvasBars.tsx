@@ -56,7 +56,7 @@ export const CanvasNavigation = ({ classNames = 'top-2 left-2' }: CanvasBarProps
   const { store } = useCanvasDocument('Canvas.Navigation');
   const path = useAtomValue(atoms.path);
   const isolation = useAtomValue(atoms.isolation);
-  const scenes = useAtomValue(store.scenes);
+  const scenes = useAtomValue(store.views);
   const actions = useMemo<NavigationActions>(
     () => ({
       // In isolation the crumbs read `Objects › <name>`, and the first leads back out.

@@ -62,7 +62,7 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   cloud: { width: 3, height: 2 },
   polygon: { width: 2, height: 2 },
   note: { width: 4, height: 2 },
-  frame: { width: 4, height: 2 },
+  view: { width: 4, height: 2 },
   instance: { width: 4, height: 2 },
   path: { width: 2, height: 2 },
   generator: { width: 4, height: 4 },
@@ -75,7 +75,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   cloud: { width: 384, height: 256 },
   polygon: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
-  frame: { width: 512, height: 256 },
+  view: { width: 512, height: 256 },
   instance: { width: 512, height: 256 },
   path: { width: 256, height: 256 },
   generator: { width: 512, height: 512 },
@@ -116,7 +116,7 @@ export const createNode = ({
       return { type, id, z, center, size, sides: DEFAULT_POLYGON_SIDES };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
-    case 'frame':
+    case 'view':
       return { type, id, z, center, size, scene: scene ?? id };
     case 'instance':
       return { type, id, z, center, size, composite: scene ?? '' };

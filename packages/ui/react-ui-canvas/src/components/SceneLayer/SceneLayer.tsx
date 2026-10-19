@@ -39,15 +39,15 @@ import {
   type NodeId,
   type NodeRegistry,
   type NodeViewProps,
-  type Scene,
-  type SceneStore,
   type StyleMap,
+  type View,
+  type ViewStore,
   frameTimeAttribute,
-  isFrameNode,
   isGeneratorNode,
   isInstanceNode,
   isNoteNode,
   isPathNode,
+  isViewNode,
   linkMarkers,
   nodeDef,
   showsContents,
@@ -68,8 +68,8 @@ import {
   contentBounds,
   elementLayer,
   frameClasses,
-  instanceScene,
   instanceTransform,
+  instanceView,
   isMultiline,
   lineClasses,
   nodeBounds,
@@ -77,10 +77,10 @@ import {
   portalFrame,
   portalScale,
   portalTransform,
-  sceneLayers,
-  sceneLinkGeometry,
   sortByZ,
-  visibleScene,
+  viewLayers,
+  viewLinkGeometry,
+  visibleView,
 } from '../../utils/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
 
@@ -105,8 +105,8 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
 };
 
 export type SceneLayerProps = {
-  store: SceneStore;
-  scene: Scene;
+  store: ViewStore;
+  scene: View;
   registry: NodeRegistry;
   /** Effective screen zoom of this layer (camera zoom × portal scales). */
   zoom: number;
@@ -171,16 +171,16 @@ export const SceneLayer = memo(
     const inheritedLattice = useContext(LatticeContext);
     const lattice = latticeProp ?? inheritedLattice;
     // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
-    const scene = useMemo(() => visibleScene(sceneProp), [sceneProp]);
+    const scene = useMemo(() => visibleView(sceneProp), [sceneProp]);
     const links = useMemo(
-      () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
+      () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
     );
     // Paint order is the layers', bottom first: each layer's links, then its nodes, then its links' ends, so an upper
     // layer covers a lower one whole. Within a layer it is z, with the selection on top: a selected node is being
     // worked on and must not hide under a neighbour, while the model's order stays what the user arranged.
     const groups = useMemo(() => {
-      const layers = sceneLayers(scene);
+      const layers = viewLayers(scene);
       const nodes = sortByZ(Object.values(scene.nodes));
       return layers.map((layer) => {
         const onLayer = nodes.filter((node) => elementLayer(node, layers) === layer.id);
@@ -432,7 +432,7 @@ type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 
 
 /** A composite a generator placed: drawn about `center`, scaled, read-only. */
 const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
-  const scene = useAtomValue(store.scene(composite));
+  const scene = useAtomValue(store.view(composite));
   const content = useMemo(() => (scene ? compositeBounds(scene) : undefined), [scene]);
   if (!scene || !content) {
     return null;
@@ -1071,15 +1071,15 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
  * A frame over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
  * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
  */
-export const FrameNodeView = (props: NodeViewProps) => {
+export const ViewNodeView = (props: NodeViewProps) => {
   const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
-  const child = useAtomValue(store.scene(isFrameNode(node) ? node.scene : ''));
-  const contents = opening || (isFrameNode(node) && showsContents(node));
+  const child = useAtomValue(store.view(isViewNode(node) ? node.scene : ''));
+  const contents = opening || (isViewNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
   // A scene named by no one shows no title, rather than its id.
-  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? '';
+  const title = (isViewNode(node) ? node.label : undefined) ?? child?.name ?? '';
   // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
   if (!contents || tier === 'dot') {
     return (
@@ -1140,9 +1140,9 @@ export const FrameNodeView = (props: NodeViewProps) => {
  * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
  */
 export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
-  const composite = useAtomValue(store.scene(isInstanceNode(node) ? node.composite : ''));
+  const composite = useAtomValue(store.view(isInstanceNode(node) ? node.composite : ''));
   const drawn = useMemo(
-    () => (composite && isInstanceNode(node) ? instanceScene(node, composite) : undefined),
+    () => (composite && isInstanceNode(node) ? instanceView(node, composite) : undefined),
     [node, composite],
   );
   const bounds = nodeBounds(node);
