@@ -511,7 +511,8 @@ const DefaultStory = ({
 
   // A paused step lands its close-up's clip at its opening frame, as playing into it would.
   useEffect(() => {
-    if (autoplay || stepped) {
+    // Pausing mid-hold leaves the clip where it is; only a step onto a landing rewinds it.
+    if (autoplay || stepped || !landings.includes(offset)) {
       return;
     }
     const focus = shotAt(shots, offset).shot.focus;
@@ -519,7 +520,7 @@ const DefaultStory = ({
     if (video) {
       video.currentTime = 0;
     }
-  }, [offset, autoplay, stepped, shots]);
+  }, [offset, autoplay, stepped, shots, landings]);
 
   useEffect(() => {
     if (!ready || shots.length === 0 || !stepped) {
