@@ -1,0 +1,315 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+//
+// Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
+// state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
+// in and out of portals with a camera transition then a root swap. Every model change goes through
+// the projection as an intent; the view never writes coordinates itself (decision 11).
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import {
+  type Intent,
+  type Layer,
+  type LayerId,
+  type SceneId,
+  createTimeline,
+  isInstanceNode,
+} from '../../model/index.ts';
+import {
+  activeLayer,
+  compositeBounds,
+  compositeScenes,
+  createId,
+  createLayer,
+  instanceCounts,
+  mergeLayersIntent,
+  moveLayer,
+  sceneLayers,
+  sceneOptions,
+} from '../../utils/index.ts';
+import {
+  AboutInspector,
+  type AboutStat,
+  LayersInspector,
+  ObjectsInspector,
+  PropertiesInspector,
+  type PropertiesInspectorProps,
+} from '../inspectors/index.ts';
+import { InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
+import { SceneLayer } from '../SceneLayer/index.ts';
+import { useCanvasContext } from './CanvasContext.ts';
+
+//
+// Properties
+//
+
+export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+  /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
+  sceneFilter?: (id: SceneId) => boolean;
+};
+
+/** The selected element's properties: an inspector that floats only while something is selected. */
+export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+    useCanvasContext('Canvas.Properties');
+  const scenes = useAtomValue(store.scenes);
+  const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
+
+  // With nothing selected there is nothing to edit, so the section goes, docked or floating.
+  if (selection.size === 0) {
+    return null;
+  }
+  return (
+    <InspectorSection section={PROPERTIES_INSPECTOR}>
+      <PropertiesInspector
+        projection={projection}
+        atoms={atoms}
+        nodes={nodeRegistry}
+        fields={fields}
+        db={db}
+        getOptions={getOptions}
+        overrides={overrides}
+        sceneOptions={options}
+        styles={store.styles}
+        readonly={!capabilities.update}
+      />
+    </InspectorSection>
+  );
+};
+
+CanvasProperties.displayName = 'Canvas.Properties';
+
+//
+// Inspectors
+//
+
+const PROPERTIES_INSPECTOR: InspectorSectionDef = {
+  id: 'properties',
+  title: 'Properties',
+  icon: 'ph--sliders-horizontal--regular',
+  order: 0,
+  show: 'selection',
+  defaultOpen: true,
+};
+
+// Floating, the layers take the properties' place while nothing is selected.
+const LAYERS_INSPECTOR: InspectorSectionDef = {
+  id: 'layers',
+  title: 'Layers',
+  icon: 'ph--stack--regular',
+  order: 1,
+  show: 'empty',
+};
+
+// Docked beside the layers (ANIMATION.md §4.3).
+const OBJECTS_INSPECTOR: InspectorSectionDef = {
+  id: 'objects',
+  title: 'Objects',
+  icon: 'ph--cube--regular',
+  order: 2,
+  show: 'never',
+};
+
+// The counts are a dock section only, so a floating or read-only view shows none.
+const ABOUT_INSPECTOR: InspectorSectionDef = {
+  id: 'about',
+  title: 'About',
+  icon: 'ph--info--regular',
+  order: 3,
+  show: 'never',
+};
+
+//
+// Layers
+//
+
+/**
+ * The current scene's layers: an inspector that floats where the properties go while nothing is selected (the two take
+ * turns). Each edit is one intent, so one undo step.
+ */
+export const CanvasLayers = () => {
+  const { registry, projection, atoms, capabilities } = useCanvasContext('Canvas.Layers');
+  const scene = useAtomValue(projection.scene);
+  const active = useAtomValue(atoms.layer);
+  const layers = useMemo(() => sceneLayers(scene), [scene]);
+  const readonly = !capabilities.update;
+  const setLayer = useCallback((layer: Layer) => projection.apply({ kind: 'layer', layer }), [projection]);
+  const byId = useCallback((id: LayerId) => layers.find((layer) => layer.id === id), [layers]);
+  // The layers picked in the panel; the active layer (the top-most of them) is the one new shapes go on.
+  const [picked, setPicked] = useState<LayerId[]>([]);
+  const top = activeLayer(scene, active);
+  const selected = useMemo(() => {
+    const ids = picked.filter((id) => byId(id));
+    return ids.includes(top) ? ids : [top];
+  }, [picked, byId, top]);
+  const select = useCallback(
+    (ids: LayerId[]) => {
+      setPicked(ids);
+      const topMost = [...layers].reverse().find((layer) => ids.includes(layer.id));
+      topMost && registry.set(atoms.layer, topMost.id);
+    },
+    [layers, registry, atoms],
+  );
+  return (
+    <InspectorSection section={LAYERS_INSPECTOR}>
+      <LayersInspector
+        layers={layers}
+        selected={selected}
+        readonly={readonly}
+        onSelectedChange={select}
+        onToggle={(id) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, hidden: !layer.hidden });
+        }}
+        onRename={(id, name) => {
+          const layer = byId(id);
+          layer && setLayer({ ...layer, name });
+        }}
+        onMove={(id, index) => {
+          const layer = moveLayer(scene, id, index);
+          layer && setLayer(layer);
+        }}
+        onCreate={() => {
+          const layer = createLayer(scene, createId('layer'));
+          setLayer(layer);
+          select([layer.id]);
+          return layer.id;
+        }}
+        onDelete={
+          capabilities.delete
+            ? (ids) => {
+                projection.apply({ kind: 'batch', intents: ids.map((id): Intent => ({ kind: 'removeLayer', id })) });
+                setPicked([]);
+              }
+            : undefined
+        }
+        onMerge={(ids, into) => {
+          const merge = mergeLayersIntent(scene, ids, into);
+          if (merge) {
+            projection.apply(merge);
+            select([into]);
+          }
+        }}
+      />
+    </InspectorSection>
+  );
+};
+
+CanvasLayers.displayName = 'Canvas.Layers';
+
+//
+// Objects
+//
+
+/** Thumbnail box of an object row, in px. */
+const THUMBNAIL = { width: 40, height: 24 };
+
+/** A composite drawn small, read-only, fitted into a row's thumbnail. */
+const ObjectThumbnail = ({ id }: { id: SceneId }) => {
+  const { store, nodeRegistry } = useCanvasContext('Canvas.Objects');
+  const composite = useAtomValue(store.scene(id));
+  const content = composite && compositeBounds(composite);
+  if (!composite || !content) {
+    return null;
+  }
+  const scale = Math.min(THUMBNAIL.width / content.width, THUMBNAIL.height / content.height) * 0.85;
+  const x = THUMBNAIL.width / 2 - (content.x + content.width / 2) * scale;
+  const y = THUMBNAIL.height / 2 - (content.y + content.height / 2) * scale;
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0' }}
+    >
+      <SceneLayer store={store} scene={composite} registry={nodeRegistry} zoom={scale} depth={1} liveDepth={1} />
+    </div>
+  );
+};
+
+/** The drawing's composite objects: a docked inspector beside the layers. */
+export const CanvasObjects = () => {
+  const {
+    store,
+    readonly,
+    capabilities,
+    selection,
+    displayScene,
+    isolation,
+    isolate,
+    objectActions,
+    baseProjection,
+    timeline,
+  } = useCanvasContext('Canvas.Objects');
+  const scenes = useAtomValue(store.scenes);
+  const objects = useMemo(() => {
+    const counts = instanceCounts(scenes);
+    return compositeScenes(scenes).map((scene) => ({
+      id: scene.id,
+      name: scene.name ?? scene.id,
+      instances: counts[scene.id] ?? 0,
+    }));
+  }, [scenes]);
+  // The open composite, else the one an instance on the canvas draws.
+  const selected = useMemo(() => {
+    if (isolation) {
+      return isolation.composite;
+    }
+    const [only] = selection.size === 1 ? [...selection] : [];
+    const node = only === undefined ? undefined : displayScene.nodes[only];
+    return node && isInstanceNode(node) ? node.composite : undefined;
+  }, [isolation, selection, displayScene]);
+  const editable = capabilities.create === true && capabilities.delete === true;
+  return (
+    <InspectorSection section={OBJECTS_INSPECTOR}>
+      <ObjectsInspector
+        objects={objects}
+        selected={selected}
+        readonly={!editable}
+        onSelect={isolate}
+        onRename={objectActions.rename}
+        onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
+        onPlace={isolation ? undefined : objectActions.place}
+        onDuplicate={objectActions.duplicate}
+        onDelete={objectActions.remove}
+        thumbnail={(id) => <ObjectThumbnail id={id} />}
+        onAnimate={
+          timeline || readonly || !capabilities.update
+            ? undefined
+            : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
+        }
+      />
+    </InspectorSection>
+  );
+};
+
+CanvasObjects.displayName = 'Canvas.Objects';
+
+//
+// About
+//
+
+/** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
+export const CanvasAbout = () => {
+  const { scene, store } = useCanvasContext('Canvas.About');
+  const scenes = useAtomValue(store.scenes);
+  const stats = useMemo<AboutStat[]>(
+    () => [
+      { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
+      { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
+      { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
+      { id: 'scenes', label: 'Scenes', value: Object.keys(scenes).length },
+    ],
+    [scene, scenes],
+  );
+  return (
+    <InspectorSection section={ABOUT_INSPECTOR}>
+      <AboutInspector stats={stats} />
+    </InspectorSection>
+  );
+};
+
+CanvasAbout.displayName = 'Canvas.About';

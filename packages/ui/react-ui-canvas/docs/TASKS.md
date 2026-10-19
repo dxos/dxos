@@ -24,6 +24,9 @@ Design: DESIGN.md §13.
   - [x] Selection (select, clear, delete, group, classFrom) and Editing (copy, cut, paste); `useSceneClipboard` removed; `createId` moved to `utils/`.
   - [ ] Navigation, Tools, Time, Look. Layers and Objects wait for Phases 3 and 2, which replace them.
 - [ ] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.
+  - [x] Parts into files: `Canvas.tsx` (namespace, 37 lines), `CanvasRoot.tsx`, `CanvasViewport.tsx`, `CanvasBars.tsx`, `CanvasInspectors.tsx`, `constants.ts`.
+  - [ ] Viewport into Background, Scene and Overlay; `CanvasRoot.tsx` under ~600 lines (needs the rest of 0.4).
+  - [ ] Move the Canvas hooks to `hooks/canvas/` once 0.4 settles them (needs `handlePoint` and the tool catalogue behind `toolForKey` in `utils/`).
 
 ## Phase 1 — View
 
