@@ -223,6 +223,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   {(settings.showPalette ?? true) && <Canvas.Tools />}
                   <Canvas.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
                   <Canvas.Timeline />
+                  <Canvas.Views />
                   <Canvas.Layers />
                   <Canvas.Objects />
                   <Canvas.About />

@@ -91,6 +91,7 @@ const Editor = ({
       <Canvas.Properties />
       <Canvas.Views />
       <Canvas.Layers />
+      <Canvas.Objects />
       <Canvas.About />
     </Canvas.Root>
   );
@@ -231,15 +232,16 @@ export const Docked: Story = {
   },
 };
 
-/** Floating inspectors (the default): the panel over the canvas, the layers until something is selected; its toolbar docks them. */
+/** Floating inspectors (the default): the panel over the canvas, with the same sections as docked; its toolbar docks them. */
 export const Floating: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
-    // About shows only while docked.
-    await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+    // Floating, the panel holds the same sections it does docked.
+    await expect(await canvas.findByTestId('dock-section-about')).toBeInTheDocument();
+    await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));
@@ -250,8 +252,9 @@ export const Floating: Story = {
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
-    // Docked, the about section joins the column, closed until opened (only the properties start open).
+    // Docked, the same sections: about still closed until opened (only the properties start open).
     await expect(await canvas.findByTestId('dock-section-about')).toHaveAttribute('data-state', 'closed');
+    await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
   },
 };
 

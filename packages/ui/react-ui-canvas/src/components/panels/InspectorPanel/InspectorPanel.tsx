@@ -39,8 +39,6 @@ export type InspectorSectionDef = {
   icon: string;
   /** Sections stack by it, lowest first. */
   order: number;
-  /** While the panel floats, when the section shows; docked, every section does. */
-  show: 'selection' | 'empty' | 'never';
   /** Open when it first shows; otherwise it starts closed, so only the inspectors that matter first take room. */
   defaultOpen?: boolean;
 };
@@ -83,8 +81,6 @@ export type InspectorPanelRootProps = PropsWithChildren<{
   docked?: boolean;
   /** Read-only, a floating panel shows no section, as the inspectors edit the scene. */
   readonly?: boolean;
-  /** Whether anything is selected, for the sections that float only with (or without) a selection. */
-  selected?: boolean;
   /** Commands on the canvas as a whole (e.g. on the selection), drawn at the start of the panel's toolbar. */
   actions?: ReactNode;
   /** Offered, the panel's toolbar docks a floating panel, or floats a docked one. */
@@ -95,7 +91,6 @@ export type InspectorPanelRootProps = PropsWithChildren<{
 const InspectorPanelRoot = ({
   docked = false,
   readonly = false,
-  selected = false,
   actions,
   onDockedChange,
   children,
@@ -105,11 +100,8 @@ const InspectorPanelRoot = ({
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
   // Sections seen before, so one starts closed (unless `defaultOpen`) only the first time it registers.
   const seen = useRef(new Set<string>());
-  const shows = useCallback(
-    (section: InspectorSectionDef) =>
-      docked || (!readonly && (section.show === 'selection' ? selected : section.show === 'empty' ? !selected : false)),
-    [docked, readonly, selected],
-  );
+  // Docked or floating, the same sections show: where the panel sits is not what it holds.
+  const shows = useCallback(() => docked || !readonly, [docked, readonly]);
   const register = useCallback((section: InspectorSectionDef) => {
     if (!seen.current.has(section.id)) {
       seen.current.add(section.id);
@@ -290,7 +282,7 @@ export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectio
  */
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
-  const { id, title, icon, order, show, defaultOpen } = section;
+  const { id, title, icon, order, defaultOpen } = section;
   const subscribe = useCallback((listener: () => void) => panel?.subscribe(listener) ?? (() => {}), [panel]);
   const slot = useSyncExternalStore(subscribe, () => {
     const state = panel?.get();
@@ -300,10 +292,10 @@ export const InspectorSection = ({ section, children }: InspectorSectionProps) =
     if (!panel) {
       return;
     }
-    return panel.register({ id, title, icon, order, show, defaultOpen });
+    return panel.register({ id, title, icon, order, defaultOpen });
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [panel?.register, id, title, icon, order, show, defaultOpen]);
+  }, [panel?.register, id, title, icon, order, defaultOpen]);
   if (!panel) {
     return <>{children}</>;
   }

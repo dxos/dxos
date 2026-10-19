@@ -64,7 +64,7 @@ export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'd
   sceneFilter?: (id: ViewId) => boolean;
 };
 
-/** The selected element's properties: an inspector that floats only while something is selected. */
+/** The selected element's properties: shown while something is selected. */
 export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.Properties');
   const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
@@ -170,44 +170,35 @@ const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
-  show: 'selection',
   defaultOpen: true,
 };
 
-// The hierarchy is a dock section only (VIEWS.md §4), as it is as tall as the drawing.
 const VIEWS_INSPECTOR: InspectorSectionDef = {
   id: 'views',
   title: 'Views',
   icon: 'ph--tree-structure--regular',
   order: 1,
-  show: 'never',
 };
 
-// Floating, the layers take the properties' place while nothing is selected.
 const LAYERS_INSPECTOR: InspectorSectionDef = {
   id: 'layers',
   title: 'Layers',
   icon: 'ph--stack--regular',
   order: 2,
-  show: 'empty',
 };
 
-// Docked beside the layers (ANIMATION.md §4.3).
 const OBJECTS_INSPECTOR: InspectorSectionDef = {
   id: 'objects',
   title: 'Objects',
   icon: 'ph--cube--regular',
   order: 3,
-  show: 'never',
 };
 
-// The counts are a dock section only, so a floating or read-only view shows none.
 const ABOUT_INSPECTOR: InspectorSectionDef = {
   id: 'about',
   title: 'About',
   icon: 'ph--info--regular',
   order: 4,
-  show: 'never',
 };
 
 //

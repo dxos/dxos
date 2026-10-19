@@ -75,7 +75,6 @@ const meta: Meta<typeof DefaultStory> = {
       title: 'Layers',
       icon: 'ph--stack--regular',
       order: 0,
-      show: 'empty',
       defaultOpen: true,
     }),
     withTheme(),

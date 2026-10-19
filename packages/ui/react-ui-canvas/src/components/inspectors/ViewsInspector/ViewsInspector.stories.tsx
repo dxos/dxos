@@ -77,7 +77,6 @@ const meta: Meta<StoryArgs> = {
       title: 'Views',
       icon: 'ph--tree-structure--regular',
       order: 0,
-      show: 'empty',
       defaultOpen: true,
     }),
     withRegistry,

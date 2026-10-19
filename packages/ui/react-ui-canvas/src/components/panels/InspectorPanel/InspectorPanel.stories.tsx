@@ -53,6 +53,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
     <Canvas.Root store={store} root={root} atoms={atoms} inspectors={inspectors} onInspectorsChange={setInspectors}>
       <Canvas.Properties />
       <Canvas.Layers />
+      <Canvas.Objects />
       <Canvas.About />
     </Canvas.Root>
   );

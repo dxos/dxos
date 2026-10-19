@@ -497,7 +497,6 @@ export const CanvasRoot = ({
                 <InspectorPanel.Root
                   docked={!readonly && inspectors === 'docked'}
                   readonly={readonly}
-                  selected={selection.size > 0}
                   actions={inspectorActions}
                   onDockedChange={
                     onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))

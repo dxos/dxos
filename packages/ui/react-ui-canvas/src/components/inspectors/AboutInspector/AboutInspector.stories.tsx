@@ -19,7 +19,6 @@ const meta: Meta<typeof AboutInspector> = {
       title: 'About',
       icon: 'ph--info--regular',
       order: 0,
-      show: 'never',
       defaultOpen: true,
     }),
     withTheme(),

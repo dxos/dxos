@@ -82,7 +82,6 @@ const PROPERTIES = {
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
-  show: 'selection',
   defaultOpen: true,
 } as const;
 

@@ -71,7 +71,6 @@ const meta: Meta<typeof DefaultStory> = {
       title: 'Objects',
       icon: 'ph--cube--regular',
       order: 0,
-      show: 'never',
       defaultOpen: true,
     }),
     withTheme(),
