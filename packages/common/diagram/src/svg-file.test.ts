@@ -72,3 +72,28 @@ describe('relation markers', () => {
     expect(markerRefs(svg, 'line', 'marker-end')).toEqual(['arrow']);
   });
 });
+
+describe('renderer fallbacks', () => {
+  test('a tinted fill carries a plain color for renderers without color-mix', ({ expect }) => {
+    const svg = toSvgFile([
+      {
+        id: 'group',
+        elements: [
+          { kind: 'rect', id: 'plain', x: 0, y: 0, w: 100, h: 100, fill: 'tint' },
+          { kind: 'rect', id: 'blue', x: 120, y: 0, w: 100, h: 100, fill: 'tint', color: 'light-blue' },
+        ],
+      },
+    ]);
+    const tinted = [...svg.matchAll(/<rect[^>]*style="fill:color-mix[^"]*"[^>]*>/g)].map((match) => match[0]);
+    expect(tinted).toHaveLength(2);
+    // 10% of the ink (#262626) and of sky-500 (#0ea5e9) over the white surface.
+    expect(tinted[0]).toContain('fill="#e9e9e9"');
+    expect(tinted[1]).toContain('fill="#e7f6fd"');
+  });
+
+  test('every custom property names a plain fallback', ({ expect }) => {
+    const svg = toSvgFile(Dsl.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
+    expect(svg).toContain('fill="var(--surface-bg, #ffffff)"');
+    expect(svg).not.toMatch(/var\(--[\w-]+\)/);
+  });
+});
