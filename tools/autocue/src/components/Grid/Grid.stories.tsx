@@ -438,8 +438,8 @@ const DefaultStory = ({
   );
   const landings = useMemo(() => closeUps.map((hold) => hold.start), [closeUps]);
   // In the shift loops only the close-up plays: grid cells rest on their first frame, so a clip starts without a jump
-  // as the camera lands on it, and a clip the camera leaves rests where it stopped.
-  const stills = variant === 'shift' || variant === 'console';
+  // as the camera lands on it, and a clip the camera leaves rests where it stopped. A drift has no close-ups, so all play.
+  const stills = (variant === 'shift' || variant === 'console') && !Number(drift);
   const playingCell = closeUps.find((hold) => hold.start <= elapsed && elapsed < hold.end)?.focus;
   /** A still cell's clip time at `ms`: 0 before its first hold, through the hold as it plays, then where it stopped. */
   const stillTime = (id: string, ms: number) =>
@@ -848,4 +848,4 @@ export const ShiftOverviewNumbers: Story = { args: { ...shiftArgs('numbers'), ov
 export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overview: true } };
 
 /** The zoomed-out 3x3 with its columns scrolling slowly and continuously at different speeds, alternating up and down. */
-export const ShiftDriftNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true, drift: 0.2 } };
+export const ShiftDriftClips: Story = { args: { ...shiftArgs('clips'), overview: true, drift: 0.2 } };
