@@ -847,5 +847,5 @@ export const ShiftClips: Story = { args: shiftArgs('clips') };
 export const ShiftOverviewNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true } };
 export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overview: true } };
 
-/** The zoomed-out 3x3 with its columns scrolling slowly and continuously, alternating up and down. */
+/** The zoomed-out 3x3 with its columns scrolling slowly and continuously at different speeds, alternating up and down. */
 export const ShiftDriftNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true, drift: 0.2 } };

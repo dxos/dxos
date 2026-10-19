@@ -371,6 +371,9 @@ export const snap = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4
 /** How much of the rows beyond the 3x3 the zoomed-out shift loop shows, as a fraction of a tile's height. */
 export const PEEK = 0.15;
 
+/** Each column's drift speed relative to `drift`, from the leftmost wall column; distinct so no two neighbours lock. */
+export const DRIFT_SPEEDS = [1.2, 1.5, 0.7, 1, 1.3, 0.8];
+
 /** The distances a varying shift takes in turn. */
 export const DISTANCES = [1, 2, 1, 1, 2, 2, 1, 2];
 
@@ -475,6 +478,7 @@ export const shiftShots = ({
 
   if (drift > 0) {
     const ms = slots.reduce((sum, slot) => sum + slot, 0);
+    const speed = (x: number) => DRIFT_SPEEDS[(x + Math.floor(cols / 2)) % DRIFT_SPEEDS.length];
     return [
       {
         ms,
@@ -483,7 +487,10 @@ export const shiftShots = ({
           place: (cell) => {
             const point = start.get(cell);
             return point
-              ? bounds({ x: point.x, y: wrapRow(point.y + direction(point.x) * drift * ((t * ms) / 1_000)) })
+              ? bounds({
+                  x: point.x,
+                  y: wrapRow(point.y + direction(point.x) * speed(point.x) * drift * ((t * ms) / 1_000)),
+                })
               : hidden;
           },
         }),
