@@ -109,7 +109,7 @@ const ProfileDialog = ({ contentSize, title, testId, paragraphs }: ProfileDialog
 );
 
 /**
- * A form dialog, which takes its trigger row's size (Phase 4 decision 2), and one whose body scrolls, `lg` at every size.
+ * A form dialog, which takes its trigger row's size, and one whose body scrolls, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <Group>
@@ -282,7 +282,7 @@ export const Test: Story = {
 
     for (const [size, block] of HEADER_BLOCK) {
       const sized = await open(canvasElement, `dialog-${size}`);
-      // The dialog takes its trigger's row size (Phase 4 decision 2).
+      // The dialog takes its trigger's row size.
       await expectPopupSize(sized, size);
       await expect(within(sized).getByTestId('header').getBoundingClientRect().height, size).toBeCloseTo(block, 0);
       await userEvent.keyboard('{Escape}');

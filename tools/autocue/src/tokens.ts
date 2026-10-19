@@ -27,8 +27,13 @@ export const TOKENS = `
     --autocue-open-fade: 600ms;
     --autocue-caption-fade: 300ms;
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
-    /* The caption panel lets the app show through a little, since it sits over the content for the whole take. */
-    --autocue-caption-surface: rgba(17, 17, 17, 0.78);
+    /* Final Cut Pro's caption: white bold type on black at 85%, the same in both themes, so it reads over any frame. */
+    --autocue-caption-surface: rgba(0, 0, 0, 0.85);
+    --autocue-caption-fg: #fff;
+    --autocue-caption-muted: rgba(255, 255, 255, 0.75);
+    --autocue-caption-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --autocue-caption-radius: 14px;
+    --autocue-caption-inset: 56px;
     --autocue-panel-fg: #fff;
     --autocue-panel-muted: rgba(255, 255, 255, 0.7);
     --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -36,7 +41,6 @@ export const TOKENS = `
   :host-context(.dark) {
     --autocue-letterbox: #000;
     --autocue-panel-surface: rgba(250, 250, 250, 0.95);
-    --autocue-caption-surface: rgba(250, 250, 250, 0.8);
     --autocue-panel-fg: #111;
     --autocue-panel-muted: rgba(17, 17, 17, 0.65);
     --autocue-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);

@@ -12,7 +12,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Projection } from '../engine/index.ts';
-import { type SceneMap, type SceneStore } from '../model/index.ts';
+import { type ViewMap, type ViewStore } from '../model/index.ts';
 
 /** Entries older than this are dropped rather than growing without bound. */
 export const UNDO_LIMIT = 100;
@@ -21,7 +21,7 @@ export const UNDO_LIMIT = 100;
  * One undo step: the projection's snapshot from before it, and, for a step that also added or removed scenes (a
  * group into a new scene), the store's scenes from before it, so undo takes the new scene away and redo returns it.
  */
-export type UndoEntry = { model: unknown; scenes?: SceneMap };
+export type UndoEntry = { model: unknown; scenes?: ViewMap };
 
 export type UndoState = {
   /** Which projection the snapshots belong to; a different one starts an empty log. */
@@ -68,18 +68,18 @@ export const recordStoreStep = (
   atom: Atom.Writable<UndoState>,
   key: string,
   model: unknown,
-  scenes: SceneMap,
+  scenes: ViewMap,
 ): void => {
   const state = stateFor(registry, atom, key);
   registry.set(atom, { key, past: [...state.past.slice(-(UNDO_LIMIT - 1)), { model, scenes }], future: [] });
 };
 
 /** Marks the step just recorded as one that also changed the store's scenes, which were `scenes` before it. */
-export const recordScenes = (
+export const recordViews = (
   registry: Registry.AtomRegistry,
   atom: Atom.Writable<UndoState>,
   key: string,
-  scenes: SceneMap,
+  scenes: ViewMap,
 ): void => {
   const state = stateFor(registry, atom, key);
   const last = state.past[state.past.length - 1];
@@ -92,13 +92,13 @@ export const recordScenes = (
 const swap = (
   projection: Projection,
   registry: Registry.AtomRegistry,
-  store: SceneStore | undefined,
+  store: ViewStore | undefined,
   entry: UndoEntry,
 ): UndoEntry => {
-  const scenes = entry.scenes && store ? registry.get(store.scenes) : undefined;
+  const scenes = entry.scenes && store ? registry.get(store.views) : undefined;
   const replaced: UndoEntry = { model: projection.snapshot(), ...(scenes ? { scenes } : {}) };
   if (entry.scenes && store) {
-    registry.set(store.scenes, entry.scenes);
+    registry.set(store.views, entry.scenes);
   }
   projection.restore(entry.model);
   return replaced;
@@ -109,7 +109,7 @@ export const undo = (
   registry: Registry.AtomRegistry,
   atom: Atom.Writable<UndoState>,
   key: string,
-  store?: SceneStore,
+  store?: ViewStore,
 ): boolean => {
   const state = stateFor(registry, atom, key);
   const entry = state.past[state.past.length - 1];
@@ -126,7 +126,7 @@ export const redo = (
   registry: Registry.AtomRegistry,
   atom: Atom.Writable<UndoState>,
   key: string,
-  store?: SceneStore,
+  store?: ViewStore,
 ): boolean => {
   const state = stateFor(registry, atom, key);
   const entry = state.future[state.future.length - 1];

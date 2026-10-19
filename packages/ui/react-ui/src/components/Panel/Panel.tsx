@@ -32,8 +32,8 @@ type PanelRootProps = {
 const PanelGutterContext = createContext<Exclude<Gutter, 'inherit'>>('sm');
 
 /**
- * The plank host (Phase 4 decision 1): fills its parent, sets `data-size` and a level for its subtree, and is the pane's
- * query container (decision 5), so its header, body and footer collapse at the same pane width.
+ * The plank host: fills its parent, sets `data-size` and a level for its subtree, and is the pane's
+ * query container, so its header, body and footer collapse at the same pane width.
  */
 const PanelRoot = slottable<HTMLDivElement, PanelRootProps>(
   ({ children, asChild, size, level = 'base', width, gutter = 'sm', ...props }, forwardedRef) => {

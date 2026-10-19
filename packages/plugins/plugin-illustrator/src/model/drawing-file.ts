@@ -14,6 +14,7 @@ import * as Schema from 'effect/Schema';
 import { Dsl, DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { Drawing } from '#types';
@@ -182,11 +183,12 @@ export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: 
   const decoded = yield* Effect.forEach(objects, (json) =>
     Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver })),
   );
-  const drawing = decoded.find((object) => object.id === root);
-  if (!drawing || !Drawing.isDrawing(drawing)) {
+  if (!decoded.some((object) => object.id === root && Drawing.isDrawing(object))) {
     return yield* Effect.fail(new ImportError({ message: 'The .dx.svg payload has no drawing at its root.' }));
   }
-  decoded.forEach((object) => db.add(object));
+  // `add` returns the database's own instance; the decoded one stays detached, so edits to it would not persist.
+  const drawing = decoded.map((object) => db.add(object)).find((object) => object.id === root);
+  invariant(drawing && Drawing.isDrawing(drawing), 'imported drawing');
   yield* Effect.promise(() => db.flush());
   return drawing;
 });

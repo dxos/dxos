@@ -10,6 +10,7 @@
 
 import React, {
   type PropsWithChildren,
+  type ReactNode,
   type SyntheticEvent,
   createContext,
   useCallback,
@@ -18,6 +19,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -25,6 +27,7 @@ import * as Accordion from '@dxos/react-ui/Accordion';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,8 +40,8 @@ export type InspectorSectionDef = {
   icon: string;
   /** Sections stack by it, lowest first. */
   order: number;
-  /** While the panel floats, when the section shows; docked, every section does. */
-  show: 'selection' | 'empty' | 'never';
+  /** The half of the panel the section sits in, the two split by a draggable seam; `lower` by default. */
+  pane?: 'upper' | 'lower';
   /** Open when it first shows; otherwise it starts closed, so only the inspectors that matter first take room. */
   defaultOpen?: boolean;
 };
@@ -54,18 +57,35 @@ type InspectorPanelContextValue = {
   register: (section: InspectorSectionDef) => () => void;
   setSlot: (id: string, element: HTMLElement | null) => void;
   setClosed: (closed: ReadonlySet<string>) => void;
+  actions?: ReactNode;
   onDockedChange?: (docked: boolean) => void;
 };
 
-const InspectorPanelContext = createContext<InspectorPanelContextValue | undefined>(undefined);
+/**
+ * The panel's state behind a stable handle: a section subscribes to its own slot, so a change that leaves its slot as
+ * it was (the selection, another section's slot, the panel's actions) does not re-render the inspector inside it.
+ */
+type InspectorPanelHandle = {
+  get: () => InspectorPanelContextValue;
+  subscribe: (listener: () => void) => () => void;
+  register: InspectorPanelContextValue['register'];
+};
+
+const InspectorPanelContext = createContext<InspectorPanelHandle | undefined>(undefined);
+
+const usePanelState = (handle: InspectorPanelHandle | undefined): InspectorPanelContextValue | undefined =>
+  useSyncExternalStore(
+    useCallback((listener: () => void) => handle?.subscribe(listener) ?? (() => {}), [handle]),
+    () => handle?.get(),
+  );
 
 export type InspectorPanelRootProps = PropsWithChildren<{
   /** Beside the canvas, rather than floating over it. */
   docked?: boolean;
   /** Read-only, a floating panel shows no section, as the inspectors edit the scene. */
   readonly?: boolean;
-  /** Whether anything is selected, for the sections that float only with (or without) a selection. */
-  selected?: boolean;
+  /** Commands on the canvas as a whole (e.g. on the selection), drawn at the start of the panel's toolbar. */
+  actions?: ReactNode;
   /** Offered, the panel's toolbar docks a floating panel, or floats a docked one. */
   onDockedChange?: (docked: boolean) => void;
 }>;
@@ -74,7 +94,7 @@ export type InspectorPanelRootProps = PropsWithChildren<{
 const InspectorPanelRoot = ({
   docked = false,
   readonly = false,
-  selected = false,
+  actions,
   onDockedChange,
   children,
 }: InspectorPanelRootProps) => {
@@ -83,11 +103,8 @@ const InspectorPanelRoot = ({
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
   // Sections seen before, so one starts closed (unless `defaultOpen`) only the first time it registers.
   const seen = useRef(new Set<string>());
-  const shows = useCallback(
-    (section: InspectorSectionDef) =>
-      docked || (!readonly && (section.show === 'selection' ? selected : section.show === 'empty' ? !selected : false)),
-    [docked, readonly, selected],
-  );
+  // Docked or floating, the same sections show: where the panel sits is not what it holds.
+  const shows = useCallback(() => docked || !readonly, [docked, readonly]);
   const register = useCallback((section: InspectorSectionDef) => {
     if (!seen.current.has(section.id)) {
       seen.current.add(section.id);
@@ -106,10 +123,26 @@ const InspectorPanelRoot = ({
     [],
   );
   const value = useMemo(
-    () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, onDockedChange }),
-    [docked, readonly, sections, slots, closed, shows, register, setSlot, onDockedChange],
+    () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, actions, onDockedChange }),
+    [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, onDockedChange],
   );
-  return <InspectorPanelContext.Provider value={value}>{children}</InspectorPanelContext.Provider>;
+  // Read during render by the subscribers, which are then told of the change once it commits.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const listeners = useRef(new Set<() => void>());
+  const handle = useMemo<InspectorPanelHandle>(
+    () => ({
+      get: () => valueRef.current,
+      subscribe: (listener) => {
+        listeners.current.add(listener);
+        return () => listeners.current.delete(listener);
+      },
+      register,
+    }),
+    [register],
+  );
+  useLayoutEffect(() => listeners.current.forEach((listener) => listener()), [value]);
+  return <InspectorPanelContext.Provider value={handle}>{children}</InspectorPanelContext.Provider>;
 };
 
 InspectorPanelRoot.displayName = 'InspectorPanel.Root';
@@ -136,24 +169,94 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
  * sections that show, each a bordered frame as tall as its inspector, any number open. Nothing (and no space) while
  * none shows.
  */
+/** The upper half's share of the height until the seam is dragged; the least either half may be dragged to, in rem. */
+const UPPER_PANE_SHARE = 0.6;
+const MIN_PANE_SIZE = 6;
+
+/** The seam in the docked panel's own edge colour, brightening as the splitter's does. */
+const SEAM = 'before:bg-separator-subtle hover:before:bg-focus focus-visible:before:bg-focus active:before:bg-focus';
+
 const InspectorPanelContent = () => {
-  const context = useContext(InspectorPanelContext);
+  const context = usePanelState(useContext(InspectorPanelContext));
   const visible = useMemo(
     () => context?.sections.filter((section) => context.shows(section)) ?? [],
     [context?.sections, context?.shows],
   );
+  // Kept here, not in the splitter, so the upper half keeps its height while a selection comes and goes; unset until
+  // the panel is measured, when it starts at its share of the height.
+  const [size, setSize] = useState<number>();
+  const splitterRef = useRef<HTMLDivElement>(null);
+  const measured = size !== undefined;
+  useLayoutEffect(() => {
+    const height = splitterRef.current?.getBoundingClientRect().height ?? 0;
+    if (!measured && height > 0) {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setSize((height * UPPER_PANE_SHARE) / rem);
+    }
+  });
   if (!context || visible.length === 0) {
     return null;
   }
-  const { docked, closed, setSlot, setClosed, onDockedChange } = context;
+  const { docked, closed, setSlot, setClosed, actions, onDockedChange } = context;
+  const upper = visible.filter((section) => section.pane === 'upper');
+  const lower = visible.filter((section) => section.pane !== 'upper');
+
+  // One half's sections: a scroll area of bordered frames, each as tall as its inspector, any number open.
+  const list = (sections: readonly InspectorSectionDef[]) => (
+    <ScrollArea.Root>
+      <ScrollArea.Viewport>
+        <Accordion.Root
+          border={false}
+          classNames='gap-2 p-2'
+          onPointerDown={stop}
+          onPointerMove={stop}
+          onPointerUp={stop}
+          onDoubleClick={stop}
+          onContextMenu={stop}
+          onKeyDown={stop}
+          value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
+          onValueChange={(open) =>
+            setClosed(
+              new Set([
+                ...[...closed].filter((id) => !sections.some((section) => section.id === id)),
+                ...sections.filter((section) => !open.includes(section.id)).map((section) => section.id),
+              ]),
+            )
+          }
+        >
+          {sections.map((section) => (
+            // Each section is its own bordered frame, clipped so its rows' fills stay inside the rounded border; its
+            // header holds only the label and disclosure.
+            <Accordion.Item
+              key={section.id}
+              value={section.id}
+              classNames='rounded-sm border border-separator overflow-clip'
+              data-testid={`dock-section-${section.id}`}
+            >
+              <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
+                {section.title}
+              </Accordion.ItemTrigger>
+              <Accordion.ItemContent>
+                <Slot id={section.id} setSlot={setSlot} />
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+
   return (
     <Panel.Root
       classNames={
         docked
           ? 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
-          : // The docked panel's surface, so the inspectors look the same wherever the panel sits.
+          : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
+            // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
-              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden',
+              // A set height, as the splitter divides one rather than sizing to its sections; it stops above the bottom
+              // toolbars so they stay reachable.
+              'absolute top-2 right-2 z-10 w-80 h-[calc(100%-4.25rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
@@ -161,11 +264,12 @@ const InspectorPanelContent = () => {
       data-testid='scene-view-dock'
       data-floating={!docked || undefined}
     >
-      {onDockedChange && (
+      {(actions || onDockedChange) && (
         <Panel.Header asChild>
           <Toolbar.Root data-testid='dock-toolbar'>
+            {actions}
             <Toolbar.Separator variant='gap' />
-            {docked ? (
+            {!onDockedChange ? null : docked ? (
               <Button.Root
                 variant='ghost'
                 iconOnly
@@ -187,44 +291,20 @@ const InspectorPanelContent = () => {
           </Toolbar.Root>
         </Panel.Header>
       )}
-      {/* The body is the scroll area itself: each section is as tall as its inspector, and it scrolls them together. */}
+      {/* Split even while a half is empty, so the halves keep their place and size as the selection comes and goes. */}
       <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
-            <Accordion.Root
-              border={false}
-              classNames='gap-2 p-2'
-              onPointerDown={stop}
-              onPointerMove={stop}
-              onPointerUp={stop}
-              onDoubleClick={stop}
-              onContextMenu={stop}
-              onKeyDown={stop}
-              value={visible.filter((section) => !closed.has(section.id)).map((section) => section.id)}
-              onValueChange={(open) =>
-                setClosed(new Set(visible.filter((section) => !open.includes(section.id)).map((section) => section.id)))
-              }
-            >
-              {visible.map((section) => (
-                // Each section is its own bordered frame, clipped so its rows' fills stay inside the rounded border; its
-                // header holds only the label and disclosure.
-                <Accordion.Item
-                  key={section.id}
-                  value={section.id}
-                  classNames='rounded-sm border border-separator overflow-hidden'
-                  data-testid={`dock-section-${section.id}`}
-                >
-                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
-                    {section.title}
-                  </Accordion.ItemTrigger>
-                  <Accordion.ItemContent>
-                    <Slot id={section.id} setSlot={setSlot} />
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-              ))}
-            </Accordion.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <Splitter.Root
+          ref={splitterRef}
+          orientation='vertical'
+          resizable
+          minSize={MIN_PANE_SIZE}
+          size={size}
+          onSizeChange={setSize}
+        >
+          <Splitter.Panel position='start'>{list(upper)}</Splitter.Panel>
+          <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
+          <Splitter.Panel position='end'>{list(lower)}</Splitter.Panel>
+        </Splitter.Root>
       </Panel.Body>
     </Panel.Root>
   );
@@ -250,18 +330,22 @@ export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectio
  */
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
-  const { id, title, icon, order, show, defaultOpen } = section;
+  const { id, title, icon, order, pane, defaultOpen } = section;
+  const subscribe = useCallback((listener: () => void) => panel?.subscribe(listener) ?? (() => {}), [panel]);
+  const slot = useSyncExternalStore(subscribe, () => {
+    const state = panel?.get();
+    return state?.shows(section) ? state.slots[id] : undefined;
+  });
   useLayoutEffect(() => {
     if (!panel) {
       return;
     }
-    return panel.register({ id, title, icon, order, show, defaultOpen });
+    return panel.register({ id, title, icon, order, pane, defaultOpen });
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [panel?.register, id, title, icon, order, show, defaultOpen]);
+  }, [panel?.register, id, title, icon, order, pane, defaultOpen]);
   if (!panel) {
     return <>{children}</>;
   }
-  const slot = panel.shows(section) ? panel.slots[id] : undefined;
   return slot ? createPortal(children, slot) : null;
 };

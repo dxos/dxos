@@ -61,7 +61,7 @@ const probeOpfs = Effect.tryPromise({
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
   Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
-    createRuntime: ({ config: configValues, requestShutdown }) =>
+    createRuntime: ({ config: configValues, requestShutdown, reportStatus }) =>
       Effect.gen(function* () {
         // Devtools addresses this worker's diagnostics (e.g. echo-stats) by tag.
         TRACE_PROCESSOR.setInstanceTag('dedicated-worker');
@@ -86,6 +86,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           }),
           automaticallyConnectWebrtc: false,
           sqliteLayer: options.sqliteLayer,
+          onIndexStatus: reportStatus,
         });
         log('dedicated-worker: WorkerRuntime started');
         if (options.onStart) {

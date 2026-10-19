@@ -5,7 +5,7 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type Node, type Scene, createMemoryStore } from '../../model/index.ts';
+import { type Node, type View, createMemoryStore } from '../../model/index.ts';
 import { DEFAULT_LATTICE, createNode, nodeBounds } from '../../utils/index.ts';
 import { constrainIntent, createLatticeProjection } from './lattice.ts';
 
@@ -15,7 +15,7 @@ const spec = DEFAULT_LATTICE;
 const cellNode = (id: string, col: number, row: number): Node =>
   createNode({ type: 'rect', id, z: id, center: { x: col * 384, y: row * 192 }, size: { width: 256, height: 128 } });
 
-const sceneOf = (...nodes: Node[]): Scene => ({
+const sceneOf = (...nodes: Node[]): View => ({
   id: 's',
   nodes: Object.fromEntries(nodes.map((node) => [node.id, node])),
   links: {},

@@ -11,16 +11,16 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import {
-  DYNAMIC_SCENE_ID,
+  DYNAMIC_VIEW_ID,
   type FreehandProjectionOptions,
   type GraphModel,
   type Overlay,
   createCanvasAtoms,
   createDynamicProjection,
 } from '../../engine/index.ts';
-import { useSceneProjection } from '../../hooks/index.ts';
+import { useViewProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
-import { PropertiesInspector } from '../inspectors/PropertiesInspector/index.ts';
+import { PropertiesInspector } from '../inspectors/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -110,11 +110,11 @@ const DefaultStory = () => {
       createDynamicProjection({ registry, graph, overlay, options: { nodes: defaultNodeRegistry } }),
     [graph, overlay],
   );
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_SCENE_ID), []);
-  const projection = useSceneProjection({ store, atoms, createProjection });
+  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
+  const projection = useViewProjection({ store, atoms, createProjection });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <Canvas.Root store={store} root={DYNAMIC_SCENE_ID} atoms={atoms} createProjection={createProjection}>
+      <Canvas.Root store={store} root={DYNAMIC_VIEW_ID} atoms={atoms} createProjection={createProjection}>
         <Canvas.Viewport />
         <Canvas.Navigation />
         <Canvas.Actions />

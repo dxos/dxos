@@ -1,5 +1,50 @@
 # @dxos/plugin-tasks
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-file@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-preview@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-calendar@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-markdown@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-task@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/halo-react@0.16.0
+  - @dxos/display-name@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/lit-ui@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

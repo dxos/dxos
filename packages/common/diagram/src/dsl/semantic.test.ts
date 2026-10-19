@@ -186,6 +186,20 @@ describe('semantic statements', () => {
     expect(cycle.commands.length).toBeGreaterThan(0);
   });
 
+  test('a group with no members is dropped with a warning, and the diagram still lays out', ({ expect }) => {
+    const empty = parse('node A\nnode B\nedge A -> B\ngroup g {\n}');
+    expect(empty.problems.map(({ severity, message }) => `${severity}: ${message}`)).toEqual([
+      'warning: Group "g" has no members; declare its nodes inside its braces.',
+    ]);
+    expect(empty.commands.length).toBeGreaterThan(0);
+    // Redeclaring existing nodes inside a new group leaves it empty; the redeclarations are the errors.
+    expect(problemsOf('node A\nnode B\ngroup g { node A\nnode B }')).toEqual([
+      'error: A',
+      'error: B',
+      'warning: group g { node A\nnode B }',
+    ]);
+  });
+
   test('a scene statement claiming a laid-out id is flagged', ({ expect }) => {
     expect(problemsOf('node A\nobject A @ 0,0 { rect box 0,0 10x10 }')[0]).toMatch(/^warning: object A/);
   });

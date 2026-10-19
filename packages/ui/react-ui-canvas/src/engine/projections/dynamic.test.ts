@@ -6,8 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../../components/SceneLayer/index.ts';
-import { type Scene } from '../../model/index.ts';
+import { defaultNodeRegistry } from '../../components/index.ts';
+import { type View } from '../../model/index.ts';
 import { type GraphModel, type Overlay, createDynamicProjection, layoutGraph, pruneOverlay } from './dynamic.ts';
 
 const graph: GraphModel = {
@@ -19,7 +19,7 @@ const graph: GraphModel = {
   ],
 };
 
-const centerOf = (scene: Scene, id: string) => {
+const centerOf = (scene: View, id: string) => {
   const node = scene.nodes[id];
   if (!node) {
     throw new Error(`no node ${id}`);
@@ -35,6 +35,30 @@ describe('dynamic projection', () => {
     expect(centerOf(scene, 'left').y).toBe(centerOf(scene, 'right').y);
     expect(centerOf(scene, 'left').x).not.toBe(centerOf(scene, 'right').x);
     expect(Object.keys(scene.links).length).toBe(3);
+  });
+
+  test('a host supplies the node type, link style and capabilities', ({ expect }) => {
+    const scene = layoutGraph(
+      graph,
+      { positions: {} },
+      {
+        nodes: defaultNodeRegistry,
+        createNode: (node, props) => ({ type: 'card', ...props, label: node.id }),
+        link: { type: 'line', ends: { end: 'arrow' } },
+      },
+    );
+    expect(scene.nodes.root).toMatchObject({ type: 'card', label: 'root' });
+    expect(scene.links.e1).toMatchObject({ type: 'line', ends: { end: 'arrow' } });
+
+    const registry = Registry.make();
+    const projection = createDynamicProjection({
+      registry,
+      graph: Atom.make(graph),
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry },
+      capabilities: { move: true },
+    });
+    expect(projection.capabilities).toEqual({ move: true });
   });
 
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {

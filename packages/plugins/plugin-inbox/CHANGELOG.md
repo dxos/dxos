@@ -1,5 +1,64 @@
 # @dxos/plugin-inbox
 
+## 0.16.0
+
+### Patch Changes
+
+- e26ed70: `DraftEmailAndOpen` now reads its database from `Database.Service` instead of taking a `db` input, so callers pass the space through the invoke options. Also removes casts, orphaned JSDoc and hand-written layout wrappers flagged by the agentic review.
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/plugin-settings@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-calendar@0.16.0
+  - @dxos/react-ui-card@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-html@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-mosaic@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/pipeline-email@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/markdown@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

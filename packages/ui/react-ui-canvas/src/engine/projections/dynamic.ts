@@ -17,13 +17,16 @@ import { Layout } from '@dxos/diagram';
 import {
   type BuiltinNodeType,
   type Capabilities,
+  type CreateProps,
   type Intent,
   type Link,
+  type LinkEnds,
+  type LinkType,
   type Node,
   type NodeRegistry,
   type Point,
-  type Scene,
   type Size,
+  type View,
   endpointNode,
 } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
@@ -50,18 +53,25 @@ export type DynamicOptions = {
   size?: Size;
   /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
+  /**
+   * Makes the scene node for a graph node, so a host can place its own node type (one that renders its
+   * object) where the default is a titled `rect`.
+   */
+  createNode?: (node: GraphNode, props: CreateProps) => Node;
+  /** How edges draw; by default a `curve` with no markers. Not `spline`, whose control points the layout does not make. */
+  link?: { type?: Exclude<LinkType, 'spline'>; ends?: LinkEnds };
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
-const DEFAULTS: Required<Omit<DynamicOptions, 'origin' | 'nodes'>> = {
+const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
   pitch: { width: 256, height: 192 },
   size: { width: 192, height: 128 },
 };
 
-export const DYNAMIC_SCENE_ID = 'dynamic';
+export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): Scene => {
+export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
@@ -95,25 +105,25 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
       x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
       y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
     };
-    nodes[node.id] = withTitle(
-      options.nodes,
-      createNode({ type: node.type ?? 'rect', id: node.id, z: keys[graph.edges.length + index], center, size }),
-      node.label ?? node.id,
-    );
+    const props = { id: node.id, z: keys[graph.edges.length + index], center, size };
+    nodes[node.id] = options.createNode
+      ? options.createNode(node, props)
+      : withTitle(options.nodes, createNode({ type: node.type ?? 'rect', ...props }), node.label ?? node.id);
   });
   const links: Record<string, Link> = {};
   graph.edges.forEach((edge, index) => {
     if (known.has(edge.from) && known.has(edge.to)) {
       links[edge.id] = {
-        type: 'curve',
+        type: options.link?.type ?? 'curve',
         id: edge.id,
         z: keys[index],
         source: { node: edge.from },
         target: { node: edge.to },
+        ...(options.link?.ends && { ends: options.link.ends }),
       };
     }
   });
-  return { id: DYNAMIC_SCENE_ID, name: 'Dynamic', nodes, links };
+  return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
 };
 
 /** Drop overrides whose nodes are gone. */
@@ -135,6 +145,8 @@ export type DynamicProjectionOptions = {
   graph: Atom.Writable<GraphModel>;
   overlay: Atom.Writable<Overlay>;
   options: DynamicOptions;
+  /** What the user may do; by default move, link, delete and relabel. `{ move: true }` makes a drag-only view. */
+  capabilities?: Capabilities;
 };
 
 export const createDynamicProjection = ({
@@ -142,6 +154,7 @@ export const createDynamicProjection = ({
   graph,
   overlay,
   options,
+  capabilities = dynamicCapabilities,
 }: DynamicProjectionOptions): Projection => {
   const scene = Atom.keepAlive(
     Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
@@ -207,7 +220,7 @@ export const createDynamicProjection = ({
   return {
     scene,
     apply,
-    capabilities: dynamicCapabilities,
+    capabilities,
     // Both atoms in one value, so an undo restores the layout and the overrides together.
     snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
     restore: (snapshot) => {

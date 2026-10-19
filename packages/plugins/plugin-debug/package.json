@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "DXOS developer debugging utilities plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -260,6 +260,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-geo": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

@@ -76,9 +76,8 @@ export const DraftEmailAndOpen = Operation.make({
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
-    db: Database.Database,
     mode: Schema.optional(Schema.Literals(['compose', 'reply', 'reply-all', 'forward'])),
     message: Schema.optional(Schema.Any),
     subject: Schema.optional(Schema.String),
@@ -95,24 +94,7 @@ export const DraftEmailAndOpen = Operation.make({
 });
 
 /**
- * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
- * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
- * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
- */
-/**
- * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
- * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
- * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
- * Mirrors {@link MaterializeGmailTarget}.
- */
-/**
- * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
- * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
- * foreign key, so re-running for the same remote calendar returns the existing Calendar.
- */
-/**
- * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
- * the calendar analogue of {@link GmailSend}). Sources credentials from the Integration.
+ * Renames a saved filter on its owning mailbox or calendar.
  */
 export const RenameFilter = Operation.make({
   meta: {

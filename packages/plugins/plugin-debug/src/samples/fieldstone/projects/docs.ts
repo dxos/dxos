@@ -170,17 +170,16 @@ const offsiteAgenda = (links: InboxCrmLinks | undefined) => {
 };
 
 /** The five project artifacts. The offsite agenda links its venue and contact when inbox-crm is present. */
-export const makeDocs = ({ inboxCrm }: { readonly inboxCrm?: InboxCrmLinks }) =>
-  Effect.gen(function* () {
-    const docs: Artifacts = {
-      cacheDesign: Markdown.make({ name: 'Remote cache v2 design', content: CACHE_DESIGN }),
-      billingPlan: Markdown.make({ name: 'Billing migration plan', content: BILLING_PLAN }),
-      soc2Policies: Markdown.make({ name: 'SOC 2 policy set', content: SOC2_POLICIES }),
-      offsiteAgenda: Markdown.make({ name: 'Offsite agenda', content: offsiteAgenda(inboxCrm) }),
-      releaseNotes: Markdown.make({ name: 'Cairn 1.8 release notes', content: RELEASE_NOTES }),
-    };
-    for (const doc of Object.values(docs)) {
-      yield* Database.add(doc);
-    }
-    return docs;
-  });
+export const makeDocs = Effect.fnUntraced(function* ({ inboxCrm }: { readonly inboxCrm?: InboxCrmLinks }) {
+  const docs: Artifacts = {
+    cacheDesign: Markdown.make({ name: 'Remote cache v2 design', content: CACHE_DESIGN }),
+    billingPlan: Markdown.make({ name: 'Billing migration plan', content: BILLING_PLAN }),
+    soc2Policies: Markdown.make({ name: 'SOC 2 policy set', content: SOC2_POLICIES }),
+    offsiteAgenda: Markdown.make({ name: 'Offsite agenda', content: offsiteAgenda(inboxCrm) }),
+    releaseNotes: Markdown.make({ name: 'Cairn 1.8 release notes', content: RELEASE_NOTES }),
+  };
+  for (const doc of Object.values(docs)) {
+    yield* Database.add(doc);
+  }
+  return docs;
+});

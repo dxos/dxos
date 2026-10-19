@@ -11,13 +11,12 @@ export type InspectorFrameProps = PropsWithChildren<{ section: InspectorSectionD
 
 /**
  * One inspector as the canvas shows it: in its section of an inspector panel, floating (the canvas's default) over a box
- * the size of a small canvas, unless the section never floats; the panel's toolbar docks and floats it.
+ * the size of a small canvas; the panel's toolbar docks and floats it.
  */
 export const InspectorFrame = ({ section, children }: InspectorFrameProps) => {
-  const [docked, setDocked] = useState(section.show === 'never');
+  const [docked, setDocked] = useState(false);
   return (
-    // A section that floats only with a selection is shown as though something is selected.
-    <InspectorPanel.Root docked={docked} selected={section.show === 'selection'} onDockedChange={setDocked}>
+    <InspectorPanel.Root docked={docked} onDockedChange={setDocked}>
       <InspectorSection section={section}>{children}</InspectorSection>
       <div className='relative flex justify-end w-[28rem] h-[32rem]'>
         <InspectorPanel.Content />
