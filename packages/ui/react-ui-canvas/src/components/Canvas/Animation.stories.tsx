@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { SceneBuilder } from '../../builder/index.ts';
-import { OPACITY_PATH, type Scene, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
+import { type Scene, type Timeline, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */
@@ -20,7 +20,7 @@ const topLevel = (root: HTMLElement, id: string) =>
     (element) => !element.closest('[data-instance]'),
   );
 
-/** Three shapes in a row on a four-second loop: A rises and returns, B fades and returns, C grows and returns. */
+/** Three linked shapes on a four-second loop: A grows and shrinks, then C does. */
 const createTree = (keyed: boolean) => {
   const box = (x: number) => ({ x, y: -64, width: 128, height: 128 });
   const tree = SceneBuilder.scene('scene:root', [
@@ -28,20 +28,19 @@ const createTree = (keyed: boolean) => {
     SceneBuilder.rect('b', box(-64)).properties({ label: 'B', style: { hue: 'amber' } }),
     SceneBuilder.rect('c', box(192)).properties({ label: 'C', style: { hue: 'green' } }),
     SceneBuilder.link('smart', 'a', 'b'),
+    SceneBuilder.link('smart', 'b', 'c'),
   ])
     .name('Animation')
     .build();
-  // Each shape keyed at the start, the middle and the end, so playback shows motion straight away.
-  const keys: [string, string, unknown, unknown][] = [
-    ['a', 'center', { x: -256, y: 0 }, { x: -256, y: -192 }],
-    ['b', OPACITY_PATH, 1, 0.2],
-    ['c', 'size', { width: 128, height: 128 }, { width: 256, height: 256 }],
-  ];
-  const timeline = keys.reduce(
-    (timeline, [target, property, rest, peak]) =>
-      [0, 2, 4].reduce((next, t) => setKey(next, target, property, { t, value: t === 2 ? peak : rest }), timeline),
-    createTimeline(4),
-  );
+  // A grows and shrinks over the first two seconds, then C over the last two; each holds its size the rest of the loop.
+  const small = { width: 128, height: 128 };
+  const large = { width: 224, height: 224 };
+  const pulse = (target: string, start: number) => (timeline: Timeline) =>
+    [start, start + 1, start + 2].reduce(
+      (next, t, index) => setKey(next, target, 'size', { t, value: index === 1 ? large : small }),
+      timeline,
+    );
+  const timeline = pulse('c', 2)(pulse('a', 0)(createTimeline(4)));
   const scenes = tree.scenes.map((scene): Scene =>
     scene.id === tree.root ? { ...scene, timeline: keyed ? timeline : createTimeline(4) } : scene,
   );
