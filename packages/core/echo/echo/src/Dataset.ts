@@ -27,6 +27,11 @@ export const Dataset = Schema.Union([
   Type.getSchema(View.View),
 ]);
 
+/**
+ * Type guard for datasets.
+ *
+ * @performance O(1); at most three type-URI comparisons.
+ */
 export const isDataset: (value: unknown) => value is Dataset = pipe(
   Obj.instanceOf(Feed.Feed),
   Predicate.or(Obj.instanceOf(Collection.Collection)),

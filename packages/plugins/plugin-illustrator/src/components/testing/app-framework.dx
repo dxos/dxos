@@ -1,0 +1,44 @@
+# @dxos/app-framework: authoring on top, the runtime around PluginManager, the React layer below.
+diagram flow=down
+
+group Authoring "Authoring" {
+  node Plugin "Plugin + modules"
+  node CapabilityTag "Capability tags" above Plugin
+  node AppCapability "AppCapability makers" left-of Plugin
+  node Contribution "Contribution" right-of Plugin
+}
+
+group Runtime "Runtime" below Authoring {
+  node Catalog "PluginCatalog" below Plugin
+  node ModuleLoader "ModuleLoader" below Contribution
+  node CapabilityManager "CapabilityManager" right-of ModuleLoader
+  node ProcessManager "ProcessManagerPlugin" right-of CapabilityManager
+  node Scheduler "ActivationScheduler" below ModuleLoader
+  node PluginManager "PluginManager" below CapabilityManager
+  node ActivationGraph "ActivationGraph" ~below Catalog
+  node ActivationEvent "Activation events" below Scheduler
+}
+
+group ReactLayer "React layer" below Runtime {
+  node UseApp "useApp / App" below PluginManager
+  node Surface "Surface" right-of UseApp
+}
+
+edge AppCapability -> Plugin "module makers"
+edge CapabilityTag -> Plugin "requires / provides"
+edge Plugin -> Catalog "registered in"
+edge PluginManager owns Catalog
+edge PluginManager -> Scheduler "start / activate"
+edge PluginManager owns CapabilityManager
+edge Catalog -> Scheduler "enabled modules"
+edge ActivationEvent -> Scheduler "activatesOn"
+edge Scheduler -> ActivationGraph "rounds and waves"
+edge Scheduler -> ModuleLoader "load module"
+edge ModuleLoader -> Contribution "activate returns"
+edge Contribution -> CapabilityManager "expand to entries"
+edge CapabilityManager -> ProcessManager "OperationHandler"
+edge ProcessManager -> CapabilityManager "OperationInvoker"
+edge CapabilityManager -> Surface "ReactSurface atom" bus=react
+edge CapabilityManager -> UseApp "ReactContext / Root" bus=react
+edge UseApp -> PluginManager "creates"
+edge Surface:bottom -> ActivationEvent:bottom "SurfacesRequested"

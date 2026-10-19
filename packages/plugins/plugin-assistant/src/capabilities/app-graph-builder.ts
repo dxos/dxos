@@ -18,7 +18,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -31,7 +32,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -39,12 +40,17 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
-const computeOperationsToImport = [RunInstructions] as const;
+const computeOperationsToImport = [AgentOperation.RunInstructions] as const;
 
-/** Match ECHO objects that are NOT chats. */
+/** Match ECHO objects that are neither chats nor agents, whose own article is already a conversation. */
 const whenNonChatObject = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObject,
-  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+  GraphNodeMatcher.whenNot(
+    GraphNodeMatcher.whenAny(
+      AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+      AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
+    ),
+  ),
 );
 
 export default Capability.makeModule(
@@ -148,7 +154,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Don't show assistant companion when a chat is already the primary object.
+      // Don't show assistant companion when a chat (or an agent's chat) is already the primary object.
       AppGraphBuilder.createExtension({
         id: 'companionChat',
         relation: AppNode.companion,

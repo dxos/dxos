@@ -4,8 +4,14 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MediaPlayer, Panel, type ThemedClassName, Toolbar, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Media from '@dxos/react-ui/Media';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -19,7 +25,7 @@ export type StoryboardClip = {
 
 const DEFAULT_STILL_MS = 4_000;
 
-export type StoryboardPlayerProps = ThemedClassName<{
+export type StoryboardPlayerProps = Util.ThemedClassName<{
   clips: readonly StoryboardClip[];
   /** How long a still is shown before advancing. */
   stillMs?: number;
@@ -40,8 +46,8 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const toolbarRef = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
   const isVideo = clip?.contentType?.startsWith('video/') ?? false;
@@ -61,7 +67,7 @@ export const StoryboardPlayer = ({
   }, [clip, isVideo, advance, stillMs]);
 
   // Opening the player unmounts whatever control opened it, which drops focus to the body; the
-  // toolbar takes it back so the plank stays attended (attention follows focus into an attendable)
+  // toolbar's first control takes it back so the plank stays attended (attention follows focus into an attendable)
   // and the transport is a key away. The attendable attributes mark the panel as that attention's
   // surface, which is what draws the attention ring.
   const attentionAttributes = useAttentionAttributes(attendableId);
@@ -74,18 +80,19 @@ export const StoryboardPlayer = ({
   }
 
   return (
-    <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root ref={toolbarRef} tabIndex={-1} classNames='outline-none'>
+    <Panel.Root {...Util.composableProps({ classNames }, attentionAttributes)}>
+      <Panel.Header>
+        <Toolbar.Root>
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
               than a grid on the root: the root brackets its children with focus sentinels, which
               would take the first and last cells. */}
-          <div className='grow grid grid-cols-[auto_1fr_auto] items-center gap-1'>
-            <div className='flex items-center gap-1'>
-              <Toolbar.IconButton
+          <Layout.Grid cols={['auto', 'fill', 'auto']} align='center' gap='xs' classNames='grow'>
+            <Layout.Flex align='center' gap='xs'>
+              <Button.Root
                 iconOnly
                 icon='ph--caret-left--regular'
-                density='sm'
+                size='sm'
+                ref={toolbarRef}
                 label={t('previous-frame.label')}
                 disabled={index === 0}
                 onClick={() => setIndex((current) => Math.max(0, current - 1))}
@@ -93,31 +100,31 @@ export const StoryboardPlayer = ({
               <span className='tabular-nums whitespace-nowrap'>
                 {index + 1} / {clips.length}
               </span>
-              <Toolbar.IconButton
+              <Button.Root
                 iconOnly
                 icon='ph--caret-right--regular'
-                density='sm'
+                size='sm'
                 label={t('next-frame.label')}
                 disabled={index + 1 >= clips.length}
                 onClick={advance}
               />
-            </div>
+            </Layout.Flex>
             <span className='min-w-0 truncate text-center'>{clip.name}</span>
-            <div className='flex justify-end'>
-              <Toolbar.IconButton
+            <Layout.Flex justify='end'>
+              <Button.Root
                 iconOnly
                 icon='ph--x--regular'
                 label={t('close.label')}
                 disabled={!onClose}
                 onClick={() => onClose?.()}
               />
-            </div>
-          </div>
+            </Layout.Flex>
+          </Layout.Grid>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
-        <MediaPlayer
+        <Media.Player
           key={clip.id}
           classNames='dx-expand bg-neutral-100 dark:bg-neutral-800'
           src={clip.src}
@@ -127,7 +134,7 @@ export const StoryboardPlayer = ({
           alt={clip.name}
           onEnded={advance}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

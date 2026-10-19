@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Sheet } from '#types';
@@ -33,6 +33,7 @@ export const translations = [
         'range-value.center.label': 'Align center',
         'range-value.end.label': 'Align right',
         'range-value.softwrap.label': 'Wrap text',
+        'range-value.header.label': 'Header',
         'range-value.highlight.label': 'Highlight',
 
         'toolbar-action.label': '{{value}}',
@@ -53,7 +54,22 @@ export const translations = [
         'row-dropped.label': 'Deleted a row',
         'align.label': 'Text align',
         'axis-dropped.label': 'Drop axis', // TODO(burdon): What does this mean?
+
+        'charts-companion.label': 'Charts',
+        'chart-actions.label': 'Chart actions',
+        'add-chart.label': 'Add chart',
+        'delete-chart.label': 'Delete chart',
+        'use-selection.label': 'Use sheet selection as range',
+        'chart-list.label': 'Charts',
+        'no-charts.message': 'No charts',
+        'no-chart-selected.message': 'Select a chart',
+        'resize-chart-list.label': 'Resize chart list',
+        'chart-description.label': '{{range}} · {{type}}',
+        'chart-type.bar.label': 'Bar',
+        'chart-type.pie.label': 'Pie',
+        'chart-type.xy.label': 'XY',
+        'invalid-range.message': 'Invalid range',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

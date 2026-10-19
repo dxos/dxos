@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Markdown.Settings,
       defaultValue: () => ({
@@ -22,6 +22,7 @@ export default Capability.makeModule(() =>
         numberedHeadings: true,
         folding: true,
         experimental: false,
+        commentAgentMode: 'mention' as const,
       }),
     });
 

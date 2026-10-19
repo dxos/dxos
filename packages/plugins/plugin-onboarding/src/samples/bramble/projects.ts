@@ -13,7 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { makeRoutine } from '@dxos/plugin-routine/util';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { Outline, type TaskSet } from '@dxos/types';
 
 import { type DrawingsResult } from './drawings.ts';
@@ -98,7 +98,7 @@ export type ProjectsResult = {
   roasteryOps: Project.Project;
 };
 
-export const Projects: SampleSpace.Phase<ProjectsResult, ProjectsInput> = SampleSpace.phase('projects', {
+export const Projects: SampleSpace.Partial<ProjectsResult, ProjectsInput> = SampleSpace.partial('projects', {
   schemas: [Project.Project, Instructions.Instructions, Routine.Routine, Trigger.Trigger, Outline.Outline],
   run: ({ taskSets, notes, drawings, about, mailbox, organizations }) =>
     Effect.gen(function* () {
@@ -164,7 +164,7 @@ export const Projects: SampleSpace.Phase<ProjectsResult, ProjectsInput> = Sample
       // Disabled: a sample space never spends the user's credits until they turn it on.
       Project.addRoutine(
         roasteryOps,
-        makeRoutine({
+        Wire.makeRoutine({
           name: 'Weekly roast report',
           instructions: Instructions.make({
             name: 'Weekly roast report',

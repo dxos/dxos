@@ -5,13 +5,14 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { useObject, useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { Card, useTranslation } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -29,7 +30,8 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [snapshot] = useObject(subject);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.
@@ -77,8 +79,8 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     if (!readonly) {
       return true;
     }
-    return properties.some((prop) => (subject as any)?.[prop.name] != null);
-  }, [schema, subject, readonly]);
+    return properties.some((prop) => Reflect.get(snapshot, prop.name) != null);
+  }, [schema, snapshot, readonly]);
 
   const handleSave = useCallback(
     (values: AnyProperties, { changed }: FormUpdateMeta<AnyProperties>) => {
@@ -98,26 +100,25 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     return (
       <Card.Body>
         <Card.Row>
-          <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
+          <Card.Text variant='muted'>{t('unable-to-create-preview.message')}</Card.Text>
         </Card.Row>
       </Card.Body>
     );
   }
-
-  const { icon, hue } = Obj.getIcon(subject) ?? { icon: 'ph--circle-dashed--regular', hue: 'neutral' };
 
   return (
     <Card.Body>
       <Form.Root
         schema={schema}
         projection={projection}
-        values={subject}
+        values={snapshot}
         readonly={readonly}
         layout={resolvedLayout}
         autoSave
         onSave={handleSave}
       >
-        <Form.Viewport>
+        {/* Joins the card's rails, so the fields start at the header's text edge rather than a gutter further in. */}
+        <Form.Viewport gutter='inherit' width='full'>
           <Form.Content>
             <Form.Fields />
           </Form.Content>

@@ -4,16 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -24,9 +23,8 @@ export type JoinDialogProps = JoinPanelProps & {
 };
 
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
-  const { t } = useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -71,18 +69,15 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
     [invokePromise, client, navigableCollections, onDone],
   );
 
-  // TODO(burdon): Move JoinHeading into Dialog.Heading.
+  // The panel supplies the Header (and its Title), then each step's Body and Footer.
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
-      <Dialog.Body>
-        <JoinPanel
-          {...props}
-          exitActionParent={<Dialog.Close asChild />}
-          doneActionParent={<Dialog.Close asChild />}
-          onDone={handleDone}
-        />
-      </Dialog.Body>
+      <JoinPanel
+        {...props}
+        exitActionParent={<Dialog.CloseTrigger asChild />}
+        doneActionParent={<Dialog.CloseTrigger asChild />}
+        onDone={handleDone}
+      />
     </Dialog.Content>
   );
 };

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
@@ -80,10 +79,10 @@ export type AssetClass = Schema.Schema.Type<typeof AssetClass>;
 /** Valuation multiples (reserved for future market-data sources). */
 export const FundamentalsValuation = Schema.Struct({
   marketCap: Schema.optional(
-    Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotate({ title: 'Market cap' })),
+    Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'Market cap' })),
   ),
-  pe: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotate({ title: 'P/E' }))),
-  pb: Schema.optional(Schema.Number.pipe(FormInputAnnotation.set(false), Schema.annotate({ title: 'P/B' }))),
+  pe: Schema.optional(Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'P/E' }))),
+  pb: Schema.optional(Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'P/B' }))),
 }).pipe(Schema.annotate({ title: 'Valuation' }));
 export type FundamentalsValuation = Schema.Schema.Type<typeof FundamentalsValuation>;
 
@@ -163,7 +162,9 @@ export type FundamentalsAdditional = Schema.Schema.Type<typeof FundamentalsAddit
 
 /** Transient fundamentals snapshot returned by {@link IbkrOperation.GetInstrumentFundamentals} from SEC EDGAR. */
 export const FundamentalsSnapshot = Schema.Struct({
-  asOf: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false), Schema.annotate({ title: 'As of' }))),
+  asOf: Schema.optional(
+    Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'As of' })),
+  ),
   valuation: Schema.optional(FundamentalsValuation),
   performance: Schema.optional(FundamentalsPerformance),
   ratios: Schema.optional(FundamentalsRatios),
@@ -193,7 +194,7 @@ export class Instrument extends Type.makeObject<Instrument>(DXN.make('org.dxos.t
     country: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Country' }))),
     description: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Description' }))),
   }).pipe(
-    LabelAnnotation.set(['symbol', 'name']),
+    Annotation.LabelAnnotation.set(['symbol', 'name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-line-up--regular', hue: 'blue' }),
     Annotation.UserType.set(),
   ),
@@ -282,7 +283,7 @@ export class Lot extends Type.makeObject<Lot>(DXN.make('org.dxos.type.ibkr.Lot',
     realizedPnl: Schema.optional(Schema.Number.pipe(Schema.annotate({ title: 'Realized P/L' }))),
     currency: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Currency' }))),
   }).pipe(
-    LabelAnnotation.set(['symbol', 'quantity']),
+    Annotation.LabelAnnotation.set(['symbol', 'quantity']),
     Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
     Annotation.UserType.set(),
   ),

@@ -5,10 +5,10 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import type * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common/index.ts';

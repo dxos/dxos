@@ -9,8 +9,10 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -26,7 +28,7 @@ export type AgentPropertiesProps = {
 };
 
 export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
 
   // Build a filter matching objects of any schema annotated as a feed.
@@ -89,15 +91,14 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
       </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Field.Checkbox
+        <Input.Checkbox
           key={object.id}
           checked={subscribedUris.has(Obj.getURI(object))}
-          onCheckedChange={(checked) => {
+          onCheckedChange={({ checked }) => {
             handleSubscriptionChange(object, checked === true);
           }}
-        >
-          {Obj.getLabel(object) ?? object.id}
-        </Field.Checkbox>
+          label={Obj.getLabel(object) ?? object.id}
+        />
       ))}
     </Form.FieldSet>
   );

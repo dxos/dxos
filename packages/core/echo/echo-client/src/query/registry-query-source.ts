@@ -22,6 +22,8 @@ import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util.ts';
 export class RegistryQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
+  readonly kind = 'registry';
+
   #registry: Registry.Registry;
   #ctx: Context | undefined = undefined;
   #query: QueryAST.Query | undefined = undefined;
@@ -47,6 +49,18 @@ export class RegistryQuerySource implements QuerySource {
       return [];
     }
     return this.#match(simple.filter);
+  }
+
+  isServing(): boolean {
+    return this.isSynchronous();
+  }
+
+  answers(): number {
+    return 0;
+  }
+
+  isFailed(): boolean {
+    return false;
   }
 
   /** The in-process registry is matched on read, so this source never has an answer outstanding. */

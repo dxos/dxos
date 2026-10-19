@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import {
   CommandConfig,
@@ -38,6 +38,8 @@ export const handler = Effect.fn(function* ({
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
+  // A space is listed before it has opened, and sharing one that has not throws.
+  yield* Effect.promise(() => space.waitUntilReady());
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = space.share({

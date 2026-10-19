@@ -1,94 +1,91 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { DRAWER_MAX_HEIGHT, Main, type MainRootProps } from './Main.tsx';
-import { useMainContext, useSidebars } from './MainContext.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Main from './Main.tsx';
 
-type StoryMainArgs = Pick<
-  MainRootProps,
-  'defaultNavigationSidebarState' | 'defaultComplementarySidebarState' | 'defaultDrawerState'
->;
+type StoryArgs = Pick<Main.RootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'> & {
+  defaultDrawerState?: Main.DrawerState;
+};
 
-const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
-  const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
+const NavigationToggle = () => {
+  const { toggleNavigationSidebar } = Main.useMainSidebars('Story.NavigationToggle');
   return (
-    <IconButton
-      icon={close ? 'ph--caret-left--regular' : 'ph--caret-right--regular'}
-      iconOnly
-      label='Toggle navigation sidebar'
-      onClick={toggleNavigationSidebar}
-    />
+    <Button icon='ph--sidebar-simple--regular' iconOnly label='Toggle navigation' onClick={toggleNavigationSidebar} />
   );
 };
 
-const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
-  const { toggleComplementarySidebar } = useSidebars('StoryMain__SidebarToggle');
+const ComplementaryToggle = () => {
+  const { toggleComplementarySidebar } = Main.useMainSidebars('Story.ComplementaryToggle');
   return (
-    <IconButton
-      icon={close ? 'ph--caret-right--regular' : 'ph--caret-left--regular'}
+    <Button
+      icon='ph--sidebar-simple--regular'
       iconOnly
-      label='Toggle complementary sidebar'
+      label='Toggle complementary'
       onClick={toggleComplementarySidebar}
     />
   );
 };
 
-const DrawerClose = () => {
-  const { setDrawerState } = useMainContext('StoryMain__DrawerClose');
-  return <Button onClick={() => setDrawerState('closed')}>Close</Button>;
-};
+/** Buttons inside a landmark, so Enter has somewhere to move focus and the area reads like a populated sidebar. */
+const AreaItems = ({ label }: { label: string }) => (
+  <>
+    {['One', 'Two', 'Three'].map((item) => (
+      <Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Button>
+    ))}
+  </>
+);
 
 const DefaultStory = ({
   defaultNavigationSidebarState = 'closed',
   defaultComplementarySidebarState = 'closed',
   defaultDrawerState = 'closed',
-}: StoryMainArgs) => {
+}: StoryArgs) => {
+  const [drawerState, setDrawerState] = useState<Main.DrawerState>(defaultDrawerState);
   return (
     <Main.Root
       defaultNavigationSidebarState={defaultNavigationSidebarState}
       defaultComplementarySidebarState={defaultComplementarySidebarState}
-      defaultDrawerState={defaultDrawerState}
+      drawerState={drawerState}
+      onDrawerStateChange={setDrawerState}
     >
       <Main.Overlay />
       <Main.NavigationSidebar label='Navigation'>
         <Toolbar.Root>
-          <h1>Navigation</h1>
-          <Toolbar.Separator />
-          <NavigationSidebarToggle close />
+          <Toolbar.Text>Navigation</Toolbar.Text>
         </Toolbar.Root>
-        <p className='p-4'>Swipe toward the edge to dismiss.</p>
+        <AreaItems label='Navigation' />
       </Main.NavigationSidebar>
-      <Main.Content classNames='w-full'>
+      <Main.Content handlesFocus data-testid='content'>
         <Toolbar.Root>
-          <NavigationSidebarToggle />
-          <div className='flex items-center grow justify-center'>Main</div>
-          <ComplementarySidebarToggle />
+          <NavigationToggle />
+          <Toolbar.Text>Main</Toolbar.Text>
+          <Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>Drawer</Button>
+          <ComplementaryToggle />
         </Toolbar.Root>
-        <div className='h-[200dvh] p-4'>Tall content</div>
+        <AreaItems label='Main' />
+        <div className='h-[150dvh] p-4'>Tall content</div>
       </Main.Content>
       <Main.Drawer label='Drawer'>
-        <div className='flex items-center gap-2 p-2'>
-          <span className='grow'>Drawer content</span>
-          <DrawerClose />
-        </div>
+        <Typography.Text>Drawer content</Typography.Text>
       </Main.Drawer>
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>
-          <ComplementarySidebarToggle close />
-          <Toolbar.Separator />
-          <h1>Complementary</h1>
+          <Toolbar.Text>Complementary</Toolbar.Text>
         </Toolbar.Root>
-        <p className='p-4'>Swipe toward the edge to dismiss.</p>
+        <AreaItems label='Complementary' />
       </Main.ComplementarySidebar>
     </Main.Root>
   );
@@ -96,41 +93,51 @@ const DefaultStory = ({
 
 const meta = {
   title: 'ui/react-ui-core/components/Main',
-  component: Main.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
+  args: { defaultNavigationSidebarState: 'expanded', defaultComplementarySidebarState: 'expanded' },
+  argTypes: {
+    defaultNavigationSidebarState: { control: 'inline-radio', options: ['closed', 'collapsed', 'expanded'] },
+    defaultComplementarySidebarState: { control: 'inline-radio', options: ['closed', 'collapsed', 'expanded'] },
   },
-} satisfies Meta<typeof DefaultStory>;
+  parameters: { layout: 'fullscreen', translations },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {},
+export const Default: Story = {};
+
+const sidebar = (canvasElement: HTMLElement, side: 'start' | 'end') => {
+  const element = canvasElement.querySelector<HTMLElement>(`[data-scope="main"][data-side="${side}"]`);
+  if (!element) {
+    throw new Error(`No ${side} sidebar`);
+  }
+  return element;
 };
 
-/** The toggles drive the sidebar states, which the sidebars carry as data attributes. */
-export const TestToggle: Story = {
-  args: {},
+/** The toggles drive the sidebar states; a closed sidebar is inert and off screen, an open one a labelled landmark. */
+export const Test: Story = {
+  args: { defaultNavigationSidebarState: 'closed', defaultComplementarySidebarState: 'closed' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe(
-      'closed',
-    );
-    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.hasAttribute('inert')).toBe(true);
-    await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[1]);
-    await waitFor(async () =>
-      expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('expanded'),
-    );
-    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.hasAttribute('inert')).toBe(false);
-    await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[0]);
-    await waitFor(async () =>
-      expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('closed'),
-    );
+    const start = sidebar(canvasElement, 'start');
+    await expect(start).toHaveAttribute('data-state', 'closed');
+    await expect(start).toHaveAttribute('inert');
+    await expect(start.getBoundingClientRect().right).toBeLessThanOrEqual(0);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Toggle navigation' }));
+    await waitFor(() => expect(start).toHaveAttribute('data-state', 'expanded'));
+    await expect(start).not.toHaveAttribute('inert');
+    await expect(start).toHaveAccessibleName('Navigation');
+    await waitFor(() => expect(start.getBoundingClientRect().left).toBeGreaterThanOrEqual(0));
+    await expect(start.getBoundingClientRect().width).toBeGreaterThan(0);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Toggle complementary' }));
+    const end = sidebar(canvasElement, 'end');
+    await waitFor(() => expect(end).toHaveAttribute('data-state', 'expanded'));
+    await waitFor(() => expect(end.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth + 0.5));
   },
 };
 
@@ -139,181 +146,69 @@ export const Drawer: Story = {
   args: { defaultDrawerState: 'open' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const content = canvasElement.querySelector<HTMLElement>('main');
-    await expect(content).not.toBeNull();
-    await expect(canvas.getByRole('region', { name: 'Drawer' })).toBeInTheDocument();
-    await expect(canvas.getByText('Drawer content')).toBeInTheDocument();
-    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('384px'));
-    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
-    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('0px'));
-  },
-};
-
-/** Escape on the drawer's region closes it, as it does the floating window it stands in for. */
-export const DrawerEscape: Story = {
-  args: { defaultDrawerState: 'open' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const content = canvasElement.querySelector<HTMLElement>('main');
     const region = canvas.getByRole('region', { name: 'Drawer' });
-    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('384px'));
-    region.focus();
-    await expect(region).toHaveFocus();
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
-    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('0px'));
-  },
-};
+    const content = canvas.getByTestId('content');
+    const height = region.getBoundingClientRect().height;
+    await expect(height).toBeCloseTo(Main.MAIN_DRAWER_DEFAULT_HEIGHT * 16, 0);
+    await expect(parseFloat(getComputedStyle(content).paddingBlockEnd)).toBeCloseTo(height, 0);
 
-/** The resize handle is a separator: arrow keys step its value a rem at a time within its bounds. */
-export const DrawerResizeKeyboard: Story = {
-  args: { defaultDrawerState: 'open' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const content = canvasElement.querySelector<HTMLElement>('main');
-    const handle = canvas.getByRole('separator', { name: 'Resize drawer' });
-    await expect(handle).toHaveAttribute('aria-orientation', 'horizontal');
-    await expect(handle).toHaveAttribute('aria-valuenow', '24');
+    // The resize handle is a separator that steps a rem per arrow key.
+    const handle = within(region).getByRole('separator', { name: 'Resize drawer' });
     handle.focus();
     await userEvent.keyboard('{ArrowUp}');
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '25'));
-    await waitFor(() => expect(content && getComputedStyle(content).paddingBlockEnd).toBe('400px'));
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '23'));
-    // Past the bound the value pins.
-    await userEvent.keyboard(`{ArrowUp>${DRAWER_MAX_HEIGHT}/}`);
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', String(DRAWER_MAX_HEIGHT)));
+    await waitFor(() => expect(region.getBoundingClientRect().height).toBeCloseTo(height + 16, 0));
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Drawer' }));
+    await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
+    await waitFor(() => expect(parseFloat(getComputedStyle(content).paddingBlockEnd)).toBe(0));
   },
 };
 
-const pointer = (type: string, target: EventTarget, x: number, y: number) =>
-  target.dispatchEvent(
-    new PointerEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      clientX: x,
-      clientY: y,
-      pointerId: 1,
-      pointerType: 'touch',
-      isPrimary: true,
-    }),
-  );
-
-const tick = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 /**
- * Below `lg` the sidebars are the drawer machine's content; at `lg` they are plain landmarks. The
- * viewport persists across the file's stories, so it is restored after the play.
+ * The sidebars and the main area are focus areas: Tab moves between them, and the focused one draws an inset ring that
+ * paints over its children, so a toolbar's background cannot hide it; the main area's spans only its visible part.
  */
-const narrow = async (play: () => Promise<void>) => {
-  const { page } = await import('@vitest/browser/context');
-  const { innerWidth, innerHeight } = window;
-  await page.viewport(800, 600);
-  try {
-    await play();
-  } finally {
-    await page.viewport(innerWidth, innerHeight);
-  }
-};
-
-const query = (canvasElement: HTMLElement, selector: string) =>
-  waitFor(() => {
-    const element = canvasElement.querySelector<HTMLElement>(selector);
-    if (!element) {
-      throw new Error(`Not rendered: ${selector}`);
+export const FocusAreas: Story = {
+  play: async ({ canvasElement }) => {
+    const areas = [
+      sidebar(canvasElement, 'start'),
+      within(canvasElement).getByTestId('content'),
+      sidebar(canvasElement, 'end'),
+    ];
+    const reached = new Set<HTMLElement>();
+    for (let step = 0; step < 30 && reached.size < areas.length; step++) {
+      await userEvent.tab();
+      const area = areas.find((candidate) => candidate === document.activeElement);
+      if (area) {
+        reached.add(area);
+        if (area === areas[1]) {
+          // The content's ring is a fixed overlay over the visible area between the sidebars.
+          const ring = getComputedStyle(area, '::after');
+          await expect(ring.boxShadow).not.toBe('none');
+          await expect(parseFloat(ring.left)).toBeCloseTo(areas[0].getBoundingClientRect().right, 0);
+          await expect(parseFloat(ring.right)).toBeCloseTo(
+            window.innerWidth - areas[2].getBoundingClientRect().left,
+            0,
+          );
+        } else {
+          const style = getComputedStyle(area);
+          await expect(style.outlineStyle).toBe('solid');
+          await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
+        }
+      }
     }
-    return element;
-  });
+    await expect(reached.size).toBe(areas.length);
 
-const sidebarOf = (canvasElement: HTMLElement, side: 'is' | 'ie') =>
-  query(canvasElement, `[data-side="${side}"][role="dialog"]`);
-
-/** Swiping a sidebar a third of its width toward its edge closes it; the other sidebar stays open. */
-const swipeToDismiss = async (canvasElement: HTMLElement, side: 'is' | 'ie') => {
-  const sidebar = await sidebarOf(canvasElement, side);
-  // Let the inset slide finish so the machine measures the open extent.
-  await tick(400);
-  const rect = sidebar.getBoundingClientRect();
-  const paragraph = within(sidebar).getByText('Swipe toward the edge to dismiss.');
-  const start = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  const direction = side === 'is' ? -1 : 1;
-  const distance = rect.width / 3;
-  pointer('pointerdown', paragraph, start.x, start.y);
-  await tick(16);
-  for (let step = 1; step <= 12; step++) {
-    pointer('pointermove', paragraph, start.x + (direction * distance * step) / 12, start.y);
-    await tick(16);
-  }
-  // Mid-drag the machine owns the panel's position through its inline transform.
-  await expect(sidebar.hasAttribute('data-dragging')).toBe(true);
-  await expect(sidebar.style.getPropertyValue('--drawer-translate-x')).not.toBe('0px');
-  pointer('pointerup', paragraph, start.x + direction * distance, start.y);
-  // A dismissal returns the sidebar to its resting state, not to `closed`.
-  await waitFor(() => expect(sidebar.getAttribute('data-state')).toBe('collapsed'));
-  await waitFor(() => expect(sidebar.hasAttribute('data-dragging')).toBe(false));
-};
-
-/** Both open at once (a click outside one would close it, so they open together on mount). */
-export const TestSwipeToDismiss: Story = {
-  args: { defaultNavigationSidebarState: 'expanded', defaultComplementarySidebarState: 'expanded' },
-  play: ({ canvasElement }) =>
-    narrow(async () => {
-      await swipeToDismiss(canvasElement, 'is');
-      // Closing one sidebar does not dismiss the other through the layer stack.
-      await expect(canvasElement.querySelector('[data-side="ie"]')?.getAttribute('data-state')).toBe('expanded');
-      await swipeToDismiss(canvasElement, 'ie');
-    }),
-};
-
-/** A short drag snaps back instead of closing. */
-export const TestSwipeSnapBack: Story = {
-  play: ({ canvasElement }) =>
-    narrow(async () => {
-      const canvas = within(canvasElement);
-      await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[1]);
-      const sidebar = await sidebarOf(canvasElement, 'is');
-      await waitFor(() => expect(sidebar.getAttribute('data-state')).toBe('expanded'));
-      await tick(400);
-
-      const rect = sidebar.getBoundingClientRect();
-      const paragraph = within(sidebar).getByText('Swipe toward the edge to dismiss.');
-      const start = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-      pointer('pointerdown', paragraph, start.x, start.y);
-      for (let step = 1; step <= 6; step++) {
-        pointer('pointermove', paragraph, start.x - step * 4, start.y);
-        await tick(40);
-      }
-      pointer('pointerup', paragraph, start.x - 24, start.y);
-
-      await tick(400);
-      await expect(sidebar.getAttribute('data-state')).toBe('expanded');
-      await expect(sidebar.style.getPropertyValue('--drawer-translate-x')).toBe('0px');
-    }),
-};
-
-/** A touch swipe inward from the edge opens the sidebar resting `collapsed`, the deck's default below `lg`. */
-export const TestSwipeToOpen: Story = {
-  args: { defaultNavigationSidebarState: 'collapsed' },
-  play: ({ canvasElement }) =>
-    narrow(async () => {
-      const sidebar = await sidebarOf(canvasElement, 'is');
-      await expect(sidebar.getAttribute('data-state')).toBe('collapsed');
-      const swipeArea = await query(canvasElement, '[data-part="swipe-area"][data-swipe-direction="right"]');
-
-      const start = { x: 4, y: 300 };
-      const touch = new Touch({ identifier: 1, target: swipeArea, clientX: start.x, clientY: start.y });
-      swipeArea.dispatchEvent(
-        new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [touch], targetTouches: [touch] }),
-      );
-      await tick(16);
-      const distance = 240;
-      for (let step = 1; step <= 12; step++) {
-        pointer('pointermove', swipeArea, start.x + (distance * step) / 12, start.y);
-        await tick(16);
-      }
-      pointer('pointerup', swipeArea, start.x + distance, start.y);
-      await waitFor(() => expect(sidebar.getAttribute('data-state')).toBe('expanded'));
-    }),
+    // On a focused area, ArrowRight and ArrowLeft move between areas as Tab and Shift+Tab do, but stop at the ends.
+    areas[0].focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(areas[1]).toHaveFocus());
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(areas[0]).toHaveFocus());
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(areas[0]).toHaveFocus());
+    areas[areas.length - 1].focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(areas[areas.length - 1]).toHaveFocus());
+  },
 };

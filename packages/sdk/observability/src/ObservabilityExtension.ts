@@ -85,7 +85,7 @@ export type Inference = {
   parentSpanId?: string;
   /** Provider span name, e.g. `LanguageModel.streamText`. */
   spanName: string;
-  /** `gen_ai.system` — the serving product, not the wire dialect. */
+  /** `gen_ai.provider.name` — the serving product, not the wire dialect. */
   provider?: string;
   model?: string;
   /** Conversation the call belongs to, when the call site named one. */
@@ -184,8 +184,13 @@ export type Mcp = {
  */
 export type SupportLogTags = { ticketId: string } | { reportId: string };
 
+/** What an uploaded NDJSON bundle is, which decides where it is filed in storage. */
+export type SupportUploadKind = 'logs' | 'trajectory';
+
 export type Support = {
   uploadLogs(): Promise<string | undefined>;
+  /** Uploads an NDJSON bundle the caller built (e.g. an agent trajectory), returning its storage key. */
+  uploadNdjson(ndjson: string, kind: SupportUploadKind): Promise<string | undefined>;
   sessionContext(): SupportSessionContext | undefined;
   flushLogs(attributes: SupportLogTags): Promise<void>;
 };

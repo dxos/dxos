@@ -11,9 +11,12 @@
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
-# Autonomous-mode run state: the pinned task, its definition of done, and the
-# block budget the Stop hook spends. Per-worktree runtime, like the mode.
+# Autonomous-mode run state: the pinned task, the session that owns it, its
+# definition of done, and the block budget the Stop hook spends. Per-worktree
+# runtime, like the mode.
 .claude/.autonomous
+.claude/.autonomous-session
+.claude/.autonomous.lock
 .claude/.autonomous-dod
 .claude/.autonomous-reminders
 # Its two logs. Both are session evidence, not source: the user log is a verbatim
@@ -50,6 +53,9 @@ vitest-results.json
 
 # Mocha
 test-results
+
+# perf CLI: cached arms, runs and the per-worktree ledger
+.perf
 
 # Vitest
 __screenshots__
@@ -274,6 +280,7 @@ node_modules
 .agents/reviews/*/STAGING.md
 .agents/reviews/*/groups.json
 .agents/reviews/*/groups/
+.agents/reviews/*/system-one.json
 
 # Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.

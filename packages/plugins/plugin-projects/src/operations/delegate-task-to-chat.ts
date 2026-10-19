@@ -5,7 +5,10 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 
+import { SessionConfig } from '@dxos/ai';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
@@ -15,6 +18,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Task } from '@dxos/types';
@@ -23,6 +27,7 @@ import { concat } from '@dxos/util';
 import { ProjectOperation } from '#types';
 
 import { findProject } from './find-project.ts';
+import { projectContext, renderDelegationBrief } from './task-brief.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
@@ -44,7 +49,7 @@ const FINISHED: ReadonlySet<string> = new Set(['done', 'review', 'cancelled', 'd
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ tasks: taskRefs }) {
+      Effect.fnUntraced(function* ({ tasks: taskRefs, harness: requestedHarness }) {
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
@@ -105,6 +110,12 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           Chat.seedSession(chat, project.session);
         }
 
+        // Every new chat names its agent, so the agent service never has to guess from an unset field.
+        const harness = yield* resolveHarness(requestedHarness);
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, harness };
+        });
+
         // Added here rather than through `SpaceOperation.AddObject`: this is a database write, and
         // routing it through plugin-space would make the operation unavailable to any host that does
         // not run that plugin.
@@ -157,9 +168,20 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
+        const prompt =
+          harness === SessionConfig.COMPOSER_HARNESS
+            ? OPENING_PROMPT
+            : renderDelegationBrief({
+                tasks,
+                project,
+                context: project ? yield* projectContext(project) : undefined,
+              });
+        // Another agent's brief is the system writing on the reader's behalf, so it shows as context
+        // rather than as words the reader typed.
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
-          prompt: OPENING_PROMPT,
+          prompt,
+          ...(harness !== SessionConfig.COMPOSER_HARNESS && { disposition: 'synthetic' as const }),
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
           log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
@@ -180,6 +202,29 @@ const OPENING_PROMPT = concat`
   This may require you to read, update, or create artifacts associated with the project.
   Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
 `;
+
+/**
+ * The agent the chat runs on: the one asked for, else the person's default agent while it is
+ * available on this device, else Composer's own.
+ */
+const resolveHarness = Effect.fnUntraced(function* (requested: string | undefined) {
+  const agents = yield* Capability.getAll(AssistantCapabilities.Agent);
+  if (requested) {
+    invariant(
+      requested === SessionConfig.COMPOSER_HARNESS || agents.some((agent) => agent.id === requested),
+      `Unknown agent: ${requested}`,
+    );
+    return requested;
+  }
+  const registry = yield* Capability.getOption(Capabilities.AtomRegistry);
+  const settings = yield* Capability.getOption(AssistantCapabilities.Settings);
+  if (Option.isNone(registry) || Option.isNone(settings)) {
+    return SessionConfig.COMPOSER_HARNESS;
+  }
+  const preferred = registry.value.get(settings.value).defaultAgent;
+  const agent = agents.find((agent) => agent.id === preferred);
+  return agent && registry.value.get(agent.availability).available ? agent.id : SessionConfig.COMPOSER_HARNESS;
+});
 
 /** The delegating identity as an actor, for the reviewer field. */
 const currentActor = Effect.gen(function* () {

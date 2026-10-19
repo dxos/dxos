@@ -1,0 +1,2018 @@
+{
+  "load": {
+    "db": "watdiv10",
+    "file": "watdiv10.nt",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791872891",
+    "at": "2026-10-13T06:30:13.761Z",
+    "pingMs": 28.10948600000006,
+    "batchLines": 20000,
+    "concurrency": 2,
+    "quadsSent": 1100872,
+    "rawBytes": 153543671,
+    "gzBytes": 7560795,
+    "elapsedMs": 31941.984958000005,
+    "quadsPerSec": 34464.73353010211,
+    "medianBatchMs": 1158.3312440000009,
+    "p90BatchMs": 1525.6013869999988,
+    "maxBatchMs": 1646.0065920000015,
+    "stats": {
+      "triples": 1087673,
+      "dbBytes": 69922816,
+      "terms": 110709,
+      "termLexBytes": 6499747,
+      "indexes": "spo,pos,osp"
+    },
+    "bytesPerTriple": 64.2866155544911
+  },
+  "hints": {
+    "db": "watdiv10",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "1",
+    "at": "2026-10-13T06:46:45.133Z",
+    "pingMs": 30.208046000000024,
+    "stats": {
+      "triples": 1087673,
+      "dbBytes": 69922816,
+      "terms": 110709,
+      "termLexBytes": 6499747,
+      "indexes": "spo,pos,osp"
+    },
+    "stat1": [
+      { "idx": "quads_osp", "stat": "635399 10 1 1 1" },
+      { "idx": "quads_pos", "stat": "635399 14441 9 1 1" },
+      { "idx": "quads", "stat": "635399 13 5 1 1" }
+    ],
+    "queries": [
+      {
+        "id": "W-L1a",
+        "family": "watdiv",
+        "template": "W-L1",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 WHERE {\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/subscribes> <http://db.uwaterloo.ca/~galuc/wsdbm/Website236> .\n\t?v2 <http://schema.org/caption> ?v3 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v2 .\n}",
+        "rows": 2,
+        "checksum": "722e3feb",
+        "firstMs": 43.63385900000003,
+        "wallMs": 31.768100000000004,
+        "serverMs": 0,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q1.s AS \"v2\", q1.o AS \"v3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 109882, 2.359e-2)) AND (likelihood(q0.o = 51986, 1.934e-3)) AND (likelihood(q1.p = 12303, 4.281e-4)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109881, 1.726e-2)) AND (q1.s = q2.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\"",
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 29, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 33, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 2, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-L1b",
+        "family": "watdiv",
+        "template": "W-L1",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 WHERE {\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/subscribes> <http://db.uwaterloo.ca/~galuc/wsdbm/Website362> .\n\t?v2 <http://schema.org/caption> ?v3 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v2 .\n}",
+        "rows": 2,
+        "checksum": "722e3feb",
+        "firstMs": 32.725627999999915,
+        "wallMs": 30.278704999999945,
+        "serverMs": 0,
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 24, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 24, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 2, "ms": 36 }
+        ]
+      },
+      {
+        "id": "W-L2a",
+        "family": "watdiv",
+        "template": "W-L2",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v1 ?v2 WHERE {\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/City113> <http://www.geonames.org/ontology#parentCountry> ?v1 .\n\t?v2 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> <http://db.uwaterloo.ca/~galuc/wsdbm/Product0> .\n\t?v2 <http://schema.org/nationality> ?v1 .\n}",
+        "rows": 31,
+        "checksum": "17bafa62",
+        "firstMs": 34.2421989999998,
+        "wallMs": 33.69398699999988,
+        "serverMs": 2.561426250000011,
+        "sql": "SELECT r.\"v1\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.o AS \"v1\", q1.s AS \"v2\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (q0.s = 109713) AND (likelihood(q0.p = 109579, 3.777e-4)) AND (likelihood(q1.p = 109881, 1.726e-2)) AND (likelihood(q1.o = 12257, 4.897e-2)) AND (q1.s = q2.s) AND (likelihood(q2.p = 109898, 3.138e-3)) AND (q0.o = q2.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v1\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\"",
+        "plan": [
+          "6/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "11/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "17/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 32 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 517, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 45, "actual": 31, "ms": 35 }
+        ]
+      },
+      {
+        "id": "W-L2b",
+        "family": "watdiv",
+        "template": "W-L2",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v1 ?v2 WHERE {\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/City174> <http://www.geonames.org/ontology#parentCountry> ?v1 .\n\t?v2 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> <http://db.uwaterloo.ca/~galuc/wsdbm/Product0> .\n\t?v2 <http://schema.org/nationality> ?v1 .\n}",
+        "rows": 7,
+        "checksum": "9507c1a1",
+        "firstMs": 34.19473000000016,
+        "wallMs": 31.517147999999906,
+        "serverMs": 0.11294600000007904,
+        "plan": [
+          "6/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "11/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "17/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 37 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 113, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 45, "actual": 7, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-L3a",
+        "family": "watdiv",
+        "template": "W-L3",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 WHERE {\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v1 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/subscribes> <http://db.uwaterloo.ca/~galuc/wsdbm/Website236> .\n}",
+        "rows": 33,
+        "checksum": "f60775db",
+        "firstMs": 32.969560999999885,
+        "wallMs": 30.952624000000014,
+        "serverMs": 0.2630570000000034,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 109881, 1.726e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109882, 2.359e-2)) AND (likelihood(q1.o = 51986, 1.934e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\"",
+        "plan": [
+          "5/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "10/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "21/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 29, "ms": 33 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 33, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-L4a",
+        "family": "watdiv",
+        "template": "W-L4",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 WHERE {\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic118> .\n\t?v0 <http://schema.org/caption> ?v2 .\n}",
+        "rows": 5,
+        "checksum": "5b9c6cf1",
+        "firstMs": 31.465417999999772,
+        "wallMs": 31.80940499999997,
+        "serverMs": 0,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS \"v0\", q1.o AS \"v2\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 109310, 2.398e-2)) AND (likelihood(q0.o = 109539, 3.413e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12303, 4.281e-4))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\"",
+        "plan": [
+          "5/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "10/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "21/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 52, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 5, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-L5a",
+        "family": "watdiv",
+        "template": "W-L5",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 WHERE {\n\t?v0 <http://schema.org/jobTitle> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/City113> <http://www.geonames.org/ontology#parentCountry> ?v3 .\n\t?v0 <http://schema.org/nationality> ?v3 .\n}",
+        "rows": 22,
+        "checksum": "9e8dd3a9",
+        "firstMs": 34.93948,
+        "wallMs": 32.77875600000016,
+        "serverMs": 2.512348750000001,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.o AS \"v3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 92, 7.539e-4)) AND (q1.s = 109713) AND (likelihood(q1.p = 109579, 3.777e-4)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109898, 3.138e-3)) AND (q1.o = q2.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\"",
+        "plan": [
+          "7/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 33 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 517, "ms": 35 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 22, "ms": 37 }
+        ]
+      },
+      {
+        "id": "W-L5b",
+        "family": "watdiv",
+        "template": "W-L5",
+        "kind": "linear",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 WHERE {\n\t?v0 <http://schema.org/jobTitle> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/City174> <http://www.geonames.org/ontology#parentCountry> ?v3 .\n\t?v0 <http://schema.org/nationality> ?v3 .\n}",
+        "rows": 6,
+        "checksum": "0164dabb",
+        "firstMs": 31.616175999999996,
+        "wallMs": 31.798228999999992,
+        "serverMs": 0,
+        "plan": [
+          "7/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 34 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 113, "ms": 34 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 6, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-S1a",
+        "family": "watdiv",
+        "template": "W-S1",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 ?v7 ?v8 ?v9 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer57> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/serialNumber> ?v4 .\n\t?v0 <http://purl.org/goodrelations/validFrom> ?v5 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v6 .\n\t?v0 <http://schema.org/eligibleQuantity> ?v7 .\n\t?v0 <http://schema.org/eligibleRegion> ?v8 .\n\t?v0 <http://schema.org/priceValidUntil> ?v9 .\n}",
+        "rows": 9,
+        "checksum": "daa9f0de",
+        "firstMs": 40.430839000000105,
+        "wallMs": 30.592864000000645,
+        "serverMs": 0.2871309999997038,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"v6\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5, r.\"v7\" AS c6, t6.kind AS k6, t6.lex AS l6, t6.dt AS d6, t6.lang AS g6, r.\"v8\" AS c7, t7.kind AS k7, t7.lex AS l7, t7.dt AS d7, t7.lang AS g7, r.\"v9\" AS c8, t8.kind AS k8, t8.lex AS l8, t8.dt AS d8, t8.lang AS g8 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q2.o AS \"v3\", q3.o AS \"v4\", q4.o AS \"v5\", q5.o AS \"v6\", q6.o AS \"v7\", q7.o AS \"v8\", q8.o AS \"v9\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 JOIN quads AS q6 JOIN quads AS q7 JOIN quads AS q8 WHERE (likelihood(q0.p = 109903, 1.416e-2)) AND (q1.s = 55377) AND (likelihood(q1.p = 109900, 1.754e-2)) AND (q0.s = q1.o) AND (q0.s = q2.s) AND (likelihood(q2.p = 7460, 3.777e-2)) AND (q0.s = q3.s) AND (likelihood(q3.p = 9942, 1.416e-2)) AND (q0.s = q4.s) AND (likelihood(q4.p = 9940, 5.700e-3)) AND (q0.s = q5.s) AND (likelihood(q5.p = 9938, 5.686e-3)) AND (q0.s = q6.s) AND (likelihood(q6.p = 9937, 1.416e-2)) AND (q0.s = q7.s) AND (likelihood(q7.p = 109904, 2.890e-2)) AND (q0.s = q8.s) AND (likelihood(q8.p = 9962, 2.789e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\" LEFT JOIN main.terms t5 ON t5.id = r.\"v6\" LEFT JOIN main.terms t6 ON t6.id = r.\"v7\" LEFT JOIN main.terms t7 ON t7.id = r.\"v8\" LEFT JOIN main.terms t8 ON t8.id = r.\"v9\"",
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "78/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "83/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "88/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "93/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 103, "ms": 34 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 19, "ms": 29 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 7, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 7, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 7, "ms": 34 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 7, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 5, "ms": 35 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 5, "ms": 32 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 9, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-S1b",
+        "family": "watdiv",
+        "template": "W-S1",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 ?v7 ?v8 ?v9 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer82> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/serialNumber> ?v4 .\n\t?v0 <http://purl.org/goodrelations/validFrom> ?v5 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v6 .\n\t?v0 <http://schema.org/eligibleQuantity> ?v7 .\n\t?v0 <http://schema.org/eligibleRegion> ?v8 .\n\t?v0 <http://schema.org/priceValidUntil> ?v9 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 34.76939599999969,
+        "wallMs": 30.936341999999968,
+        "serverMs": 0,
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "78/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "83/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "88/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "93/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 47, "ms": 31 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 7, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 1, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 1, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 1, "ms": 33 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 1, "ms": 32 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 1, "ms": 34 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 1, "ms": 36 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S1c",
+        "family": "watdiv",
+        "template": "W-S1",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 ?v7 ?v8 ?v9 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer51> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/serialNumber> ?v4 .\n\t?v0 <http://purl.org/goodrelations/validFrom> ?v5 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v6 .\n\t?v0 <http://schema.org/eligibleQuantity> ?v7 .\n\t?v0 <http://schema.org/eligibleRegion> ?v8 .\n\t?v0 <http://schema.org/priceValidUntil> ?v9 .\n}",
+        "rows": 15,
+        "checksum": "25d0879e",
+        "firstMs": 33.15646000000015,
+        "wallMs": 30.450716000000284,
+        "serverMs": 0.18857675000003837,
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "78/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "83/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "88/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "93/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 126, "ms": 31 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 32, "ms": 33 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 15, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 15, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 15, "ms": 33 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 15, "ms": 33 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 6, "ms": 33 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 6, "ms": 31 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 15, "ms": 44 }
+        ]
+      },
+      {
+        "id": "W-S2a",
+        "family": "watdiv",
+        "template": "W-S2",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 WHERE {\n\t?v0 <http://purl.org/dc/terms/Location> ?v1 .\n\t?v0 <http://schema.org/nationality> <http://db.uwaterloo.ca/~galuc/wsdbm/Country12> .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/gender> ?v3 .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/Role2> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 33.72039399999994,
+        "wallMs": 29.67276899999979,
+        "serverMs": 0.5688887500000419,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q2.o AS \"v3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 109884, 6.297e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109898, 3.138e-3)) AND (likelihood(q1.o = 109580, 1.856e-2)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109895, 9.520e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 109144, 2.157e-2)) AND (likelihood(q3.o = 109879, 1.536e-1))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\"",
+        "plan": [
+          "8/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "19/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "45/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 37, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 16, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 6, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 225, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S2b",
+        "family": "watdiv",
+        "template": "W-S2",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 WHERE {\n\t?v0 <http://purl.org/dc/terms/Location> ?v1 .\n\t?v0 <http://schema.org/nationality> <http://db.uwaterloo.ca/~galuc/wsdbm/Country11> .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/gender> ?v3 .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/Role2> .\n}",
+        "rows": 1,
+        "checksum": "b9750f26",
+        "firstMs": 32.66321499999958,
+        "wallMs": 30.1656210000001,
+        "serverMs": 0.21101425000006202,
+        "plan": [
+          "8/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "19/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "45/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 40, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 15, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 9, "ms": 32 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 225, "actual": 1, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S3a",
+        "family": "watdiv",
+        "template": "W-S3",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 ?v4 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory7> .\n\t?v0 <http://schema.org/caption> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> ?v3 .\n\t?v0 <http://schema.org/publisher> ?v4 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 35.826928999999836,
+        "wallMs": 29.753985999999713,
+        "serverMs": 0,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3 FROM (SELECT q0.s AS \"v0\", q1.o AS \"v2\", q2.o AS \"v3\", q3.o AS \"v4\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 109144, 2.157e-2)) AND (likelihood(q0.o = 109515, 1.175e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12303, 4.281e-4)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109526, 9.196e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 109925, 1.920e-4))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\"",
+        "plan": [
+          "9/0 SEARCH q3 USING COVERING INDEX quads_pos (p=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "26/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "42/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "47/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 122, "ms": 35 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14441, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 0, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-S3b",
+        "family": "watdiv",
+        "template": "W-S3",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 ?v4 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory6> .\n\t?v0 <http://schema.org/caption> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> ?v3 .\n\t?v0 <http://schema.org/publisher> ?v4 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 32.996924000000035,
+        "wallMs": 29.64550799999961,
+        "serverMs": 0.22194899999999507,
+        "plan": [
+          "9/0 SEARCH q3 USING COVERING INDEX quads_pos (p=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "26/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "42/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "47/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 122, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14441, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 0, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-S4a",
+        "family": "watdiv",
+        "template": "W-S4",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 WHERE {\n\t?v0 <http://xmlns.com/foaf/age> <http://db.uwaterloo.ca/~galuc/wsdbm/AgeGroup4> .\n\t?v0 <http://xmlns.com/foaf/familyName> ?v2 .\n\t?v3 <http://purl.org/ontology/mo/artist> ?v0 .\n\t?v0 <http://schema.org/nationality> <http://db.uwaterloo.ca/~galuc/wsdbm/Country1> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 32.949117000000115,
+        "wallMs": 30.30756399999973,
+        "serverMs": 0.02497575000006691,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q1.o AS \"v2\", q2.s AS \"v3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 109885, 7.827e-3)) AND (likelihood(q0.o = 109888, 2.351e-1)) AND (q0.s = q1.s) AND (likelihood(q1.p = 6, 1.097e-2)) AND (likelihood(q2.p = 110702, 2.329e-4)) AND (q0.s = q2.o) AND (q0.s = q3.s) AND (likelihood(q3.p = 109898, 3.138e-3)) AND (likelihood(q3.o = 109586, 1.259e-1))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\"",
+        "plan": [
+          "8/0 SEARCH q2 USING COVERING INDEX quads_pos (p=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "45/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 148, "ms": 33 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14441, "actual": 6, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 4, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 72205, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S5a",
+        "family": "watdiv",
+        "template": "W-S5",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory7> .\n\t?v0 <http://schema.org/description> ?v2 .\n\t?v0 <http://schema.org/keywords> ?v3 .\n\t?v0 <http://schema.org/language> <http://db.uwaterloo.ca/~galuc/wsdbm/Language0> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.844507999999223,
+        "wallMs": 30.63772599999993,
+        "serverMs": 0.0590020000001914,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q1.o AS \"v2\", q2.o AS \"v3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 109144, 2.157e-2)) AND (likelihood(q0.o = 109515, 1.175e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12266, 2.383e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 12270, 1.119e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 109843, 1.015e-3)) AND (likelihood(q3.o = 109844, 2.434e-1))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\"",
+        "plan": [
+          "8/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "26/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "42/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 157, "ms": 35 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 9, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S5b",
+        "family": "watdiv",
+        "template": "W-S5",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory6> .\n\t?v0 <http://schema.org/description> ?v2 .\n\t?v0 <http://schema.org/keywords> ?v3 .\n\t?v0 <http://schema.org/language> <http://db.uwaterloo.ca/~galuc/wsdbm/Language0> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.75569799999903,
+        "wallMs": 31.673197000000073,
+        "serverMs": 0,
+        "plan": [
+          "8/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "26/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "42/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 157, "ms": 29 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 9, "actual": 0, "ms": 36 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S6a",
+        "family": "watdiv",
+        "template": "W-S6",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 WHERE {\n\t?v0 <http://purl.org/ontology/mo/conductor> ?v1 .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> <http://db.uwaterloo.ca/~galuc/wsdbm/SubGenre68> .\n}",
+        "rows": 1,
+        "checksum": "a8588b7b",
+        "firstMs": 30.761852999999974,
+        "wallMs": 30.888350000001083,
+        "serverMs": 0.2744874999998501,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.o AS \"v2\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 110700, 8.499e-5)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109144, 2.157e-2)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109526, 9.196e-3)) AND (likelihood(q2.o = 109233, 1.421e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v2\"",
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "11/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "21/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 54, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14441, "actual": 1, "ms": 36 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 1, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-S6b",
+        "family": "watdiv",
+        "template": "W-S6",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 WHERE {\n\t?v0 <http://purl.org/ontology/mo/conductor> ?v1 .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> <http://db.uwaterloo.ca/~galuc/wsdbm/SubGenre105> .\n}",
+        "rows": 1,
+        "checksum": "b9f786ad",
+        "firstMs": 32.97561700000006,
+        "wallMs": 31.272711999999956,
+        "serverMs": 0,
+        "plan": [
+          "7/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 27, "ms": 34 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 1, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S7a",
+        "family": "watdiv",
+        "template": "W-S7",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v1 .\n\t?v0 <http://schema.org/text> ?v2 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/User4718> <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v0 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.089347000001,
+        "wallMs": 29.73290300000008,
+        "serverMs": 0,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.o AS \"v2\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (likelihood(q0.p = 109144, 2.157e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12282, 1.191e-3)) AND (q2.s = 47985) AND (likelihood(q2.p = 109881, 1.726e-2)) AND (q0.s = q2.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v2\"",
+        "plan": [
+          "7/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-S7b",
+        "family": "watdiv",
+        "template": "W-S7",
+        "kind": "star",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 WHERE {\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v1 .\n\t?v0 <http://schema.org/text> ?v2 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/User7242> <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v0 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 45.052357000000484,
+        "wallMs": 29.69314900000063,
+        "serverMs": 0.16644774999986112,
+        "plan": [
+          "7/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-F1a",
+        "family": "watdiv",
+        "template": "W-F1",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 ?v4 ?v5 WHERE {\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic118> .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v2 .\n\t?v3 <http://schema.org/trailer> ?v4 .\n\t?v3 <http://schema.org/keywords> ?v5 .\n\t?v3 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> ?v0 .\n\t?v3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory2> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 32.98728099999971,
+        "wallMs": 30.527438999999504,
+        "serverMs": 0.06356600000026447,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v2\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4 FROM (SELECT q0.s AS \"v0\", q1.o AS \"v2\", q2.s AS \"v3\", q2.o AS \"v4\", q3.o AS \"v5\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 109310, 2.398e-2)) AND (likelihood(q0.o = 109539, 3.413e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109144, 2.157e-2)) AND (likelihood(q2.p = 110705, 2.833e-5)) AND (q2.s = q3.s) AND (likelihood(q3.p = 12270, 1.119e-3)) AND (q2.s = q4.s) AND (likelihood(q4.p = 109526, 9.196e-3)) AND (q0.s = q4.o) AND (q2.s = q5.s) AND (likelihood(q5.p = 109144, 2.157e-2)) AND (likelihood(q5.o = 109522, 1.204e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v2\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\"",
+        "plan": [
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=?)",
+          "16/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "22/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "28/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "41/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "51/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "61/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "66/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 18, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 5, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 14, "ms": 36 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 361025, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 1805125, "actual": 0, "ms": 36 }
+        ]
+      },
+      {
+        "id": "W-F1b",
+        "family": "watdiv",
+        "template": "W-F1",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v2 ?v3 ?v4 ?v5 WHERE {\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic171> .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v2 .\n\t?v3 <http://schema.org/trailer> ?v4 .\n\t?v3 <http://schema.org/keywords> ?v5 .\n\t?v3 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> ?v0 .\n\t?v3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://db.uwaterloo.ca/~galuc/wsdbm/ProductCategory2> .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 32.48101900000074,
+        "wallMs": 30.77606100000048,
+        "serverMs": 0.14883249999957116,
+        "plan": [
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=?)",
+          "16/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "22/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "28/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "41/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "51/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "61/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "66/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 18, "ms": 33 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 5, "ms": 31 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 14, "ms": 35 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 361025, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 1805125, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-F2a",
+        "family": "watdiv",
+        "template": "W-F2",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 ?v7 WHERE {\n\t?v0 <http://xmlns.com/foaf/homepage> ?v1 .\n\t?v0 <http://ogp.me/ns#title> ?v2 .\n\t?v0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v3 .\n\t?v0 <http://schema.org/caption> ?v4 .\n\t?v0 <http://schema.org/description> ?v5 .\n\t?v1 <http://schema.org/url> ?v6 .\n\t?v1 <http://db.uwaterloo.ca/~galuc/wsdbm/hits> ?v7 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> <http://db.uwaterloo.ca/~galuc/wsdbm/SubGenre68> .\n}",
+        "rows": 1,
+        "checksum": "3089bd2f",
+        "firstMs": 33.11112399999911,
+        "wallMs": 30.07732600000054,
+        "serverMs": 0.5157029999995757,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"v6\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5, r.\"v7\" AS c6, t6.kind AS k6, t6.lex AS l6, t6.dt AS d6, t6.lang AS g6 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.o AS \"v2\", q3.o AS \"v4\", q4.o AS \"v5\", q5.o AS \"v6\", q6.o AS \"v7\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 JOIN quads AS q6 JOIN quads AS q7 WHERE (likelihood(q0.p = 109577, 1.782e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12259, 3.935e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109144, 2.157e-2)) AND (q0.s = q3.s) AND (likelihood(q3.p = 12303, 4.281e-4)) AND (q0.s = q4.s) AND (likelihood(q4.p = 12266, 2.383e-3)) AND (q0.o = q5.s) AND (likelihood(q5.p = 7310, 7.869e-4)) AND (q0.o = q6.s) AND (likelihood(q6.p = 7308, 7.869e-4)) AND (q0.s = q7.s) AND (likelihood(q7.p = 109526, 9.196e-3)) AND (likelihood(q7.o = 109233, 1.421e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v2\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\" LEFT JOIN main.terms t5 ON t5.id = r.\"v6\" LEFT JOIN main.terms t6 ON t6.id = r.\"v7\"",
+        "plan": [
+          "16/0 SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "21/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "76/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "81/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "86/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "91/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "96/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 83, "ms": 37 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 52, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 21, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 21, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 21, "ms": 32 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28125, "actual": 1, "ms": 33 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 140625, "actual": 1, "ms": 34 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 703125, "actual": 1, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-F3a",
+        "family": "watdiv",
+        "template": "W-F3",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 WHERE {\n\t?v0 <http://schema.org/contentRating> ?v1 .\n\t?v0 <http://schema.org/contentSize> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> <http://db.uwaterloo.ca/~galuc/wsdbm/SubGenre68> .\n\t?v4 <http://db.uwaterloo.ca/~galuc/wsdbm/makesPurchase> ?v5 .\n\t?v5 <http://db.uwaterloo.ca/~galuc/wsdbm/purchaseDate> ?v6 .\n\t?v5 <http://db.uwaterloo.ca/~galuc/wsdbm/purchaseFor> ?v0 .\n}",
+        "rows": 6,
+        "checksum": "7f6ad9bb",
+        "firstMs": 41.76474999999846,
+        "wallMs": 31.42439000000013,
+        "serverMs": 0.12276849999989281,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"v6\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.o AS \"v2\", q3.s AS \"v4\", q3.o AS \"v5\", q4.o AS \"v6\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 12258, 1.166e-3)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12347, 3.966e-4)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109526, 9.196e-3)) AND (likelihood(q2.o = 109233, 1.421e-2)) AND (likelihood(q3.p = 110708, 2.361e-2)) AND (q3.o = q4.s) AND (likelihood(q4.p = 7465, 7.114e-3)) AND (q3.o = q5.s) AND (likelihood(q5.p = 109905, 2.361e-2)) AND (q0.s = q5.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v2\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\" LEFT JOIN main.terms t5 ON t5.id = r.\"v6\"",
+        "plan": [
+          "13/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "39/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "45/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "61/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "66/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "76/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 83, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 34, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 3, "ms": 34 },
+          {
+            "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2025,
+            "actual": 18,
+            "ms": 32
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 18225,
+            "actual": 18,
+            "ms": 32
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 6, "ms": 37 }
+        ]
+      },
+      {
+        "id": "W-F3b",
+        "family": "watdiv",
+        "template": "W-F3",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 WHERE {\n\t?v0 <http://schema.org/contentRating> ?v1 .\n\t?v0 <http://schema.org/contentSize> ?v2 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/hasGenre> <http://db.uwaterloo.ca/~galuc/wsdbm/SubGenre99> .\n\t?v4 <http://db.uwaterloo.ca/~galuc/wsdbm/makesPurchase> ?v5 .\n\t?v5 <http://db.uwaterloo.ca/~galuc/wsdbm/purchaseDate> ?v6 .\n\t?v5 <http://db.uwaterloo.ca/~galuc/wsdbm/purchaseFor> ?v0 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 39.114402000001064,
+        "wallMs": 29.90345900000102,
+        "serverMs": 0,
+        "plan": [
+          "13/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "39/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "45/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "61/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "66/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "71/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "76/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 56, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 15, "ms": 34 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 32 },
+          { "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 2025, "actual": 2, "ms": 35 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 18225,
+            "actual": 2,
+            "ms": 32
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 0, "ms": 35 }
+        ]
+      },
+      {
+        "id": "W-F4a",
+        "family": "watdiv",
+        "template": "W-F4",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 ?v7 ?v8 WHERE {\n\t?v0 <http://xmlns.com/foaf/homepage> ?v1 .\n\t?v2 <http://purl.org/goodrelations/includes> ?v0 .\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic146> .\n\t?v0 <http://schema.org/description> ?v4 .\n\t?v0 <http://schema.org/contentSize> ?v8 .\n\t?v1 <http://schema.org/url> ?v5 .\n\t?v1 <http://db.uwaterloo.ca/~galuc/wsdbm/hits> ?v6 .\n\t?v1 <http://schema.org/language> <http://db.uwaterloo.ca/~galuc/wsdbm/Language0> .\n\t?v7 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v0 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 41.577078000000256,
+        "wallMs": 30.41364600000088,
+        "serverMs": 1.0359867499996653,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"v6\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5, r.\"v7\" AS c6, t6.kind AS k6, t6.lex AS l6, t6.dt AS d6, t6.lang AS g6, r.\"v8\" AS c7, t7.kind AS k7, t7.lex AS l7, t7.dt AS d7, t7.lang AS g7 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q1.s AS \"v2\", q3.o AS \"v4\", q5.o AS \"v5\", q6.o AS \"v6\", q8.s AS \"v7\", q4.o AS \"v8\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 JOIN quads AS q6 JOIN quads AS q7 JOIN quads AS q8 WHERE (likelihood(q0.p = 109577, 1.782e-3)) AND (likelihood(q1.p = 109903, 1.416e-2)) AND (q0.s = q1.o) AND (q0.s = q2.s) AND (likelihood(q2.p = 109310, 2.398e-2)) AND (likelihood(q2.o = 109336, 4.267e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 12266, 2.383e-3)) AND (q0.s = q4.s) AND (likelihood(q4.p = 12347, 3.966e-4)) AND (q0.o = q5.s) AND (likelihood(q5.p = 7310, 7.869e-4)) AND (q0.o = q6.s) AND (likelihood(q6.p = 7308, 7.869e-4)) AND (q0.o = q7.s) AND (likelihood(q7.p = 109843, 1.015e-3)) AND (likelihood(q7.o = 109844, 2.434e-1)) AND (likelihood(q8.p = 109881, 1.726e-2)) AND (q0.s = q8.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v2\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\" LEFT JOIN main.terms t5 ON t5.id = r.\"v6\" LEFT JOIN main.terms t6 ON t6.id = r.\"v7\" LEFT JOIN main.terms t7 ON t7.id = r.\"v8\"",
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "39/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "48/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "57/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "69/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "81/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "86/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "91/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "96/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "101/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "106/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "111/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "116/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 65, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 11, "ms": 32 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 45, "actual": 3, "ms": 32 },
+          { "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 405, "actual": 10, "ms": 31 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 3645,
+            "actual": 63,
+            "ms": 32
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18225, "actual": 43, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 455625, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2278125, "actual": 0, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-F4b",
+        "family": "watdiv",
+        "template": "W-F4",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 ?v7 ?v8 WHERE {\n\t?v0 <http://xmlns.com/foaf/homepage> ?v1 .\n\t?v2 <http://purl.org/goodrelations/includes> ?v0 .\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic181> .\n\t?v0 <http://schema.org/description> ?v4 .\n\t?v0 <http://schema.org/contentSize> ?v8 .\n\t?v1 <http://schema.org/url> ?v5 .\n\t?v1 <http://db.uwaterloo.ca/~galuc/wsdbm/hits> ?v6 .\n\t?v1 <http://schema.org/language> <http://db.uwaterloo.ca/~galuc/wsdbm/Language0> .\n\t?v7 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v0 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.38122199999998,
+        "wallMs": 31.905533000001014,
+        "serverMs": 0,
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "39/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "48/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "57/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "69/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "81/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "86/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "91/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "96/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "101/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "106/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "111/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "116/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 43, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 8, "ms": 32 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 45, "actual": 2, "ms": 32 },
+          { "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 405, "actual": 6, "ms": 30 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 3645,
+            "actual": 18,
+            "ms": 31
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18225, "actual": 18, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 455625, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2278125, "actual": 0, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-F4c",
+        "family": "watdiv",
+        "template": "W-F4",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v2 ?v4 ?v5 ?v6 ?v7 ?v8 WHERE {\n\t?v0 <http://xmlns.com/foaf/homepage> ?v1 .\n\t?v2 <http://purl.org/goodrelations/includes> ?v0 .\n\t?v0 <http://ogp.me/ns#tag> <http://db.uwaterloo.ca/~galuc/wsdbm/Topic150> .\n\t?v0 <http://schema.org/description> ?v4 .\n\t?v0 <http://schema.org/contentSize> ?v8 .\n\t?v1 <http://schema.org/url> ?v5 .\n\t?v1 <http://db.uwaterloo.ca/~galuc/wsdbm/hits> ?v6 .\n\t?v1 <http://schema.org/language> <http://db.uwaterloo.ca/~galuc/wsdbm/Language0> .\n\t?v7 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v0 .\n}",
+        "rows": 27,
+        "checksum": "9d30d9db",
+        "firstMs": 34.60474400000021,
+        "wallMs": 32.446695000000545,
+        "serverMs": 0.6233352499998546,
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "39/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "48/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "57/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "69/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "81/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "86/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "91/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "96/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "101/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "106/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "111/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "116/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 64, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 16, "ms": 32 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 45, "actual": 3, "ms": 31 },
+          { "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 405, "actual": 14, "ms": 34 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 3645,
+            "actual": 60,
+            "ms": 34
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18225, "actual": 51, "ms": 34 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 27, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 455625, "actual": 27, "ms": 32 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2278125, "actual": 27, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-F5a",
+        "family": "watdiv",
+        "template": "W-F5",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer70> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v4 .\n\t?v1 <http://ogp.me/ns#title> ?v5 .\n\t?v1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v6 .\n}",
+        "rows": 27,
+        "checksum": "4d52ff88",
+        "firstMs": 32.779624000000695,
+        "wallMs": 31.814478000000236,
+        "serverMs": 0.8449452499999097,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v3\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v4\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3, r.\"v5\" AS c4, t4.kind AS k4, t4.lex AS l4, t4.dt AS d4, t4.lang AS g4, r.\"v6\" AS c5, t5.kind AS k5, t5.lex AS l5, t5.dt AS d5, t5.lang AS g5 FROM (SELECT q0.s AS \"v0\", q0.o AS \"v1\", q2.o AS \"v3\", q3.o AS \"v4\", q4.o AS \"v5\", q5.o AS \"v6\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 109903, 1.416e-2)) AND (q1.s = 65972) AND (likelihood(q1.p = 109900, 1.754e-2)) AND (q0.s = q1.o) AND (q0.s = q2.s) AND (likelihood(q2.p = 7460, 3.777e-2)) AND (q0.s = q3.s) AND (likelihood(q3.p = 9938, 5.686e-3)) AND (q0.o = q4.s) AND (likelihood(q4.p = 12259, 3.935e-3)) AND (q0.o = q5.s) AND (likelihood(q5.p = 109144, 2.157e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v1\" LEFT JOIN main.terms t2 ON t2.id = r.\"v3\" LEFT JOIN main.terms t3 ON t3.id = r.\"v4\" LEFT JOIN main.terms t4 ON t4.id = r.\"v5\" LEFT JOIN main.terms t5 ON t5.id = r.\"v6\"",
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "53/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "58/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "63/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "68/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "73/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 74, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 74, "ms": 29 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 27, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 27, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 27, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 27, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-F5b",
+        "family": "watdiv",
+        "template": "W-F5",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer72> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v4 .\n\t?v1 <http://ogp.me/ns#title> ?v5 .\n\t?v1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v6 .\n}",
+        "rows": 37,
+        "checksum": "12dae329",
+        "firstMs": 32.19546699999955,
+        "wallMs": 31.25766499999918,
+        "serverMs": 0.9181657500002984,
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "53/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "58/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "63/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "68/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "73/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 101, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 101, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 37, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 37, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 37, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 37, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-F5c",
+        "family": "watdiv",
+        "template": "W-F5",
+        "kind": "snowflake",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v1 ?v3 ?v4 ?v5 ?v6 WHERE {\n\t?v0 <http://purl.org/goodrelations/includes> ?v1 .\n\t<http://db.uwaterloo.ca/~galuc/wsdbm/Retailer87> <http://purl.org/goodrelations/offers> ?v0 .\n\t?v0 <http://purl.org/goodrelations/price> ?v3 .\n\t?v0 <http://purl.org/goodrelations/validThrough> ?v4 .\n\t?v1 <http://ogp.me/ns#title> ?v5 .\n\t?v1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?v6 .\n}",
+        "rows": 31,
+        "checksum": "2f729a61",
+        "firstMs": 33.15319500000078,
+        "wallMs": 31.727771999998367,
+        "serverMs": 0.5065922500002671,
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "53/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "58/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "63/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "68/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "73/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 83, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 83, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 31, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 31, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 31, "ms": 30 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 31, "ms": 63 }
+        ]
+      },
+      {
+        "id": "W-C1a",
+        "family": "watdiv",
+        "template": "W-C1",
+        "kind": "complex",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v4 ?v6 ?v7 WHERE {\n\t?v0 <http://schema.org/caption> ?v1 .\n\t?v0 <http://schema.org/text> ?v2 .\n\t?v0 <http://schema.org/contentRating> ?v3 .\n\t?v0 <http://purl.org/stuff/rev#hasReview> ?v4 .\n\t?v4 <http://purl.org/stuff/rev#title> ?v5 .\n\t?v4 <http://purl.org/stuff/rev#reviewer> ?v6 .\n\t?v7 <http://schema.org/actor> ?v6 .\n\t?v7 <http://schema.org/language> ?v8 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 36.65225199999986,
+        "wallMs": 29.878114000002824,
+        "serverMs": 0.7829122499997538,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v4\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v6\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v7\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3 FROM (SELECT q0.s AS \"v0\", q3.o AS \"v4\", q5.o AS \"v6\", q6.s AS \"v7\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 JOIN quads AS q6 JOIN quads AS q7 WHERE (likelihood(q0.p = 12303, 4.281e-4)) AND (q0.s = q1.s) AND (likelihood(q1.p = 12282, 1.191e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 12258, 1.166e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 109906, 2.359e-2)) AND (q3.o = q4.s) AND (likelihood(q4.p = 4214, 7.137e-3)) AND (q3.o = q5.s) AND (likelihood(q5.p = 110709, 2.361e-2)) AND (likelihood(q6.p = 110703, 2.595e-3)) AND (q5.o = q6.o) AND (q6.s = q7.s) AND (likelihood(q7.p = 109843, 1.015e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v4\" LEFT JOIN main.terms t2 ON t2.id = r.\"v6\" LEFT JOIN main.terms t3 ON t3.id = r.\"v7\"",
+        "plan": [
+          "13/0 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "17/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "35/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "41/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "47/0 SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "53/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "59/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "64/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "69/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "74/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 272, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 75, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 16, "ms": 38 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 81, "ms": 33 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 9025625, "actual": 22, "ms": 33 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45128125, "actual": 22, "ms": 32 },
+          {
+            "step": "SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 406153125,
+            "actual": 0,
+            "ms": 32
+          },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2030765625, "actual": 0, "ms": 35 }
+        ]
+      },
+      {
+        "id": "W-C2a",
+        "family": "watdiv",
+        "template": "W-C2",
+        "kind": "complex",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 ?v3 ?v4 ?v8 WHERE {\n\t?v0 <http://schema.org/legalName> ?v1 .\n\t?v0 <http://purl.org/goodrelations/offers> ?v2 .\n\t?v2 <http://schema.org/eligibleRegion> <http://db.uwaterloo.ca/~galuc/wsdbm/Country5> .\n\t?v2 <http://purl.org/goodrelations/includes> ?v3 .\n\t?v4 <http://schema.org/jobTitle> ?v5 .\n\t?v4 <http://xmlns.com/foaf/homepage> ?v6 .\n\t?v4 <http://db.uwaterloo.ca/~galuc/wsdbm/makesPurchase> ?v7 .\n\t?v7 <http://db.uwaterloo.ca/~galuc/wsdbm/purchaseFor> ?v3 .\n\t?v3 <http://purl.org/stuff/rev#hasReview> ?v8 .\n\t?v8 <http://purl.org/stuff/rev#totalVotes> ?v9 .\n}",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 73.66646599999876,
+        "wallMs": 70.4382250000017,
+        "serverMs": 44.30719349999981,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"v3\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"v4\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"v8\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3 FROM (SELECT q0.s AS \"v0\", q3.o AS \"v3\", q4.s AS \"v4\", q8.o AS \"v8\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 JOIN quads AS q6 JOIN quads AS q7 JOIN quads AS q8 JOIN quads AS q9 WHERE (likelihood(q0.p = 12188, 2.361e-5)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109900, 1.754e-2)) AND (q1.o = q2.s) AND (likelihood(q2.p = 109904, 2.890e-2)) AND (likelihood(q2.o = 109598, 4.966e-2)) AND (q1.o = q3.s) AND (likelihood(q3.p = 109903, 1.416e-2)) AND (likelihood(q4.p = 92, 7.539e-4)) AND (q4.s = q5.s) AND (likelihood(q5.p = 109577, 1.782e-3)) AND (q4.s = q6.s) AND (likelihood(q6.p = 110708, 2.361e-2)) AND (q6.o = q7.s) AND (likelihood(q7.p = 109905, 2.361e-2)) AND (q3.o = q7.o) AND (q3.o = q8.s) AND (likelihood(q8.p = 109906, 2.359e-2)) AND (q8.o = q9.s) AND (likelihood(q9.p = 4230, 1.218e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\" LEFT JOIN main.terms t1 ON t1.id = r.\"v3\" LEFT JOIN main.terms t2 ON t2.id = r.\"v4\" LEFT JOIN main.terms t3 ON t3.id = r.\"v8\"",
+        "plan": [
+          "15/0 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "31/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "37/0 SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "46/0 SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "52/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "62/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "68/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "74/0 SEARCH q9 USING PRIMARY KEY (s=? AND p=?)",
+          "80/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "85/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "90/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "95/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 15, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 1447, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 1447, "ms": 34 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 8413, "ms": 38 },
+          {
+            "step": "SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 16246125,
+            "actual": 41338,
+            "ms": 45
+          },
+          {
+            "step": "SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 146215125,
+            "actual": 41338,
+            "ms": 73
+          },
+          {
+            "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+            "estimate": 146215125,
+            "actual": 972,
+            "ms": 92
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 731075625, "actual": 33, "ms": 77 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3655378125, "actual": 0, "ms": 81 },
+          { "step": "SEARCH q9 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18276890625, "actual": 0, "ms": 90 }
+        ]
+      },
+      {
+        "id": "W-C3a",
+        "family": "watdiv",
+        "template": "W-C3",
+        "kind": "complex",
+        "sparql": "PREFIX wsdbm: <http://db.uwaterloo.ca/~galuc/wsdbm/>\nSELECT ?v0 WHERE {\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/likes> ?v1 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/friendOf> ?v2 .\n\t?v0 <http://purl.org/dc/terms/Location> ?v3 .\n\t?v0 <http://xmlns.com/foaf/age> ?v4 .\n\t?v0 <http://db.uwaterloo.ca/~galuc/wsdbm/gender> ?v5 .\n\t?v0 <http://xmlns.com/foaf/givenName> ?v6 .\n}",
+        "rows": 51852,
+        "checksum": "6edc83dd",
+        "firstMs": 278.2263700000003,
+        "wallMs": 303.4801239999979,
+        "serverMs": 122.97893525000109,
+        "sql": "SELECT r.\"v0\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"v0\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 109881, 1.726e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 109883, 1.574e-1)) AND (q0.s = q2.s) AND (likelihood(q2.p = 109884, 6.297e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 109885, 7.827e-3)) AND (q0.s = q4.s) AND (likelihood(q4.p = 109895, 9.520e-3)) AND (q0.s = q5.s) AND (likelihood(q5.p = 8, 1.097e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"v0\"",
+        "plan": [
+          "8/0 SEARCH q2 USING COVERING INDEX quads_pos (p=?)",
+          "12/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "45/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 4001, "ms": 32 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 1967, "ms": 46 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 1374, "ms": 55 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 59604, "ms": 54 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 9025625, "actual": 75470, "ms": 80 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45128125, "actual": 51852, "ms": 94 }
+        ]
+      }
+    ]
+  },
+  "noHints": {
+    "db": "watdiv10",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "0",
+    "at": "2026-10-13T06:46:21.378Z",
+    "pingMs": 28.357313000000033,
+    "stats": {
+      "triples": 1087673,
+      "dbBytes": 69922816,
+      "terms": 110709,
+      "termLexBytes": 6499747,
+      "indexes": "spo,pos,osp"
+    },
+    "queries": [
+      {
+        "id": "W-L1a",
+        "rows": 2,
+        "checksum": "722e3feb",
+        "wallMs": 30.939592999999945,
+        "serverMs": 0,
+        "firstMs": 48.95688199999995,
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L1b",
+        "rows": 2,
+        "checksum": "722e3feb",
+        "wallMs": 29.31917499999986,
+        "serverMs": 0,
+        "firstMs": 30.85054799999989,
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L2a",
+        "rows": 31,
+        "checksum": "17bafa62",
+        "wallMs": 30.06816600000002,
+        "serverMs": 0.20043349999997417,
+        "firstMs": 30.9486730000001,
+        "plan": [
+          "6/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "11/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/0 SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "23/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "28/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L2b",
+        "rows": 7,
+        "checksum": "9507c1a1",
+        "wallMs": 29.038916999999856,
+        "serverMs": 0.15646200000003319,
+        "firstMs": 33.58035800000016,
+        "plan": [
+          "6/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "11/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "16/0 SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "23/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "28/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L3a",
+        "rows": 33,
+        "checksum": "f60775db",
+        "wallMs": 28.951690000000326,
+        "serverMs": 0.012153249999983018,
+        "firstMs": 29.126537999999982,
+        "plan": [
+          "5/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "10/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "21/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L4a",
+        "rows": 5,
+        "checksum": "5b9c6cf1",
+        "wallMs": 27.91219299999966,
+        "serverMs": 0.5306320000000824,
+        "firstMs": 30.800696000000244,
+        "plan": [
+          "5/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "10/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "21/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L5a",
+        "rows": 22,
+        "checksum": "9e8dd3a9",
+        "wallMs": 32.79422999999997,
+        "serverMs": 2.296465499999954,
+        "firstMs": 31.801354999999603,
+        "plan": [
+          "7/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-L5b",
+        "rows": 6,
+        "checksum": "0164dabb",
+        "wallMs": 28.288244999999733,
+        "serverMs": 1.101434000000154,
+        "firstMs": 29.706838999999945,
+        "plan": [
+          "7/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "29/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "34/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S1a",
+        "rows": 9,
+        "checksum": "daa9f0de",
+        "wallMs": 28.61902400000008,
+        "serverMs": 0.3953409999999167,
+        "firstMs": 35.74150899999995,
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "57/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "84/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "93/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "123/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "128/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "133/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S1b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.899905000000217,
+        "serverMs": 0,
+        "firstMs": 29.73191399999996,
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "57/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "84/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "93/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "123/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "128/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "133/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S1c",
+        "rows": 15,
+        "checksum": "25d0879e",
+        "wallMs": 28.252919000000475,
+        "serverMs": 1.0199657499997556,
+        "firstMs": 35.64232700000048,
+        "plan": [
+          "19/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "57/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "66/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "75/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "84/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "93/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "98/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "103/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "108/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "113/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "118/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "123/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "128/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "133/0 SEARCH t8 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S2a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.382821999999578,
+        "serverMs": 0,
+        "firstMs": 29.477163000000473,
+        "plan": [
+          "8/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "20/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S2b",
+        "rows": 1,
+        "checksum": "b9750f26",
+        "wallMs": 30.006034,
+        "serverMs": 0,
+        "firstMs": 32.63155000000006,
+        "plan": [
+          "8/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "20/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S3a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 31.18842599999971,
+        "serverMs": 0,
+        "firstMs": 30.778808000000026,
+        "plan": [
+          "9/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "14/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "41/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "46/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "51/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S3b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.903519999999844,
+        "serverMs": 0.21997349999992366,
+        "firstMs": 30.351579999999558,
+        "plan": [
+          "9/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "14/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "32/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "41/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "46/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "51/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S4a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 32.759594999999536,
+        "serverMs": 0,
+        "firstMs": 31.264439999999922,
+        "plan": [
+          "8/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S5a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.746608999999808,
+        "serverMs": 0,
+        "firstMs": 31.475398999999925,
+        "plan": [
+          "8/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S5b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.164746999998897,
+        "serverMs": 0.287746750000224,
+        "firstMs": 33.17035399999986,
+        "plan": [
+          "8/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "13/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "38/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "43/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S6a",
+        "rows": 1,
+        "checksum": "a8588b7b",
+        "wallMs": 29.074929999998858,
+        "serverMs": 0,
+        "firstMs": 30.17108299999927,
+        "plan": [
+          "7/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S6b",
+        "rows": 1,
+        "checksum": "b9f786ad",
+        "wallMs": 30.717130000000907,
+        "serverMs": 0,
+        "firstMs": 31.823812000000544,
+        "plan": [
+          "7/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S7a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.522723000000042,
+        "serverMs": 0,
+        "firstMs": 29.233715000000302,
+        "plan": [
+          "7/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-S7b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.977746999999,
+        "serverMs": 0.022459249999883468,
+        "firstMs": 28.385483000000022,
+        "plan": [
+          "7/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "32/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F1a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.208568000000014,
+        "serverMs": 0.17389800000000832,
+        "firstMs": 31.127551999999923,
+        "plan": [
+          "12/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "17/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "57/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "77/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F1b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.307700999999724,
+        "serverMs": 1.05600000000004,
+        "firstMs": 30.965422000001126,
+        "plan": [
+          "12/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "17/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "30/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "57/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "77/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F2a",
+        "rows": 1,
+        "checksum": "3089bd2f",
+        "wallMs": 29.994119999999384,
+        "serverMs": 0.24907075000010082,
+        "firstMs": 31.465791999999055,
+        "plan": [
+          "16/0 SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "21/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "27/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "36/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "45/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "81/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "86/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "91/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "96/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "101/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "106/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "111/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F3a",
+        "rows": 6,
+        "checksum": "7f6ad9bb",
+        "wallMs": 29.763032999999268,
+        "serverMs": 0,
+        "firstMs": 32.50384900000063,
+        "plan": [
+          "13/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "42/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "57/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "77/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "82/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F3b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 30.105374999999185,
+        "serverMs": 0.10785249999980806,
+        "firstMs": 27.665334999999686,
+        "plan": [
+          "13/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "42/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "48/0 SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "57/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "72/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "77/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "82/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F4a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.127145000000382,
+        "serverMs": 0.15906225000026097,
+        "firstMs": 33.09049699999923,
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "36/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "45/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "81/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "90/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "95/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "100/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "105/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "110/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "115/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "120/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "125/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F4b",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.888952000001154,
+        "serverMs": 0,
+        "firstMs": 40.39433300000019,
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "36/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "45/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "81/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "90/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "95/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "100/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "105/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "110/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "115/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "120/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "125/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F4c",
+        "rows": 27,
+        "checksum": "9d30d9db",
+        "wallMs": 29.78229900000042,
+        "serverMs": 0,
+        "firstMs": 31.245994000000792,
+        "plan": [
+          "18/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "23/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "29/0 SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "36/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "45/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "54/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "63/0 SEARCH q6 USING PRIMARY KEY (s=? AND p=?)",
+          "72/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "81/0 SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "90/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "95/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "100/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "105/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "110/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "115/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "120/0 SEARCH t6 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "125/0 SEARCH t7 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F5a",
+        "rows": 27,
+        "checksum": "4d52ff88",
+        "wallMs": 28.83566400000018,
+        "serverMs": 0.7172317499998826,
+        "firstMs": 29.812173000000257,
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "65/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "70/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "75/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "80/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "85/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F5b",
+        "rows": 37,
+        "checksum": "12dae329",
+        "wallMs": 31.19657599999846,
+        "serverMs": 0.6257125000006454,
+        "firstMs": 32.64621200000147,
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "65/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "70/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "75/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "80/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "85/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-F5c",
+        "rows": 31,
+        "checksum": "2f729a61",
+        "wallMs": 30.021601999998893,
+        "serverMs": 0.1480085000002873,
+        "firstMs": 31.890814999998838,
+        "plan": [
+          "13/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "33/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "42/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "51/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "65/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "70/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "75/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "80/0 SEARCH t4 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "85/0 SEARCH t5 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-C1a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 198.83180800000082,
+        "serverMs": 171.88132900000028,
+        "firstMs": 209.11260399999992,
+        "plan": [
+          "21/0 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "25/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "34/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "43/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "53/0 BLOOM FILTER ON q4 (s=? AND p=?)",
+          "62/0 BLOOM FILTER ON q5 (s=? AND p=?)",
+          "71/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "90/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "105/0 BLOOM FILTER ON q6 (p=? AND o=?)",
+          "114/0 SEARCH q6 USING INDEX quads_pos (p=? AND o=?)",
+          "127/0 BLOOM FILTER ON q7 (s=? AND p=?)",
+          "136/0 SEARCH q7 USING PRIMARY KEY (s=? AND p=?)",
+          "148/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "153/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "158/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "163/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-C2a",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 186.06009399999675,
+        "serverMs": 157.5452490000007,
+        "firstMs": 178.64488400000118,
+        "plan": [
+          "19/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "24/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "30/0 SEARCH q8 USING PRIMARY KEY (s=? AND p=?)",
+          "39/0 SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "48/0 SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "54/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "60/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "69/0 SEARCH q9 USING PRIMARY KEY (s=? AND p=?)",
+          "76/0 BLOOM FILTER ON q1 (p=? AND o=?)",
+          "85/0 SEARCH q1 USING INDEX quads_pos (p=? AND o=?)",
+          "101/0 BLOOM FILTER ON q0 (s=? AND p=?)",
+          "110/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=?)",
+          "122/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "127/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "132/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "137/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "W-C3a",
+        "rows": 51852,
+        "checksum": "6edc83dd",
+        "wallMs": 735.6732960000008,
+        "serverMs": 681.7688357499992,
+        "firstMs": 721.0052140000007,
+        "plan": [
+          "12/0 SEARCH q0 USING COVERING INDEX quads_pos (p=?)",
+          "16/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "25/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "34/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "44/0 BLOOM FILTER ON q4 (s=? AND p=?)",
+          "53/0 BLOOM FILTER ON q5 (s=? AND p=?)",
+          "62/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "81/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "95/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      }
+    ]
+  },
+  "oxigraphLocal": {
+    "engine": "oxigraph-js (LOCAL, in-memory)",
+    "triples": 1087673,
+    "loadMs": 9586.033652999999,
+    "results": [
+      { "id": "W-L1a", "rows": 2, "checksum": "722e3feb", "ms": 1.0838069999990694 },
+      { "id": "W-L1b", "rows": 2, "checksum": "722e3feb", "ms": 0.4931780000006256 },
+      { "id": "W-L2a", "rows": 31, "checksum": "17bafa62", "ms": 5.171372999999221 },
+      { "id": "W-L2b", "rows": 7, "checksum": "9507c1a1", "ms": 1.2844880000011472 },
+      { "id": "W-L3a", "rows": 33, "checksum": "f60775db", "ms": 0.8746439999995346 },
+      { "id": "W-L4a", "rows": 5, "checksum": "5b9c6cf1", "ms": 0.30704700000023877 },
+      { "id": "W-L5a", "rows": 22, "checksum": "9e8dd3a9", "ms": 3.3640030000005936 },
+      { "id": "W-L5b", "rows": 6, "checksum": "0164dabb", "ms": 1.0153960000006919 },
+      { "id": "W-S1a", "rows": 9, "checksum": "daa9f0de", "ms": 2.6300300000002608 },
+      { "id": "W-S1b", "rows": 0, "checksum": "811c9dc5", "ms": 1.1841660000009142 },
+      { "id": "W-S1c", "rows": 15, "checksum": "25d0879e", "ms": 3.3901440000008733 },
+      { "id": "W-S2a", "rows": 0, "checksum": "811c9dc5", "ms": 0.6347159999986616 },
+      { "id": "W-S2b", "rows": 1, "checksum": "b9750f26", "ms": 0.3572180000010121 },
+      { "id": "W-S3a", "rows": 0, "checksum": "811c9dc5", "ms": 0.38438500000120257 },
+      { "id": "W-S3b", "rows": 0, "checksum": "811c9dc5", "ms": 0.5885479999997187 },
+      { "id": "W-S4a", "rows": 0, "checksum": "811c9dc5", "ms": 7.646584000000075 },
+      { "id": "W-S5a", "rows": 0, "checksum": "811c9dc5", "ms": 0.27233200000046054 },
+      { "id": "W-S5b", "rows": 0, "checksum": "811c9dc5", "ms": 0.25464500000089174 },
+      { "id": "W-S6a", "rows": 1, "checksum": "a8588b7b", "ms": 0.18461699999897974 },
+      { "id": "W-S6b", "rows": 1, "checksum": "b9f786ad", "ms": 0.09376799999881769 },
+      { "id": "W-S7a", "rows": 0, "checksum": "811c9dc5", "ms": 0.05928400000084366 },
+      { "id": "W-S7b", "rows": 0, "checksum": "811c9dc5", "ms": 0.0524569999997766 },
+      { "id": "W-F1a", "rows": 0, "checksum": "811c9dc5", "ms": 0.27472900000066147 },
+      { "id": "W-F1b", "rows": 0, "checksum": "811c9dc5", "ms": 0.2850850000013452 },
+      { "id": "W-F2a", "rows": 1, "checksum": "3089bd2f", "ms": 0.6580069999999978 },
+      { "id": "W-F3a", "rows": 6, "checksum": "7f6ad9bb", "ms": 0.42847900000015215 },
+      { "id": "W-F3b", "rows": 0, "checksum": "811c9dc5", "ms": 0.19388900000012654 },
+      { "id": "W-F4a", "rows": 0, "checksum": "811c9dc5", "ms": 0.3026829999998881 },
+      { "id": "W-F4b", "rows": 0, "checksum": "811c9dc5", "ms": 0.2388539999992645 },
+      { "id": "W-F4c", "rows": 27, "checksum": "9d30d9db", "ms": 1.1830229999995936 },
+      { "id": "W-F5a", "rows": 27, "checksum": "4d52ff88", "ms": 1.1511609999997745 },
+      { "id": "W-F5b", "rows": 37, "checksum": "12dae329", "ms": 1.3587989999996353 },
+      { "id": "W-F5c", "rows": 31, "checksum": "2f729a61", "ms": 1.2063490000000456 },
+      { "id": "W-C1a", "rows": 0, "checksum": "811c9dc5", "ms": 2.2468840000001364 },
+      { "id": "W-C2a", "rows": 0, "checksum": "811c9dc5", "ms": 21.220917000000554 },
+      { "id": "W-C3a", "rows": 51852, "checksum": "6edc83dd", "ms": 3666.496473000001 }
+    ]
+  }
+}

@@ -24,7 +24,7 @@ const DefaultStory = () => {
         onChange={(patch) => updateConfig((draft) => Object.assign(draft, patch))}
         onWaterSheen={setWaterSheen}
       />
-      <div className='text-sm text-description'>water sheen: {String(waterSheen)}</div>
+      <div className='text-sm text-fg-muted'>water sheen: {String(waterSheen)}</div>
     </div>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-trace';
 
@@ -14,6 +14,9 @@ export const translations = [
 
         'gantt-axis-time.label': 'Fit to time',
         'gantt-axis-unit.label': 'One step per event',
+        'gantt-legend-stats.label': 'Show usage',
+        'gantt-legend-title.label': 'Show titles',
+        'gantt-chart.label': 'Timeline',
 
         'trace.label': 'Trace',
         'trace-processes.label': 'Processes',
@@ -29,4 +32,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

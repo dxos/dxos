@@ -1,5 +1,138 @@
 # @dxos/react-ui-dashboard
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [55bdf55]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [b07f49f]
+  - @dxos/react-ui@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [cb1e218]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- 5a0fc35: `Dashboard.Activity` no longer scrolls horizontally: when the weeks overflow the available width, the oldest weeks are clipped on the left so the most recent weeks stay pinned to the right, with day labels always visible.
+- b7d66c8: The `Chat` schema is no longer re-exported from the `@dxos/plugin-assistant/Assistant` namespace; import it from `@dxos/assistant-toolkit` instead. Plugin and UI packages also widen their `@dxos/react-ui` and `@dxos/ui-theme` peer-dependency ranges from an exact workspace pin to `workspace:^`, so consumers are no longer forced onto a single matching version.
+- Updated dependencies [6a457ac]
+- Updated dependencies [96f94c2]
+- Updated dependencies [c020513]
+- Updated dependencies [9714c75]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [5262408]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [b63506b]
+- Updated dependencies [6af89f4]
+- Updated dependencies [d770fe7]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [2e4c299]
+- Updated dependencies [813069c]
+- Updated dependencies [967b130]
+- Updated dependencies [098a0bb]
+- Updated dependencies [818a096]
+- Updated dependencies [9d2466a]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [08cddf6]
+- Updated dependencies [a04ab6e]
+- Updated dependencies [d4b4919]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [306f50d]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [d005fd9]
+- Updated dependencies [0e44f24]
+- Updated dependencies [cef0a3b]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [178bc6d]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [6fed038]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [82a9c4e]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+- Updated dependencies [77d0026]
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/react-hooks@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

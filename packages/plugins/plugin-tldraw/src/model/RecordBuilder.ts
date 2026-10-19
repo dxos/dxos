@@ -84,10 +84,19 @@ export type ConnectorProps = Omit<StyleProps, 'align'> & {
   /** Marker at the target end (default arrow). */
   head?: ArrowHead;
   /** Marker at the source end (default none). */
-  tail?: 'none' | 'circle';
+  tail?: ArrowTail;
 };
 
 export type ArrowHead = 'arrow' | 'triangle' | 'crowsfoot' | 'none';
+
+export type ArrowTail = 'none' | 'circle' | 'arrow';
+
+/** Scene tails → tldraw arrowheads at the start of the arrow. */
+export const ARROWHEAD_START: Record<ArrowTail, 'dot' | 'arrow' | 'none'> = {
+  none: 'none',
+  circle: 'dot',
+  arrow: 'arrow',
+};
 
 /**
  * Scene heads → tldraw arrowheads. tldraw has no crow's foot; `inverted` (a triangle fanning out
@@ -370,7 +379,7 @@ export class RecordBuilder {
           labelColor: DEFAULTS.color,
           fill: props.fill ?? DEFAULTS.fill,
           font: props.font ?? DEFAULTS.font,
-          arrowheadStart: props.tail === 'circle' ? 'dot' : 'none',
+          arrowheadStart: ARROWHEAD_START[props.tail ?? 'none'],
           arrowheadEnd: ARROWHEAD_END[props.head ?? 'arrow'],
           start: { x: 0, y: 0 },
           end: relativeEnd,

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
@@ -25,9 +25,9 @@ const makeMessage = (suffix: string, created: string) =>
 const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: object },
+    object: { kind: 'entity', entity: object },
   },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: {

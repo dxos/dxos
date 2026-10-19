@@ -18,5 +18,5 @@ Two entry points, both from plugin-inbox's own seams:
 - **Toolbar action** (`MailboxAction`) — "Label messages" runs it over the whole inbox.
 - **Cascade pass** (`MailboxProcessor`, id `label`, after `contacts`) — runs as part of Analyze.
 
-Asks `AiService.decisionModel('ai.typesafe.model.jev.latest')`, which the space serves once TypeSafe
-is connected: see `@dxos/plugin-typesafe`. See [docs/DESIGN.md](./docs/DESIGN.md).
+Asks `AiService.decisionModel(Model.defaultDecisionModel)`, which the space serves as whichever
+decision model (Jev or Cloudflare's Clef) the TypeSafe plugin settings select: see `@dxos/plugin-typesafe`. See [docs/DESIGN.md](./docs/DESIGN.md).

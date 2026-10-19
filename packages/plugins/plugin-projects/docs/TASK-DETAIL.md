@@ -1,73 +1,41 @@
 # Task detail — master-detail for task lists
 
-How a task row opens its detail, and what that replaces. Ledger items live in
-[TASKS.md](TASKS.md) under "Tracked 2026-09-23 — task surfaces".
+How a task row opens its detail. Ledger items live in [TASKS.md](TASKS.md) under "Tracked 2026-09-23 —
+task surfaces"; the deck mechanism is [plugin-deck DESIGN.md §5](../../plugin-deck/DESIGN.md#5-details).
 
-## The problem
+## The behaviour
 
-`TaskSetArticle` edits the selected task in a `TaskList.Edit` strip pinned to the bottom of the
-panel. The strip is both the editor and the create row, so it is always present, it competes with the
-list for height, and it can only ever show the few fields it has room for. Embedded as the Tasks tab
-of `ProjectArticle` it is worse: the tab already splits with the pipeline chart, so the strip eats
-the little height the ledger has left.
+A task list appears in two hosts: a task set opened on its own (`TaskSetArticle`) and the Tasks tab of
+`ProjectArticle`, where the same article is embedded in the `Section` role. Either way, clicking a row
+opens the task as the **detail** of the host's plank:
 
-A task has more to show than a strip can hold — description, status, assignee, estimate,
-dependencies, sub-tasks, history, and the delegation a sub-agent ran against it — and a reader moving
-down a list wants each one in the same place rather than a new pane per click.
+- **Flattened deck (the default)** — the task shows in a companion tab beside the list, labelled
+  "Task". The list stays in front of the reader, and reading down it swaps the task in place.
+- **Deck not flattened** — the task is a plank beside the list, and the next row replaces it rather
+  than adding another plank.
+- **Mobile** — the task is pushed onto the stack, replacing the previous task.
+- **Meta/ctrl-click** — the task opens as a plank of its own, outside the chain.
 
-## The precedent: plugin-inbox
+The mailbox (message) and the calendar (event) open their rows the same way, and so does a task's
+own attachment grid: clicking an attachment card opens the file as the task's detail, which under a
+flattened deck moves the task into the main plank. Cards elsewhere, such as a project's or a task's
+artifacts, open beside their plank instead, and a card menu's Open always does.
 
-Mail is the same shape (a long list, a detail per row) and Composer already answers it. The answer is
-**not** a companion — it is a _level chain of planks_, so the detail is an ordinary plank that the
-deck reuses as the reader moves down the list.
+## The pieces
 
-| Piece                 | Where                                                                     | What it does                                                                                                                                                                                                                                            |
-| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Level chain           | `plugin-inbox/src/types/Mailbox.ts` — `DeckAnnotation.set({ levels: … })` | `mailbox → message → attachment`. A level's key names the plank (`<rootId>/<key>`), so opening at a level **reuses** that plank and closes every level below it.                                                                                        |
-| Hidden graph children | `plugin-inbox/src/capabilities/app-graph-builder.ts` — `mailboxMessages`  | One hidden node per message under the mailbox, so `…/mailboxes/<id>/<messageId>` resolves. `url: { key: 'message', kind: 'item', path, minDepth }`; `disposition: 'hidden'` keeps them out of the nav tree.                                             |
-| Path helper           | `plugin-inbox/src/paths.ts` — `getFeedObjectPath(parentPath, childId)`    | The child's qualified path, appended as a plain segment (not a linked companion segment).                                                                                                                                                               |
-| Detail surface        | `plugin-inbox/src/capabilities/react-surface.ts` — `message`              | `MessageArticle` on `AppSurface.subject(Article, isNonDraftMessage)`, and the same component in the `Section` role.                                                                                                                                     |
-| Row → detail          | `MailboxArticle.tsx` — `handleNavigate`                                   | `LayoutOperation.Select` (the row stays current in the list) **plus** `LayoutOperation.Open` with `{ root, level, pivotId, disposition: 'add' }`. Meta/ctrl click drops `root`/`level`, so it opens a plank of its own and keeps what is already there. |
-| Keyboard              | `useArticleKeyboardNavigation({ articleId, items, currentId, onSelect })` | Arrow keys read down the list through the same handler, reusing the one plank.                                                                                                                                                                          |
-| Create                | toolbar action → `InboxOperation.DraftEmailAndOpen`                       | Creation makes the object and opens its plank; there is no persistent editor strip.                                                                                                                                                                     |
+| Piece             | Where                                                           | What it does                                                                                                                                                                     |
+| ----------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Row → detail      | `useDetailNavigation` (app-toolkit)                             | Publishes the row as the list's selection and calls `LayoutOperation.Open({ subject, pivotId: <host plank>, disposition: 'detail' })`. The deck decides where the detail goes.   |
+| Addressable tasks | `taskSetTasks` (plugin-tasks), `projectTasks` (plugin-projects) | One hidden `Task` node per task under its task set's or project's node, so `…/<host>/<taskId>` resolves. Hidden because the ledger is the list; the nodes exist to be addressed. |
+| Detail surface    | `TaskArticle` on `AppSurface.object(Article, Task.Task)`        | The task itself; it renders the same in the companion tab as in a plank.                                                                                                         |
+| Tab label         | `AppNode.getTypeLabel` (app-toolkit)                            | The deck names the detail tab from the detail node's type ("Task", "Message", "Event"), so no list configures it.                                                                |
+| Keyboard          | `useArticleKeyboardNavigation({ articleId, items, onSelect })`  | Arrow keys read down the list through the same handler.                                                                                                                          |
 
-## The design for Project / Tasks
+Nothing is declared on `Project`, `TaskSet` or `Task`: the call says the open is a detail, and the
+deck holds it as a named plank under a name derived from the list's plank.
 
-Same six pieces, with one wrinkle mail does not have: a task list appears in **two hosts** — the
-standalone `TaskSetArticle` and the Tasks tab of `ProjectArticle`, where it is embedded in the
-`Section` role. The deck root differs between them, so the chain is declared on both types:
+## Not done
 
-- `TaskSet` — `levels: [{ key: 'taskSet' }, { key: 'task' }]`.
-- `Project` — the existing chain gains a `task` rung, so a row opened from the Tasks tab reuses one
-  plank beside the project rather than stacking one per click.
-
-The row handler takes the root from its host (the article's `attendableId`), which is the task set's
-node id standalone and the project's inside the tab; nothing else differs between the two.
-
-### Pieces
-
-1. **Chain** — `DeckAnnotation` on `TaskSet` (and the `task` rung on `Project`).
-2. **Hidden children** — a `taskSetTasks` connector in `plugin-tasks` (hidden `Task` nodes under a
-   `TaskSet` node), and a matching one in `plugin-projects` under `PROJECT_URL` for the project's own
-   task set, so a task is addressable by path from either host.
-3. **Path helper** — `plugin-tasks/src/paths.ts`, mirroring `getFeedObjectPath`.
-4. **`TaskArticle`** — the detail container, registered on `AppSurface.object(Article, Task.Task)`.
-   Its body IS `TaskList.Edit`, wrapped in a `TaskList.Root` of one task held selected: a task then
-   reads and edits the same way wherever it is opened, and the description keeps the host's live
-   markdown extensions (links, `#nnn`) that a schema form renders as plain text. It grows from there
-   into the fields a strip has no room for — assignee, dependencies, sub-tasks, history.
-5. **Row → detail** — `TaskSetArticle` rows invoke `Select` + `Open` at `level: 'task'`; meta-click
-   opens its own plank. Keyboard navigation reuses `useArticleKeyboardNavigation`.
-6. **Retire the strip** (not done) — only once creation has somewhere else to live: either an inline new row in
-   the list, or a toolbar action that creates the task and opens its plank (the mail draft pattern).
-   Removing the strip before that takes away the only way to type a new task. In the meantime it is
-   `createOnly`: the article is the editor, so a selected row must not turn the add row into one.
-
-### What this is not
-
-- **Not a companion.** A companion is _about_ the subject beside it (assistant, properties, debug). A
-  task's detail is the subject itself, reached by reading down its list — which is what a level chain
-  is for. The word "companion" in the original request means "detail pane beside the list"; the deck
-  spells that as a reused plank.
-- **Not a rewrite of `TaskList`.** Selection already exists (`selectable` / `selected` /
-  `onTaskSelect`); the row handler is what is missing.
+- **Retire the `TaskList.Edit` strip** — it is `createOnly` (the article is the editor, so a selected
+  row must not turn the add row into one). Removing it needs creation somewhere else: an inline new row,
+  or a toolbar action that creates the task and opens it (the mail draft pattern).

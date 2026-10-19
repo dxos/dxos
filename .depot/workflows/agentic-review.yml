@@ -7,8 +7,14 @@ name: Agentic Review
 # committed files. A separate workflow so it is never a required `Check` job — keep
 # it out of branch protection, since it is meant to prompt a review, not block a merge.
 
+# Runs only on PRs authored by dmaretskyi while the review flow is reworked; everyone else is skipped.
+# Draft PRs skip this, and converting a PR to a draft cancels the run in flight: the same gate as
+# `Check`.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,12 +25,13 @@ concurrency:
 
 jobs:
   review-present:
-    runs-on: depot-ubuntu-24.04
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    if: >-
+      github.event_name != 'pull_request' || (github.event.pull_request.user.login == 'dmaretskyi' &&
+      !github.event.pull_request.draft)
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 2x8
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 5
     steps:
       # Full history (blobs on demand) for the merge-base and the per-commit drift count.

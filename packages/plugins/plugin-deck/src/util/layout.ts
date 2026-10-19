@@ -4,25 +4,19 @@
 
 import { produce } from 'immer';
 
-import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
-
 import { DeckSchema } from '#types';
-
-import { Navigation } from '../url/index.ts';
 
 /** Where {@link addSubjectsToActiveDeck} puts the subjects it is given. */
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
-  /** The plank currently holding the requested name, replaced in place instead of inserting. */
   replaceId?: string;
 };
 
 /**
  * Computes the next `active` list for an `'add'` disposition {@link LayoutOperation.Open}: inserts
  * subjects immediately after `pivotId` when present, else appends them at the end. Subjects already
- * open keep their position; when the open is named, the plank holding that name (`replaceId`) is
- * replaced in place so the deck reuses it rather than growing.
+ * open keep their position.
  */
 export const addSubjectsToActiveDeck = (
   active: readonly string[],
@@ -33,16 +27,11 @@ export const addSubjectsToActiveDeck = (
   const next = [...active];
   const pivotIndex = pivotId ? next.indexOf(pivotId) : -1;
   let insertAt = pivotIndex !== -1 ? pivotIndex + 1 : next.length;
-  // Only the first subject may take over the name, because that is the one the name is bound to (see
-  // the Open handler). Letting a later subject take it instead would leave the name pointing at a
-  // different plank than the one that replaced the old occupant.
   const replaceIndex = replaceId ? next.indexOf(replaceId) : -1;
   subject.forEach((entryId, index) => {
     const openIndex = next.indexOf(entryId);
     if (index === 0 && replaceIndex !== -1) {
       if (openIndex !== -1) {
-        // Already open, so it keeps its own place and takes the name with it; the plank that held the
-        // name stays open as an ordinary one rather than being replaced by something else.
         insertAt = openIndex + 1;
       } else {
         next[replaceIndex] = entryId;
@@ -58,19 +47,6 @@ export const addSubjectsToActiveDeck = (
     next.splice(insertAt, 0, entryId);
     insertAt += 1;
   });
-  return next;
-};
-
-/** Named planks, pruned to what is open, keyed by URL segment. */
-export const updatePlankNames = (
-  names: Record<string, string>,
-  activeSegments: readonly string[],
-  binding?: { name: string; segment: string },
-): Record<string, string> => {
-  const next = Object.fromEntries(Object.entries(names).filter(([, segment]) => activeSegments.includes(segment)));
-  if (binding && activeSegments.includes(binding.segment)) {
-    next[binding.name] = binding.segment;
-  }
   return next;
 };
 
@@ -106,116 +82,128 @@ export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction
   });
 };
 
-/**
- * Upper bound on the planks a seeded deck opens at once. Every plank mounts its article surface, so a
- * large collection would otherwise instantiate an editor per document on a single navtree click.
- */
-export const MAX_SEEDED_PLANKS = 8;
+const DETAIL_NAME_PREFIX = 'detail:';
 
-/**
- * The planks a deck opens when navigating to a node whose type declares `initial: 'children'`, or
- * `undefined` when the open should proceed normally.
- *
- * Seeds only a navigation (`addBesideOrigin === false`): an `add`, a shift-forced add, or an `auto`
- * that grew a sliding deck are all requests to put *this* node beside what is already open, and
- * replacing the deck there would discard the planks the user was working in.
- *
- * Never seeds a flattened deck: it renders only the last plank and reads the ones before it as a
- * breadcrumb trail, so sibling documents would show as a history nobody navigated.
- */
-export const resolveSeededPlanks = ({
-  initial,
-  addBesideOrigin,
-  flatten = false,
-  children,
-}: {
-  initial: 'children' | 'none' | undefined;
-  addBesideOrigin: boolean;
-  flatten?: boolean;
-  /** Ids of the node's openable graph children, in order. */
-  children: readonly string[];
-}): string[] | undefined => {
-  // An empty collection falls through to the ordinary open, which shows the collection itself rather
-  // than leaving the user on an empty deck.
-  if (addBesideOrigin || flatten || initial !== 'children' || children.length === 0) {
-    return undefined;
+export const detailName = (owner: string): string => `${DETAIL_NAME_PREFIX}${owner}`;
+
+export const detailChain = (names: Readonly<Record<string, string>>, id: string): string[] => {
+  const chain: string[] = [];
+  const seen = new Set([id]);
+  for (let next = names[detailName(id)]; next && !seen.has(next); next = names[detailName(next)]) {
+    chain.push(next);
+    seen.add(next);
   }
-  return children.slice(0, MAX_SEEDED_PLANKS);
+  return chain;
 };
 
-/** The open plank currently holding `name`. */
-export const plankIdForName = (
-  name: string,
-  {
-    active,
-    plankNames,
-    segments,
-  }: { active: readonly string[]; plankNames: Record<string, string>; segments?: Record<string, string> },
-): string | undefined => {
-  const segment = plankNames[name];
-  return segment ? active.find((id) => Navigation.segmentOf(segments, id) === segment) : undefined;
+export const prunePlankNames = (
+  names: Readonly<Record<string, string>>,
+  active: readonly string[],
+): Record<string, string> => {
+  const kept = Object.fromEntries(
+    Object.entries(names).filter(([name, holder]) => !name.startsWith(DETAIL_NAME_PREFIX) && active.includes(holder)),
+  );
+  for (const id of active) {
+    let owner = id;
+    for (const detail of detailChain(names, id)) {
+      kept[detailName(owner)] = detail;
+      owner = detail;
+    }
+  }
+  return kept;
 };
 
-/**
- * The next `active` list for an open at `level` of `root`'s declared chain, plus the plank name that
- * level occupies. `undefined` when the level is not declared, so the caller falls back to an ordinary
- * open rather than inventing a chain.
- *
- * Two things a plain named open cannot do. The level supplies the name, so callers stop hand-building
- * it; and opening at a level closes every level below it, so reading a second message drops the first
- * one's attachment instead of leaving it stranded beside an unrelated message.
- */
-export const resolveLevelOpen = ({
+export const replaceDetail = (
+  names: Readonly<Record<string, string>>,
+  owner: string,
+  detail: string,
+): Record<string, string> => {
+  if (names[detailName(owner)] === detail) {
+    return { ...names };
+  }
+  const next = { ...names };
+  for (const id of detailChain(names, owner)) {
+    delete next[detailName(id)];
+  }
+  next[detailName(owner)] = detail;
+  return next;
+};
+
+export type DetailOpen = {
+  next: string[];
+  plankNames: Record<string, string>;
+  inCompanion: boolean;
+  replacedId?: string;
+};
+
+type DetailOpenInput = {
+  active: readonly string[];
+  plankNames: Readonly<Record<string, string>>;
+  pivot: string;
+  subject: string;
+};
+
+export const resolveFlattenedDetail = ({
   active,
   plankNames,
-  segments,
-  spec,
-  root,
-  level,
-  subjectId,
-}: {
-  active: readonly string[];
-  plankNames: Record<string, string>;
-  segments?: Record<string, string>;
-  spec: DeckSpec.DeckSpec | undefined;
-  root: string;
-  level: string;
-  subjectId: string;
-}): { next: string[]; name: string; replacedId?: string } | undefined => {
-  const levels = spec?.levels;
-  const index = levels?.findIndex((entry) => entry.key === level) ?? -1;
-  if (!levels || index === -1) {
+  pivot,
+  subject,
+}: DetailOpenInput): DetailOpen | undefined => {
+  const main = active.at(-1);
+  if (main && pivot === plankNames[detailName(main)]) {
+    return { next: [...active, pivot], plankNames: replaceDetail(plankNames, pivot, subject), inCompanion: true };
+  }
+  const index = active.indexOf(pivot);
+  return index === -1
+    ? undefined
+    : { next: active.slice(0, index + 1), plankNames: replaceDetail(plankNames, pivot, subject), inCompanion: true };
+};
+
+const resolveDetailPlank = (
+  { active, plankNames, pivot, subject }: DetailOpenInput,
+  place: (previous: string | undefined, stale: ReadonlySet<string>) => string[],
+): DetailOpen | undefined => {
+  if (!active.includes(pivot)) {
     return undefined;
   }
-
-  const holderOf = (plankName: string) => plankIdForName(plankName, { active, plankNames, segments });
-
-  const name = DeckSpec.plankName(root, level);
-  const stale = new Set(
-    DeckSpec.levelsBelow(spec, level)
-      .map((entry) => holderOf(DeckSpec.plankName(root, entry.key)))
-      .filter((id): id is string => !!id),
-  );
-  const pruned = active.filter((id) => !stale.has(id));
-
-  // Anchored to the level above so the chain reads left to right whatever else is open. The topmost
-  // level falls back to the root itself, whose plank is opened normally and so carries no level name.
-  const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
-  const parent = (parentName && holderOf(parentName)) || root;
-
-  const replacedId = holderOf(name);
+  const previous = plankNames[detailName(pivot)];
+  if (previous === subject && active.includes(subject)) {
+    return { next: [...active], plankNames: { ...plankNames }, inCompanion: false };
+  }
+  const stale = new Set(previous ? [previous, ...detailChain(plankNames, previous)] : []);
+  const replacedId = previous && previous !== subject && active.includes(previous) ? previous : undefined;
   return {
-    next: addSubjectsToActiveDeck(pruned, [subjectId], {
-      pivotId: pruned.includes(parent) ? parent : undefined,
-      replaceId: replacedId,
-    }),
-    name,
-    // Surfaced so per-plank state riding the level (an open companion) can follow the swap: the new
-    // plank stands in for the old one, and losing the companion mid-read both surprises and, by
-    // narrowing the deck, makes the browser clamp the scroll in a visible snap.
+    next: place(previous, stale),
+    plankNames: replaceDetail(plankNames, pivot, subject),
+    inCompanion: false,
     replacedId,
   };
 };
+
+export const resolveStackDetail = (input: DetailOpenInput): DetailOpen | undefined =>
+  resolveDetailPlank(input, (_previous, stale) =>
+    pushSubjectsToStack(
+      input.active.filter((id) => !stale.has(id)),
+      [input.subject],
+    ),
+  );
+
+export const resolveDeckDetail = (input: DetailOpenInput): DetailOpen | undefined =>
+  resolveDetailPlank(input, (previous, stale) => {
+    const replaceId = previous && input.active.includes(previous) ? previous : undefined;
+    return addSubjectsToActiveDeck(
+      input.active.filter((id) => id === replaceId || !stale.has(id)),
+      [input.subject],
+      { pivotId: input.pivot, replaceId },
+    ).filter((id) => id === input.subject || !stale.has(id));
+  });
+
+export const resolveDetailOpen = ({
+  flatten,
+  stack,
+  ...input
+}: DetailOpenInput & { flatten?: boolean; stack?: boolean }): DetailOpen | undefined =>
+  stack ? resolveStackDetail(input) : flatten ? resolveFlattenedDetail(input) : resolveDeckDetail(input);
 
 /**
  * Computes the next `active` list for a mobile {@link LayoutOperation.Open}: the list is a

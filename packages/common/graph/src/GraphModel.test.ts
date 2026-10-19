@@ -3,9 +3,9 @@
 //
 
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
 import { describe, test } from 'vitest';

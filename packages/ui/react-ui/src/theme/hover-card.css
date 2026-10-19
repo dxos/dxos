@@ -1,0 +1,17 @@
+/*
+ * HoverCard: a portalled preview on the popup level (`.dx-popup` supplies size, level and radius), padded by the gap
+ * and stacking its children like a Popover; it is narrower than a Popover since it previews rather than edits.
+ */
+
+@layer dx-components {
+  .dx-hover-card {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--dx-gap-size) / 2);
+    max-width: min(18rem, 100vw - 1rem);
+    max-height: var(--available-height, none);
+    padding: var(--dx-gap-size);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+  }
+}

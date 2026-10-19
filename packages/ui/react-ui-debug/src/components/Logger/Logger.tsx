@@ -13,39 +13,42 @@ import React, {
 } from 'react';
 
 import { logFileRegistry } from '@dxos/log';
-import {
-  ErrorStack,
-  Field,
-  Icon,
-  Panel,
-  Popover,
-  ScrollArea,
-  Select,
-  SystemIconButton,
-  type ThemedClassName,
-  ToggleIconButton,
-  Toolbar,
-  composable,
-  composableProps,
-  parseCaptureOwnerStack,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { formatLogEntry, packageName } from './format.ts';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
-import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
+import { DEFAULT_MAX_LINES, type LogBuffer, type LogRow, logBuffer } from './log-buffer.ts';
+import { LoggerProvider, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
 import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
 //
 // Shared
 //
+
+/** Whether a row matches the search box: a case-insensitive match on its file and message. */
+const matchesText = (record: ReturnType<typeof formatLogEntry>, textFilter: string): boolean => {
+  const needle = textFilter.trim().toLowerCase();
+  return needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true;
+};
 
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
@@ -66,6 +69,11 @@ type LoggerRootProps = PropsWithChildren<{
    * Must be stable across renders — hoist it or memoize it.
    */
   rowFilter?: (row: LogRow) => boolean;
+  /**
+   * Source of rows; defaults to the process-wide buffer fed by `@dxos/log`. A caller-owned buffer is
+   * fed by its `append`. Must be stable across renders.
+   */
+  buffer?: LogBuffer;
 }>;
 
 const LoggerRoot = ({
@@ -74,6 +82,7 @@ const LoggerRoot = ({
   initialFilter = 'info',
   defaultRecording = true,
   rowFilter,
+  buffer = logBuffer,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
@@ -89,26 +98,31 @@ const LoggerRoot = ({
   );
   const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
 
-  // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
-  // companion, so mounting is not the lifetime we want recording to follow.
-  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Rows, files and the recorder live in the buffer, not here: this panel is a deck companion, so
+  // mounting is not the lifetime we want recording to follow.
+  const allRows = useSyncExternalStore(buffer.subscribe, buffer.getRows);
   // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
   // same set — a scoped panel should never copy out rows it never showed.
   const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
-  const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
-  const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
+  const files = useSyncExternalStore(buffer.subscribe, buffer.getFiles);
+  const recording = useSyncExternalStore(buffer.subscribe, buffer.getRecording);
 
-  // Absorb files registered at module load (dev registry) plus any registered after mount.
+  // Absorb files registered at module load (dev registry) plus any registered after mount; a buffer
+  // fed by `append` holds none of those files' entries, so it lists only the files it was given.
   useEffect(() => {
-    const sync = () => logBuffer.addFiles(logFileRegistry.getFiles());
+    if (!buffer.recordsLog) {
+      return;
+    }
+
+    const sync = () => buffer.addFiles(logFileRegistry.getFiles());
     sync();
     return logFileRegistry.subscribe(sync);
-  }, []);
+  }, [buffer]);
 
-  useEffect(() => logBuffer.setCapacity(maxLines), [maxLines]);
+  useEffect(() => buffer.setCapacity(maxLines), [buffer, maxLines]);
 
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
-  useEffect(() => logBuffer.setFilter(filter, fileLevels), [filter, fileLevels, effectiveFilter]);
+  useEffect(() => buffer.setFilter(filter, fileLevels), [buffer, filter, fileLevels, effectiveFilter]);
 
   // `defaultRecording` seeds the buffer the first time a panel mounts; thereafter the buffer's own
   // state wins, so reopening the panel does not silently resume a stream the user paused.
@@ -117,16 +131,19 @@ const LoggerRoot = ({
     if (!seeded.current) {
       seeded.current = true;
       if (defaultRecording) {
-        logBuffer.start();
+        buffer.start();
       }
     }
-  }, [defaultRecording]);
+  }, [buffer, defaultRecording]);
 
-  const setRecording = useCallback((fn: (value: boolean) => boolean) => {
-    const next = fn(logBuffer.recording);
-    logBuffer.start();
-    logBuffer.setPaused(!next);
-  }, []);
+  const setRecording = useCallback(
+    (fn: (value: boolean) => boolean) => {
+      const next = fn(buffer.recording);
+      buffer.start();
+      buffer.setPaused(!next);
+    },
+    [buffer],
+  );
 
   // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
@@ -158,22 +175,23 @@ const LoggerRoot = ({
   );
   const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
-    logBuffer.clear();
+    buffer.clear();
     setExpanded(new Set());
     setChecked(new Set());
     setCurrent(undefined);
-  }, []);
-  // Copy the checked rows when any are checked, else the whole buffer.
-  const copyAll = useCallback(() => {
-    const selected = checked.size > 0 ? rows.filter((row) => checked.has(row.id)) : rows;
-    copyToClipboard(
-      JSON.stringify(
-        selected.map(({ entry }) => formatLogEntry(entry)),
-        null,
-        2,
-      ),
+  }, [buffer]);
+  // Copy the checked rows when any are checked, else the rows the search leaves visible.
+  const getCopyText = useCallback(() => {
+    const selected =
+      checked.size > 0
+        ? rows.filter((row) => checked.has(row.id))
+        : rows.filter((row) => matchesText(formatLogEntry(row.entry), textFilter));
+    return JSON.stringify(
+      selected.map(({ entry }) => formatLogEntry(entry)),
+      null,
+      2,
     );
-  }, [rows, checked]);
+  }, [rows, checked, textFilter]);
   const toggleExpand = useCallback((id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -209,7 +227,7 @@ const LoggerRoot = ({
       checked={checked}
       toggleChecked={toggleChecked}
       clear={clear}
-      copyAll={copyAll}
+      getCopyText={getCopyText}
     >
       {children}
     </LoggerProvider>
@@ -224,17 +242,17 @@ LoggerRoot.displayName = 'Logger.Root';
 
 type LoggerToolbarProps = ComposableProps;
 
-const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
+const LoggerToolbar = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const { filter, setFilter, recording, setRecording, clear, getCopyText } = useLoggerContext('Logger.Toolbar');
 
   // A bare level matching the filter selects it; a scoped filter shows no selection.
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
       <Field.Root>
-        <Field.Input
+        <Input.Root
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
@@ -242,31 +260,29 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
           onChange={(ev) => setFilter(ev.target.value)}
         />
       </Field.Root>
-      <Select.Root value={selectedLevel} onValueChange={setFilter}>
-        <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {LEVELS.map((level) => (
-                <Select.Option key={level} value={level} classNames='text-sm'>
-                  {t(`level.${level}`)}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+      <Select.Root
+        value={[selectedLevel]}
+        onValueChange={({ value: [value] }) => setFilter(value)}
+        items={LEVELS.map((level) => ({ value: level, label: t(`level.${level}`) }))}
+      >
+        <Select.Trigger classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
+        <Select.Content>
+          {LEVELS.map((level) => (
+            <Select.Item key={level} classNames='text-sm' item={{ value: level, label: t(`level.${level}`) }} />
+          ))}
+        </Select.Content>
       </Select.Root>
       <LoggerLevels />
-      <ToggleIconButton
-        active={recording}
+      <Button.Toggle
+        pressed={recording}
+        onPressedChange={(pressed) => setRecording(() => pressed)}
         icon='ph--record--regular'
         activeIcon='ph--pause--regular'
         iconOnly
         label={t('record.label')}
-        onClick={() => setRecording((value) => !value)}
       />
-      <Toolbar.IconButton icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Toolbar.IconButton icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+      <Button.Root icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
+      <SystemButton.Clipboard iconOnly label={t('copy.label')} onCopy={getCopyText} />
     </Toolbar.Root>
   );
 });
@@ -277,10 +293,10 @@ LoggerToolbar.displayName = 'Logger.Toolbar';
 // Levels
 //
 
-type LoggerLevelsProps = ThemedClassName<{}>;
+type LoggerLevelsProps = Util.ThemedClassName<{}>;
 
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
   const [fileFilter, setFileFilter] = useState('');
 
@@ -288,109 +304,107 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   // path (so typing a package name filters, since the path carries `packages/<group>/<pkg>/…`).
   const needle = fileFilter.trim().toLowerCase();
   const visibleFiles = needle ? files.filter((file) => file.toLowerCase().includes(needle)) : files;
+  const levelItems = useMemo(
+    () => [
+      { value: 'inherit', label: t('levels.inherit.label') },
+      ...LEVELS.map((level) => ({ value: level, label: t(`level.${level}`) })),
+    ],
+    [t],
+  );
 
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Toolbar.IconButton
+        <Button.Root
           icon='ph--sliders--regular'
           iconOnly
           label={t('levels.label')}
           classNames={mx(fileLevels.size > 0 && 'text-primary-text', classNames)}
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content>
-          <Popover.Viewport classNames='w-[24rem] max-h-[22rem]'>
-            <Panel.Root>
-              <Panel.Toolbar asChild>
-                <Toolbar.Root>
-                  <Field.Root>
-                    <Field.Input
-                      placeholder={t('levels.filter.placeholder')}
-                      value={fileFilter}
-                      autoComplete='off'
-                      spellCheck={false}
-                      onChange={(ev) => setFileFilter(ev.target.value)}
-                    />
-                  </Field.Root>
-                  <Toolbar.IconButton
-                    icon='ph--trash--regular'
-                    iconOnly
-                    label={t('levels.reset.label')}
-                    disabled={fileLevels.size === 0}
-                    onClick={clearFileLevels}
+      <Popover.Content>
+        <Popover.Body classNames='w-[24rem] max-h-[22rem]'>
+          <Panel.Root>
+            <Panel.Header>
+              <Toolbar.Root>
+                <Field.Root>
+                  <Input.Root
+                    placeholder={t('levels.filter.placeholder')}
+                    value={fileFilter}
+                    autoComplete='off'
+                    spellCheck={false}
+                    onChange={(ev) => setFileFilter(ev.target.value)}
                   />
-                </Toolbar.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <ScrollArea.Root orientation='vertical' thin>
-                  <ScrollArea.Viewport>
-                    {visibleFiles.length === 0 && (
-                      <div className='p-2 text-xs text-subdued'>
-                        {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
-                      </div>
-                    )}
-                    {visibleFiles.length > 0 && (
-                      <Listbox.Root>
-                        <Listbox.Content classNames='dx-density-sm'>
-                          {visibleFiles.map((file) => {
-                            const basename = file.split('/').pop() ?? file;
-                            const pkg = packageName(file);
-                            const value = fileLevels.get(file) ?? 'inherit';
-                            return (
-                              <Listbox.Item
-                                key={file}
-                                id={file}
-                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
-                              >
-                                {/* One line so the row can honour the compact density; the package
+                </Field.Root>
+                <Button.Root
+                  icon='ph--trash--regular'
+                  iconOnly
+                  label={t('levels.reset.label')}
+                  disabled={fileLevels.size === 0}
+                  onClick={clearFileLevels}
+                />
+              </Toolbar.Root>
+            </Panel.Header>
+            <Panel.Body asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport>
+                  {visibleFiles.length === 0 && (
+                    <div className='p-2 text-xs text-fg-subtle'>
+                      {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
+                    </div>
+                  )}
+                  {visibleFiles.length > 0 && (
+                    <Listbox.Root items={visibleFiles.map((file) => ({ value: file, label: file }))}>
+                      <Listbox.Content classNames='dx-density-sm'>
+                        {visibleFiles.map((file) => {
+                          const basename = file.split('/').pop() ?? file;
+                          const pkg = packageName(file);
+                          const value = fileLevels.get(file) ?? 'inherit';
+                          return (
+                            <Listbox.Item
+                              key={file}
+                              id={file}
+                              classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
+                            >
+                              {/* One line so the row can honour the compact density; the package
                                     and full path are carried in the tooltip instead of a second line. */}
-                                <Listbox.ItemLabel
-                                  classNames='truncate text-xs'
-                                  title={pkg ? `${pkg} · ${file}` : file}
-                                >
-                                  {basename}
-                                </Listbox.ItemLabel>
-                                <Select.Root
-                                  value={value}
-                                  onValueChange={(next) =>
-                                    setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
-                                  }
-                                >
-                                  <Select.TriggerButton
-                                    classNames='w-full text-sm'
-                                    placeholder={t('levels.inherit.label')}
+                              <Listbox.ItemText classNames='truncate text-xs' title={pkg ? `${pkg} · ${file}` : file}>
+                                {basename}
+                              </Listbox.ItemText>
+                              <Select.Root
+                                items={levelItems}
+                                value={[value]}
+                                onValueChange={({ value: [next] }) =>
+                                  setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                                }
+                              >
+                                <Select.Trigger classNames='w-full text-sm' placeholder={t('levels.inherit.label')} />
+                                <Select.Content>
+                                  <Select.Item
+                                    classNames='text-sm'
+                                    item={{ value: 'inherit', label: t('levels.inherit.label') }}
                                   />
-                                  <Select.Portal>
-                                    <Select.Content>
-                                      <Select.Viewport>
-                                        <Select.Option value='inherit' classNames='text-sm'>
-                                          {t('levels.inherit.label')}
-                                        </Select.Option>
-                                        {LEVELS.map((level) => (
-                                          <Select.Option key={level} value={level} classNames='text-sm'>
-                                            {t(`level.${level}`)}
-                                          </Select.Option>
-                                        ))}
-                                      </Select.Viewport>
-                                    </Select.Content>
-                                  </Select.Portal>
-                                </Select.Root>
-                              </Listbox.Item>
-                            );
-                          })}
-                        </Listbox.Content>
-                      </Listbox.Root>
-                    )}
-                  </ScrollArea.Viewport>
-                </ScrollArea.Root>
-              </Panel.Content>
-            </Panel.Root>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+                                  {LEVELS.map((level) => (
+                                    <Select.Item
+                                      key={level}
+                                      classNames='text-sm'
+                                      item={{ value: level, label: t(`level.${level}`) }}
+                                    />
+                                  ))}
+                                </Select.Content>
+                              </Select.Root>
+                            </Listbox.Item>
+                          );
+                        })}
+                      </Listbox.Content>
+                    </Listbox.Root>
+                  )}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Panel.Body>
+          </Panel.Root>
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -403,7 +417,7 @@ LoggerLevels.displayName = 'Logger.Levels';
 
 type LoggerContentProps = ComposableProps;
 
-const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const LoggerContent = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { rows } = useLoggerContext('Logger.Content');
 
   // Keep the viewport pinned to the newest entry.
@@ -416,7 +430,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>
@@ -430,82 +444,133 @@ LoggerContent.displayName = 'Logger.Content';
 // List
 //
 
-type LoggerListProps = ThemedClassName<{}>;
+type LoggerListProps = Util.ThemedClassName<{
+  /** Rows carry a checkbox that marks them for the toolbar's copy; omit where there is no toolbar to copy from. */
+  checkable?: boolean;
+}>;
 
-const LoggerList = ({ classNames }: LoggerListProps) => {
-  const { t } = useTranslation(translationKey);
+/** Keys that move the listbox's highlight. */
+const NAVIGATION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+
+/** The row id of the listbox's highlighted option, if any. */
+const highlightedId = (container: HTMLElement): number | undefined => {
+  const value = container.querySelector('[role=option][data-highlighted]')?.getAttribute('data-value');
+  return value === null || value === undefined ? undefined : Number(value);
+};
+
+const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
 
-  // Compute the display record once; filter the buffer by a case-insensitive match on file + message.
-  const needle = textFilter.trim().toLowerCase();
+  // Compute the display record once; the same predicate decides what the toolbar's copy takes.
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
-    .filter(({ record }) =>
-      needle ? `${record.file ?? ''} ${record.message ?? ''}`.toLowerCase().includes(needle) : true,
-    );
+    .filter(({ record }) => matchesText(record, textFilter));
+  // Entries from a caller-owned buffer usually carry no call-site file, so the column shows their time instead of staying empty.
+  const showFile = visible.some(({ record }) => record.file);
+  // Literal class names, since Tailwind only generates classes it finds verbatim in source.
+  const columns = checkable
+    ? showFile
+      ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[auto_1rem_max-content_1fr_max-content]'
+    : showFile
+      ? 'grid-cols-[1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[1rem_max-content_1fr_max-content]';
 
   if (visible.length === 0) {
     return (
-      <div className={mx('p-2 text-subdued', classNames)}>
+      <div className={mx('p-2 text-fg-subtle', classNames)}>
         {t(rows.length === 0 ? 'empty.message' : 'search.no-matches.message')}
       </div>
     );
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
+        // A click marks its row current; once the keys move the listbox's own highlight, that is the only ringed row, since
+        // a current row left behind would be ringed alongside it.
         onKeyDown={(event) => {
-          if (current === undefined) {
+          if (NAVIGATION_KEYS.has(event.key)) {
+            setCurrent(undefined);
+          }
+          const target = highlightedId(event.currentTarget) ?? current;
+          if (target === undefined) {
             return;
           }
           if (event.key === ' ') {
             event.preventDefault();
-            toggleExpand(current);
-          } else if (event.key === 'Enter') {
+            toggleExpand(target);
+          } else if (event.key === 'Enter' && checkable) {
             event.preventDefault();
-            toggleChecked(current);
+            toggleChecked(target);
           }
         }}
       >
-        <Listbox.Content classNames={mx('dx-density-sm', classNames)}>
+        {/* `Logger.Content` is the scroll area, so the list joins it rather than nesting a second one; its viewport is not a
+            grid, so the list lays out its own column rather than inheriting one. */}
+        <Listbox.Content gutter='none' classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
-            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
+            const frames = isExpanded && record.error ? Status.parseCaptureOwnerStack(record.error) : null;
             return (
               <Listbox.Item
                 key={id}
                 id={String(id)}
-                aria-current={current === id || undefined}
-                onFocus={() => setCurrent(id)}
+                current={current === id}
                 onClick={() => setCurrent(id)}
-                classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
+                // The first track keeps the row's height, so its cells stay centred with or without the checkbox and while the
+                // detail below it is open.
+                classNames={mx(
+                  'group grid gap-2 items-center p-0 [grid-template-rows:minmax(var(--dx-block-size),auto)]',
+                  columns,
+                )}
               >
-                <div className='flex items-center pl-2'>
-                  <Field.Root>
-                    <Field.Checkbox
-                      tabIndex={-1}
-                      size={3}
-                      checked={checked.has(id)}
-                      onCheckedChange={() => toggleChecked(id)}
-                    />
-                  </Field.Root>
-                </div>
-                <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-                <div
-                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
-                  title={record.file}
+                {checkable && (
+                  <Layout.Flex align='center'>
+                    <Field.Root>
+                      <Input.Checkbox
+                        tabIndex={-1}
+                        checked={checked.has(id)}
+                        onCheckedChange={() => toggleChecked(id)}
+                      />
+                    </Field.Root>
+                  </Layout.Flex>
+                )}
+                <span className={mx('grid size-6 place-items-center text-sm', levelColor(entry.level))}>
+                  {record.level}
+                </span>
+                {showFile ? (
+                  <span
+                    className={mx(
+                      'min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]',
+                      !expanded.has(id) && 'text-fg-muted',
+                    )}
+                    title={record.file}
+                  >
+                    {record.file?.split('/').pop() ?? record.file}
+                  </span>
+                ) : (
+                  <time
+                    className='tabular-nums text-fg-muted [text-box:trim-both_cap_alphabetic]'
+                    dateTime={record.timestamp}
+                  >
+                    {new Date(entry.timestamp).toLocaleTimeString(undefined, { hour12: false })}
+                  </time>
+                )}
+                {/* Trimmed to the cap height so text without descenders (times, capitals) centres in the row instead of riding high;
+                    clipped on x only, since `truncate`'s hidden overflow would cut the descenders the trim leaves outside the box. */}
+                <span
+                  className='min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]'
+                  title={record.message}
                 >
-                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
-                </div>
-                <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
-                <SystemIconButton.Clipboard
+                <SystemButton.Clipboard
                   iconOnly
-                  density='sm'
+                  size='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'
@@ -513,11 +578,11 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                   onCopy={() => JSON.stringify(record, null, 2)}
                 />
                 {isExpanded && (
-                  <div className='col-span-full'>
+                  <div data-place='full' className='min-w-0'>
                     {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
                     <Syntax.Viewport>
                       <JsonHighlighter
-                        classNames='p-2 overflow-visible'
+                        classNames='text-sm'
                         data={{
                           file: record.line ? `${record.file}:${record.line}` : record.file,
                           message: record.message,
@@ -525,7 +590,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                         }}
                       />
                     </Syntax.Viewport>
-                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
+                    {frames && <Status.ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>
@@ -545,29 +610,24 @@ LoggerList.displayName = 'Logger.List';
 
 type LoggerFilterProps = ComposableProps;
 
-const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+const LoggerFilter = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
+    <Toolbar.Root {...Util.composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
       <Field.Root>
-        <Field.Input
+        <Input.Root
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setTextFilter(ev.target.value)}
-          start={<Icon icon='ph--magnifying-glass--regular' />}
+          start={<Icon.Icon icon='ph--magnifying-glass--regular' />}
         />
       </Field.Root>
       {textFilter.length > 0 && (
-        <Toolbar.IconButton
-          icon='ph--x--regular'
-          iconOnly
-          label={t('search.clear.label')}
-          onClick={() => setTextFilter('')}
-        />
+        <Button.Root icon='ph--x--regular' iconOnly label={t('search.clear.label')} onClick={() => setTextFilter('')} />
       )}
     </Toolbar.Root>
   );

@@ -2,137 +2,100 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Collapsible` — a section that folds under its own heading, built on `@ark-ui/react`'s Collapsible
-// (zag state machine). The machine owns the open state, pairs the trigger to the section it controls
-// (`aria-controls`/`aria-expanded`), measures the section so its height can be animated, and mounts
-// or unmounts it around that animation. A stack of these under one caller-owned expansion set is an
-// accordion; the machine is per-section so each one stays independent of how the stack is rendered.
+// @import-as-namespace
 
-import { Collapsible as CollapsiblePrimitive, useCollapsibleContext } from '@ark-ui/react/collapsible';
-import React from 'react';
+import { Collapsible as CollapsiblePrimitive } from '@ark-ui/react/collapsible';
+import React, { forwardRef, useContext } from 'react';
 
-import { type SlottableProps } from '@dxos/ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { containerAttributes } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { RowContext } from '../Listbox/grid.ts';
 
 //
 // Root
 //
 
-const ROOT_NAME = 'Collapsible.Root';
+type CollapsibleRootProps = ThemedClassName<CollapsiblePrimitive.RootProps>;
 
-type CollapsibleRootElementProps = {
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** Nothing to fold: the trigger stops being a control and the section stays as it is. */
-  disabled?: boolean;
-  /** Render the section only while it is open, so a folded one costs nothing. */
-  unmountOnExit?: boolean;
-  /** Defer the section's first render until it is opened. */
-  lazyMount?: boolean;
-};
+const CollapsibleRoot = forwardRef<HTMLDivElement, CollapsibleRootProps>(({ classNames, ...props }, forwardedRef) => (
+  <CollapsiblePrimitive.Root {...props} className={mx(recipes.collapsible(), classNames)} ref={forwardedRef} />
+));
 
-type CollapsibleRootProps = SlottableProps<CollapsibleRootElementProps>;
-
-const CollapsibleRoot = slottable<HTMLDivElement, CollapsibleRootElementProps>(
-  (
-    { asChild, children, open, defaultOpen, onOpenChange, disabled, unmountOnExit, lazyMount, ...props },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    const { className, ...rest } = composableProps(props);
-
-    return (
-      <CollapsiblePrimitive.Root
-        {...rest}
-        asChild={asChild}
-        open={open}
-        defaultOpen={defaultOpen}
-        // The machine reports the new state in a detail object; callers want the boolean.
-        onOpenChange={onOpenChange && (({ open: next }) => onOpenChange(next))}
-        disabled={disabled}
-        unmountOnExit={unmountOnExit}
-        lazyMount={lazyMount}
-        className={tx('collapsible.root', { disabled }, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </CollapsiblePrimitive.Root>
-    );
-  },
-);
-
-CollapsibleRoot.displayName = ROOT_NAME;
+CollapsibleRoot.displayName = 'Collapsible.Root';
 
 //
 // Trigger
 //
 
-const TRIGGER_NAME = 'Collapsible.Trigger';
+type CollapsibleTriggerProps = ThemedClassName<CollapsiblePrimitive.TriggerProps> & {
+  icon?: string;
+};
 
-type CollapsibleTriggerProps = SlottableProps;
+/**
+ * A block row: a caret that turns to point down when open, followed by the label. Without children it is the caret
+ * alone, a block-sized square for a list row's trailing column, named by the row's `ItemText` unless given a label.
+ */
+const CollapsibleTrigger = forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
+  ({ classNames, icon = 'ph--caret-right--regular', children, ...props }, forwardedRef) => {
+    const row = useContext(RowContext);
+    const caretOnly = children === undefined;
+    const labelledBy =
+      caretOnly && props['aria-label'] === undefined && props['aria-labelledby'] === undefined
+        ? row?.textId
+        : undefined;
+    return (
+      <CollapsiblePrimitive.Trigger
+        aria-labelledby={labelledBy}
+        {...props}
+        data-caret-only={caretOnly ? '' : undefined}
+        className={mx(recipes.collapsibleTrigger(), classNames)}
+        ref={forwardedRef}
+      >
+        <CollapsiblePrimitive.Indicator className={recipes.collapsibleIndicator()}>
+          <Icon.Icon icon={icon} />
+        </CollapsiblePrimitive.Indicator>
+        {children}
+      </CollapsiblePrimitive.Trigger>
+    );
+  },
+);
 
-const CollapsibleTrigger = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-  // Read from the machine rather than a prop: `disabled` is declared on the root, so the trigger
-  // would otherwise style itself as interactive on a section that cannot be folded.
-  const { disabled } = useCollapsibleContext();
-
-  return (
-    <CollapsiblePrimitive.Trigger
-      {...rest}
-      asChild={asChild}
-      // The machine renders a button, which submits the form around it unless told otherwise.
-      type='button'
-      className={tx('collapsible.trigger', { disabled }, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </CollapsiblePrimitive.Trigger>
-  );
-});
-
-CollapsibleTrigger.displayName = TRIGGER_NAME;
+CollapsibleTrigger.displayName = 'Collapsible.Trigger';
 
 //
 // Content
 //
 
-const CONTENT_NAME = 'Collapsible.Content';
-
-type CollapsibleContentProps = SlottableProps;
-
-const CollapsibleContent = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-
-  return (
-    <CollapsiblePrimitive.Content
-      {...rest}
-      asChild={asChild}
-      className={tx('collapsible.content', {}, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </CollapsiblePrimitive.Content>
-  );
-});
-
-CollapsibleContent.displayName = CONTENT_NAME;
-
-//
-// Collapsible
-//
-
-const Collapsible = {
-  Root: CollapsibleRoot,
-  Trigger: CollapsibleTrigger,
-  Content: CollapsibleContent,
+type CollapsibleContentProps = ThemedClassName<CollapsiblePrimitive.ContentProps> & {
+  /** `inherit` makes the content a subgrid of the enclosing grid (a Container or a grid Fieldset), keeping its rails. */
+  gutter?: 'inherit';
 };
 
-export { Collapsible };
+/** Animates its height from Ark's measured `--height`. */
+const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
+  ({ classNames, gutter, style, ...props }, forwardedRef) => {
+    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter }) : { style: undefined };
+    return (
+      <CollapsiblePrimitive.Content
+        {...props}
+        {...grid}
+        style={gridStyle ? { ...gridStyle, ...style } : style}
+        className={mx(recipes.collapsibleContent(), gutter && recipes.container(), classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
-export type { CollapsibleContentProps, CollapsibleRootProps, CollapsibleTriggerProps };
+CollapsibleContent.displayName = 'Collapsible.Content';
+export type {
+  CollapsibleContentProps as ContentProps,
+  CollapsibleRootProps as RootProps,
+  CollapsibleTriggerProps as TriggerProps,
+};
+
+export { CollapsibleContent as Content, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };

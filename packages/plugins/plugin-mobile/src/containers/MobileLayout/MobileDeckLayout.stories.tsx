@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DeckStoryPlugin, storyItemId } from '@dxos/plugin-deck/testing';
 import { translations as deckTranslations } from '@dxos/plugin-deck/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -37,7 +37,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), DeckStoryPlugin()],
+      plugins: [...CorePlugins.make(), DeckStoryPlugin()],
     }),
   ],
   parameters: {
@@ -65,7 +65,7 @@ export const Default: Story = {
 
 /** Opens the given story items as the navigation stack, top-most last. */
 const OpenStory = ({ items }: { items: string[] }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useAsyncEffect(async () => {
     for (const [index, subject] of items.entries()) {
       await invokePromise(LayoutOperation.Open, {

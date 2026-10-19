@@ -9,9 +9,9 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import type * as PlatformError from 'effect/PlatformError';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';

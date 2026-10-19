@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { Memory } from './Memory.ts';
+export * as AgentOperation from './AgentOperation.ts';
+export * as Memory from './Memory.ts';

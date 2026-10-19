@@ -8,7 +8,7 @@ import { SvgHandler } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { SceneSvg } from '#components';
 import { Drawing, type IllustratorCapabilities } from '#types';
@@ -25,15 +25,15 @@ export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }:
   const objects = useMemo(() => SvgHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
 
   return (
-    <Panel.Root classNames='dx-fill'>
-      <Panel.Content classNames='dx-attention-surface'>
+    <Panel.Root>
+      <Panel.Body classNames='dx-attention-surface'>
         <SceneSvg
           objects={objects}
           selection={selection}
           onSelectionChange={onSelectionChange}
           onActivate={onActivate}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

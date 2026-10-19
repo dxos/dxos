@@ -4,10 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -174,6 +174,20 @@ export const WithConversations: Story = {
     },
     // Half the senders are strangers, so both avatar states appear down the list.
     knownSenders: 0.5,
+  },
+  // The tile is the one focus stop: a click on a message row focuses its tile, and ArrowDown moves to the next tile.
+  play: async ({ canvasElement }) => {
+    const tiles = () => [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="inbox.conversation.row"]')];
+    await waitFor(() => expect(tiles().length).toBeGreaterThan(1), { timeout: 12_000 });
+    const [first, second] = tiles();
+    await expect(first.querySelector('.cursor-pointer button')).toBeNull();
+    const row = first.querySelector<HTMLElement>('.cursor-pointer');
+    await expect(row).not.toBeNull();
+    if (row) {
+      await userEvent.click(row);
+    }
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(second));
   },
 };
 

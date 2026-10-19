@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
 
@@ -34,7 +34,8 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
     const resolver = yield* AiModelResolver;
     return {
       metadata: resolver.metadata,
-      languageModel: (name, options) => Layer.merge(resolver.languageModel(name, options), telemetryLayer),
+      languageModel: (name, options) =>
+        Layer.merge(AiTelemetry.markRequestsLayer(resolver.languageModel(name, options)), telemetryLayer),
       decisionModel: resolver.decisionModel,
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),

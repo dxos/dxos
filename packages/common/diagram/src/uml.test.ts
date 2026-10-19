@@ -113,15 +113,19 @@ describe('uml', () => {
     // one, so the visible segment stays in the rank gap instead of crossing Animal's members.
     const inheritance = arrows.find((arrow) => arrow.from === 'Dog/title' && arrow.to === 'Animal/methods')!;
     expect(inheritance.stroke).toBeUndefined();
+    expect(inheritance.relation).toBe('inheritance');
     const realization = arrows.find((arrow) => arrow.to === 'Serializable/methods')!;
     expect(realization.stroke).toBe('dashed');
     const aggregation = arrows.find((arrow) => arrow.from === 'Owner/title')!;
     expect(aggregation.to).toBe('Dog/title');
     expect(aggregation.text).toBe('1 owns *');
+    expect(aggregation.relation).toBe('aggregation');
     // Memberless classes below Dog bind to their only compartment; Dog faces them with its last.
     const composition = arrows.find((arrow) => arrow.to === 'Leg/title')!;
     expect(composition.from).toBe('Dog/methods');
-    expect(composition.text).toBe('◆');
+    // The diamond is the relation's marker at the whole's end, not a glyph in the label.
+    expect(composition.relation).toBe('composition');
+    expect(composition.text).toBeUndefined();
   });
 
   test('wraps long member lines into taller compartments, capped at maxWidth', ({ expect }) => {

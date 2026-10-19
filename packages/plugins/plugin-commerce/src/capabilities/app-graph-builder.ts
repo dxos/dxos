@@ -14,7 +14,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';

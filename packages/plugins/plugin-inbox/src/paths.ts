@@ -82,17 +82,4 @@ export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messag
 export const getCalendarEventPath = (spaceId: string, calendarId: string, eventId: string): string =>
   getFeedObjectPath(getCalendarPath(spaceId, calendarId), eventId);
 
-/**
- * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
- * context id (which holds the `single` event selection) so the two selection modes don't collide.
- * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
- */
-export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
-
-/**
- * Builds the node ID for an event's companion node by appending the pre-computed linked segment
- * to the calendar's attendable ID. The segment must already be a linked segment (see EventArticle).
- */
-export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
-
 export { getCalendarPath, getCalendarsPath };

@@ -3,11 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import type * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import type * as Scope from 'effect/Scope';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 // Bridges an effect-rpc Handlers implementation to a Client without a wire hop or serialization
 // (backed by RpcServer/RpcClient in no-serialization mode). Consumers use the same effect-rpc

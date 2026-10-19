@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AgentHydrator,
   AgentRuntime,
+  Agents,
   AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
@@ -58,6 +59,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     // upstream. See `capabilities/ai-context.ts` for the rationale.
     Plugin.addModule(AiContextCapability),
     Plugin.addModule(AgentRuntime),
+    Plugin.addModule(Agents),
   )
   .pipe(
     Plugin.addModule(Toolkit),

@@ -1,267 +1,123 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+  type ImgHTMLAttributes,
+  forwardRef,
+  useState,
+} from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { sampleDominantColor } from '@dxos/lit-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-// TODO(burdon): Factor out.
-const cache = new Map<string, string>();
+import { clickableProps } from '../../clickable.ts';
+import { recipes } from '../../recipes.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 
-export type ImageProps = ThemedClassName<
-  {
-    src: string;
-    alt?: string;
-    fit?: 'contain' | 'cover';
-    /**
-     * Image CORS mode (sets the `<img crossorigin>` attribute). Omitted by default: cross-origin
-     * images load without a CORS request (no console errors), but the dominant-color sampler can't
-     * read their pixels off the canvas (the browser taints it). Opt in with `'anonymous'` when the
-     * image host sends CORS headers and you want the dominant-color gradient.
-     */
-    crossOrigin?: 'anonymous' | 'use-credentials' | '';
-    /** Makes the image a button, operable by pointer and by Enter or Space. */
-    onClick?: () => void;
-  } & ColorOptions
+type ImageStatus = 'loading' | 'loaded' | 'error';
+
+type ImageElementProps = Pick<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'src' | 'srcSet' | 'sizes' | 'crossOrigin' | 'referrerPolicy' | 'loading' | 'decoding' | 'onLoad' | 'onError'
 >;
 
-export const Image = ({
-  classNames,
-  src,
-  alt = '',
-  fit = 'contain',
-  crossOrigin,
-  sampleSize = 64,
-  contrast = 0.9,
-  onClick,
-}: ImageProps) => {
-  const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
-  const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
-  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // CORS not supported by server.
-  const handleImageError = (): void => {
-    setCrossOriginState(undefined);
+export type ImageProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'onLoad' | 'onError'>> &
+  ImageElementProps & {
+    /** Required: also names the fallback icon when the image fails to load. */
+    alt: string;
+    /** CSS `aspect-ratio` of the frame. */
+    aspectRatio?: string;
+    fit?: 'cover' | 'contain';
+    /**
+     * `dominant` fills the frame behind a loaded image (the letterbox of `contain`) with the colour of its corners;
+     * an image whose pixels cannot be read (cross-origin without `crossOrigin` and CORS) leaves the host surface.
+     */
+    backdrop?: 'dominant';
   };
 
-  const handleImageLoad = useCallback(
-    ({ target }: SyntheticEvent<HTMLImageElement>): void => {
-      const rgb = cache.get(src);
-      if (rgb) {
-        setDominantColor(rgb);
-        setImageLoaded(true);
-        return;
-      }
-
-      const img = target as HTMLImageElement;
-      if (!canvasRef.current) {
-        return;
-      }
-
-      try {
-        const color = extractDominantColor(canvasRef.current, img, { sampleSize, contrast });
-        if (color) {
-          const rgb = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-          cache.set(src, rgb);
-          setDominantColor(rgb);
-        }
-      } catch {
-        setCrossOriginState(undefined);
-      }
-
-      setImageLoaded(true);
+/**
+ * An `<img>` in a fixed-ratio frame that shows the well while loading and a broken-image icon on error. With `onClick`
+ * the frame is a button named by `alt`, operable by Enter and Space.
+ */
+export const Image = forwardRef<HTMLDivElement, ImageProps>(
+  (
+    {
+      classNames,
+      style,
+      src,
+      srcSet,
+      sizes,
+      crossOrigin,
+      referrerPolicy,
+      alt,
+      loading = 'lazy',
+      decoding = 'async',
+      aspectRatio = '16 / 9',
+      fit = 'cover',
+      backdrop,
+      onLoad,
+      onError,
+      onClick,
+      onKeyDown,
+      ...props
     },
-    [sampleSize, contrast, src],
-  );
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLImageElement>) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onClick?.();
-      }
-    },
-    [onClick],
-  );
-
-  return (
-    <div
-      // `isolate` (`isolation: isolate`) creates a new stacking context so
-      // the inner <img>'s `z-10` stays scoped to this wrapper. Without it
-      // the z-10 leaks into the parent's stacking context and elevates the
-      // image above any pseudo-element rings (e.g. Focus.Item's
-      // `dx-ring-pseudo` `::after`) painted on ancestors — most visibly,
-      // the focus ring on a Card containing a Card.Poster.
-      className={mx(
-        `isolate relative shrink-0 flex w-full justify-center overflow-hidden transition-all duration-700`,
-        classNames,
-      )}
-      style={{
-        backgroundColor: dominantColor,
-      }}
-    >
-      {/* Hidden canvas for color extraction. */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} aria-hidden='true' />
-
-      {/* Background gradient overlay for smooth transition. */}
+    forwardedRef,
+  ) => {
+    // Keyed by source so a new `src` starts loading again without an effect racing the load event.
+    const source = `${src ?? ''} ${srcSet ?? ''}`;
+    const [result, setResult] = useState<{ source: string; status: ImageStatus; color?: string }>();
+    const status: ImageStatus = result?.source === source ? result.status : 'loading';
+    const color = result?.source === source ? result.color : undefined;
+    const aspectStyle: CSSProperties & CSSVariables = {
+      '--dx-image-aspect': aspectRatio,
+      ...(color ? { '--dx-image-backdrop': color } : {}),
+    };
+    return (
       <div
-        className='dx-fullscreen pointer-events-none'
-        style={{
-          background: dominantColor
-            ? `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`
-            : undefined,
-          transition: 'opacity 0.7s ease-in-out',
-          opacity: 0.5,
-        }}
-      />
-
-      <img
-        src={src}
-        alt={alt}
-        crossOrigin={crossOriginState}
-        className={mx(
-          'z-10 transition-opacity duration-500',
-          fit === 'cover' ? 'dx-fill object-cover' : 'object-contain',
+        {...props}
+        {...clickableProps(onClick, onKeyDown)}
+        data-scope='image'
+        data-part='root'
+        data-fit={fit}
+        data-status={status}
+        data-backdrop={backdrop}
+        style={{ ...aspectStyle, ...style }}
+        className={mx(recipes.image(), onClick && recipes.imageClickable(), classNames)}
+        ref={forwardedRef}
+      >
+        {status === 'error' ? (
+          <Icon.Icon icon='ph--image-broken--regular' label={alt} />
+        ) : (
+          <img
+            src={src}
+            srcSet={srcSet}
+            sizes={sizes}
+            crossOrigin={crossOrigin}
+            referrerPolicy={referrerPolicy}
+            alt={alt}
+            loading={loading}
+            decoding={decoding}
+            data-scope='image'
+            data-part='img'
+            onLoad={(event) => {
+              const sampled = backdrop === 'dominant' ? sampleDominantColor(event.currentTarget) : undefined;
+              setResult({ source, status: 'loaded', color: sampled });
+              onLoad?.(event);
+            }}
+            onError={(event) => {
+              setResult({ source, status: 'error' });
+              onError?.(event);
+            }}
+          />
         )}
-        style={{
-          opacity: imageLoaded ? 1 : 0,
-        }}
-        onError={handleImageError}
-        onLoad={handleImageLoad}
-        {...(onClick && { role: 'button', tabIndex: 0, onClick, onKeyDown: handleKeyDown })}
-      />
-    </div>
-  );
-};
+      </div>
+    );
+  },
+);
 
-type ColorOptions = {
-  sampleSize?: number;
-  contrast?: number;
-};
-
-/**
- * Get dominant color from image (esp. from corners).
- */
-const extractDominantColor = (
-  canvas: HTMLCanvasElement,
-  img: HTMLImageElement,
-  { sampleSize = 64, contrast = 0.95 }: ColorOptions,
-): [number, number, number] | null => {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return null;
-  }
-
-  // Draw the image scaled down.
-  canvas.width = sampleSize;
-  canvas.height = sampleSize;
-  ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
-
-  // Get image data.
-  const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
-  const pixels = imageData.data;
-
-  // Check for transparent background.
-  if (isTransparent(pixels, sampleSize)) {
-    return null;
-  }
-
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  let totalWeight = 0;
-
-  // Define corner sampling areas (e.g., 25% of each dimension from each corner).
-  const cornerSize = Math.floor(sampleSize * 0.125);
-
-  // Sample only pixels in corner areas.
-  for (let y = 0; y < sampleSize; y++) {
-    for (let x = 0; x < sampleSize; x++) {
-      // Check if pixel is in any corner area.
-      const isInTopLeft = x < cornerSize && y < cornerSize;
-      const isInTopRight = x >= sampleSize - cornerSize && y < cornerSize;
-      const isInBottomLeft = x < cornerSize && y >= sampleSize - cornerSize;
-      const isInBottomRight = x >= sampleSize - cornerSize && y >= sampleSize - cornerSize;
-      if (!isInTopLeft && !isInTopRight && !isInBottomLeft && !isInBottomRight) {
-        continue; // Skip pixels not in corner areas.
-      }
-
-      const i = (y * sampleSize + x) * 4;
-      const red = pixels[i];
-      const green = pixels[i + 1];
-      const blue = pixels[i + 2];
-      const alpha = pixels[i + 3];
-
-      // Skip transparent pixels.
-      if (alpha === 0) {
-        continue;
-      }
-
-      // Calculate saturation to weight vibrant colors more.
-      const max = Math.max(red, green, blue);
-      const min = Math.min(red, green, blue);
-      const saturation = max === 0 ? 0 : (max - min) / max;
-      const weight = 1 + saturation * 2;
-
-      r += red * weight;
-      g += green * weight;
-      b += blue * weight;
-      totalWeight += weight;
-    }
-  }
-
-  if (totalWeight > 0) {
-    // Slightly darken the color for better contrast.
-    r = Math.round(Math.round(r / totalWeight) * contrast);
-    g = Math.round(Math.round(g / totalWeight) * contrast);
-    b = Math.round(Math.round(b / totalWeight) * contrast);
-    return [r, g, b];
-  }
-
-  return null;
-};
-
-/**
- * Detects if an image has a transparent background by examining edge pixels.
- * @param pixels - Image pixel data from canvas
- * @param sampleSize - Size of the sampled image
- * @param threshold - Percentage threshold for considering background transparent (default: 0.5)
- * @returns True if the image has a transparent background
- */
-const isTransparent = (pixels: Uint8ClampedArray, sampleSize: number, threshold: number = 0.5): boolean => {
-  let edgeTransparentPixels = 0;
-  const edgePixels = sampleSize * 4 - 4; // Perimeter minus corners counted twice.
-
-  for (let x = 0; x < sampleSize; x++) {
-    // Top edge.
-    const topIndex = x * 4;
-    if (pixels[topIndex + 3] === 0) {
-      edgeTransparentPixels++;
-    }
-
-    // Bottom edge.
-    const bottomIndex = ((sampleSize - 1) * sampleSize + x) * 4;
-    if (pixels[bottomIndex + 3] === 0) {
-      edgeTransparentPixels++;
-    }
-  }
-
-  for (let y = 1; y < sampleSize - 1; y++) {
-    // Left edge.
-    const leftIndex = y * sampleSize * 4;
-    if (pixels[leftIndex + 3] === 0) {
-      edgeTransparentPixels++;
-    }
-
-    // Right edge.
-    const rightIndex = (y * sampleSize + sampleSize - 1) * 4;
-    if (pixels[rightIndex + 3] === 0) {
-      edgeTransparentPixels++;
-    }
-  }
-
-  return edgeTransparentPixels / edgePixels > threshold;
-};
+Image.displayName = 'Image';

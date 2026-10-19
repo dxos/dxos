@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import { useCallback, useMemo } from 'react';
 
 import { Entity } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 const DEFAULT_ICON = 'ph--circle-dashed--regular';
 
@@ -44,7 +44,7 @@ export type UseRelatedTypeFilter = {
  * actually present are offered.
  */
 export const useRelatedTypeFilter = (items: Entity.Unknown[], contextId?: string): UseRelatedTypeFilter => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const hidden = useViewState(relatedTypeFilterAspect, contextId);
   const { update } = useViewStateActions(relatedTypeFilterAspect, contextId);
 

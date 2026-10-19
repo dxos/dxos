@@ -6,8 +6,8 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import {
   type AutomergeReplicator,
@@ -16,7 +16,9 @@ import {
   type QueryExecutorMode,
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { SqliteKeyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -27,7 +29,8 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
+import { migrateBlobStore } from '../blobs/index.ts';
+import { type IdentityManagerProps, type InboxRelay, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
@@ -67,6 +70,8 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
   signalManager?: SignalManager;
   /** Overrides the WebRTC transport; tests pass the in-memory transport. */
   transportFactory?: TransportFactory;
+  /** Replaces the EDGE inbox; tests share one relay between clients. */
+  inboxRelay?: InboxRelay;
 };
 
 /**
@@ -122,6 +127,7 @@ export const storageMigrationLayer = Layer.effect(
         new SqliteMetadataStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage.SqliteStorage({ runtime }).migrate,
+        migrateBlobStore,
       ],
       { discard: true },
     );

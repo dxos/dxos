@@ -37,7 +37,7 @@ const listStyles = tv({
     // `dx-current` enables `aria-current` row styling (not listbox/option semantics).
     orderedListItem: 'relative dx-current',
     // Bordered column wrapping title + detail panel in the master-detail layout.
-    orderedListDetailColumn: 'flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden',
+    orderedListDetailColumn: 'flex flex-col ring-1 ring-separator-subtle rounded-sm overflow-hidden',
     // `min-h` matches the shared rail-item track so handles, title, and caret share a baseline.
     orderedListDetailTitleRow: 'flex items-center min-h-[var(--dx-rail-item)]',
     orderedListDetailPanel: 'px-trim-sm pb-trim-sm',
@@ -61,7 +61,7 @@ const listStyles = tv({
     comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.
     comboboxItem: 'flex w-full gap-trim-sm items-center',
-    comboboxItemDescription: 'text-sm text-description truncate',
+    comboboxItemDescription: 'text-sm text-fg-muted truncate',
 
     //
     // ItemContent
@@ -72,12 +72,12 @@ const listStyles = tv({
     // Flex so an inline icon (avatar span, svg) is blockified and gets no line-box descender gap below it.
     itemContentIcon: 'col-start-1 row-start-1 place-self-center flex',
     itemContentTitle: 'row-start-1 min-w-0 truncate',
-    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-description',
+    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-fg-muted',
 
     //
     // Empty
     //
-    empty: 'flex flex-col items-center justify-center gap-trim-sm p-trim-lg text-sm text-center text-description',
+    empty: 'flex flex-col items-center justify-center gap-trim-sm p-trim-lg text-sm text-center text-fg-muted',
   },
   variants: {
     // Reserve the leading icon track only when an icon is rendered; otherwise the content occupies a

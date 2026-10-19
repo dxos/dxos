@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useCalendarContext } from './context.ts';
@@ -74,7 +74,7 @@ type Gesture = {
 // A pending edit (the gesture's live result) overlaid on the source events while dragging.
 type Draft = { start: Date; end: Date; eventId?: string };
 
-const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
+const CalendarWeek = Util.composable<HTMLDivElement, CalendarWeekProps>(
   ({ classNames, date, events = [], onEventCreate, onEventUpdate, ...props }, forwardedRef) => {
     const { weekStartsOn, event: scrollEvent, setIndex } = useCalendarContext(CALENDAR_WEEK_NAME);
     const today = useMemo(() => new Date(), []);
@@ -308,7 +308,7 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           classNames: ['flex flex-col dx-fill overflow-hidden outline-hidden', classNames],
         })}
         ref={forwardedRef}
@@ -328,7 +328,7 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
               {Array.from({ length: 24 }, (_, hour) => (
                 <div
                   key={hour}
-                  className='absolute right-1 -translate-y-1/2 text-xs text-description tabular-nums'
+                  className='absolute right-1 -translate-y-1/2 text-xs text-fg-muted tabular-nums'
                   style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
                 >
                   {hour === 0 ? '' : `${hour.toString().padStart(2, '0')}:00`}

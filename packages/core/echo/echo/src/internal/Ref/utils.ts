@@ -2,9 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import type { LoadOptions, Ref } from './ref.ts';
+
+/** Reads the deletion marker off a value of unconstrained target type. */
+export const isTargetDeleted = (target: unknown): boolean =>
+  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
 
 /**
  * Internal helper for loading ref targets in atoms.

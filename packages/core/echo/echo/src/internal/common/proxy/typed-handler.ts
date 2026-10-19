@@ -9,7 +9,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
@@ -691,11 +691,20 @@ const setChildSchemas = (obj: any, ast: SchemaAST.AST) => {
   }
 };
 
+export type PrepareTargetOptions = {
+  /** Validate the target against its schema (default). See `Obj.MakeOptions.skipValidation`. */
+  validate?: boolean;
+};
+
 // Accepts any encoded type: the typed handler operates on the decoded representation, so schemas
 // whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
-  // log.info('prepareTypedTarget', { target, schema });
-  validateAndReactifyTarget(target, schema);
+export const prepareTypedTarget = <T>(
+  target: T,
+  schema: Schema.Schema<T>,
+  typeSource?: TypeSource,
+  options?: PrepareTargetOptions,
+) => {
+  validateAndReactifyTarget(target, schema, options);
   setSchemaProperties(target, schema, typeSource);
 };
 
@@ -703,14 +712,16 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeS
  * Validate a target against its schema and convert nested arrays to `ReactiveArray`. Shared by
  * {@link prepareTypedTarget} and {@link prepareDecodedTypedTarget}.
  */
-export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>) => {
+export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>, options?: PrepareTargetOptions) => {
   if (!SchemaAST.isObjects(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 
-  SchemaValidator.validateSchema(schema);
-  assertsWithDetail(schema, target);
-  SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path));
+  if (options?.validate !== false) {
+    SchemaValidator.validateSchema(schema);
+    assertsWithDetail(schema, target);
+    SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path));
+  }
   makeArraysReactive(target);
 };
 

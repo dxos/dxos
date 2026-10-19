@@ -9,15 +9,15 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';

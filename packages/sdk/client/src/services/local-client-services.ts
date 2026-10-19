@@ -6,9 +6,9 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { Event, synchronized } from '@dxos/async';
 import {
@@ -18,18 +18,19 @@ import {
   makeClientServicesRpcFromRouter,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { ServiceStack } from '@dxos/client-services';
+import { type IdentityManager, ServiceStack } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { RpcRouter } from '@dxos/rpc';
-import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/Platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
@@ -84,6 +85,8 @@ export type LocalClientServicesParams = {
    * If not provided, falls back to in-memory SQLite (indexes lost on restart).
    */
   sqlitePath?: string;
+  /** Replaces the EDGE inbox; tests share one relay (e.g. `MemoryEdgeInbox`) between clients. */
+  inboxRelay?: IdentityManager.InboxRelay;
 };
 
 /**
@@ -284,6 +287,7 @@ export class LocalClientServices implements ClientServicesProvider {
             runtimeProps: this._params.runtimeProps,
             signalManager: this._params.signalManager,
             transportFactory: this._params.transportFactory,
+            inboxRelay: this._params.inboxRelay,
             connectionLog: this._params.connectionLog,
             autoConnect: this._params.autoConnect,
           }).pipe(

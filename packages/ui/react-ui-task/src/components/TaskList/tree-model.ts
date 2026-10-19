@@ -73,11 +73,12 @@ export const TASK_TREE_ROOT_ID = 'tasks';
  * skipped, so a corrupt set renders short rather than hanging.
  */
 export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {
+  const childrenOf = Task.childIndex(tasks);
   const seen = new Set<string>();
 
   const visit = (task: Task.Task): TaskNode => {
     seen.add(task.id);
-    const children = Task.subTasks(tasks, task).filter((child) => !seen.has(child.id));
+    const children = childrenOf(task).filter((child) => !seen.has(child.id));
     return { id: task.id, task, children: children.map(visit) };
   };
 
@@ -209,12 +210,7 @@ export const createTaskTreeModel = (
           ? // A branch (its children make it one) rather than a `group` disposition: a section
             // header cannot be collapsed, and folding away the `Done` group is half the point.
             { testId: 'taskList.group' }
-          : {
-              testId: 'taskList.item',
-              // The selection fill already marks the row, so a focus ring on top of it reads as a
-              // second, conflicting highlight; unselected rows keep the ring for keyboard travel.
-              className: 'data-[selected]:ring-0',
-            }),
+          : { testId: 'taskList.item' }),
     }),
     isOpen: (node) => !collapsed?.has(node.id),
   });

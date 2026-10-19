@@ -3,9 +3,9 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
@@ -28,11 +28,17 @@ export const translations = [
         'plugin.name': 'Editor',
         'document-tour.label': 'Take the document tour',
         'add-object.label': 'Add object',
-        'link-query.placeholder': 'Search or create…',
         'choose-markdown-from-space-dialog.title': 'Choose one or more documents to add',
         'empty-choose-markdown-from-space.message': 'None available; try creating a new one instead?',
         'chooser-done.label': 'Add selected',
         'editor.placeholder': 'Enter text…',
+        'enable-plugin.label': 'Enable plugin',
+        'enable-plugin.tooltip': 'Open the plugin registry',
+        'content-loading.placeholder': 'Loading…',
+        'content-missing.title': 'Content unavailable',
+        'content-missing.message': 'This device does not have the document content yet. Editing starts once it syncs.',
+        'content-deleted.title': 'Content deleted',
+        'content-deleted.message': 'The text of this document was deleted, so it cannot be edited.',
         'toggle-view-mode.label': 'Toggle read-only',
         'upload-image.label': 'Upload image',
         'fallback.title': 'Untitled',
@@ -80,4 +86,4 @@ export const translations = [
   },
   ...editorTranslations,
   ...componentsTranslations,
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

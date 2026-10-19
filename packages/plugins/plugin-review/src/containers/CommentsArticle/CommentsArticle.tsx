@@ -6,11 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
@@ -19,9 +20,18 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
@@ -32,7 +42,7 @@ import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
-import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
+import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -73,7 +83,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
     [subject],
   );
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{title}</span>, [title]);
 
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
@@ -97,9 +107,9 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
 
@@ -146,7 +156,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members],
   );
 
-  const stateAtom = useCapability(CommentCapabilities.State);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
 
@@ -154,8 +164,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
-  const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
-  const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
+  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state points
+  // only to the toolbar's whole-object comment.
+  const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
+  const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -176,6 +189,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     return branch?.key;
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
+
+  // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over.
+  const handleAddObjectComment = useCallback(
+    () =>
+      invokePromise(CommentOperation.Create, {
+        subject,
+        branch: reviewBranch,
+      }),
+    [invokePromise, subject, reviewBranch],
+  );
 
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
@@ -492,22 +515,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       </div>
     ) : hasSuggestions ? null : (
       <Banner.Root>
-        <Banner.Content classNames='m-trim-md'>
-          <Banner.Body>
-            <span>
-              <Trans
-                {...{
-                  t,
-                  i18nKey: 'no-comments.message',
-                  components: {
-                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
-                  },
-                }}
-              />
-            </span>
-          </Banner.Body>
-        </Banner.Content>
+        <Banner.Body>
+          <span>
+            <Theme.Trans
+              {...{
+                t,
+                i18nKey: unanchored ? 'no-comments-unanchored.message' : 'no-comments.message',
+                components: {
+                  commentIcon: (
+                    <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  versionsIcon: (
+                    <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  addIcon: <Icon.Icon icon='ph--plus--regular' size='md' classNames='inline-block align-[-0.125em]' />,
+                },
+              }}
+            />
+          </span>
+        </Banner.Body>
       </Banner.Root>
     );
 
@@ -518,20 +544,29 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         value={showResolvedThreads ? 'all' : 'unresolved'}
         onValueChange={handleChangeViewState}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist>
-              <Tabs.Button classNames='text-sm' value='unresolved'>
+            <Tabs.List>
+              <Tabs.Trigger classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
-              </Tabs.Button>
-              <Tabs.Button classNames='text-sm' value='all'>
+              </Tabs.Trigger>
+              <Tabs.Trigger classNames='text-sm' value='all'>
                 {t('show-all.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Toolbar.Separator variant='gap' />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--plus--regular'
+              label={t('add-object-comment.label')}
+              onClick={handleAddObjectComment}
+              data-testid='comments.object-comment.add'
+            />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root thin>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
             <ScrollArea.Viewport>
               <Suggestions
                 document={markdownDoc}
@@ -545,11 +580,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 hiddenAuthors={hiddenAuthors}
                 onToggleAuthor={handleToggleAuthor}
               />
-              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
-              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Content value='all'>{showResolvedThreads && comments}</Tabs.Content>
+              <Tabs.Content value='unresolved'>{!showResolvedThreads && comments}</Tabs.Content>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Tabs.Root>
     </Panel.Root>
   );

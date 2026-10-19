@@ -7,8 +7,8 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import * as Trigger from '@dxos/compute/Trigger';
 
@@ -21,7 +21,8 @@ import * as Trigger from '@dxos/compute/Trigger';
  */
 export interface Manager {
   readonly triggers: Atom.Atom<readonly Trigger.State[]>;
-  readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void, Trigger.TriggerDisabledError>;
+  readonly resetTrigger: (options: Trigger.ResetOptions) => Effect.Effect<void, Trigger.TriggerNotResettableError>;
 }
 
 export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteTriggerManager') {}
@@ -38,6 +39,7 @@ export const layerNoop: Layer.Layer<Service, never, Registry.AtomRegistry> = Lay
     return {
       triggers,
       invokeTrigger: () => Effect.die(new Error('No remote trigger manager configured')),
+      resetTrigger: () => Effect.die(new Error('No remote trigger manager configured')),
     } satisfies Manager;
   }),
 );

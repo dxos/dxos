@@ -44,7 +44,7 @@ This project needs no Anthropic key and no Cloudflare login. If a step seems to 
 is the wrong step.`;
 
 /**
- * The work-stream. It adopts the task set the tasks phase built (`Project.make` would otherwise
+ * The work-stream. It adopts the task set the tasks partial built (`Project.make` would otherwise
  * create its own empty one) and carries the brief as an artifact.
  *
  * The skill reaches a chat through `instructions.skills`, which is the only binding path: a Skill
@@ -55,16 +55,15 @@ is the wrong step.`;
  * No `repo` and no `McpServer`: the repository is created in stage five and the server record in
  * stage four, and seeding either would name a URL that does not exist.
  */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   // `Outline.Outline` is not created here directly: `Project.make` builds one for the project's own
-  // outline, and a phase has to declare every type it persists or the space cannot register it.
+  // outline, and a partial has to declare every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline],
   run: ({ docs, tasks, skill, game }: ProjectInput) =>
     Effect.gen(function* () {
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Chess MCP on Workers',
-          description: 'Bindings for a chat working this project.',
           text: INSTRUCTIONS,
           skills: [Ref.make(skill.skill)],
           objects: [Ref.make(docs.brief), Ref.make(tasks.taskSet), Ref.make(game.game)],

@@ -110,6 +110,13 @@ export const Share = Operation.make({
   output: Schema.instanceOf(CancellableInvitationObservable),
 });
 
+/**
+ * Why an admitted member was not sent an invitation message: `account-required` when EDGE relays
+ * inbox messages only for identities linked to an account and this one is not.
+ */
+export const NoticeFailureReason = Schema.Literals(['account-required', 'send-failed']);
+export type NoticeFailureReason = Schema.Schema.Type<typeof NoticeFailureReason>;
+
 export const AddMembers = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.addMembers'),
@@ -127,6 +134,8 @@ export const AddMembers = Operation.make({
     joinUrl: Schema.String,
     admitted: Schema.Array(Schema.String),
     failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+    /** Admitted, but not told: they can still join from the space link. */
+    notNotified: Schema.Array(Schema.Struct({ key: Schema.String, reason: NoticeFailureReason })),
   }),
 });
 
@@ -516,18 +525,28 @@ export const AddType = Operation.make({
     // Typed as a record so the tool parameter advertises `type: object`, forcing the model to emit
     // the JSON Schema as an object rather than a JSON-encoded string.
     jsonSchema: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
-      description: 'JSON Schema (draft-07) describing the fields of the new type.',
+      description:
+        'JSON Schema (draft-07) describing the fields of the new type; `id` is added when left out. ' +
+        'For a relation type, set `entityKind: "relation"` and name the ends as ' +
+        '`relationSource: { $ref: "dxn:<typename>" }` and `relationTarget`, as `queryTypes` reports them.',
     }),
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the type.' }),
     typename: Schema.optional(Schema.String).annotate({
       description: 'Typename in reverse-domain form (e.g. com.example.type.project); required with `jsonSchema`.',
     }),
-    version: Schema.optional(Schema.String),
+    version: Schema.optional(Schema.String).annotate({
+      description:
+        'Semver of the type (default 0.1.0). Adding a typename at a version the space already holds ' +
+        'returns the stored type unchanged; pass a new version to store a revised definition.',
+    }),
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
     id: Schema.String,
     object: Type.getSchema(Type.Type),
+    notified: Schema.optional(Schema.Boolean).annotate({
+      description: 'Whether the plugins were told the type was added (which makes a table for it).',
+    }),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -699,6 +718,32 @@ export const GetObjects = Operation.make({
   }),
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
+  }),
+}).pipe(Operation.mutation('none'));
+
+export const ResolveUrl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.resolveUrl'),
+    name: 'Resolve URL',
+    description:
+      'Map a Composer URL (e.g. `https://composer.space/w/<spaceId>/...`) to references to the objects it ' +
+      'shows, in order. Use when the user pastes a link. A reference names its space, so read the objects ' +
+      'by passing them on without a spaceId, one space per call.',
+    icon: 'ph--link--regular',
+  },
+  input: Schema.Struct({
+    url: Schema.String.annotate({ description: 'Composer URL, deep link (`composer://...`) or bare pathname.' }),
+  }),
+  output: Schema.Struct({
+    spaceId: Schema.optional(Schema.String).annotate({
+      description: 'The space the URL opens on; a URL spanning spaces can name objects in others.',
+    }),
+    objects: Schema.Array(
+      Schema.Struct({
+        key: Schema.String.annotate({ description: 'The URL key the object appeared under (e.g. `doc`).' }),
+        object: Ref.Ref(Obj.Unknown),
+      }),
+    ),
   }),
 }).pipe(Operation.mutation('none'));
 

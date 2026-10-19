@@ -906,7 +906,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='dx-hover dx-current dx-selected border-b border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
@@ -917,17 +917,17 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
             <Card.Row icon={icon}>
               <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
               {isTentative && (
-                <span className='ml-2 text-xs text-description px-1 rounded bg-attentionSurface'>tentative</span>
+                <span className='ml-2 text-xs text-fg-muted px-1 rounded bg-attentionSurface'>tentative</span>
               )}
             </Card.Row>
             {route && (
               <Card.Row icon='ph--arrow-right--regular'>
-                <span className='text-description text-sm'>{route}</span>
+                <span className='text-fg-muted text-sm'>{route}</span>
               </Card.Row>
             )}
             {date && (
               <Card.Row icon='ph--calendar--regular'>
-                <span className='text-description text-sm'>{format(date, 'PPp')}</span>
+                <span className='text-fg-muted text-sm'>{format(date, 'PPp')}</span>
               </Card.Row>
             )}
           </Card.Content>
@@ -1217,9 +1217,10 @@ git commit -m "feat(plugin-trip): add TripBuilder test helper"
 import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useShowItem } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -1464,8 +1465,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { TripArticle } from '#containers';
 import { Trip } from '#types';
@@ -2310,7 +2311,7 @@ git commit -m "feat(plugin-inbox): add ExtractMessage operation handler"
 
 import { useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import type * as Message from '@dxos/types/Message';

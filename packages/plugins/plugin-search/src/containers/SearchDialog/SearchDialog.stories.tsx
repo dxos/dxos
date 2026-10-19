@@ -10,13 +10,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import { Obj } from '@dxos/echo';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
@@ -37,9 +37,7 @@ const DefaultStory = () => {
   return (
     <SearchContextProvider>
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
-        </Dialog.Overlay>
+        <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
       </Dialog.Root>
     </SearchContextProvider>
   );
@@ -53,7 +51,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Organization.Organization, Person.Person],
@@ -68,6 +66,8 @@ const meta = {
                   { type: Person.Person, count: 50 },
                 ]),
               );
+              // The random fixture need not contain the term the test types, so one object guarantees a match.
+              defaultSpace.db.add(Obj.make(Organization.Organization, { name: 'The Search Fixture' }));
               // The story searches the full-text index, which lags the indexing pass until a flush drains it.
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
@@ -95,7 +95,7 @@ export const Test: Story = {
     const searchInput = await body.findByRole('textbox', undefined, { timeout: 10_000 });
     await expect(searchInput).toBeInTheDocument();
 
-    // Type a 3+ char term (FTS trigram minimum) likely present across 60 seeded objects.
+    // Type a 3+ char term (FTS trigram minimum) the seeded fixture object contains.
     await userEvent.type(searchInput, 'the');
 
     // Wait for search results to appear as options in the listbox — this is the

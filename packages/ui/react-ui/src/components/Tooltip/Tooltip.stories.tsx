@@ -1,180 +1,176 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
+
+import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { invariant } from '@dxos/invariant';
-import { random } from '@dxos/random';
+import { GEOMETRY, byTestId, expectArrow, expectNoTooltip, expectTooltip } from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Tooltip from './Tooltip.tsx';
 
-import { Grid } from '../../layout/index.ts';
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Tooltip, type TooltipSide } from './Tooltip.tsx';
+const LONG =
+  'Publishing makes this space readable by anyone with the link. Members keep their roles, and you can unpublish at any time.';
 
-type StoryArgs = {
-  tooltips: { label: string; content: string }[];
-  side?: TooltipSide;
-  defaultOpen?: boolean;
-};
+const SIDES: readonly Tooltip.Side[] = ['top', 'right', 'bottom', 'left'];
 
-const DefaultStory = ({ tooltips, side, defaultOpen }: StoryArgs) => {
-  return (
-    <Tooltip.Provider defaultOpen={defaultOpen}>
-      {/* Centered here, since the test runner ignores `layout` and a corner trigger flips the tooltip. */}
-      <Grid center grow={false} classNames='w-screen h-screen'>
-        <div className='w-32'>
-          {tooltips.map(({ label, content }, i) => (
-            <Tooltip.Trigger asChild key={i} content={content} side={side}>
-              <Button classNames='block w-full'>{label}</Button>
-            </Tooltip.Trigger>
-          ))}
-        </div>
-      </Grid>
-    </Tooltip.Provider>
-  );
-};
+/**
+ * Two triggers, then an Input without a tooltip to tab onto; a trigger per side using the `content`/`side` shorthand; and two
+ * TextTooltips, one truncated and one that fits.
+ */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Group>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <Button data-testid={`save-${size}`}>Save</Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content data-testid={`save-tooltip-${size}`}>Save changes (⌘S)</Tooltip.Content>
+      </Tooltip.Root>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <Button data-testid={`publish-${size}`}>Publish</Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content size='lg'>{LONG}</Tooltip.Content>
+      </Tooltip.Root>
+      <Input aria-label='Note' data-testid={`note-${size}`} />
+    </Group>
+    <Group>
+      {SIDES.map((side) => (
+        <Tooltip.Trigger key={side} asChild content={`Opens on the ${side}`} side={side}>
+          <Button data-testid={`side-${side}-${size}`}>{side}</Button>
+        </Tooltip.Trigger>
+      ))}
+    </Group>
+    <Tooltip.TextTooltip text={LONG} classNames='w-48' data-testid={`truncated-${size}`} />
+    <Tooltip.TextTooltip text='Short' classNames='w-48' data-testid={`fits-${size}`} />
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-core/components/Tooltip',
-  component: Tooltip as any,
   render: DefaultStory,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const tooltips = [
-  {
-    label: 'Tooltip trigger',
-    content: 'This is the tooltip content',
-  },
-];
-
-export const Default: Story = {
-  args: {
-    tooltips,
-  },
+/** The computed colour of a ui-theme token, read from a probe beside `element` so it resolves in the same scope. */
+const tokenColour = (element: HTMLElement, property: 'background-color' | 'color', token: string) => {
+  const probe = element.ownerDocument.createElement('div');
+  probe.style.setProperty(property, `var(${token})`);
+  element.ownerDocument.body.append(probe);
+  const colour = getComputedStyle(probe).getPropertyValue(property);
+  probe.remove();
+  return colour;
 };
 
-export const DefaultOpen: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips,
-  },
-  play: async () => {
-    // Portaled, so read from the document; open on mount, before any trigger is hovered.
-    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
-  },
-};
-
-export const Left: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips,
-    side: 'left',
-  },
-  play: async () => {
-    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
-    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('left');
-  },
-};
-
-export const Right: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips,
-    side: 'right',
-  },
-  play: async () => {
-    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
-    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('right');
-  },
-};
-
-export const Top: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips,
-    side: 'top',
-  },
-  play: async () => {
-    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
-    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('top');
-  },
-};
-
-export const Bottom: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips,
-    side: 'bottom',
-  },
-  play: async () => {
-    await waitFor(() => expect(within(document.body).getByText('This is the tooltip content')).toBeVisible());
-    await expect(document.querySelector('[data-part="content"]')?.getAttribute('data-placement')).toBe('bottom');
-  },
-};
-
-export const StressTest: Story = {
-  args: {
-    defaultOpen: true,
-    tooltips: random.helpers.multiple(
-      () => ({
-        label: random.lorem.words(2),
-        content: random.lorem.words(5),
-      }),
-      {
-        count: 32,
-      },
-    ),
-  },
-};
+export const Default: Story = {};
 
 /**
- * Hovering a trigger opens the one tooltip at that trigger, describing only it; moving to another
- * trigger hands the tooltip over.
+ * Keyboard focus shows the tooltip, linked to its trigger; tabbing straight to the next trigger swaps tooltips and the
+ * second stays open past the open delay; tabbing off a trigger still closes its tooltip, although the close is deferred
+ * by a task; hovering shows it after the delay, and long text wraps within the 20rem cap. One line is a compact chip,
+ * shorter than the block. The tooltip takes its trigger row's size unless given its own. `Tooltip.Trigger content`
+ * brings its own Root and Content, on `side`. A TextTooltip ellipsizes its text and shows it in full on hover only
+ * while it is truncated. The tooltip and its arrow use the inverted surface, not the popup level. The story ends open.
  */
-export const TestHover: Story = {
-  args: {
-    tooltips: [
-      { label: 'First', content: 'First tip' },
-      { label: 'Second', content: 'Second tip' },
-    ],
-  },
+export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const [first, second] = canvas.getAllByRole('button');
+    const body = within(canvasElement.ownerDocument.body);
+    const save = byTestId(canvasElement, 'save-xs');
+    const publish = byTestId(canvasElement, 'publish-xs');
 
-    await userEvent.hover(first);
-    const tooltip = await waitFor(async () => {
-      const element = document.querySelector<HTMLElement>('[role="tooltip"]');
-      await expect(element).not.toBeNull();
-      invariant(element);
-      return element;
-    });
-    await waitFor(() => expect(tooltip.textContent).toContain('First tip'));
-    await expect(first.getAttribute('aria-describedby')).toContain(tooltip.id);
-    await expect(second.getAttribute('aria-describedby')).toBeNull();
-    // Positioned beside the trigger rather than left at the portal's origin.
-    await waitFor(async () => {
-      const rect = tooltip.getBoundingClientRect();
-      const anchor = first.getBoundingClientRect();
-      await expect(rect.width).toBeGreaterThan(0);
-      await expect(Math.abs(rect.left + rect.width / 2 - (anchor.left + anchor.width / 2))).toBeLessThan(anchor.width);
-    });
+    await userEvent.tab();
+    await expect(save).toHaveFocus();
+    const tooltip = await body.findByRole('tooltip');
+    await expect(tooltip).toHaveTextContent('Save changes (⌘S)');
+    await expect(save).toHaveAttribute('aria-describedby', tooltip.id);
+    await expect(save).toHaveAccessibleDescription('Save changes (⌘S)');
 
-    await userEvent.unhover(first);
-    await userEvent.hover(second);
-    await waitFor(() => expect(second.getAttribute('aria-describedby')).toBeTruthy());
-    await waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('Second tip'));
-    await expect(first.getAttribute('aria-describedby')).toBeNull();
+    const content = body.getByTestId('save-tooltip-xs');
+    await expect(content).not.toHaveAttribute('data-surface');
+    // Inherits the trigger's row size.
+    await expect(content).toHaveAttribute('data-size', 'xs');
+    // The inverted surface, as the current Tooltip: not the popup level, and the arrow shares the fill.
+    const fill = getComputedStyle(content).backgroundColor;
+    await expect(fill).toBe(tokenColour(content, 'background-color', '--color-inverse-surface'));
+    await expect(getComputedStyle(content).color).toBe(tokenColour(content, 'color', '--color-inverse-fg'));
+    await expect(fill).not.toBe(tokenColour(content, 'background-color', '--dx-surface-popup'));
+    await expectArrow(save, content);
+    // A one-line chip: its line plus one control inset above and below, shorter than the block.
+    const chip = content.getBoundingClientRect().height;
+    await expect(chip).toBeCloseTo(parseFloat(getComputedStyle(content).lineHeight) + 2 * GEOMETRY.xs.inset, 0);
+    await expect(chip).toBeLessThan(GEOMETRY.xs.block);
+
+    await userEvent.tab();
+    await expect(publish).toHaveFocus();
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const tooltips = body.getAllByRole('tooltip');
+    await expect(tooltips).toHaveLength(1);
+    await expect(tooltips[0]).toHaveTextContent('Publishing');
+    // An explicit size wins over the inherited one.
+    await expect(tooltips[0]).toHaveAttribute('data-size', 'lg');
+    await expect(publish).toHaveAttribute('aria-describedby', tooltips[0].id);
+
+    await userEvent.tab();
+    await expect(byTestId(canvasElement, 'note-xs')).toHaveFocus();
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+
+    const side = byTestId(canvasElement, 'side-right-md');
+    await userEvent.hover(side);
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Opens on the right'));
+    await waitFor(() =>
+      expect(body.getByRole('tooltip').getBoundingClientRect().left).toBeGreaterThanOrEqual(
+        side.getBoundingClientRect().right,
+      ),
+    );
+    await expect(body.getByRole('tooltip').getBoundingClientRect().height).toBeLessThan(GEOMETRY.md.block);
+    await userEvent.unhover(side);
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+
+    // The arrow points at the trigger on every side, its outer half clear of the tooltip's ring.
+    for (const placement of SIDES) {
+      const trigger = byTestId(canvasElement, `side-${placement}-md`);
+      await userEvent.hover(trigger);
+      await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent(`Opens on the ${placement}`));
+      const tooltip = body.getByRole('tooltip');
+      await expect(tooltip).toHaveAttribute('data-side', placement);
+      await expectArrow(trigger, tooltip);
+      await userEvent.unhover(trigger);
+      await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+    }
+
+    const truncated = byTestId(canvasElement, 'truncated-md');
+    await expect(truncated.scrollWidth).toBeGreaterThan(truncated.clientWidth);
+    await userEvent.hover(truncated);
+    await expectTooltip(truncated, 'Publishing makes this space');
+    await userEvent.unhover(truncated);
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+    const fits = byTestId(canvasElement, 'fits-md');
+    const watch = expectNoTooltip(canvasElement, 700);
+    await userEvent.hover(fits);
+    await watch;
+    await userEvent.unhover(fits);
+
+    await userEvent.hover(byTestId(canvasElement, 'publish-md'));
+    await waitFor(() => expect(body.getByRole('tooltip')).toHaveTextContent('Publishing'));
+    const long = body.getByRole('tooltip').getBoundingClientRect();
+    await expect(long.width).toBeLessThanOrEqual(320.5);
+    await expect(long.height).toBeGreaterThan(40);
   },
 };

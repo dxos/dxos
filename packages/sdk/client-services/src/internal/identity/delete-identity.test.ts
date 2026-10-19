@@ -4,12 +4,12 @@
 
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { failedInvariant } from '@dxos/invariant';
 import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';

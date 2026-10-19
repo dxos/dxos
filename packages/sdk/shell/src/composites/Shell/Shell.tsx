@@ -13,16 +13,16 @@ import {
   InvitationUrlRequestSchema,
   LayoutRequestSchema,
 } from '@dxos/protocols/buf/dxos/iframe_pb';
-import { useClient } from '@dxos/react-client';
 import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
   ShellLayout,
   type ShellRuntime,
+  useClient,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { IdentityDialog } from '../IdentityDialog/index.ts';
 import { JoinDialog } from '../JoinDialog/index.ts';
@@ -82,7 +82,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     };
   }, [runtime]);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
       await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));

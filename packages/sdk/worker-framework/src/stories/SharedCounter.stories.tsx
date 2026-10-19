@@ -177,14 +177,14 @@ const SessionMeta = ({
   reconnectCount: number;
 }) => {
   if (!session) {
-    return <div className='text-xs text-subdued'>Connecting…</div>;
+    return <div className='text-xs text-fg-subtle'>Connecting…</div>;
   }
 
   return (
-    <div className='flex flex-col gap-1 text-xs text-subdued'>
+    <div className='flex flex-col gap-1 text-xs text-fg-subtle'>
       <div className='flex flex-wrap items-center gap-2'>
         <span
-          className={`rounded px-1.5 py-0.5 font-medium ${session.isOwner ? 'bg-primary-surface/15 text-primary-text' : 'bg-separator text-subdued'}`}
+          className={`rounded px-1.5 py-0.5 font-medium ${session.isOwner ? 'bg-primary-surface/15 text-primary-text' : 'bg-separator text-fg-subtle'}`}
         >
           {session.isOwner ? 'Owner' : 'Guest'}
         </span>
@@ -195,10 +195,10 @@ const SessionMeta = ({
         )}
       </div>
       <div>
-        Worker: <span className='font-mono text-base-fg'>{shortId(session.leaderId)}</span>
+        Worker: <span className='font-mono text-fg'>{shortId(session.leaderId)}</span>
       </div>
       <div>
-        Client: <span className='font-mono text-base-fg'>{shortId(session.clientId)}</span>
+        Client: <span className='font-mono text-fg'>{shortId(session.clientId)}</span>
       </div>
     </div>
   );
@@ -206,20 +206,20 @@ const SessionMeta = ({
 
 const LatencyPanel = ({ ping, ready }: { ping: PingMeasurement | undefined; ready: boolean }) => (
   <div className='rounded-md border border-separator p-3'>
-    <div className='mb-2 text-xs font-medium uppercase tracking-wide text-subdued'>
+    <div className='mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle'>
       Ping (auto {PING_INTERVAL_MS}ms)
     </div>
     <dl className='grid grid-cols-3 gap-2 text-sm'>
       <div>
-        <dt className='text-subdued'>RTT</dt>
+        <dt className='text-fg-subtle'>RTT</dt>
         <dd className='font-mono tabular-nums text-lg font-semibold'>{ready ? formatMs(ping?.rttMs) : '…'}</dd>
       </div>
       <div>
-        <dt className='text-subdued'>Queue</dt>
+        <dt className='text-fg-subtle'>Queue</dt>
         <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.queueWaitMs) : '…'}</dd>
       </div>
       <div>
-        <dt className='text-subdued'>Service</dt>
+        <dt className='text-fg-subtle'>Service</dt>
         <dd className='font-mono tabular-nums'>{ready ? formatMs(ping?.serviceMs) : '…'}</dd>
       </div>
     </dl>
@@ -232,18 +232,18 @@ const TimingStatsPanel = ({ stats }: { stats: TimingStatsSnapshot | undefined })
   return (
     <div className='rounded-md border border-separator p-3'>
       <div className='mb-2 flex items-baseline justify-between gap-2'>
-        <div className='text-xs font-medium uppercase tracking-wide text-subdued'>RPC timing stats</div>
-        <div className='text-xs text-subdued'>
+        <div className='text-xs font-medium uppercase tracking-wide text-fg-subtle'>RPC timing stats</div>
+        <div className='text-xs text-fg-subtle'>
           max queue {formatMs(stats?.maxQueueWaitMs)} · max service {formatMs(stats?.maxServiceMs)}
         </div>
       </div>
       {recent.length === 0 ? (
-        <div className='text-xs text-subdued'>No samples yet.</div>
+        <div className='text-xs text-fg-subtle'>No samples yet.</div>
       ) : (
         <ul className='flex flex-col gap-1 text-xs'>
           {recent.map((sample, index) => (
             <li key={`${sample.at}-${sample.tag}-${index}`} className='flex justify-between gap-2 font-mono'>
-              <span className='truncate text-subdued'>{sample.tag}</span>
+              <span className='truncate text-fg-subtle'>{sample.tag}</span>
               <span className='shrink-0 tabular-nums'>
                 q={formatMs(sample.queueWaitMs)} s={formatMs(sample.serviceMs)}
               </span>
@@ -268,8 +268,8 @@ const BlockWorkerPanel = ({
 
   return (
     <div className='rounded-md border border-separator p-3'>
-      <div className='mb-2 text-xs font-medium uppercase tracking-wide text-subdued'>Block worker thread</div>
-      <p className='mb-3 text-xs text-subdued'>
+      <div className='mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle'>Block worker thread</div>
+      <p className='mb-3 text-xs text-fg-subtle'>
         Spins the worker event loop synchronously. Watch ping RTT and queue wait rise while blocked.
       </p>
       <div className='flex items-center gap-2'>
@@ -282,7 +282,7 @@ const BlockWorkerPanel = ({
           onChange={(event) => setDurationMs(event.target.value)}
           disabled={!ready || blocking}
         />
-        <span className='text-xs text-subdued'>ms</span>
+        <span className='text-xs text-fg-subtle'>ms</span>
         <button
           type='button'
           className='rounded-md bg-error-bg px-3 py-1.5 text-sm font-medium text-error-fg disabled:opacity-50'
@@ -307,7 +307,7 @@ const CounterPanel = ({ label, connection }: CounterPanelProps) => {
 
   return (
     <div className='flex w-full max-w-md flex-col gap-3 rounded-lg border border-separator p-4'>
-      <div className='text-sm font-medium text-subdued'>{label}</div>
+      <div className='text-sm font-medium text-fg-subtle'>{label}</div>
       <SessionMeta session={session} reconnectCount={reconnectCount} />
       <LatencyPanel ping={ping} ready={ready} />
       <TimingStatsPanel stats={timingStats} />
@@ -338,7 +338,7 @@ const SingleClientStory = () => {
 
   return (
     <div className='p-6'>
-      <p className='mb-4 max-w-2xl text-sm text-subdued'>
+      <p className='mb-4 max-w-2xl text-sm text-fg-subtle'>
         Dedicated worker holds a shared counter and exposes observability RPCs. Ping runs automatically every second;
         RPC timing middleware records queue wait and service time on the worker. Use Block to simulate event-loop
         starvation and watch latency spike.
@@ -361,7 +361,7 @@ const TwoClientsStory = () => {
 
   return (
     <div className='p-6'>
-      <p className='mb-4 max-w-2xl text-sm text-subdued'>
+      <p className='mb-4 max-w-2xl text-sm text-fg-subtle'>
         Two clients share one SharedWorker coordinator and one dedicated worker. Each panel runs its own ping loop and
         shows per-client RTT; timing stats reflect all RPCs handled by the shared worker.
       </p>

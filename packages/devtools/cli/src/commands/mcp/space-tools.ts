@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';

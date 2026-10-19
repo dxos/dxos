@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Tour.tsx';
+export * as Tour from './Tour.tsx';

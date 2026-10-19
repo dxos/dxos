@@ -17,6 +17,8 @@
     "allow-set-preferred-audio-input",
     "allow-start-microphone-bridge",
     "allow-stop-microphone-bridge",
+    "allow-login-passkey",
+    "allow-register-passkey",
     "allow-take-web-process-terminations"
   ],
   "platforms": ["iOS"],

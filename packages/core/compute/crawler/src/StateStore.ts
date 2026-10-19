@@ -8,9 +8,11 @@ import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
+import type * as CrawlState from './CrawlState.ts';
 import { type StateError } from './errors.ts';
+import { makeEcho } from './internal/state-store-echo.ts';
 import { makeSql, migrate } from './internal/state-store-sql.ts';
 import type * as Type from './types.ts';
 
@@ -19,8 +21,9 @@ export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 /**
  * Durable crawl state: the frontier stack, per-target cursors, and run status. Resumability comes
  * entirely from here — the crawl loop holds no in-memory continuation, so a stop/eviction is safe.
- * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerMemory` serves
- * tests and throwaway runs.
+ * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerEcho` keeps it in a
+ * {@link CrawlState.CrawlState} object, so a crawl run by a trigger resumes wherever the space is open; `layerMemory`
+ * serves tests and throwaway runs.
  */
 export interface Service {
   /** Push targets onto the frontier (LIFO ⇒ depth-first). Ids already present are ignored. */
@@ -33,6 +36,13 @@ export interface Service {
   readonly setCursor: (targetId: string, cursor: string) => Effect.Effect<void, StateError>;
   /** Update a target's lifecycle status (recording `lastError` on failure). */
   readonly setStatus: (targetId: string, status: Type.TargetStatus, error?: string) => Effect.Effect<void, StateError>;
+  /**
+   * Rewinds targets (every target when `targetIds` is omitted) to `pending` with no cursor, last run or error, so the
+   * next crawl reads them from the seed window again.
+   */
+  readonly resetTargets: (targetIds?: readonly string[]) => Effect.Effect<void, StateError>;
+  /** Drops targets from the frontier, cursor and all; a later push adds them afresh. */
+  readonly removeTargets: (targetIds: readonly string[]) => Effect.Effect<void, StateError>;
   /** All targets, in frontier order (for introspection / demos). */
   readonly listTargets: () => Effect.Effect<Type.Target[], StateError>;
   readonly setRunStatus: (status: RunStatus) => Effect.Effect<void, StateError>;
@@ -55,6 +65,13 @@ export const layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient> = Lay
   }),
 );
 
+/**
+ * Frontier kept in a {@link CrawlState.CrawlState} ECHO object (one per crawl). Writes land on the object as they are
+ * made, so the commit-after-stages semantics hold: only `Crawler.commit` moves a cursor.
+ */
+export const layerEcho = (state: CrawlState.CrawlState): Layer.Layer<StateStore> =>
+  Layer.sync(StateStore, () => makeEcho(state));
+
 export const pushTargets = (...args: Parameters<Service['pushTargets']>) =>
   StateStore.use((store) => store.pushTargets(...args));
 export const nextActionable = (...args: Parameters<Service['nextActionable']>) =>
@@ -65,6 +82,10 @@ export const setCursor = (...args: Parameters<Service['setCursor']>) =>
   StateStore.use((store) => store.setCursor(...args));
 export const setStatus = (...args: Parameters<Service['setStatus']>) =>
   StateStore.use((store) => store.setStatus(...args));
+export const resetTargets = (...args: Parameters<Service['resetTargets']>) =>
+  StateStore.use((store) => store.resetTargets(...args));
+export const removeTargets = (...args: Parameters<Service['removeTargets']>) =>
+  StateStore.use((store) => store.removeTargets(...args));
 export const listTargets = (...args: Parameters<Service['listTargets']>) =>
   StateStore.use((store) => store.listTargets(...args));
 export const setRunStatus = (...args: Parameters<Service['setRunStatus']>) =>
@@ -126,6 +147,32 @@ const makeMemory = (): Service => {
         const target = byId.get(targetId);
         if (target) {
           replace({ ...target, status, ...(error !== undefined ? { lastError: error } : {}) });
+        }
+      }),
+    resetTargets: (targetIds) =>
+      Effect.sync(() => {
+        for (const target of [...frontier]) {
+          if (targetIds === undefined || targetIds.includes(target.id)) {
+            replace({
+              id: target.id,
+              channelId: target.channelId,
+              ...(target.threadId !== undefined ? { threadId: target.threadId } : {}),
+              ...(target.parentMessageId !== undefined ? { parentMessageId: target.parentMessageId } : {}),
+              ...(target.rootId !== undefined ? { rootId: target.rootId } : {}),
+              depth: target.depth,
+              status: 'pending',
+            });
+          }
+        }
+      }),
+    removeTargets: (targetIds) =>
+      Effect.sync(() => {
+        for (const id of targetIds) {
+          byId.delete(id);
+          const index = frontier.findIndex((candidate) => candidate.id === id);
+          if (index >= 0) {
+            frontier.splice(index, 1);
+          }
         }
       }),
     listTargets: () => Effect.sync(() => [...frontier]),

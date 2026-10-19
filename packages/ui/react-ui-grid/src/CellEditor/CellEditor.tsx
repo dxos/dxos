@@ -6,8 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   type ThemeExtensionsOptions,
   createBasicExtensions,
@@ -19,6 +19,8 @@ import { mx } from '@dxos/ui-theme';
 import { type GridEditBox } from '../Grid/index.ts';
 import { type EditorBlurHandler } from './editor-keys.ts';
 
+const INDICATOR = 'var(--dx-grid-focus-indicator-width)';
+
 export type CellEditorProps = {
   value?: string;
   extensions?: Extension;
@@ -29,7 +31,7 @@ export type CellEditorProps = {
   Pick<ThemeExtensionsOptions, 'slots'>;
 
 export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, onBlur }: CellEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef } = useTextEditor(() => {
     return {
       autoFocus,
@@ -94,10 +96,11 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
       // to its content and left a strip of dead cell below. A grid row still grows for a taller value.
       className='absolute z-[1] grid dx-grid__cell-editor'
       style={{
-        insetInlineStart: box?.insetInlineStart ?? '0px',
-        insetBlockStart: box?.insetBlockStart ?? '0px',
-        minInlineSize: box?.inlineSize ?? '180px',
-        minBlockSize: box?.blockSize ?? '32px',
+        // One indicator width up and left, so the border covers the neighbouring cells' grid lines (see dx-grid.pcss).
+        insetInlineStart: box ? `calc(${box.insetInlineStart}px - ${INDICATOR})` : '0px',
+        insetBlockStart: box ? `calc(${box.insetBlockStart}px - ${INDICATOR})` : '0px',
+        minInlineSize: box ? `calc(${box.inlineSize}px + ${INDICATOR})` : '180px',
+        minBlockSize: box ? `calc(${box.blockSize}px + ${INDICATOR})` : '32px',
         ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}

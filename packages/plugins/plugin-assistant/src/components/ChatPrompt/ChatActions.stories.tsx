@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -36,7 +36,7 @@ const meta = {
   title: 'plugins/plugin-assistant/components/ChatActions',
   component: ChatActions,
   render: DefaultStory,
-  decorators: [withTheme(), withPluginManager({ plugins: corePlugins() })],
+  decorators: [withTheme(), withPluginManager({ plugins: CorePlugins.make() })],
   parameters: { layout: 'centered', translations },
 } satisfies Meta<typeof ChatActions>;
 

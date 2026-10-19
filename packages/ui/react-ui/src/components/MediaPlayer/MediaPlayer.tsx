@@ -5,82 +5,86 @@
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type ThemedClassName } from '../../util/index.ts';
+import { recipes } from '../../recipes.ts';
 import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
-export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+export type MediaPlayerKind = MediaKind;
 
-/** Static map to keep Tailwind's class scanner happy (no dynamic `object-${fit}`). */
-const FIT_CLASS: Record<MediaFit, string> = {
-  'cover': 'object-cover',
-  'contain': 'object-contain',
-  'fill': 'object-fill',
-  'none': 'object-none',
-  'scale-down': 'object-scale-down',
-};
+export type MediaPlayerFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+
+type MediaPlayerStatus = 'loading' | 'loaded' | 'error';
 
 /** iframe sandbox flags compatible with typical oEmbed-style players. */
-const DEFAULT_IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
+const IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
 
-/**
- * Match Cloudflare Stream `/iframe` embed URLs of the form
- * `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`.
- */
+/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
 const CLOUDFLARE_STREAM_IFRAME_PATTERN =
   /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
 
-const isCloudflareStreamEmbed = (src: string): boolean => CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src);
-
 export type MediaPlayerProps = ThemedClassName<{
-  src: string;
-  alt?: string;
-  /** Override auto-detection. When omitted, `detectMediaKind(src)` is used and falls back to 'video'. */
-  kind?: MediaKind;
-  controls?: boolean;
-  autoPlay?: boolean;
-  loop?: boolean;
-  muted?: boolean;
-  /**
-   * CORS mode for `<video>`/`<audio>`. Omitted by default — plain playback needs no CORS, and
-   * forcing it breaks sources whose response/redirect lacks `access-control-allow-origin` (e.g.
-   * Cloudflare Stream's signed MP4 redirect). Set 'anonymous' only when reading frames into a canvas.
-   */
-  crossOrigin?: 'anonymous' | 'use-credentials' | '';
-  /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
-  fit?: MediaFit;
-  /** Playback reached the end (`<video>`/`<audio>` only) — what a playlist advances on. */
-  onEnded?: () => void;
+  'src': string;
+  /** Names the media (`aria-label`, an image's `alt`, an embed's `title`). */
+  'alt'?: string;
+  /** Forces native playback; otherwise detected from the URL's extension, and anything else is an image. */
+  'kind'?: MediaPlayerKind;
+  'controls'?: boolean;
+  'autoPlay'?: boolean;
+  'loop'?: boolean;
+  'muted'?: boolean;
+  /** CORS mode for `<video>`/`<audio>`; omitted by default, since forcing it breaks sources without CORS headers. */
+  'crossOrigin'?: 'anonymous' | 'use-credentials' | '';
+  /** `object-fit` of an image or video; `cover` by default. */
+  'fit'?: MediaPlayerFit;
+  /** Playback reached the end (`<video>`/`<audio>` only), what a playlist advances on. */
+  'onEnded'?: () => void;
+  'data-testid'?: string;
 }>;
 
 /**
- * Renders a media URL using the appropriate element:
- * - Direct media URLs (mp4, mp3, …) → native `<video>` / `<audio>`.
- * - Cloudflare Stream `/iframe` embed URLs → `<iframe>`.
- * - Everything else → `<img>` that hides itself on load failure (broken images
- *   are common in feeds and the placeholder is uglier than nothing).
+ * A media URL in the element that plays it: native `<video>`/`<audio>` for media files, an `<iframe>` for Cloudflare
+ * Stream embeds, and otherwise an `<img>` that disappears if it fails to load (a broken placeholder is worse than
+ * nothing in a feed). The element itself is the part, so it fills whatever box the host gives it.
  */
 export const MediaPlayer = ({
   classNames,
   src,
+  alt,
   kind,
   controls = true,
   autoPlay = false,
   loop = false,
   muted = false,
-  alt,
   crossOrigin,
   fit = 'cover',
   onEnded,
+  'data-testid': testId,
 }: MediaPlayerProps) => {
-  const fitClass = FIT_CLASS[fit];
+  // Keyed by source so a new `src` starts loading again without an effect racing the load event.
+  const [result, setResult] = useState<{ src: string; status: MediaPlayerStatus }>();
+  const status: MediaPlayerStatus = result?.src === src ? result.status : 'loading';
+
   // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
-  if (kind || isEmbedUrl(src)) {
-    const resolved = kind ?? detectMediaKind(src) ?? 'video';
-    if (resolved === 'audio') {
+  const resolved = kind || isEmbedUrl(src) ? (kind ?? detectMediaKind(src) ?? 'video') : undefined;
+  const element = resolved ?? (CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src) ? 'embed' : 'image');
+  const partProps = {
+    'data-scope': 'media-player',
+    'data-part': 'root',
+    'data-kind': element,
+    'data-fit': fit,
+    'data-status': status,
+    'data-testid': testId,
+    'className': mx(recipes.mediaPlayer(), classNames),
+  };
+
+  switch (element) {
+    case 'audio':
+    case 'video': {
+      const Media = element;
       return (
-        <audio
-          className={mx('w-full', classNames)}
+        <Media
+          {...partProps}
           src={src}
           controls={controls}
           autoPlay={autoPlay}
@@ -93,61 +97,34 @@ export const MediaPlayer = ({
       );
     }
 
-    return (
-      <div className={mx('grid place-items-center', classNames)}>
-        <video
-          className={mx('max-w-full max-h-full aspect-video', fitClass)}
+    case 'embed':
+      return (
+        <iframe
+          {...partProps}
+          key={src}
           src={src}
-          controls={controls}
-          autoPlay={autoPlay}
-          loop={loop}
-          muted={muted}
-          crossOrigin={crossOrigin}
-          aria-label={alt}
-          onEnded={onEnded}
+          title={alt ?? 'Embedded media'}
+          loading='lazy'
+          sandbox={IFRAME_SANDBOX}
+          referrerPolicy='no-referrer'
+          allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
+          allowFullScreen
+          onLoad={() => setResult({ src, status: 'loaded' })}
         />
-      </div>
-    );
-  }
+      );
 
-  if (isCloudflareStreamEmbed(src)) {
-    return <IframePlayer key={src} classNames={classNames} src={src} alt={alt} />;
+    default:
+      return (
+        <img
+          {...partProps}
+          src={src}
+          alt={alt ?? ''}
+          loading='lazy'
+          onLoad={() => setResult({ src, status: 'loaded' })}
+          onError={() => setResult({ src, status: 'error' })}
+        />
+      );
   }
-
-  return (
-    <img
-      className={mx(fitClass, classNames)}
-      src={src}
-      alt={alt ?? ''}
-      loading='lazy'
-      onError={(event) => {
-        event.currentTarget.style.display = 'none';
-      }}
-    />
-  );
 };
 
-type IframePlayerProps = ThemedClassName<{
-  src: string;
-  alt?: string;
-}>;
-
-const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <div className={mx('relative bg-base-surface', classNames)}>
-      <iframe
-        src={src}
-        title={alt ?? 'Embedded media'}
-        loading='lazy'
-        className={mx('border-none dx-fill transition-opacity duration-150', loaded ? 'opacity-100' : 'opacity-0')}
-        style={{ colorScheme: 'dark' }}
-        sandbox={DEFAULT_IFRAME_SANDBOX}
-        referrerPolicy='no-referrer'
-        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
-        allowFullScreen
-        onLoad={() => setLoaded(true)}
-      />
-    </div>
-  );
-};
+MediaPlayer.displayName = 'MediaPlayer';

@@ -6,14 +6,15 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -22,16 +23,17 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Expando } from '@dxos/schema';
 
+import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
@@ -257,11 +259,23 @@ describe('Binding.sync', () => {
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
-  const recordingMonitor: Trigger.Monitor = {
+  /** Ids of the toasts the sync raised. */
+  const toasts: string[] = [];
+
+  const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
-    invokeTrigger: ({ trigger }) => Effect.sync(() => void fired.push(trigger.id)),
+    // Refuses a switched-off trigger the way the real monitor does.
+    invokeTrigger: ({ trigger }) =>
+      trigger.enabled
+        ? Effect.sync(() => void fired.push(trigger.id))
+        : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
+    resetTrigger: () => Effect.void,
   };
+
+  const toastHandler = LayoutOperation.AddToast.pipe(
+    Operation.withHandler((toast) => Effect.sync(() => void toasts.push(toast.id))),
+  );
 
   test('force-runs the sync trigger of the target’s account', async ({ expect }) => {
     const { target, trigger } = await setup();
@@ -269,6 +283,42 @@ describe('Binding.sync', () => {
     await run(target);
 
     expect(fired).toEqual([trigger.id]);
+  });
+
+  test('says the routine is switched off instead of running a disabled trigger', async ({ expect }) => {
+    const { db, target, trigger } = await setup();
+    Obj.update(trigger, (trigger) => {
+      trigger.enabled = false;
+    });
+    await db.flush({ indexes: true });
+
+    await using runtime = ManagedRuntime.make(Layer.succeed(Capability.Service, capabilities()));
+    await Binding.sync(target).pipe(
+      Effect.provideService(Capability.Service, capabilities()),
+      Effect.provideService(
+        Operation.Service,
+        OperationInvoker.make(() => Effect.succeed([toastHandler]), runtime),
+      ),
+      EffectEx.runPromise,
+    );
+
+    expect(fired).toEqual([]);
+    expect(toasts).toEqual([`${meta.profile.key}.sync-routine-disabled`]);
+  });
+
+  test('a routine saved switched off fails as disabled instead of running', async ({ expect }) => {
+    const { db } = await setup();
+    const trigger = Trigger.make({ enabled: false, spec: Trigger.specTimer('*/10 * * * *') });
+    const created = Routine.make({ name: 'Sync', triggers: [Ref.make(trigger)] });
+
+    const error = await Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+      Effect.provideService(Capability.Service, capabilities()),
+      Effect.flip,
+      EffectEx.runPromise,
+    );
+
+    expect(error).toBeInstanceOf(Trigger.TriggerDisabledError);
+    expect(fired).toEqual([]);
   });
 
   test('does nothing for an object with no binding', async ({ expect }) => {
@@ -287,13 +337,14 @@ describe('Binding.sync', () => {
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,
-      implementation: ServiceResolver.fromContext(Context.make(Trigger.TriggerMonitorService, recordingMonitor)),
+      implementation: ServiceResolver.fromContext(Context.make(Trigger.ManagerService, recordingMonitor)),
     });
     return manager;
   };
 
   const setup = async () => {
     fired.length = 0;
+    toasts.length = 0;
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,
@@ -353,7 +404,7 @@ describe('Binding.scaffoldRoutine', () => {
   ];
 
   test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -377,7 +428,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -387,7 +438,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('persists nothing until the caller adds the draft', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -417,7 +468,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('names the routine after the account so several connections stay distinguishable', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
     Obj.update(connection, (connection) => Obj.setLabel(connection, 'work@example.com'));
@@ -428,7 +479,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -713,7 +764,7 @@ describe('Binding.syncAll', () => {
     ),
   );
 
-  const recordingMonitor: Trigger.Monitor = {
+  const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
     invokeTrigger: ({ trigger }) =>
@@ -721,6 +772,7 @@ describe('Binding.syncAll', () => {
         fired.push(trigger.id);
         recorded.wake();
       }),
+    resetTrigger: () => Effect.void,
   };
 
   test('fans out to each binding', async ({ expect }) => {
@@ -760,6 +812,29 @@ describe('Binding.syncAll', () => {
     // The capped binding never starves its siblings: both were attempted before the re-raise.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
+  });
+
+  // Regression: deleting a mailbox left its binding behind, and every account sync then failed loading
+  // the deleted target until EDGE switched the routine off.
+  test('skips a binding whose target was deleted and syncs the rest', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const orphaned = await addCursor(db, token);
+    const target = orphaned.spec.target.target;
+    invariant(target);
+    db.remove(target);
+    await db.flush({ indexes: true });
+
+    // Loads the target first, as every connector's per-binding sync does.
+    const outcome = await EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        sync: (binding) => Database.load(binding.spec.target).pipe(Effect.andThen(recordingSync(binding))),
+      }).pipe(Effect.result),
+    );
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
   });
 
   test('collects every binding before surfacing a failure', async ({ expect }) => {
@@ -932,7 +1007,7 @@ describe('Binding.syncAll', () => {
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,
-      implementation: ServiceResolver.fromContext(Context.make(Trigger.TriggerMonitorService, recordingMonitor)),
+      implementation: ServiceResolver.fromContext(Context.make(Trigger.ManagerService, recordingMonitor)),
     });
     return manager;
   };
@@ -999,7 +1074,7 @@ describe('Binding.syncAll', () => {
     EffectEx.runPromise(makeInvoker().invoke(TestSync, { connection: Ref.make(connection), priority }));
 });
 
-const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
+const initSpace = async (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) => {
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );

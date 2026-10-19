@@ -2,38 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
-import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
+import React, {
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { type Axis } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
-import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext.ts';
+import { recipes } from '../../recipes.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
+import { FocusContext, type FocusState } from './FocusContext.ts';
 
 //
 // Group
 //
 
-type GroupProps = {
+type FocusGroupProps = {
   orientation?: Axis;
-  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  /** A separator-coloured border while unfocused (e.g. a grid cell's edge). */
   border?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
 };
 
 /**
- * Provides arrow-key navigation across focusable children, and makes the group a single `Tab`
- * stop that `Enter` moves into and `Escape` leaves.
- * Does not manage `aria-current` — use `Focus.Item` on each child for that.
+ * One `Tab` stop over focusable children: arrow keys move between them, `Enter` moves into the group and `Escape`
+ * leaves it. Members report a state (`useFocus().setFocus`) that colours the group's ring.
  */
-// TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
-//   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
-const Group = slottable<HTMLDivElement, GroupProps>(
-  ({ children, asChild, orientation = 'vertical', border = false, onKeyDown, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+const FocusGroup = slottable<HTMLDivElement, FocusGroupProps>(
+  ({ children, asChild, orientation = 'vertical', border, onKeyDown, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const {
       ref: focusGroupRef,
@@ -43,6 +49,7 @@ const Group = slottable<HTMLDivElement, GroupProps>(
     } = useFocusGroup({ axis: orientation, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
     const [state, setState] = useState<FocusState | undefined>();
     const [groupHasFocus, setGroupHasFocus] = useState(false);
+    const context = useMemo(() => ({ setFocus: setState, groupHasFocus }), [groupHasFocus]);
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -52,34 +59,37 @@ const Group = slottable<HTMLDivElement, GroupProps>(
       [onFocusGroupKeyDown, onKeyDown],
     );
 
-    const handleFocusIn = useCallback(
+    const handleFocus = useCallback(
       (event: FocusEvent<HTMLDivElement>) => {
         onFocusGroupFocus(event);
         setGroupHasFocus(true);
       },
       [onFocusGroupFocus],
     );
-    const handleFocusOut = useCallback((event: FocusEvent<HTMLDivElement>) => {
-      const related = event.relatedTarget as HTMLElement | null;
-      if (!related || !rootRef.current?.contains(related)) {
+
+    // Focus moving between members bubbles a blur too; only focus leaving the group clears it.
+    const handleBlur = useCallback((event: FocusEvent<HTMLDivElement>) => {
+      if (!(event.relatedTarget instanceof Node) || !rootRef.current?.contains(event.relatedTarget)) {
         setGroupHasFocus(false);
       }
     }, []);
 
-    const { className, ...rest } = composableProps(props);
+    const { className, ...rest } = composableProps(props, { classNames: recipes.focusGroup() });
     return (
-      <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
+      <FocusContext.Provider value={context}>
         <ark.div
           asChild={asChild}
           {...rest}
           tabIndex={0}
-          className={tx('focus.group', { border }, className)}
           {...focusGroupAttrs}
-          {...(state && {
-            [`data-${FOCUS_STATE_ATTR}`]: state,
-          })}
-          onBlur={handleFocusOut}
-          onFocus={handleFocusIn}
+          data-scope='focus'
+          data-part='group'
+          data-orientation={orientation}
+          data-border={border ? '' : undefined}
+          data-focus-state={state}
+          className={className}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef, focusGroupRef)}
         >
@@ -90,30 +100,27 @@ const Group = slottable<HTMLDivElement, GroupProps>(
   },
 );
 
+FocusGroup.displayName = 'Focus.Group';
+
 //
 // Item
 //
 
-type ItemProps = {
+type FocusItemProps = {
+  /** Controlled `aria-current`; otherwise the item is current while it has focus. */
   current?: boolean;
-  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  /** A separator-coloured border while unfocused. */
   border?: boolean;
+  /** Called on click and on `Enter`. */
   onCurrentChange?: () => void;
 };
 
 /**
- * Focusable item within a `Focus.Group`.
- * Marks itself a focus group so the parent Group's arrow navigation treats it as a single unit
- * (internal buttons are not arrow-navigation targets; Escape returns focus to the item).
- * Supports controlled (`current` prop) and uncontrolled (focus-driven) `aria-current`.
+ * A member of a `Focus.Group`, moved between as one unit: its own controls are not arrow targets, `Enter` selects it
+ * rather than moving into it, and `Escape` returns focus to it.
  */
-const Item = slottable<HTMLDivElement, ItemProps>(
-  (
-    { children, asChild, current, border = false, onCurrentChange, onClick, onFocus, onBlur, ...props },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    // Enter selects the item rather than moving focus into it.
+const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
+  ({ children, asChild, current, border, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
     const {
       ref: focusGroupRef,
       onKeyDown: onFocusGroupKeyDown,
@@ -156,19 +163,21 @@ const Item = slottable<HTMLDivElement, ItemProps>(
       [onBlur],
     );
 
-    // Controlled `current` prop takes precedence (e.g., virtualized items that scroll back into view).
-    // Otherwise fall back to DOM focus state.
+    // A controlled `current` wins, so a virtualized item scrolled back into view keeps its state.
     const isCurrent = current ?? focused;
 
-    const { className, ...rest } = composableProps(props);
+    const { className, ...rest } = composableProps(props, { classNames: recipes.focusItem() });
     return (
       <ark.div
         asChild={asChild}
         {...rest}
         tabIndex={0}
-        className={tx('focus.item', { border }, className)}
         {...focusGroupAttrs}
+        data-scope='focus'
+        data-part='item'
+        data-border={border ? '' : undefined}
         aria-current={isCurrent || undefined}
+        className={className}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
@@ -181,13 +190,8 @@ const Item = slottable<HTMLDivElement, ItemProps>(
   },
 );
 
-//
-// Focus
-//
+FocusItem.displayName = 'Focus.Item';
+export type { FocusGroupProps as GroupProps, FocusItemProps as ItemProps };
 
-export const Focus = {
-  Group,
-  Item,
-};
-
-export type { GroupProps as FocusGroupProps, ItemProps as FocusItemProps };
+export { FocusGroup as Group, FocusItem as Item };
+export { type FocusContextValue, type FocusState, useFocus } from './FocusContext.ts';

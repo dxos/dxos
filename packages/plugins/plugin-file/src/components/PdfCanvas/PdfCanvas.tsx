@@ -12,7 +12,8 @@ import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { composable, composableProps, composeRefs, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -89,9 +90,9 @@ type PageRefs = {
  * whole document. Large documents therefore cost their full page count up front — virtualization is
  * the obvious next step if that becomes a problem.
  */
-export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
+export const PdfCanvas = Util.composable<HTMLDivElement, PdfCanvasProps>(
   ({ url, fit = 'width', onLoad, onStateChange, apiRef, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const containerRef = useRef<HTMLDivElement>(null);
     const refs = useRef<PageRefs[]>([]);
     const documentRef = useRef<PDFDocumentProxy | undefined>(undefined);
@@ -550,7 +551,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
 
     if (error) {
       return (
-        <div {...composableProps(props, { classNames: 'dx-fill overflow-auto' })} ref={forwardedRef}>
+        <div {...Util.composableProps(props, { classNames: 'dx-fill overflow-auto' })} ref={forwardedRef}>
           <div role='alert' className='p-4 text-sm text-error-text'>
             {t('pdf-error.message')}
           </div>
@@ -577,7 +578,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
     return (
       <div
         data-pdf-canvas=''
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           classNames: [
             'dx-fill bg-deck-surface select-text',
             single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
@@ -585,7 +586,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         })}
         // Two refs on one node: `containerRef` measures the available width for the page scale, and
         // `forwardedRef` belongs to whatever slotted this in.
-        ref={composeRefs(containerRef, forwardedRef)}
+        ref={Hooks.composeRefs(containerRef, forwardedRef)}
       >
         <div className={single ? 'contents' : 'flex flex-col items-center gap-4 py-4'}>
           {shown.map((index) => (

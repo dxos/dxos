@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type, View } from '@dxos/echo';
@@ -13,7 +13,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TypeEnum } from '@dxos/echo/Format';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
 import * as Ref from '@dxos/echo/Ref';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing/index.ts';
@@ -974,6 +975,7 @@ describe('ProjectionModel', () => {
       { format: Format.TypeFormat.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
       { format: Format.TypeFormat.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
       { format: Format.TypeFormat.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+      { format: Format.TypeFormat.Text, expectedType: TypeEnum.String, fieldName: 'notes' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {

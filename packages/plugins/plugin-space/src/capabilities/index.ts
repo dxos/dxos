@@ -11,14 +11,13 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers.ts';
 import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
@@ -142,12 +141,13 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
 export const Translations = AppCapability.translations([
   ...translations,
   ...componentsTranslations,
+  ...queryTranslations,
   ...formTranslations,
   ...shellTranslations,
 ]);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

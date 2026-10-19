@@ -2,29 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { controlSize } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Editable, type EditableActivation, type EditableBlurBehavior } from './Editable.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Editable from './Editable.tsx';
 import { useEditable } from './useEditable.ts';
 
-type StoryArgs = {
-  label?: string;
-  /** Holds the field open, as a pane editor does. */
-  held?: boolean;
-  /** Names the preview, to prove a caller's own label survives the machine's. */
-  previewLabel?: string;
-  initialValue?: string;
-  placeholder?: string;
-  activation?: EditableActivation;
-  blurBehavior?: EditableBlurBehavior;
-  disabled?: boolean;
-};
+type StoryArgs = SizeArgs &
+  Pick<Editable.RootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
+    /** Names the preview, to prove a caller's own label survives the machine's. */
+    previewLabel?: string;
+    initialValue?: string;
+    /** Holds the field open, as a pane editor does (hook stories only). */
+    held?: boolean;
+  };
 
 const DefaultStory = ({
-  label = 'Title',
   previewLabel,
   initialValue = 'Ship the spring release',
   placeholder = 'Untitled',
@@ -36,37 +38,41 @@ const DefaultStory = ({
   const [commits, setCommits] = useState<string[]>([]);
 
   return (
-    <div className='flex flex-col gap-4 min-w-[24rem]'>
-      <div>
-        <div className='text-sm text-description'>{label}</div>
-        <Editable.Root
-          value={value}
-          onValueChange={(next) => {
-            setValue(next);
-            setCommits((commits) => [...commits, next]);
-          }}
-          placeholder={placeholder}
-          activation={activation}
-          blurBehavior={blurBehavior}
-          disabled={disabled}
-        >
-          <Editable.Preview aria-label={previewLabel} />
-          <Editable.Input />
-        </Editable.Root>
-      </div>
-      {/* `onValueChange` fires on commit, never per keystroke — visible here as one entry per edit. */}
-      <div className='text-sm text-description' data-testid='editable.commits'>
+    <>
+      <Editable.Root
+        value={value}
+        onValueChange={(next) => {
+          setValue(next);
+          setCommits((commits) => [...commits, next]);
+        }}
+        placeholder={placeholder}
+        activation={activation}
+        blurBehavior={blurBehavior}
+        disabled={disabled}
+      >
+        <Editable.Preview aria-label={previewLabel} data-testid='editable.preview' />
+        <Editable.Input data-testid='editable.input' />
+      </Editable.Root>
+      {/* `onValueChange` fires on commit, never per keystroke: one entry per edit. */}
+      <Typography.Text tone='muted' data-testid='editable.commits'>
         {commits.length === 0 ? 'No commits yet' : `Commits: ${commits.join(' · ')}`}
-      </div>
-    </div>
+      </Typography.Text>
+    </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/Editable',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: {
+    ...SIZE_ARG_TYPES,
+    activation: { control: 'select', options: ['click', 'dblclick', 'focus', 'none'] },
+    blurBehavior: { control: 'select', options: ['commit', 'revert'] },
+  },
+  parameters: { layout: 'centered' },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
@@ -74,110 +80,82 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const DoubleClick: Story = {
-  args: { activation: 'dblclick', label: 'Title (double-click to edit)' },
-};
-
-export const RevertOnBlur: Story = {
-  args: { blurBehavior: 'revert', label: 'Title (blur reverts)' },
-};
-
-export const Empty: Story = {
-  args: { initialValue: '', label: 'Title (empty shows the placeholder)' },
-};
-
-export const Disabled: Story = {
-  args: { disabled: true, label: 'Title (disabled)' },
-};
-
+/** The text does not move when it becomes editable (only geometry shows it); Escape reverts and Enter commits once. */
 export const Test: Story = {
-  // The point of the component is that the text does not move when it becomes editable, which only
-  // geometry shows: the DOM changes either way.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const glyphLeft = (element: Element) => {
-      const { left } = element.getBoundingClientRect();
-      const pad = parseFloat(getComputedStyle(element).paddingInlineStart);
-      return Math.round(left + pad);
-    };
-    const glyphTop = (element: Element) => {
+    const glyphLeft = (element: Element) =>
+      Math.round(element.getBoundingClientRect().left + parseFloat(getComputedStyle(element).paddingInlineStart));
+    const glyphMiddle = (element: Element) => {
       const { top, height } = element.getBoundingClientRect();
       return Math.round(top + height / 2);
     };
 
     const preview = canvas.getByTestId('editable.preview');
     await expect(preview).toHaveTextContent('Ship the spring release');
+    await expect(preview).toHaveAttribute('data-scope', 'editable');
     const previewBox = preview.getBoundingClientRect();
+    await expect(previewBox.height).toBeCloseTo(controlSize('md'), 0);
     const previewLeft = glyphLeft(preview);
-    const previewMiddle = glyphTop(preview);
 
-    // Click swaps in the input, focused with the caret at the end so typing amends rather than
-    // replacing — a select-all would make the next keystroke a silent delete.
+    // A click swaps in the input, focused with the caret at the end so typing amends rather than replaces.
     await userEvent.click(preview);
-    const input = await canvas.findByTestId('editable.input');
-    await waitFor(async () => expect(input).toHaveFocus());
+    const input = await canvas.findByTestId<HTMLInputElement>('editable.input');
+    await waitFor(() => expect(input).toHaveFocus());
     const end = 'Ship the spring release'.length;
-    await expect((input as HTMLInputElement).selectionStart).toEqual(end);
-    await expect((input as HTMLInputElement).selectionEnd).toEqual(end);
+    await expect(input.selectionStart).toEqual(end);
+    await expect(input.selectionEnd).toEqual(end);
 
-    // ...and it occupies the same box, so nothing on the row shifts.
+    // ...in the same box, so nothing on the row shifts.
     const inputBox = input.getBoundingClientRect();
     await expect(Math.round(inputBox.height)).toEqual(Math.round(previewBox.height));
     await expect(Math.round(inputBox.width)).toEqual(Math.round(previewBox.width));
     await expect(glyphLeft(input)).toEqual(previewLeft);
-    await expect(glyphTop(input)).toEqual(previewMiddle);
+    await expect(glyphMiddle(input)).toEqual(Math.round(previewBox.top + previewBox.height / 2));
 
-    // Escape reverts, and commits nothing.
+    // Escape reverts and commits nothing.
     await userEvent.keyboard('{Control>}a{/Control}Rewritten{Escape}');
-    await waitFor(async () =>
-      expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Ship the spring release'),
-    );
+    await waitFor(() => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Ship the spring release'));
     await expect(canvas.getByTestId('editable.commits')).toHaveTextContent('No commits yet');
 
     // Enter commits, once.
     await userEvent.click(canvas.getByTestId('editable.preview'));
     await userEvent.keyboard('{Control>}a{/Control}Ship the summer release{Enter}');
-    await waitFor(async () =>
-      expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Ship the summer release'),
-    );
+    await waitFor(() => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Ship the summer release'));
     await expect(canvas.getByTestId('editable.commits')).toHaveTextContent('Commits: Ship the summer release');
   },
 };
 
+/** A disabled field cannot be opened; the input stays mounted but hidden, so the two never claim a row apiece. */
 export const TestDisabled: Story = {
   args: { disabled: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const preview = canvas.getByTestId('editable.preview');
     await userEvent.click(preview);
-    // Still the preview: a disabled field cannot be opened by clicking it. The input is in the DOM
-    // either way — the machine hides the part that is out of play rather than unmounting it, so the
-    // two never claim a row apiece.
     await expect(canvas.getByTestId('editable.input')).not.toBeVisible();
     await expect(preview).toBeVisible();
   },
 };
 
+/** Escape on a field opened empty discards what was typed rather than keeping it. */
 export const TestRevertFromEmpty: Story = {
   args: { initialValue: '' },
-  // A field opened on nothing is the one `Escape` has to be trusted on: there is no committed text
-  // to fall back to, so a revert that keeps what was typed writes it instead of discarding it.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Untitled');
     await userEvent.click(canvas.getByTestId('editable.preview'));
-    // The machine focuses the input a frame later; typing before it lands sends the keystrokes
-    // nowhere and the assertions below would pass without the revert ever running.
+    // The machine focuses the input a frame later; typing before then sends the keystrokes nowhere.
     const input = await canvas.findByTestId('editable.input');
-    await waitFor(async () => expect(input).toHaveFocus());
+    await waitFor(() => expect(input).toHaveFocus());
     await userEvent.keyboard('Discard me{Escape}');
-    await waitFor(async () => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Untitled'));
+    await waitFor(() => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Untitled'));
     await expect(canvas.getByTestId('editable.commits')).toHaveTextContent('No commits yet');
   },
 };
 
+/** A click-activated preview is a button a keyboard reader can open with Enter; focus alone does not open it. */
 export const TestKeyboard: Story = {
-  // The preview opens on a click, which a keyboard reader does not have. Without a door of its own
-  // it is a tab stop that answers nothing.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const preview = canvas.getByTestId('editable.preview');
@@ -185,42 +163,34 @@ export const TestKeyboard: Story = {
 
     preview.focus();
     await expect(preview).toHaveFocus();
-    // Focus alone must not open it: tabbing across a list of these would put every row into edit on
-    // the way past.
     await expect(canvas.getByTestId('editable.input')).not.toBeVisible();
 
     await userEvent.keyboard('{Enter}');
     const input = await canvas.findByTestId('editable.input');
-    await waitFor(async () => expect(input).toBeVisible());
-    await waitFor(async () => expect(input).toHaveFocus());
+    await waitFor(() => expect(input).toBeVisible());
+    await waitFor(() => expect(input).toHaveFocus());
 
     await userEvent.keyboard('{Control>}a{/Control}Renamed by keyboard{Enter}');
-    await waitFor(async () => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Renamed by keyboard'));
+    await waitFor(() => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Renamed by keyboard'));
   },
 };
 
+/** A caller's name for the preview wins over the machine's generic "edit". */
 export const TestLabel: Story = {
   args: { previewLabel: 'Document title' },
-  // The machine names every preview "edit", which says what the gesture does rather than what the
-  // field holds. A caller that names it has to win.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId('editable.preview')).toHaveAttribute('aria-label', 'Document title');
   },
 };
 
-/**
- * A field held open by its host, driven through the hook rather than the component — the shape a
- * pane editor takes, where there is nothing to click into and a control elsewhere says when to
- * write.
- */
+/** A field driven through the hook, as a pane editor is: nothing to click into, and a control elsewhere writes. */
 const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }: StoryArgs) => {
   const [value, setValue] = useState(initialValue);
   const [commits, setCommits] = useState<string[]>([]);
   const { draft, editing, setDraft, edit, commit, revert } = useEditable({
     value,
-    // Held open, the pane IS the editor and this never flips. Left alone, the machine owns the
-    // state and announces the commit itself — the route `commit` must not write a second time.
+    // Held open, the pane IS the editor; left alone, the machine announces the commit itself.
     editing: held ? true : undefined,
     onValueChange: (next) => {
       setValue(next);
@@ -229,79 +199,67 @@ const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }
   });
 
   return (
-    <div className='flex flex-col gap-2 min-w-[24rem]'>
-      <input
-        data-testid='held.input'
-        className='dx-input'
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-      />
+    <>
+      <Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
       <div className='flex gap-2'>
-        <button type='button' data-testid='held.edit' onClick={() => edit()}>
+        <Button data-testid='held.edit' onClick={() => edit()}>
           Edit
-        </button>
-        <button type='button' data-testid='held.commit' onClick={() => commit()}>
+        </Button>
+        <Button data-testid='held.commit' onClick={() => commit()}>
           Commit
-        </button>
-        <button type='button' data-testid='held.revert' onClick={() => revert()}>
+        </Button>
+        <Button data-testid='held.revert' onClick={() => revert()}>
           Revert
-        </button>
+        </Button>
       </div>
-      <div data-testid='held.editing'>{editing ? 'editing' : 'preview'}</div>
-      <div data-testid='held.value'>{value}</div>
-      <div data-testid='held.commits'>{commits.length === 0 ? 'none' : commits.join(' · ')}</div>
-    </div>
+      <span data-testid='held.editing'>{editing ? 'editing' : 'preview'}</span>
+      <span data-testid='held.value'>{value}</span>
+      <span data-testid='held.commits'>{commits.length === 0 ? 'none' : commits.join(' · ')}</span>
+    </>
   );
 };
 
+/** Held open, the machine never announces a commit, so the hook's `commit` delivers it, exactly once. */
 export const TestHeldOpen: Story = {
   render: HeldOpenStory,
-  // A field whose editing state is controlled never leaves edit on its own, so the machine treats a
-  // submit as a request to the host and announces only the state change. Nothing would ever be
-  // written, which is exactly what a pane editor is for.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByTestId('held.input');
 
     await userEvent.clear(input);
     await userEvent.type(input, 'Ship the summer release');
-    // Typing alone writes nothing: a keystroke is not a commit.
     await expect(canvas.getByTestId('held.commits')).toHaveTextContent('none');
 
     canvas.getByTestId('held.commit').click();
-    await waitFor(async () => expect(canvas.getByTestId('held.value')).toHaveTextContent('Ship the summer release'));
-    // Once, not twice — the caller's commit and the machine's own announcement are one edit.
+    await waitFor(() => expect(canvas.getByTestId('held.value')).toHaveTextContent('Ship the summer release'));
     await expect(canvas.getByTestId('held.commits')).toHaveTextContent('Ship the summer release');
     await expect(canvas.getByTestId('held.commits').textContent).not.toContain('·');
 
-    // And a revert restores the committed text rather than leaving the abandoned draft behind.
+    // A revert restores the committed text rather than leaving the abandoned draft.
     await userEvent.clear(input);
     await userEvent.type(input, 'Abandoned');
     canvas.getByTestId('held.revert').click();
-    await waitFor(async () => expect(canvas.getByTestId('held.input')).toHaveValue('Ship the summer release'));
-    await expect(canvas.getByTestId('held.commits')).toHaveTextContent('Ship the summer release');
+    await waitFor(() => expect(canvas.getByTestId('held.input')).toHaveValue('Ship the summer release'));
     await expect(canvas.getByTestId('held.commits').textContent).not.toContain('·');
   },
 };
 
+/** The same `commit` on a field the machine owns collapses into the machine's own announcement. */
 export const TestUncontrolledCommit: Story = {
   render: HeldOpenStory,
   args: { held: false },
-  // The same `commit()` against a field the machine owns: here it announces the edit itself, so the
-  // caller's own delivery has to collapse into that one rather than write a second time.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Opened first: a field at rest reconciles to the value its host holds, so text put into it
-    // before it is editing is not a pending edit and is rightly discarded.
+    // Opened first: a field at rest reconciles to the host's value, so text typed before editing is discarded.
     canvas.getByTestId('held.edit').click();
-    await waitFor(async () => expect(canvas.getByTestId('held.editing')).toHaveTextContent('editing'));
+    await waitFor(() => expect(canvas.getByTestId('held.editing')).toHaveTextContent('editing'));
 
     const input = canvas.getByTestId('held.input');
     await userEvent.clear(input);
     await userEvent.type(input, 'Ship the summer release');
     canvas.getByTestId('held.commit').click();
 
-    await waitFor(async () => expect(canvas.getByTestId('held.value')).toHaveTextContent('Ship the summer release'));
+    await waitFor(() => expect(canvas.getByTestId('held.value')).toHaveTextContent('Ship the summer release'));
     await expect(canvas.getByTestId('held.commits')).toHaveTextContent('Ship the summer release');
     await expect(canvas.getByTestId('held.commits').textContent).not.toContain('·');
   },

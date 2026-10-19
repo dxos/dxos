@@ -4,16 +4,20 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchOutputModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -31,12 +35,12 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Research Output</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
@@ -46,7 +50,7 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

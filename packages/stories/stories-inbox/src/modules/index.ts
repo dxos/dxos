@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { ArchiveModule } from './ArchiveModule.tsx';
 import { ConnectorModule } from './ConnectorModule.tsx';

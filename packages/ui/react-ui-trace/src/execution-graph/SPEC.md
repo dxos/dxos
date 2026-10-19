@@ -25,7 +25,7 @@ Out of scope:
 - Filtering / search of commits.
 - Mutating, ack-ing, or replaying trace events.
 
-Inputs: `traceMessages: Trace.Message[]`, `activeProcesses?: Process.Info[]`, `eventLimit?: number`,
+Inputs: `traceMessages: Trace.Message[]`, `activeProcesses?: Process.Process[]`, `eventLimit?: number`,
 `spanTimeoutMs?: number`, `now?: number`.
 Output: `ExecutionGraph = { branches, commits, spanTree, details }`.
 
@@ -57,7 +57,7 @@ forwarded as `SpanMeta` for downstream display but never branch or anchor logic.
 `isEphemeral` is preserved on `FlatEvent` but is not consulted; ephemeral events
 participate exactly like persistent events.
 
-### 2.2 `Process.Info` (active processes)
+### 2.2 `Process.Process` (active processes)
 
 Defined in `packages/core/compute/compute/src/Process.ts#L365`.
 Optional input via `activeProcesses` (defaults to `[]`). Fields the builder reads:
@@ -696,7 +696,7 @@ Each entry: **scenario → expected output → rationale**.
 | `CommitSelector`                                        | same                                                                         | L446        |
 | `GraphBuilder` / `doctor`                               | same                                                                         | L579 / L610 |
 | `Trace.Meta` / `Trace.flatten`                          | `packages/core/compute/compute/src/Trace.ts`                                 | L102 / L178 |
-| `Process.Info` / `Process.State`                        | `packages/core/compute/compute/src/Process.ts`                               | L365 / L321 |
+| `Process.Process` / `Process.State`                     | `packages/core/compute/compute/src/Process.ts`                               | L365 / L321 |
 | `AGENT_PROCESS_KEY`                                     | `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts` | L54         |
 | `Commit` type                                           | `packages/ui/react-ui-trace/src/components/Timeline/Timeline.tsx`            | L40         |
 | `TracePanel` `useExecutionGraph` / default `eventLimit` | `packages/ui/react-ui-trace/src/hooks/useExecutionGraph.ts`                  | L138 / L153 |

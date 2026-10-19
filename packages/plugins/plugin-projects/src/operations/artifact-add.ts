@@ -22,13 +22,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = Proj
     Effect.fn(function* ({ project: projectRef, object: objectRef, task: taskRef }) {
       const project = yield* Database.load(projectRef);
 
-      // Resolved before any write, so a rejected target (a conflicting PR) leaves the project untouched.
-      // A PR goes to the root of the task's tree, where every sub-task finds it.
+      // Checked before any write, so a rejected task (a conflicting PR) leaves the project untouched.
       const taskTarget = taskRef
         ? yield* Effect.gen(function* () {
             const task = yield* Database.load(taskRef);
             const object = yield* Database.load(objectRef);
-            return { task: yield* Task.artifactTarget(task, object), object };
+            yield* Task.checkArtifact(task, object);
+            return { task, object };
           })
         : undefined;
 

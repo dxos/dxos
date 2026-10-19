@@ -12,6 +12,7 @@ export const FeedsArticle = lazy(() => import('./FeedsArticle/index.ts'));
 export const MembersArticle = lazy(() => import('./MembersArticle/index.ts'));
 export const MetadataArticle = lazy(() => import('./MetadataArticle/index.ts'));
 export const ObjectsArticle = lazy(() => import('./ObjectsArticle/index.ts'));
+export const QueriesArticle = lazy(() => import('./QueriesArticle/index.ts'));
 export const QueuesArticle = lazy(() => import('./QueuesArticle/index.ts'));
 export const SpaceInfoArticle = lazy(() => import('./SpaceInfoArticle/index.ts'));
 export const SpaceListArticle = lazy(() => import('./SpaceListArticle/index.ts'));

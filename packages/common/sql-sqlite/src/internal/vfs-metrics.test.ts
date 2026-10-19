@@ -4,7 +4,16 @@
 
 import { beforeEach, describe, test } from 'vitest';
 
-import { SQLITE_IO_GLOBAL, getSqliteIoStats, instrumentVfs, resetSqliteIoStats } from './vfs-metrics.ts';
+import {
+  SQLITE_IO_GLOBAL,
+  getSqliteIoStats,
+  instrumentVfs,
+  recordStatement,
+  recordStatementError,
+  registerCacheSampler,
+  resetSqliteIoStats,
+  statementKind,
+} from './vfs-metrics.ts';
 
 const SQLITE_OK = 0;
 const SQLITE_IOERR = 10;
@@ -110,3 +119,47 @@ const fakeVfs = (result: number = SQLITE_OK) => {
     jSync: (_fileId: number, _flags: number) => (calls.push('sync'), SQLITE_OK),
   };
 };
+
+describe('statement counters', () => {
+  beforeEach(() => {
+    resetSqliteIoStats();
+  });
+
+  test('statementKind reads the leading keyword, a CTE counting as a select', ({ expect }) => {
+    expect(statementKind('  SELECT 1')).toBe('select');
+    expect(statementKind('WITH x AS (SELECT 1) SELECT * FROM x')).toBe('select');
+    // A CTE introduces a write as often as a read; the verb after its definitions decides.
+    expect(statementKind('WITH x AS (SELECT 1) INSERT INTO t SELECT * FROM x')).toBe('insert');
+    expect(statementKind('WITH RECURSIVE x(n) AS (SELECT 1 UNION SELECT n + 1 FROM x) DELETE FROM t')).toBe('delete');
+    expect(statementKind("with a as (select ')'), b as (update t set c = 1) update u set d = 2")).toBe('update');
+    expect(statementKind('insert into t values (1)')).toBe('insert');
+    expect(statementKind('REPLACE INTO t VALUES (1)')).toBe('insert');
+    expect(statementKind('UPDATE t SET a = 1')).toBe('update');
+    expect(statementKind('DELETE FROM t')).toBe('delete');
+    expect(statementKind('PRAGMA user_version')).toBe('other');
+    expect(statementKind('WITH x AS (SELECT 1)')).toBe('other');
+  });
+
+  test('recordStatement accumulates kinds, rows read and rows changed', ({ expect }) => {
+    recordStatement('select', 12, 0);
+    recordStatement('insert', 0, 3);
+    recordStatementError();
+    expect(getSqliteIoStats()).toMatchObject({
+      selects: 1,
+      inserts: 1,
+      rowsRead: 12,
+      rowsChanged: 3,
+      statementErrors: 1,
+    });
+  });
+
+  test('cache readings are sampled on read and survive the connection closing', ({ expect }) => {
+    let reading = { hits: 5, misses: 1 };
+    const unregister = registerCacheSampler(() => reading);
+    expect(getSqliteIoStats()).toMatchObject({ cacheHits: 5, cacheMisses: 1 });
+    reading = { hits: 9, misses: 2 };
+    unregister();
+    // Monotonic across the close: the final reading is kept rather than dropped with the sampler.
+    expect(getSqliteIoStats()).toMatchObject({ cacheHits: 9, cacheMisses: 2 });
+  });
+});

@@ -2,170 +2,198 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { PropsWithChildren, useMemo } from 'react';
+import '../../theme/index.css';
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { mx } from '@dxos/ui-theme';
-import { ThemedClassName } from '@dxos/ui-types';
 
+import { byTestId, expectScoped, realHover } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from './ScrollArea.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as ScrollArea from './ScrollArea.tsx';
 
 random.seed(123);
 
-const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  return <div className={mx('border border-separator rounded-md overflow-hidden', classNames)}>{children}</div>;
-};
+const PARAGRAPHS = Array.from({ length: 12 }, () => random.lorem.paragraph());
 
-// Items are direct children of the viewport, carrying their own `snap-start`: `snap` sets the
-// snap type on the scroller, but the browser needs an alignment on the items to snap to.
-// The filled background makes the `padding` inset visible against the scroller edge.
-
-const List = ({ items = 50 }: { items?: number }) => (
-  <>
-    {Array.from({ length: items }).map((_, index) => (
-      <div key={index} className='snap-start px-1 mb-1 bg-hover-surface cursor-pointer'>
-        {index + 1} tempor incididunt ut labore et dolore magna aliqua
-      </div>
-    ))}
-  </>
-);
-
-const Row = ({ items = 50 }: { items?: number }) => (
-  <>
-    {Array.from({ length: items }).map((_, index) => (
-      <div
-        key={index}
-        className='snap-start shrink-0 h-20 w-20 me-2 cursor-pointer border border-separator rounded-md flex items-center justify-center bg-hover-surface'
-      >
-        {index + 1}
-      </div>
-    ))}
-  </>
-);
-
-const Grid = ({ items = 50 }: { items?: number }) => (
-  <>
-    {Array.from({ length: items }).map((_, rowIndex) => (
-      <div key={rowIndex} className='snap-start flex gap-2 mb-2'>
-        {Array.from({ length: items }).map((_, colIndex) => (
-          <div
-            key={colIndex}
-            className='shrink-0 h-20 w-20 flex items-center justify-center text-sm border border-separator font-mono bg-hover-surface'
-          >
-            [{colIndex}:{rowIndex}]
-          </div>
-        ))}
-      </div>
-    ))}
-  </>
-);
-
-const sizes: Record<string, string> = {
-  vertical: 'h-72 w-64',
-  horizontal: 'w-96',
-  all: 'w-96 h-96',
-};
-
-const Story = ({ orientation = 'vertical', ...props }: ScrollAreaRootProps) => (
-  <Container classNames={sizes[orientation]}>
-    <ScrollArea.Root orientation={orientation} {...props}>
-      <ScrollArea.Viewport>
-        {orientation === 'vertical' && <List />}
-        {orientation === 'horizontal' && <Row />}
-        {orientation === 'all' && <Grid />}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+const Header = ({ testId, children }: { testId: string; children: string }) => (
+  <Container gutter='rail' layout='row' data-testid={testId}>
+    <Block rail='start' data-testid={`${testId}-rail-start`}>
+      <Icon.Icon icon='ph--list--regular' />
+    </Block>
+    <div className='truncate' data-testid={`${testId}-content`}>
+      {children}
+    </div>
+    <Block rail='end' data-testid={`${testId}-rail-end`}>
+      <Icon.Icon icon='ph--dots-three-vertical--regular' />
+    </Block>
   </Container>
 );
 
-export default {
-  title: 'ui/react-ui-core/components/ScrollArea',
-  component: ScrollArea.Root,
-  render: (args: ScrollAreaRootProps) => <Story {...args} />,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
-  argTypes: {
-    orientation: { control: 'inline-radio', options: ['vertical', 'horizontal', 'all'] },
-    native: { control: 'boolean' },
-    autoHide: { control: 'boolean' },
-    scrollbars: { control: 'boolean' },
-    padding: { control: 'boolean' },
-    centered: { control: 'boolean' },
-    thin: { control: 'boolean' },
-    snap: { control: 'boolean' },
-  },
-  // Mirrors the component defaults so the controls panel reflects real behaviour.
-  args: {
-    native: false,
-    autoHide: true,
-    scrollbars: true,
-    padding: false,
-    centered: false,
-    thin: false,
-    snap: false,
-  } satisfies ScrollAreaRootProps,
-};
+type PaneProps = Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> & { prefix: string };
 
-export const Vertical = {
-  args: { orientation: 'vertical' },
-};
-
-export const Horizontal = {
-  args: { orientation: 'horizontal' },
-};
-
-export const Both = {
-  args: { orientation: 'all' },
-};
-
-/** The classic native scrollbar, which consumes layout width. */
-export const Native = {
-  args: { orientation: 'vertical', native: true },
-};
-
-/** Nesting is not expressible through the controls panel: a vertical scroller inside a horizontal one. */
-export const Nested = {
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  render: ({ orientation: _orientation, ...props }: ScrollAreaRootProps) => {
-    const columns = useMemo(
-      () =>
-        Array.from({ length: 8 }).map((_, index) => ({
-          id: String(index),
-          count: random.number.int({ min: 5, max: 20 }),
-        })),
-      [],
-    );
-
-    return (
-      <ScrollArea.Root orientation='horizontal' padding {...props}>
-        <ScrollArea.Viewport classNames='gap-4'>
-          {columns.map((column) => (
-            <section
-              key={column.id}
-              className='shrink-0 h-full w-[16rem] grid grid-rows-[min-content_1fr_min-content] border border-separator'
-            >
-              <header className='flex shrink-0 p-2 border-b border-separator'>Column {column.id}</header>
-              <ScrollArea.Root orientation='vertical' padding {...props}>
-                <ScrollArea.Viewport classNames='py-2 px-2 gap-2'>
-                  {Array.from({ length: column.count }, (_, index) => (
-                    <div
-                      key={index}
-                      role='listitem'
-                      className='shrink-0 p-2 text-sm border border-separator rounded-xs'
-                    >
-                      Item {index + 1}
-                    </div>
-                  ))}
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-              <footer className='p-2 text-subdued border-t border-separator'>{column.count}</footer>
-            </section>
+/** A header over a scroll pane whose rows share its rails; `prefix` keeps test ids unique. */
+const Pane = ({ prefix, mode, width, native }: PaneProps) => (
+  <div className='@container flex flex-col h-[14rem] w-[26rem] border border-separator bg-base-surface'>
+    <Header testId={`${prefix}-header`}>Header</Header>
+    <ScrollArea.Root mode={mode} width={width} native={native} classNames='flex-1' data-testid={`${prefix}-root`}>
+      <ScrollArea.Viewport asChild>
+        <Container gutter='rail' data-testid={`${prefix}-viewport`}>
+          <Container layout='row'>
+            <Block rail='start' data-testid={`${prefix}-row-rail-start`}>
+              <Icon.Icon icon='ph--user--regular' />
+            </Block>
+            <Input aria-label='Name' />
+            <Block rail='end' data-testid={`${prefix}-row-rail-end`}>
+              <Icon.Icon icon='ph--x--regular' />
+            </Block>
+          </Container>
+          {PARAGRAPHS.map((paragraph, index) => (
+            <Typography.Text key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
+              {paragraph}
+            </Typography.Text>
           ))}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  </div>
+);
+
+type StoryArgs = SizeArgs & Pick<ScrollArea.RootProps, 'mode' | 'width'>;
+
+const TAGS = Array.from({ length: 16 }, (_, index) => `Tag ${index + 1}`);
+
+type StripProps = Pick<ScrollArea.RootProps, 'autoHide' | 'snap' | 'scrollbars'> & { prefix: string };
+
+/** A horizontal strip of Tags wider than its pane. */
+const Strip = ({ prefix, ...props }: StripProps) => (
+  <ScrollArea.Root {...props} orientation='horizontal' classNames='w-[26rem]' data-testid={`${prefix}-root`}>
+    <ScrollArea.Viewport data-testid={`${prefix}-viewport`}>
+      <div className='flex w-max gap-2 py-2'>
+        {TAGS.map((tag) => (
+          <Tag.Tag key={tag} hue='sky' classNames='snap-start'>
+            {tag}
+          </Tag.Tag>
+        ))}
+      </div>
+    </ScrollArea.Viewport>
+  </ScrollArea.Root>
+);
+
+/**
+ * An overlay (or `mode`/`width`) pane beside a native one, then a horizontal strip that snaps and hides its thumb
+ * until hovered, and one with no scrollbar at all.
+ */
+const DefaultStory = ({ size, mode, width }: StoryArgs) => (
+  <>
+    <div className='flex gap-2'>
+      <Pane prefix={`overlay-${size}`} mode={mode} width={width} />
+      <Pane prefix={`native-${size}`} native />
+    </div>
+    <Strip prefix={`strip-${size}`} snap />
+    <Strip prefix={`bare-${size}`} scrollbars={false} />
+  </>
+);
+
+const meta = {
+  title: 'ui/react-ui-core/components/ScrollArea',
+  render: DefaultStory,
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[56rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+} satisfies Meta<StoryArgs>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const rect = (root: HTMLElement, testId: string) => byTestId(root, testId).getBoundingClientRect();
+
+/** Rows in the scroll pane share the header's rails, and the content track ends where the header's does. */
+const assertAligned = async (root: HTMLElement, prefix: string, { railEnd = true } = {}) => {
+  const at = (testId: string) => rect(root, `${prefix}-${testId}`);
+  await expect(at('row-rail-start').left).toBeCloseTo(at('header-rail-start').left, 0);
+  if (railEnd) {
+    await expect(at('row-rail-end').right).toBeCloseTo(at('header-rail-end').right, 0);
+    await expect(at('paragraph').right).toBeCloseTo(at('header-content').right, 0);
+  }
+  await expect(at('paragraph').left).toBeCloseTo(at('header-content').left, 0);
+  const viewport = byTestId(root, `${prefix}-viewport`);
+  await expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
+};
+
+export const Default: Story = {};
+
+/**
+ * Overlay thumbs sit in the end gutter, so the content track is not narrowed, and the thumb follows the scroll; a
+ * native bar reserves its width out of the end track, so rail-end Blocks cannot also align (finding 4). A horizontal
+ * pane scrolls sideways only, snaps when asked, and its `autoHide` thumb runs along the bottom, showing only while the
+ * pointer is over it; `scrollbars={false}` shows no bar.
+ */
+export const Test: Story = {
+  args: { allSizes: true },
+  play: async ({ canvasElement }) => {
+    await assertAligned(canvasElement, 'overlay-md');
+    const viewport = byTestId(canvasElement, 'overlay-md-viewport');
+    const root = byTestId(canvasElement, 'overlay-md-root');
+    await expect(viewport).toHaveClass('dx-scroll-viewport');
+    await expect(root).toHaveAttribute('data-mode', 'overlay');
+    await expect(getComputedStyle(viewport).scrollbarWidth).toBe('none');
+
+    const thumb = await waitFor(() => {
+      const element = root.querySelector<HTMLElement>(':scope > .absolute');
+      if (!element) {
+        throw new Error('missing thumb');
+      }
+      return element;
+    });
+    const top = thumb.getBoundingClientRect().top;
+    viewport.scrollTop = viewport.scrollHeight;
+    await waitFor(() => expect(thumb.getBoundingClientRect().top).toBeGreaterThan(top));
+    await expect(thumb.getBoundingClientRect().right).toBeCloseTo(root.getBoundingClientRect().right, 0);
+    await expectScoped(canvasElement);
+
+    await assertAligned(canvasElement, 'native-md', { railEnd: false });
+    await expect(byTestId(canvasElement, 'native-md-root')).toHaveAttribute('data-mode', 'reserve');
+    await expect(byTestId(canvasElement, 'native-md-viewport')).toHaveAttribute('data-native');
+    await expect(byTestId(canvasElement, 'native-md-root').querySelector(':scope > .absolute')).toBeNull();
+
+    const strip = byTestId(canvasElement, 'strip-md-root');
+    const stripViewport = byTestId(canvasElement, 'strip-md-viewport');
+    await expect(stripViewport.scrollWidth).toBeGreaterThan(stripViewport.clientWidth);
+    await expect(getComputedStyle(stripViewport).overflowY).toBe('hidden');
+    await expect(getComputedStyle(stripViewport).scrollSnapType).toBe('x mandatory');
+    // Contained only along its own axis, so a vertical swipe over the strip scrolls whatever encloses it.
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorX).toBe('contain');
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorY).toBe('auto');
+    await expect(getComputedStyle(viewport).overscrollBehaviorY).toBe('contain');
+    const stripThumb = await waitFor(() => {
+      const element = strip.querySelector<HTMLElement>(':scope > .absolute');
+      if (!element) {
+        throw new Error('missing horizontal thumb');
+      }
+      return element;
+    });
+    // Along the bottom edge, inset by the thumb's padding.
+    const stripGap = strip.getBoundingClientRect().bottom - stripThumb.getBoundingClientRect().bottom;
+    await expect(stripGap >= 0 && stripGap <= 4, `thumb gap ${stripGap}`).toBe(true);
+    await expect(stripThumb.getBoundingClientRect().width).toBeLessThan(strip.getBoundingClientRect().width);
+    await expect(getComputedStyle(stripThumb).opacity).toBe('0');
+    await realHover(strip);
+    await waitFor(() => expect(getComputedStyle(stripThumb).opacity).toBe('1'));
+
+    const bare = byTestId(canvasElement, 'bare-md-root');
+    await expect(bare.querySelector(':scope > .absolute')).toBeNull();
+    await expect(getComputedStyle(byTestId(canvasElement, 'bare-md-viewport')).scrollbarWidth).toBe('none');
   },
 };

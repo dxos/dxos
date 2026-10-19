@@ -22,7 +22,8 @@ type TestEdgeWsServerProps = {
   /** Resolves when the numbered upgrade attempt (from 1) may complete; overrides `admitConnection`. */
   admitConnectionAttempt?: (attempt: number) => Promise<void>;
   payloadDecoder?: (payload: Uint8Array) => any;
-  messageHandler?: (payload: any) => Promise<Uint8Array | undefined>;
+  /** Returns the reply to `payload`; `request` lets a handler send further messages ahead of it. */
+  messageHandler?: (payload: any, request: Message) => Promise<Uint8Array | undefined>;
 };
 
 export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestEdgeWsServerProps) => {
@@ -64,7 +65,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
       const { request, requestPayload } = await decodePayload(message, params);
       messageSourceLog.push(request.source);
       if (params?.messageHandler) {
-        const responsePayload = await params.messageHandler(requestPayload);
+        const responsePayload = await params.messageHandler(requestPayload, request);
         if (responsePayload && newestConnection()) {
           sendResponseMessage(request, responsePayload);
         }

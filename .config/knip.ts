@@ -445,7 +445,11 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // Astro's default image service is emitted into `docs/dist/.prerender/` and `import('sharp')`s
   // from there, so the package has to resolve from `docs/node_modules` — astro's own optional
   // dependency is not reachable from the emitted chunk.
-  'docs': ['sharp'],
+  'docs': [
+    'sharp',
+    // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
+    '@dxos/app-framework',
+  ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
   // cross-compiling the CLI resolves all five at bundle time. pnpm installs them for the host

@@ -78,6 +78,8 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
  * member lacking the leading property its own singleton group instead of pooling them under `null`,
  * where an {@link items} `limit` would truncate unrelated members. `id` qualifies: it resolves to
  * the object's entity id even though documents don't store it as data.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const group: {
   <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null>;
@@ -91,12 +93,16 @@ export const group: {
  * Aggregate the maximum of a scalar property across the group's members.
  * `T` is inferred from the `Query.aggregate` context, so `property` is checked against the query's
  * element type (like {@link Order.property}).
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const max = <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null> =>
   new AggregateClass({ kind: 'max', property });
 
 /**
  * Aggregate the minimum of a scalar property across the group's members.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null> =>
   new AggregateClass({ kind: 'min', property });
@@ -111,6 +117,8 @@ export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
  * they arrived in from a preceding `orderBy` (unspecified if there is none), so a per-group
  * top-`limit` moved position in the chain would silently change; declaring `order` here makes the
  * ordering explicit and local to this aggregate regardless of where it sits.
+ *
+ * @performance O(k) in the number of orders; builds an aggregate spec without evaluating anything.
  */
 export const items = <T>(options?: { limit?: number; order?: Order.Any[] }): Aggregate<T, T[]> =>
   new AggregateClass({ kind: 'items', limit: options?.limit, order: options?.order?.map((order) => order.ast) });
@@ -121,18 +129,24 @@ export type NumericKeys<T> = { [K in keyof T & string]: T[K] extends number | nu
 /**
  * Sum a numeric property across the group's members; values that are not numbers count as 0, so
  * a group always sums to a number.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const sum = <T, K extends NumericKeys<T>>(property: K): Aggregate<T, number> =>
   new AggregateClass({ kind: 'sum', property });
 
 /**
  * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
 
 /**
  * Group members by their stored type URI. The field carries the URI string as written, so two
  * schema versions are two groups.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const type = <T>(): Aggregate<T, string | null> => new AggregateClass({ kind: 'type' });
 
@@ -146,11 +160,17 @@ export type TimeUnit = 'hour' | 'day';
 /**
  * Group members by the UTC hour or day their system `updatedAt` falls in. The field carries the start
  * of that interval in unix ms, or `null` when the timestamp is unknown.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const updated = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
   new AggregateClass({ kind: 'timestamp', field: 'updatedAt', unit });
 
-/** Like {@link updated}, over the system `createdAt` timestamp. */
+/**
+ * Like {@link updated}, over the system `createdAt` timestamp.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
+ */
 export const created = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
   new AggregateClass({ kind: 'timestamp', field: 'createdAt', unit });
 
@@ -158,6 +178,8 @@ export const created = <T>(unit: TimeUnit): Aggregate<T, number | null> =>
  * Group members by the UTC hour or day a unix-ms property falls in, like {@link updated} over a
  * property instead of a system timestamp. The field carries the start of that interval in unix ms,
  * or `null` when the property is not a number.
+ *
+ * @performance O(1); builds an aggregate spec without evaluating anything.
  */
 export const time = <T, K extends NumericKeys<T>>(property: K, unit: TimeUnit): Aggregate<T, number | null> =>
   new AggregateClass({ kind: 'time', property, unit });

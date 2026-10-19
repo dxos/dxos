@@ -6,8 +6,8 @@ import { useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
 
 import { NavTreeNode } from '#types';
@@ -33,8 +33,8 @@ export const getListActions = ({ actions, groupedActions }: NavTreeNode.Flattene
 
 /** Returns flattened actions and grouped sub-actions for a given graph node. */
 export const useActions = (node: AppGraphNode.Node): NavTreeNode.FlattenedActions => {
-  const { graph } = useAppGraph();
-  const actions = useGraphActions(graph, node.id);
+  const { graph } = Hooks.useAppGraph();
+  const actions = GraphHooks.useActions(graph, node.id);
 
   return useMemo(() => {
     return actions.reduce(

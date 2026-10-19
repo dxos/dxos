@@ -76,19 +76,42 @@ export const Edit = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+export const Convert = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.illustrator.convert'),
+    name: 'Convert Drawing',
+    description:
+      'Moves a drawing onto another variant (renderer) by re-applying its scene to a fresh canvas of that variant, e.g. to make a read-only SVG drawing editable in Excalidraw. Shapes not managed by the scene DSL are not carried over.',
+    icon: 'ph--swap--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to convert.' }),
+    variant: Schema.String.annotate({ description: 'Target variant id (canvas typename), e.g. `excalidraw.com/2`.' }),
+  }),
+  output: Schema.Struct({
+    ...SceneOutput,
+    upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids written to the new canvas.' }),
+  }),
+  services: [Capability.Service, Database.Service],
+});
+
 export const Draw = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.draw'),
     name: 'Draw Diagram',
     description:
-      'Applies a diagram written in the native text DSL, where you choose every coordinate. Use this to author a diagram precisely, or to hand-edit one that `generate` laid out; use `generate` instead when you want the layout done for you.',
+      'Applies a diagram written in the native text DSL: either semantic statements (`node`, `edge`, `group`) that state intent and are laid out for you, or scene statements where you choose every coordinate, or both. Use semantic statements for boxes-and-arrows diagrams, scene statements for precise figures or to hand-edit a drawing.',
     icon: 'ph--code--regular',
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to draw into.' }),
     source: Schema.String.annotate({
       description: [
-        'Diagram DSL. Statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
+        'Diagram DSL. Semantic statements: `node <id> ["label"] [right-of|left-of|above|below|same-row|same-col <node>]* [@cell(c,r)] [ref=]`,',
+        '`group <id> ["label"] [right-of|below… <group>] { node… edge… }`, `edge <a>[:side|side] -> <b>[:side] ["label"] [via x,_ | _,y] [bus]`',
+        '(`~` before a relation makes it soft; `<->` two arrows; `a -> b, c bus` one trunk), `diagram [flow=down|right]`; the engine places and routes the rest.',
+        'In place of `->` an edge may name its relationship, left end being the child/whole/owner/one side: `extends`, `implements`, `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`.',
+        'Scene statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
         '`elements <objectId> { … }`, `move <id> @ <x>,<y>`, `remove object <id>`, `remove elements <id> <ids…>`.',
         'An element is `<kind> <id> <geometry> ["label"] <name=value>*` where kind is rect/ellipse/diamond/triangle',
         '(`x,y WxH`), circle (`cx,cy r`), line/curve (two or more `x,y`), arc (`cx,cy r a0..a1`), text (`x,y "s"`),',

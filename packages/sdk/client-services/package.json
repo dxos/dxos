@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.11.1",
+  "version": "0.16.0",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,6 +32,7 @@
     "@automerge/automerge-repo": "catalog:",
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
@@ -67,6 +68,7 @@
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",

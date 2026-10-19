@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Prompt from 'effect/unstable/ai/Prompt';
+import * as Prompt from 'effect/ai/Prompt';
 import { describe, test } from 'vitest';
 
 import { countTurnsSincePrompt } from './scripted-model.ts';

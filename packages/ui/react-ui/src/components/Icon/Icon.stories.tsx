@@ -1,185 +1,146 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 'react';
+import React from 'react';
+import { expect, within } from 'storybook/test';
 
-import { getSize, iconSize, mx } from '@dxos/ui-theme';
+import { SIZES } from '../../sizes.ts';
+import { GEOMETRY, byTestId, expectDecorativeIconsHidden, expectScoped, sizeRow } from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Icon from './Icon.tsx';
 
-import { withTheme } from '../../testing/index.ts';
-import { Icon } from './Icon.tsx';
+const VALENCES: Icon.IconValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
+
+const HUES: Icon.IconHue[] = ['red', 'orange', 'amber', 'green', 'teal', 'sky', 'blue', 'violet', 'pink'];
 
 /**
- * Create icon from serializable data.
- * https://github.com/phosphor-icons/react#custom-icons
- * https://github.com/phosphor-icons/core/tree/main/assets
+ * An icon in each rail of a row, then one toolbar per colouring: valences (semantic text colours), palette hues, and
+ * a valence over a hue (the valence wins).
  */
-const createIcon = ({
-  name,
-  weights,
-}: {
-  name: string;
-  weights: Record<string, SVGProps<SVGPathElement>[]>;
-}): FC<IconProps> => {
-  const CustomIcon = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
-    <IconBase
-      ref={ref}
-      {...props}
-      weights={
-        new Map<IconWeight, ReactElement>(
-          Object.entries(weights).map(
-            ([key, paths]) =>
-              [
-                key,
-                <>
-                  {paths.map((props, i) => (
-                    <path key={`${key}-${i}`} {...props} />
-                  ))}
-                </>,
-              ] as [IconWeight, ReactElement],
-          ),
-        )
-      }
-    />
-  ));
-
-  CustomIcon.displayName = name;
-  return CustomIcon;
-};
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Container gutter='rail' layout='row'>
+      <Block rail='start' data-testid={`rail-${size}`}>
+        <Icon.Icon icon='ph--user--regular' />
+      </Block>
+      <Typography.Text>Icon</Typography.Text>
+      <Block rail='end'>
+        <Icon.Icon icon='ph--x--regular' label='Clear' />
+      </Block>
+    </Container>
+    <Toolbar.Root aria-label='Valence' data-testid={`valence-${size}`}>
+      <Toolbar.Text>Valence</Toolbar.Text>
+      {VALENCES.map((valence) => (
+        <Block key={valence}>
+          <Icon.Icon icon='ph--circle--fill' valence={valence} data-testid={`valence-${valence}-${size}`} />
+        </Block>
+      ))}
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Hue' data-testid={`hue-${size}`}>
+      <Toolbar.Text>Hue</Toolbar.Text>
+      {HUES.map((hue) => (
+        <Block key={hue}>
+          <Icon.Icon icon='ph--tag--regular' hue={hue} data-testid={`hue-${hue}-${size}`} />
+        </Block>
+      ))}
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Valence over hue'>
+      <Toolbar.Text>Valence over hue</Toolbar.Text>
+      <Block>
+        <Icon.Icon icon='ph--warning--regular' hue='blue' valence='error' data-testid={`both-${size}`} />
+      </Block>
+      <Block>
+        <Icon.Icon icon='ph--warning--regular' valence='error' data-testid={`error-${size}`} />
+      </Block>
+    </Toolbar.Root>
+    <Toolbar.Root aria-label='Tone, spin and size'>
+      <Toolbar.Text>Tone, spin, size</Toolbar.Text>
+      <Block>
+        <Icon.Icon icon='ph--note--regular' tone='muted' data-testid={`tone-description-${size}`} />
+      </Block>
+      <Block>
+        <Icon.Icon icon='ph--note--regular' tone='subtle' data-testid={`tone-subdued-${size}`} />
+      </Block>
+      <Block>
+        <Icon.Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />
+      </Block>
+      <Block>
+        <Icon.Icon icon='ph--star--regular' size='xs' data-testid={`small-${size}`} />
+      </Block>
+    </Toolbar.Root>
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-core/components/Icon',
-  component: Icon,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
-} satisfies Meta<typeof Icon>;
+  render: DefaultStory,
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    icon: 'ph--github-logo--regular',
-  },
-};
-
-export const Static: Story = {
-  args: {
-    icon: 'ph--github-logo--regular',
-    classNames: getSize(8),
-  },
-};
-
-export const Custom_DXOS: Story = {
-  args: {
-    icon: 'dx--dxos--regular',
-    classNames: getSize(16),
-  },
-};
+export const Default: Story = {};
 
 /**
- * Custom DXOS brand icons (the `dx--` set), sourced from `@dxos/brand` SVGs.
+ * One icon scale per size (decision 2): the same size in a rail Block as in a control. A labelled icon is an `img`;
+ * an unlabelled one is hidden from assistive tech (decision 9). `tone` lowers emphasis, `spin` animates (every spinner in one phase), and `size`
+ * takes another size's icon scale.
  */
-export const Brand: Story = {
-  args: {
-    icon: 'dx--dxos--regular',
-  },
-  render: () => (
-    <div className='flex gap-8'>
-      {(['dxos', 'echo', 'halo', 'mesh', 'dxns', 'kube'] as const).map((name) => (
-        <Icon key={name} icon={`dx--${name}--regular`} classNames={getSize(12)} />
-      ))}
-    </div>
-  ),
-};
+export const Test: Story = {
+  args: { allSizes: true },
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const icon = byTestId(canvasElement, `rail-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(icon?.width, size).toBeCloseTo(GEOMETRY[size].icon, 0);
+      await expect(icon?.height, size).toBeCloseTo(GEOMETRY[size].icon, 0);
+    }
 
-/**
- * Extended icons (the `px--` set), sourced from `@dxos/ui-icons` — glyphs Phosphor does not provide.
- * Referenced by literal name rather than through the package's `PxIcons` map, since `@dxos/ui-icons`
- * is private and `@dxos/react-ui` is published.
- */
-export const Extended: Story = {
-  args: {
-    icon: 'px--anthropic--regular',
-  },
-  render: () => (
-    <div className='flex items-end gap-8'>
-      <Icon icon='px--anthropic--regular' classNames={getSize(12)} />
-      <Icon icon='px--anthropic--regular' classNames={getSize(8)} />
-      <Icon icon='px--anthropic--regular' classNames={getSize(5)} />
-      <Icon icon='ph--circle--regular' classNames={getSize(5)} />
-    </div>
-  ),
-};
+    // Each valence and hue colours its glyph distinctly, and a valence wins over a hue.
+    const color = (testId: string) => getComputedStyle(byTestId(canvasElement, testId)).color;
+    const plain = getComputedStyle(within(sizeRow(canvasElement, 'md')).getByRole('img', { name: 'Clear' })).color;
+    for (const group of [
+      VALENCES.filter((valence) => valence !== 'neutral').map((v) => `valence-${v}-md`),
+      HUES.map((hue) => `hue-${hue}-md`),
+    ]) {
+      const colors = group.map(color);
+      await expect(new Set(colors).size, group.join(',')).toBe(colors.length);
+      for (const value of colors) {
+        await expect(value).not.toBe(plain);
+      }
+    }
+    await expect(color('both-md')).toBe(color('error-md'));
 
-export const Dynamic: Story = {
-  args: {
-    icon: 'ph--github-logo--regular',
-  },
-  render: (args) => {
-    return (
-      <div className='flex gap-4'>
-        <Icon {...args} />
-        <div className='flex gap-4' style={iconSize(8)}>
-          <Icon {...args} />
-          <div className='flex gap-4' style={iconSize(null)}>
-            <Icon {...args} />
-          </div>
-        </div>
-      </div>
-    );
-  },
-};
+    await expect(color('tone-description-md')).not.toBe(plain);
+    await expect(color('tone-subdued-md')).not.toBe(plain);
+    await expect(color('tone-subdued-md')).not.toBe(color('tone-description-md'));
+    await expect(getComputedStyle(byTestId(canvasElement, 'spin-md')).animationName).toBe('dx-spin');
+    // Spinners share a phase: each starts at the wall clock's offset into the turn.
+    await expect(parseFloat(byTestId(canvasElement, 'spin-md').style.animationDelay)).toBeLessThanOrEqual(0);
+    for (const size of SIZES) {
+      await expect(byTestId(canvasElement, `small-${size}`).getBoundingClientRect().width, size).toBeCloseTo(
+        GEOMETRY.xs.icon,
+        0,
+      );
+    }
 
-export const Custom = {
-  render: ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
-    return (
-      <div className='grid grid-cols-2 gap-8'>
-        <CustomIcon weight={'regular'} className={mx(getSize(16))} />
-        <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
-      </div>
-    );
-  },
-  args: {
-    CustomIcon: createIcon({
-      name: 'GithubLogo',
-      weights: {
-        // https://github.com/phosphor-icons/core/tree/main/assets
-        // <path d="M119.83,56A52,52,0,0,0,76,32a51.92,51.92,0,0,0-3.49,44.7A49.28,49.28,0,0,0,64,104v8a48,48,0,0,0,48,48h48a48,48,0,0,0,48-48v-8a49.28,49.28,0,0,0-8.51-27.3A51.92,51.92,0,0,0,196,32a52,52,0,0,0-43.83,24Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-        // <path d="M104,232V192a32,32,0,0,1,32-32h0a32,32,0,0,1,32,32v40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-        // <path d="M104,208H72a32,32,0,0,1-32-32A32,32,0,0,0,8,144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/>
-        regular: [
-          {
-            d: 'M119.83,56A52,52,0,0,0,76,32a51.92,51.92,0,0,0-3.49,44.7A49.28,49.28,0,0,0,64,104v8a48,48,0,0,0,48,48h48a48,48,0,0,0,48-48v-8a49.28,49.28,0,0,0-8.51-27.3A51.92,51.92,0,0,0,196,32a52,52,0,0,0-43.83,24Z',
-            fill: 'none',
-            stroke: 'currentColor',
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-            strokeWidth: '16',
-          },
-          {
-            d: 'M104,232V192a32,32,0,0,1,32-32h0a32,32,0,0,1,32,32v40',
-            fill: 'none',
-            stroke: 'currentColor',
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-            strokeWidth: '16',
-          },
-          {
-            d: 'M104,208H72a32,32,0,0,1-32-32A32,32,0,0,0,8,144',
-            fill: 'none',
-            stroke: 'currentColor',
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-            strokeWidth: '16',
-          },
-        ],
-      },
-    }),
+    const canvas = within(canvasElement);
+    await expect(within(sizeRow(canvasElement, 'md')).getByRole('img', { name: 'Clear' })).toBeInTheDocument();
+    await expect(canvas.getAllByRole('img')).toHaveLength(SIZES.length);
+    await expectDecorativeIconsHidden(canvasElement);
+    await expectScoped(canvasElement);
   },
 };

@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';

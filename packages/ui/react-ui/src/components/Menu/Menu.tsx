@@ -1,634 +1,645 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-// One menu machine serves dropdown, context and sub menus (`Menu.Trigger` for a dropdown,
-// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu).
+// @import-as-namespace
 
-import { ark } from '@ark-ui/react/factory';
-import { Menu as MenuPrimitive, useMenuContext as useMenuPrimitiveContext } from '@ark-ui/react/menu';
+import { Menu as MenuPrimitive, useMenuContext } from '@ark-ui/react/menu';
 import { Portal } from '@ark-ui/react/portal';
 import React, {
-  type ComponentPropsWithRef,
-  type FC,
-  type MouseEvent,
+  type ComponentPropsWithoutRef,
   type ReactNode,
   type RefObject,
+  createContext,
   forwardRef,
-  useCallback,
-  useEffect,
+  useContext,
   useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
   useState,
 } from 'react';
 
-import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
+import { invariant } from '@dxos/invariant';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { ColumnContext } from '../Column/ColumnContext.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import {
-  MENU_NAME,
-  type MenuAlign,
-  type MenuContentHandlers,
-  type MenuPlacementOptions,
-  MenuProvider,
-  type MenuSelectHandler,
-  type MenuSide,
-  useMenuContext,
-} from './MenuContext.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { composable, composableProps } from '../../util/slots.ts';
+import * as Icon from '../Icon/Icon.tsx';
+import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+
+/** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
+const POPUP_GUTTER = 2;
 
 //
 // Root
 //
 
-type MenuRootProps = {
-  children?: ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** Accepted for compatibility: the machine neither traps focus nor locks scroll. */
-  modal?: boolean;
+type MenuRootProps = MenuPrimitive.RootProps;
+
+/**
+ * The enclosing menu: its `onSelect`, so a nested menu reports its selections to the root by default, and whether it
+ * is a `Menu.Sub`, whose Content lines its first item up with the TriggerItem row.
+ */
+type MenuContextValue = {
+  onSelect?: MenuRootProps['onSelect'];
+  sub: boolean;
+  /** Whether the menu was last opened at the pointer (ContextTrigger), where an arrow has no trigger to point at. */
+  atPointer: boolean;
+  setAtPointer?: (atPointer: boolean) => void;
 };
 
-type MenuRootImplProps = MenuRootProps & {
-  name: string;
-  /**
-   * Where content sits when it says nothing. Unset, the root decides: below a trigger, or beside the
-   * pointer once a context trigger has announced itself. A submenu pins it beside its trigger item.
-   */
-  defaultSide?: MenuSide;
-  defaultAlign?: MenuAlign;
-};
+const MenuContext = createContext<MenuContextValue>({ sub: false, atPointer: false });
 
-/** Re-places open content when its requested placement changes; needs the machine's api. */
-const MenuReposition = ({ open, positioning }: { open: boolean; positioning: Positioning }) => {
-  const menu = useMenuPrimitiveContext();
-  const reposition = menu.reposition;
-  useEffect(() => {
-    if (open) {
-      reposition(positioning);
-    }
-  }, [open, positioning, reposition]);
-  return null;
-};
-
-const MenuRootImpl: FC<MenuRootImplProps> = ({
-  children,
-  open: openProp,
-  defaultOpen,
-  onOpenChange,
-  name,
-  defaultSide: defaultSideProp,
-  defaultAlign: defaultAlignProp,
-}) => {
-  const [contextTriggered, setContextTriggered] = useState(false);
-  const markContextTrigger = useCallback(() => {
-    setContextTriggered(true);
-    return () => setContextTriggered(false);
-  }, []);
-  const defaultSide = defaultSideProp ?? (contextTriggered ? 'right' : 'bottom');
-  const defaultAlign = defaultAlignProp ?? (contextTriggered ? 'start' : 'center');
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: onOpenChange,
-  });
-  const contentId = useId();
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const handlersRef = useRef<MenuContentHandlers>({});
-  const [placementOptions, setPlacement] = useState<MenuPlacementOptions>({});
-  const { positioning, setVirtualAnchor } = usePositioning({
-    open,
-    triggerRef,
-    placement: placementOptions,
-    defaultSide,
-    defaultAlign,
-  });
-
-  const context = useMemo(
-    () => ({
-      open,
-      onOpenChange: setOpen,
-      triggerRef,
-      setVirtualAnchor,
-      setPlacement,
-      markContextTrigger,
-      handlersRef,
-    }),
-    [open, setOpen, setVirtualAnchor, markContextTrigger],
-  );
-
+const MenuRootBase = ({
+  lazyMount = true,
+  unmountOnExit = true,
+  positioning,
+  onSelect,
+  sub,
+  ...props
+}: MenuRootProps & { sub: boolean }) => {
+  const [atPointer, setAtPointer] = useState(false);
   return (
-    <MenuPrimitive.Root
-      open={open}
-      onOpenChange={({ open: next }) => setOpen(next)}
-      ids={{ content: contentId }}
-      positioning={positioning}
-      typeahead
-      // Selection is the item's own click handler's business (see `useSelectableItem`), so the
-      // machine neither closes nor reports it.
-      closeOnSelect={false}
-      onInteractOutside={(event) => handlersRef.current.onInteractOutside?.(event)}
-      onPointerDownOutside={(event) => handlersRef.current.onPointerDownOutside?.(event)}
-      onFocusOutside={(event) => handlersRef.current.onFocusOutside?.(event)}
-      onEscapeKeyDown={(event) => handlersRef.current.onEscapeKeyDown?.(event)}
-      // Closed content is not in the DOM at all.
-      lazyMount
-      unmountOnExit
-    >
-      <MenuReposition open={open} positioning={positioning} />
-      <MenuProvider {...context}>{children}</MenuProvider>
-    </MenuPrimitive.Root>
+    <MenuContext.Provider value={{ onSelect, sub, atPointer, setAtPointer }}>
+      <MenuPrimitive.Root
+        {...props}
+        onSelect={onSelect}
+        lazyMount={lazyMount}
+        unmountOnExit={unmountOnExit}
+        // Ark's 8px default reads as detached from the trigger.
+        positioning={popupPositioning(POPUP_GUTTER, positioning)}
+      />
+    </MenuContext.Provider>
   );
 };
 
-const MenuRoot: FC<MenuRootProps> = (props) => <MenuRootImpl {...props} name={MENU_NAME} />;
+/**
+ * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
+ * trigger), open it under control and anchor it with `positioning={useVirtualAnchor(ref)}`.
+ */
+const MenuRoot = (props: MenuRootProps) => <MenuRootBase {...props} sub={false} />;
 
-MenuRoot.displayName = MENU_NAME;
+MenuRoot.displayName = 'Menu.Root';
 
 //
 // Trigger
 //
 
-const TRIGGER_NAME = 'Menu.Trigger';
+type MenuTriggerProps = MenuPrimitive.TriggerProps;
 
-type MenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.Trigger>;
+/** Use `asChild` to open the menu from a `Button`. */
+const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
+  ({ onPointerDown, onKeyDown, ...props }, forwardedRef) => {
+    const { setAtPointer } = useContext(MenuContext);
+    return (
+      <MenuPrimitive.Trigger
+        {...props}
+        onPointerDown={(event) => {
+          setAtPointer?.(false);
+          onPointerDown?.(event);
+        }}
+        onKeyDown={(event) => {
+          setAtPointer?.(false);
+          onKeyDown?.(event);
+        }}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
-const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => {
-  const { triggerRef } = useMenuContext(TRIGGER_NAME);
-  return <MenuPrimitive.Trigger data-arrow-keys='down' {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
-});
-
-MenuTrigger.displayName = TRIGGER_NAME;
-
-const CONTEXT_TRIGGER_NAME = 'Menu.ContextTrigger';
-
-type MenuContextTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
-
-const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>((props, forwardedRef) => {
-  const { triggerRef, markContextTrigger } = useMenuContext(CONTEXT_TRIGGER_NAME);
-  useLayoutEffect(() => markContextTrigger(), [markContextTrigger]);
-  return <MenuPrimitive.ContextTrigger {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
-});
-
-MenuContextTrigger.displayName = CONTEXT_TRIGGER_NAME;
-
-//
-// VirtualTrigger
-//
-
-const VIRTUAL_TRIGGER_NAME = 'Menu.VirtualTrigger';
-
-type MenuVirtualTriggerProps = {
-  /** The element the content is positioned at and focus returns to; it renders nothing itself. */
-  virtualRef: RefObject<Element | null>;
-};
-
-const MenuVirtualTrigger = ({ virtualRef }: MenuVirtualTriggerProps) => {
-  const { setVirtualAnchor, triggerRef } = useMenuContext(VIRTUAL_TRIGGER_NAME);
-  useLayoutEffect(() => setVirtualAnchor(virtualRef), [setVirtualAnchor, virtualRef]);
-  useLayoutEffect(() => {
-    const element = virtualRef.current;
-    if (element instanceof HTMLElement) {
-      triggerRef.current = element;
-    }
-  });
-  return null;
-};
-
-MenuVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
+MenuTrigger.displayName = 'Menu.Trigger';
 
 //
-// Portal
+// ContextTrigger
 //
 
-type MenuPortalProps = {
-  children?: ReactNode;
-  /** Specify a container element to portal the content into. */
-  container?: HTMLElement | null;
-};
+type MenuContextTriggerProps = MenuPrimitive.ContextTriggerProps;
 
-const MenuPortal = ({ children, container }: MenuPortalProps) => {
-  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
-  return (
-    <Portal container={containerRef}>
-      {/* The portal escapes the declaring tree's DOM, but React context follows the element tree, so
-          content declared inside a Column would otherwise place itself in a track no ancestor provides. */}
-      <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
-    </Portal>
-  );
-};
+/** Opens the menu at the pointer on right-click (or long-press); use `asChild` to make a region the target. */
+const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>(
+  ({ onContextMenu, ...props }, forwardedRef) => {
+    const { setAtPointer } = useContext(MenuContext);
+    return (
+      <MenuPrimitive.ContextTrigger
+        {...props}
+        onContextMenu={(event) => {
+          setAtPointer?.(true);
+          onContextMenu?.(event);
+        }}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
-MenuPortal.displayName = 'Menu.Portal';
+MenuContextTrigger.displayName = 'Menu.ContextTrigger';
 
 //
 // Content
 //
 
-const CONTENT_NAME = 'Menu.Content';
-
-type MenuContentProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Content>> &
-  MenuPlacementOptions &
-  MenuContentHandlers;
-
-const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  (
-    {
-      classNames,
-      children,
-      side,
-      align,
-      sideOffset,
-      alignOffset,
-      collisionPadding,
-      collisionBoundary,
-      avoidCollisions,
-      hideWhenDetached,
-      onCloseAutoFocus,
-      onInteractOutside,
-      onPointerDownOutside,
-      onFocusOutside,
-      onEscapeKeyDown,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { setPlacement, handlersRef } = useMenuContext(CONTENT_NAME);
-    const { tx } = useThemeContext();
-    const elevation = useElevationContext();
-
-    // Placement is state on the root (it re-positions); the handlers are read at event time.
-    useLayoutEffect(() => {
-      setPlacement({
-        side,
-        align,
-        sideOffset,
-        alignOffset,
-        collisionPadding,
-        collisionBoundary,
-        avoidCollisions,
-        hideWhenDetached,
-      });
-    }, [
-      setPlacement,
-      side,
-      align,
-      sideOffset,
-      alignOffset,
-      collisionPadding,
-      collisionBoundary,
-      avoidCollisions,
-      hideWhenDetached,
-    ]);
-    handlersRef.current = {
-      onCloseAutoFocus,
-      onInteractOutside,
-      onPointerDownOutside,
-      onFocusOutside,
-      onEscapeKeyDown,
-    };
-
-    return (
-      <MenuPrimitive.Positioner className={tx('menu.positioner', { elevation })}>
-        <MenuPrimitive.Content
-          data-arrow-keys='up down'
-          {...props}
-          className={tx('menu.content', { elevation }, classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </MenuPrimitive.Content>
-      </MenuPrimitive.Positioner>
-    );
-  },
-);
-
-MenuContent.displayName = CONTENT_NAME;
-
-//
-// Viewport
-//
-
-type MenuViewportProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
-  asChild?: boolean;
+type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
+  /** The menu's size; `md` by default (a submenu inherits its parent's). */
+  size?: Size;
+  /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; on by default, off for submenus. */
+  arrow?: boolean;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
+  /** Lays the items out as a grid of square cells, this many to a row (e.g. a palette of swatches). */
+  columns?: number;
 };
 
-/** The scrolling body of the menu, with the overlay scrollbar rather than the native one. */
-const MenuViewport = forwardRef<HTMLDivElement, MenuViewportProps>(
-  ({ classNames, asChild, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+/**
+ * Ark's content as a composable part, so the ScrollArea viewport slot merges onto it (a plain Ark part gets the dev
+ * warning wrapper, which breaks the frame's child rules); it restates Ark's scope and part, which the slot's replace.
+ */
+const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((props, forwardedRef) => (
+  <MenuPrimitive.Content {...composableProps(props)} data-scope='menu' data-part='content' ref={forwardedRef} />
+));
+
+/**
+ * Portalled menu at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the menu itself; a nested menu's
+ * Content is the same part inside a `Menu.Sub`.
+ */
+const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
+  ({ classNames, size, arrow: arrowProp, container, columns, style, children, ...props }, forwardedRef) => {
+    const { sub, atPointer } = useContext(MenuContext);
+    // A submenu opens beside its row and a context menu at the pointer: neither has a trigger to point at.
+    const arrow = arrowProp ?? (!sub && !atPointer);
+    const menu = useMenuContext();
+    // A menu reads at one density wherever it opens (a navtree row or a plank's larger header), so a top-level menu is
+    // `md` unless sized; a Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
+    const popupSize = usePopupSize(
+      size ?? (sub ? undefined : 'md'),
+      menu.open,
+      [menu.getTriggerProps().id, menu.getContextTriggerProps().id],
+      'md',
+    );
     return (
-      <ScrollArea.Root orientation='vertical' thin classNames={tx('menu.viewport', {})}>
-        <ScrollArea.Viewport
-          asChild={asChild}
-          {...props}
-          classNames={tx('menu.viewportContent', {}, classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <Portal container={container}>
+        <MenuPrimitive.Positioner>
+          <PopupScroll
+            size={popupSize}
+            classNames={mx(recipes.menuContent(), sub && recipes.submenuContent(), classNames)}
+            outside={
+              arrow && (
+                <MenuPrimitive.Arrow className={recipes.arrow()}>
+                  <MenuPrimitive.ArrowTip className={recipes.arrowTip()} />
+                </MenuPrimitive.Arrow>
+              )
+            }
+          >
+            <MenuViewport
+              {...props}
+              data-columns={columns}
+              style={columns ? { ...style, gridTemplateColumns: `repeat(${columns}, var(--dx-block-size))` } : style}
+              ref={forwardedRef}
+            >
+              {children}
+            </MenuViewport>
+          </PopupScroll>
+        </MenuPrimitive.Positioner>
+      </Portal>
     );
   },
 );
 
-MenuViewport.displayName = 'Menu.Viewport';
-
-//
-// Group
-//
-
-type MenuGroupProps = ComponentPropsWithRef<typeof MenuPrimitive.ItemGroup>;
-
-const MenuGroup = forwardRef<HTMLDivElement, MenuGroupProps>((props, forwardedRef) => {
-  return <MenuPrimitive.ItemGroup {...props} ref={forwardedRef} />;
-});
-
-MenuGroup.displayName = 'Menu.Group';
-
-/** A heading over the entries that follow; a plain element, so it works inside a group or without one. */
-type MenuGroupLabelProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>>;
-
-const MenuGroupLabel = forwardRef<HTMLDivElement, MenuGroupLabelProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return <ark.div {...props} className={tx('menu.groupLabel', {}, classNames)} ref={forwardedRef} />;
-});
-
-MenuGroupLabel.displayName = 'Menu.GroupLabel';
+MenuContent.displayName = 'Menu.Content';
 
 //
 // Item
 //
 
-const ITEM_NAME = 'Menu.Item';
-
-/**
- * Selection handled on the item's own click — which keyboard activation reaches too, since the
- * machine clicks the highlighted element on Enter. Not the machine's `onSelect`: that reads the
- * highlighted value from React-state-backed context, which a click landing before React commits
- * the pointerdown's highlight (a test does) finds empty. The contract: `onSelect` gets a
- * cancelable event and `preventDefault()` keeps the menu open, as does `closeOnSelect={false}`.
- */
-const useSelectableItem = (
-  name: string,
-  valueProp: string | undefined,
-  onSelect: MenuSelectHandler | undefined,
-  closeOnSelect: boolean | undefined,
-) => {
-  const { onOpenChange } = useMenuContext(name);
-  const generatedValue = useId();
-  const value = valueProp ?? generatedValue;
-  const select = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (event.currentTarget.dataset.disabled !== undefined) {
-        return;
-      }
-      const selection = new Event(`${name}.select`, { cancelable: true });
-      onSelect?.(selection);
-      if (!selection.defaultPrevented && closeOnSelect !== false) {
-        onOpenChange(false);
-      }
-    },
-    [name, onSelect, onOpenChange, closeOnSelect],
-  );
-  return { value, select };
+/** What a row shows: its default layout renders the icon, label and shortcut. */
+type MenuItemData = {
+  label: string;
+  /** Leading icon. */
+  icon?: string;
+  /** Trailing keyboard hint, e.g. `⌘C`; display only. */
+  shortcut?: string;
 };
 
-type MenuItemProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof MenuPrimitive.Item>, 'value' | 'onSelect'>> & {
-  /** Identifies the item to the machine; generated when absent. */
-  value?: string;
-  /** Called on click or keyboard activation; `preventDefault()` keeps the menu open. */
-  onSelect?: MenuSelectHandler;
-  /** What typeahead matches when the item's text is not its label. */
-  textValue?: string;
+type MenuOption = MenuItemData & {
+  value: string;
+  disabled?: boolean;
 };
 
+// The row an item part belongs to; a TriggerItem is no Ark option, so its text cannot be Ark's ItemText.
+const ItemContext = createContext<{ data: MenuItemData; trigger: boolean } | undefined>(undefined);
+
+const useItem = (part: string) => {
+  const context = useContext(ItemContext);
+  if (!context) {
+    throw new Error(`Menu.${part} must be inside a Menu item`);
+  }
+  return context;
+};
+
+/** An item part's row data comes from its caller, so a missing `item` names the part rather than failing deep inside it. */
+const assertItem = (part: string, item: MenuItemData | undefined) =>
+  invariant(item, `Menu.${part} requires an \`item\``);
+
+type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText`, `ItemShortcut` and any trailing control. */
+  children?: ReactNode;
+};
+
+/** A block-tall row: without children, the option's leading icon, its label and its trailing shortcut. */
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
-  ({ classNames, value: valueProp, onSelect, textValue, ...props }, forwardedRef) => {
-    const { value, select } = useSelectableItem(ITEM_NAME, valueProp, onSelect, props.closeOnSelect);
-    const { tx } = useThemeContext();
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('Item', item);
     return (
-      <MenuPrimitive.Item
-        {...props}
-        onClick={composeEventHandlers(props.onClick, select)}
-        value={value}
-        valueText={textValue}
-        className={tx('menu.item', {}, classNames)}
-        ref={forwardedRef}
-      />
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.Item
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              {item.icon && <MenuItemIcon />}
+              <MenuItemText />
+              {item.shortcut && <MenuItemShortcut />}
+            </>
+          )}
+        </MenuPrimitive.Item>
+      </ItemContext.Provider>
     );
   },
 );
 
-MenuItem.displayName = ITEM_NAME;
+MenuItem.displayName = 'Menu.Item';
 
 //
-// CheckboxItem
+// ItemIcon
 //
 
-const CHECKBOX_ITEM_NAME = 'Menu.CheckboxItem';
-
-type MenuCheckboxItemProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<typeof MenuPrimitive.CheckboxItem>, 'value' | 'checked' | 'onCheckedChange'>
-> & {
-  value?: string;
-  checked?: boolean | 'indeterminate';
-  onCheckedChange?: (checked: boolean) => void;
-  onSelect?: MenuSelectHandler;
-  textValue?: string;
+type MenuItemIconProps = Omit<Icon.IconProps, 'icon'> & {
+  /** Defaults to the item's `icon`. */
+  icon?: string;
 };
 
-const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
-  ({ classNames, value: valueProp, checked, onCheckedChange, onSelect, textValue, ...props }, forwardedRef) => {
-    const { value, select } = useSelectableItem(CHECKBOX_ITEM_NAME, valueProp, onSelect, props.closeOnSelect);
-    const { tx } = useThemeContext();
-    return (
-      <MenuPrimitive.CheckboxItem
-        {...props}
-        onClick={composeEventHandlers(props.onClick, select)}
-        value={value}
-        checked={checked === true}
-        onCheckedChange={onCheckedChange}
-        valueText={textValue}
-        className={tx('menu.item', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-MenuCheckboxItem.displayName = CHECKBOX_ITEM_NAME;
-
-//
-// RadioGroup / RadioItem
-//
-
-type MenuRadioGroupProps = Omit<ComponentPropsWithRef<typeof MenuPrimitive.RadioItemGroup>, 'onValueChange'> & {
-  onValueChange?: (value: string) => void;
-};
-
-const MenuRadioGroup = forwardRef<HTMLDivElement, MenuRadioGroupProps>(({ onValueChange, ...props }, forwardedRef) => {
-  return (
-    <MenuPrimitive.RadioItemGroup
-      {...props}
-      onValueChange={onValueChange && (({ value }) => onValueChange(value))}
-      ref={forwardedRef}
-    />
-  );
+const MenuItemIcon = forwardRef<SVGSVGElement, MenuItemIconProps>(({ icon, ...props }, forwardedRef) => {
+  const { data } = useItem('ItemIcon');
+  const glyph = icon ?? data.icon;
+  return glyph ? <Icon.Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
 });
 
-MenuRadioGroup.displayName = 'Menu.RadioGroup';
+MenuItemIcon.displayName = 'Menu.ItemIcon';
 
-const RADIO_ITEM_NAME = 'Menu.RadioItem';
+//
+// ItemText
+//
 
-type MenuRadioItemProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.RadioItem>> & {
-  onSelect?: MenuSelectHandler;
-  textValue?: string;
-};
+type MenuItemTextProps = ThemedClassName<MenuPrimitive.ItemTextProps>;
 
-const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
-  ({ classNames, value, onSelect, textValue, ...props }, forwardedRef) => {
-    const { select } = useSelectableItem(RADIO_ITEM_NAME, value, onSelect, props.closeOnSelect);
-    const { tx } = useThemeContext();
-    return (
-      <MenuPrimitive.RadioItem
-        {...props}
-        onClick={composeEventHandlers(props.onClick, select)}
-        value={value}
-        valueText={textValue}
-        className={tx('menu.item', {}, classNames)}
-        ref={forwardedRef}
-      />
+/** The row's label, taking the free space and truncating; the item's `label` by default. */
+const MenuItemText = forwardRef<HTMLDivElement, MenuItemTextProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data, trigger } = useItem('ItemText');
+    const className = mx(recipes.menuItemText(), classNames);
+    return trigger ? (
+      <div {...props} data-scope='menu' data-part='item-text' className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </div>
+    ) : (
+      <MenuPrimitive.ItemText {...props} className={className} ref={forwardedRef}>
+        {children ?? data.label}
+      </MenuPrimitive.ItemText>
     );
   },
 );
 
-MenuRadioItem.displayName = RADIO_ITEM_NAME;
+MenuItemText.displayName = 'Menu.ItemText';
+
+//
+// ItemShortcut
+//
+
+type MenuItemShortcutProps = ThemedClassName<ComponentPropsWithoutRef<'kbd'>>;
+
+/** A trailing keyboard hint in the description colour, hidden from assistive tech; the item's `shortcut` by default. */
+const MenuItemShortcut = forwardRef<HTMLElement, MenuItemShortcutProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const { data } = useItem('ItemShortcut');
+    return (
+      <kbd
+        aria-hidden
+        {...props}
+        data-scope='menu'
+        data-part='item-shortcut'
+        className={mx(recipes.menuShortcut(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? data.shortcut}
+      </kbd>
+    );
+  },
+);
+
+MenuItemShortcut.displayName = 'Menu.ItemShortcut';
 
 //
 // ItemIndicator
 //
 
-type MenuItemIndicatorProps = ComponentPropsWithRef<typeof MenuPrimitive.ItemIndicator>;
+type MenuItemIndicatorProps = ThemedClassName<MenuPrimitive.ItemIndicatorProps>;
 
-const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>((props, forwardedRef) => {
-  return <MenuPrimitive.ItemIndicator {...props} ref={forwardedRef} />;
-});
+/**
+ * The trailing cell of a checkbox or radio item: icon-sized whether or not the item is checked, so rows keep one shape,
+ * and showing a check by default while it is.
+ */
+const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <MenuPrimitive.ItemIndicator
+      aria-hidden
+      // Kept in the layout while unchecked (styled by `data-state`), since preflight's `[hidden]` rule is `!important`.
+      hidden={false}
+      {...props}
+      className={mx(recipes.menuIndicator(), classNames)}
+      ref={forwardedRef}
+    >
+      {children ?? <Icon.Icon icon='ph--check--regular' />}
+    </MenuPrimitive.ItemIndicator>
+  ),
+);
 
 MenuItemIndicator.displayName = 'Menu.ItemIndicator';
 
 //
-// Separator
+// CheckboxItem
 //
 
-type MenuSeparatorProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Separator>>;
+type MenuCheckboxItemProps = ThemedClassName<Omit<MenuPrimitive.CheckboxItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator`, `ItemText` and `ItemShortcut`. */
+  children?: ReactNode;
+};
 
-const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return <MenuPrimitive.Separator {...props} className={tx('menu.separator', {}, classNames)} ref={forwardedRef} />;
-});
+/** A `menuitemcheckbox` row: without children, the icon, the label, the shortcut and a trailing check; selecting it toggles `checked`. */
+const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('CheckboxItem', item);
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.CheckboxItem
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              {item.icon && <MenuItemIcon />}
+              <MenuItemText />
+              {item.shortcut && <MenuItemShortcut />}
+              <MenuItemIndicator />
+            </>
+          )}
+        </MenuPrimitive.CheckboxItem>
+      </ItemContext.Provider>
+    );
+  },
+);
 
-MenuSeparator.displayName = 'Menu.Separator';
+MenuCheckboxItem.displayName = 'Menu.CheckboxItem';
 
 //
-// Arrow
+// RadioItemGroup
 //
 
-type MenuArrowProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Arrow>>;
+type MenuRadioItemGroupProps = ThemedClassName<MenuPrimitive.RadioItemGroupProps>;
 
-const MenuArrow = forwardRef<HTMLDivElement, MenuArrowProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <MenuPrimitive.Arrow {...props} className={tx('menu.arrow', {}, classNames)} ref={forwardedRef}>
-      <MenuPrimitive.ArrowTip />
-    </MenuPrimitive.Arrow>
-  );
-});
+/** A group of radio items holding one `value`; name it with an `ItemGroupLabel` inside. */
+const MenuRadioItemGroup = forwardRef<HTMLDivElement, MenuRadioItemGroupProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <MenuPrimitive.RadioItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
+  ),
+);
 
-MenuArrow.displayName = 'Menu.Arrow';
+MenuRadioItemGroup.displayName = 'Menu.RadioItemGroup';
+
+//
+// RadioItem
+//
+
+type MenuRadioItemProps = ThemedClassName<Omit<MenuPrimitive.RadioItemProps, 'value' | 'children'>> & {
+  item: MenuOption;
+  /** Replaces the whole row, composed from `ItemIndicator` and `ItemText`. */
+  children?: ReactNode;
+};
+
+/** A `menuitemradio` row: without children, the icon, the label and a trailing check while it holds its group's value. */
+const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('RadioItem', item);
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.RadioItem
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              {item.icon && <MenuItemIcon />}
+              <MenuItemText />
+              <MenuItemIndicator />
+            </>
+          )}
+        </MenuPrimitive.RadioItem>
+      </ItemContext.Provider>
+    );
+  },
+);
+
+MenuRadioItem.displayName = 'Menu.RadioItem';
 
 //
 // Sub
 //
 
-const SUB_NAME = 'Menu.Sub';
-
-type MenuSubProps = {
-  children?: ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-};
-
-/** A nested root; the machine links it to the parent it is rendered under. */
-const MenuSub: FC<MenuSubProps> = (props) => (
-  <MenuRootImpl {...props} name={SUB_NAME} defaultSide='right' defaultAlign='start' />
-);
-
-MenuSub.displayName = SUB_NAME;
-
-type MenuSubTriggerProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.TriggerItem>>;
-
-const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return <MenuPrimitive.TriggerItem {...props} className={tx('menu.item', {}, classNames)} ref={forwardedRef} />;
-});
-
-MenuSubTrigger.displayName = 'Menu.SubTrigger';
-
-//
-// Namespaces
-//
+type MenuSubProps = MenuRootProps;
 
 /**
- * The menu's parts, inert in the sense Ark's are: the caller renders every item and sets every
- * property. `Root` serves dropdown and context menus alike — a `ContextTrigger` inside it opens on
- * right-click at the pointer and shifts the default placement to the side.
+ * A nested menu: a Root inside a parent's Content, opened by its `TriggerItem` and placed beside it. Ark reports a
+ * nested item only to its own menu, so without an `onSelect` of its own a Sub forwards selections to its parent's.
  */
-export const Menu = {
-  Root: MenuRoot,
-  Trigger: MenuTrigger,
-  ContextTrigger: MenuContextTrigger,
-  VirtualTrigger: MenuVirtualTrigger,
-  Portal: MenuPortal,
-  Content: MenuContent,
-  Viewport: MenuViewport,
-  Group: MenuGroup,
-  GroupLabel: MenuGroupLabel,
-  Label: MenuGroupLabel,
-  Item: MenuItem,
-  CheckboxItem: MenuCheckboxItem,
-  RadioGroup: MenuRadioGroup,
-  RadioItem: MenuRadioItem,
-  ItemIndicator: MenuItemIndicator,
-  Separator: MenuSeparator,
-  Arrow: MenuArrow,
-  Sub: MenuSub,
-  SubTrigger: MenuSubTrigger,
-  SubContent: MenuContent,
+const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
+  const parent = useContext(MenuContext);
+  return (
+    <MenuRootBase
+      {...props}
+      sub
+      onSelect={onSelect ?? parent.onSelect}
+      positioning={{ placement: 'right-start', gutter: 0, getAnchorRect: parentEdgeRect, ...positioning }}
+    />
+  );
 };
 
-export type {
-  MenuArrowProps,
-  MenuCheckboxItemProps,
-  MenuContentProps,
-  MenuContextTriggerProps,
-  MenuGroupLabelProps,
-  MenuGroupProps,
-  MenuItemIndicatorProps,
-  MenuItemProps,
-  MenuPortalProps,
-  MenuRadioGroupProps,
-  MenuRadioItemProps,
-  MenuRootProps,
-  MenuSeparatorProps,
-  MenuSubProps,
-  MenuSubTriggerProps,
-  MenuTriggerProps,
-  MenuViewportProps,
-  MenuVirtualTriggerProps,
+/**
+ * The trigger item's rect stretched to its menu's end edge, so a submenu opens beside the menu rather than over the
+ * thumb strip an overflowing menu reserves after its items.
+ */
+const parentEdgeRect = (element: unknown) => {
+  // A virtual anchor has no menu to measure, so zag falls back to its own rect.
+  if (!(element instanceof HTMLElement)) {
+    return null;
+  }
+  const item = element.getBoundingClientRect();
+  const frame = element.closest('.dx-popup')?.getBoundingClientRect();
+  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
 };
+
+MenuSub.displayName = 'Menu.Sub';
+
+//
+// TriggerItem
+//
+
+type MenuTriggerItemProps = ThemedClassName<Omit<MenuPrimitive.TriggerItemProps, 'children'>> & {
+  item: MenuItemData;
+  /** Neither highlights nor opens its submenu. */
+  disabled?: boolean;
+  /** Replaces the whole row, composed from `ItemIcon`, `ItemText` and a trailing caret. */
+  children?: ReactNode;
+};
+
+/** An item row that opens its `Menu.Sub` (hover, ArrowRight or Enter): without children, icon, label and a caret. */
+const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
+  ({ classNames, item, disabled, children, onSelect, ...props }, forwardedRef) => {
+    const value = useId();
+    assertItem('TriggerItem', item);
+    const row = children ?? (
+      <>
+        {item.icon && <MenuItemIcon />}
+        <MenuItemText />
+        <Icon.Icon icon='ph--caret-right--regular' />
+      </>
+    );
+
+    // Ark's trigger item takes no `disabled`, so a disabled one is an inert item row and its submenu never opens.
+    if (disabled) {
+      return (
+        <ItemContext.Provider value={{ data: item, trigger: false }}>
+          <MenuPrimitive.Item
+            {...props}
+            value={value}
+            disabled
+            className={mx(recipes.menuItem(), classNames)}
+            ref={forwardedRef}
+          >
+            {row}
+          </MenuPrimitive.Item>
+        </ItemContext.Provider>
+      );
+    }
+
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: true }}>
+        <MenuPrimitive.TriggerItem
+          {...props}
+          onSelect={onSelect}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {row}
+        </MenuPrimitive.TriggerItem>
+      </ItemContext.Provider>
+    );
+  },
+);
+
+MenuTriggerItem.displayName = 'Menu.TriggerItem';
+
+//
+// Separator
+//
+
+type MenuSeparatorProps = ThemedClassName<MenuPrimitive.SeparatorProps>;
+
+/** Ark's separator (`role=separator`) with `Separator`'s horizontal rule. */
+const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ classNames, ...props }, forwardedRef) => (
+  <MenuPrimitive.Separator
+    {...props}
+    data-orientation='horizontal'
+    className={mx(recipes.separator(), classNames)}
+    ref={forwardedRef}
+  />
+));
+
+MenuSeparator.displayName = 'Menu.Separator';
+
+//
+// ItemGroup
+//
+
+type MenuItemGroupProps = ThemedClassName<MenuPrimitive.ItemGroupProps>;
+
+const MenuItemGroup = forwardRef<HTMLDivElement, MenuItemGroupProps>(({ classNames, ...props }, forwardedRef) => (
+  <MenuPrimitive.ItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
+));
+
+MenuItemGroup.displayName = 'Menu.ItemGroup';
+
+//
+// ItemGroupLabel
+//
+
+type MenuItemGroupLabelProps = ThemedClassName<MenuPrimitive.ItemGroupLabelProps>;
+
+/** A small caption naming the group that follows. */
+const MenuItemGroupLabel = forwardRef<HTMLDivElement, MenuItemGroupLabelProps>(
+  ({ classNames, ...props }, forwardedRef) => (
+    <MenuPrimitive.ItemGroupLabel {...props} className={mx(recipes.popupGroupLabel(), classNames)} ref={forwardedRef} />
+  ),
+);
+
+MenuItemGroupLabel.displayName = 'Menu.ItemGroupLabel';
+export type {
+  MenuCheckboxItemProps as CheckboxItemProps,
+  MenuContentProps as ContentProps,
+  MenuContextTriggerProps as ContextTriggerProps,
+  MenuItemGroupLabelProps as ItemGroupLabelProps,
+  MenuItemGroupProps as ItemGroupProps,
+  MenuItemIconProps as ItemIconProps,
+  MenuItemIndicatorProps as ItemIndicatorProps,
+  MenuItemProps as ItemProps,
+  MenuItemShortcutProps as ItemShortcutProps,
+  MenuItemTextProps as ItemTextProps,
+  MenuRadioItemGroupProps as RadioItemGroupProps,
+  MenuRadioItemProps as RadioItemProps,
+  MenuRootProps as RootProps,
+  MenuSeparatorProps as SeparatorProps,
+  MenuSubProps as SubProps,
+  MenuTriggerItemProps as TriggerItemProps,
+  MenuTriggerProps as TriggerProps,
+};
+
+export {
+  MenuCheckboxItem as CheckboxItem,
+  MenuContent as Content,
+  MenuContextTrigger as ContextTrigger,
+  MenuItem as Item,
+  MenuItemGroup as ItemGroup,
+  MenuItemGroupLabel as ItemGroupLabel,
+  MenuItemIcon as ItemIcon,
+  MenuItemIndicator as ItemIndicator,
+  MenuItemShortcut as ItemShortcut,
+  MenuItemText as ItemText,
+  MenuRadioItem as RadioItem,
+  MenuRadioItemGroup as RadioItemGroup,
+  MenuRoot as Root,
+  MenuSeparator as Separator,
+  MenuSub as Sub,
+  MenuTrigger as Trigger,
+  MenuTriggerItem as TriggerItem,
+};
+export type { MenuItemData as ItemData, MenuOption as Option };

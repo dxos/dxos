@@ -1,5 +1,43 @@
 # @dxos/halo-react
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/halo@0.16.0
+  - @dxos/keys@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/halo@0.15.0
+  - @dxos/keys@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/halo@0.14.0
+  - @dxos/keys@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/halo@0.13.0
+  - @dxos/keys@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0ef896f]
+- Updated dependencies [777d24a]
+- Updated dependencies [48fd9fe]
+  - @dxos/halo@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

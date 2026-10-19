@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SelectionModel } from '@dxos/graph';
 import * as GraphModel from '@dxos/graph/GraphModel';
+import type * as SelectionModel from '@dxos/graph/SelectionModel';
 
 import { type SVGContext } from '../../hooks/index.ts';
 import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types.ts';
@@ -25,7 +25,7 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
   constructor(
     context: SVGContext,
     options?: Options,
-    private readonly _selection?: SelectionModel,
+    private readonly _selection?: SelectionModel.SelectionModel,
     layout?: GraphLayout<NodeData>,
   ) {
     super(context, options);

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as Language from './Language.ts';
 import * as Vocabulary from './Vocabulary.ts';
@@ -68,7 +67,7 @@ export class Word extends Type.makeObject<Word>(DXN.make('org.dxos.type.lingo.wo
     language: Ref.Ref(Language.Language),
     progress: Schema.optional(Progress),
   }).pipe(
-    LabelAnnotation.set(['term']),
+    Annotation.LabelAnnotation.set(['term']),
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'teal' }),
     Annotation.UserType.set(),
   ),

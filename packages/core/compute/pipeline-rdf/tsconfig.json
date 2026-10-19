@@ -32,6 +32,9 @@
     },
     {
       "path": "../pipeline"
+    },
+    {
+      "path": "../sparql-sqlite"
     }
   ]
 }

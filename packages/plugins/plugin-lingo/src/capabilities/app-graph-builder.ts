@@ -17,7 +17,7 @@ import { Obj, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Vocabulary } from '#types';

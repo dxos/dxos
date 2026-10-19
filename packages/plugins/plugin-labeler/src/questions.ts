@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Decision from 'effect/ai/Decision';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
 
+import { Model } from '@dxos/ai';
+import { type DXN } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 
-/** The decision model the questions are asked of: TypeSafe System One, via the space's AiService. */
-export const DECISION_MODEL = 'ai.typesafe.model.jev.latest' as const;
+/** The decision model the questions are asked of: whichever the TypeSafe plugin settings select. */
+export const DECISION_MODEL: DXN.DXN = Model.defaultDecisionModel;
 
 /** Ordered urgency criteria; the model answers a position on this scale. */
 export const URGENCY_SCALE = [

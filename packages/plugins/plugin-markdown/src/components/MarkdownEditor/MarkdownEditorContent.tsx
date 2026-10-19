@@ -5,18 +5,19 @@
 import { Compartment } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorToolbarState,
   type UseTextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type EditorSelectionState,
   type EditorStateStore,
@@ -40,12 +41,14 @@ import { meta } from '#meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
-export type MarkdownEditorContentProps = ThemedClassName<{
+export type MarkdownEditorContentProps = Util.ThemedClassName<{
   id: string;
   attendableId?: string;
   role?: string;
   compact?: boolean;
   viewMode?: EditorViewMode;
+  /** Content still loading: the placeholder says so, after a delay. */
+  loading?: boolean;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Atom.Writable<EditorToolbarState>;
@@ -54,6 +57,10 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
+
+// Fast loads finish before the loading placeholder fades in, so it only shows when loading is slow.
+const loadingPlaceholderClassNames =
+  '[&_.cm-placeholder]:animate-fade-in [&_.cm-placeholder]:[animation-delay:1s] [&_.cm-placeholder]:[animation-fill-mode:both]';
 
 // TODO(burdon): Move controller to Root.
 // One compartment per module is safe: compartments are keyed per EditorState, so concurrent editors
@@ -68,6 +75,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       role,
       compact,
       viewMode,
+      loading,
       initialValue,
       editorStateStore,
       toolbarState,
@@ -77,8 +85,8 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const themeMode = Hooks.useThemeMode();
     const registry = useContext(RegistryContext);
 
     // Callback to update toolbar state atom.
@@ -108,7 +116,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder: t('editor.placeholder'),
+            placeholder: loading ? t('content-loading.placeholder') : t('editor.placeholder'),
             scrollPastEnd: !compact,
             search: true,
           }),
@@ -134,7 +142,19 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             }),
           extensions,
         ].filter(isTruthy),
-      [viewMode, themeMode, extensions, compact, slots, role, toolbarState, updateToolbarState, onFileUpload, t],
+      [
+        viewMode,
+        loading,
+        themeMode,
+        extensions,
+        compact,
+        slots,
+        role,
+        toolbarState,
+        updateToolbarState,
+        onFileUpload,
+        t,
+      ],
     );
 
     const {
@@ -170,7 +190,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     return (
       <div
         {...focusAttributes}
-        className={mx(editorClassNames(role), classNames)}
+        className={mx(editorClassNames(role), loading && loadingPlaceholderClassNames, classNames)}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         // Where focus lands when the article is entered as a whole: the document, not the toolbar.

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -80,13 +80,11 @@ export const translations = [
         'settings.debug-port.label': 'Open debug port.',
         'settings.debug-port.description':
           'Runs arbitrary code from a loopback server with full access to your data. Only enable while you are working with an agent you trust.',
-        'settings.debug-port.running.label': 'Listening on',
         'settings.debug-port.session.label': 'Session id',
         'settings.debug-port.session.description':
           'Pass to composer-recovery.js --session. A new id is issued on every restart.',
-        'settings.debug-port.copy-session.label': 'Copy session id.',
         'settings.debug-port.log.label': 'Debug port log',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

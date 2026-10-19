@@ -53,10 +53,14 @@ export type SchemaProperty = {
 export const getProperties = (ast: SchemaAST.AST): SchemaProperty[] =>
   getPropertySignatures(ast).map((prop) => {
     const { type, checks } = getBaseType(prop.type);
-    // Key annotations (v3's PropertySignature.annotations) now hang off the type's context.
-    const keyAnnotations = prop.type.context?.annotations;
+    // `Schema.optional(S).annotate(...)` annotates the `S | undefined` union that `getBaseType` strips, so those
+    // annotations are carried over to the base type; key annotations (v3's PropertySignature.annotations) hang off the
+    // type's context and win over both.
+    const optionalAnnotations =
+      SchemaAST.isOptional(prop.type) && SchemaAST.isUnion(prop.type) ? prop.type.annotations : undefined;
+    const keyAnnotations = { ...optionalAnnotations, ...prop.type.context?.annotations };
     const mergedType =
-      keyAnnotations && Object.keys(keyAnnotations).length > 0
+      Object.keys(keyAnnotations).length > 0
         ? annotateAst(type, keyAnnotations as Schema.Annotations.Annotations)
         : type;
     return {

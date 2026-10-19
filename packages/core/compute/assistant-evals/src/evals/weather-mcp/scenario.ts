@@ -5,7 +5,6 @@
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
-import { CapabilityNotFoundError } from '@dxos/app-framework';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
@@ -132,7 +131,7 @@ export const seed = ({
   instructions: Instructions.Instructions;
 }): Effect.Effect<
   SeedResult,
-  SeedError | CapabilityNotFoundError | EchoError.EntityNotFoundError | SampleSpace.SampleSpaceError,
+  SeedError | Capability.NotFoundError | EchoError.EntityNotFoundError | SampleSpace.SampleSpaceError,
   Database.Service | Capabilities.ProcessManagerRuntimeServices
 > =>
   Effect.gen(function* () {

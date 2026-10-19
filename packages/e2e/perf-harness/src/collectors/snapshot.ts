@@ -285,12 +285,15 @@ export const takeMemorySnapshot = async ({
   dir,
   preGc,
   preGcHeap,
+  heapSnapshots = true,
 }: {
   browserCdp: Cdp;
   targets: Attached[];
   dir: string;
   preGc?: DumpEvent[];
   preGcHeap?: HeapReading[];
+  /** Off, only the allocator dumps are written: sizes, none of the strings a heap snapshot holds. */
+  heapSnapshots?: boolean;
 }): Promise<MemorySnapshot> => {
   mkdirSync(dir, { recursive: true });
   const files: string[] = [];
@@ -319,7 +322,7 @@ export const takeMemorySnapshot = async ({
 
   const realms: RealmSnapshot[] = [];
   const used = new Set<string>();
-  for (const target of targets) {
+  for (const target of heapSnapshots ? targets : []) {
     const file = path.join(dir, `${uniqueStem(target.name, used)}.heapsnapshot`);
     if (await writeHeapSnapshot(target, file)) {
       files.push(file);

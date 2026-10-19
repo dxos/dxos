@@ -18,6 +18,7 @@ import {
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -142,6 +143,8 @@ export class InvitationsHandler {
         attributes: {
           'ctx.dxos.invitation.id': invitation.invitationId,
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+          // Invitations are rare and counted one by one, so a 30% sample would hide most of them.
+          [SpanAttributes.SAMPLING.keep]: true,
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {
@@ -149,8 +152,10 @@ export class InvitationsHandler {
         void invitationCtx.dispose();
       });
     }
-    ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    ctx.onDispose(() =>
+      _trace.spanEnd(hostSpanId, { attributes: { outcome: getInvitationOutcome(guardedState.current.state) } }),
+    );
     const topology = new InvitationTopology(InvitationOptions_Role.HOST);
     // Called for every connecting peer.
     const createExtension = (remotePeerId: PublicKey): InvitationHostExtension => {
@@ -320,6 +325,7 @@ export class InvitationsHandler {
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
           'ctx.dxos.invitation.type': Invitation_Type[invitation.type],
           ...(invitation.spaceId ? { 'ctx.spaceId': invitation.spaceId } : {}),
+          [SpanAttributes.SAMPLING.keep]: true,
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {

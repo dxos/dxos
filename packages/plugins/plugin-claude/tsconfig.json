@@ -25,7 +25,13 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/assistant"
@@ -34,13 +40,25 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
@@ -49,7 +67,31 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-code"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-tasks"
     }
   ]
 }

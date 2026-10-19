@@ -3,9 +3,9 @@
 //
 
 import * as Context from 'effect/Context';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 
 import { ContactBookSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
 import { bufMessage, serviceError } from './service-rpc.ts';

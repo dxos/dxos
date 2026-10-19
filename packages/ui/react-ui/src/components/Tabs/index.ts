@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './Tabs.tsx';
+export * as Tabs from './Tabs.tsx';

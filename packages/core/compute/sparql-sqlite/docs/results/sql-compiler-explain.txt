@@ -1,0 +1,63 @@
+## Q2_entity
+SELECT r."fact" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r."p" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r."o" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT d3."fact" AS "fact", q4.p AS "p", q4.o AS "o" FROM (SELECT DISTINCT d2."fact" AS "fact" FROM (SELECT q0.s AS "fact" FROM quads AS q0 WHERE (q0.p = 4) AND (q0.o = 2276) UNION ALL SELECT q1.s AS "fact" FROM quads AS q1 WHERE (q1.p = 8) AND (q1.o = 2276)) AS d2) AS d3 JOIN quads AS q4 WHERE (d3."fact" = q4.s)) r LEFT JOIN terms t0 ON t0.id = r."fact" LEFT JOIN terms t1 ON t1.id = r."p" LEFT JOIN terms t2 ON t2.id = r."o"
+2/0 CO-ROUTINE d3
+4/2 CO-ROUTINE d2
+5/4 COMPOUND QUERY
+6/5 LEFT-MOST SUBQUERY
+8/6 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)
+16/5 UNION ALL
+18/16 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)
+28/2 SCAN d2
+37/2 USE TEMP B-TREE FOR DISTINCT
+43/0 SCAN d3
+46/0 SEARCH q4 USING PRIMARY KEY (s=?)
+52/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+57/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+62/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+## Q4_asof
+SELECT r."fact" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r."pred" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r."t" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS "fact", q1.o AS "pred", q2.o AS "t" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 WHERE (q0.p = 4) AND (q0.o = 61) AND (q0.s = q1.s) AND (q1.p = 6) AND (q0.s = q2.s) AND (q2.p = 18) AND (((SELECT num FROM terms WHERE id = q2.o AND kind = 5) <= 1772323200000)) ORDER BY (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = q2.o) DESC, (SELECT num FROM terms WHERE id = q2.o) DESC, (SELECT lex FROM terms WHERE id = q2.o) DESC LIMIT 10) r LEFT JOIN terms t0 ON t0.id = r."fact" LEFT JOIN terms t1 ON t1.id = r."pred" LEFT JOIN terms t2 ON t2.id = r."t"
+2/0 CO-ROUTINE r
+8/2 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)
+13/2 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)
+23/2 CORRELATED SCALAR SUBQUERY 1
+27/23 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+37/2 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)
+47/2 CORRELATED SCALAR SUBQUERY 2
+51/47 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+66/2 CORRELATED SCALAR SUBQUERY 3
+70/66 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+79/2 CORRELATED SCALAR SUBQUERY 4
+83/79 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+103/2 USE TEMP B-TREE FOR ORDER BY
+114/0 SCAN r
+117/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+122/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+127/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+## Q5_aggregate
+SELECT r."pred" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r."n" AS c1 FROM (SELECT a1."pred" AS "pred", a1."n" AS "n" FROM (SELECT q0.o AS "pred", COUNT(q0.s) AS "n" FROM quads AS q0 WHERE (q0.p = 6) GROUP BY q0.o) AS a1 ORDER BY a1."n" DESC, (SELECT CASE kind WHEN 1 THEN 1 WHEN 0 THEN 2 ELSE 3 END FROM terms WHERE id = a1."pred"), (SELECT num FROM terms WHERE id = a1."pred"), (SELECT lex FROM terms WHERE id = a1."pred") LIMIT 10) r LEFT JOIN terms t0 ON t0.id = r."pred"
+2/0 CO-ROUTINE r
+4/2 CO-ROUTINE a1
+10/4 SEARCH q0 USING COVERING INDEX quads_pos (p=?)
+44/2 SCAN a1
+49/2 CORRELATED SCALAR SUBQUERY 2
+53/49 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+68/2 CORRELATED SCALAR SUBQUERY 3
+72/68 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+81/2 CORRELATED SCALAR SUBQUERY 4
+85/81 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+101/2 USE TEMP B-TREE FOR ORDER BY
+109/0 SCAN r
+112/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+## Q8_text
+SELECT r."fact" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r."q" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS "fact", q1.o AS "q" FROM quads AS q0 JOIN quads AS q1 WHERE (q0.p = 14) AND (q0.o = 71) AND (q0.s = q1.s) AND (q1.p = 20) AND ((instr((SELECT lex FROM terms WHERE id = q1.o AND kind IN (2, 3)), 'paris') > 0))) r LEFT JOIN terms t0 ON t0.id = r."fact" LEFT JOIN terms t1 ON t1.id = r."q"
+5/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)
+10/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)
+17/0 CORRELATED SCALAR SUBQUERY 1
+21/17 SEARCH terms USING INTEGER PRIMARY KEY (rowid=?)
+33/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+38/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN
+## Q10_count
+SELECT r."n" AS c0 FROM (SELECT a1."n" AS "n" FROM (SELECT COUNT(*) AS "n" FROM quads AS q0) AS a1) r 
+2/0 CO-ROUTINE a1
+6/2 SCAN quads
+10/0 SCAN a1

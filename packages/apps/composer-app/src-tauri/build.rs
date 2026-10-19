@@ -45,10 +45,15 @@ fn main() {
             "remove_xattr",
             "hide_spotlight",
             "take_web_process_terminations",
+            "defer_exit",
+            "confirm_exit",
+            "cancel_exit",
             "list_audio_inputs",
             "set_preferred_audio_input",
             "start_microphone_bridge",
             "stop_microphone_bridge",
+            "login_passkey",
+            "register_passkey",
         ])),
     )
     .expect("failed to run tauri-build");

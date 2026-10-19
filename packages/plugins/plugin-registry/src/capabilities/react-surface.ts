@@ -8,8 +8,8 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { DisableDependentsAlert } from '#components';
 import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySettingsContainer } from '#containers';
@@ -26,7 +26,7 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
           id: 'registry',
           filter: AppSurface.literal(AppSurface.Article, 'registry'),
           component: PublicRegistryArticle,
-          props: () => ({ id: 'registry' }),
+          props: ({ data: { attendableId } }) => ({ contextId: attendableId }),
         }),
         Surface.create({
           id: LOAD_PLUGIN_DIALOG,
@@ -48,25 +48,25 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),
         component: RegistryCategoryArticle,
-        props: () => ({ category: 'bundled' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'bundled' }),
       }),
       Surface.create({
         id: 'installed',
         filter: AppSurface.literal(AppSurface.Article, 'installed'),
         component: RegistryCategoryArticle,
-        props: () => ({ category: 'installed' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'installed' }),
       }),
       Surface.create({
         id: 'recommended',
         filter: AppSurface.literal(AppSurface.Article, 'recommended'),
         component: RegistryCategoryArticle,
-        props: () => ({ category: 'recommended' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'recommended' }),
       }),
       Surface.create({
         id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, 'labs'),
         component: RegistryCategoryArticle,
-        props: () => ({ category: 'labs' }),
+        props: ({ data: { attendableId } }) => ({ contextId: attendableId, category: 'labs' }),
       }),
       Surface.create({
         id: 'pluginDetails',

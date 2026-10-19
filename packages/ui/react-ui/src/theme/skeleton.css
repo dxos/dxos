@@ -1,0 +1,37 @@
+/*
+ * Skeleton: a pulsing separator-coloured shape sized from the block metrics, so a placeholder occupies the space of
+ * the row it stands in for: `default` one block tall, `text` a font-size bar centred in a line, `circle` a block disc.
+ * Width fills the track unless the caller sets it.
+ */
+
+@layer dx-components {
+  .dx-skeleton {
+    min-width: 0;
+    height: var(--dx-block-size);
+    border-radius: var(--radius-md, 0.375rem);
+    background: var(--color-separator);
+    animation: dx-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .dx-skeleton[data-variant='text'] {
+    height: var(--dx-font-size);
+    margin-block: calc((var(--dx-line-height) - var(--dx-font-size)) / 2);
+    border-radius: var(--radius-sm, 0.25rem);
+  }
+  .dx-skeleton[data-variant='circle'] {
+    flex-shrink: 0;
+    width: var(--dx-block-size);
+    border-radius: 9999px;
+  }
+
+  @keyframes dx-skeleton-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-skeleton {
+      animation: none;
+    }
+  }
+}

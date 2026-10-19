@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buf } from '@dxos/protocols/buf';
 import {
   type SubscribeToMetadataResponse,

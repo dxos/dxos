@@ -87,6 +87,7 @@ export class Placement {
   #extents: Extents;
   #viewport: number;
   #overscan: number;
+  #budget = Infinity;
   #reserve: number;
 
   /** Measured extents by message id, so that reordering the model cannot invalidate them. */
@@ -132,6 +133,24 @@ export class Placement {
 
   setReserve(reserve: number): void {
     this.#reserve = reserve;
+  }
+
+  get overscan(): number {
+    return this.#overscan;
+  }
+
+  /** Narrowed by the binding while a jump settles, so the rows the reader can see mount first. */
+  setOverscan(overscan: number): void {
+    this.#overscan = overscan;
+  }
+
+  get budget(): number {
+    return this.#budget;
+  }
+
+  /** At most this many rows mounted from the first visible one down; unbounded unless a jump is settling. */
+  setBudget(budget: number): void {
+    this.#budget = budget;
   }
 
   /**
@@ -288,7 +307,7 @@ export class Placement {
       return { first: 0, last: -1, visible: { first: 0, last: -1 }, offset: 0, sizerExtent: 0 };
     }
 
-    const { first, last, visible } = this.#range();
+    const { first, last, visible } = this.range();
     const offset = this.positionOf(first);
     let windowExtent = 0;
     for (let row = first; row <= last; row++) {
@@ -344,7 +363,7 @@ export class Placement {
       return undefined;
     }
 
-    const { first, last } = this.#range();
+    const { first, last } = this.range();
     if (first === 0 && this.positionOf(0) !== 0) {
       return { edge: 'start', delta: this.positionOf(0) };
     }
@@ -363,8 +382,8 @@ export class Placement {
     return undefined;
   }
 
-  /** Visible rows, plus overscan, clamped to the model. */
-  #range(): { first: number; last: number; visible: { first: number; last: number } } {
+  /** Visible rows, plus overscan, clamped to the model — {@link layout} without the extents. */
+  range(): { first: number; last: number; visible: { first: number; last: number } } {
     let first = this.#anchor.index;
     // Walk out from the anchor rather than searching from zero: the anchor is the only position
     // known exactly, so it is the only sound place to start.
@@ -384,7 +403,7 @@ export class Placement {
 
     return {
       first: Math.max(0, first - this.#overscan),
-      last: Math.min(this.#count - 1, last + this.#overscan),
+      last: Math.min(this.#count - 1, last + this.#overscan, first + this.#budget - 1),
       visible: { first, last },
     };
   }
@@ -405,7 +424,7 @@ export class Placement {
       return;
     }
 
-    const { visible } = this.#range();
+    const { visible } = this.range();
     if (this.#anchor.index === visible.first) {
       return;
     }

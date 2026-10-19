@@ -1,7 +1,13 @@
 <style>
-  @media (prefers-color-scheme: dark) {
-    html {
-      color-scheme: dark;
-    }
+  /*
+   * The manager is always dark (theme.tsx), so the preview iframe is too until its story paints: an empty iframe
+   * otherwise shows the browser's white canvas on every reload. Matches neutral-950, as preview-head.html does.
+   */
+  html {
+    color-scheme: dark;
+  }
+  #storybook-preview-wrapper,
+  #storybook-preview-iframe {
+    background: oklch(0.145 0 0);
   }
 </style>

@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
@@ -43,8 +43,11 @@ export const failingAiService = (): Layer.Layer<AiService.AiService> =>
   );
 
 /** Stub `AiService` that returns a different `generateObject` payload per call (FIFO),
- *  simulating per-message LLM extraction over a sequence of documents. */
-export const queuedAiService = (payloads: readonly unknown[]): Layer.Layer<AiService.AiService> => {
+ *  simulating per-message LLM extraction over a sequence of documents; each prompt is appended to `prompts`. */
+export const queuedAiService = (
+  payloads: readonly unknown[],
+  prompts: unknown[] = [],
+): Layer.Layer<AiService.AiService> => {
   let index = 0;
   return Layer.succeed(
     AiService.AiService,
@@ -52,10 +55,12 @@ export const queuedAiService = (payloads: readonly unknown[]): Layer.Layer<AiSer
       languageModel: () =>
         Layer.succeed(LanguageModel.LanguageModel, {
           generateText: () => Effect.succeed({ text: '', content: [] }),
-          generateObject: () =>
-            index < payloads.length
+          generateObject: ({ prompt }: { prompt: unknown }) => {
+            prompts.push(prompt);
+            return index < payloads.length
               ? Effect.succeed({ value: payloads[index++], content: [] })
-              : Effect.die(new Error(`queuedAiService exhausted after ${index} generateObject calls`)),
+              : Effect.die(new Error(`queuedAiService exhausted after ${index} generateObject calls`));
+          },
           streamText: () => Stream.empty,
         } as any),
     }),

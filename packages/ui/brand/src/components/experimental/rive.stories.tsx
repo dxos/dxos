@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import { useAsyncState } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -35,13 +35,13 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
   return (
     <div className='m-8 relative flex grow justify-center'>
       <RiveComponent />
-      <div className='z-1 dx-fullscreen' style={{ background: 'radial-gradient(transparent, black)' }} />
+      <div className='z-1 dx-cover' style={{ background: 'radial-gradient(transparent, black)' }} />
     </div>
   );
 };
 
 const DefaultStory = () => {
-  const [buffer] = useAsyncState<ArrayBuffer>(async () => {
+  const [buffer] = Hooks.useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
     const response = await fetch('https://media.dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
@@ -64,14 +64,14 @@ const DefaultStory = () => {
       {false && (
         <div className='flex absolute left-0 right-0 top-[120px] h-[320px] align-center'>
           <div
-            className='z-1 dx-fullscreen w-[800px] m-auto'
+            className='z-1 dx-cover w-[800px] m-auto'
             style={{
               background: 'radial-gradient(ellipse 200% 100% at center, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0) 50%)',
             }}
           />
           <div
             className={mx(
-              'z-2 dx-fullscreen items-center w-[720px] m-auto p-2',
+              'z-2 dx-cover items-center w-[720px] m-auto p-2',
               'text-white text-[60px] leading-tight text-center font-thin',
             )}
           >

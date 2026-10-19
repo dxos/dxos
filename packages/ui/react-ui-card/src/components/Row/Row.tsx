@@ -6,19 +6,17 @@ import { format, intervalToDuration } from 'date-fns';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import { EID, type URI } from '@dxos/keys';
-import {
-  Card,
-  DxAnchorActivate,
-  Icon,
-  IconButton,
-  type IconButtonProps,
-  SystemIconButton,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -111,7 +109,6 @@ type AnchorIconButtonProps = {
   fallbackLabel?: string;
   title?: string;
   value?: URI.URI;
-  size?: 4 | 5 | 6;
   /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
   hover?: boolean;
   onClick?: () => void;
@@ -129,7 +126,6 @@ const AnchorIconButton = ({
   fallbackLabel,
   title,
   value,
-  size = 4,
   hover,
   onClick,
 }: AnchorIconButtonProps) => {
@@ -151,7 +147,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <IconButton
+    <Button.Root
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -159,7 +155,6 @@ const AnchorIconButton = ({
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
       iconOnly
-      size={size}
       label={value ? label : (fallbackLabel ?? label)}
       onClick={handleClick}
       ref={buttonRef}
@@ -187,13 +182,10 @@ const RowDate = ({ start, end }: RowDateProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--calendar--regular' />
-      </Card.Block>
+    <Card.Row icon='ph--calendar--regular'>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-        <div className='truncate text-description'>{format(start, 'PPp')}</div>
-        {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
+        <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
+        {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );
@@ -211,16 +203,13 @@ type RowRefProps = {
 
 /** A Card.Row rendering an ECHO ref/relation with a card-preview anchor icon. */
 const RowRef = ({ object }: RowRefProps) => {
-  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const label = useLabel(object, { fallback: 'typename' }) ?? 'object';
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   // TODO(burdon): Nav?
   return (
-    <Card.Row>
-      <Card.Block>
-        <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Card.Block>
+    <Card.Row leading={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -266,10 +255,7 @@ type RowPersonProps = {
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
-  <Card.Row>
-    <Card.Block>
-      <Avatar actor={actor} size={size} onClick={onClick} />
-    </Card.Block>
+  <Card.Row leading={<Avatar actor={actor} size={size} onClick={onClick} />}>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
@@ -307,7 +293,7 @@ export const ContactAvatar = ({
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
   const resolved = useActorContact(getContact ? undefined : db, actor);
   const contactDXN = getContact ? getContact(actor) : resolved;
@@ -350,15 +336,15 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <IconButton
+        <Button.Root
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 5 : 4}
+          iconSize={Number(size) >= 8 ? 'lg' : 'md'}
           label={t('create-contact.label')}
-          classNames='dx-fullscreen opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
+          classNames='dx-cover opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
         />
       )}
@@ -378,11 +364,11 @@ const PersonContactRow = ({
   onRemove,
   onClick,
 }: RowPersonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <Card.Row>
-      <Card.Block>
+    <Card.Row
+      leading={
         <ContactAvatar
           actor={actor}
           role={role}
@@ -392,19 +378,20 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Card.Block>
-      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
-      {onRemove && (
-        <Card.Block end>
-          <IconButton
+      }
+      trailing={
+        onRemove && (
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Card.Block>
-      )}
+        )
+      }
+    >
+      <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
     </Card.Row>
   );
 };
@@ -439,13 +426,10 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
   }
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--tag--regular' />
-      </Card.Block>
+    <Card.Row icon='ph--tag--regular'>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
-          <Tag
+          <Tag.Tag
             key={tag.id}
             hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
@@ -459,7 +443,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             }
           >
             {tag.label ?? tag.id}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </Card.Row>
@@ -483,7 +467,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<Button.RootProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -495,7 +479,7 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+  return <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
@@ -521,13 +505,10 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
   }
 
   return (
-    <Card.Row>
-      <Card.Block>
-        <Icon icon='ph--paperclip--regular' />
-      </Card.Block>
+    <Card.Row icon='ph--paperclip--regular'>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
-          <Tag
+          <Tag.Tag
             key={attachment.ref.uri}
             hue='neutral'
             classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
@@ -551,9 +532,9 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Icon icon='ph--file--regular' size={3} />
+            <Icon.Icon icon='ph--file--regular' size='xs' />
             {attachment.name ?? attachment.ref.uri}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </Card.Row>

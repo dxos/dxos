@@ -9,10 +9,10 @@
 // so grading a diagram costs one request however many rules there are.
 //
 
+import * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import type * as Mermaid from './mermaid.ts';
 import type * as Score from './score.ts';
@@ -180,6 +180,12 @@ export const definition = (rules: readonly Rule[] = RULES) =>
   });
 
 /**
+ * What a judge is shown: the diagram's content, and optionally the rendered page as images for a
+ * model that reads them (one that does not fails the call, which scores every rule as an error).
+ */
+export type Subject = { readonly content: Content; readonly images?: readonly DecisionModel.Image[] };
+
+/**
  * Every rule as a score, from one `DecisionModel` call: the probability that the diagram follows the
  * rule. A failed call scores every rule as an error rather than as 0, so an outage never reads as a
  * bad diagram. `kind` labels the scores, so another rule set (e.g. `Aesthetics`) can share the judge.
@@ -187,12 +193,12 @@ export const definition = (rules: readonly Rule[] = RULES) =>
 export const judge = (
   rules: readonly Rule[] = RULES,
   kind: Score.Kind = 'architecture',
-): Score.Batch<{ readonly content: Content }, DecisionModel.DecisionModel> => {
+): Score.Batch<Subject, DecisionModel.DecisionModel> => {
   const decisions = definition(rules);
   return {
     entries: rules.map(({ id, description }) => ({ id, kind, description })),
-    evaluate: ({ content }) =>
-      DecisionModel.decide(decisions, { input: content }).pipe(
+    evaluate: ({ content, images }) =>
+      DecisionModel.decide(decisions, { input: content, ...(images?.length ? { images } : {}) }).pipe(
         Effect.map(({ answers }) =>
           rules.map(({ key }) => {
             const answer = answers[key];

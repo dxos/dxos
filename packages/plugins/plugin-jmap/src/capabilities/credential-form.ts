@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';

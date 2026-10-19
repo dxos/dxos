@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
+import { useLabel, useObject } from '@dxos/echo-react';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
-import { Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { getStyles } from '@dxos/ui-theme';
 
 import { nameToHue } from './avatar-name.ts';
@@ -22,19 +23,23 @@ import { nameToHue } from './avatar-name.ts';
  */
 const IMAGE_PROPERTY = 'image';
 
+const asImage = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? value : undefined;
+
+const isLiveObject = (value: unknown): value is Obj.Unknown & { readonly [IMAGE_PROPERTY]?: unknown } =>
+  Obj.isObject(value);
+
 /** The object's picture URL, or `undefined` when it has none. */
-export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined => {
-  // Read through `unknown`: the property is a convention across unrelated types rather than part of
-  // any shared interface, so there is no structural overlap for TypeScript to check against.
-  const image = (entity as unknown as Record<string, unknown>)[IMAGE_PROPERTY];
-  return typeof image === 'string' && image.length > 0 ? image : undefined;
-};
+export const getObjectImage = (entity: Entity.Unknown | Entity.Snapshot): string | undefined =>
+  asImage(Reflect.get(entity, IMAGE_PROPERTY));
 
 export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {
   /** Any ECHO object — the avatar is derived entirely from it. */
   object: Entity.Unknown | Entity.Snapshot;
   /** Fallback glyph when the object has neither a picture nor a label. */
   fallbackIcon?: string;
+  /** False when the host already shows the picture nearby (e.g., a card body), so the avatar keeps to initials. */
+  showImage?: boolean;
 };
 
 /**
@@ -45,9 +50,18 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * directory of cards is scanned by kind, and giving every object a per-instance disc would trade
  * that away; the type glyph stays the default.
  */
-export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
-  const image = getObjectImage(object);
-  const label = Obj.getLabel(object as Obj.Unknown);
+export const ObjectAvatar = ({
+  object,
+  variant = 'circle',
+  size = 6,
+  fallbackIcon,
+  showImage = true,
+  onClick,
+}: ObjectAvatarProps) => {
+  const live = isLiveObject(object) ? object : undefined;
+  const [liveImage] = useObject(live, IMAGE_PROPERTY);
+  const image = showImage ? (live ? asImage(liveImage) : getObjectImage(object)) : undefined;
+  const label = useLabel(object);
   const iconAnnotation = Entity.getIcon(object);
 
   // No picture and no label leaves initials with nothing to derive from, so the type's own glyph is
@@ -55,7 +69,7 @@ export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIco
   // that has never been named.
   if (!image && !label) {
     const icon = fallbackIcon ?? iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
-    return <Icon icon={icon} classNames={iconAnnotation?.hue ? getStyles(iconAnnotation.hue).text : undefined} />;
+    return <Icon.Icon icon={icon} classNames={iconAnnotation?.hue ? getStyles(iconAnnotation.hue).text : undefined} />;
   }
 
   return (

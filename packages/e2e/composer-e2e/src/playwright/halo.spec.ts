@@ -89,6 +89,8 @@ test.describe('HALO tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
     await host.openUserSecurity();
     const recoveryCode = await host.createRecoveryCode();
+    // EDGE refuses the code until the host's agent is active and has registered it.
+    await host.waitForAgentInSpaces();
 
     // The guest leaves its own identity for the host's without leaving the page.
     const guestDocument = await guest.markDocument();
@@ -119,7 +121,7 @@ test.describe('HALO tests', () => {
 
     await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
-    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await host.togglePlugin(StackPlugin.meta.profile.key);
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     // 1. Sync: the host's decision replicates to the guest.
@@ -131,7 +133,7 @@ test.describe('HALO tests', () => {
     await guest.usePluginSetForThisDeviceOnly();
 
     await guest.openRegistryCategory('recommended');
-    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await guest.togglePlugin(StackPlugin.meta.profile.key);
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
     // 3. The host keeps the account's decision.

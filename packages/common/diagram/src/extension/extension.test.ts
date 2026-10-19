@@ -46,6 +46,10 @@ describe('diagram language', () => {
     test(`every token is coloured under the ${mode} theme`, ({ expect }) => {
       expect(uncoloured(SAMPLE, themeStyle)).toEqual([]);
     });
+
+    test(`every semantic token is coloured under the ${mode} theme`, ({ expect }) => {
+      expect(uncoloured(SEMANTIC_SAMPLE, themeStyle)).toEqual([]);
+    });
   }
 });
 
@@ -59,6 +63,13 @@ object pkgA @ -24,-24 scale=1 index="a1" {
   arrow e2 10,20 -> _
   portal "1st" 0,0 10x10 ref="dxn:echo:@:01"
 }
+`;
+
+/** The semantic statements, with soft sides, a compact group, an aspect ratio and a fan-in bus. */
+const SEMANTIC_SAMPLE = `diagram flow=down aspect=4:3
+group g "G" compact max-width=2 ~right-of h { node A  node B below A }
+group h { node C }
+edge A:~left|top, B -> C "joins" bus
 `;
 
 /** Non-whitespace runs that no highlighter claimed, as `offset:"text"`. */

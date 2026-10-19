@@ -4,7 +4,9 @@
 
 import React from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
+
 // TODO(burdon): Show skeleton: https://github.com/dxos/dxos/issues/8259
 export const Loading = () => {
-  return <div className='grid place-items-center dx-attention-surface' />;
+  return <Layout.Grid center classNames='dx-attention-surface' />;
 };

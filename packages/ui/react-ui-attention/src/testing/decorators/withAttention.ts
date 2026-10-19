@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Decorator } from '@storybook/react-vite';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { createElement, useMemo } from 'react';
 
 import { RootAttentionProvider, ViewStateProvider } from '../../components/index.ts';

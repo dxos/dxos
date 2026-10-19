@@ -125,7 +125,7 @@ export type ScheduleResult = { calendar: Calendar.Calendar; events: Event.Event[
 
 export type ScheduleInput = { people: PersonMap; organizations: OrgMap };
 
-export const Schedule: SampleSpace.Phase<ScheduleResult, ScheduleInput> = SampleSpace.phase('schedule', {
+export const Schedule: SampleSpace.Partial<ScheduleResult, ScheduleInput> = SampleSpace.partial('schedule', {
   schemas: [Calendar.Calendar, Event.Event, Feed.Feed],
   run: ({ people, organizations }) =>
     Effect.gen(function* () {

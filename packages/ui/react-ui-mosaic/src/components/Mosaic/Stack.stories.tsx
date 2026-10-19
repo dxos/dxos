@@ -8,14 +8,16 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayMove } from '@dxos/util';
 
 import { useContainerDebug } from '../../hooks/index.ts';
 import { DefaultStackTile, TestItem } from '../../testing/index.ts';
-import { Focus } from '../Focus/index.ts';
 import { Mosaic, MosaicStackProps } from './Mosaic.ts';
 import { MosaicStack } from './Stack.tsx';
 
@@ -73,12 +75,12 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Toolbar.Text>Items: {items.length}</Toolbar.Text>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Focus.Group asChild>
             <Mosaic.Container
               asChild
@@ -95,11 +97,11 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
               </ScrollArea.Root>
             </Mosaic.Container>
           </Focus.Group>
-        </Panel.Content>
+        </Panel.Body>
         {props.debug && (
-          <Panel.Statusbar classNames='h-[40dvh]'>
+          <Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Statusbar>
+          </Panel.Footer>
         )}
       </Panel.Root>
     </Dnd.Root>
@@ -114,12 +116,12 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Mosaic.Container
             asChild
             orientation='vertical'
@@ -142,11 +144,11 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Content>
+        </Panel.Body>
         {props.debug && (
-          <Panel.Statusbar classNames='h-[40dvh]'>
+          <Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Statusbar>
+          </Panel.Footer>
         )}
       </Panel.Root>
     </Dnd.Root>

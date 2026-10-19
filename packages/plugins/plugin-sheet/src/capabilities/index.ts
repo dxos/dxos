@@ -16,11 +16,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SheetCapabilities, SheetEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
   activatesOn: SheetEvents.Start,
@@ -38,6 +36,8 @@ export const ComputeGraphRegistry = Capability.lazyModule(
     // earlier, which a start-gated provider is not.
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [SheetCapabilities.ComputeGraphRegistry],
+    // Needs a client, which headless hosts (EDGE) do not provide.
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./compute-graph-registry.ts'),
 );
@@ -51,6 +51,8 @@ export const Markdown = Capability.lazyModule(
     requires: [SheetCapabilities.ComputeGraphRegistry],
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
+    // Follows its required registry, which headless hosts (EDGE) do not provide.
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./markdown-extension.ts'),
 );
@@ -77,6 +79,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

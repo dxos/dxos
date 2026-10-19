@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
@@ -14,9 +14,13 @@ import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
 import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
+import { countUnindexed } from './indexer-heads.ts';
+import { pollWithBackoff } from './poll.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
-const POLL_INTERVAL = 5_000;
+const INITIAL_POLL_DELAY = 5_000;
+
+const MAX_POLL_DELAY = 60_000;
 
 export type IndexerRow = {
   spaceId: SpaceId;
@@ -26,23 +30,16 @@ export type IndexerRow = {
   error?: string;
 };
 
-const sameHeads = (left: readonly string[] = [], right: readonly string[] = []): boolean =>
-  left.length === right.length && [...left].sort().join() === [...right].sort().join();
-
 /** Diffs the client's local document heads against the EDGE indexer's last-indexed heads. */
 const compareHeads = (
   space: Space,
   local: Record<string, readonly string[]>,
   remote: IndexerHeadsResponse,
-): IndexerRow => {
-  const indexedHeads = new Map(remote.documents.map(({ documentId, heads }) => [documentId, heads]));
-  return {
-    spaceId: space.id,
-    name: getSpaceDisplayName(space),
-    unindexed: Object.keys(local).filter((documentId) => !sameHeads(local[documentId], indexedHeads.get(documentId)))
-      .length,
-  };
-};
+): IndexerRow => ({
+  spaceId: space.id,
+  name: getSpaceDisplayName(space),
+  unindexed: countUnindexed(local, remote),
+});
 
 /** One row per ready space comparing local document heads with the EDGE indexer's, polled, plus a raw copy action. */
 export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; copy: () => void } => {
@@ -68,7 +65,7 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
           ]);
           return { row: compareHeads(space, heads, remote), raw: { local: heads, indexer: remote } };
         } catch (err) {
-          log.catch(err);
+          log.warn('indexer heads comparison failed', { spaceId: space.id, err });
           const error = err instanceof Error ? err.message : String(err);
           const row: IndexerRow = {
             spaceId: space.id,
@@ -91,9 +88,8 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       client.edge.http.setIdentity(createEdgeIdentity(client));
-      await fetchRows();
+      pollWithBackoff(ctx, fetchRows, { initialDelay: INITIAL_POLL_DELAY, maxDelay: MAX_POLL_DELAY });
     });
-    scheduleTaskInterval(ctx, fetchRows, POLL_INTERVAL);
     return () => {
       generationRef.current++;
       void ctx.dispose();

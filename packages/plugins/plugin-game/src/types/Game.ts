@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation } from '@dxos/schema';
 
 // @import-as-namespace
@@ -44,12 +43,12 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
     name: Schema.optional(Schema.String),
     players: Schema.mutable(Schema.Array(Player))
       .annotate({ description: 'Players in the game.' })
-      .pipe(FormInputAnnotation.set(false), Schema.optional),
+      .pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     variant: Ref.Ref(Obj.Unknown)
       .annotate({ description: 'Reference to variant-specific state object.' })
-      .pipe(FormInputAnnotation.set(false)),
+      .pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     // Delegate the graph-node icon to the referenced variant state's schema. Falls back to

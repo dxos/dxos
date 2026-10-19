@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcServer from 'effect/rpc/RpcServer';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { WorkerRuntime } from '@dxos/client-services';
 import { LayerStack } from '@dxos/compute-runtime';
@@ -14,6 +14,7 @@ import { Config } from '@dxos/config';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
@@ -62,6 +63,8 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
     storageLockKey: STORAGE_LOCK_KEY,
     createRuntime: ({ config: configValues, requestShutdown }) =>
       Effect.gen(function* () {
+        // Devtools addresses this worker's diagnostics (e.g. echo-stats) by tag.
+        TRACE_PROCESSOR.setInstanceTag('dedicated-worker');
         const config = new Config(configValues ?? {});
         if (!options.sqliteLayer) {
           log('dedicated-worker: probing OPFS');

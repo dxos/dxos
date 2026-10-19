@@ -13,9 +13,13 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  countersLabel,
   detachAll,
+  flowConditions,
   installProbes,
+  installReactProbe,
   launchInstrumentedBrowser,
+  parseCounters,
   publishPosthogBatch,
   readProcessFootprint,
   startAllocationSampling,
@@ -29,10 +33,9 @@ import {
   writeRunReport,
 } from '@dxos/perf-harness';
 
-import { INITIAL_URL } from './harness-helpers.ts';
 import { SCALE, type Scale, createProjectsFixture, scaleLabel } from './perf/fixture.ts';
 import { describeReplication, waitForReplication } from './perf/replication.ts';
-import { PERF_PORT } from './perf/server.ts';
+import { PERF_ORIGIN } from './perf/server.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
@@ -120,7 +123,7 @@ const SETTLE_MS = 20_000;
 const REPLICATION_TIMEOUT_MS = Number.parseInt(process.env.DX_PERF_REPLICATION_TIMEOUT_MS ?? '', 10) || 180_000;
 
 /** Moved off the shared e2e port by `DX_PERF_PORT`, which the config serves on too. */
-const BASE_URL = PERF_PORT ? `http://127.0.0.1:${PERF_PORT}` : INITIAL_URL;
+const BASE_URL = PERF_ORIGIN;
 
 /**
  * Where to take a memory snapshot (`DX_PERF_SNAPSHOTS`, comma-separated): any stage id, `idle` for
@@ -147,6 +150,9 @@ const ALLOC_SAMPLE = process.env.DX_PERF_ALLOC_SAMPLE === '1';
  * more have been dropped and what remains is what the app retains.
  */
 const END_SETTLE_MS = 10_000;
+
+/** The costed work counters (`DX_PERF_COUNTERS`: `all`, `none`, or e.g. `trace,react`). */
+const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
 
 const modes: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(Boolean) as Mode[];
 
@@ -219,6 +225,42 @@ const invokeInPage = (page: Page, key: string, input: unknown): Promise<unknown>
     { key, input },
   );
 
+/** The tab's counters that move while it brings objects in. */
+const OBJECT_LOAD_COUNTERS = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
+
+/**
+ * Resolves once the tab has gone `quietMs` without bringing in an object or recomputing a query.
+ *
+ * The task list is virtualized and shows its first rows before the rest of its query has loaded, so
+ * a stage that ended on a visible row would leave the remaining loads uncounted, between stages.
+ */
+const waitForObjectsSettled = async (page: Page, timeoutMs: number, quietMs = 1_000): Promise<void> => {
+  const read = () =>
+    page.evaluate((names) => {
+      const counters: unknown = Reflect.get(globalThis, '__dxosWorkCounters');
+      if (typeof counters !== 'function') {
+        throw new Error('the tab publishes no work counters');
+      }
+      const totals: Record<string, number> = counters();
+      return names.map((name) => totals[name] ?? 0).join(',');
+    }, OBJECT_LOAD_COUNTERS);
+
+  const deadline = Date.now() + timeoutMs;
+  let last = await read();
+  let quietSince = Date.now();
+  while (Date.now() - quietSince < quietMs) {
+    if (Date.now() > deadline) {
+      throw new Error(`objects still loading after ${timeoutMs} ms`);
+    }
+    await page.waitForTimeout(100);
+    const current = await read();
+    if (current !== last) {
+      last = current;
+      quietSince = Date.now();
+    }
+  }
+};
+
 /**
  * Drives the `PERF.mdl` QA-1 flow once, in one mode, at one scale.
  *
@@ -243,12 +285,14 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     const network = trackNetwork(page);
 
     const comparability: Comparability = {
+      ...flowConditions(),
       servingMode: 'preview',
       pluginSet: process.env.DX_PLUGIN_SET ?? 'default',
       profileState: 'first-run',
       settleMs: SETTLE_MS,
       instruments: `${mode === 'diagnose' && screencastEnabled ? 'profiler+screencast' : 'profiler'}${ALLOC_SAMPLE ? '+allocations' : ''}${VIDEO ? '+video' : ''}`,
       ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
+      counters: countersLabel(COUNTERS),
     };
     const snapshotDir = path.join(artifactDir, 'snapshots');
 
@@ -267,6 +311,8 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       screenshotDir: path.join(artifactDir, 'stages'),
       snapshotStages: SNAPSHOTS,
       snapshotDir,
+      counters: COUNTERS,
+      counterDir: path.join(artifactDir, 'counters'),
     });
 
     // `boot` is its own stage and the profiler cannot start before it: there is no target to attach
@@ -276,10 +322,15 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     // registered after `goto` would miss the whole boot window, which is where the longest tasks
     // are.
     await installProbes(page);
+    if (COUNTERS.react) {
+      await installReactProbe(page);
+    }
 
     // Before the first navigation, which is the whole point: a browser-wide trace covers `boot`
     // and the workers boot creates, the window no per-target instrument can reach.
-    const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir });
+    // With the counter categories when counters are on: the runner's own per-stage counter trace
+    // cannot start while this one records, so boot's counts come from here instead.
+    const tracing = await startTracing(browserCdp, { mode, outputDir: artifactDir, counters: COUNTERS.trace });
 
     await runner.stage('boot', async () => {
       // `model=scripted` so the assistant stages run a fixed agent loop offline: a live model's
@@ -309,6 +360,10 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
       const perRealm = traced.byStage.get('boot');
       if (bootRow && perRealm) {
         bootRow.tracedCpuMsByRealm = perRealm;
+      }
+      const bootCounters = COUNTERS.trace ? traced.countersByStage.get('boot') : undefined;
+      if (bootRow && bootCounters) {
+        bootRow.traceCounters = bootCounters;
       }
     }
 
@@ -519,6 +574,30 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
 
     page.context().off('request', onRequest);
     log.info('assistant stages', { liveModelCalls: liveModelCalls.length });
+
+    // The return visit: the same profile, reopened at the space, the way someone comes back to a space
+    // they already have. Every stage above runs with the space resident in the tab, since the fixture
+    // built it there; these are where what a query returns has to be loaded, or not.
+    await runner.stage(
+      'revisit-boot',
+      async () => {
+        await page.goto(`${BASE_URL}/w/${fixture.spaceId}?profiler=1&model=scripted`, { timeout: 120_000 });
+        await waitForReady(page);
+      },
+      { restartsApp: true },
+    );
+
+    await runner.stage('revisit-open-project', async () => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
+        subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
+      });
+      await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
+      await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
+    });
+
+    await runner.stage('revisit-load-tasks', async () => {
+      await waitForObjectsSettled(page, budget);
+    });
 
     const rows = runner.rows;
     const name = `${FLOW}-${mode}`;

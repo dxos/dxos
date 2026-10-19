@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
 import { queryCompactFacts } from './query-facts.ts';
@@ -24,9 +24,9 @@ const makeFact = (options: {
 }): RDF.Fact => ({
   id: options.id,
   assertion: {
-    subject: { entity: options.subject, label: options.subject },
+    subject: { kind: 'entity', entity: options.subject, label: options.subject },
     predicate: options.predicate,
-    object: { entity: options.object, label: options.object },
+    object: { kind: 'entity', entity: options.object, label: options.object },
   },
   factuality: { value: 'CT+', polarity: '+', confidence: options.confidence ?? 0.9, nature: 'epistemic' },
   attribution: {
@@ -74,7 +74,8 @@ describe('QueryFacts', () => {
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id).sort()).toEqual(['f-1', 'f-3']);
-    expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works-at', object: 'acme', factuality: 'CT+' });
+    // `works-at` is the seeded `schema:worksFor`, read back under its label.
+    expect(facts[0]).toMatchObject({ subject: 'alice', predicate: 'works for', object: 'acme', factuality: 'CT+' });
   });
 
   test('applies minConfidence and limit bounds', async ({ expect }) => {

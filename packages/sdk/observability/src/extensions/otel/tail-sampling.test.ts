@@ -38,12 +38,18 @@ describe('TailSampler', () => {
 
   test('keeps a model call the ratio would have dropped', ({ expect }) => {
     const sampler = new TailSampler();
-    expect(sampler.keep(span({ attributes: { 'gen_ai.system': 'anthropic' } }))).toEqual(true);
+    expect(sampler.keep(span({ attributes: { 'gen_ai.provider.name': 'anthropic' } }))).toEqual(true);
   });
 
   test('keeps a turn or tool-call span the ratio would have dropped', ({ expect }) => {
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'turn' } }))).toEqual(true);
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'tool' } }))).toEqual(true);
+  });
+
+  test('keeps a span marked to keep, under either attribute namespace', ({ expect }) => {
+    expect(new TailSampler().keep(span({ attributes: { 'dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': true } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'ctx.dxos.sampling.keep': false } }))).toEqual(false);
   });
 
   test('keeps a span slower than the threshold', ({ expect }) => {

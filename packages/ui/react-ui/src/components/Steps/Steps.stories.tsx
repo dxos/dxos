@@ -2,219 +2,115 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useEffect, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { random } from '@dxos/random';
+import { translations } from '#translations';
 
+import { SIZES } from '../../sizes.ts';
+import { GEOMETRY, sizeRow } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
 import { Steps, type StepsProps } from './Steps.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
 const ITEMS = 10;
-/**
- * Items completed per tick. Uneven, because real work is: a fixed step glides so smoothly that the
- * line's transition has nothing to smooth, and it lands the handover on the same beat every time.
- */
-const step = () => random.number.int({ min: 1, max: 3 });
 
-type StoryArgs = Partial<StepsProps> & {
-  /** How many stages the plan starts with. */
-  stages?: number;
-};
+type StoryArgs = SizeArgs & Pick<StepsProps, 'indeterminate' | 'error'> & { stages?: number };
 
-/**
- * Drives a fixed plan from the first stage to the last, so the plan is watched advancing rather
- * than sampled at rest. The stage count is switched from the toolbar, since the whole point of the
- * flexing lines is that the gaps stay even however many stages there are.
- */
-const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArgs) => {
-  const [stages, setStages] = useState(initial);
-  const [active, setActive] = useState<number | undefined>(undefined);
-  const [fraction, setFraction] = useState(0);
-  const [failed, setFailed] = useState(false);
-  const [selected, setSelected] = useState<number | undefined>(undefined);
-  const [run, setRun] = useState(0);
-  const stopped = useRef(false);
-
+/** Drives a plan from the first stage to the last, so it is watched advancing rather than sampled at rest. */
+const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
+  const [tick, setTick] = useState(0);
+  const [selected, setSelected] = useState<number | undefined>();
   useEffect(() => {
-    if (run === 0) {
-      return;
-    }
-
-    stopped.current = false;
-    let phase = 0;
-    let count = 0;
-
-    const interval = setInterval(() => {
-      if (stopped.current) {
-        return;
-      }
-
-      if (phase >= stages) {
-        clearInterval(interval);
-        // Past the last stage, not on it: a run parked on its final stage still reads as working,
-        // and an uncounted one goes on spinning there for good.
-        setActive(stages);
-        setFraction(1);
-        return;
-      }
-
-      count += indeterminate ? TICK_MS : step();
-      setActive(phase);
-      setFraction(indeterminate ? 0 : Math.min(1, count / ITEMS));
-      if (count >= (indeterminate ? 2_000 : ITEMS)) {
-        phase += 1;
-        count = 0;
-      }
-    }, TICK_MS);
-
+    const interval = setInterval(() => setTick((tick) => (tick + 1) % ((stages + 2) * ITEMS)), TICK_MS);
     return () => clearInterval(interval);
-  }, [run, stages, indeterminate]);
-
-  const reset = useCallback(
-    (next = stages) => {
-      stopped.current = true;
-      // Ends the run rather than pausing it: changing `stages` re-runs the driving effect, which
-      // would clear the stop flag and start over from the first stage.
-      setRun(0);
-      setStages(next);
-      setActive(undefined);
-      setFraction(0);
-      setFailed(false);
-      setSelected(undefined);
-    },
-    [stages],
-  );
-
-  const handleStart = useCallback(() => {
-    stopped.current = true;
-    setFailed(false);
-    setActive(0);
-    setFraction(0);
-    setRun((run) => run + 1);
-  }, []);
+  }, [stages]);
 
   return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={handleStart}>Start</Toolbar.Button>
-          <Toolbar.Button onClick={() => (stopped.current = true)}>Stop</Toolbar.Button>
-          <Toolbar.Button
-            onClick={() => {
-              stopped.current = true;
-              setFailed(true);
-            }}
-          >
-            Fail
-          </Toolbar.Button>
-          <Toolbar.Button onClick={() => reset()}>Reset</Toolbar.Button>
-          <div className='flex-1' />
-          {[2, 3, 5, 8].map((count) => (
-            <Toolbar.Button key={count} onClick={() => reset(count)}>
-              {String(count)}
-            </Toolbar.Button>
-          ))}
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='h-6' />
-      <Panel.Statusbar>
-        <Steps
-          steps={stages}
-          active={active}
-          fraction={fraction}
-          indeterminate={indeterminate}
-          error={failed}
-          selected={selected}
-          onSelect={(step) => setSelected((selected) => (selected === step.index ? undefined : step.index))}
-          {...props}
-        />
-      </Panel.Statusbar>
-    </Panel.Root>
+    <Steps
+      steps={['Plan', 'Build', 'Verify', 'Ship', 'Launch'].slice(0, stages).map((label) => ({ id: label, label }))}
+      active={Math.floor(tick / ITEMS)}
+      fraction={(tick % ITEMS) / ITEMS}
+      indeterminate={indeterminate}
+      error={error}
+      selected={selected}
+      onSelect={({ index }) => setSelected((selected) => (selected === index ? undefined : index))}
+    />
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/Steps',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
-  parameters: {
-    layout: 'centered',
-  },
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md', stages: 5, indeterminate: false, error: false },
+  argTypes: { ...SIZE_ARG_TYPES, stages: { control: { type: 'range', min: 2, max: 5 } } },
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * A fixed plan: one circle per stage, joined by lines that flex so the gaps stay even at **3**, **5**
- * or **8** stages. The line leaving a stage fills as that stage is worked through, so the plan and
- * the progress within it are one drawing rather than two.
- */
-export const Default: Story = {
-  args: {
-    stages: 5,
-  },
-};
+export const Default: Story = {};
 
-/**
- * The same plan with nothing to count. No line can be drawn honestly, so the stage in flight spins
- * and its line stays empty until the run is past it.
- */
-export const Indeterminate: Story = {
-  args: {
-    stages: 5,
-    indeterminate: true,
-  },
-};
-
-/**
- * Drives the plan by hand rather than on a timer, so the moment an advance is reported can be
- * observed rather than caught.
- */
-const HandoverStory = ({ stages = 3 }: StoryArgs) => {
+/** Driven by hand, so the moment an advance, a failure or a reset is reported can be observed rather than caught. */
+const TestStory = ({ size }: StoryArgs) => {
   const [active, setActive] = useState<number | undefined>(0);
   const [fraction, setFraction] = useState(1);
+  const [error, setError] = useState(false);
+  const [selected, setSelected] = useState<number | undefined>();
+  const testId = (name: string) => `${size}-${name}`;
 
   return (
-    <div className='flex flex-col gap-4 w-full'>
-      <Toolbar.Root>
-        {/* What a run does at the moment it starts the next stage: it reports the new stage and a
-            count of almost nothing, both in the same update. */}
-        <Toolbar.Button
-          data-testid='steps.advance'
+    <>
+      <div className='flex gap-2'>
+        <Button
+          data-testid={testId('advance')}
           onClick={() => {
             setActive((active) => (active ?? 0) + 1);
             setFraction(0.2);
           }}
         >
           Advance
-        </Toolbar.Button>
-        <Toolbar.Button
-          data-testid='steps.reset'
+        </Button>
+        <Button data-testid={testId('fail')} onClick={() => setError(true)}>
+          Fail
+        </Button>
+        <Button
+          data-testid={testId('reset')}
           onClick={() => {
             setActive(undefined);
             setFraction(0);
+            setError(false);
           }}
         >
           Reset
-        </Toolbar.Button>
-      </Toolbar.Root>
-      <Steps steps={stages} active={active} fraction={fraction} />
-    </div>
+        </Button>
+      </div>
+      <Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
+      <Steps
+        steps={[
+          { id: 'plan', label: 'Plan' },
+          { id: 'build', label: 'Build' },
+          { id: 'ship', label: 'Ship' },
+        ]}
+        active={1}
+        indeterminate
+        selected={selected}
+        onSelect={({ index }) => setSelected((selected) => (selected === index ? undefined : index))}
+      />
+    </>
   );
 };
 
-/**
- * Every drawn width, on each painted frame for `ms`. Read after the frame rather than before it, so
- * the first reading is of what the click actually drew rather than of what was on screen before it.
- */
+/** Every drawn line width (percent of its track), on each painted frame for `ms`. */
 const sample = async (read: () => number[], ms: number): Promise<number[][]> => {
   const frames: number[][] = [];
   const until = performance.now() + ms;
@@ -225,99 +121,71 @@ const sample = async (read: () => number[], ms: number): Promise<number[][]> => 
   return frames;
 };
 
-export const TestHandover: Story = {
-  render: HandoverStory,
-  args: { stages: 3 },
-  // Sampled every frame rather than asserted at an instant: what makes the drawing wrong is a line
-  // that goes backwards at some point during the window, which a single reading after the click is
-  // free to miss entirely.
+/**
+ * Circles are icon-sized at every size and named; an advance holds the line it leaves full until it arrives, a reset
+ * lands at once, a failure recolours only what the run reached, and selectable stages are toggle buttons.
+ */
+export const Test: Story = {
+  render: TestStory,
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // The computed width, not the inline one: a line easing to its target is drawn at neither end
-    // for the length of the transition, and it is exactly those frames that show a line retreating.
+    for (const size of SIZES) {
+      const indicators = sizeRow(canvasElement, size).querySelectorAll<HTMLElement>(
+        '[data-scope="steps"][data-part="indicator"]',
+      );
+      await expect(indicators, size).toHaveLength(7);
+      for (const indicator of indicators) {
+        await expect(indicator.getBoundingClientRect().width, size).toBeCloseTo(GEOMETRY[size].icon, 0);
+      }
+    }
+
+    const row = sizeRow(canvasElement, 'md');
+    const canvas = within(row);
+    const steps = canvas.getByTestId('md-steps');
+    await expect(steps).toHaveAttribute('role', 'list');
+    await expect(within(steps).getAllByRole('listitem')).toHaveLength(4);
+    await expect(within(steps).getByRole('img', { name: 'Step 1' })).toBeVisible();
+
     const widths = () =>
-      [...canvasElement.querySelectorAll<HTMLElement>('[data-scope="steps"][data-part="separator"]')].map((track) => {
+      [...steps.querySelectorAll<HTMLElement>('[data-part="separator"]')].map((track) => {
         const fill = track.firstElementChild;
         return fill ? Math.round((fill.getBoundingClientRect().width / track.getBoundingClientRect().width) * 100) : 0;
       });
+    const colours = () =>
+      [...steps.querySelectorAll<HTMLElement>('[data-part="indicator"]')].map(
+        (indicator) => getComputedStyle(indicator).backgroundColor,
+      );
 
-    // The first stage, counted to its end.
-    await waitFor(async () => expect(widths()).toEqual([100, 0]));
+    // The first stage counted to its end.
+    await waitFor(() => expect(widths()).toEqual([100, 0, 0]));
 
-    // A run reports the next stage the instant it starts it, with a count of almost nothing. The
-    // line leaving the stage being left has to stay at its end while it hands over — without that
-    // it snaps back to the new count and the reader sees the plan run backwards.
-    canvas.getByTestId('steps.advance').click();
-    const advancing = await sample(widths, 800);
+    // An advance reports the next stage with almost nothing counted; the line it leaves must not snap back meanwhile.
+    canvas.getByTestId('md-advance').click();
+    const advancing = await sample(widths, 700);
     await expect(Math.min(...advancing.map((frame) => frame[0]))).toEqual(100);
-    await waitFor(async () => expect(widths()).toEqual([100, 20]));
+    await waitFor(() => expect(widths()).toEqual([100, 20, 0]));
+    await expect(within(steps).getAllByRole('listitem')[1]).toHaveAttribute('aria-current', 'step');
 
-    // A reset has no line in flight to finish, so it lands at once: easing back to nothing would
-    // read as progress in reverse.
-    canvas.getByTestId('steps.reset').click();
+    // A failure recolours every stage the run reached, and leaves the one it never reached as an outline.
+    const [reached, , , ahead] = colours();
+    canvas.getByTestId('md-fail').click();
+    await waitFor(() => expect(colours()[0]).not.toBe(reached));
+    const failed = colours();
+    await expect(failed[1]).toBe(failed[0]);
+    await expect(failed[3]).toBe(ahead);
+
+    // A reset has no line in flight to finish, so it lands at once.
+    canvas.getByTestId('md-reset').click();
     const resetting = await sample(widths, 200);
     await expect(Math.max(...resetting.map((frame) => Math.max(...frame)))).toEqual(0);
-  },
-};
 
-/** Holds a plan part-way through so the failure can be applied to a run that has made progress. */
-const FailureStory = ({ stages = 4 }: StoryArgs) => {
-  const [failed, setFailed] = useState(false);
-
-  return (
-    <div className='flex flex-col gap-4 w-full'>
-      <Toolbar.Root>
-        <Toolbar.Button data-testid='steps.fail' onClick={() => setFailed(true)}>
-          Fail
-        </Toolbar.Button>
-      </Toolbar.Root>
-      <Steps steps={stages} active={2} fraction={0.5} error={failed} />
-    </div>
-  );
-};
-
-export const TestFailure: Story = {
-  render: FailureStory,
-  args: { stages: 4 },
-  // A run that failed is drawn in the error hue throughout: a plan half-drawn in the accent
-  // would read as half of it having gone fine.
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // Resolved from the theme rather than written down, so the test says "the error hue" and not a
-    // particular colour the theme is free to change.
-    const swatch = (classNames: string) => {
-      const probe = document.createElement('div');
-      probe.className = `border ${classNames}`;
-      canvasElement.append(probe);
-      const { backgroundColor, borderTopColor } = getComputedStyle(probe);
-      probe.remove();
-      return { backgroundColor, borderTopColor };
-    };
-    const errorSurface = swatch('bg-error-surface').backgroundColor;
-    const separator = swatch('border-separator').borderTopColor;
-    const accent = swatch('bg-accent-bg').backgroundColor;
-
-    const circles = () =>
-      [...canvasElement.querySelectorAll('[data-scope="steps"][data-part="item"] [role="img"]')].map((circle) => {
-        const { backgroundColor, borderTopColor } = getComputedStyle(circle);
-        return { backgroundColor, borderTopColor };
-      });
-
-    await waitFor(async () => expect(circles()).toHaveLength(4));
-    // Stages the run reached are filled in the accent; the one ahead of it is an outline.
-    await expect(circles().map((circle) => circle.backgroundColor === accent)).toEqual([true, true, true, false]);
-
-    canvas.getByTestId('steps.fail').click();
-
-    // Every stage the run started now reads as failed, so the progress behind the failure does not
-    // read as having gone fine.
-    await waitFor(async () =>
-      expect(circles().map((circle) => circle.backgroundColor === errorSurface)).toEqual([true, true, true, false]),
-    );
-    await expect(circles().every((circle) => circle.backgroundColor !== accent)).toEqual(true);
-
-    // The stage it never reached is untouched: it did not fail, and colouring it would claim the
-    // failure reached further than it did.
-    await expect(circles()[3].borderTopColor).toEqual(separator);
+    // An uncounted stage spins, and selectable stages toggle.
+    const build = canvas.getByRole('button', { name: 'Build' });
+    await expect(getComputedStyle(build, '::after').animationName).toBe('dx-spin');
+    await expect(build).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(build);
+    await expect(build).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(build);
+    await expect(build).toHaveAttribute('aria-pressed', 'false');
   },
 };

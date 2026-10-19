@@ -30,6 +30,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../plugins/plugin-agent"
+    },
+    {
       "path": "../../../plugins/plugin-assistant"
     },
     {
@@ -75,6 +78,9 @@
       "path": "../../../plugins/plugin-testing"
     },
     {
+      "path": "../../../plugins/plugin-uml"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -91,9 +97,6 @@
     },
     {
       "path": "../../../ui/react-ui-table"
-    },
-    {
-      "path": "../../echo/blob"
     },
     {
       "path": "../../echo/echo"

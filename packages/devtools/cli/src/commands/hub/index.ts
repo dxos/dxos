@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as ConfigProvider from 'effect/ConfigProvider';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { account } from './accounts/index.ts';
 import { code } from './codes/index.ts';

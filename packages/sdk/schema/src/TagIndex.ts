@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';

@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 import { Feed } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Outline, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -57,7 +57,7 @@ export const voyageSpace: AppCapabilities.SpaceTemplate = {
     space.db.add(Mailbox.make({ name: 'Clients' }));
     // Parented by the scaffold, so the single add cascades the instructions, task set and outline.
     space.db.add(
-      scaffoldProject({
+      Templates.scaffoldProject({
         name: 'Voyage',
         description: 'Project chat-binding test fixture.',
         text: PROJECT_INSTRUCTIONS,

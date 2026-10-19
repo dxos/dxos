@@ -55,7 +55,7 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
    - **fish:** `eval (pnpm -ws 1p-credentials)`
    - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
 
-   The script is the `1p-credentials` package script (runs `op inject` over inlined `op://CI/…` references; the full env template lives in the dxos/edge repo as `.env.tpl`).
+   The script is the `1p-credentials` package script (runs `op inject` over inlined `op://CI/…` references; the full env template lives in the dxos/edge repo as `.env.tpl`). An agent runs it only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
 
 2. **Run tests with generation:**
 

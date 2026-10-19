@@ -59,15 +59,15 @@ export const assistant = (options: AssistantOptions): Extension[] => {
         outline: 'none !important',
       },
       '.cm-panel button': {
-        color: 'var(--color-base-fg) !important',
+        color: 'var(--color-fg) !important',
       },
       '.cm-panel.cm-panel-lint ul': {
-        color: 'var(--color-base-fg) !important',
+        color: 'var(--color-fg) !important',
         backgroundColor: 'var(--color-base-surface) !important',
         marginRight: '2rem !important',
       },
       '.cm-panel.cm-panel-lint ul [aria-selected]': {
-        color: 'var(--color-base-fg) !important',
+        color: 'var(--color-fg) !important',
         backgroundColor: 'var(--color-base-surface) !important',
       },
       '.cm-panel.cm-panel-lint ul li': {

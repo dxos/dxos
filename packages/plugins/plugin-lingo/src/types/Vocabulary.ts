@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation } from '@dxos/schema';
 
 import * as Language from './Language.ts';
@@ -24,8 +23,8 @@ export class Vocabulary extends Type.makeObject<Vocabulary>(DXN.make('org.dxos.t
     description: Schema.optional(Schema.String),
     language: Ref.Ref(Language.Language).pipe(Schema.annotate({ title: 'Language' })),
   }).pipe(
-    LabelAnnotation.set(['name']),
-    DescriptionAnnotation.set('description'),
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'teal' }),
     CardAnnotation.set(true),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),

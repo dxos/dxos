@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Types from 'effect/Types';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {

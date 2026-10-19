@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
@@ -17,7 +17,7 @@ describe('MermaidPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly — only ProcessManagerPlugin is needed.
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), MermaidPlugin()],
+      plugins: [ProcessManagerPlugin.make(), MermaidPlugin()],
     });
 
     // MarkdownExtension is a cross-plugin contribution riding the markdown feature's start

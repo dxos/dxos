@@ -9,7 +9,7 @@
 
 svg {
   marker {
-    &.dx-arrow path {
+    &.dx-graph-arrow path {
       @apply fill-none;
     }
 
@@ -127,7 +127,7 @@ svg {
           }
         }
 
-        g.dx-label {
+        g.dx-graph-label {
           @apply hidden;
         }
       }
@@ -263,7 +263,7 @@ svg {
           }
         }
 
-        g.dx-label {
+        g.dx-graph-label {
           @apply block;
 
           line {
@@ -283,7 +283,8 @@ svg {
       g.dx-edge {
         path {
           /** NOTE: Set text- so that current color is picked up by marker. */
-          @apply stroke-1 stroke-neutral-700 fill-none;
+          /* Hairline and light: a dense graph draws hundreds of overlapping edges, which read as solid black at 1px. */
+          @apply stroke-[0.5px] stroke-neutral-400 fill-none;
           /* Force higher-quality tessellation. Some browsers' default `auto` shape-rendering
              produces visible gaps in stroked bezier curves at certain curvature / stroke-width
              combinations — geometricPrecision avoids the heuristic and uses precise math. */

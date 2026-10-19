@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './Card.tsx';
+export * as Card from './Card.tsx';

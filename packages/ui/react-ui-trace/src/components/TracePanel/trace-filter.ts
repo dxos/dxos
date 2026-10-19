@@ -44,7 +44,7 @@ const ENVIRONMENT_ICONS: Record<ProcessEnvironment, string> = {
 export const environmentIcon = (environment: ProcessEnvironment): string => ENVIRONMENT_ICONS[environment];
 
 /** `conversation` outranks `space`, since a conversation always runs inside one. */
-export const processEnvironment = (process: Process.Info): ProcessEnvironment => {
+export const processEnvironment = (process: Process.Process): ProcessEnvironment => {
   if (process.environment.conversation !== undefined) {
     return ProcessEnvironment.Conversation;
   }
@@ -55,9 +55,9 @@ export const processEnvironment = (process: Process.Info): ProcessEnvironment =>
 };
 
 export const filterProcesses = (
-  processes: readonly Process.Info[],
+  processes: readonly Process.Process[],
   selected: readonly ProcessEnvironment[],
-): readonly Process.Info[] => {
+): readonly Process.Process[] => {
   // Identity when nothing is excluded, so `ProcessTree`'s `React.memo` still holds.
   if (selected.length === ALL_PROCESS_ENVIRONMENTS.length) {
     return processes;
@@ -95,9 +95,9 @@ export const parseProcessEnvironments = (selected: readonly string[] | undefined
  * {@link filterTraceMessages}: a running child of a picked process is that process's live work.
  */
 export const filterProcessesBySelection = (
-  processes: readonly Process.Info[],
+  processes: readonly Process.Process[],
   selected: readonly string[],
-): readonly Process.Info[] => {
+): readonly Process.Process[] => {
   if (selected.length === 0) {
     return processes;
   }

@@ -6,16 +6,16 @@ import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Stream from 'effect/Stream';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, test } from 'vitest';
 
 import { Rpc, makeClientServicesRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { RTCService } from '@dxos/protocols/rpc';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { makeWorkerRuntime } from './worker-runtime.ts';
 

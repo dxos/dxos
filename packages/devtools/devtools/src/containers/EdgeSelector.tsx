@@ -30,6 +30,8 @@ export const EdgeSelector = () => {
           runtime: {
             services: {
               edge: { url: value },
+              // EDGE checks accounts against the hub it serves under `/hub`, so the hub entry moves with it.
+              hub: { url: `${value}/hub/` },
             },
           },
         },

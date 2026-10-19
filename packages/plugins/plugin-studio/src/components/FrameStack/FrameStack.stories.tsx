@@ -25,7 +25,7 @@ const DefaultStory = () => {
   const [items, setItems] = useState(ITEMS);
   const [selectedId, setSelectedId] = useState<string | undefined>('a');
   return (
-    <div className='w-(--dx-nav-sidebar-size) h-full overflow-auto border-e border-subdued-separator'>
+    <div className='w-(--dx-nav-sidebar-size) h-full overflow-auto border-e border-separator-subtle'>
       <FrameStack
         items={items}
         selectedId={selectedId}

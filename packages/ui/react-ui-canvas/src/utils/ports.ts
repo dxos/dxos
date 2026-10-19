@@ -8,13 +8,27 @@
 // the diagram re-attaches its links.
 //
 
-import { type NodeRegistry, nodeDef } from '../model/registry.ts';
-import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '../model/types.ts';
+import {
+  type Bounds,
+  type Node,
+  type NodeRegistry,
+  type Point,
+  type Port,
+  type PortDirection,
+  type Side,
+  nodeDef,
+} from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 
 export const DEFAULT_PORTS_PER_SIDE = 3;
+
+/** The most ports a side may carry; a stored count is clamped to `1..MAX_PORTS_PER_SIDE` whole ports. */
+export const MAX_PORTS_PER_SIDE = 9;
+
+const clampPorts = (count: number) =>
+  Number.isFinite(count) ? Math.min(MAX_PORTS_PER_SIDE, Math.max(1, Math.round(count))) : DEFAULT_PORTS_PER_SIDE;
 
 /**
  * The id of the `index`th port along `side`, counting from 1 at the side's start: `e1` is the top of the
@@ -38,13 +52,22 @@ export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
 
 export const defaultPorts: readonly Port[] = sidePorts();
 
+/** How many ports a node spreads along each side: its own count, else its type's, else the default. */
+export const portsPerSideOf = (registry: NodeRegistry, node: Node): number =>
+  clampPorts(node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE);
+
 /**
- * A node's ports: its own when it carries them, else its type's, else `portsPerSide` of the type. Ports
- * landing on the same point collapse to the first, so a definition cannot stack two at one place.
+ * A node's ports: its own when it carries them, else its own `portsPerSide` spread along each side, else
+ * its type's layout or count. Ports landing on the same point collapse to the first, so a definition
+ * cannot stack two at one place.
  */
 export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
   const def = nodeDef(registry, node);
-  const ports = node.ports ?? def?.ports?.(node) ?? sidePorts(def?.portsPerSide);
+  const ports =
+    node.ports ??
+    (node.portsPerSide !== undefined ? sidePorts(clampPorts(node.portsPerSide)) : undefined) ??
+    def?.ports?.(node) ??
+    sidePorts(def?.portsPerSide);
   const bounds = nodeBounds(node);
   const seen = new Set<string>();
   return ports.filter((port) => {
@@ -112,8 +135,8 @@ const distance2 = (left: Point, right: Point) => (left.x - right.x) ** 2 + (left
  * source end only leaves a port that accepts `out`, the target end only lands on one that accepts `in`.
  */
 export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair | undefined => {
-  const sources = candidates(source, 'out');
-  const targets = candidates(target, 'in');
+  const sources = portCandidates(source, 'out');
+  const targets = portCandidates(target, 'in');
   if (sources.length === 0 || targets.length === 0) {
     return undefined;
   }
@@ -140,7 +163,7 @@ export const nearestPort = (
 ): Port | undefined => {
   let best: Port | undefined;
   let bestDistance = Infinity;
-  for (const port of candidates(terminal, direction)) {
+  for (const port of portCandidates(terminal, direction)) {
     const value = distance2(portPoint(terminal.bounds, port), point);
     if (value < bestDistance) {
       bestDistance = value;
@@ -151,7 +174,10 @@ export const nearestPort = (
 };
 
 /** The ports an end may use: those accepting its direction, narrowed to the pinned one when it is among them. */
-const candidates = ({ ports, port }: PortTerminal, direction: Exclude<PortDirection, 'any'>): readonly Port[] => {
+export const portCandidates = (
+  { ports, port }: PortTerminal,
+  direction: Exclude<PortDirection, 'any'>,
+): readonly Port[] => {
   const allowed = ports.filter((candidate) => portAccepts(candidate, direction));
   if (port === undefined) {
     return allowed;

@@ -13,6 +13,7 @@ import { concat } from '@dxos/util';
 import { ProjectOperation } from '#types';
 
 import { findProject } from './find-project.ts';
+import { fenced, projectContext } from './task-brief.ts';
 
 /**
  * The verb the prompt tells the agent to call, named by operation key rather than by a host's tool
@@ -36,16 +37,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.CopyTaskPrompt> = P
     }),
   ),
 );
-
-/** The project's own instructions, which is what a session working in it would run with. */
-const projectContext = Effect.fnUntraced(function* (project: Project.Project) {
-  if (!project.instructions) {
-    return undefined;
-  }
-  const instructions = yield* Database.load(project.instructions);
-  const text = yield* Database.load(instructions.text);
-  return text.content.trim() || undefined;
-});
 
 type PromptInput = {
   task: Task.Task;
@@ -152,20 +143,6 @@ const renderPrompt = ({ task, project, context }: PromptInput): string => {
   );
 
   return lines.join('\n');
-};
-
-/**
- * Space content, wrapped so a reader can see where it begins and ends.
- *
- * The fence is longer than the longest backtick run the content holds, so content carrying a fence
- * of its own cannot close this one early and continue as if it were the prompt's own text — which
- * is the whole reason the block is delimited.
- */
-const fenced = (content: string[]): string[] => {
-  const text = content.join('\n');
-  const longest = Math.max(0, ...[...text.matchAll(/`+/g)].map((match) => match[0].length));
-  const fence = '`'.repeat(Math.max(3, longest + 1));
-  return [fence, text, fence];
 };
 
 export default handler;

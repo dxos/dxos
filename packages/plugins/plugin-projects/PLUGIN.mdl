@@ -39,8 +39,8 @@ test QA-1: Build a plugin with an agent in the desktop app
   given:
     - an identity exists
     - space: a space is open (the default "My Space" is fine)
-    - Composer is the desktop app, built from a commit of `main` that pkg.pr.new has published (every push to
-      `main` is), or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one
+    - Composer is the desktop app, built from a commit of `main` that pkg.pr.new has published (a deployed
+      build's commit is), or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one
     - Sandbox is enabled and its Backend is Local, the desktop app's default
     - no plugin named "World Clock" is loaded, and no "World Clock" project or sandbox is left from an earlier
       run (the flow's first setup step restores this)
@@ -81,4 +81,139 @@ test QA-1: Build a plugin with an agent in the desktop app
     - name: Uninstall World Clock
       do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
       expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+
+test QA-2: Build a plugin with an agent in the browser and install it from the private registry
+  desc: |
+    The browser variant of QA-1. The agent works the same parent task and four subtasks in a Sandbox on EDGE, and the
+    last one publishes the build with `dx registry publish --private`, authenticated by the account token the sandbox
+    was given when the agent created it. Nothing is loaded by URL: World Clock appears in Plugins → Registry, listed
+    only to this identity, and the reader installs it there. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/composer-plugin-registry.mjs`.
+  actors: both
+  status: verified
+  given:
+    - an identity exists and is associated with an account on the EDGE it talks to
+    - space: a space is open (the default "My Space" is fine)
+    - Composer is a production bundle (remote plugins install only from a bundle), built from a commit of `main` that
+      pkg.pr.new has published or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one, and with a `dx` that has
+      `registry publish --private` (`DX_PLUGIN_TOOLCHAIN_CLI` until a release carries it)
+    - EDGE runs registry-service with its `PLUGIN_REGISTRY_DB`, and the Assistant's model is one its ai-service serves
+    - no plugin named "World Clock" is installed, and no "World Clock" project is left from an earlier run
+  steps:
+    - name: Create a project from the Composer Plugin template
+      do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
+      capture: project
+      expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
+    - name: Assign the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+      expect: the delegated chat holds the parent and its four subtasks and is working
+    - name: Wait for the agent to publish the plugin
+      do: Watch the subtasks tick off.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox" }
+      capture: sandboxes
+      expect: |
+        a sandbox exists whose credentials export DX_API_TOKEN, all five tasks are finished, and the chat shows an
+        `Uploaded: <edge>/registry/private/modules/…/manifest.json` line
+      assert: return $result.results.length === 1
+      note: |
+        Creating the sandbox mints the token; no one grants it by hand. The template's publish step only asks for
+        "Grant account access" when the token is missing. The delegated brief asks for sign-off, so the agent may
+        leave the tasks in `review` rather than `done`.
+    - name: Install World Clock from the registry
+      do: Open Plugins, then Registry, find the World Clock card and click Install.
+      expect: World Clock is listed without being loaded by URL, and installing it enables and activates it
+    - name: Open the Clocks page and add two timezones
+      do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
+      expect: the page shows the map above three ticking clock cards and the plus card
+
+test QA-3: Read a project's tasks as details
+  desc: |
+    A project's task list opens each task as the project plank's detail. With the deck flattened (the default)
+    the task shows in a companion tab beside the project. Clicking an attachment card in the task moves the task
+    into the main plank and shows the file beside it, and the breadcrumb goes back.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists, with a space open
+    - the deck is flattened (Settings → Deck), the default
+    - a "Roastery Ops" project whose Tasks tab holds "Write a maintenance checklist for both roasters", with an
+      image attached, and "Hire a part-time roastery assistant" (the flow's setup step creates them)
+  steps:
+    - name: Open the project's tasks
+      do: Open the "Roastery Ops" project and its Tasks tab.
+      expect: the project fills the main plank and nothing is open beside it
+    - name: Open a task
+      do: Click "Write a maintenance checklist for both roasters".
+      expect: the task opens in a "Task" tab beside the project, and the project stays in the main plank
+    - name: Open the task's attachment
+      do: Click the attachment's card in the task.
+      expect: |
+        the task moves into the main plank with "Roastery Ops" in its breadcrumb, and the image opens in a "File"
+        tab beside it
+    - name: Go back to the project
+      do: Click "Roastery Ops" in the breadcrumb.
+      expect: the project is in the main plank again and the task is back in the "Task" tab beside it
+    - name: Open another task
+      do: Click "Hire a part-time roastery assistant".
+      expect: it replaces the first task in the "Task" tab, and the first task and its attachment are closed
+    - name: Open a task in its own plank
+      do: Cmd-click "Write a maintenance checklist for both roasters".
+      expect: |
+        the task opens in the main plank with "Roastery Ops" in its breadcrumb, and its attachment is not open
+        beside it
+
+test QA-4: Plan a project and hand its tasks to an agent
+  desc: |
+    The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
+    one in, and select tasks for the agent. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
+    needed.
+  actors: human
+  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a project
+      do: Click "Add to space", choose Project, title it "Roastery Ops", pick the Default template and click Save.
+      capture: project
+      expect: the project opens on its Overview tab, with the default agent instructions, and joins the navtree
+        under Projects
+    - name: Brief the project's agent
+      do: Type a description, then add a line to the Instructions.
+      expect: both fields keep what was typed
+    - name: Break the work into tasks
+      do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
+        from the Add task row, pressing Enter after each.
+      expect: the three tasks list in the order added
+    - name: Fill in a task
+      do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
+      expect: |
+        the task opens in a "Task" tab beside the project, and its Activity records the priority and status
+        changes
+    - name: Select tasks for the agent
+      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
+      expect: the two rows are selected and the button is enabled
+      note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+
+test QA-5: Showcase clip
+  desc: |
+    The 20s showcase clip: Open a task of the Chess MCP on Workers project, then tick it and send it to the agent. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: projects` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-debug, plugin-projects enabled
+  steps:
+    - name: Create the space from its template
+      do: Enable plugin-debug, create the Chess MCP on Workers space, and open its project on Tasks.
+      expect: the task tree shows
+    - name: Open a task
+      do: Click the first task.
+      expect: the task's properties open
+    - name: Send it to the agent
+      do: Tick the first task and click Send to agent.
+      expect: the Gantt panel opens
 ```

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Ref, Tag, Type } from '@dxos/echo';
+import { Geo } from '@dxos/types';
 
 /**
  * Shared test schemas for form stories. Intentionally small, hand-written types
@@ -23,16 +24,13 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
     active: Schema.optional(Schema.Boolean.annotate({ title: 'Active' })),
     name: Schema.String.pipe(Schema.check(Schema.isMinLength(1))).annotate({ title: 'Full name' }),
     hidden: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))), // Don't render.
-    address: Schema.optional(
-      Schema.Struct({
-        street: Schema.String,
-        city: Schema.String,
-        state: Schema.String.pipe(Schema.check(Schema.isMinLength(2)), Schema.check(Schema.isMaxLength(2))).annotate({
-          title: 'State',
-          description: 'State code',
-        }),
-        zip: Schema.Number.annotate({ title: 'ZIP Code' }),
-      }).annotate({ title: 'Address' }),
+    address: Schema.optional(Geo.PostalAddress.annotate({ title: 'Address' })),
+    // A string: ZIP codes keep leading zeros and may carry the +4 suffix.
+    zip: Schema.optional(
+      Schema.String.pipe(Schema.check(Schema.isPattern(/^\d{5}(-\d{4})?$/))).annotate({
+        title: 'ZIP Code',
+        description: 'Five digits, optionally followed by a dash and four more.',
+      }),
     ),
     employer: Schema.optional(Ref.Ref(Organization).annotate({ title: 'Employer' })),
     tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotate({ title: 'Tags' })),

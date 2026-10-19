@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Show.tsx';
-export * from './Switch.tsx';
+export * as Match from './Match.tsx';
+export * as Show from './Show.tsx';

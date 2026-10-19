@@ -1,51 +1,73 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import '../../theme/index.css';
 
-import { withTheme } from '../../testing/index.ts';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { expect, within } from 'storybook/test';
+
+import { SIZES } from '../../sizes.ts';
+import { GEOMETRY, sizeRow } from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { Skeleton } from './Skeleton.tsx';
 
-export default {
+/** A placeholder for a contact row: avatar, name and a line of description, then a block-tall action. */
+const DefaultStory = () => (
+  <>
+    <div className='flex gap-2'>
+      <Skeleton variant='circle' data-testid='circle' />
+      <div className='flex flex-col grow'>
+        <Skeleton variant='text' classNames='w-2/3' data-testid='text' />
+        <Skeleton variant='text' classNames='w-1/3' />
+      </div>
+    </div>
+    <Skeleton data-testid='default' />
+  </>
+);
+
+const meta = {
   title: 'ui/react-ui-core/components/Skeleton',
-  component: Skeleton,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
+  render: DefaultStory,
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+} satisfies Meta<SizeArgs>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+/** Shapes follow the size's block and line metrics, pulse, and are hidden from assistive tech. */
+export const Test: Story = {
+  args: { allSizes: true },
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const canvas = within(sizeRow(canvasElement, size));
+      const { block } = GEOMETRY[size];
+
+      const bar = canvas.getByTestId('default');
+      await expect(bar).toHaveAttribute('aria-hidden', 'true');
+      await expect(bar.getBoundingClientRect().height).toBeCloseTo(block, 0);
+      await expect(getComputedStyle(bar).animationName).toBe('dx-skeleton-pulse');
+
+      const circle = canvas.getByTestId('circle').getBoundingClientRect();
+      await expect(circle.width).toBeCloseTo(block, 0);
+      await expect(circle.height).toBeCloseTo(block, 0);
+
+      // A text bar is shorter than the block and centred in its line by equal margins.
+      const text = canvas.getByTestId('text');
+      const style = getComputedStyle(text);
+      const height = text.getBoundingClientRect().height;
+      await expect(height).toBeGreaterThan(0);
+      await expect(height).toBeLessThan(block);
+      await expect(parseFloat(style.marginTop)).toBeGreaterThan(0);
+      await expect(style.marginTop).toBe(style.marginBottom);
+    }
   },
-};
-
-export const Default = {
-  render: () => (
-    <div className='flex flex-col gap-4 p-4 border border-separator rounded-xs'>
-      <div className='flex w-fit items-center gap-4'>
-        <Skeleton classNames='size-10 shrink-0 rounded-full' />
-        <div className='grid gap-2'>
-          <Skeleton classNames='h-4 w-[150px]' />
-          <Skeleton classNames='h-4 w-[100px]' />
-        </div>
-      </div>
-    </div>
-  ),
-};
-
-export const Card = {
-  render: () => (
-    <div className='flex flex-col gap-3 w-96 p-4 border border-separator rounded-xs'>
-      <div className='flex items-center gap-3'>
-        <Skeleton variant='circle' classNames='h-12 w-12 rounded-full' />
-        <div className='flex flex-col gap-2 flex-1'>
-          <Skeleton classNames='h-4 w-24' />
-          <Skeleton classNames='h-3 w-32' />
-        </div>
-      </div>
-      <Skeleton classNames='h-32 w-full rounded-sm' />
-      <div className='flex flex-col gap-2'>
-        <Skeleton classNames='h-3 w-full' />
-        <Skeleton classNames='h-3 w-5/6' />
-        <Skeleton classNames='h-3 w-4/6' />
-      </div>
-    </div>
-  ),
 };

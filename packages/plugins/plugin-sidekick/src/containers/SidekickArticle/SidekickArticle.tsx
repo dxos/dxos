@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Column } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { ActionItems, DayAhead, Permissions, ProfileGrid, ProfileSummary } from '#components';
 import { Sidekick } from '#types';
@@ -14,15 +14,15 @@ export type SidekickArticleProps = AppSurface.ObjectArticleProps<Sidekick.Profil
 
 export const SidekickArticle = ({ role, subject: _sidekick, attendableId: _attendableId }: SidekickArticleProps) => {
   return (
-    <Column.Root role={role}>
-      <Column.Center>
+    <Layout.Container role={role} gutter='lg'>
+      <div>
         <DayAhead />
         <ActionItems items={[]} />
         <ProfileGrid profiles={[]} />
         <ProfileSummary />
         <Permissions entries={[]} />
-      </Column.Center>
-    </Column.Root>
+      </div>
+    </Layout.Container>
   );
 };
 

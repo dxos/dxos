@@ -9,7 +9,7 @@ import { userEvent } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { runCommand, waitForTerminal } from '@dxos/react-ui-terminal/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,7 @@ const meta = {
       // No setup event: the panel fires `CommandsRequested` itself, which is what pulls the
       // plugins' command modules in — the same path the app takes.
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         // The identity brings a default space, which is what the commands resolve against.
         ClientPlugin.make({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
         StorybookPlugin.make({}),

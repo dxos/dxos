@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -23,7 +23,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { DraftMessage, Event, Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
-import { Position, kebabize } from '@dxos/util';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
@@ -80,6 +80,70 @@ export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
   Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
+const CALENDAR_FILTER_TYPE = `${calendarTypename}-filter`;
+
+type SavedFilter = { name: string; filter: string };
+
+/**
+ * A saved view per entry of the owner's `filters`: a child node carrying the owner as data (so the
+ * owner's article renders it) and the query as its `filter` property, with rename/delete actions.
+ */
+const makeSavedFilterNodes = (
+  owner: Mailbox.Mailbox | Calendar.Calendar,
+  filters: readonly SavedFilter[] | undefined,
+  type: string,
+) =>
+  (filters ?? []).map(({ name, filter }) =>
+    AppGraphNode.make({
+      id: `filter-${kebabize(name)}`,
+      type,
+      data: owner,
+      properties: {
+        label: name,
+        icon: 'ph--funnel--regular',
+        iconHue: 'rose',
+        filter,
+      },
+      actions: [
+        AppGraphNode.makeAction({
+          id: 'rename-filter',
+          data: (params?: AppGraphNode.InvokeProps) =>
+            Operation.invoke(InboxOperation.RenameFilter, {
+              owner,
+              name,
+              caller: `${params?.caller}:${params?.parent?.id}`,
+            }),
+          properties: {
+            label: ['rename-filter.label', { ns: meta.profile.key }],
+            icon: 'ph--pencil-simple--regular',
+            disposition: 'list-item',
+          },
+        }),
+        AppGraphNode.makeAction({
+          id: 'delete-filter',
+          data: () =>
+            Effect.sync(() => {
+              Obj.update(owner, (owner) => {
+                const filters = owner.filters;
+                if (!filters) {
+                  return;
+                }
+                for (let index = filters.length - 1; index >= 0; index--) {
+                  if (filters[index].name === name) {
+                    filters.splice(index, 1);
+                  }
+                }
+              });
+            }),
+          properties: {
+            label: ['delete-filter.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            disposition: 'list-item',
+          },
+        }),
+      ],
+    }),
+  );
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -238,52 +302,7 @@ export default Capability.makeModule(
                           mailbox,
                         },
                       }),
-                      ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
-                        AppGraphNode.make({
-                          id: `filter-${kebabize(name)}`,
-                          type: FILTER_TYPE,
-                          data: mailbox,
-                          properties: {
-                            label: name,
-                            icon: 'ph--funnel--regular',
-                            iconHue: 'rose',
-                            filter,
-                          },
-                          actions: [
-                            AppGraphNode.makeAction({
-                              id: 'rename-filter',
-                              data: (params?: AppGraphNode.InvokeProps) =>
-                                Operation.invoke(InboxOperation.RenameFilter, {
-                                  mailbox,
-                                  name,
-                                  caller: `${params?.caller}:${params?.parent?.id}`,
-                                }),
-                              properties: {
-                                label: ['rename-filter.label', { ns: meta.profile.key }],
-                                icon: 'ph--pencil-simple--regular',
-                                disposition: 'list-item',
-                              },
-                            }),
-                            AppGraphNode.makeAction({
-                              id: 'delete-filter',
-                              data: () =>
-                                Effect.sync(() => {
-                                  Obj.update(mailbox, (mailbox) => {
-                                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                                    if (index >= 0) {
-                                      mailbox.filters.splice(index, 1);
-                                    }
-                                  });
-                                }),
-                              properties: {
-                                label: ['delete-filter.label', { ns: meta.profile.key }],
-                                icon: 'ph--trash--regular',
-                                disposition: 'list-item',
-                              },
-                            }),
-                          ],
-                        }),
-                      ) ?? []),
+                      ...makeSavedFilterNodes(mailbox, mailboxSnapshot.filters, FILTER_TYPE),
                     ],
               });
             }),
@@ -308,12 +327,15 @@ export default Capability.makeModule(
             AppGraphNode.makeAction({
               id: 'createDraft',
               data: () =>
-                Operation.invoke(InboxOperation.DraftEmailAndOpen, {
-                  db,
-                  mailbox,
-                  // This action hangs off the Drafts view, so the draft opens as a plank beside it.
-                  contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
-                }),
+                Operation.invoke(
+                  InboxOperation.DraftEmailAndOpen,
+                  {
+                    mailbox,
+                    // This action hangs off the Drafts view, so the draft opens as a plank beside it.
+                    contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
+                  },
+                  { spaceId: db.spaceId },
+                ),
               properties: {
                 label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
@@ -322,25 +344,6 @@ export default Capability.makeModule(
             }),
           ]);
         },
-      }),
-
-      // A "Message" companion on every mailbox: the slot a row's detail opens into where the deck has
-      // room beside the list, so reading a message keeps the mailbox in front of the reader. One
-      // fixed slot — which message it shows is the list's own selection, read by the surface.
-      AppGraphBuilder.createExtension({
-        id: 'mailboxMessageCompanion',
-        relation: AppNode.companion,
-        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'message',
-              label: ['message-companion.label', { ns: meta.profile.key }],
-              icon: 'ph--envelope-open--regular',
-              data: 'message',
-              position: Position.first,
-            }),
-          ]),
       }),
 
       // Every message in a mailbox's feed, plus its in-progress local drafts, as a hidden child of the
@@ -406,6 +409,7 @@ export default Capability.makeModule(
                 properties: {
                   label: attachment.name ?? 'Attachment',
                   icon: 'ph--paperclip--regular',
+                  [AppNode.TYPE_LABEL_PROPERTY]: ['attachment-type.label', { ns: meta.profile.key }],
                   disposition: 'hidden',
                 },
               }),
@@ -448,6 +452,16 @@ export default Capability.makeModule(
             typename: calendarTypename,
             targetNodeId: getCalendarsPath(space.db.spaceId),
           }),
+      }),
+
+      // A calendar's saved views (see `Calendar.filters`), as children of the calendar's own node only —
+      // not of its saved views, which share the calendar as data.
+      AppGraphBuilder.createExtension({
+        id: 'calendarFilters',
+        match: (node) =>
+          node.type === calendarTypename && Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
+        connector: (calendar, get) =>
+          Effect.succeed(makeSavedFilterNodes(calendar, get(Obj.atom(calendar)).filters, CALENDAR_FILTER_TYPE)),
       }),
 
       // Every event in a calendar's feed, plus its local draft events, as a hidden child of the

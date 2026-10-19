@@ -2,229 +2,118 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { mx } from '@dxos/ui-theme';
-
+import { sizeRow } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { Focus } from './Focus.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Focus from './Focus.tsx';
+import { useFocus } from './FocusContext.ts';
 
-type Item = { id: string; label: string };
+type StoryArgs = SizeArgs & Pick<Focus.GroupProps, 'orientation' | 'border'>;
 
-const ITEMS: Item[] = [
-  { id: '1', label: 'Item 1' },
-  { id: '2', label: 'Item 2' },
-  { id: '3', label: 'Item 3' },
-  { id: '4', label: 'Item 4' },
-  { id: '5', label: 'Item 5' },
-];
+const ITEMS = ['Inbox', 'Drafts', 'Sent', 'Archive'];
 
-const itemClassName = 'flex items-center gap-3 px-3 py-2 aria-current:bg-neutral-75 dark:aria-current:bg-neutral-800';
-
-const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+/** A member that colours its group's ring, as a drop target does while dragged over. */
+const Reporter = () => {
+  const { setFocus } = useFocus();
   return (
-    <div className='dx-expand grid grid-cols-[1fr_2fr_1fr]'>
-      <div className='border-e border-separator' />
-      <div className='dx-expand grid grid-rows-[1fr_2fr_1fr]'>
-        <div className='border-b border-separator' />
-        <div className={mx('h-full flex flex-col gap-2', classNames)}>{children}</div>
-        <div className='border-t border-separator' />
-      </div>
-      <div className='border-s border-separator' />
-    </div>
+    <Group>
+      <Button label='Active' onClick={() => setFocus?.('active')} />
+      <Button label='Error' onClick={() => setFocus?.('error')} />
+      <Button label='Clear' onClick={() => setFocus?.(undefined)} />
+    </Group>
   );
 };
 
-const Text = ({ children }: PropsWithChildren) => {
-  return <p className='p-1 text-sm text-subdued'>{children}</p>;
-};
-
-//
-// Default (vertical list)
-//
-
-const DefaultStory = () => {
-  const [current, setCurrent] = useState<string | undefined>('1');
-
+const DefaultStory = ({ orientation, border }: StoryArgs) => {
+  const [current, setCurrent] = useState<string>();
   return (
-    <Container>
-      <Text>Tab into the group, then use arrow keys to navigate. Press Enter to select.</Text>
-      <Focus.Group classNames='h-full'>
+    <>
+      <Focus.Group
+        orientation={orientation}
+        border={border}
+        classNames={orientation === 'horizontal' ? 'flex' : 'flex flex-col'}
+        data-testid='group'
+      >
         {ITEMS.map((item) => (
           <Focus.Item
-            key={item.id}
-            current={current === item.id}
-            onCurrentChange={() => setCurrent(item.id)}
-            classNames={itemClassName}
+            key={item}
+            current={current === item}
+            onCurrentChange={() => setCurrent(item)}
+            classNames='p-2 aria-current:bg-current-surface'
+            data-testid={`item-${item}`}
           >
-            <span className='size-2 bg-primary-500 opacity-0 aria-[current]:opacity-100' />
-            <span>{item.label}</span>
+            {item}
           </Focus.Item>
         ))}
+        <Reporter />
       </Focus.Group>
-      <Text>Selected: {current ?? 'none'}</Text>
-    </Container>
+      <Typography.Text data-testid='current'>Current: {current ?? 'none'}</Typography.Text>
+    </>
   );
 };
 
-//
-// Horizontal group
-//
-
-const HorizontalStory = () => {
-  const [current, setCurrent] = useState<string | undefined>();
-
-  return (
-    <Container>
-      <Text>Horizontal arrow-key navigation between cards.</Text>
-      <Focus.Group classNames='h-full flex flex-row gap-2 items-center justify-center' orientation='horizontal'>
-        {ITEMS.map((item) => (
-          <Focus.Item
-            key={item.id}
-            current={current === item.id}
-            onCurrentChange={() => setCurrent(item.id)}
-            classNames='flex flex-col items-center justify-center w-20 h-20 border border-separator aria-current:border-primary-500 aria-current:bg-primary-50 dark:aria-current:bg-primary-900/20 cursor-pointer'
-          >
-            <span className='text-xs mt-1'>{item.label}</span>
-          </Focus.Item>
-        ))}
-      </Focus.Group>
-      <Text>Selected: {current ?? 'none'}</Text>
-    </Container>
-  );
-};
-
-//
-// Grid (demonstrates border prop and overflow-hidden clipping)
-//
-
-const GridCell = ({ border, items }: { border?: boolean; items: Item[] }) => {
-  const [current, setCurrent] = useState<string | undefined>();
-  return (
-    <div className='overflow-hidden dx-base-surface'>
-      <Focus.Group classNames='h-full' border={border}>
-        {items.map((item) => (
-          <Focus.Item
-            key={item.id}
-            current={current === item.id}
-            onCurrentChange={() => setCurrent(item.id)}
-            classNames={itemClassName}
-          >
-            <span>{item.label}</span>
-          </Focus.Item>
-        ))}
-      </Focus.Group>
-    </div>
-  );
-};
-
-const GridStory = () => {
-  return (
-    <div className='p-8 space-y-8'>
-      <Text>Tab between groups to compare. Each cell has overflow-hidden.</Text>
-
-      {/* Default vs border. */}
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <p className='text-xs font-mono text-subdued'>Default (invisible until focused)</p>
-          <div className='h-48'>
-            <GridCell items={ITEMS} />
-          </div>
-        </div>
-        <div className='space-y-2'>
-          <p className='text-xs font-mono text-subdued'>border (always visible)</p>
-          <div className='h-48'>
-            <GridCell border items={ITEMS} />
-          </div>
-        </div>
-      </div>
-
-      {/* Tight grid — border. */}
-      <p className='text-xs font-mono text-subdued'>Tight grid — border</p>
-      <div className='grid grid-cols-3'>
-        {[0, 1, 2].map((col) => (
-          <div key={col} className='overflow-hidden'>
-            <GridCell border items={ITEMS.slice(0, 3)} />
-          </div>
-        ))}
-      </div>
-
-      {/* Tight grid — default. */}
-      <p className='text-xs font-mono text-subdued'>Tight grid — default</p>
-      <div className='grid grid-cols-3'>
-        {[0, 1, 2].map((col) => (
-          <div key={col} className='overflow-hidden'>
-            <GridCell items={ITEMS.slice(0, 3)} />
-          </div>
-        ))}
-      </div>
-
-      {/* Item-level border. */}
-      <p className='text-xs font-mono text-subdued'>Item-level border</p>
-      <div className='h-48 overflow-hidden'>
-        <Focus.Group classNames='h-full'>
-          {ITEMS.slice(0, 3).map((item) => (
-            <Focus.Item key={item.id} border classNames={itemClassName}>
-              <span>{item.label}</span>
-            </Focus.Item>
-          ))}
-        </Focus.Group>
-      </div>
-
-      {/* Error state. */}
-      <p className='text-xs font-mono text-subdued'>Error state</p>
-      <div className='h-48 overflow-hidden'>
-        <Focus.Group classNames='h-full' data-focus-state='error'>
-          {ITEMS.slice(0, 3).map((item) => (
-            <Focus.Item key={item.id} classNames={itemClassName}>
-              <span>{item.label}</span>
-            </Focus.Item>
-          ))}
-        </Focus.Group>
-      </div>
-    </div>
-  );
-};
-
-//
-// asChild (slot) usage
-//
-
-const AsChildStory = () => {
-  const [current, setCurrent] = useState<string | undefined>();
-
-  return (
-    <Container>
-      <Text>Focus.Item rendered as a custom element via asChild.</Text>
-      <Focus.Group classNames='h-full'>
-        {ITEMS.slice(0, 3).map((item) => (
-          <Focus.Item key={item.id} asChild current={current === item.id} onCurrentChange={() => setCurrent(item.id)}>
-            <button className='flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-neutral-75 dark:hover:bg-neutral-800 aria-current:bg-primary-50 dark:aria-current:bg-primary-900/20 aria-current:text-primary-600'>
-              <span>{item.label}</span>
-            </button>
-          </Focus.Item>
-        ))}
-      </Focus.Group>
-    </Container>
-  );
-};
-
-//
-// Meta
-//
-
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-core/components/Focus',
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-};
+  render: DefaultStory,
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md', orientation: 'vertical', border: true },
+  argTypes: { ...SIZE_ARG_TYPES, orientation: { control: 'radio', options: ['vertical', 'horizontal'] } },
+  parameters: { layout: 'centered' },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: DefaultStory };
-export const Horizontal: Story = { render: HorizontalStory };
-export const Grid: Story = { render: GridStory };
-export const AsChild: Story = { render: AsChildStory };
+export const Default: Story = {};
+
+/** The group is one tab stop with arrow navigation; Enter makes an item current; members colour the ring. */
+export const Test: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const group = canvas.getByTestId('group');
+    const ring = (element: HTMLElement) => getComputedStyle(element, '::after').boxShadow;
+
+    // `border` shows a 1px edge at rest.
+    await expect(ring(group)).toContain('1px');
+
+    // Tab lands on the group and shows the ring.
+    await userEvent.tab();
+    await expect(group).toHaveFocus();
+    await expect(ring(group)).toContain('2px');
+
+    // Arrow keys move between items, which take the ring in turn.
+    await userEvent.keyboard('{Enter}');
+    const inbox = canvas.getByTestId('item-Inbox');
+    await waitFor(() => expect(inbox).toHaveFocus());
+    await expect(ring(inbox)).toContain('2px');
+    await userEvent.keyboard('{ArrowDown}');
+    const drafts = canvas.getByTestId('item-Drafts');
+    await waitFor(() => expect(drafts).toHaveFocus());
+
+    // Enter makes the focused item current.
+    await userEvent.keyboard('{Enter}');
+    await expect(drafts).toHaveAttribute('aria-current', 'true');
+    await expect(inbox).not.toHaveAttribute('aria-current');
+    await expect(canvas.getByTestId('current')).toHaveTextContent('Current: Drafts');
+
+    // A click also makes an item current.
+    await userEvent.click(canvas.getByTestId('item-Sent'));
+    await expect(canvas.getByTestId('item-Sent')).toHaveAttribute('aria-current', 'true');
+
+    // A member's reported state colours the group's ring.
+    await userEvent.click(canvas.getByRole('button', { name: 'Error' }));
+    await expect(group).toHaveAttribute('data-focus-state', 'error');
+    await userEvent.click(canvas.getByRole('button', { name: 'Clear' }));
+    await expect(group).not.toHaveAttribute('data-focus-state');
+  },
+};

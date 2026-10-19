@@ -1,5 +1,79 @@
 # @dxos/proto-guard
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/client@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/node-std@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [1e9c017]
+- Updated dependencies [37edd53]
+  - @dxos/async@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/client@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/node-std@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [8980a93]
+  - @dxos/client@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/node-std@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [86d1482]
+- Updated dependencies [3b78bb6]
+- Updated dependencies [a069511]
+- Updated dependencies [5df602e]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [577b434]
+- Updated dependencies [7d04444]
+- Updated dependencies [881f900]
+- Updated dependencies [75d9c7c]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [608a172]
+- Updated dependencies [ce194c0]
+- Updated dependencies [9d2466a]
+- Updated dependencies [df22dec]
+- Updated dependencies [5959b41]
+- Updated dependencies [139a3b0]
+- Updated dependencies [a5dfa5e]
+- Updated dependencies [c4188a6]
+- Updated dependencies [9996125]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [dd039d2]
+- Updated dependencies [adcad97]
+- Updated dependencies [56276cd]
+- Updated dependencies [0280a6a]
+- Updated dependencies [4da1052]
+  - @dxos/client@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

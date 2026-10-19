@@ -21,7 +21,7 @@ import {
 import { raise } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
@@ -66,6 +66,7 @@ import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
 import {
   SpaceArchiveWriter,
+  collectFeedMessages,
   detectSpaceArchiveFormat,
   extractSpaceArchive,
   objJsonToObjectStructure,
@@ -395,8 +396,13 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
 
         const format = request.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY;
-        if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
-          const archive = await writeSerializedSpaceArchive({ space, echoHost: this._echoHost });
+        // A binary archive holds whole automerge documents, which cannot be narrowed to a few feeds.
+        if (format === SpacesService.SpaceArchiveFormat.enums.JSON || request.feedIds) {
+          const archive = await writeSerializedSpaceArchive({
+            space,
+            echoHost: this._echoHost,
+            ...(request.feedIds ? { feedIds: request.feedIds } : {}),
+          });
           return { archive };
         }
 
@@ -445,6 +451,20 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const dataSpaceManager = await this._getDataSpaceManager();
 
         const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
+        if (request.targetSpaceId) {
+          assertArgument(
+            format === SpacesService.SpaceArchiveFormat.enums.JSON,
+            'archive',
+            'Only a JSON archive can be imported into an existing space',
+          );
+          assertArgument(SpaceId.isValid(request.targetSpaceId), 'targetSpaceId', 'Invalid space ID');
+          const target =
+            dataSpaceManager.getSpaceById(request.targetSpaceId) ?? raise(new Error('Target space not found'));
+          await this._hydrateSpaceFromSerialized(target, readSerializedSpaceArchive(request.archive), {
+            merge: true,
+          });
+          return { newSpaceId: target.id };
+        }
         if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
           const serialized = readSerializedSpaceArchive(request.archive);
           const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
@@ -477,6 +497,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   private async '_hydrateSpaceFromSerialized'(
     space: DataSpace,
     serialized: ReturnType<typeof readSerializedSpaceArchive>,
+    { merge = false }: { merge?: boolean } = {},
   ): Promise<void> {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
@@ -486,17 +507,30 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         doc.objects = {};
       }
       for (const obj of serialized.objects) {
+        // Merging into a live space keeps its own copy of an object the archive also holds, whether it is inline in
+        // the root document or in a linked document of its own.
+        if (merge && (doc.objects[obj.id] || doc.links?.[obj.id])) {
+          continue;
+        }
         doc.objects[obj.id] = objJsonToObjectStructure(obj);
       }
     });
 
     for (const feed of serialized.feeds ?? []) {
-      if (feed.messages.length === 0) {
+      const namespace =
+        feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+      const held = merge
+        ? new Set(
+            (await collectFeedMessages(this._echoHost, space.id, feed.feedObjectId, feed.namespace)).map(
+              (message) => message.id,
+            ),
+          )
+        : new Set<string>();
+      const messages = feed.messages.filter((message) => !held.has(message.id));
+      if (messages.length === 0) {
         continue;
       }
 
-      const namespace =
-        feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       try {
         // Handlers are served, not called directly; bridge to a client in-process for this write.
         const feedService = this._echoHost.feedService;
@@ -507,11 +541,15 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
               spaceId: space.id,
               feedId: feed.feedObjectId,
               subspaceTag: namespace,
-              objects: feed.messages.map((message) => JSON.stringify(message)),
+              objects: messages.map((message) => JSON.stringify(message)),
             });
           }).pipe(Effect.scoped),
         );
       } catch (err) {
+        // A merge into an existing space must fail rather than report success with messages missing.
+        if (merge) {
+          throw err;
+        }
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
       }
     }

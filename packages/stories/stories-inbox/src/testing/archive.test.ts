@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex } from '@dxos/schema';

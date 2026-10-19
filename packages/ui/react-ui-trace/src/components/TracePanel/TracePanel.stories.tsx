@@ -25,7 +25,7 @@ const messages = (subAgentDelegationFixture as unknown as Trace.Message[])
   .sort((a, b) => (a.events[0]?.timestamp ?? 0) - (b.events[0]?.timestamp ?? 0));
 
 /** One process per top-level pid in the fixture, so the tree has something to pick. */
-const processes: Process.Info[] = [...new Set(messages.map((message) => message.meta.pid))]
+const processes: Process.Process[] = [...new Set(messages.map((message) => message.meta.pid))]
   .filter((pid): pid is string => pid !== undefined)
   .map((pid, index) => {
     const own = messages.filter((message) => message.meta.pid === pid);

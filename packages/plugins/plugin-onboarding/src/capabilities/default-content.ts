@@ -34,9 +34,7 @@ export default Capability.makeModule(
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
-    const {
-      AppAnnotation: { RootCollectionAnnotation },
-    } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+    const { RootCollectionAnnotation } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit/AppAnnotation'));
 
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;

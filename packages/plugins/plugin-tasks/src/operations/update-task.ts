@@ -99,9 +99,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
 
 /**
- * A task with sub-tasks is one unit of work that lands in one PR, so claiming any task in the tree —
- * assigning it, or starting it — claims the root and every descendant with it; otherwise a sub-task
- * can be picked up by a second session and shipped on its own.
+ * A task with sub-tasks is one unit of work, so claiming any task in the tree — assigning it, or
+ * starting it — claims the root and every descendant with it; otherwise a sub-task can be picked up
+ * by a second session working against the first.
  */
 const cascadeClaim = Effect.fnUntraced(function* (
   task: Task.Task,

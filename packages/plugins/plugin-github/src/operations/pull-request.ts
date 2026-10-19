@@ -82,6 +82,7 @@ export const toCheckRun = (run: GitHubApi.GitHubCheckRun): GitHubOperation.Check
             : 'success';
   const url = run.details_url ?? run.html_url;
   return {
+    ...(run.id !== undefined ? { id: run.id } : {}),
     name: run.name,
     outcome,
     ...(run.conclusion ? { conclusion: run.conclusion } : {}),
@@ -109,4 +110,33 @@ export const summarizeCheckRuns = (
   const ci: GitHubOperation.CiState =
     checks.total === 0 ? 'none' : checks.failed > 0 ? 'failure' : checks.pending > 0 ? 'pending' : 'success';
   return { ci, checks };
+};
+
+/** Review states that set a reviewer's standing verdict; a comment leaves the previous one in place. */
+const VERDICT_STATES = new Set(['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED']);
+
+/**
+ * Folds a pull request's reviews into where they stand, from each reviewer's latest verdict — the
+ * way GitHub reads them: a later approval clears that reviewer's request for changes, and a dismissal
+ * withdraws whichever verdict it replaced.
+ */
+export const summarizeReviews = (
+  reviews: readonly GitHubApi.GitHubSubmittedReview[],
+): { review: GitHubOperation.ReviewState; approvals: number } => {
+  const verdicts = new Map<string, string>();
+  for (const review of reviews) {
+    const login = review.user?.login;
+    if (login && VERDICT_STATES.has(review.state)) {
+      verdicts.set(login, review.state);
+    }
+  }
+
+  const states = [...verdicts.values()];
+  const approvals = states.filter((state) => state === 'APPROVED').length;
+  const review: GitHubOperation.ReviewState = states.includes('CHANGES_REQUESTED')
+    ? 'changes_requested'
+    : approvals > 0
+      ? 'approved'
+      : 'none';
+  return { review, approvals };
 };

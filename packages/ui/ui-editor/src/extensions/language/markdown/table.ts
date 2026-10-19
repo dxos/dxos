@@ -45,39 +45,34 @@ const update = (state: EditorState, _options: TableOptions) => {
 
   const tables: Table[] = [];
   const getTable = () => tables[tables.length - 1];
-  const getRow = () => {
-    const table = getTable();
-    return table.rows?.[table.rows.length - 1];
-  };
 
-  // Parse table.
+  // Parse table. Cells are split from each row's text rather than read from `TableCell` nodes, which the GFM parser
+  // omits for empty cells (so an empty header or value would shift the columns after it).
   syntaxTree(state).iterate({
     enter: (node) => {
-      // Check if cursor is inside text.
       switch (node.name) {
         case 'Table': {
           tables.push({ from: node.from, to: node.to });
           break;
         }
         case 'TableHeader': {
-          getTable().header = [];
-          break;
+          getTable().header = splitRow(state.sliceDoc(node.from, node.to));
+          return false;
         }
         case 'TableRow': {
-          (getTable().rows ??= []).push([]);
-          break;
-        }
-        case 'TableCell': {
-          const row = getRow();
-          if (row) {
-            row.push(state.sliceDoc(node.from, node.to));
-          } else {
-            getTable().header?.push(state.sliceDoc(node.from, node.to));
-          }
-          break;
+          (getTable().rows ??= []).push(splitRow(state.sliceDoc(node.from, node.to)));
+          return false;
         }
       }
     },
+  });
+
+  // Every row has the table's full column count, so a short row still lines up.
+  tables.forEach((table) => {
+    const columns = Math.max(table.header?.length ?? 0, ...(table.rows ?? []).map((row) => row.length));
+    const pad = (row: string[]) => [...row, ...Array<string>(Math.max(0, columns - row.length)).fill('')];
+    table.header = table.header && pad(table.header);
+    table.rows = table.rows?.map(pad);
   });
 
   tables.forEach((table) => {
@@ -104,6 +99,15 @@ const update = (state: EditorState, _options: TableOptions) => {
   });
 
   return builder.finish();
+};
+
+/** A row's cells: the text between unescaped pipes, without the optional leading and trailing pipe. */
+const splitRow = (text: string): string[] => {
+  const trimmed = text
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/(?<!\\)\|$/, '');
+  return trimmed.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, '|'));
 };
 
 /** Renders cell text into el, processing inline markdown (bold, italic, code). */

@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns';
-import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, createContext, useCallback, useContext, useEffect } from 'react';
 
 import {
   type CancellableInvitationObservable,
@@ -11,19 +11,14 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import {
-  Avatar,
-  type AvatarContentProps,
-  Button,
-  IconButton,
-  SystemIconButton,
-  type ThemedClassName,
-  Tooltip,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { getSize, mx } from '@dxos/ui-theme';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -34,7 +29,7 @@ export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
   onClickRemove?: (invitation: CancellableInvitationObservable) => void;
   reverseEffects?: boolean;
-} & ThemedClassName<ComponentPropsWithoutRef<'li'>>;
+} & Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export type InvitationListItemImplProps = InvitationListItemProps & {
   invitationStatus: InvitationStatus;
@@ -46,46 +41,35 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const avatarProps: Pick<AvatarContentProps, 'size' | 'variant'> = {
-  size: 10,
-  variant: 'circle',
-};
+/**
+ * Lets each row tell its list how to open it (its QR or auth view), so a pick by Enter or a click on the row, which the
+ * list reports, reaches the row that knows whether it can be opened.
+ */
+export const InvitationOpenContext = createContext<(id: string, open: (() => void) | undefined) => void>(() => {});
 
+/** Two faded rings behind a multi-use invitation's avatar, so it reads as a stack. */
 const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<AvatarContentProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => {
-  const { tx } = useThemeContext();
-  return (
-    <>
-      <span
-        className={mx(
-          'absolute right-auto opacity-20',
-          reverseEffects ? 'left-3' : 'left-1',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '400ms' }}
-        />
-      </span>
-      <span
-        className={mx(
-          'absolute right-auto opacity-50',
-          reverseEffects ? 'left-2' : 'left-2',
-          getSize(avatarProps.size!),
-        )}
-      >
-        <span
-          className={tx('avatar.ring', { ...avatarProps, status, animation })}
-          style={{ animationDelay: '200ms' }}
-        />
-      </span>
-    </>
-  );
-};
+}: Pick<Avatar.RootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
+  <>
+    {[
+      { offset: reverseEffects ? 'left-3' : 'left-1', opacity: 'opacity-20', delay: '400ms' },
+      { offset: 'left-2', opacity: 'opacity-50', delay: '200ms' },
+    ].map(({ offset, opacity, delay }) => (
+      <Avatar.Root
+        key={delay}
+        aria-hidden
+        status={status}
+        animation={animation}
+        hueVariant='transparent'
+        classNames={mx('absolute right-auto', offset, opacity)}
+        style={{ animationDelay: delay }}
+      />
+    ))}
+  </>
+);
 
 export const InvitationListItemImpl = ({
   invitation,
@@ -96,7 +80,7 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
@@ -142,89 +126,72 @@ export const InvitationListItemImpl = ({
 
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
+  const canOpen = !!(showShare && invitationUrl);
+  const registerOpen = useContext(InvitationOpenContext);
+  useEffect(() => {
+    registerOpen(invitationId, canOpen ? () => send({ type: 'selectInvitation', invitation }) : undefined);
+    return () => registerOpen(invitationId, undefined);
+  }, [registerOpen, invitationId, canOpen, send, invitation]);
+
+  const status = canOpen
+    ? t('open-share-panel.label')
+    : invitationStatus === Invitation_State.CONNECTING
+      ? 'Connecting...'
+      : invitationStatus === Invitation_State.AUTHENTICATING
+        ? 'Authenticating...'
+        : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT
+          ? 'Failed'
+          : invitationStatus === Invitation_State.CANCELLED
+            ? 'Cancelled'
+            : invitationStatus === Invitation_State.SUCCESS
+              ? 'User joined'
+              : !shareable
+                ? 'Pending Invitation'
+                : '';
+
   return (
-    <Listbox.Item
-      id={invitationId}
-      {...props}
-      classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
-    >
-      <Listbox.ItemLabel classNames='sr-only'>
-        {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </Listbox.ItemLabel>
-      {multiUse && (
-        <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
-      )}
-      <Avatar.Root>
+    <Listbox.Item {...props} id={invitationId}>
+      <Listbox.ItemIcon>
+        {multiUse && (
+          <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
+        )}
         <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-          <Avatar.Content
-            {...avatarProps}
+          <Avatar.Root
             animation={avatarAnimation}
             status={avatarStatus}
             fallback={hexToEmoji(invitationId)}
-            tabIndex={0}
-            classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
+            label={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
           />
         </Tooltip.Trigger>
-      </Avatar.Root>
-      {showShare && invitationUrl ? (
-        <>
-          <Tooltip.Trigger
-            asChild
-            content={
-              invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
-            }
-          >
-            <Button
-              variant='ghost'
-              classNames='grow justify-start font-medium'
-              data-testid='show-qrcode'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
-            >
-              <span>{t('open-share-panel.label')}</span>
-            </Button>
-          </Tooltip.Trigger>
-          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
-        </>
+      </Listbox.ItemIcon>
+      {canOpen ? (
+        <Tooltip.Trigger
+          asChild
+          content={
+            invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
+          }
+        >
+          <Listbox.ItemText data-testid='show-qrcode'>{status}</Listbox.ItemText>
+        </Tooltip.Trigger>
       ) : showAuthCode ? (
-        <AuthCode code={authCode} classNames='grow' />
-      ) : invitationStatus === Invitation_State.CONNECTING ? (
-        <span className='px-2 grow text-neutral-500'>Connecting...</span>
-      ) : invitationStatus === Invitation_State.AUTHENTICATING ? (
-        <span className='px-2 grow text-neutral-500'>Authenticating...</span>
-      ) : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT ? (
-        <span className='px-2 grow text-neutral-500'>Failed</span>
-      ) : invitationStatus === Invitation_State.CANCELLED ? (
-        <span className='px-2 grow text-neutral-500'>Cancelled</span>
-      ) : invitationStatus === Invitation_State.SUCCESS ? (
-        <span className='px-2 grow truncate'>User joined</span>
-      ) : !shareable ? (
-        <span className='px-2 grow text-neutral-500'>Pending Invitation</span>
+        <Listbox.ItemText>
+          <AuthCode code={authCode} />
+        </Listbox.ItemText>
       ) : (
-        <span className='grow'> </span>
+        <Listbox.ItemText tone={invitationStatus === Invitation_State.SUCCESS ? 'default' : 'muted'}>
+          {status}
+        </Listbox.ItemText>
       )}
-      {isCancellable ? (
-        <IconButton
-          icon='ph--x--regular'
-          size={4}
-          label={t('cancel-invitation.label')}
-          iconOnly
-          variant='ghost'
-          classNames='flex gap-1 px-0'
-          onClick={cancel}
-          data-testid='cancel-invitation'
-        />
-      ) : (
-        <IconButton
-          icon='ph--x--regular'
-          size={4}
-          label={t('remove-invitation.label')}
-          iconOnly
-          variant='ghost'
-          classNames='flex gap-1 px-0'
-          onClick={handleClickRemove}
-          data-testid='remove-invitation'
-        />
-      )}
+      {canOpen && invitationUrl && <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />}
+      <Button.Root
+        icon='ph--x--regular'
+        iconSize='md'
+        label={t(isCancellable ? 'cancel-invitation.label' : 'remove-invitation.label')}
+        iconOnly
+        variant='ghost'
+        onClick={isCancellable ? cancel : handleClickRemove}
+        data-testid={isCancellable ? 'cancel-invitation' : 'remove-invitation'}
+      />
     </Listbox.Item>
   );
 };

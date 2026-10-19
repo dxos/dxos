@@ -9,3 +9,9 @@ export * from './Extract.ts';
 export * from './Fact.ts';
 export * from './Factuality.ts';
 export * from './Illocution.ts';
+
+export * as Graph from './Graph.ts';
+export * as Mapping from './Mapping.ts';
+export * as Ontology from './Ontology.ts';
+export * as Predicate from './Predicate.ts';
+export * as Vocab from './Vocab.ts';

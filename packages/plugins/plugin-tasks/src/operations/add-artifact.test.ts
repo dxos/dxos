@@ -56,75 +56,94 @@ describe('add-artifact', () => {
       title: 'Child',
       parentTask: Ref.make(root),
     });
-    return { root, child };
+    const { task: sibling } = yield* createTask.handler({
+      taskSet: Ref.make(taskSet),
+      title: 'Sibling',
+      parentTask: Ref.make(root),
+    });
+    return { root, child, sibling };
   });
 
-  it.effect('records a pull request made for a sub-task on the root of its tree', () =>
+  const artifactIds = (task: Task.Task) => (task.artifacts ?? []).map((ref) => Task.refEntityId(ref));
+
+  it.effect('records a pull request on the root it was attached to', () =>
     Effect.gen(function* () {
       const { root, child } = yield* makeTree();
       const pullRequest = yield* makePullRequest(1);
       yield* Database.flush();
 
-      const result = yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(pullRequest) });
+      const result = yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(pullRequest) });
 
       expect(result.task.id).toBe(root.id);
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([pullRequest.id]);
-      expect(child.artifacts ?? []).toHaveLength(0);
+      expect(artifactIds(root)).toEqual([pullRequest.id]);
+      expect(artifactIds(child)).toEqual([]);
     }).pipe(Effect.provide(prLayer)),
   );
 
-  it.effect('refuses a second open pull request for the same tree', () =>
+  it.effect('records a pull request on the sub-task it was attached to, even under a root with its own', () =>
     Effect.gen(function* () {
       const { root, child } = yield* makeTree();
+      const rootPullRequest = yield* makePullRequest(1);
+      const childPullRequest = yield* makePullRequest(2);
+      yield* Database.flush();
+      yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(rootPullRequest) });
+
+      const result = yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(childPullRequest) });
+
+      expect(result.task.id).toBe(child.id);
+      expect(artifactIds(child)).toEqual([childPullRequest.id]);
+      expect(artifactIds(root)).toEqual([rootPullRequest.id]);
+    }).pipe(Effect.provide(prLayer)),
+  );
+
+  it.effect('records a separate pull request on each sibling', () =>
+    Effect.gen(function* () {
+      const { root, child, sibling } = yield* makeTree();
       const first = yield* makePullRequest(1);
       const second = yield* makePullRequest(2);
       yield* Database.flush();
-      yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(first) });
+
+      yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(first) });
+      yield* addArtifact.handler({ task: Ref.make(sibling), object: Ref.make(second) });
+
+      expect(artifactIds(child)).toEqual([first.id]);
+      expect(artifactIds(sibling)).toEqual([second.id]);
+      expect(artifactIds(root)).toEqual([]);
+    }).pipe(Effect.provide(prLayer)),
+  );
+
+  it.effect('refuses a second open pull request for the same task', () =>
+    Effect.gen(function* () {
+      const { child } = yield* makeTree();
+      const first = yield* makePullRequest(1);
+      const second = yield* makePullRequest(2);
+      yield* Database.flush();
+      yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(first) });
 
       const error = yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(second) }).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(Task.PullRequestConflictError);
+      expect(error.message).toContain('"Child"');
       expect(error.message).toContain('https://github.com/dxos/dxos/pull/1');
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
+      expect(artifactIds(child)).toEqual([first.id]);
 
-      // Re-adding the tree's own PR stays the usual no-op, not a conflict.
+      // Re-adding the task's own PR stays the usual no-op, not a conflict.
       yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(first) });
-    }).pipe(Effect.provide(prLayer)),
-  );
-
-  it.effect('refuses a pull request when a sub-task already holds a different open one', () =>
-    Effect.gen(function* () {
-      const { root, child } = yield* makeTree();
-      const legacy = yield* makePullRequest(1);
-      const second = yield* makePullRequest(2);
-      yield* Database.flush();
-      // Recorded on the sub-task itself, as PRs were before they were routed to the root.
-      Task.addArtifact(child, legacy);
-
-      const error = yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(second) }).pipe(Effect.flip);
-
-      expect(error).toBeInstanceOf(Task.PullRequestConflictError);
-      expect(error.message).toContain('"Root"');
-      expect(error.message).toContain('https://github.com/dxos/dxos/pull/1');
-      expect(root.artifacts ?? []).toHaveLength(0);
-
-      // The sub-task's own PR is not a conflict with itself.
-      yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(legacy) });
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([legacy.id]);
+      expect(artifactIds(child)).toEqual([first.id]);
     }).pipe(Effect.provide(prLayer)),
   );
 
   it.effect('accepts a new pull request once the earlier one is closed', () =>
     Effect.gen(function* () {
-      const { root, child } = yield* makeTree();
+      const { root } = yield* makeTree();
       const closed = yield* makePullRequest(1, 'closed');
       const replacement = yield* makePullRequest(2);
       yield* Database.flush();
       yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(closed) });
 
-      yield* addArtifact.handler({ task: Ref.make(child), object: Ref.make(replacement) });
+      yield* addArtifact.handler({ task: Ref.make(root), object: Ref.make(replacement) });
 
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([closed.id, replacement.id]);
+      expect(artifactIds(root)).toEqual([closed.id, replacement.id]);
     }).pipe(Effect.provide(prLayer)),
   );
 

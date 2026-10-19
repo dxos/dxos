@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';

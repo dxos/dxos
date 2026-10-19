@@ -80,6 +80,20 @@ describe('placement', () => {
     expect(visible).to.deep.eq({ first: 10, last: 17 });
   });
 
+  test('a budget bounds the mounted rows down from the first visible one, and overscan can be narrowed', () => {
+    const { placement } = create();
+    placement.scrollTo(5_000);
+    expect(placement.range()).toEqual({ first: 48, last: 59, visible: { first: 50, last: 57 } });
+
+    placement.setOverscan(0);
+    placement.setBudget(3);
+    expect(placement.range()).toEqual({ first: 50, last: 52, visible: { first: 50, last: 57 } });
+    expect(placement.layout().offset).to.equal(5_000);
+
+    placement.setBudget(Infinity);
+    expect(placement.range()).toEqual({ first: 50, last: 57, visible: { first: 50, last: 57 } });
+  });
+
   test('the sizer spans the whole model', () => {
     const { placement } = create({ count: 10, extent: () => 100, exact: true });
 

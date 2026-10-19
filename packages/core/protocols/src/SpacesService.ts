@@ -4,10 +4,10 @@
 
 import { AnySchema } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
+import * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import {
   ContactSchema,
@@ -182,6 +182,10 @@ export const ExportSpaceRequest = Schema.Struct({
    * Archive format to produce. Defaults to BINARY.
    */
   format: Schema.optional(SpaceArchiveFormat),
+  /**
+   * Export only these feeds (`Feed` object ids) with their messages, as a JSON archive.
+   */
+  feedIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface ExportSpaceRequest extends Schema.Schema.Type<typeof ExportSpaceRequest> {}
 
@@ -196,12 +200,17 @@ export const ImportSpaceRequest = Schema.Struct({
    * Immutable tags to set on the imported space at creation time.
    */
   tags: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * Import a JSON archive into this existing space instead of creating one: objects it lacks are added and feed
+   * messages it already holds (by object id) are skipped, so importing the same archive twice changes nothing.
+   */
+  targetSpaceId: Schema.optional(Schema.String),
 });
 export interface ImportSpaceRequest extends Schema.Schema.Type<typeof ImportSpaceRequest> {}
 
 export const ImportSpaceResponse = Schema.Struct({
   /**
-   * The ID of the new space.
+   * The ID of the new space, or of the target space when importing into an existing one.
    */
   newSpaceId: Schema.String,
 });

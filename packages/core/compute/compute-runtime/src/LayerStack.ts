@@ -15,10 +15,9 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Tracer from 'effect/Tracer';
 
-import { ServiceNotAvailableError } from '@dxos/compute/errors';
 import type * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -96,8 +95,37 @@ export class LayerStack {
   #services: Context.Context<unknown>;
 
   constructor(opts: LayerStackOpts) {
-    this.#layers = opts.layers;
+    // Copied because {@link addLayers} appends, and the caller's array is not ours to mutate.
+    this.#layers = [...opts.layers];
     this.#services = (opts.services ?? Context.empty()) as Context.Context<unknown>;
+  }
+
+  /**
+   * Add specs to a live stack, e.g. those of a plugin enabled after boot.
+   *
+   * Slices that are already built are extended rather than rebuilt, so the services they hold
+   * stay live: each one folds the new specs in on its next resolution, re-resolving any new
+   * requirement from the slices below it and re-admitting a spec that was pruned only because
+   * its dependency had not been contributed yet. Specs already in the stack are ignored.
+   *
+   * @throws {LayerDependencyCycleError} if the specs would close a requires/provides cycle; the
+   *   stack is left unchanged.
+   */
+  addLayers(layers: readonly LayerSpec.LayerSpec[]): void {
+    const added = [...new Set(layers)].filter((layer) => !this.#layers.includes(layer));
+    if (added.length === 0) {
+      return;
+    }
+
+    // Checked before anything is committed, so a bad contribution cannot poison slices built later.
+    for (const affinity of new Set(added.map((layer) => layer.affinity))) {
+      sortLayers([...this.#layers, ...added].filter((layer) => layer.affinity === affinity));
+    }
+
+    this.#layers.push(...added);
+    for (const slice of this.#slices) {
+      slice.addLayers(added.filter((layer) => layer.affinity === slice.affinity));
+    }
   }
 
   /**
@@ -105,7 +133,9 @@ export class LayerStack {
    * A stack whose point is its side effects — rpc registrations, lifecycle subscriptions — has
    * nothing to resolve, so this is how an embedder starts it.
    */
-  init(context: LayerSpec.LayerContext = {}): Effect.Effect<void, ServiceNotAvailableError, Scope.Scope> {
+  init(
+    context: LayerSpec.LayerContext = {},
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
     return this.#getOrInitSlice('application', contextForAffinity('application', context)).pipe(
       Effect.catchTag('LayerDependencyCycleError', (err) => Effect.die(err)),
       Effect.asVoid,
@@ -136,7 +166,7 @@ export class LayerStack {
   #resolveService(
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<unknown, ServiceNotAvailableError, Scope.Scope> {
+  ): Effect.Effect<unknown, ServiceResolver.ServiceNotAvailableError, Scope.Scope> {
     // Cycle errors from slice initialisation are a configuration bug, not a
     // recoverable resolver failure; surface them as defects so the typed error
     // channel stays narrowed to `ServiceNotAvailableError`.
@@ -148,7 +178,7 @@ export class LayerStack {
   #resolveServiceInner(
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<unknown, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<unknown, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       // Initialise slices top-down (dependencies first) so that higher-affinity slices
       // can use the services provided by lower-affinity ones.
@@ -173,7 +203,7 @@ export class LayerStack {
       );
       if (Option.isNone(service)) {
         return yield* Effect.fail(
-          new ServiceNotAvailableError(tag.key, {
+          new ServiceResolver.ServiceNotAvailableError(tag.key, {
             message: this.#formatMissingServiceMessage(tag.key, topAffinity, context),
           }),
         );
@@ -185,7 +215,7 @@ export class LayerStack {
   #getOrInitSlice(
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
-  ): Effect.Effect<Slice, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<Slice, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       const target = this.#findOrRegisterSlice(affinity, context);
       target.incrementRefCount();
@@ -196,7 +226,10 @@ export class LayerStack {
         }),
       );
 
-      if (!target.initialized) {
+      if (target.needsInit) {
+        // Captured with `requires` (before any yield), so specs added while the requirements
+        // resolve leave the slice stale for the next caller instead of being pruned unseen.
+        const revision = target.revision;
         const resolveAffinity = lowerAffinity(affinity);
         if (resolveAffinity) {
           yield* this.#materializeTags(resolveAffinity, context, target.requires);
@@ -204,7 +237,7 @@ export class LayerStack {
         const requirements = resolveAffinity
           ? Context.merge(this.#services, this.#resolveServices(resolveAffinity, context, target.requires))
           : this.#services;
-        yield* target.initOnce(requirements).pipe(
+        yield* target.initOnce(requirements, revision).pipe(
           Effect.tapCauseIf(isInitFailure, (cause) =>
             Effect.sync(() => {
               const failure = Cause.findErrorOption(cause);
@@ -279,7 +312,7 @@ export class LayerStack {
     tag: Context.Key<any, any>,
     context: LayerSpec.LayerContext,
     topAffinity: LayerSpec.Affinity,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return this.#materializeTags(topAffinity, context, [tag]);
   }
 
@@ -287,7 +320,7 @@ export class LayerStack {
     affinity: LayerSpec.Affinity,
     context: LayerSpec.LayerContext,
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
     return Effect.gen({ self: this }, function* () {
       let currentAffinity: LayerSpec.Affinity | undefined = affinity;
       while (currentAffinity) {
@@ -419,6 +452,13 @@ class Slice {
   #context: LayerSpec.LayerContext;
   #keepAlive: boolean;
   #refCount: number = 0;
+  /**
+   * Every spec assigned to the slice, in topological order, including those pruned at init.
+   */
+  #allLayers: LayerSpec.LayerSpec[];
+  /**
+   * The specs that survived pruning (all of them until the slice is initialized).
+   */
   #layers: LayerSpec.LayerSpec[];
   /**
    * Requirements that are not satisfied by the layers in the slice.
@@ -458,11 +498,15 @@ class Slice {
 
   readonly #buildLock = Effect.runSync(Semaphore.make(1));
   #initialized = false;
+  /** Bumped by {@link addLayers}; the slice is stale while it is ahead of {@link #appliedRevision}. */
+  #revision = 0;
+  #appliedRevision = -1;
 
   constructor(opts: SliceOpts) {
     this.#affinity = opts.affinity;
     this.#context = opts.context;
     this.#keepAlive = opts.keepAlive;
+    this.#allLayers = opts.layers;
     this.#layers = opts.layers;
 
     switch (opts.affinity) {
@@ -487,6 +531,28 @@ class Slice {
     // Eagerly compute the topological sort so that `requires`/`provides` are
     // populated for dependency resolution. A cycle is remembered and surfaced
     // through the Effect error channel when `init()` runs.
+    try {
+      this.#sortLayers();
+    } catch (err) {
+      if (err instanceof LayerDependencyCycleError) {
+        this.#sortError = err;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * Assign more specs to the slice. A built slice keeps its services and folds the specs in on its
+   * next {@link initOnce}, which the owning stack triggers through {@link needsInit}.
+   */
+  addLayers(layers: readonly LayerSpec.LayerSpec[]): void {
+    const added = layers.filter((layer) => !this.#allLayers.includes(layer));
+    if (added.length === 0) {
+      return;
+    }
+    this.#allLayers = [...this.#allLayers, ...added];
+    this.#revision++;
     try {
       this.#sortLayers();
     } catch (err) {
@@ -548,11 +614,49 @@ class Slice {
 
   init(
     requirements: Context.Context<unknown>,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
 
+    this.#prune(requirements);
+    this.#requirements = requirements;
+    // A spec in this slice outranks the same tag from below, as a higher slice's would; leaving it in
+    // would mark the tag built and the spec would never run.
+    this.#services = this.#withoutOwnProvides(requirements);
+    this.#materializedLayers = [];
+    this.#managedRuntimes = [];
+
+    return Effect.void;
+  }
+
+  /**
+   * Re-prunes a built slice after {@link addLayers}, keeping every service it already holds:
+   * `requirements` only adds the lower-affinity services the new specs need.
+   */
+  #extend(
+    requirements: Context.Context<unknown>,
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
+    if (this.#sortError) {
+      return Effect.fail(this.#sortError);
+    }
+
+    const merged = Context.merge(this.#requirements, requirements);
+    this.#prune(merged);
+    this.#requirements = merged;
+    // Existing entries win, so a service already handed out is never swapped underneath its users.
+    this.#services = Context.merge(this.#withoutOwnProvides(requirements), this.#services);
+
+    return Effect.void;
+  }
+
+  /** `services` without the tags a surviving spec of this slice provides. */
+  #withoutOwnProvides(services: Context.Context<unknown>): Context.Context<unknown> {
+    const own = new Set(this.#provides.map((tag) => tag.key));
+    return Context.makeUnsafe<unknown>(new Map([...services.mapUnsafe].filter(([key]) => !own.has(key))));
+  }
+
+  #prune(requirements: Context.Context<unknown>): void {
     // Per-spec pruning: drop specs whose `requires` aren't satisfied by the
     // parent slice's services (or by surviving earlier specs in this slice).
     // Iterate in topological order so a spec only sees what came before it.
@@ -577,9 +681,10 @@ class Slice {
     const survivingLayers: LayerSpec.LayerSpec[] = [];
     const droppedLayers: { provides: string[]; missing: string[] }[] = [];
     this.#droppedProviders.clear();
-    for (const layer of this.#layers) {
+    for (const layer of this.#allLayers) {
       const missing = layer.requires.filter((r) => !availableKeys.has(r.key));
-      if (missing.length === 0) {
+      // A built spec stays whatever the re-prune says: its services are live and handed out.
+      if (missing.length === 0 || this.#materializedLayers.includes(layer)) {
         survivingLayers.push(layer);
         for (const p of layer.provides) {
           availableKeys.add(p.key);
@@ -615,34 +720,43 @@ class Slice {
       }
     }
     this.#provides = [...provides.values()];
-
-    this.#requirements = requirements;
-    this.#services = requirements;
-    this.#materializedLayers = [];
-    this.#managedRuntimes = [];
-
-    return Effect.void;
   }
 
   get initialized(): boolean {
     return this.#initialized;
   }
 
+  /** True until the slice is initialized, and again whenever specs were added since. */
+  get needsInit(): boolean {
+    return !this.#initialized || this.#appliedRevision < this.#revision;
+  }
+
+  get revision(): number {
+    return this.#revision;
+  }
+
+  /**
+   * Initializes the slice, or extends it with the specs added since, as of `revision`: the
+   * {@link revision} read alongside the {@link requires} that `requirements` was resolved for.
+   */
   initOnce(
     requirements: Context.Context<unknown>,
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+    revision: number,
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return this.#buildLock.withPermits(1)(
-      Effect.suspend(() =>
-        this.#initialized
-          ? Effect.void
-          : this.init(requirements).pipe(
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  this.#initialized = true;
-                }),
-              ),
-            ),
-      ),
+      Effect.suspend(() => {
+        if (this.#initialized && this.#appliedRevision >= revision) {
+          return Effect.void;
+        }
+        return (this.#initialized ? this.#extend(requirements) : this.init(requirements)).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              this.#initialized = true;
+              this.#appliedRevision = Math.max(this.#appliedRevision, revision);
+            }),
+          ),
+        );
+      }),
     );
   }
 
@@ -653,7 +767,7 @@ class Slice {
    */
   materialize(
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return Effect.suspend(() =>
       this.#hasBuilt(tags)
         ? Effect.void
@@ -665,7 +779,7 @@ class Slice {
    * Builds every {@link LayerSpec.LayerSpec.eager} spec that survived pruning, with whatever
    * provides its requirements.
    */
-  materializeEager(): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  materializeEager(): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     return Effect.suspend(() => {
       const pending = this.#layers.filter((layer) => layer.eager && !this.#materializedLayers.includes(layer));
       return pending.length === 0
@@ -680,7 +794,7 @@ class Slice {
 
   #materializePending(
     tags: Context.Key<any, any>[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -696,7 +810,7 @@ class Slice {
   /** Builds `specs` and their dependency providers, skipping whatever is already materialized. */
   #materializeSpecs(
     specs: LayerSpec.LayerSpec[],
-  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+  ): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError | LayerDependencyCycleError> {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
@@ -770,7 +884,7 @@ class Slice {
     return keys;
   }
 
-  #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceNotAvailableError> {
+  #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceResolver.ServiceNotAvailableError> {
     return Effect.gen({ self: this }, function* () {
       // `ManagedRuntime.make` starts from an empty context, so the slice would otherwise trace to
       // Effect's default, which exports nothing.
@@ -800,15 +914,15 @@ class Slice {
       if (Exit.isFailure(exit)) {
         yield* Effect.tryPromise(() => runtime.dispose()).pipe(Effect.orDie);
         const failure = Cause.findErrorOption(exit.cause);
-        if (Option.isSome(failure) && failure.value instanceof ServiceNotAvailableError) {
+        if (Option.isSome(failure) && failure.value instanceof ServiceResolver.ServiceNotAvailableError) {
           return yield* Effect.fail(failure.value);
         }
         const defect = Option.fromNullishOr(exit.cause.reasons.find(Cause.isDieReason)?.defect);
-        if (Option.isSome(defect) && defect.value instanceof ServiceNotAvailableError) {
+        if (Option.isSome(defect) && defect.value instanceof ServiceResolver.ServiceNotAvailableError) {
           return yield* Effect.fail(defect.value);
         }
         return yield* Effect.fail(
-          new ServiceNotAvailableError('layer materialization failed', {
+          new ServiceResolver.ServiceNotAvailableError('layer materialization failed', {
             message: `Layer materialization failed: ${Cause.pretty(exit.cause)}`,
           }),
         );
@@ -838,78 +952,76 @@ class Slice {
   }
 
   #sortLayers() {
-    const layers = this.#layers;
-    const n = layers.length;
-
-    const providesByKey = new Map<string, Context.Key<any, any>>();
-    for (const layer of layers) {
-      for (const p of layer.provides) {
-        providesByKey.set(p.key, p);
-      }
+    const { sorted, provides, requires } = sortLayers(this.#allLayers);
+    this.#allLayers = sorted;
+    this.#requires = requires;
+    // A built slice advertises only what survived its last prune; the next one recomputes this.
+    if (!this.#initialized) {
+      this.#layers = sorted;
+      this.#provides = provides;
     }
-
-    const requireTagByKey = new Map<string, Context.Key<any, any>>();
-    for (const layer of layers) {
-      for (const r of layer.requires) {
-        requireTagByKey.set(r.key, r);
-      }
-    }
-
-    this.#provides = [...providesByKey.values()];
-    this.#requires = [];
-    for (const [key, tag] of requireTagByKey) {
-      if (!providesByKey.has(key)) {
-        this.#requires.push(tag);
-      }
-    }
-
-    if (n <= 1) {
-      return;
-    }
-
-    const inDegree = new Array<number>(n).fill(0);
-    const adj: number[][] = Array.from({ length: n }, () => []);
-
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        if (i === j) {
-          continue;
-        }
-        const a = layers[i]!;
-        const b = layers[j]!;
-        const depends = a.requires.some((req: Context.Key<any, any>) =>
-          b.provides.some((prov: Context.Key<any, any>) => prov.key === req.key),
-        );
-        if (depends) {
-          adj[j]!.push(i);
-          inDegree[i]!++;
-        }
-      }
-    }
-
-    const sorted: number[] = [];
-    const placed = new Array<boolean>(n).fill(false);
-    for (let k = 0; k < n; k++) {
-      let next = -1;
-      for (let i = 0; i < n; i++) {
-        if (placed[i] || inDegree[i] !== 0) {
-          continue;
-        }
-        next = i;
-        break;
-      }
-      if (next === -1) {
-        throw new LayerDependencyCycleError({
-          message: 'Cycle in layer dependency graph (requires / provides)',
-        });
-      }
-      sorted.push(next);
-      placed[next] = true;
-      for (const v of adj[next]!) {
-        inDegree[v]!--;
-      }
-    }
-
-    this.#layers = sorted.map((idx) => layers[idx]!);
   }
 }
+
+/**
+ * Topologically sorts `layers` so each spec follows the providers of its requirements, and
+ * collects what they provide and what they require from outside the set.
+ *
+ * @throws {LayerDependencyCycleError} if the requires/provides graph has a cycle.
+ */
+const sortLayers = (
+  layers: readonly LayerSpec.LayerSpec[],
+): {
+  sorted: LayerSpec.LayerSpec[];
+  provides: Context.Key<any, any>[];
+  requires: Context.Key<any, any>[];
+} => {
+  const unique = [...new Set(layers)];
+
+  const providesByKey = new Map<string, Context.Key<any, any>>();
+  const requireTagByKey = new Map<string, Context.Key<any, any>>();
+  for (const layer of unique) {
+    for (const tag of layer.provides) {
+      providesByKey.set(tag.key, tag);
+    }
+    for (const tag of layer.requires) {
+      requireTagByKey.set(tag.key, tag);
+    }
+  }
+  const provides = [...providesByKey.values()];
+  const requires = [...requireTagByKey].filter(([key]) => !providesByKey.has(key)).map(([, tag]) => tag);
+
+  // Kahn's algorithm, always taking the earliest ready spec so independent specs keep their order.
+  const inDegree = new Map<LayerSpec.LayerSpec, number>(unique.map((layer) => [layer, 0]));
+  const dependents = new Map<LayerSpec.LayerSpec, LayerSpec.LayerSpec[]>(unique.map((layer) => [layer, []]));
+  for (const dependent of unique) {
+    for (const provider of unique) {
+      if (
+        dependent !== provider &&
+        dependent.requires.some((required) => provider.provides.some((provided) => provided.key === required.key))
+      ) {
+        dependents.get(provider)?.push(dependent);
+        inDegree.set(dependent, (inDegree.get(dependent) ?? 0) + 1);
+      }
+    }
+  }
+
+  const sorted: LayerSpec.LayerSpec[] = [];
+  const remaining = [...unique];
+  while (remaining.length > 0) {
+    const index = remaining.findIndex((layer) => inDegree.get(layer) === 0);
+    if (index === -1) {
+      throw new LayerDependencyCycleError({
+        message: 'Cycle in layer dependency graph (requires / provides)',
+      });
+    }
+    for (const next of remaining.splice(index, 1)) {
+      sorted.push(next);
+      for (const dependent of dependents.get(next) ?? []) {
+        inDegree.set(dependent, (inDegree.get(dependent) ?? 0) - 1);
+      }
+    }
+  }
+
+  return { sorted, provides, requires };
+};

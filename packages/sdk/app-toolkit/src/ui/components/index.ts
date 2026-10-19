@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './AttentionSigil.tsx';
-export * from './CardIconSlot.tsx';
-export * from './CardMenuSlot.tsx';
-export * from './NotFoundArticle.tsx';
-export * from './PluginRegistryButton.tsx';
-export * from './SettingsScope.tsx';
-export * from './UpdateRow.tsx';
-
-export * as AppSurface from './app-surface.ts';
+export * from './AppSurface/index.ts';
+export * from './AttentionSigil/index.ts';
+export * from './CardSlot/index.ts';
+export * from './HomeSection/index.ts';
+export * from './NamePopover/index.ts';
+export * from './NotFoundArticle/index.ts';
+export * from './ObjectCard/index.ts';
+export * from './ObjectCombobox/index.ts';
+export * from './PluginRegistryButton/index.ts';
+export * from './SettingsScope/index.ts';

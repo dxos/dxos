@@ -2,117 +2,139 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize } from './FloatingPanel.tsx';
+import { GEOMETRY, byTestId } from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as FloatingPanel from './FloatingPanel.tsx';
 
-const paragraphs = Array.from({ length: 4 }, () => random.lorem.paragraph(3));
+random.seed(7);
 
-type StoryArgs = {
-  draggable?: boolean;
-  resizable?: boolean;
-  persistRect?: boolean;
-};
+const LINES = Array.from({ length: 40 }, () => random.lorem.sentence());
 
-/**
- * A window the reader opens from a button, drags by its header, resizes from any edge, folds to its
- * title bar or fills the viewport, and closes; where it was left is reported so a host can keep it.
- */
-const DefaultStory = ({ draggable = true, resizable = true, persistRect = true }: StoryArgs) => {
-  const [position, setPosition] = useState<FloatingPanelPoint>();
-  const [size, setSize] = useState<FloatingPanelSize>();
+type StoryArgs = Pick<FloatingPanel.RootProps, 'resizable' | 'draggable'>;
 
-  return (
-    <div className='flex flex-col gap-2 items-start'>
-      <FloatingPanel.Root
-        defaultSize={{ width: 480, height: 320 }}
-        minSize={{ width: 240, height: 160 }}
-        draggable={draggable}
-        resizable={resizable}
-        persistRect={persistRect}
-        onPositionChangeEnd={setPosition}
-        onSizeChangeEnd={setSize}
-      >
-        <FloatingPanel.Trigger asChild>
-          <Button>Open panel</Button>
-        </FloatingPanel.Trigger>
-        <FloatingPanel.Portal>
-          <FloatingPanel.Content>
-            <FloatingPanel.Header>
-              <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title>Floating panel</FloatingPanel.Title>
-              </FloatingPanel.DragTrigger>
-              <FloatingPanel.Control>
-                <FloatingPanel.StageTrigger stage='minimized' />
-                <FloatingPanel.StageTrigger stage='maximized' />
-                <FloatingPanel.StageTrigger stage='default' />
-                <FloatingPanel.CloseTrigger />
-              </FloatingPanel.Control>
-            </FloatingPanel.Header>
-            <FloatingPanel.Body>
-              <ScrollArea.Root>
-                <ScrollArea.Viewport classNames='text-sm'>
-                  {paragraphs.map((text, index) => (
-                    <p key={index} className='px-2 mb-2'>
-                      {text}
-                    </p>
-                  ))}
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </FloatingPanel.Body>
-            <FloatingPanel.Resizers />
-          </FloatingPanel.Content>
-        </FloatingPanel.Portal>
-      </FloatingPanel.Root>
-      <div className='text-xs text-description' data-testid='rect'>
-        {position && `at ${Math.round(position.x)},${Math.round(position.y)}`}
-        {size && ` size ${Math.round(size.width)}×${Math.round(size.height)}`}
-      </div>
-    </div>
-  );
-};
+/** A button opening a log window that folds, maximizes, restores and closes; its body scrolls in a ScrollArea. */
+const DefaultStory = (args: StoryArgs) => (
+  <FloatingPanel.Root
+    {...args}
+    defaultSize={{ width: 384, height: 256 }}
+    defaultPosition={{ x: 32, y: 96 }}
+    minSize={{ width: 240, height: 160 }}
+    closeOnEscape
+  >
+    <FloatingPanel.Trigger asChild>
+      <Button data-testid='panel.trigger'>Open log</Button>
+    </FloatingPanel.Trigger>
+    <FloatingPanel.Content data-testid='panel'>
+      <FloatingPanel.Header data-testid='panel.header'>
+        <FloatingPanel.DragTrigger>
+          <FloatingPanel.Title>Log</FloatingPanel.Title>
+        </FloatingPanel.DragTrigger>
+        <FloatingPanel.Control>
+          <FloatingPanel.StageTrigger stage='minimized' />
+          <FloatingPanel.StageTrigger stage='maximized' />
+          <FloatingPanel.StageTrigger stage='default' />
+          <FloatingPanel.CloseTrigger />
+        </FloatingPanel.Control>
+      </FloatingPanel.Header>
+      <FloatingPanel.Body data-testid='panel.body'>
+        <ScrollArea.Root classNames='h-full'>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='inset'>
+              {LINES.map((line, index) => (
+                <Typography.Text key={index}>{line}</Typography.Text>
+              ))}
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </FloatingPanel.Body>
+    </FloatingPanel.Content>
+  </FloatingPanel.Root>
+);
 
 const meta = {
   title: 'ui/react-ui-core/components/FloatingPanel',
-  component: DefaultStory,
-  decorators: [withTheme()],
-  parameters: { layout: 'centered', translations },
-  args: { draggable: true, resizable: true, persistRect: true },
-} satisfies Meta<typeof DefaultStory>;
+  render: DefaultStory,
+  decorators: [withLayout({ classNames: 'p-4' }), withTheme()],
+  args: { resizable: true, draggable: true },
+  parameters: { layout: 'fullscreen', translations },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+/**
+ * The trigger opens a `dialog` named by its title at `level='raised'`, placed and sized from the defaults with a resize
+ * handle on every edge and corner. Minimize folds it to its block-tall header and hides the body; restore and maximize
+ * swap with it; the close button and Escape close it. The story ends open.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Open panel' }));
-    // Portaled to the body, so the dialog is looked up on the document.
-    const body = within(document.body);
-    const dialog = await body.findByRole('dialog', { name: 'Floating panel' });
-    await expect(dialog).toHaveAttribute('data-state', 'open');
+    const body = within(canvasElement.ownerDocument.body);
+    const trigger = byTestId(canvasElement, 'panel.trigger');
 
-    // Fold to the title bar, then restore.
-    await userEvent.click(body.getByRole('button', { name: 'Minimize' }));
-    await waitFor(() => expect(dialog).toHaveAttribute('data-minimized'));
-    await userEvent.click(body.getByRole('button', { name: 'Restore' }));
-    await waitFor(() => expect(dialog).not.toHaveAttribute('data-minimized'));
+    await expect(body.queryByTestId('panel')).toBeNull();
+    await userEvent.click(trigger);
+    let panel = await body.findByRole('dialog', { name: 'Log' });
+    await expect(panel).toBe(body.getByTestId('panel'));
+    await expect(panel).toHaveAttribute('data-surface', 'raised');
+    await expect(panel).toHaveAttribute('data-size', 'md');
+    await expect(getComputedStyle(panel).getPropertyValue('--dx-level').trim()).toBe('3');
+    await waitFor(async () => {
+      const rect = panel.getBoundingClientRect();
+      await expect(rect.width).toBeCloseTo(384, 0);
+      await expect(rect.height).toBeCloseTo(256, 0);
+      await expect(rect.left).toBeCloseTo(32, 0);
+      await expect(rect.top).toBeCloseTo(96, 0);
+    });
+    await expect(panel.querySelectorAll('[data-part="resize-trigger"]')).toHaveLength(8);
+    // A block row and its 1px separator.
+    await expect(body.getByTestId('panel.header').getBoundingClientRect().height).toBeCloseTo(GEOMETRY.md.block + 1, 0);
+    const viewport = body.getByTestId('panel.body').querySelector<HTMLElement>('.dx-scroll-viewport');
+    await waitFor(() => expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true));
 
-    await userEvent.click(body.getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
+    // Restore is hidden until the panel is staged; minimize folds it to the header.
+    const control = within(panel);
+    await expect(control.queryByRole('button', { name: 'Restore' })).toBeNull();
+    await userEvent.click(control.getByRole('button', { name: 'Minimize' }));
+    await waitFor(() => expect(panel).toHaveAttribute('data-staged'));
+    await waitFor(() => expect(body.getByTestId('panel.body')).not.toBeVisible());
+    await waitFor(() => expect(panel.getBoundingClientRect().height).toBeLessThanOrEqual(GEOMETRY.md.block + 3));
+    await userEvent.click(control.getByRole('button', { name: 'Restore' }));
+    await waitFor(() => expect(panel).not.toHaveAttribute('data-staged'));
+    await waitFor(() => expect(panel.getBoundingClientRect().height).toBeCloseTo(256, 0));
+
+    await userEvent.click(control.getByRole('button', { name: 'Maximize' }));
+    await waitFor(() => expect(panel.getBoundingClientRect().width).toBeGreaterThan(384));
+    await userEvent.click(control.getByRole('button', { name: 'Restore' }));
+    await waitFor(() => expect(panel.getBoundingClientRect().width).toBeCloseTo(384, 0));
+
+    await userEvent.click(control.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(body.queryByTestId('panel')).toBeNull());
+
+    await userEvent.click(trigger);
+    panel = await body.findByRole('dialog', { name: 'Log' });
+    panel.focus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('panel')).toBeNull());
+
+    await userEvent.click(trigger);
+    await body.findByRole('dialog', { name: 'Log' });
   },
-};
-
-export const Fixed: Story = {
-  args: { draggable: false, resizable: false },
 };

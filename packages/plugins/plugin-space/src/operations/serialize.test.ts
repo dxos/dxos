@@ -21,6 +21,7 @@ const PROJECTED_KEYS = [
   'org.dxos.operation.space.queryTypes',
   'org.dxos.operation.space.removeObjects',
   'org.dxos.operation.space.removeTag',
+  'org.dxos.operation.space.resolveUrl',
   'org.dxos.operation.space.updateObject',
 ];
 
@@ -82,6 +83,7 @@ describe('operation serialization', () => {
       ['queryTypes', 'none'],
       ['removeObjects', 'destructive'],
       ['removeTag', 'write'],
+      ['resolveUrl', 'none'],
       ['updateObject', 'write'],
     ]);
   });

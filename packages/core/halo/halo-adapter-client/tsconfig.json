@@ -13,6 +13,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -26,6 +29,9 @@
     },
     {
       "path": "../../../sdk/client-protocol"
+    },
+    {
+      "path": "../../compute/link"
     },
     {
       "path": "../../echo/echo-protocol"

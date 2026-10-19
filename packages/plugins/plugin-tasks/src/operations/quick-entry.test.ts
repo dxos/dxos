@@ -7,12 +7,12 @@ import { describe, test } from 'vitest';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
 import { TasksPlugin } from '#plugin';
 import { Journal, OutlineOperation } from '#types';
@@ -58,10 +58,10 @@ describe('OutlineOperation.QuickJournalEntry', () => {
   });
 });
 
-type Harness = Awaited<ReturnType<typeof createComposerTestApp>>;
+type Harness = Awaited<ReturnType<typeof TestingHarness.createComposerTestApp>>;
 
 const setup = async (): Promise<Harness> => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
+  const harness = await TestingHarness.createComposerTestApp({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
   await harness.waitForEvent(ClientEvents.SpacesAvailable);

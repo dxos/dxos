@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as AiError from 'effect/ai/AiError';
+import type * as Tool from 'effect/ai/Tool';
+import type * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
-import type * as AiError from 'effect/unstable/ai/AiError';
-import type * as Tool from 'effect/unstable/ai/Tool';
-import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
@@ -105,6 +105,19 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
       }),
       Effect.catchCause((cause) =>
         Effect.sync(() => {
+          // A tool that fails with a string has already written the text the model should see.
+          const failure = Option.getOrUndefined(Cause.findErrorOption(cause));
+          if (typeof failure === 'string') {
+            log.info('tool failed', { tool: toolCall.name, message: failure });
+            return {
+              _tag: 'toolResult',
+              toolCallId: toolCall.toolCallId,
+              name: toolCall.name,
+              error: failure,
+              providerExecuted: false,
+            } satisfies ContentBlock.ToolResult;
+          }
+
           const errors = Cause.prettyErrors(cause);
           // A serialized error can carry no readable text, so name the tool and message separately.
           log.warn('tool failed', { tool: toolCall.name, message: errors[0]?.message, err: errors[0] });

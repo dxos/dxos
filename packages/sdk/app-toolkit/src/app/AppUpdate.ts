@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 /**
  * How far along an update's download is.

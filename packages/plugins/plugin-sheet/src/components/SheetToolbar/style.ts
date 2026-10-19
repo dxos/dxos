@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -27,17 +27,19 @@ export type StyleState = Partial<Record<SheetRange.StyleValue, boolean>>;
 export type StyleAction = { key: SheetRange.StyleKey; value: SheetRange.StyleValue };
 
 const styles: Record<SheetRange.StyleValue, string> = {
+  header: 'ph--rows--regular',
   highlight: 'ph--highlighter--regular',
   softwrap: 'ph--paragraph--regular',
 };
+
+const isStyleValue = (value: string): value is SheetRange.StyleValue => value in styles;
 
 export const useStyleState = (stateAtom: ToolbarStateAtom) => {
   const registry = useContext(RegistryContext);
   const { cursorFallbackRange, model } = useSheetContext();
 
   useEffect(() => {
-    let highlight = false;
-    let softwrap = false;
+    const state: StyleState = Object.fromEntries(Object.keys(styles).map((value) => [value, false]));
     if (cursorFallbackRange && model.sheet.ranges) {
       model.sheet.ranges
         .filter(
@@ -45,16 +47,13 @@ export const useStyleState = (stateAtom: ToolbarStateAtom) => {
             key === 'style' && inRange(SheetUtil.rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
         )
         .forEach(({ value }) => {
-          if (value === 'highlight') {
-            highlight = true;
-          }
-          if (value === 'softwrap') {
-            softwrap = true;
+          if (isStyleValue(value)) {
+            state[value] = true;
           }
         });
     }
     const prev = registry.get(stateAtom);
-    registry.set(stateAtom, { ...prev, highlight, softwrap });
+    registry.set(stateAtom, { ...prev, ...state });
   }, [cursorFallbackRange, model.sheet, registry, stateAtom]);
 };
 

@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 

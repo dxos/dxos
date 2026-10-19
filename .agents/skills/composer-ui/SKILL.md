@@ -62,9 +62,9 @@ is being phased out — prefer the kebab forms):
 - **Surfaces:** `bg-base-surface`, `bg-card-surface`, `bg-modal-surface`, `bg-toolbar-surface`,
   `bg-sidebar-surface`, `bg-deck-surface`, `bg-group-surface`, `bg-input-surface`, `bg-hover-surface`,
   `bg-attention-surface`, `bg-accent-bg` (+ `-hover`).
-- **Text:** `text-base-fg` (body), `text-description` (muted), `text-subdued` (dimmest),
+- **Text:** `text-fg` (body), `text-fg-muted` (muted), `text-fg-subtle` (dimmest),
   `text-placeholder`, `text-accent-text`.
-- **Borders:** `border-separator`, `border-subdued-separator`, `border-primary-separator`,
+- **Borders:** `border-separator`, `border-separator-subtle`, `border-primary-separator`,
   `border-active-separator`, `border-focus-ring`.
 
 Themed primitives accept overrides via a `classNames` prop (string or array) — never `className`.
@@ -120,8 +120,8 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 `light`, `duotone`, `thin`). Use the `Icon` primitive or any primitive that takes an `icon` prop:
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />;
+import * as Icon from '@dxos/react-ui/Icon';
+<Icon.Icon icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
@@ -201,7 +201,7 @@ the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra 
 ```tsx
 <Flex column gap='sm'>…</Flex>
 <Flex gap='sm' justify='end'>…</Flex>
-<Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+<Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
 <Flex asChild gap='sm'><header>…</header></Flex>
 ```
 
@@ -316,7 +316,7 @@ Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
-  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  Built with `KvsStore.make` (`@dxos/effect/KvsStore`) (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with
@@ -418,7 +418,7 @@ or wrap it in one element occupying slot 2:
     {' '}
     {/* slot 2 (1fr content) */}
     <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
-    {price && <span className='text-sm text-description'>{price}</span>}
+    {price && <span className='text-sm text-fg-muted'>{price}</span>}
   </div>
   <Card.IconBlock /> {/* slot 3 (action) */}
 </Card.Header>

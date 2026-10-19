@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -88,6 +88,11 @@ type EditTarget =
   | { kind: 'document'; text: Obj.Any }
   | { kind: 'none' };
 
+/** The interim reply posted when a turn starts. */
+const INTERIM_TEXT = 'Working on it…';
+
+/** The interim reply's text when the turn fails. */
+const FAILED_TEXT = 'Sorry, something went wrong.';
 /**
  * Resolve the agent's edit target for this turn:
  *  - 'anchored' when the thread is anchored to a span of the doc — agent edits
@@ -114,14 +119,15 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<Edi
       (relation: AnchoredTo.AnchoredTo) =>
         Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
     );
-    if (!ours?.anchor) {
+    const anchor = ours?.anchor;
+    if (!anchor) {
       return { kind: 'document', text };
     }
-    try {
+    return yield* Effect.try(() => {
       const accessor = Doc.createAccessor(text, ['content']);
-      const range = getRangeFromCursor(accessor, ours.anchor);
+      const range = getRangeFromCursor(accessor, anchor);
       if (!range || range.start === range.end) {
-        return { kind: 'document', text };
+        return { kind: 'document', text } satisfies EditTarget;
       }
       const content = (text as unknown as { content: string }).content ?? '';
       return {
@@ -131,11 +137,13 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<Edi
         to: range.end,
         snippet: content.slice(range.start, range.end),
         relation: ours,
-      };
-    } catch (err) {
-      log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
-      return { kind: 'document', text };
-    }
+      } satisfies EditTarget;
+    }).pipe(
+      Effect.catch((err) => {
+        log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
+        return Effect.succeed({ kind: 'document', text } satisfies EditTarget);
+      }),
+    );
   });
 
 /**
@@ -207,84 +215,104 @@ export default Capability.makeModule(
           );
           const history = normalizeRoles(loaded);
 
-          const target = yield* resolveEditTarget(thread, subject);
-          const prompt = yield* AiPreprocessor.preprocessPrompt(history, {
-            system: buildInstructions(subject, target),
-          });
-
-          // Capture which edit tool fired so we can synthesize a fallback chat
-          // ack when the model elides the post-tool message.
-          let editOutcome: 'anchored' | 'document' | undefined;
-
-          const toolkit = Toolkit.make(EditAnchoredRangeTool, UpdateDocumentTool);
-          const toolkitLayer = toolkit.toLayer({
-            editAnchoredRange: ({ replacement }) =>
-              Effect.sync(() => {
-                if (target.kind !== 'anchored') {
-                  return 'No anchored selection on this thread; use updateDocument instead.';
-                }
-                const original = (target.text as unknown as { content: string }).content ?? '';
-                const next = original.slice(0, target.from) + replacement + original.slice(target.to);
-                updateText(target.text, ['content'], next);
-
-                // Cursor at `to` (left-associated) can collapse to `from` after a
-                // delete-and-insert at that range, leaving the comment's anchor
-                // pointing at a zero-width span. Rewrite AnchoredTo.anchor to
-                // span the newly-inserted text so the editor marker continues
-                // to highlight the replaced range.
-                const newTo = target.from + replacement.length;
-                const accessor = Doc.createAccessor(target.text, ['content']);
-                const newAnchor = toCursorRange(accessor, target.from, newTo);
-                Relation.update(target.relation, (relation) => {
-                  (relation as Relation.Mutable<AnchoredTo.AnchoredTo>).anchor = newAnchor;
-                });
-                editOutcome = 'anchored';
-                return 'Anchored range replaced.';
-              }),
-            updateDocument: ({ content }) =>
-              Effect.sync(() => {
-                if (target.kind === 'none') {
-                  return 'No editable document in scope.';
-                }
-                updateText(target.text, ['content'], content);
-                editOutcome = 'document';
-                return 'Document updated.';
-              }),
-          });
-
-          const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
-            Effect.scoped,
-            Effect.provide(
-              Layer.provideMerge(
-                AiService.languageModel(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)),
-                toolkitLayer,
-              ),
-            ),
-          );
-
-          // The chat message defaults to whatever the model returned, but when
-          // the model elided its post-tool reply (some providers do) fall back
-          // to a synthesized ack so the thread always reflects that something
-          // happened.
-          const fallbackByOutcome: Record<'anchored' | 'document', string> = {
-            anchored: 'Updated the highlighted selection.',
-            document: 'Updated the document.',
-          };
-          const text =
-            response.text.trim().length > 0 ? response.text : editOutcome ? fallbackByOutcome[editOutcome] : '';
-          if (text.length === 0) {
-            // Nothing to say and nothing was edited — don't post a hollow bubble.
-            return;
-          }
-
-          const reply = Obj.make(Message.Message, {
+          // An interim reply shows the turn has started; the answer replaces its text rather than adding a second
+          // message. Posted after the history is read, so the model never sees it.
+          const sender = { role: 'assistant' as const, name: identity.name, identityDid: identity.identityDid };
+          const interim = Obj.make(Message.Message, {
             created: new Date().toISOString(),
-            sender: { role: 'assistant', name: identity.name, identityDid: identity.identityDid },
-            blocks: [{ _tag: 'text', text }],
+            sender,
+            blocks: [{ _tag: 'text', text: INTERIM_TEXT }],
           });
           Obj.update(thread, (thread) => {
-            (thread.messages as Ref.Ref<Message.Message>[]).push(Ref.make(reply));
+            (thread.messages as Ref.Ref<Message.Message>[]).push(Ref.make(interim));
           });
+          const setInterimText = (text: string) =>
+            Obj.update(interim, (interim) => {
+              interim.blocks = [{ _tag: 'text', text }];
+            });
+
+          yield* Effect.gen(function* () {
+            const target = yield* resolveEditTarget(thread, subject);
+            const prompt = yield* AiPreprocessor.preprocessPrompt(history, {
+              system: buildInstructions(subject, target),
+            });
+
+            // Capture which edit tool fired so we can synthesize a fallback chat
+            // ack when the model elides the post-tool message.
+            let editOutcome: 'anchored' | 'document' | undefined;
+
+            const toolkit = Toolkit.make(EditAnchoredRangeTool, UpdateDocumentTool);
+            const toolkitLayer = toolkit.toLayer({
+              editAnchoredRange: ({ replacement }) =>
+                Effect.sync(() => {
+                  if (target.kind !== 'anchored') {
+                    return 'No anchored selection on this thread; use updateDocument instead.';
+                  }
+                  const original = (target.text as unknown as { content: string }).content ?? '';
+                  const next = original.slice(0, target.from) + replacement + original.slice(target.to);
+                  updateText(target.text, ['content'], next);
+
+                  // Cursor at `to` (left-associated) can collapse to `from` after a
+                  // delete-and-insert at that range, leaving the comment's anchor
+                  // pointing at a zero-width span. Rewrite AnchoredTo.anchor to
+                  // span the newly-inserted text so the editor marker continues
+                  // to highlight the replaced range.
+                  const newTo = target.from + replacement.length;
+                  const accessor = Doc.createAccessor(target.text, ['content']);
+                  const newAnchor = toCursorRange(accessor, target.from, newTo);
+                  Relation.update(target.relation, (relation) => {
+                    (relation as Relation.Mutable<AnchoredTo.AnchoredTo>).anchor = newAnchor;
+                  });
+                  editOutcome = 'anchored';
+                  return 'Anchored range replaced.';
+                }),
+              updateDocument: ({ content }) =>
+                Effect.sync(() => {
+                  if (target.kind === 'none') {
+                    return 'No editable document in scope.';
+                  }
+                  updateText(target.text, ['content'], content);
+                  editOutcome = 'document';
+                  return 'Document updated.';
+                }),
+            });
+
+            const response = yield* LanguageModel.generateText({ prompt, toolkit }).pipe(
+              Effect.scoped,
+              Effect.provide(
+                Layer.provideMerge(
+                  AiService.languageModel(DEFAULT_MODEL).pipe(Layer.provide(aiServiceLayer)),
+                  toolkitLayer,
+                ),
+              ),
+            );
+
+            // The chat message defaults to whatever the model returned, but when
+            // the model elided its post-tool reply (some providers do) fall back
+            // to a synthesized ack so the thread always reflects that something
+            // happened.
+            const fallbackByOutcome: Record<'anchored' | 'document', string> = {
+              anchored: 'Updated the highlighted selection.',
+              document: 'Updated the document.',
+            };
+            const text =
+              response.text.trim().length > 0 ? response.text : editOutcome ? fallbackByOutcome[editOutcome] : '';
+            if (text.length === 0) {
+              // Nothing to say and nothing was edited — take the interim reply away rather than leave a hollow bubble.
+              Obj.update(thread, (thread) => {
+                const messages = thread.messages as Ref.Ref<Message.Message>[];
+                const index = messages.findIndex((ref) => ref.target?.id === interim.id);
+                if (index >= 0) {
+                  messages.splice(index, 1);
+                }
+              });
+              return;
+            }
+            setInterimText(text);
+          }).pipe(
+            // A failed turn says so in place of the interim reply, so the thread does not show work that stopped.
+            Effect.tapCause(() => Effect.sync(() => setInterimText(FAILED_TEXT))),
+          );
         }),
     };
 

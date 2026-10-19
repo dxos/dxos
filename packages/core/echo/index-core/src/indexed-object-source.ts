@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
@@ -22,8 +22,8 @@ import { type IndexerObject } from './indexes/interface.ts';
 const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: null };
 
 /**
- * Objects one pass reads, and so one downstream transaction writes. Independent of how many bound
- * variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
+ * Most objects one pass reads; the engine asks for at most one transaction's worth. Independent of
+ * how many bound variables a statement may carry — the indexes chunk their own SQL (see `chunkRows`).
  */
 const INDEX_BATCH_SIZE = 500;
 

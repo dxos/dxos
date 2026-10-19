@@ -119,7 +119,7 @@ describe('mermaid-engine', { timeout: 120_000 }, () => {
     expect(edges.filter(({ id }) => /-stub-\d$/.test(id))).toHaveLength(2);
     const labelled = edges.filter((element) => element.kind === 'text' && element.text === 'via mixin');
     expect(labelled).toHaveLength(1);
-    expect(edges.filter((element) => element.kind === 'arrow' && element.head === 'triangle')).toHaveLength(2);
+    expect(edges.filter((element) => element.kind === 'arrow' && element.relation === 'inheritance')).toHaveLength(2);
   });
 
   test('toStandard rewrites the UML tokens into mermaid-legal labelled arrows', ({ expect }) => {
@@ -181,10 +181,10 @@ describe('mermaid-engine', { timeout: 120_000 }, () => {
       .elements.flatMap((element) => (element.kind === 'arrow' ? [element] : []));
     const byId = (prefix: string) => arrows.find(({ id }) => id.startsWith(prefix))!;
 
-    expect(byId('B-A')).toMatchObject({ head: 'triangle' });
-    expect(byId('X-Y')).toMatchObject({ head: 'crowsfoot' });
-    expect(byId('P-Q')).toMatchObject({ tail: 'circle' });
-    expect(byId('R-S').head).toBeUndefined();
+    expect(byId('B-A')).toMatchObject({ relation: 'inheritance' });
+    expect(byId('X-Y')).toMatchObject({ relation: 'one-to-many' });
+    expect(byId('P-Q')).toMatchObject({ relation: 'aggregation' });
+    expect(byId('R-S').relation).toBeUndefined();
   });
 
   test('basic: no hard defects, every connector straight or one bend', async ({ expect }) => {
@@ -204,7 +204,7 @@ describe('mermaid-engine', { timeout: 120_000 }, () => {
     const edges = objects.find(({ id }) => id === 'edges')!.elements;
     expect(edges.find(({ id }) => id === 'A-bus')?.kind).toBe('line');
     expect(edges.filter(({ id }) => id.endsWith('-stub-0') || id.endsWith('-stub-1'))).toHaveLength(2);
-    expect(edges.filter((element) => element.kind === 'arrow' && element.head === 'triangle')).toHaveLength(1);
+    expect(edges.filter((element) => element.kind === 'arrow' && element.relation === 'inheritance')).toHaveLength(1);
     // Nothing else needs a second bend, and the three frames sit at equal gaps.
     expect(report.metrics.frameGapSpread).toBe(0);
 

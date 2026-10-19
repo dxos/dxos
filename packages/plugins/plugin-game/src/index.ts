@@ -3,6 +3,5 @@
 //
 
 export * as GamePlugin from './GamePlugin.ts';
-export * from '#meta';
 export * from '#types';
-export * from '#util';
+export * as GameUtil from './GameUtil.ts';

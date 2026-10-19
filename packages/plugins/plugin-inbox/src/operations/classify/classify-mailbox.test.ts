@@ -16,7 +16,7 @@ import { Message, Person } from '@dxos/types';
 import { InboxOperationHandlerSet } from '#operations';
 import { InboxOperation, Mailbox } from '#types';
 
-import { getTaggedIds } from '../../types/SystemTags.ts';
+import * as SystemTags from '../../types/SystemTags.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: InboxOperationHandlerSet.handlers,
@@ -90,7 +90,7 @@ const taggedSubjects = Effect.fnUntraced(function* (mailbox: Mailbox.Mailbox, la
   }
   const feed = yield* Database.load(mailbox.feed);
   const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-  const ids = getTaggedIds(mailbox, Obj.getURI(tag).toString());
+  const ids = SystemTags.getTaggedIds(mailbox, Obj.getURI(tag).toString());
   return messages.filter((message) => ids.has(message.id)).map((message) => message.properties?.subject);
 });
 

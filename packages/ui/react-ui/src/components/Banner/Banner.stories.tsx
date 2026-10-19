@@ -1,133 +1,95 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import '../../theme/index.css';
 
-import { random } from '@dxos/random';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
+
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Banner } from './Banner.tsx';
+import { translations } from '#translations';
 
-random.seed(123);
+import { byTestId, expectScoped, sizeRow } from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Banner from './Banner.tsx';
 
-type StoryArgs = {
-  valence: MessageValence;
-  title: string;
-  body: string;
-  button?: boolean;
-};
+const VALENCES: MessageValence[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
-const DefaultStory = ({ valence, title, body, button }: StoryArgs) => {
+/** One banner per valence; the error banner closes and holds a valence Button. */
+const DefaultStory = ({ size }: SizeArgs) => {
+  const [open, setOpen] = useState(true);
   return (
-    <div className='w-[30rem]'>
-      <Banner.Root valence={valence}>
-        <Banner.Content>
-          {title && <Banner.Title onClose={() => console.log('close')}>{title}</Banner.Title>}
-          {body && (
-            <Banner.Body asChild classNames='gap-2'>
-              <div>
-                <p>{body}</p>
-                {button && <Button>Test</Button>}
-              </div>
-            </Banner.Body>
+    <Container gap='md'>
+      {VALENCES.filter((valence) => valence !== 'error' || open).map((valence) => (
+        <Banner.Root key={valence} valence={valence} data-testid={`${valence}-${size}`}>
+          <Banner.Title onClose={valence === 'error' ? () => setOpen(false) : undefined}>
+            {valence[0].toUpperCase() + valence.slice(1)}
+          </Banner.Title>
+          <Banner.Body>The body text lines up with the title, not the icon.</Banner.Body>
+          {valence === 'error' && (
+            <Group>
+              <Button variant='valence' data-testid={`retry-${size}`}>
+                Retry
+              </Button>
+            </Group>
           )}
-        </Banner.Content>
-      </Banner.Root>
-    </div>
+        </Banner.Root>
+      ))}
+    </Container>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/Banner',
-  component: Banner.Root as any,
   render: DefaultStory,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
-  argTypes: {
-    valence: {
-      control: 'select',
-      options: ['success', 'info', 'warning', 'error', 'neutral'],
-    },
-  },
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    valence: 'neutral',
-    title: 'Default',
-    body: random.lorem.paragraphs(1),
-    button: true,
-  },
-};
+export const Default: Story = {};
 
-export const Success: Story = {
-  args: {
-    valence: 'success',
-    title: 'Success',
-    body: random.lorem.paragraphs(1),
-    button: true,
-  },
-};
+/**
+ * A neutral banner is a note (a paragraph cannot be named) and any other valence an alert, named by its title and
+ * described by its body; the icon sits in the start rail so the body aligns with the title text, each valence paints
+ * its own surface, a `valence` Button takes the banner's colour, and the close button removes it.
+ */
+export const Test: Story = {
+  play: async ({ canvasElement }) => {
+    await expectScoped(canvasElement);
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    await expect(canvas.getByRole('note', { name: 'Neutral' })).toBeInTheDocument();
+    const error = canvas.getByRole('alert', { name: 'Error' });
+    await expect(error).toHaveAccessibleDescription('The body text lines up with the title, not the icon.');
 
-export const Info: Story = {
-  args: {
-    valence: 'info',
-    title: 'Info',
-    body: random.lorem.paragraphs(1),
-    button: true,
-  },
-};
+    const neutral = byTestId(canvasElement, 'neutral-md');
+    const title = neutral.querySelector('h2')?.getBoundingClientRect();
+    const body = neutral.querySelector('[data-part="body"]')?.getBoundingClientRect();
+    const icon = neutral.querySelector('svg')?.getBoundingClientRect();
+    await expect(body?.left).toBeCloseTo(title?.left ?? 0, 0);
+    await expect(icon?.right).toBeLessThan(title?.left ?? 0);
 
-export const Warning: Story = {
-  args: {
-    valence: 'warning',
-    title: 'Warning',
-    body: random.lorem.paragraphs(1),
-    button: true,
-  },
-};
+    const surfaces = new Set(
+      VALENCES.map((valence) => getComputedStyle(byTestId(canvasElement, `${valence}-md`)).backgroundColor),
+    );
+    await expect(surfaces.size).toBe(VALENCES.length);
+    const retry = getComputedStyle(byTestId(canvasElement, 'retry-md')).backgroundColor;
+    await expect(retry).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(retry).not.toBe(getComputedStyle(error).backgroundColor);
 
-export const Error: Story = {
-  args: {
-    valence: 'error',
-    title: 'Error',
-    body: random.lorem.paragraphs(1),
-    button: true,
-  },
-};
-
-//
-// Empty
-//
-
-/** A surface with nothing in it: no valence, no box — the one banner that says nothing is wrong. */
-export const Empty: StoryObj<typeof Banner.Empty> = {
-  render: (args) => <Banner.Empty {...args} />,
-  args: {
-    label: 'No automations',
-  },
-};
-
-/** No label: the generic message, so a surface that forgot to say what is missing still reads. */
-export const EmptyFallback: StoryObj<typeof Banner.Empty> = {
-  render: () => <Banner.Empty />,
-};
-
-/** With an icon, for a surface whose emptiness is worth depicting. */
-export const EmptyWithIcon: StoryObj<typeof Banner.Empty> = {
-  render: (args) => <Banner.Empty {...args} />,
-  args: {
-    label: 'No automations',
-    icon: 'ph--lightning--regular',
+    await userEvent.click(within(error).getByRole('button', { name: 'Close' }));
+    await expect(canvas.queryByRole('alert', { name: 'Error' })).toBeNull();
   },
 };

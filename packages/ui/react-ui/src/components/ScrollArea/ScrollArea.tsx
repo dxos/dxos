@@ -2,153 +2,156 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
-import React, { CSSProperties, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
-import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
+import { type AllowedAxis } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composable, composableProps, slottable } from '../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
-import { type ScrollbarDensity, scrollbar } from './scrollbar.ts';
+import { scrollbar } from './scrollbar.ts';
 
-//
-// Context
-//
-
-const SCROLLAREA_NAME = 'ScrollArea';
-
-type ScrollAreaOptions = {
-  /** Orientation of scrollbars. */
-  orientation: AllowedAxis;
-  /** Hide scrollbars when not scrolling. */
-  autoHide: boolean;
-  /** Show scrollbars. */
-  scrollbars?: boolean;
-  /** Apply padding to opposite side of scrollbar. */
-  centered?: boolean;
-  /** Apply padding. */
-  padding: boolean;
-  /** Use thin scrollbars. */
-  thin: boolean;
-  /** Enable snap scrolling; the content must carry its own snap alignment (e.g. `snap-start`). */
-  snap: boolean;
-  /** Use the native scrollbar, which reserves layout width, instead of an overlay thumb. */
+type ScrollAreaContextValue = {
   native: boolean;
+  setViewport: (viewport: HTMLElement | null) => void;
 };
 
-type ScrollAreaContextType = ScrollAreaOptions & {
-  density: ScrollbarDensity;
-  setViewport: (viewport: HTMLDivElement | null) => void;
-};
-
-const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextType>(SCROLLAREA_NAME);
+const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('ScrollArea');
 
 //
 // Root
 //
 
-const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
+type ScrollAreaRootProps = {
+  size?: Size;
+  /** `overlay` paints the thumb over the end gutter; `reserve` takes its width out of the end track. */
+  mode?: 'overlay' | 'reserve';
+  /** `thin` fits the thumb in a rail Block's margin at every size; `regular` overlaps it. */
+  width?: 'thin' | 'regular';
+  /** Platform scrollbar instead of overlay thumbs; implies `reserve`. */
+  native?: boolean;
+  /** Scrolling axis; `all` scrolls both (the current ScrollArea's values). */
+  orientation?: AllowedAxis;
+  /** Overlay thumbs show only while the pointer is over the frame (or a thumb is dragged); `false` keeps them visible. */
+  autoHide?: boolean;
+  /** Mandatory snapping on the scrolling axis; children carry their own `scroll-snap-align`. */
+  snap?: boolean;
+  /** `false` scrolls without any visible bar, overlay or native. */
+  scrollbars?: boolean;
+  /** Pixels at the start of the horizontal bar's track left clear, so the bar spans only what scrolls past a sticky column. */
+  trackStart?: number;
+};
 
-type ScrollAreaRootProps = Partial<ScrollAreaOptions>;
+/** Tailwind group names the overlay thumbs' `autoHide` hover rule targets (`ScrollAreaThumbs`). */
+const AUTO_HIDE_GROUP: Record<AllowedAxis, string> = {
+  vertical: 'group/scroll-v',
+  horizontal: 'group/scroll-h',
+  all: 'group/scroll-all',
+};
 
-/**
- * ScrollArea provides native scrollbars with custom styling.
- * The root owns its element: the overlay thumbs render beside the children inside it, so it has no
- * `asChild` — a consumer that needs to be the scroll root nests the viewport in it instead.
- */
-const ScrollAreaRoot = composable<HTMLDivElement, ScrollAreaRootProps>(
+/** Non-scrolling frame: hosts the overlay thumbs and is the query container for its content. */
+const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
       children,
+      asChild,
+      size,
+      mode = 'overlay',
+      width = 'thin',
+      native = false,
       orientation = 'vertical',
       autoHide = true,
-      scrollbars = true,
-      centered = false,
-      padding = false,
-      thin = false,
       snap = false,
-      native = false,
+      scrollbars = true,
+      trackStart,
       ...props
     },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
-    const { className, ...rest } = composableProps(props);
-    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
-    const density = thin ? scrollbar.md : scrollbar.lg;
-    const options = useMemo(
-      () => ({ orientation, autoHide, scrollbars, centered, padding, thin, snap, native }),
-      [orientation, autoHide, scrollbars, centered, padding, thin, snap, native],
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    // Which axes currently show an overlay thumb, published as `data-overflow-*` so CSS can reserve its strip.
+    const [overflow, setOverflow] = useState({ vertical: false, horizontal: false });
+    const handleOverflowChange = useCallback(
+      (next: { vertical: boolean; horizontal: boolean }) =>
+        setOverflow((current) =>
+          current.vertical === next.vertical && current.horizontal === next.horizontal ? current : next,
+        ),
+      [],
     );
-
+    const { className, ...rest } = composableProps(props, {
+      classNames: [recipes.scrollRoot(), autoHide && AUTO_HIDE_GROUP[orientation]],
+    });
     return (
-      <ScrollAreaProvider {...options} density={density} setViewport={setViewport}>
-        <div {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
+      <ScrollAreaProvider native={native} setViewport={setViewport}>
+        <ark.div
+          asChild={asChild}
+          {...rest}
+          data-scope='scroll-area'
+          data-part='root'
+          data-size={size}
+          data-mode={native ? 'reserve' : mode}
+          data-width={width}
+          data-orientation={orientation}
+          data-snap={snap ? '' : undefined}
+          data-scrollbars={scrollbars ? undefined : 'false'}
+          data-overflow-y={overflow.vertical ? '' : undefined}
+          data-overflow-x={overflow.horizontal ? '' : undefined}
+          className={className}
+          ref={forwardedRef}
+        >
           {children}
           {!native && scrollbars && viewport && (
-            <ScrollAreaThumbs viewport={viewport} orientation={orientation} density={density} autoHide={autoHide} />
+            <ScrollAreaThumbs
+              viewport={viewport}
+              orientation={orientation}
+              density={width === 'thin' ? scrollbar.md : scrollbar.lg}
+              autoHide={autoHide}
+              trackStart={trackStart}
+              onOverflowChange={handleOverflowChange}
+            />
           )}
-        </div>
+        </ark.div>
       </ScrollAreaProvider>
     );
   },
 );
 
-ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
+ScrollAreaRoot.displayName = 'ScrollArea.Root';
 
 //
 // Viewport
 //
 
-const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
+type ScrollAreaViewportProps = {};
 
-type ScrollAreaViewportProps = SlottableProps;
+/** The scrolling element; under `asChild` it is the child (e.g. a Container) itself. */
+const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const { native, setViewport } = useScrollAreaContext('ScrollArea.Viewport');
+    const ref = useComposedRefs(forwardedRef, setViewport);
+    const { className, ...rest } = composableProps(props, { classNames: recipes.scrollViewport() });
+    return (
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        data-scope='scroll-area'
+        data-part='viewport'
+        data-native={native ? '' : undefined}
+        className={className}
+        ref={ref}
+      >
+        {children}
+      </ark.div>
+    );
+  },
+);
 
-/** The custom properties the viewport publishes for the theme to size padding against. */
-type ScrollAreaVars = CSSProperties & {
-  '--scroll-width': string;
-  '--scroll-padding': string;
-  '--scroll-strip': string;
-};
+ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
-const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
-  const { density, setViewport } = options;
-  const { className, style, ...rest } = composableProps(props);
-  const ref = useComposedRefs(forwardedRef, setViewport);
-  const vars: ScrollAreaVars = {
-    '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
-    '--scroll-padding': options.scrollbars ? `${density.padding}px` : '0px',
-    // Width of the strip the overlay thumb occupies: its thickness inset at both ends.
-    '--scroll-strip': options.scrollbars ? `${density.size + density.padding * 2}px` : '0px',
-    ...style,
-  };
-
-  return (
-    <ark.div
-      asChild={asChild}
-      {...rest}
-      style={vars}
-      className={tx('scrollArea.viewport', options, className)}
-      ref={ref}
-    >
-      {children}
-    </ark.div>
-  );
-});
-
-ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
-
-//
-// ScrollArea
-//
-
-export const ScrollArea = {
-  Root: ScrollAreaRoot,
-  Viewport: ScrollAreaViewport,
-};
-
-export type { ScrollAreaRootProps, ScrollAreaViewportProps };
+export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport };
+export type { ScrollAreaRootProps as RootProps, ScrollAreaViewportProps as ViewportProps };

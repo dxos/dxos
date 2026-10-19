@@ -16,7 +16,7 @@ import { Panproto } from '@dxos/echo-panproto';
 import * as Annotation from '@dxos/echo/Annotation';
 import { AccessToken, Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -102,7 +102,7 @@ const decorators = (options: SeedOptions) => [
       Capability.contribute(AtprotoCapabilities.RepoLayer, () => AtprotoRepo.layerMock()),
     ],
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({}),
       ClientPlugin.make({
         types: [Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, DemoNote],

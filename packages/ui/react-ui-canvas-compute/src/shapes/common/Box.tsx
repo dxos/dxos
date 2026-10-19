@@ -6,16 +6,18 @@ import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useComputeContext } from '../../hooks/compute-context.ts';
+import { useComputeContext, useComputeNodeDef } from '../../hooks/compute-context.ts';
 import { type ComputeShape } from '../defs.ts';
 
 export type BoxActionHandler = (action: 'open' | 'close') => void;
 
 export type BoxProps = PropsWithChildren<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     shape: ComputeShape;
     title?: string;
     status?: string | ReactNode;
@@ -27,9 +29,12 @@ export type BoxProps = PropsWithChildren<
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
     invariant(shape.type);
-    // The chrome comes from the host's registry, whichever surface the shape is mounted in.
-    const { controller, registry, debug = false } = useComputeContext();
-    const { icon, name, openable } = registry?.getShapeDef(shape.type) ?? { icon: 'ph--circle-dashed--regular' };
+    // The chrome comes from the node registry the scene renders with.
+    const { controller, debug = false } = useComputeContext();
+    const def = useComputeNodeDef();
+    const icon = def?.icon ?? 'ph--circle-dashed--regular';
+    const name = def?.name;
+    const openable = def?.openable;
 
     // Running a node propagates to everything downstream of it, which is what the button means; a shape
     // with no compute node behind it has nothing to run, so it does not get one.
@@ -41,10 +46,10 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
     return (
       <div ref={forwardedRef} className='flex flex-col dx-fill justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
-          <Icon icon={icon} classNames='mx-2' />
+          <Icon.Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           {nodeId && (
-            <IconButton
+            <Button.Root
               classNames='p-1 text-green-500'
               variant='ghost'
               icon='ph--play--regular'
@@ -63,7 +68,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
           {openable && (
-            <IconButton
+            <Button.Root
               classNames='p-1'
               variant='ghost'
               icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}

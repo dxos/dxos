@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
+import * as Hooks from '@dxos/plugin-graph/Hooks';
 import { type TreeModel } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';
@@ -22,5 +22,5 @@ export const useNavTreeModel = (rootId: string): TreeModel<NavTreeNode.NavTreeIt
     }),
     [getItemAtom],
   );
-  return useGraphTreeModel(rootId, state);
+  return Hooks.useGraphTreeModel(rootId, state);
 };

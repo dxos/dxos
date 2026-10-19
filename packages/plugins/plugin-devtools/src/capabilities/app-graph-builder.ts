@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -13,7 +13,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
@@ -263,6 +263,15 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     properties: {
                       label: ['objects.label', { ns: meta.profile.key }],
                       icon: 'ph--cube--regular',
+                    },
+                  }),
+                  AppGraphNode.make({
+                    id: Devtools.nodeId(Devtools.Echo.Queries),
+                    data: Devtools.Echo.Queries,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['queries.label', { ns: meta.profile.key }],
+                      icon: 'ph--tree-view--regular',
                     },
                   }),
                   AppGraphNode.make({

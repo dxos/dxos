@@ -14,10 +14,12 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 
 | Rule | Enforces | Severity | Fix |
 | --- | --- | --- | --- |
+| `dxos-subpath-entrypoints` | A package with namespace subpaths declares no other entry points beyond the conventional ones | error | no |
 | `dxos-subpath-exports` | A package's root barrel agrees with the per-namespace subpaths in its `exports` map | warn | partial |
 | `dxos-subpath-imports` | Namespace subpath imports for designated `@dxos` packages | warn | yes |
 | `dxos-package-imports` | A package's own `imports` aliases over relative paths to the same file | warn | yes |
 | `effect-subpath-imports` | Subpath imports for Effect packages | warn | yes |
+| `folder-barrel-imports` | A relative import into another folder goes through that folder's barrel (`index` or `testing`) | **off**; packages opt in via `overrides` | no |
 | `import-as-namespace` | `import * as X` for modules marked `@import-as-namespace`, with `X` matching the filename | warn | yes |
 | `no-bare-dot-imports` | No bare `.` or `..` specifiers | error | yes |
 | `no-effect-run-promise` | `EffectEx.runPromise` from `@dxos/effect` over `Effect.runPromise` | error | no |
@@ -41,23 +43,64 @@ checked and passed:
   migration itself rather than a defect. It lints only the root barrel, following bare `export *`
   into nested barrels — so `export * from './types'` with the namespaces a directory down satisfies
   the same contract as declaring them all at the root.
-- **`dxos-subpath-imports` applies to a fixed list**, currently `@dxos/app-framework`,
-  `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`. Adding a
-  package to that list requires the package to export `./package.json`, or the rule silently finds
-  nothing.
+- **`dxos-subpath-entrypoints` engages on the same packages as `dxos-subpath-exports`** and reports
+  on the root barrel, since the exports map itself is not linted. Beside PascalCase namespace
+  subpaths a package may declare only `.`, `./package.json`, `./plugin`, `./translations`,
+  `./vite-plugin`, `./testing` and `./testing/*`, `./assets/*`, and a Storybook addon's `./manager`
+  and `./preview`. A `./hooks` becomes `./Hooks`, a `./components` one subpath per component set.
+  The few entry points still pending a migration of their own are listed in the rule.
+- **`dxos-subpath-imports` applies to a fixed list** (`DXOS_SUBPATH_PACKAGES`) plus every
+  `@dxos/plugin-*` package; `dxos-subpath-exports` requires those packages' roots to export
+  namespaces only, one per subpath. Adding a package to that list requires the package to export
+  `./package.json`, or the rule silently finds nothing.
 - **`dxos-package-imports` steps aside for conditional aliases.** Where an alias resolves per
   condition (`#plugin` → `plugin.node.ts` under node, `plugin.tsx` by default), it and a relative
   path to one branch are *different modules*, so substituting one for the other would change which
   module loads. Naming a branch deliberately is not a bypass and is not reported.
 
+### `folder-barrel-imports`
+
+Every folder is private. From a file in folder `F`:
+
+- a file in `F` is fine;
+- a direct child folder is entered only by its barrel (`./child/index.ts`), never a file inside it or deeper;
+- a sibling or cousin folder is entered only by the barrel of the first folder below the common
+  ancestor (`../panels/index.ts`, not `../panels/ToolsPanel/index.ts` or
+  `../panels/ToolsPanel/ToolsPanel.tsx`);
+- an ancestor folder's own files are in scope (`../types.ts`), but not its barrel, which re-exports
+  `F` and so forms a cycle.
+
+Tests, stories and testing helpers follow the same rule. Type-only imports, re-exports and dynamic
+`import()` are checked; package imports and imports that leave the file's `src` tree are not.
+
+Options:
+
+- `barrels` (default `['index', 'testing']`) — file stems that count as a folder's barrel, so a
+  folder can expose test helpers from `testing.ts` without shipping them in `index.ts`. Every listed
+  stem is also an ancestor barrel.
+- `allow` — importer paths, matched as a path suffix, exempt from the rule; e.g. a React-free
+  subpath entry (`src/headless.ts`) that imports single files to keep React out of its bundle.
+
+It is `off` in the root `.oxlintrc.json`. A package opts in with an `overrides` entry:
+
+```json
+{
+  "files": ["packages/ui/react-ui-canvas/src/**"],
+  "rules": {
+    "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }]
+  }
+}
+```
+
 ### `dxos-subpath-exports` findings
 
-Eight checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
+Ten checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
 rule cannot make for you:
 
 | Message | Meaning |
 | --- | --- |
 | `missingNamespaceExport` | A declared subpath has no matching namespace on the barrel. Inserted among its sorted siblings. |
+| `nonNamespaceSubpath` | A PascalCase subpath of a package on the `dxos-subpath-imports` list (or a plugin) points at a module that is not a namespace, so the root cannot re-export it. |
 | `namespaceTargetMismatch` | Barrel and subpath resolve to different modules, so a consumer rewritten to the subpath gets another module. |
 | `typeOnlyNamespaceExport` | Re-exported as a type where the subpath declares a value entrypoint. |
 | `undeclaredNamespace` | On the barrel but with no subpath, so importing it costs the whole package. |
@@ -65,6 +108,7 @@ rule cannot make for you:
 | `externalStarExport` | Bare `export *` of another package. Its names cannot be given subpaths, and its releases silently change this package's API. |
 | `pluginInstanceExported` | The barrel re-exports a plugin entrypoint; the root entry carries types and operations only. |
 | `nestedPathExport` | The barrel reaches a directory down. Declare it in that directory's own barrel and re-export the directory. |
+| `flatExport` | A name reaches the root of a package on the `dxos-subpath-imports` list (or a plugin) outside a namespace. The root exports namespaces only, each with its own subpath, so every named root import can be rewritten to a subpath. |
 
 Why it exists: `dxos-subpath-imports` rewrites a consumer's `import { Drawing } from '@dxos/plugin-illustrator'`
 into `import * as Drawing from '@dxos/plugin-illustrator/Drawing'` purely from the exports map, so

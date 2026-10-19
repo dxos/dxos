@@ -5,14 +5,14 @@
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { type Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,6 +60,13 @@ import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
 
 export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
+/** Arguments for {@link EdgeHttpClient.request}; authenticates unless `auth` is `false`. */
+export type EdgeRequestArgs = EdgeHttpCallArgs & {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  /** JSON-serializable request body. */
+  body?: unknown;
+};
+
 /**
  * HTTP wire shape returned by `/queue/.../query`.
  */
@@ -73,6 +80,21 @@ export type UploadPluginBundleRequest = {
   slug: string;
   version: string;
   files: { path: string; content: string }[];
+};
+
+export type CreateApiTokenRequest = {
+  label: string;
+  /** Epoch milliseconds; the token never expires when omitted. */
+  expiresAt?: number;
+};
+
+/** A minted token: `token` is the secret, returned once; the rest is its non-secret summary. */
+export type CreateApiTokenResponse = {
+  token: string;
+  id: string;
+  prefix: string;
+  label: string;
+  expiresAt?: number | null;
 };
 
 export type TriggersDispatcherStatus = {
@@ -131,6 +153,10 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 /** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
 export type FinalizedUpload = { key: string; size: number; contentType?: string };
 
+/** What EDGE answers every brain fact feed route with: the EIDs of the fact feeds the brain indexes. */
+export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
+export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -187,6 +213,20 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public async getStatus(ctx: Context, args?: EdgeHttpCallArgs): Promise<EdgeStatus> {
     return this._call(ctx, new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
+  }
+
+  //
+  // Generic
+  //
+
+  /**
+   * Authenticated JSON call to an EDGE route that has no dedicated method here (e.g. a service a
+   * plugin owns end to end). Resolves to the response envelope's unwrapped `data`, left `unknown`
+   * so the caller decodes it against its own schema.
+   */
+  public async request(ctx: Context, path: string, args: EdgeRequestArgs): Promise<unknown> {
+    const { method, body, ...rest } = args;
+    return this._call<unknown>(ctx, new URL(path, this.baseUrl), { auth: true, ...rest, method, body });
   }
 
   //
@@ -651,6 +691,18 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
+   * Rewinds a feed trigger on the EDGE dispatcher to the start of its feed, so every item is delivered
+   * again. EDGE answers 409 for a trigger that is not a feed trigger.
+   */
+  public async resetTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call<{ reset: boolean }>(
+      ctx,
+      new URL(`/compute/functions/${spaceId}/triggers/${triggerId}/reset`, this.baseUrl),
+      { method: 'POST', auth: true },
+    );
+  }
+
+  /**
    * Returns the full list of triggers registered on a space's EDGE dispatcher, with per-trigger
    * runtime status. Polled by the remote trigger monitor to surface edge trigger state.
    *
@@ -666,6 +718,60 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Brain fact feeds
+  //
+
+  /**
+   * Has an agent's brain index a fact feed (its EID) from now on; answers the feeds it indexes. `agent` names the
+   * brain (see plugin-agent's `AgentPresence.brainId`); the caller must be a member of `spaceId`, a space it serves.
+   */
+  public async addBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'POST', body: { feed } });
+  }
+
+  /** Stops an agent's brain indexing a fact feed; the facts it read stay. Answers the feeds it still indexes. */
+  public async removeBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'DELETE' }, { feed });
+  }
+
+  /** The fact feeds an agent's brain indexes. */
+  public async listBrainFactFeeds(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'GET' });
+  }
+
+  async #factFeedsCall(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args: EdgeHttpCallArgs & { method: string; body?: unknown },
+    query: Record<string, string> = {},
+  ): Promise<BrainFactFeeds> {
+    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agent)}/fact-feeds`, this.baseUrl);
+    for (const [key, value] of Object.entries(query)) {
+      url.searchParams.set(key, value);
+    }
+    const response = await this._call(ctx, url, { ...args, auth: true });
+    return Schema.decodeUnknownSync(BrainFactFeeds)(response);
   }
 
   //
@@ -721,6 +827,52 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
+  /**
+   * Your private plugins: releases uploaded with {@link uploadPrivatePluginBundle}, listed only to the
+   * identity that published them. Same shape as {@link getRegistryPlugins}, so callers merge the two.
+   */
+  public async getPrivateRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
+    return this._call(ctx, new URL('/registry/private/plugins', this.baseUrl), { auth: true, ...args, method: 'GET' });
+  }
+
+  /**
+   * Uploads a private plugin release, which is hosted like a public one but written to no AT Protocol
+   * repo: the registry records it against the caller, authenticated by identity or by API key.
+   */
+  public async uploadPrivatePluginBundle(
+    ctx: Context,
+    request: UploadPluginBundleRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/private/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
+      ...args,
+    });
+  }
+
+  //
+  // API tokens
+  //
+
+  /**
+   * Mints a personal API token bound to this client's identity, for a process that cannot sign as it
+   * (a CLI in a sandbox, a CI job). Hub accepts only a verifiable presentation here, never a token.
+   */
+  public async createApiToken(
+    ctx: Context,
+    request: CreateApiTokenRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CreateApiTokenResponse> {
+    return this._call(ctx, new URL('/hub/api/api-tokens', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
+      ...args,
+    });
+  }
+
   //
   // Proxy
   //
@@ -758,10 +910,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     let handledAuth = false;
     while (true) {
       if (!this._authHeader) {
-        const authResponse = await fetch(new URL('/auth', this.baseUrl));
-        if (authResponse.status === 401) {
-          this._authHeader = await this._handleUnauthorized(authResponse);
-        }
+        await this._prefetchAuthHeader();
       }
 
       const headers = new Headers(request.headers);

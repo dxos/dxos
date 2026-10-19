@@ -2,54 +2,57 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { QrCode as QrCodePrimitive } from '@ark-ui/react/qr-code';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
+import { recipes } from '../../recipes.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
-type QrCodeProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof QrCodePrimitive.Root>, 'value' | 'encoding'>> & {
+export type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
+
+export type QrCodeProps = ThemedClassName<
+  Omit<QrCodePrimitive.RootProps, 'value' | 'defaultValue' | 'encoding' | 'children'>
+> & {
   /** What the code encodes. */
   value: string;
-  /** Overlay icon. */
-  icon?: string;
-  /** How much of the code may be lost and still read; higher costs modules. Defaults to `M`. */
+  /** How much of the code may be lost and still read; higher costs modules. `M` by default. */
   errorCorrection?: QrCodeErrorCorrection;
+  /** An icon over the centre, which the error correction must cover (use `Q` or `H`). */
+  icon?: string;
+  /** Names the code (`aria-label`); otherwise reference a visible name with `aria-labelledby`. */
+  label?: string;
 };
 
 /**
- * A QR code drawn in the current text colour on a transparent ground, filling its box; built on
- * Ark's qr-code machine, which encodes and lays out the modules.
+ * Ark's QR code: a square that fills its host's width, its modules drawn in the current text colour on a transparent
+ * ground so it reads on any surface. The root is the element (`role=img`), so a label lands on it.
  */
-const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
-  ({ classNames, value, icon, errorCorrection = 'M', ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <QrCodePrimitive.Root
-        {...props}
-        value={value}
-        encoding={{ ecc: errorCorrection }}
-        className={tx('qrCode.root', {}, classNames)}
-        ref={forwardedRef}
-      >
-        <QrCodePrimitive.Frame className={tx('qrCode.frame', {})}>
-          <QrCodePrimitive.Pattern className={tx('qrCode.pattern', {})} />
-        </QrCodePrimitive.Frame>
-        {icon && (
-          <QrCodePrimitive.Overlay>
-            <Icon icon={icon} size={10} classNames='bg-black' />
-          </QrCodePrimitive.Overlay>
-        )}
-      </QrCodePrimitive.Root>
-    );
-  },
+export const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
+  ({ classNames, value, errorCorrection = 'M', icon, label, ...props }, forwardedRef) => (
+    <QrCodePrimitive.Root
+      role='img'
+      {...(label && { 'aria-label': label })}
+      {...props}
+      value={value}
+      encoding={{ ecc: errorCorrection }}
+      className={mx(recipes.qrCode(), classNames)}
+      ref={forwardedRef}
+    >
+      <QrCodePrimitive.Frame className={recipes.qrCodeFrame()}>
+        <QrCodePrimitive.Pattern className={recipes.qrCodePattern()} />
+      </QrCodePrimitive.Frame>
+      {icon && (
+        <QrCodePrimitive.Overlay className={recipes.qrCodeOverlay()}>
+          <Icon.Icon icon={icon} />
+        </QrCodePrimitive.Overlay>
+      )}
+    </QrCodePrimitive.Root>
+  ),
 );
 
 QrCode.displayName = 'QrCode';
-
-export { QrCode };
-
-export type { QrCodeErrorCorrection, QrCodeProps };

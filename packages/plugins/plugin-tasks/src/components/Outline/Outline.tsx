@@ -17,8 +17,9 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
+// Registers `<dx-anchor>`, which the link chips render.
+import '@dxos/lit-ui';
 import { composeRefs, createContext } from '@dxos/react-hooks';
-import { composable, composableProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -26,6 +27,8 @@ import {
   type UseTextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -199,7 +202,7 @@ const OUTLINE_CONTENT_NAME = 'Outline.Content';
 
 type OutlineContentProps = {};
 
-const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
+const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
   const {
     id,
     text,
@@ -214,8 +217,8 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     extensions,
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
-  const { t } = useTranslation(meta.profile.key);
-  const { themeMode } = useThemeContext();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const themeMode = Hooks.useThemeMode();
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -354,7 +357,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
 
   return (
     <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
-      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef, setRoot)} />
+      <div {...Util.composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef, setRoot)} />
     </EditorMenuProvider>
   );
 });

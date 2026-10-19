@@ -8,7 +8,7 @@ import { Leva } from 'leva';
 import React, { useMemo, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
-import { useAsyncState } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { loadTopology } from '../../data.ts';
@@ -151,15 +151,15 @@ const DefaultStory = ({
   level = '110m',
 }: StoryArgs) => {
   const [controller, setController] = useState<GlobeController | null>(null);
-  const [dots] = useAsyncState(async () => {
+  const [dots] = Hooks.useAsyncState(async () => {
     const points = (await import('../../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useAsyncState(() => loadTopology(level), [level]);
-  const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
+  const [topology] = Hooks.useAsyncState(() => loadTopology(level), [level]);
+  const [airports] = Hooks.useAsyncState(async () => (await import('../../../data/airports.ts')).default);
 
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
@@ -248,7 +248,7 @@ const meta = {
 export default meta;
 
 const Earth = ({ level }: { level: Level }) => {
-  const [topology] = useAsyncState(() => loadTopology(level), [level]);
+  const [topology] = Hooks.useAsyncState(() => loadTopology(level), [level]);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);

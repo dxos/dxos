@@ -5,6 +5,12 @@
 import { type Attached, type Cdp } from '../cdp.ts';
 import { type FootprintReading, type HeapReading } from '../types.ts';
 
+/** Ample for a full GC of a large realm; a shared worker never answers the call at all. */
+const GC_TIMEOUT_MS = 10_000;
+
+/** The reads after the GC answer in milliseconds; a target that stops answering must not hang the stage. */
+const READ_TIMEOUT_MS = 10_000;
+
 /**
  * Repeated collection with a turn between passes.
  *
@@ -14,7 +20,10 @@ import { type FootprintReading, type HeapReading } from '../types.ts';
  */
 const settle = async (target: Attached): Promise<void> => {
   for (let iteration = 0; iteration < 3; iteration++) {
-    await target.cdp.trySend('HeapProfiler.collectGarbage');
+    // A pass that does not answer will not answer the next one either.
+    if ((await target.cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS })) === undefined) {
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 };
@@ -36,10 +45,11 @@ const WASM_EXPRESSION = `(() => {
 type WasmReading = { bytes: number; sharedBytes: number; instances: number; byModule: Record<string, number> };
 
 const readWasmMemory = async (target: Attached): Promise<WasmReading | undefined> => {
-  const response = await target.cdp.trySend<{ result?: { value?: unknown } }>('Runtime.evaluate', {
-    expression: WASM_EXPRESSION,
-    returnByValue: true,
-  });
+  const response = await target.cdp.trySend<{ result?: { value?: unknown } }>(
+    'Runtime.evaluate',
+    { expression: WASM_EXPRESSION, returnByValue: true },
+    { timeoutMs: READ_TIMEOUT_MS },
+  );
   const serialized = response?.result?.value;
   if (typeof serialized !== 'string') {
     return undefined;
@@ -81,7 +91,7 @@ export const readHeap = async (
       totalSize: number;
       backingStorageSize?: number;
       embedderHeapUsedSize?: number;
-    }>('Runtime.getHeapUsage');
+    }>('Runtime.getHeapUsage', {}, { timeoutMs: READ_TIMEOUT_MS });
     if (!usage) {
       continue;
     }

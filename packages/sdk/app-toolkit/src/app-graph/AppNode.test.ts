@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';

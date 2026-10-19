@@ -1,453 +1,367 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import React from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { mx } from '@dxos/ui-theme';
-import { type MessageValence } from '@dxos/ui-types';
 
-import { withLayout, withLayoutVariants, withTheme } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { translations } from '#translations';
+
+import * as UiInput from '../../namespaces/Input.ts';
+import { SIZES } from '../../sizes.ts';
 import {
-  type CheckboxProps,
-  type DateInputProps,
-  type DateTimeInputProps,
-  Field,
-  type InputProps,
-  type PinInputProps,
-  type SwitchProps,
-  type TextareaProps,
-  type TimeProps,
-} from './Field.tsx';
+  GEOMETRY,
+  byTestId,
+  controlSize,
+  expectEndCell,
+  expectScoped,
+  expectTooltip,
+  sizeRow,
+} from '../../testing/geometry.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Checkbox } from '../Checkbox/Checkbox.tsx';
+import { Container } from '../Container/Container.tsx';
+import { Input } from '../Input/Input.tsx';
+import { NumberInput } from '../NumberInput/NumberInput.tsx';
+import { PasswordInput } from '../PasswordInput/PasswordInput.tsx';
+import { PinInput } from '../PinInput/PinInput.tsx';
+import { Switch } from '../Switch/Switch.tsx';
+import { Textarea } from '../Textarea/Textarea.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Field from './Field.tsx';
 
-type VariantMap = {
-  text: InputProps;
-  pin: PinInputProps;
-  textarea: TextareaProps;
-  time: TimeProps;
-  date: DateInputProps;
-  datetime: DateTimeInputProps;
-  checkbox: CheckboxProps;
-  switch: SwitchProps;
-};
+const VALENCES: Field.Valence[] = ['success', 'info', 'warning', 'error'];
 
-type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
-
-type StoryArgs = Partial<{
-  kind: keyof VariantMap;
-  label: string;
-  labelVisuallyHidden: boolean;
-  description: string;
-  descriptionVisuallyHidden: boolean;
-  validationValence: MessageValence;
-  validationMessage: string;
-}>;
-
-type RowProps = PropsWithChildren<
-  Pick<
-    StoryArgs,
-    | 'label'
-    | 'labelVisuallyHidden'
-    | 'description'
-    | 'descriptionVisuallyHidden'
-    | 'validationMessage'
-    | 'validationValence'
-  > & {
-    /** The control carries its own label (a checkbox or switch with label children), so the row adds none. */
-    selfLabelled?: boolean;
-  }
->;
-
-/** Label, control and the meta text on one line, so the valence border and message are seen together. */
-const Row = ({
-  selfLabelled,
-  label,
-  validationValence,
-  labelVisuallyHidden,
-  description,
-  descriptionVisuallyHidden,
-  validationMessage,
-  children,
-}: RowProps) => (
-  <Field.Root validationValence={validationValence}>
-    <div className='flex flex-col gap-1'>
-      {selfLabelled ? (
-        children
-      ) : (
-        <>
-          <Field.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
-            {label}
-          </Field.Label>
-          {children}
-        </>
-      )}
-
-      <div
-        className={mx(
-          'flex grow shrink-0 text-description whitespace-nowrap',
-          validationMessage && 'justify-end',
-          descriptionVisuallyHidden && 'sr-only',
-        )}
-      >
-        {validationMessage ? (
-          <Field.ErrorText classNames='block'>{validationMessage}</Field.ErrorText>
-        ) : (
-          <Field.HelperText>{description}</Field.HelperText>
-        )}
-      </div>
-    </div>
-  </Field.Root>
+/**
+ * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
+ * date-time with the calendar trigger, PIN, number, password, and a checkbox and switch in block cells (the current
+ * `Field.Block`). A `required` field (its label marked automatically, then with the mark placed by hand), a `readOnly`
+ * one and an `asChild` root close it.
+ */
+const EveryField = ({ size }: SizeArgs) => (
+  <>
+    <Field.Root>
+      <Field.Label>Name</Field.Label>
+      <Input data-testid={`every-input-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Bio</Field.Label>
+      <Textarea />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Birthday</Field.Label>
+      <UiInput.Date defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Wake up</Field.Label>
+      <UiInput.Date type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Meeting</Field.Label>
+      <UiInput.Date type='datetime-local' defaultValue='2026-09-29T14:00' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Code</Field.Label>
+      <PinInput length={4} data-testid={`every-pin-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Age</Field.Label>
+      <NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput data-testid={`every-password-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Switch label='Notifications' data-testid={`every-switch-${size}`} />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`required-label-${size}`}>Handle</Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`placed-label-${size}`}>
+        <Field.RequiredIndicator>required</Field.RequiredIndicator> Alias
+      </Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root readOnly>
+      <Field.Label>Id</Field.Label>
+      <Input defaultValue='abc-123' />
+    </Field.Root>
+    <Field.Root asChild data-testid={`every-as-child-${size}`}>
+      <section>
+        <Field.Label>Nickname</Field.Label>
+        <Input />
+      </section>
+    </Field.Root>
+  </>
 );
 
-const DefaultStory = ({
-  kind = 'text',
-  label,
-  description,
-  labelVisuallyHidden,
-  descriptionVisuallyHidden,
-  validationValence,
-  validationMessage,
-  ...props
-}: StoryArgs) => {
-  const control = (() => {
-    switch (kind) {
-      case 'text':
-        return <Field.Input {...props} />;
-      case 'pin':
-        return <Field.PinInput {...props} />;
-      case 'textarea':
-        return <Field.Textarea {...props} />;
-      case 'time':
-        return <Field.Time {...props} />;
-      case 'date':
-        return <Field.Date {...props} />;
-      case 'datetime':
-        return <Field.DateTime {...props} />;
-      case 'checkbox':
-        return <Field.Checkbox {...props}>{label}</Field.Checkbox>;
-      case 'switch':
-        return <Field.Switch {...props}>{label}</Field.Switch>;
-    }
-  })();
-
-  return (
-    <Row
-      validationValence={validationValence}
-      selfLabelled={kind === 'checkbox' || kind === 'switch'}
-      label={label}
-      labelVisuallyHidden={labelVisuallyHidden}
-      description={description}
-      descriptionVisuallyHidden={descriptionVisuallyHidden}
-      validationMessage={validationMessage}
-    >
-      {control}
-    </Row>
-  );
-};
+/**
+ * A labelled field with helper text, the same header-with-action field valid and invalid, a field per validation
+ * valence, one with a visually hidden label, then every field type.
+ */
+const DefaultStory = ({ size }: SizeArgs) => (
+  <>
+    <Field.Root data-testid={`field-${size}`}>
+      <Field.Label>Email</Field.Label>
+      <Input data-testid={`field-input-${size}`} />
+      <Field.HelperText>We never share it.</Field.HelperText>
+    </Field.Root>
+    {(['Website', 'Homepage'] as const).map((name) => (
+      <Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
+        <Field.Header>
+          <Field.Label>{name}</Field.Label>
+          <Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
+        </Field.Header>
+        <Input defaultValue='not a url' />
+        <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
+      </Field.Root>
+    ))}
+    {VALENCES.map((valence) => (
+      <Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
+        <Field.Label>Handle ({valence})</Field.Label>
+        <Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
+        <Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Field.HelperText>
+        <Field.ErrorText>The handle is taken.</Field.ErrorText>
+      </Field.Root>
+    ))}
+    <Field.Root>
+      <Field.Label srOnly data-testid={`hidden-label-${size}`}>
+        Filter
+      </Field.Label>
+      <Input placeholder='Filter' />
+    </Field.Root>
+    <EveryField size={size} />
+    {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
+    <Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+      {['Theme', 'Language'].map((name) => (
+        <Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
+          <Field.Header>
+            <Field.Label>{name}</Field.Label>
+          </Field.Header>
+          <Field.HelperText>The app's {name.toLowerCase()}.</Field.HelperText>
+          <Input />
+        </Field.Root>
+      ))}
+    </Container>
+    {/* A header whose label is text (no single control to name): its action still ends the row. */}
+    <Field.Header data-testid={`text-header-${size}`}>
+      <Typography.Text truncate>Tags</Typography.Text>
+      <Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+    </Field.Header>
+    {/* A row with its own columns spaces them by its gap. */}
+    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Container>
+  </>
+);
 
 const meta = {
   title: 'ui/react-ui-core/components/Field',
-  component: Field.Root as any,
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayoutVariants(),
-    withLayout({ layout: 'column', scroll: true, classNames: 'bg-transparent' }),
-  ],
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
-type Story = StoryObj<StoryArgs & Variant>;
+type Story = StoryObj<typeof meta>;
 
-export const Subdued: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a subdued input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    variant: 'subdued',
-  },
-};
-
-export const Disabled: Story = {
-  args: {
-    kind: 'text',
-    label: 'Disabled',
-    placeholder: 'This is a disabled input',
-    disabled: true,
-  },
-};
-
-export const LabelVisuallyHidden: Story = {
-  args: {
-    kind: 'text',
-    label: 'The label is for screen readers',
-    labelVisuallyHidden: true,
-    placeholder: 'The label for this input exists but is only read by screen readers',
-  },
-};
-
-export const WithDescription: Story = {
-  args: {
-    kind: 'text',
-    label: 'Described input',
-    placeholder: 'This input has an accessible description',
-    description: 'This helper text is accessibly associated with the input.',
-  },
-};
-
-export const WithError: Story = {
-  args: {
-    kind: 'text',
-    label: 'Described invalid input',
-    placeholder: 'This input has both an accessible description and a validation error',
-    description: 'This description is identified separately in the accessibility tree.',
-    validationValence: 'error',
-    validationMessage: 'The input has an error.',
-  },
-};
+export const Default: Story = {};
 
 /**
- * Native HTML input types. `Field.Input` accepts every standard
- * `<input type="…">` value via its `type` prop; this story exercises the most
- * commonly used ones so the rendering across themes/browsers can be
- * inspected at a glance.
+ * In a Field stack the field pads its control out to a block (finding 11); the field wires its label and helper text
+ * to the control, and ErrorText renders only while invalid; a trailing icon-only Button in `Field.Header` shows its
+ * label in a Tooltip (left open). `validationValence` gives the control a 1px border and focus ring in the valence's
+ * border colour and the HelperText its text colour; `error` also makes the field invalid. An `srOnly` label still
+ * names its control.
  */
-const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
-  { type: 'text', placeholder: 'Plain text' },
-  { type: 'email', placeholder: 'name@example.com' },
-  { type: 'password', placeholder: '••••••••' },
-  { type: 'search', placeholder: 'Search…' },
-  { type: 'tel', placeholder: '+1 (555) 555-5555' },
-  { type: 'url', placeholder: 'https://example.com' },
-  { type: 'number', placeholder: '42' },
-  { type: 'date', placeholder: '' },
-  { type: 'time', placeholder: '' },
-  { type: 'datetime-local', placeholder: '' },
-  { type: 'month', placeholder: '' },
-  { type: 'week', placeholder: '' },
-];
+export const Test: Story = {
+  args: { allSizes: true },
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const input = byTestId(canvasElement, `field-input-${size}`);
+      await expect(input.getBoundingClientRect().height, size).toBeCloseTo(controlSize(size), 0);
+      await expect(parseFloat(getComputedStyle(input).marginTop), size).toBeCloseTo(GEOMETRY[size].inset, 0);
+      await expect(parseFloat(getComputedStyle(input).marginBottom), size).toBeCloseTo(GEOMETRY[size].inset, 0);
+    }
 
-export const Input: Story = {
-  render: () => (
-    <div className='flex flex-col gap-3 min-w-[24rem]'>
-      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
-        // `Field.Root` renders no element, so without this wrapper the gap falls between each label
-        // and its own field rather than between the groups — making the label spacing look unlike
-        // every other story's.
-        <div key={type}>
-          <Field.Root>
-            <Field.Label>{`type="${type}"`}</Field.Label>
-            <Field.Input type={type} placeholder={placeholder} />
-          </Field.Root>
-        </div>
-      ))}
-    </div>
-  ),
-};
+    const canvas = within(sizeRow(canvasElement, 'md'));
+    const input = canvas.getByRole('textbox', { name: 'Email' });
+    await expect(input).toBe(byTestId(canvasElement, 'field-input-md'));
+    await expect(input).toHaveAccessibleDescription('We never share it.');
+    await expect(byTestId(canvasElement, 'field-md').dataset.scope).toBe('field');
+    const website = within(byTestId(canvasElement, 'website-md'));
+    await expect(website.queryByText('Enter a valid URL.')).toBeNull();
+    await expect(website.getByRole('textbox', { name: 'Website' })).not.toHaveAttribute('aria-invalid', 'true');
+    await expectScoped(canvasElement);
 
-/**
- * MUI-style adornments: text or icon placed inside the input container. The container carries the
- * surface/border/focus (via `focus-within`) and the field renders bare. `subdued` drops the box for a
- * borderless row (compose a bottom rule via `classNames`).
- */
-export const InputAdornments: Story = {
-  render: () => (
-    <div className='flex flex-col'>
-      <Field.Root>
-        <Field.Label>Start icon</Field.Label>
-        <Field.Input start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
-      </Field.Root>
-      <Field.Root>
-        <Field.Label>End text</Field.Label>
-        <Field.Input end={<span className='text-sm'>.dxos.org</span>} placeholder='workspace' />
-      </Field.Root>
-      <Field.Root>
-        <Field.Label>Both</Field.Label>
-        <Field.Input
-          start={<span className='text-sm'>$</span>}
-          end={<Icon icon='ph--currency-circle-dollar--regular' size={4} />}
-          placeholder='0.00'
-        />
-      </Field.Root>
-    </div>
-  ),
-};
+    const homepage = within(byTestId(canvasElement, 'homepage-md'));
+    await expect(homepage.getByText('Enter a valid URL.')).toBeVisible();
+    await expect(homepage.getByRole('textbox', { name: 'Homepage' })).toHaveAttribute('aria-invalid', 'true');
+    await expect(byTestId(canvasElement, 'homepage-md')).toHaveAttribute('data-invalid');
 
-export const TextArea: Story = {
-  args: {
-    kind: 'textarea',
-    label: 'This input is a text area input',
-    description: 'Type a long paragraph',
-    placeholder: 'Lorem ipsum dolor sit amet',
+    const plainHelper = getComputedStyle(
+      within(byTestId(canvasElement, 'field-md')).getByText('We never share it.'),
+    ).color;
+    const tones = new Set<string>();
+    for (const valence of VALENCES) {
+      const input = byTestId(canvasElement, `${valence}-input-md`);
+      await expect(getComputedStyle(input).boxShadow, valence).toMatch(/0px 0px 0px 1px inset$/);
+      const helper = getComputedStyle(byTestId(canvasElement, `${valence}-helper-md`)).color;
+      await expect(helper, valence).not.toBe(plainHelper);
+      tones.add(helper);
+      const errorText = within(byTestId(canvasElement, `${valence}-md`)).queryByText('The handle is taken.');
+      if (valence === 'error') {
+        await expect(input).toHaveAttribute('aria-invalid', 'true');
+        await expect(errorText).toBeVisible();
+      } else {
+        await expect(input).not.toHaveAttribute('aria-invalid', 'true');
+        await expect(errorText).toBeNull();
+      }
+    }
+    await expect(tones.size).toBe(VALENCES.length);
+    await expect(canvas.getByRole('textbox', { name: 'Filter' })).toBeInTheDocument();
+    await expect(byTestId(canvasElement, 'hidden-label-md').getBoundingClientRect().width).toBeLessThanOrEqual(1);
+
+    // Every field type is named by its Field label; a checkbox or switch takes a block like the current `Field.Block`.
+    for (const size of SIZES) {
+      for (const part of ['input', 'date', 'time', 'number', 'password']) {
+        const control = byTestId(canvasElement, `every-${part}-${size}`);
+        await expect(control.getBoundingClientRect().height, `${part} ${size}`).toBeCloseTo(controlSize(size), 0);
+      }
+      for (const part of ['checkbox', 'switch']) {
+        const control = byTestId(canvasElement, `every-${part}-${size}`);
+        await expect(control.getBoundingClientRect().height, `${part} ${size}`).toBeCloseTo(GEOMETRY[size].block, 0);
+      }
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: 'Bio' }).tagName).toBe('TEXTAREA');
+    await expect(canvas.getByRole('group', { name: 'Birthday' })).toBeInTheDocument();
+    await expect(
+      within(byTestId(canvasElement, 'every-date-md')).getByRole('button', { name: 'Pick a date' }),
+    ).toBeVisible();
+    await expect(canvas.getByRole('group', { name: 'Wake up' })).toBeInTheDocument();
+    await expect(canvas.getByRole('group', { name: 'Meeting' })).toBeInTheDocument();
+    await expect(within(canvas.getByRole('group', { name: 'Code' })).getAllByRole('textbox')).toHaveLength(4);
+    await expect(canvas.getByRole('spinbutton', { name: 'Age' })).toHaveValue('30');
+    await expect(canvas.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    await expect(canvas.getByRole('checkbox', { name: 'Subscribe' })).toBeInTheDocument();
+    await expect(canvas.getByRole('switch', { name: 'Notifications' })).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: 'Handle' })).toBeRequired();
+    // A required root's label ends with Ark's mark on its own, kept out of the name; one placed in the label replaces it.
+    const marks = byTestId(canvasElement, 'required-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(marks).toHaveLength(1);
+    await expect(marks[0]).toHaveTextContent('*');
+    await expect(marks[0]).toHaveAttribute('aria-hidden', 'true');
+    await expect(
+      canvas
+        .getByRole('textbox', { name: 'Id' })
+        .closest('.dx-field')
+        ?.querySelector('[data-part="required-indicator"]'),
+    ).toBeNull();
+    const placed = byTestId(canvasElement, 'placed-label-md').querySelectorAll('[data-part="required-indicator"]');
+    await expect(placed).toHaveLength(1);
+    await expect(placed[0]).toHaveTextContent('required');
+    await expect(canvas.getByRole('textbox', { name: 'Alias' })).toBeRequired();
+    await expect(canvas.getByRole('textbox', { name: 'Id' })).toHaveAttribute('readonly');
+    const asChild = byTestId(canvasElement, 'every-as-child-md');
+    await expect(asChild.tagName).toBe('SECTION');
+    await expect(asChild).toHaveClass('dx-field');
+    await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+
+    // Row fields share the Container's tracks: the header spans the row; the helper (before the `control` line) and the
+    // control (after it) share the next line, top-aligned to the control's cell.
+    const rows = ['theme', 'language'].map((name) => {
+      const row = byTestId(canvasElement, `row-${name}-md`);
+      const inputElement = row.querySelector<HTMLElement>('.dx-input');
+      const headerElement = row.querySelector('[data-part="header"]');
+      const helperElement = row.querySelector('[data-part="helper-text"]');
+      invariant(inputElement && headerElement && helperElement);
+      return {
+        row,
+        header: headerElement.getBoundingClientRect(),
+        helper: helperElement.getBoundingClientRect(),
+        input: inputElement.getBoundingClientRect(),
+        inputTop: inputElement.getBoundingClientRect().top - parseFloat(getComputedStyle(inputElement).marginTop),
+      };
+    });
+    for (const { row, header, helper, input, inputTop } of rows) {
+      await expect(input.left).toBeCloseTo(rows[0].input.left, 0);
+      await expect(header.right).toBeGreaterThanOrEqual(input.right - 0.5);
+      await expect(helper.top).toBeGreaterThanOrEqual(header.bottom - 0.5);
+      await expect(helper.right).toBeLessThanOrEqual(input.left + 0.5);
+      await expect(helper.top).toBeCloseTo(inputTop, 0);
+      await expect(row).toHaveAttribute('data-surface', '+1');
+      await expect(getComputedStyle(row).borderTopWidth).toBe('0px');
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Theme' })).toBeInTheDocument();
+    const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();
+    const second = byTestId(canvasElement, 'pair-second-md').getBoundingClientRect();
+    await expect(second.left - first.right).toBeCloseTo(4, 0);
+
+    // Header actions end the row whatever the label is: the icon sits in the block-wide end cell.
+    for (const size of SIZES) {
+      const header = byTestId(canvasElement, `text-header-${size}`);
+      const box = header.getBoundingClientRect();
+      const label = header.firstElementChild;
+      invariant(label);
+      await expect(label.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(box.left, 0);
+      await expectEndCell(
+        within(header).getByRole('button', { name: 'Add tag' }).querySelector('svg'),
+        box.right,
+        size,
+        size,
+      );
+    }
+
+    // Colours resolved from the tokens, through a probe element in the same scope.
+    const resolve = (token: string) => {
+      const probe = canvasElement.ownerDocument.createElement('span');
+      probe.style.color = `var(${token})`;
+      canvasElement.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+
+    // Label and help text are interface text in the subdued colour, distinct from the value; help text is a size smaller.
+    const field = within(byTestId(canvasElement, 'field-md'));
+    const emailLabel = getComputedStyle(field.getByText('Email'));
+    const helper = getComputedStyle(field.getByText('We never share it.'));
+    const value = getComputedStyle(field.getByRole('textbox'));
+    await expect(emailLabel.color).toBe(resolve('--color-fg-subtle'));
+    await expect(helper.color).toBe(resolve('--color-fg-subtle'));
+    await expect(parseFloat(helper.fontSize)).toBeLessThan(parseFloat(emailLabel.fontSize));
+    await expect(emailLabel.color).not.toBe(value.color);
+    await expect(helper.color).not.toBe(value.color);
+
+    // The required mark is warning-coloured, a small gap after the label's text.
+    const requiredLabel = byTestId(canvasElement, 'required-label-md');
+    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]');
+    invariant(mark && requiredLabel.firstChild);
+    await expect(getComputedStyle(mark).color).toBe(resolve('--color-warning-text'));
+    const range = canvasElement.ownerDocument.createRange();
+    range.selectNodeContents(requiredLabel.firstChild);
+    await expect(mark.getBoundingClientRect().left - range.getBoundingClientRect().right).toBeGreaterThan(0.5);
+
+    const clear = website.getByRole('button', { name: 'Clear website' });
+    await userEvent.hover(clear);
+    await expectTooltip(clear, 'Clear website');
   },
-};
-
-/** The control is one `<label>` holding its text and its form input, so clicking the text toggles it. */
-const togglesFromItsLabel = async (canvasElement: HTMLElement, label: string) => {
-  const root = canvasElement.querySelector('label') as HTMLLabelElement;
-  await expect(root).toHaveTextContent(label);
-  const input = root.querySelector('input') as HTMLInputElement;
-  await expect(input.checked).toBe(false);
-  await userEvent.click(within(root).getByText(label));
-  await expect(input.checked).toBe(true);
-  await userEvent.click(within(root).getByText(label));
-  await expect(input.checked).toBe(false);
-  await userEvent.click(within(root).getByText(label));
-  await expect(input.checked).toBe(true);
-};
-
-export const Checkbox: Story = {
-  args: {
-    kind: 'checkbox',
-    label: 'This is a checkbox',
-    description: 'Checked, indeterminate, or unchecked',
-    size: 5,
-  },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
-    togglesFromItsLabel(canvasElement, 'This is a checkbox'),
-};
-
-export const Switch: Story = {
-  args: {
-    kind: 'switch',
-    label: 'This is a switch',
-    description: 'On or off',
-  },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
-    togglesFromItsLabel(canvasElement, 'This is a switch'),
-};
-
-export const SwitchCompact: Story = {
-  args: {
-    kind: 'switch',
-    density: 'sm',
-    label: 'This is a compact switch',
-    description: 'On or off',
-  },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
-    togglesFromItsLabel(canvasElement, 'This is a compact switch'),
-};
-
-export const PinInput: Story = {
-  args: {
-    kind: 'pin',
-    label: 'This input is a PIN-style input',
-    length: 6,
-    description: 'Type in secret you received',
-    pattern: '\\d*',
-    density: 'lg',
-  },
-};
-
-export const Time: Story = {
-  args: {
-    kind: 'time',
-    label: 'Time',
-    defaultValue: '09:30',
-  },
-};
-
-export const TimeUncontrolled: Story = {
-  args: {
-    kind: 'time',
-    label: 'Time (uncontrolled)',
-    defaultValue: '14:00',
-  },
-};
-
-export const TimeAmPm: Story = {
-  args: {
-    kind: 'time',
-    label: 'Time (12-hour, AM/PM)',
-    defaultValue: '14:00',
-    hourCycle: 12,
-  } as any,
-};
-
-export const TimeDisabled: Story = {
-  args: {
-    kind: 'time',
-    label: 'Time (disabled)',
-    defaultValue: '12:00',
-    disabled: true,
-  },
-};
-
-export const Date: Story = {
-  args: {
-    kind: 'date',
-    label: 'Date',
-    defaultValue: '1990-05-12',
-  },
-};
-
-export const DateTime: Story = {
-  args: {
-    kind: 'datetime',
-    label: 'Date & time',
-    defaultValue: '2026-06-01T15:30',
-  },
-};
-
-/**
- * The picker must open at its field. It is positioned through a virtual anchor because the
- * react-aria field keeps an `id` handed to it for its input, so an `Anchor asChild` would leave
- * the popover machine nothing to find and the calendar would open at the page's origin.
- */
-const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-  const canvas = within(canvasElement);
-  const [field] = canvasElement.querySelectorAll<HTMLElement>('[data-density]');
-  await userEvent.click(canvas.getAllByRole('button')[0]);
-  const dialog = await waitFor(async () => {
-    const element = document.querySelector<HTMLElement>('[role="dialog"]');
-    await expect(element).not.toBeNull();
-    invariant(element);
-    return element;
-  });
-  await waitFor(async () => {
-    const rect = dialog.getBoundingClientRect();
-    const anchor = field.getBoundingClientRect();
-    await expect(Math.abs(rect.left - anchor.left)).toBeLessThan(8);
-    await expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
-    await expect(rect.top - anchor.bottom).toBeLessThan(16);
-  });
-};
-
-export const DateWithPicker: Story = {
-  render: () => (
-    <Field.Root>
-      <Field.Label>Date (with picker)</Field.Label>
-      <div className='flex items-center gap-1'>
-        <Field.Date defaultValue='2026-06-01' />
-        <Field.TriggerIcon />
-      </div>
-      <Field.HelperText>Click the calendar icon to open the date picker.</Field.HelperText>
-    </Field.Root>
-  ),
-  play: opensAtField,
-};
-
-export const DateTimeWithPicker: Story = {
-  render: () => (
-    <Field.Root>
-      <Field.Label>Date & time (with picker)</Field.Label>
-      <div className='flex items-center gap-1'>
-        <Field.DateTime defaultValue='2026-06-01T15:30' />
-        <Field.TriggerIcon />
-      </div>
-      <Field.HelperText>Click the calendar icon to open the date picker.</Field.HelperText>
-    </Field.Root>
-  ),
-  play: opensAtField,
 };

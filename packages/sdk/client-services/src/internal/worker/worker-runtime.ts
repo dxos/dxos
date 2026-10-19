@@ -8,17 +8,17 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as Reactivity from 'effect/reactivity/Reactivity';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
 import { LayerStack } from '@dxos/compute-runtime';
 import { type Config, ConfigService } from '@dxos/config';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
@@ -70,7 +70,7 @@ export type WorkerRuntimeOptions = {
 
   /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
-   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   * For testing in Node.js, use `layerMemory` from `@dxos/sql-sqlite/Platform`.
    */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 
@@ -168,6 +168,8 @@ export const makeWorkerRuntime = ({
       SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie),
     );
     yield* Hook.on(Events.Reset, () => requestShutdown);
+    // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
+    yield* Hook.on(Events.StorageStuck, () => requestShutdown);
     yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {

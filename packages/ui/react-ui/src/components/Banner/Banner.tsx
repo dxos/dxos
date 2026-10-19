@@ -1,29 +1,27 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
-import React, {
-  type ComponentPropsWithRef,
-  type CSSProperties,
-  type PropsWithChildren,
-  type ReactNode,
-  forwardRef,
-} from 'react';
+import React, { type ReactNode, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { createContext, useId } from '@dxos/react-hooks';
-import { type ComposableProps, type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
+import { createContext } from '@dxos/react-hooks';
+import { type MessageValence } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { recipes } from '../../recipes.ts';
+import { composable, composableProps, slottable } from '../../util/slots.ts';
+import { Block } from '../Block/Block.tsx';
+import { Button } from '../Button/Button.tsx';
+import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
 
-const bannerIcons: Record<MessageValence, string> = {
+const BANNER_ICONS: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
   info: 'ph--info--duotone',
   warning: 'ph--warning--duotone',
@@ -31,250 +29,145 @@ const bannerIcons: Record<MessageValence, string> = {
   neutral: 'ph--info--duotone',
 };
 
-type BannerRootProps = PropsWithChildren<{
-  valence?: MessageValence;
-  titleId?: string;
-  descriptionId?: string;
-  /** Overrides the default valence icon; consumed by {@link BannerTitle}. */
-  icon?: string;
-}>;
+type BannerContextValue = { titleId: string; descriptionId: string; valence: MessageValence; icon?: string };
 
-type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence; icon?: string };
-
-const BANNER_NAME = 'Banner';
-
-// CSS custom properties for valence color inheritance — consumed by Button variant='valence'.
-// Extending CSSProperties so entries satisfy the style prop type without a cast at the use site.
-type ValenceCSSVars = CSSProperties & {
-  '--dx-valence-bg': string;
-  '--dx-valence-bg-hover': string;
-  '--dx-valence-text': string;
-};
-
-const valenceVars: Record<MessageValence, ValenceCSSVars> = {
-  success: {
-    '--dx-valence-bg': 'var(--color-success-bg)',
-    '--dx-valence-bg-hover': 'var(--color-success-bg-hover)',
-    '--dx-valence-text': 'var(--color-success-text)',
-  },
-  info: {
-    '--dx-valence-bg': 'var(--color-info-bg)',
-    '--dx-valence-bg-hover': 'var(--color-info-bg-hover)',
-    '--dx-valence-text': 'var(--color-info-text)',
-  },
-  warning: {
-    '--dx-valence-bg': 'var(--color-warning-bg)',
-    '--dx-valence-bg-hover': 'var(--color-warning-bg-hover)',
-    '--dx-valence-text': 'var(--color-warning-text)',
-  },
-  error: {
-    '--dx-valence-bg': 'var(--color-error-bg)',
-    '--dx-valence-bg-hover': 'var(--color-error-bg-hover)',
-    '--dx-valence-text': 'var(--color-error-text)',
-  },
-  neutral: {
-    '--dx-valence-bg': 'var(--color-neutral-bg)',
-    '--dx-valence-bg-hover': 'var(--color-neutral-bg-hover)',
-    '--dx-valence-text': 'var(--color-neutral-text)',
-  },
-};
-
-const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(BANNER_NAME);
+const [BannerProvider, useBannerContext] = createContext<BannerContextValue>('Banner');
 
 //
 // Root
 //
 
-/**
- * Headless: renders no DOM element — only the shared message context (ids, valence, icon).
- * The element, with its role/aria wiring, valence CSS variables and surface, is `Banner.Content`.
- */
-const BannerRoot = ({
-  valence = 'neutral',
-  titleId: propsTitleId,
-  descriptionId: propsDescriptionId,
-  icon,
-  children,
-}: BannerRootProps) => {
-  const titleId = useId('message__title', propsTitleId);
-  const descriptionId = useId('message__description', propsDescriptionId);
-
-  return <MessageProvider {...{ titleId, descriptionId, valence, icon }}>{children}</MessageProvider>;
+type BannerRootProps = {
+  valence?: MessageValence;
+  /** Overrides the valence's icon in the Title's start rail. */
+  icon?: string;
+  /** Inset by a gutter of its own; by default only outside a grid, so `false` for a host that already pads it. */
+  inset?: boolean;
 };
 
-BannerRoot.displayName = BANNER_NAME;
-
-//
-// Content
-//
-
-const BANNER_CONTENT_NAME = 'Banner.Content';
-
-// Narrowed to the composable surface because the element is a `Column.Root`, which only accepts
-// `classNames`/`role`/`style` (see `ComposableProps`).
-type BannerContentProps = SlottableProps<{ elevation?: Elevation }>;
-
 /**
- * The message's element: a `Column` grid carrying the role/aria wiring, the valence CSS variables
- * and surface — so `Banner.Title` places its icon in the gutter and `Banner.Body` aligns to the
- * content track. Required inside `Banner.Root`, which renders no DOM element.
+ * A message on its valence's surface: a rail-gutter Container whose Title puts the icon in the start rail and an
+ * optional close button in the end rail, so the Body aligns with the title text. A neutral banner is a note,
+ * any other an alert. Buttons with `variant='valence'` inside it take its colours.
  */
-const BannerContent = forwardRef<HTMLDivElement, BannerContentProps>(
-  ({ asChild, classNames, role, style, children, elevation: propsElevation, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { titleId, descriptionId, valence } = useMessageContext(BANNER_CONTENT_NAME);
-    const elevation = useElevationContext(propsElevation);
-    // Spread rather than inline attributes: `Column.Root`'s composable surface does not declare
-    // aria props, and assignability (unlike JSX literal attributes) admits them.
-    const aria = { 'aria-labelledby': titleId, 'aria-describedby': descriptionId };
-
+const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
+  ({ children, valence = 'neutral', icon, inset: insetProp, ...props }, forwardedRef) => {
+    const titleId = useId();
+    const descriptionId = useId();
+    // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
+    const inGrid = useInGrid();
+    const inset = insetProp ?? !inGrid;
+    const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
+    const {
+      className,
+      style: propsStyle,
+      ...rest
+    } = composableProps<HTMLDivElement>(props, {
+      classNames: [recipes.container(), recipes.banner()],
+      role: valence === 'neutral' ? 'note' : 'alert',
+    });
     return (
-      <Column.Root
-        asChild={asChild}
-        {...props}
-        {...aria}
-        role={role ?? (valence === 'neutral' ? 'paragraph' : 'alert')}
-        style={{ ...valenceVars[valence], ...style }}
-        classNames={tx('banner.content', { valence, elevation }, classNames)}
+      <div
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        {...rest}
+        {...attributes}
+        data-scope='banner'
+        data-part='root'
+        data-valence={valence}
+        data-inset={inset ? '' : undefined}
+        style={{ ...style, ...propsStyle }}
+        className={className}
         ref={forwardedRef}
       >
-        {children}
-      </Column.Root>
+        <BannerProvider titleId={titleId} descriptionId={descriptionId} valence={valence} icon={icon}>
+          <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider>
+        </BannerProvider>
+      </div>
     );
   },
 );
 
-BannerContent.displayName = BANNER_CONTENT_NAME;
+BannerRoot.displayName = 'Banner.Root';
 
 //
 // Title
 //
 
-const BANNER_TITLE_NAME = 'Banner.Title';
-
-type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
+type BannerTitleProps = {
+  /** Overrides the Root's icon for this title. */
   icon?: string;
+  /** Shows a close button in the end rail. */
   onClose?: () => void;
+  children?: ReactNode;
 };
 
-const BannerTitle = forwardRef<HTMLDivElement, BannerTitleProps>(
-  ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
+const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
+  ({ children, icon: iconProp, onClose, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { tx } = useThemeContext();
-    const { titleId, valence, icon: contextIcon } = useMessageContext(BANNER_TITLE_NAME);
-    const icon = iconProp ?? contextIcon ?? bannerIcons[valence];
+    const { titleId, valence, icon: rootIcon } = useBannerContext('Banner.Title');
+    const icon = iconProp ?? rootIcon ?? BANNER_ICONS[valence];
+    const { style, ...attributes } = containerAttributes({ layout: 'row' });
+    const {
+      className,
+      style: propsStyle,
+      ...rest
+    } = composableProps<HTMLDivElement>(props, {
+      classNames: [recipes.container(), recipes.bannerTitle()],
+    });
     return (
-      <Column.Row classNames={tx('banner.header', {}, classNames)} ref={forwardedRef}>
-        {icon && (
-          <Column.Block>
-            <Icon icon={icon} />
-          </Column.Block>
-        )}
-        <h2 className={tx('banner.title', {}, classNames)} id={titleId}>
-          {children}
-        </h2>
+      <div
+        {...rest}
+        {...attributes}
+        data-scope='banner'
+        data-part='title'
+        style={{ ...style, ...propsStyle }}
+        className={className}
+        ref={forwardedRef}
+      >
+        <Block rail='start'>
+          <Icon.Icon icon={icon} />
+        </Block>
+        <Typography.Text asChild>
+          <h2 id={titleId}>{children}</h2>
+        </Typography.Text>
         {onClose && (
-          <Column.Block end>
-            <IconButton
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              density='sm'
-              label={t('toolbar-close.label')}
-              onClick={onClose}
-            />
-          </Column.Block>
+          <Block rail='end'>
+            <Button icon='ph--x--regular' label={t('toolbar-close.label')} iconOnly variant='ghost' onClick={onClose} />
+          </Block>
         )}
-      </Column.Row>
+      </div>
     );
   },
 );
 
-BannerTitle.displayName = BANNER_TITLE_NAME;
+BannerTitle.displayName = 'Banner.Title';
 
 //
 // Body
 //
 
-const BANNER_BODY_NAME = 'Banner.Body';
-
-type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
-  asChild?: boolean;
-};
-
-const BannerBody = forwardRef<HTMLParagraphElement, BannerBodyProps>(
-  ({ asChild, classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { descriptionId } = useMessageContext(BANNER_BODY_NAME);
-    return (
-      <ark.p
-        asChild={asChild}
-        {...props}
-        className={tx('banner.body', {}, classNames)}
-        id={descriptionId}
-        ref={forwardedRef}
-      >
-        {children}
-      </ark.p>
-    );
-  },
-);
-
-BannerBody.displayName = BANNER_BODY_NAME;
-
-//
-// Empty
-//
-
-const BANNER_EMPTY_NAME = 'Banner.Empty';
-
-type BannerEmptyProps = ComposableProps<{
-  /** Message to show; the caller translates it. Falls back to a generic message when omitted. */
-  label?: ReactNode;
-  /** Optional Phosphor icon name shown above the message. */
-  icon?: string;
-}>;
-
-/**
- * A surface standing in for content that is not there: no list items, no selection, no result.
- *
- * A banner rather than a component of its own because it is the same statement — a message in place
- * of content — but the one case that carries no valence and paints no surface: nothing has gone
- * wrong, there is simply nothing to show. So it renders flat and centred, and announces itself as a
- * status rather than an alert. It composes no `Banner.Root`: with no valence there is nothing for
- * the context to carry.
- */
-const BannerEmpty = composable<HTMLDivElement, BannerEmptyProps>(({ label, icon, ...props }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  // `defaultValue` keeps the fallback working even before a host registers the key, and leaves it translatable.
-  const message = label ?? t('empty.label', { defaultValue: 'No items' });
+const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { descriptionId } = useBannerContext('Banner.Body');
+  const { className, ...rest } = composableProps(props, {
+    classNames: [recipes.typography(), recipes.bannerBody()],
+  });
   return (
-    <div
-      {...composableProps<HTMLDivElement>(props, {
-        classNames: 'flex flex-col items-center justify-center gap-2 p-trim-md text-sm text-center text-description',
-        role: 'status',
-      })}
+    <ark.p
+      asChild={asChild}
+      {...rest}
+      id={descriptionId}
+      data-scope='banner'
+      data-part='body'
+      className={className}
       ref={forwardedRef}
     >
-      {/* Decorative: the message carries the whole statement, so the glyph is not announced beside it. */}
-      {icon && <Icon icon={icon} size={6} classNames='text-subdued' aria-hidden='true' />}
-      <span>{message}</span>
-    </div>
+      {children}
+    </ark.p>
   );
 });
 
-BannerEmpty.displayName = BANNER_EMPTY_NAME;
+BannerBody.displayName = 'Banner.Body';
+export type { BannerRootProps as RootProps, BannerTitleProps as TitleProps };
 
-//
-// Banner
-//
-
-export const Banner = {
-  Root: BannerRoot,
-  Content: BannerContent,
-  Title: BannerTitle,
-  Body: BannerBody,
-  Empty: BannerEmpty,
-};
-
-export type { BannerBodyProps, BannerContentProps, BannerEmptyProps, BannerRootProps, BannerTitleProps };
+export { BannerBody as Body, BannerRoot as Root, BannerTitle as Title };

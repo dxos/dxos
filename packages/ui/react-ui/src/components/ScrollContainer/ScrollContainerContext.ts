@@ -1,24 +1,31 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type ScrollController } from './ScrollContainer.tsx';
+// Kept out of `ScrollContainer.tsx`: react-refresh only fast-refreshes a module whose exports are all components.
 
-// Kept out of `ScrollContainer.tsx`: react-refresh only fast-refreshes a module whose exports are all
-// components, so a context and its hook exported beside them force a full page reload on every edit.
+/** Imperative handle on a `ScrollContainer.Root`. */
+export type ScrollController = {
+  readonly viewport: HTMLElement | null;
+  scrollToTop: (behavior?: ScrollBehavior) => void;
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
+};
 
 export type ScrollContainerContextValue = {
-  controller?: ScrollController;
-  pinned?: boolean;
-  overflow?: boolean;
-  /** Called by Viewport to register/unregister the scroll element. */
-  setViewport: (el: HTMLDivElement | null) => void;
-  /** Called by Viewport on wheel events to update pinned state. */
-  setPinned: (value: boolean) => void;
-  /** Called by Viewport on scroll events to update overflow state. */
-  setOverflow: (value: boolean) => void;
+  controller: ScrollController;
+  /** Following the tail: new content scrolls into view. */
+  pinned: boolean;
+  /** Scrolled away from the top, so the top Fade shows. */
+  overflow: boolean;
+  /** Content continues below the visible end, so the bottom Fade shows. */
+  overflowEnd: boolean;
+  /** Called by Viewport to register its scrolling element. */
+  setViewport: (viewport: HTMLElement | null) => void;
+  setPinned: (pinned: boolean) => void;
+  setOverflow: (overflow: boolean) => void;
+  setOverflowEnd: (overflowEnd: boolean) => void;
 };
 
 export const [ScrollContainerProvider, useScrollContainerContext] =

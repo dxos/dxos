@@ -9,7 +9,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -17,7 +17,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
 import { ProjectsPlugin } from '#plugin';
 import { ProjectCapabilities, ProjectOperation } from '#types';
@@ -97,10 +97,10 @@ describe('ProjectOperation.Create', () => {
   });
 });
 
-type Harness = Awaited<ReturnType<typeof createComposerTestApp>>;
+type Harness = Awaited<ReturnType<typeof TestingHarness.createComposerTestApp>>;
 
 const setup = async (): Promise<Harness> => {
-  const harness = await createComposerTestApp({
+  const harness = await TestingHarness.createComposerTestApp({
     // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
     // Assistant and Tasks are declared in Projects' `dependsOn`, so the manager refuses to resolve
     // Projects without them.

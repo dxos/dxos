@@ -2,21 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 import { useEffect, useMemo } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { CommandConfig, type CommandServices } from '@dxos/cli-util';
 import { type Client, fromClient, fromConfig } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const OPERATIONS_UNAVAILABLE = 'Operations are not available in the devtools terminal.';
 
@@ -46,9 +47,9 @@ const operationLayer = Layer.succeed(Operation.Service, {
  * Returns `undefined` until something contributes commands — there is no shell to offer yet.
  */
 export const useCliApp = (client: Client) => {
-  const manager = usePluginManager();
-  const commands = useCapabilities(Capabilities.Command);
-  const contributed = useCapabilities(Capabilities.Layer);
+  const manager = PluginManagerProvider.usePluginManager();
+  const commands = Hooks.useCapabilities(Capabilities.Command);
+  const contributed = Hooks.useCapabilities(Capabilities.Layer);
 
   useEffect(() => {
     EffectEx.runDetached(manager.activate(ActivationEvents.CommandsRequested));

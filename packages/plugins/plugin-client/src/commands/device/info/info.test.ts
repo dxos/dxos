@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { handler } from './info.ts';

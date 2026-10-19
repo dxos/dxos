@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
 
 /**
- * Long enough that a transient empty state — a scope resolving before its data, a store settling
- * between query identities — is never rendered, short enough that a genuinely empty surface still
- * feels immediate. The policy lives here rather than at each call site so surfaces agree on it.
+ * Long enough that a transient empty state (a scope resolving before its data, a store settling between query
+ * identities) is never rendered, short enough that a genuinely empty surface still feels immediate.
  */
 const DEFAULT_DELAY = 500;
 
@@ -16,52 +15,22 @@ const DEFAULT_MIN_DURATION = 1_000;
 
 export type DeferredProps = PropsWithChildren<{
   /**
-   * Whether the fallback is what should be shown — typically "the query has not produced content".
-   *
-   * Named for what it gates rather than for the happy path: a surface asking this question already
-   * holds a predicate like `showEmptyState`, and inverting it at every call site is how the two
-   * branches get swapped.
+   * Whether the fallback is what should be shown, typically "the query has not produced content". Named for what it
+   * gates, so a caller's `showEmptyState` passes straight through rather than being inverted at every call site.
    */
   pending: boolean;
-
-  /**
-   * How long `pending` must hold before the fallback appears, in ms.
-   *
-   * This is the flicker guard. A query-driven surface passes through a legitimately-empty state on
-   * the way to its first results — a scope that resolves before its data does, a store that settles
-   * between identities — and rendering an "empty" panel for those few frames reads as a bug. A
-   * pending state shorter than this is never shown at all.
-   */
+  /** How long `pending` must hold before the fallback appears, in ms: the flicker guard. */
   delay?: number;
-
-  /**
-   * Once shown, how long the fallback stays, in ms.
-   *
-   * The opposite guard to {@link delay}, for the case where content arrives just after the fallback
-   * committed: without it the panel would appear and vanish, which is the same flash by another
-   * route. Only counted from the moment the fallback actually rendered.
-   */
+  /** Once shown, how long the fallback stays, in ms, counted from when it rendered. */
   minDuration?: number;
-
-  /** Rendered while deferred. A thunk, so an expensive fallback costs nothing when it never shows. */
+  /** Rendered while deferred; a thunk, so an expensive fallback costs nothing when it never shows. */
   fallback: () => ReactNode;
 }>;
 
 /**
- * Renders `children`, falling back to `fallback` while `pending` — but only once `pending` has held
- * for `delay`, and then for at least `minDuration`.
- *
- * Both bounds exist because a fallback that flashes is worse than one that is slightly late: the
- * user reads a momentary "empty" or "not found" as the real answer. Timing is the honest tool here
- * precisely because the surface cannot distinguish "no results yet" from "no results" — the states
- * are identical, and only their duration differs.
- *
- * @example
- * ```tsx
- * <Deferred pending={showEmptyState} fallback={() => <EmptyPanel />}>
- *   <List items={items} />
- * </Deferred>
- * ```
+ * Renders `children`, falling back to `fallback` while `pending`, but only once `pending` has held for `delay`, and
+ * then for at least `minDuration`. A surface cannot tell "no results yet" from "no results", only how long the state
+ * lasts, and a fallback that flashes reads as the real answer. Renders no element of its own.
  */
 export const Deferred = ({
   pending,
@@ -71,8 +40,7 @@ export const Deferred = ({
   children,
 }: DeferredProps) => {
   const [showFallback, setShowFallback] = useState(pending && delay === 0);
-  // When the fallback became visible, so `minDuration` measures from the render rather than from the
-  // moment `pending` flipped — a fallback held back by `delay` has not been on screen at all yet.
+  // When the fallback rendered: one still held back by `delay` has not been on screen, so it owes no minimum.
   const shownAt = useRef<number | undefined>(showFallback ? Date.now() : undefined);
 
   useEffect(() => {

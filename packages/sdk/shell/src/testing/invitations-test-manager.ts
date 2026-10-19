@@ -142,8 +142,7 @@ export class InvitationsTestManager {
     const peer = this.peer(id);
     try {
       const membersList = peer.getByTestId('space-members-list');
-      const items = membersList.querySelectorAll('li');
-      return items.length;
+      return membersList.querySelectorAll('[data-testid="identity-list-item"]').length;
     } catch {
       return 0;
     }
@@ -358,11 +357,13 @@ export class InvitationsTestManager {
     const testIdPrefix = type === 'device' ? 'halo' : 'space';
 
     const user = userEvent.setup();
-    const input = peer.getByTestId(`${testIdPrefix}-auth-code-input`);
+    const fields = authCodeFields(peer.getByTestId(`${testIdPrefix}-auth-code-input`));
     const button = peer.getByTestId(`${testIdPrefix}-invitation-authenticator-next`);
 
-    await user.clear(input);
-    await user.type(input, authCode);
+    // One field per digit, which zag's machine fills only from real keystrokes (synthetic events leave it empty).
+    const { userEvent: real } = await import('vitest/browser');
+    await real.click(fields[0]);
+    await real.keyboard(authCode);
     await user.click(button);
   }
 
@@ -434,8 +435,14 @@ export class InvitationsTestManager {
   async clearAuthCode(type: 'device' | 'space', id: number): Promise<void> {
     const peer = this.peer(id);
     const testIdPrefix = type === 'device' ? 'halo' : 'space';
-    const input = peer.getByTestId(`${testIdPrefix}-auth-code-input`);
-    fireEvent.change(input, { target: { value: '' } });
-    input.focus();
+    const fields = authCodeFields(peer.getByTestId(`${testIdPrefix}-auth-code-input`));
+    for (const field of fields) {
+      fireEvent.change(field, { target: { value: '' } });
+    }
+    fields[0]?.focus();
   }
 }
+
+/** The auth code is a pin input: one text field per digit inside the element the test id names. */
+const authCodeFields = (root: HTMLElement): HTMLInputElement[] =>
+  Array.from(root.querySelectorAll<HTMLInputElement>('input:not([type="hidden"])'));

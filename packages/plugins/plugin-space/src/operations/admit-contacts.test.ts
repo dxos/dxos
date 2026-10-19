@@ -2,16 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { describe, expect, test } from 'vitest';
 
 import { SpaceMember_Role } from '@dxos/client/echo';
 import { type Contact } from '@dxos/client/halo';
 import { PublicKey } from '@dxos/keys';
+import { InboxAccountRequiredError } from '@dxos/protocols';
 import { createBuf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { InboxService } from '@dxos/protocols/rpc';
+import { Message, SpaceInvitationMessage } from '@dxos/types';
 
-import { admitContacts, sendInvitationNotices } from './admit-contacts.ts';
+import { admitContacts, sendInvitationMessages } from './admit-contacts.ts';
 
 describe('admitContacts', () => {
   test('admits every key with the role and reports failures without stopping', async () => {
@@ -58,28 +62,47 @@ describe('admitContacts', () => {
   });
 });
 
-describe('sendInvitationNotices', () => {
-  test('sends one notice per admitted key and reports failures without throwing', async () => {
+describe('sendInvitationMessages', () => {
+  test('sends one invitation message per admitted key and reports failures without throwing', async () => {
     const spaceKey = PublicKey.random();
-    const [ok, bad] = [PublicKey.random(), PublicKey.random()].map((key) => key.toHex());
-    const requests: { recipient: string; spaceKey: string; role: number }[] = [];
+    const [ok, bad, accountless] = [PublicKey.random(), PublicKey.random(), PublicKey.random()].map((key) =>
+      key.toHex(),
+    );
+    const requests: InboxService.SendMessageRequest[] = [];
     const inbox = {
-      send: async (request: { recipientIdentityKey: PublicKey; spaceKey: PublicKey; role: number }) => {
-        requests.push({
-          recipient: request.recipientIdentityKey.toHex(),
-          spaceKey: request.spaceKey.toHex(),
-          role: request.role,
-        });
+      sendMessage: async (request: InboxService.SendMessageRequest) => {
+        requests.push(request);
         if (request.recipientIdentityKey.toHex() === bad) {
           throw new Error('offline');
         }
+        if (request.recipientIdentityKey.toHex() === accountless) {
+          throw new InboxAccountRequiredError();
+        }
       },
     };
-    const result = await sendInvitationNotices(inbox, spaceKey, [ok, bad], SpaceMember_Role.EDITOR);
-    expect(result).toEqual({ sent: [ok], failed: [bad] });
-    expect(requests).toEqual([
-      { recipient: ok, spaceKey: spaceKey.toHex(), role: SpaceMember_Role.EDITOR },
-      { recipient: bad, spaceKey: spaceKey.toHex(), role: SpaceMember_Role.EDITOR },
-    ]);
+    const result = await sendInvitationMessages(inbox, {
+      sender: { identityDid: 'did:halo:alice' },
+      spaceKey,
+      spaceName: 'Plans',
+      identityKeys: [ok, bad, accountless],
+      role: SpaceMember_Role.EDITOR,
+    });
+    expect(result).toEqual({
+      sent: [ok],
+      failed: [
+        { key: bad, reason: 'send-failed' },
+        { key: accountless, reason: 'account-required' },
+      ],
+    });
+    expect(requests.map((request) => request.recipientIdentityKey.toHex())).toEqual([ok, bad, accountless]);
+    expect(requests.every((request) => request.type === InboxService.INBOX_MESSAGE_TYPE)).toBe(true);
+
+    const message = Option.getOrThrow(Message.decodeJson(requests[0].payload));
+    expect(message.sender.identityDid).toBe('did:halo:alice');
+    expect(Option.getOrThrow(SpaceInvitationMessage.match(message))).toEqual({
+      spaceKey: spaceKey.toHex(),
+      role: SpaceMember_Role.EDITOR,
+      spaceName: 'Plans',
+    });
   });
 });

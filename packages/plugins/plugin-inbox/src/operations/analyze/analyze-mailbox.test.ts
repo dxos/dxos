@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { type AiService } from '@dxos/ai';

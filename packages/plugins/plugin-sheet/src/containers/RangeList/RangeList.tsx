@@ -5,42 +5,42 @@
 import React, { useCallback } from 'react';
 
 // Loaded only through the lazy `RangeList` container, so Next's CSS stays out of the boot graph.
-import '@dxos/react-ui/next/theme.css';
+import '@dxos/react-ui/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
-import { OrderedList } from '@dxos/react-ui-list/next';
-import { Next } from '@dxos/react-ui/next';
+import { OrderedList } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { type Sheet, SheetUtil } from '#types';
 
-/** Handle cell, title, remove. */
-const COLUMNS = 'var(--nx-block-size) minmax(0, 1fr) var(--nx-block-size)';
-
-/** A sheet toggles a `key`/`value` on a cell range at most once, so the triple identifies a range across reorders. */
+/** A sheet toggles a `key`/`value` on a cell range at most once, so the triple identifies a range. */
 const getRangeId = ({ key, value, range }: Sheet.Range) => `${key}:${value}:${range}`;
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
 };
 
-/** The sheet's formatting ranges in precedence order (later ranges win); rows reorder and remove. */
+/** The sheet's formatting ranges in precedence order (later ranges win), each removable. */
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
 
-  const handleMove = useCallback(
-    (from: number, to: number) =>
-      updateSheet((sheet) => {
-        const [range] = sheet.ranges.splice(from, 1);
-        // Re-inserting the detached element would re-parent a removed node; insert a copy of its fields.
-        sheet.ranges.splice(to, 0, { range: range.range, key: range.key, value: range.value });
+  // The row's text, also its typeahead label.
+  const getLabel = useCallback(
+    (range: Sheet.Range) =>
+      t('range.title', {
+        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
+        key: t(`range-key.${range.key}.label`),
+        value: t(`range-value.${range.value}.label`),
       }),
-    [updateSheet],
+    [t, sheetProp],
   );
 
-  const handleRemove = useCallback(
+  const handleDelete = useCallback(
     (id: string) =>
       updateSheet((sheet) => {
         const index = sheet.ranges.findIndex((range) => getRangeId(range) === id);
@@ -53,26 +53,21 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
 
   return (
     <>
-      <Next.Typography>{t('range-list.heading')}</Next.Typography>
+      <Typography.Text>{t('range-list.heading')}</Typography.Text>
       {sheet.ranges.length === 0 ? (
-        <Next.Typography tone='description'>{t('no-ranges.message')}</Next.Typography>
+        <Banner.Root>
+          <Banner.Title>{t('no-ranges.message')}</Banner.Title>
+        </Banner.Root>
       ) : (
-        <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} onMove={handleMove}>
+        <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} getLabel={getLabel}>
           {({ items: ranges }) => (
-            <OrderedList.Content aria-label={t('range-list.heading')} scroll={false}>
+            <OrderedList.Content aria-label={t('range-list.heading')}>
               {ranges.map((range) => {
                 const id = getRangeId(range);
                 return (
-                  <OrderedList.Item key={id} id={id} columns={COLUMNS}>
-                    <OrderedList.DragHandle />
-                    <OrderedList.ItemText>
-                      {t('range.title', {
-                        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
-                        key: t(`range-key.${range.key}.label`),
-                        value: t(`range-value.${range.value}.label`),
-                      })}
-                    </OrderedList.ItemText>
-                    <Next.SystemButton.Remove onClick={() => handleRemove(id)} />
+                  <OrderedList.Item key={id} id={id}>
+                    <OrderedList.ItemText />
+                    <SystemButton.Remove onClick={() => handleDelete(id)} />
                   </OrderedList.Item>
                 );
               })}

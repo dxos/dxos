@@ -79,13 +79,17 @@ export default handler;
  * query happened to return. That is the under-return: a space holding both forms answered the same
  * call with all of its objects, some of them, or none, run to run.
  *
- * The registry is still consulted, but only to reject a typename nothing declares; it no longer
- * decides what the filter matches.
+ * The registry is still consulted to reject a typename nothing declares, and to add the `echo:` id
+ * of every registration persisted in the space, since objects of such a type carry that id instead.
  */
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  if (!types.some((type) => Type.getTypename(type) === typename)) {
+  const declared = types.filter((type) => Type.getTypename(type) === typename);
+  if (declared.length === 0) {
     return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }
-  return Filter.type(DXN.make(typename));
+  // Objects of a type persisted in the space are stamped with its `echo:` id, which the bare typename
+  // does not match, so each persisted registration is matched alongside it.
+  const persisted = declared.filter((type) => Type.getDatabase(type) != null).map((type) => Filter.type(type));
+  return Filter.or(Filter.type(DXN.make(typename)), ...persisted);
 });

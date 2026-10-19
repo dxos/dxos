@@ -12,12 +12,12 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';

@@ -43,12 +43,13 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
 import * as Semaphore from 'effect/Semaphore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { AtomEx, EffectEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
@@ -397,7 +398,8 @@ class ManagerImpl implements PluginManager {
       Effect.flatMap((subscription) =>
         PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
-          Effect.forever,
+          // A yield per message is a clamped 4ms browser timer; `take` already suspends when the queue is empty.
+          Effect.forever({ disableYield: true }),
         ),
       ),
       Effect.scoped,

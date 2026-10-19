@@ -25,3 +25,5 @@ export const SpaceHomePinBottom: Role.Role<{ space: Space }> = Role.make('org.dx
 export const Prompts: Role.Role<{ subject: Obj.Any; attendableId: string }> = Role.make(
   'org.dxos.plugin.assistant.role.prompts',
 );
+
+export { RENAME_POPOVER } from '../constants.ts';

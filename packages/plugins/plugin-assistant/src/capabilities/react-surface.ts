@@ -7,8 +7,8 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -16,7 +16,7 @@ import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   AgentArticle,

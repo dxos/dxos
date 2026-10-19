@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Database, type Feed } from '@dxos/echo';
@@ -31,6 +31,8 @@ export interface TranscriptionManager {
   setAudioTrack(track?: MediaStreamTrack): Promise<void>;
   setRecording(recording?: boolean): void;
   setEnabled(enabled: boolean): Promise<void>;
+  /** Transcribes whatever audio is still buffered, resolving once its segments are written. */
+  flush(): Promise<void>;
   open(): Promise<this>;
   close(): Promise<this>;
 }

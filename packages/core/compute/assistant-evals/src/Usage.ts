@@ -4,12 +4,12 @@
 
 // @import-as-namespace
 
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Response from 'effect/unstable/ai/Response';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { reportTrace, shouldReportTrace } from 'evalite/traces';
 
 import { type AiService, Model } from '@dxos/ai';
@@ -77,7 +77,7 @@ const fromResponse = (
   );
   return {
     model: backendName(model),
-    provider: string(span.attributes.get('gen_ai.system')),
+    provider: string(span.attributes.get('gen_ai.provider.name')),
     spanName: span.name,
     parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
     input: json(span.attributes.get('dxos.ai.input')),

@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -45,6 +47,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects.ts'))),
   SpaceOperation.Rename.pipe(Operation.lazyHandler(() => import('./rename.ts'))),
   SpaceOperation.RenameObject.pipe(Operation.lazyHandler(() => import('./rename-object.ts'))),
+  SpaceOperation.ResolveUrl.pipe(Operation.lazyHandler(() => import('./resolve-url.ts'))),
   SpaceOperation.RestoreField.pipe(Operation.lazyHandler(() => import('./restore-field.ts'))),
   SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects.ts'))),
   SpaceOperation.SetArchived.pipe(Operation.lazyHandler(() => import('./set-archived.ts'))),

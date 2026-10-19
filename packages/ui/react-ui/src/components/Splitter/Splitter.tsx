@@ -2,21 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Splitter` — two panes and the seam between them, built on `@ark-ui/react`'s Splitter (zag state
-// machine). The machine owns the drag (pointer capture, the global resize cursor), the keyboard
-// resize, the `separator` role and its `aria-value*`, the lower bound on both panes, and keeping the
-// anchored pane's width across a container resize. DXOS owns the pane vocabulary the app speaks:
-// sizes in rem rather than percent, an `anchor` saying which pane the size measures, and a `mode`
-// that collapses to one pane or the other with an animation.
+// @import-as-namespace
+
+// Two panes and the seam between them on Ark's splitter machine, which owns the drag, the keyboard resize, the
+// `separator` role and its `aria-value*`, and the panes' lower bound. DXOS owns the vocabulary the app speaks: sizes in
+// rem rather than percent, an `anchor` naming the pane the size measures, a `mode` that collapses to one pane, and a
+// `collapseBelow` width under which the root shows one pane at a time (master-detail on a narrow host).
 
 import { Splitter as SplitterPrimitive } from '@ark-ui/react/splitter';
-import React, { type ComponentProps, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ComponentProps,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { createContext } from '@dxos/react-hooks';
+import { createContext, useControllableState } from '@dxos/react-hooks';
+import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 
 type SplitterOrientation = 'horizontal' | 'vertical';
 
@@ -47,11 +59,51 @@ type SplitterContextValue = {
   anchor: Position;
   /** The anchored pane's extent in rem while split, if known; the panes then size themselves without the machine. */
   anchoredSize?: number;
+  /** The requested mode (`mode`/`defaultMode`), which `collapseBelow` may override. */
+  mode: SplitterMode;
+  /** The mode the panes actually show: `split` above `collapseBelow`, one pane below it. */
+  visibleMode: SplitterMode;
+  /** True while the root is narrower than `collapseBelow`, so one pane shows at a time. */
+  collapsed: boolean;
+  /** Requests a mode; reported through `onModeChange`, and stored unless `mode` is controlled. */
+  setMode: Dispatch<SetStateAction<SplitterMode>>;
 };
 
 const [SplitterProvider, useSplitterContext] = createContext<SplitterContextValue>(SPLITTER_NAME);
 
 const getRem = (): number => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+
+/** A `collapseBelow` length in px; rem (and em, read as rem) or px, since the root measures itself in px. */
+const toPx = (length: string): number => {
+  const match = /^\s*(\d*\.?\d+)\s*(rem|em|px)?\s*$/.exec(length);
+  if (!match) {
+    throw new Error(`Splitter.Root: unsupported collapseBelow length '${length}' (use rem or px).`);
+  }
+  const value = parseFloat(match[1]);
+  return match[2] === 'px' ? value : value * getRem();
+};
+
+/**
+ * Whether the element is narrower than `collapseBelow`, measured before paint and on every resize. A container query
+ * cannot drive this, because the panes' sizes and the context's `collapsed` are React state the machine consumes.
+ */
+const useNarrow = (root: RefObject<HTMLDivElement | null>, collapseBelow?: string): boolean => {
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const element = root.current;
+    if (!element || collapseBelow === undefined) {
+      setNarrow(false);
+      return;
+    }
+    const threshold = toPx(collapseBelow);
+    const update = (width: number) => setNarrow(width < threshold);
+    update(element.getBoundingClientRect().width);
+    const observer = new ResizeObserver(([entry]) => update(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [root, collapseBelow]);
+  return narrow;
+};
 
 /**
  * The size array the machine takes, with the pane that is not anchored left as a hole for it to
@@ -82,14 +134,25 @@ const ROOT_NAME = 'Splitter.Root';
 
 type SplitterRootElementProps = {
   orientation?: SplitterOrientation;
+  /** The pane(s) to show (controlled); `split` by default. Under `collapseBelow` it picks the one pane shown. */
   mode?: SplitterMode;
+  defaultMode?: SplitterMode;
+  onModeChange?: (mode: SplitterMode) => void;
+  /**
+   * A container width (CSS length in rem or px, e.g. `32rem`): narrower, the root shows only the `mode` pane (`split`
+   * reads as `start`); wider, it shows both whatever the mode, so a selection that asked for the detail shows it beside
+   * the list.
+   */
+  collapseBelow?: string;
   /** Which panel `size` measures (defaults to `start`); the other panel fills the remainder. */
   anchor?: Position;
   /** The anchored panel's extent in rem (controlled). */
   size?: number;
   defaultSize?: number;
   onSizeChange?: (size: number) => void;
+  /** Collapse animation in ms; defaults to the theme's `--dx-disclosure-duration` (0 under reduced motion). */
   transition?: number;
+  /** A draggable seam; when false (the default) the ResizeTrigger renders nothing and the sizes are fixed. */
   resizable?: boolean;
   /** Lower bound (rem) applied to both panels. */
   minSize?: number;
@@ -97,26 +160,61 @@ type SplitterRootElementProps = {
 
 type SplitterRootProps = SlottableProps<SplitterRootElementProps>;
 
+/** A duration custom property as the element resolves it, in milliseconds. */
+const cssDuration = (element: HTMLElement, property: string): number => {
+  const value = getComputedStyle(element).getPropertyValue(property).trim();
+  const duration = Number.parseFloat(value);
+  return Number.isNaN(duration) ? 0 : value.endsWith('ms') ? duration : duration * 1000;
+};
+
 const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
   (
     {
       asChild,
       children,
       orientation = 'vertical',
-      mode = 'split',
+      mode: modeProp,
+      defaultMode = 'split',
+      onModeChange,
+      collapseBelow,
       anchor = 'start',
       size: sizeProp,
       defaultSize,
       onSizeChange,
-      transition = 250,
+      transition: transitionProp,
       resizable = false,
       minSize = 0,
       ...props
     },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
+    const [themeTransition, setThemeTransition] = useState(0);
+    useLayoutEffect(() => {
+      if (rootRef.current) {
+        setThemeTransition(cssDuration(rootRef.current, '--dx-disclosure-duration'));
+      }
+    }, []);
+    const transition = transitionProp ?? themeTransition;
+    const [requestedMode = 'split', setRequestedMode] = useControllableState<SplitterMode>({
+      prop: modeProp,
+      defaultProp: defaultMode,
+      onChange: onModeChange,
+    });
+    const setMode = useCallback<Dispatch<SetStateAction<SplitterMode>>>(
+      (next) => setRequestedMode((previous) => (typeof next === 'function' ? next(previous ?? 'split') : next)),
+      [setRequestedMode],
+    );
+    const narrow = useNarrow(rootRef, collapseBelow);
+    // `useNarrow` is false without `collapseBelow`, so only a root that opted in overrides the requested mode.
+    const mode: SplitterMode =
+      collapseBelow === undefined
+        ? requestedMode
+        : narrow
+          ? requestedMode === 'split'
+            ? 'start'
+            : requestedMode
+          : 'split';
 
     // Animate ONLY for a brief window right after a `mode` change (the collapse). The rest of the time the
     // transition is off, so layout reflows from a container/window resize never animate (no jitter) — this
@@ -204,6 +302,10 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
         animating={animating}
         anchor={anchor}
         anchoredSize={anchoredSize}
+        mode={requestedMode}
+        visibleMode={mode}
+        collapsed={narrow}
+        setMode={setMode}
       >
         <SplitterPrimitive.Root
           {...rest}
@@ -213,7 +315,8 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
           size={size}
           defaultSize={defaultSize === undefined ? undefined : anchoredSizes(defaultSize, anchor)}
           onResize={handleResize}
-          className={tx('splitter.root', { orientation }, className)}
+          data-collapsed={narrow ? '' : undefined}
+          className={mx(recipes.splitter(), className)}
           ref={(element) => {
             rootRef.current = element;
             if (typeof forwardedRef === 'function') {
@@ -242,7 +345,6 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     const { transition, animating, anchor, anchoredSize } = useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
 
@@ -265,9 +367,11 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         asChild={asChild}
         id={position}
         ref={forwardedRef}
-        className={tx('splitter.panel', {}, className)}
+        className={mx(recipes.splitterPanel(), className)}
         style={{
-          transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
+          transition: animate
+            ? `flex-grow ${transition}ms var(--dx-disclosure-ease-open), flex-basis ${transition}ms var(--dx-disclosure-ease-open)`
+            : undefined,
           // A pane growing from nothing must be allowed to be small on the way: its lower bound
           // returns at once with the mode, and would hold it at `minSize` until the basis caught up.
           ...(animate && { minWidth: 0, minHeight: 0 }),
@@ -284,20 +388,32 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
 SplitterPanel.displayName = PANEL_NAME;
 
 //
-// Handle
+// ResizeTrigger
 //
 
-const HANDLE_NAME = 'Splitter.Handle';
+const RESIZE_TRIGGER_NAME = 'Splitter.ResizeTrigger';
 
-type SplitterHandleProps = SlottableProps;
+type SplitterResizeTriggerProps = SlottableProps;
 
-const SplitterHandle = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { orientation, resizable } = useSplitterContext(HANDLE_NAME);
+/**
+ * The seam: a 7px grab area straddling the panes around a 1px divider. Without `resizable` it is only the divider (a
+ * static `separator`, not focusable), and while one pane shows it renders nothing.
+ */
+const SplitterResizeTrigger = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
+  const { orientation, resizable, visibleMode } = useSplitterContext(RESIZE_TRIGGER_NAME);
   const { className, ...rest } = composableProps(props);
 
   if (!resizable) {
-    return null;
+    return visibleMode === 'split' ? (
+      <div
+        role='separator'
+        aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
+        data-scope='splitter'
+        data-part='divider'
+        data-orientation={orientation}
+        className={mx(recipes.splitterDivider(), className)}
+      />
+    ) : null;
   }
 
   return (
@@ -311,25 +427,42 @@ const SplitterHandle = slottable<HTMLButtonElement>(({ asChild, children, ...pro
       // A separator's orientation is its own, not the group's: panes side by side are parted by a
       // vertical line. The machine reports the group's.
       aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
-      className={tx('splitter.handle', { orientation }, className)}
+      className={mx(recipes.splitterResizeTrigger(), className)}
     >
       {children}
     </SplitterPrimitive.ResizeTrigger>
   );
 });
 
-SplitterHandle.displayName = HANDLE_NAME;
+SplitterResizeTrigger.displayName = RESIZE_TRIGGER_NAME;
+
+//
+// useContext
+//
+
+type SplitterContext = Pick<SplitterContextValue, 'mode' | 'visibleMode' | 'collapsed' | 'setMode' | 'orientation'>;
+
+/** The nearest Splitter's mode state, for parts inside it: a master that opens its detail, a Back button when collapsed. */
+const useSplitterPublicContext = (): SplitterContext => {
+  const { mode, visibleMode, collapsed, setMode, orientation } = useSplitterContext('Splitter.useContext');
+  return { mode, visibleMode, collapsed, setMode, orientation };
+};
 
 //
 // Splitter
 //
-
-const Splitter = {
-  Root: SplitterRoot,
-  Panel: SplitterPanel,
-  Handle: SplitterHandle,
+export type {
+  SplitterContext as Context,
+  SplitterMode as Mode,
+  SplitterOrientation as Orientation,
+  SplitterPanelProps as PanelProps,
+  SplitterResizeTriggerProps as ResizeTriggerProps,
+  SplitterRootProps as RootProps,
 };
 
-export { Splitter };
-
-export type { SplitterHandleProps, SplitterMode, SplitterOrientation, SplitterPanelProps, SplitterRootProps };
+export {
+  SplitterPanel as Panel,
+  SplitterResizeTrigger as ResizeTrigger,
+  SplitterRoot as Root,
+  useSplitterPublicContext as useContext,
+};

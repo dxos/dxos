@@ -8,7 +8,7 @@ import * as Stream from 'effect/Stream';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Trace from '@dxos/compute/Trace';
 import { useSpaces } from '@dxos/react-client/echo';
 
@@ -38,8 +38,8 @@ export type SwarmTrace = {
  * per space because an empty {@link Trace.Filter} derives no swarm tag.
  */
 export const useSwarmTrace = (): SwarmTrace => {
-  const monitor = useOptionalCapability(Capabilities.RemoteTraceMonitor);
-  const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
+  const monitor = Hooks.useOptionalCapability(Capabilities.RemoteTraceMonitor);
+  const runtime = Hooks.useOptionalCapability(Capabilities.ProcessManagerRuntime);
   const spaces = useSpaces();
   const [messages, setMessages] = useState<ReceivedMessage[]>([]);
   const seqRef = useRef(0);

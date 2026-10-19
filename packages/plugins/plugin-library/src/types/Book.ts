@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Blob, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import {
   AtprotoPolicyAnnotation,
   AtprotoRecordAnnotation,
@@ -126,7 +125,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     // Catalog metadata (first field); labels the book via `catalog.title`. Its published subset
     // (title/authors/identifiers) is marked on the struct's fields; the rest is mirrored (the network
     // sees it from the BookHive catalog by id, not from our record) rather than private.
-    catalog: Catalog.pipe(FormInlineAnnotation.set(true), AtprotoVisibilityAnnotation.set('mirror')),
+    catalog: Catalog.pipe(Annotation.FormInlineAnnotation.set(true), AtprotoVisibilityAnnotation.set('mirror')),
 
     // Published per-user reading state.
     status: Status.annotate({ title: 'Status' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
@@ -165,7 +164,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     // Private (ECHO-only) fields — unmarked, never published.
     notes: Ref.Ref(Text.Text)
       .annotate({ title: 'Private notes' })
-      .pipe(FormInlineAnnotation.set(true), Schema.optional),
+      .pipe(Annotation.FormInlineAnnotation.set(true), Schema.optional),
     purchasePrice: Format.Currency().annotate({ title: 'Purchase price' }).pipe(Schema.optional),
     purchaseDate: Format.DateOnly.annotate({ title: 'Purchase date' }).pipe(Schema.optional),
     shelfLocation: Schema.String.annotate({ title: 'Shelf location' }).pipe(Schema.optional),
@@ -176,7 +175,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       .annotate({ title: 'Book file', description: 'A DRM-free copy of the book (PDF, EPUB, …).' })
       .pipe(Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['catalog.title']),
+    Annotation.LabelAnnotation.set(['catalog.title']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-bookmark--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     AtprotoRecordAnnotation.set({

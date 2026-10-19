@@ -4,7 +4,8 @@
 
 import * as Option from 'effect/Option';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { SetParentAnnotation, getFromAst } from '../Annotation/index.ts';
 import { EntityKind } from '../common/types/entity.ts';

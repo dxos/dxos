@@ -8,11 +8,11 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
@@ -212,7 +212,7 @@ describe('FileOperation.CreateFromSource', () => {
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   harness.capabilities.contribute({
     module: 'test',
     interface: FileCapabilities.Backend,

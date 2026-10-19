@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Obj, type Ref } from '@dxos/echo';
 import { ViewState } from '@dxos/react-ui-attention/types';

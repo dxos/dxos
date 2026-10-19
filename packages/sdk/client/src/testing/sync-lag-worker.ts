@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { runDedicatedWorker } from '../services/dedicated/dedicated-worker.ts';
 

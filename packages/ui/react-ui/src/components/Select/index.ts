@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './Select.tsx';
+export * as Select from './Select.tsx';

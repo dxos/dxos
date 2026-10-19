@@ -4,10 +4,19 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Link } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
-import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath } from './route.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { type Link, type Scene } from '../model/index.ts';
+import { DEFAULT_LATTICE } from './lattice.ts';
+import {
+  insertIndex,
+  linkGeometry,
+  linkPath,
+  sceneLinkGeometry,
+  sideToward,
+  smartPoints,
+  splinePath,
+} from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -51,7 +60,7 @@ describe('route', () => {
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    // A right angle is cut 32 back along each segment; the corner is the quadratic's control, so the
+    // A right angle is cut one minor cell (16) back along each segment; the corner is the quadratic's control, so the
     // route bends around it and never reaches it.
     expect(
       splinePath([
@@ -59,7 +68,7 @@ describe('route', () => {
         { x: 100, y: 0 },
         { x: 100, y: 100 },
       ]),
-    ).toBe('M 0 0 L 68 0 Q 100 0, 100 32 L 100 100');
+    ).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
     // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
     expect(
       splinePath([
@@ -81,11 +90,13 @@ describe('route', () => {
   });
 
   test('a free end faces the other end, and a node end facing it takes its nearest port', ({ expect }) => {
-    const scene = SceneBuilder.create('s')
-      .rect('a', { x: 0, y: 0, width: 256, height: 128 })
-      .line('free', '@-200,64', '@-100,64')
-      .line('half', '@640,64', 'a')
-      .build();
+    const {
+      scenes: [scene],
+    } = SceneBuilder.scene('s', [
+      SceneBuilder.rect('a', { x: 0, y: 0, width: 256, height: 128 }),
+      SceneBuilder.link('line', '@-200,64', '@-100,64').id('free'),
+      SceneBuilder.link('line', '@640,64', 'a').id('half'),
+    ]).build();
     expect(sideToward({ x: 0, y: 0 }, { x: 10, y: 3 })).toBe('e');
     expect(sideToward({ x: 0, y: 0 }, { x: -3, y: 10 })).toBe('s');
     const free = linkGeometry(scene, defaultNodeRegistry, scene.links.free);
@@ -95,5 +106,45 @@ describe('route', () => {
     const half = linkGeometry(scene, defaultNodeRegistry, scene.links.half);
     expect(half?.target).toEqual({ point: { x: 256, y: 64 }, side: 'e' });
     expect(half?.source.side).toBe('w');
+  });
+
+  test('a route runs straight to a free end rather than turning to its side', ({ expect }) => {
+    const port = { point: { x: 0, y: 0 }, side: 'e' as const };
+    const free = { point: { x: 100, y: 37 }, side: 'w' as const, free: true };
+    // A curve's control point at a free end is the end itself, and a smart link has no stub there.
+    expect(
+      linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
+    ).toMatch(/, 100 37, 100 37$/);
+    expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
+  });
+
+  test('on a lattice a smart link takes the ports whose gutter route bends least', ({ expect }) => {
+    // MESH on (4, 1) and EDGE on (3, 4), as the Composer overview has them: the nearest ports (MESH's bottom-left,
+    // EDGE's top-right) need two bends round EDGE's corner; down the free column and in from the east needs one.
+    const box = (id: string, col: number, row: number) => ({
+      type: 'rect',
+      id,
+      z: 'a0',
+      center: { x: col * 384, y: row * 192 },
+      size: { width: 256, height: 128 },
+    });
+    const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
+    const scene: Scene = {
+      id: 'root',
+      nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
+      links: { link },
+    };
+    const [geometry] = sceneLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    expect([geometry.source.side, geometry.source.point, geometry.target.side, geometry.target.point]).toEqual([
+      's',
+      { x: 1536, y: 256 },
+      'e',
+      { x: 1280, y: 768 },
+    ]);
+    // One bend: a single rounded corner between the two straight runs.
+    expect(geometry.path.match(/Q/g)).toHaveLength(1);
+    // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
+    const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
+    expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
   });
 });

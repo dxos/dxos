@@ -5,7 +5,7 @@
 import { type Attributes, type Context } from '@opentelemetry/api';
 import { type ReadableSpan, type Span, type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 
 /**
  * The prompt, the response, and the tool names. They stay on the span for the AI analytics sink,

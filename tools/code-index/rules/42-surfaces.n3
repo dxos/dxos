@@ -1,0 +1,62 @@
+# Composer surfaces (`Surface.create` from `@dxos/app-framework/ui`).
+#
+# A surface is not a declaration but one call in a module body, usually several per file, so the
+# class is concluded on the `deus:CallSite`, after `40-composer.n3` has concluded the plugins and
+# the modules they add.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+@prefix surfx: <https://dxos.org/vocab/deus/surfaces#>.
+
+# The functions that create a surface, by every addressing a caller can reach them through.
+surfx:create surfx:named "create", "createWeb".
+<https://dxos.org/deus/module/@dxos/app-framework/ui#Surface.create> surfx:role surfx:create.
+<https://dxos.org/deus/module/@dxos/app-framework/ui#Surface.createWeb> surfx:role surfx:create.
+<https://dxos.org/deus/module/@dxos/app-framework#Surface.create> surfx:role surfx:create.
+<https://dxos.org/deus/module/@dxos/app-framework#Surface.createWeb> surfx:role surfx:create.
+# A workspace import lands on the barrel's `Surface` namespace as well, leaving the member as a path.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/ui/index.ts#Surface> surfx:namespace true.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/ui/components/Surface/index.ts#Surface> surfx:namespace true.
+
+# `deus:callee` is shared with Argument nodes and type terms, hence the CallSite join in each rule.
+{ ?c deus:callee ?f. ?f surfx:role surfx:create. ?c rdf:type deus:CallSite } => { ?c rdf:type deus:Surface }.
+{
+  ?c deus:callee ?namespace; deus:calleePath ?member.
+  ?namespace surfx:namespace true.
+  surfx:create surfx:named ?member.
+  ?c rdf:type deus:CallSite.
+} => { ?c rdf:type deus:Surface }.
+
+{ ?c rdf:type deus:Surface; deus:literal ?kv. (?kv "^id=(.*)$") string:scrape ?id } => { ?c deus:surfaceId ?id }.
+
+# The module whose body holds the call: the enclosing declaration (an inline module), or the lazy
+# module that loads the enclosing file (`AppCapability.surface(() => import('./react-surface.ts'))`).
+{ ?c surfx:module ?m } <= { ?c deus:enclosedBy ?m. ?c rdf:type deus:Surface }.
+{ ?c surfx:module ?lazy } <= {
+  ?c deus:enclosedBy ?m. ?c rdf:type deus:Surface.
+  ?file deus:declares ?m.
+  ?lazy deus:loads ?file.
+}.
+{ ?c rdf:type deus:Surface. ?c surfx:module ?m. ?plugin deus:addsModule ?m } => { ?c deus:providedBy ?plugin }.
+
+# When no module chain reaches a plugin, the one plugin its package ships — stories and tests define
+# fixture plugins of their own, so they neither count nor take the fallback.
+{ ?path surfx:shipped true } <= { ?path string:notMatches "\\.(stories|test|spec)\\.tsx?$" }.
+{ ?package surfx:ships ?plugin } <= {
+  ?package deus:definesPlugin ?plugin.
+  ?file deus:declares ?plugin; deus:path ?path.
+  ?path surfx:shipped true.
+}.
+{
+  ?c rdf:type deus:Surface; deus:enclosedBy ?m.
+  (?p1 { ?c surfx:module ?any. ?p1 deus:addsModule ?any } ?chained) log:collectAllIn ?scope.
+  ?chained list:length 0.
+  ?file deus:declares ?m; deus:path ?path; deus:inPackage ?package.
+  ?path surfx:shipped true.
+  (?p2 { ?package surfx:ships ?p2 } ?plugins) log:collectAllIn ?scope.
+  ?plugins list:length 1.
+  ?plugins list:first ?plugin.
+} => { ?c deus:providedBy ?plugin }.

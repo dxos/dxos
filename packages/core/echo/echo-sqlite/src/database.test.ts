@@ -7,7 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,9 +16,9 @@ import { afterEach, beforeEach } from 'vitest';
 
 import { Annotation, Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { type OpenOptions, SqliteDatabase } from './database.ts';
 import { UnsupportedOperationError, UnsupportedQueryError } from './errors.ts';
@@ -450,6 +450,64 @@ describe('SqliteDatabase', () => {
             'Blue',
             'Plain',
           ]);
+        },
+        { spaceId },
+      );
+    }),
+  );
+
+  it.effect('orders by an annotation path in SQL, missing values last', () =>
+    Effect.gen(function* () {
+      const Distance = Annotation.make({
+        id: 'org.dxos.annotation.echo-sqlite-distance',
+        schema: Schema.Struct({ meters: Schema.Number }),
+      });
+      const Pinned = Annotation.make({ id: 'org.dxos.annotation.echo-sqlite-pinned', schema: Schema.Boolean });
+      const spaceId = SpaceId.random();
+      yield* session(
+        async (db) => {
+          for (const [name, meters] of [
+            ['Far', 300],
+            ['Near', 100],
+            ['Unplaced', undefined],
+            ['Mid', 200],
+          ] as const) {
+            const person = db.add(Obj.make(TestSchema.Person, { name }));
+            if (meters !== undefined) {
+              Obj.update(person, (person) => {
+                Annotation.set(person, Distance, { meters });
+                Annotation.set(person, Pinned, meters !== 200);
+              });
+            }
+          }
+        },
+        { spaceId },
+      );
+      yield* session(
+        async (db) => {
+          const byDistance = (direction: 'asc' | 'desc') =>
+            Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Distance, direction, ['meters']));
+          expect((await db.query(byDistance('asc')).run()).map((person) => person.name)).toEqual([
+            'Near',
+            'Mid',
+            'Far',
+            'Unplaced',
+          ]);
+          expect((await db.query(byDistance('desc')).run()).map((person) => person.name)).toEqual([
+            'Far',
+            'Mid',
+            'Near',
+            'Unplaced',
+          ]);
+          expect((await db.query(byDistance('asc').limit(2)).run()).map((person) => person.name)).toEqual([
+            'Near',
+            'Mid',
+          ]);
+          // Booleans order as 0/1: pinned (true) first, then unpinned, then unannotated.
+          const byPinned = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Pinned, 'desc'));
+          const pinned = (await db.query(byPinned).run()).map((person) => person.name);
+          expect(pinned.slice(0, 2).sort()).toEqual(['Far', 'Near']);
+          expect(pinned.slice(2)).toEqual(['Mid', 'Unplaced']);
         },
         { spaceId },
       );

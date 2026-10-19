@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Args from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Flag from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Args from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Flag from 'effect/unstable/cli/Flag';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import type * as Operation from '@dxos/compute/Operation';
@@ -97,7 +98,8 @@ const evalSnippet = (code: string): Promise<unknown> => {
       return new Function('dxos', 'composer', `'use strict'; return (async () => { ${code} })();`);
     }
   };
-  return Promise.resolve(compile()(Reflect.get(globalThis, '__DXOS__'), globalThis.composer));
+  const composer: Devtools.ComposerDevtools | undefined = globalThis.composer;
+  return Promise.resolve(compile()(Reflect.get(globalThis, '__DXOS__'), composer));
 };
 
 const makeCommand = (options: DebugCliOptions = {}) => {

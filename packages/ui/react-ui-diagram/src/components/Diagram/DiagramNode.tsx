@@ -50,7 +50,7 @@ export const DiagramNode = ({ data, selected }: DiagramNodeProps) => {
         </div>
         {compartments.map((compartment) => (
           <div key={compartment.id} className='px-2 py-1 text-xs border-b border-separator last:border-b-0'>
-            {compartment.label && <div className='text-description'>{compartment.label}</div>}
+            {compartment.label && <div className='text-fg-muted'>{compartment.label}</div>}
             {compartment.lines.map((line, index) => (
               <div key={index} className='truncate font-mono'>
                 {line}
@@ -87,7 +87,7 @@ export const DiagramGroup = ({ data, selected }: DiagramNodeProps) => {
     <div
       className={mx('dx-fill rounded-sm border border-dashed', selected ? 'border-primary-500' : 'border-separator')}
     >
-      {node.label && <div className='px-2 py-1 text-xs text-description truncate'>{node.label}</div>}
+      {node.label && <div className='px-2 py-1 text-xs text-fg-muted truncate'>{node.label}</div>}
     </div>
   );
 };

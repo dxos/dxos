@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest';
 
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { createResources, extensions } from './extension.ts';

@@ -18,7 +18,7 @@ describe('notify override', () => {
       }
     }
 
-    // `getNotifyOverride` reads the override off a failed process's `error` (`Process.Info.error`, a
+    // `getNotifyOverride` reads the override off a failed process's `error` (`Process.Process.error`, a
     // `SerializedError` whose `context` carries it); a `BaseError` exposes `.context` directly.
     const override = LayoutOperation.getNotifyOverride(new ExampleError());
     expect(override?.title).toBe('Nicer title');

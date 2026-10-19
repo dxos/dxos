@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Performance } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
 /** Log context is truncated at a fixed length; oversized params (blobs, long strings) must not push `time` out of it. */

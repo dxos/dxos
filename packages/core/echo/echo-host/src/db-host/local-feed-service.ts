@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { type ObjectJSON } from '@dxos/echo/internal';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { BaseError } from '@dxos/errors';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';

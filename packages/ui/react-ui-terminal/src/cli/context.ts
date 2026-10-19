@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Path from 'effect/Path';
-import type * as Command from 'effect/unstable/cli/Command';
-import * as ChildProcessSpawner from 'effect/unstable/process/ChildProcessSpawner';
+import * as ChildProcessSpawner from 'effect/process/ChildProcessSpawner';
 
 import type { TerminalBridge } from './bridge.ts';
 import * as XtermConsole from './console.ts';

@@ -141,10 +141,22 @@ export class LocalSandboxBackend implements SandboxService.Backend {
     request: ExecRequest,
   ): Effect.Effect<ExecResult, SandboxService.SandboxError> {
     return Effect.gen({ self: this }, function* () {
+      // Every command is bounded by its wall-clock timeout and runs one at a time, so one that
+      // outlives the call would hold the sandbox for everything after it.
+      if (request.background) {
+        return yield* Effect.fail(
+          new SandboxService.SandboxError({ message: 'Local sandboxes cannot run background commands.' }),
+        );
+      }
       const entry = yield* this.#open(spaceId, sandboxId);
       const cwd = request.cwd ? yield* this.#resolve(entry, request.cwd) : entry.workspaceDir;
       return yield* this.#run(entry, request, cwd);
     });
+  }
+
+  /** Commands reach only the allowed domains and nothing reaches them, so there is nothing to expose. */
+  exposePort(): Effect.Effect<never, SandboxService.SandboxError> {
+    return Effect.fail(new SandboxService.SandboxError({ message: 'Local sandboxes cannot expose ports; use EDGE.' }));
   }
 
   readFileBytes(
@@ -160,7 +172,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
         '[ -f "$f" ] || { echo "not a file" >&2; exit 2; }',
         // The path check above is lexical; a symlink in the workspace can still name any file the sandbox may
         // read, and a read here leaves the sandbox (a download into ECHO, a published URL).
-        `w=$(realpath -e -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -e -- "$f") || exit 2`,
+        `w=$(realpath -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -- "$f") || exit 2`,
         'case "$r" in "$w"/*) ;; *) echo "outside the sandbox workspace" >&2; exit 2 ;; esac',
         'exec cat -- "$r"',
       ]);

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import { buildUnionFormSchema, mergeJsonSchemas } from './unionSchema.ts';
 

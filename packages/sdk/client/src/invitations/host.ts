@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 

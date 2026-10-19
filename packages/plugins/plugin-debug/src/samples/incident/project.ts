@@ -31,7 +31,7 @@ File every document you write as an artifact on this project rather than leaving
 turn every recommendation into a task on this project with an owner drawn from the people in the notes.`;
 
 /** The retro as a project: the record and the notes as its artifacts, the four steps as its tasks. */
-export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
+export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   schemas: [Project.Project, Instructions.Instructions],
   run: ({ docs, tasks }: ProjectInput) =>
     Effect.gen(function* () {
@@ -39,7 +39,6 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Incident 0516 retrospective',
-          description: 'Bindings for a chat working this retro.',
           text: INSTRUCTIONS,
           objects: [...sources.map((doc) => Ref.make(doc)), Ref.make(tasks.taskSet)],
         }),

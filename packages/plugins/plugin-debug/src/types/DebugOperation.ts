@@ -30,6 +30,24 @@ export const InsertLoremIpsum = Operation.make({
   services: [Capability.Service],
 });
 
+/**
+ * Shows a page of the debug panel — a node under `root/debug`, which has no URL for
+ * `LayoutOperation.Open` — opening the docked drawer when the panel is docked.
+ */
+export const OpenPage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.openPage'),
+    name: 'Open debug page',
+    description: 'Selects a page of the debug panel by its qualified graph id and shows the panel.',
+    icon: 'ph--terminal-window--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    nodeId: Schema.String.annotate({ description: 'Qualified graph id of the page, under `root/debug`.' }),
+  }),
+  output: Schema.Void,
+});
+
 const LayoutSummary = Schema.Struct({
   mode: Schema.String,
   sidebarOpen: Schema.Boolean,

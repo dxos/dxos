@@ -2,260 +2,118 @@
 // Copyright 2026 DXOS.org
 //
 
-// A card that opens on hover or focus of its trigger, for previewing what a small element stands
-// for without a click. The Ark machine owns the open/close delays, hover intent, positioning and
-// presence; this file is anatomy plus the DXOS placement vocabulary the popover speaks, and the
-// popover's surface, so the two float alike.
+// @import-as-namespace
 
-import { HoverCard as HoverCardPrimitive, useHoverCard } from '@ark-ui/react/hover-card';
+import { HoverCard as HoverCardPrimitive, useHoverCardContext } from '@ark-ui/react/hover-card';
 import { Portal } from '@ark-ui/react/portal';
-import React, {
-  type ComponentPropsWithRef,
-  type FC,
-  type ReactNode,
-  forwardRef,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type RefObject, forwardRef } from 'react';
 
-import { createContext, useControllableState } from '@dxos/react-hooks';
-import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
-import { type ElevationLevel } from '@dxos/ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { ColumnContext } from '../Column/index.ts';
-import { type PopoverPlacementOptions } from '../Popover/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
-const HOVER_CARD_NAME = 'HoverCard';
+/** Gap between trigger and card, in px (positioning takes a number, not a CSS variable). */
+const POPUP_GUTTER = 2;
 
-type HoverCardContextValue = {
-  open: boolean;
-  triggerRef: React.RefObject<HTMLElement | null>;
-  setPlacement: (options: PopoverPlacementOptions) => void;
-};
+/** Long enough that sweeping the pointer past a trigger opens nothing. */
+const OPEN_DELAY = 300;
 
-const [HoverCardProvider, useHoverCardContext] = createContext<HoverCardContextValue>(HOVER_CARD_NAME);
+/** Long enough to cross the gutter from the trigger onto the card. */
+const CLOSE_DELAY = 200;
 
 //
 // Root
 //
 
-type HoverCardRootProps = {
-  children?: ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** Milliseconds the pointer rests on the trigger before the card opens. */
-  openDelay?: number;
-  /** Milliseconds after the pointer leaves the trigger and card before it closes. */
-  closeDelay?: number;
-};
+type HoverCardRootProps = HoverCardPrimitive.RootProps;
 
-const HoverCardRoot: FC<HoverCardRootProps> = ({
-  children,
-  open: openProp,
-  defaultOpen,
-  onOpenChange,
-  openDelay = 300,
-  closeDelay = 200,
-}) => {
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: onOpenChange,
-  });
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const [placementOptions, setPlacement] = useState<PopoverPlacementOptions>({});
-  const { positioning } = usePositioning({ open, triggerRef, placement: placementOptions, defaultSide: 'top' });
+/**
+ * Ark hover card: a preview that opens on hover or keyboard focus of its trigger and stays open while the pointer is
+ * on the card. Content mounts on open and unmounts on close unless the caller opts out; it opens above the trigger,
+ * as the current HoverCard does, unless `positioning.placement` says otherwise.
+ */
+const HoverCardRoot = ({
+  openDelay = OPEN_DELAY,
+  closeDelay = CLOSE_DELAY,
+  lazyMount = true,
+  unmountOnExit = true,
+  positioning,
+  ...props
+}: HoverCardRootProps) => (
+  <HoverCardPrimitive.Root
+    {...props}
+    openDelay={openDelay}
+    closeDelay={closeDelay}
+    lazyMount={lazyMount}
+    unmountOnExit={unmountOnExit}
+    positioning={popupPositioning(POPUP_GUTTER, { placement: 'top', ...positioning })}
+  />
+);
 
-  const hoverCard = useHoverCard({
-    open,
-    onOpenChange: ({ open: next }) => setOpen(next),
-    openDelay,
-    closeDelay,
-    positioning,
-  });
-  const reposition = hoverCard.reposition;
-  useEffect(() => {
-    if (open) {
-      reposition(positioning);
-    }
-  }, [open, positioning, reposition]);
-
-  const context = useMemo(() => ({ open, triggerRef, setPlacement }), [open]);
-
-  return (
-    // Closed content is not in the DOM at all: `lazyMount` for before the first open,
-    // `unmountOnExit` for after.
-    <HoverCardPrimitive.RootProvider value={hoverCard} lazyMount unmountOnExit>
-      <HoverCardProvider {...context}>{children}</HoverCardProvider>
-    </HoverCardPrimitive.RootProvider>
-  );
-};
-
-HoverCardRoot.displayName = HOVER_CARD_NAME;
+HoverCardRoot.displayName = 'HoverCard.Root';
 
 //
 // Trigger
 //
 
-const TRIGGER_NAME = 'HoverCard.Trigger';
+type HoverCardTriggerProps = HoverCardPrimitive.TriggerProps;
 
-type HoverCardTriggerProps = ComponentPropsWithRef<typeof HoverCardPrimitive.Trigger>;
+/** Use `asChild` to preview from any element (a link, an SVG node). */
+const HoverCardTrigger = forwardRef<HTMLButtonElement, HoverCardTriggerProps>((props, forwardedRef) => (
+  <HoverCardPrimitive.Trigger {...props} ref={forwardedRef} />
+));
 
-const HoverCardTrigger = forwardRef<HTMLButtonElement, HoverCardTriggerProps>((props, forwardedRef) => {
-  const { triggerRef } = useHoverCardContext(TRIGGER_NAME);
-  return (
-    <HoverCardPrimitive.Trigger
-      {...props}
-      ref={(element) => {
-        triggerRef.current = element;
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(element);
-        } else if (forwardedRef) {
-          forwardedRef.current = element;
-        }
-      }}
-    />
-  );
-});
-
-HoverCardTrigger.displayName = TRIGGER_NAME;
-
-//
-// Portal
-//
-
-const PORTAL_NAME = 'HoverCard.Portal';
-
-type HoverCardPortalProps = {
-  children?: ReactNode;
-  container?: HTMLElement | null;
-};
-
-const HoverCardPortal = ({ children, container }: HoverCardPortalProps) => {
-  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
-  return (
-    <Portal container={containerRef}>
-      {/* The portal leaves the declaring tree's DOM but not its React context, so content declared
-          inside a Column would otherwise lay out for a gutter no ancestor provides. */}
-      <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
-    </Portal>
-  );
-};
-
-HoverCardPortal.displayName = PORTAL_NAME;
+HoverCardTrigger.displayName = 'HoverCard.Trigger';
 
 //
 // Content
 //
 
-const CONTENT_NAME = 'HoverCard.Content';
+type HoverCardContentProps = ThemedClassName<HoverCardPrimitive.ContentProps> & {
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
+  size?: Size;
+  /** Point at the trigger with an arrow in the card's surface colour. */
+  arrow?: boolean;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
+};
 
-type HoverCardContentProps = ThemedClassName<ComponentPropsWithRef<typeof HoverCardPrimitive.Content>> &
-  PopoverPlacementOptions & {
-    /** Material-style elevation, 0–5, onto the surface ladder; a card is `popup` (5) by default. */
-    elevation?: ElevationLevel;
-  };
-
+/** Portalled card at `level='popup'`, padded by the size's gap, with an arrow unless `arrow={false}`. */
 const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
-  (
-    {
-      classNames,
-      children,
-      elevation: elevationProp,
-      side,
-      align,
-      sideOffset,
-      alignOffset,
-      collisionPadding,
-      collisionBoundary,
-      avoidCollisions,
-      hideWhenDetached,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { setPlacement } = useHoverCardContext(CONTENT_NAME);
-    const { tx } = useThemeContext();
-    const elevation = useElevationContext();
-
-    // Placement is state on the root, which re-positions when it changes.
-    useLayoutEffect(() => {
-      setPlacement({
-        side,
-        align,
-        sideOffset,
-        alignOffset,
-        collisionPadding,
-        collisionBoundary,
-        avoidCollisions,
-        hideWhenDetached,
-      });
-    }, [
-      setPlacement,
-      side,
-      align,
-      sideOffset,
-      alignOffset,
-      collisionPadding,
-      collisionBoundary,
-      avoidCollisions,
-      hideWhenDetached,
-    ]);
-
+  ({ classNames, size, arrow = true, container, children, ...props }, forwardedRef) => {
+    const hoverCard = useHoverCardContext();
+    const popupSize = usePopupSize(size, hoverCard.open, [hoverCard.getTriggerProps().id], 'md');
     return (
-      <HoverCardPrimitive.Positioner className={tx('hoverCard.positioner', { elevation })}>
-        <HoverCardPrimitive.Content
-          {...props}
-          {...elevationAttrs(elevationProp)}
-          className={tx('hoverCard.content', { elevation, surface: elevationSurface(elevationProp) }, classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </HoverCardPrimitive.Content>
-      </HoverCardPrimitive.Positioner>
+      <Portal container={container}>
+        <HoverCardPrimitive.Positioner>
+          <HoverCardPrimitive.Content
+            {...props}
+            data-surface='popup'
+            data-size={popupSize}
+            className={mx(recipes.popup(), recipes.hoverCardContent(), classNames)}
+            ref={forwardedRef}
+          >
+            {children}
+            {arrow && (
+              <HoverCardPrimitive.Arrow className={recipes.arrow()}>
+                <HoverCardPrimitive.ArrowTip className={recipes.arrowTip()} />
+              </HoverCardPrimitive.Arrow>
+            )}
+          </HoverCardPrimitive.Content>
+        </HoverCardPrimitive.Positioner>
+      </Portal>
     );
   },
 );
 
-HoverCardContent.displayName = CONTENT_NAME;
-
-//
-// Arrow
-//
-
-const ARROW_NAME = 'HoverCard.Arrow';
-
-type HoverCardArrowProps = ThemedClassName<ComponentPropsWithRef<typeof HoverCardPrimitive.Arrow>>;
-
-const HoverCardArrow = forwardRef<HTMLDivElement, HoverCardArrowProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <HoverCardPrimitive.Arrow {...props} className={tx('hoverCard.arrow', {}, classNames)} ref={forwardedRef}>
-      <HoverCardPrimitive.ArrowTip />
-    </HoverCardPrimitive.Arrow>
-  );
-});
-
-HoverCardArrow.displayName = ARROW_NAME;
-
-export const HoverCard = {
-  Root: HoverCardRoot,
-  Trigger: HoverCardTrigger,
-  Portal: HoverCardPortal,
-  Content: HoverCardContent,
-  Arrow: HoverCardArrow,
-};
-
+HoverCardContent.displayName = 'HoverCard.Content';
 export type {
-  HoverCardArrowProps,
-  HoverCardContentProps,
-  HoverCardPortalProps,
-  HoverCardRootProps,
-  HoverCardTriggerProps,
+  HoverCardContentProps as ContentProps,
+  HoverCardRootProps as RootProps,
+  HoverCardTriggerProps as TriggerProps,
 };
+
+export { HoverCardContent as Content, HoverCardRoot as Root, HoverCardTrigger as Trigger };

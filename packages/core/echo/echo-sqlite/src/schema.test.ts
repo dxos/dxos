@@ -5,12 +5,12 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './migrations/0001_init.sql?raw';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';

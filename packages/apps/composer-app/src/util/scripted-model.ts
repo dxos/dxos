@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import type * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';

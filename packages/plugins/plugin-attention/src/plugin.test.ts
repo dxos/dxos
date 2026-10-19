@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
@@ -16,7 +16,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('AttentionPlugin', () => {
   test('modules activate on startup', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [GraphPlugin.make(), ProcessManagerPlugin(), AttentionPlugin()],
+      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), AttentionPlugin()],
     });
 
     // All modules are dependency-mode and activate during the startup dependency pass. `#plugin`

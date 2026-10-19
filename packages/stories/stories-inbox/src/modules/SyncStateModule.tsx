@@ -4,18 +4,19 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * Renders the space database's EDGE sync state (Automerge document counts and feed block backlogs)
  * as live JSON, driven by {@link Database.subscribeToSyncState}.
  */
 export const SyncStateModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -32,14 +33,14 @@ const SyncStateModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Sync State</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter data={syncState ?? {}} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

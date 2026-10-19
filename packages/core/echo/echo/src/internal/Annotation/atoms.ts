@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 

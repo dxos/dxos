@@ -8,7 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -111,10 +111,13 @@ export class DataServiceImpl implements DataService.Handlers {
         const synchronizer = this._subscriptions.get(request.subscriptionId);
         invariant(synchronizer, 'Subscription not found');
 
-        if (request.addIds?.length) {
-          await synchronizer.addDocuments(request.addIds as DocumentId[]);
+        if (request.add?.length) {
+          await synchronizer.addDocuments(
+            request.add.map(({ id, heads, passive }) => ({ documentId: id as DocumentId, heads, passive })),
+          );
           // The subscription now holds each document, so the creation lease has nothing left to guard.
-          for (const documentId of request.addIds as DocumentId[]) {
+          for (const { id } of request.add) {
+            const documentId = id as DocumentId;
             this._pendingCreations.get(documentId)?.[Symbol.dispose]();
             this._pendingCreations.delete(documentId);
           }
@@ -233,6 +236,11 @@ export class DataServiceImpl implements DataService.Handlers {
       },
       catch: toServiceError,
     });
+  }
+
+  /** Whether any of the given subscriptions holds the document, passive or loaded. */
+  'holds'(subscriptionIds: readonly string[], documentId: DocumentId): boolean {
+    return subscriptionIds.some((subscriptionId) => this._subscriptions.get(subscriptionId)?.holds(documentId));
   }
 
   /**

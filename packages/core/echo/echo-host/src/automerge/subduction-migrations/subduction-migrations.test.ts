@@ -22,12 +22,12 @@ import {
 } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { PublicKey } from '@dxos/keys';
 
 import { type TestSqliteRuntime, createTestSqliteRuntime } from '../../testing/index.ts';
@@ -284,6 +284,27 @@ describe('subduction migrations', () => {
       await openHost(runtime);
       expect(await adapter.load(planted.fragmentKey)).toEqual(rewritten);
       expect(await adapter.load(planted.blobKey)).toEqual(blob);
+    });
+
+    // The migration is recorded once, but the shape keeps arriving: clients on automerge < 3.5 still write it, and a
+    // peer forwards a fragment with the signature it was received with. Stored as received, it would be uploaded to
+    // the next empty EDGE store on its own sync, where it hides the document's head again.
+    test('rewrites an old-shape fragment received after the migration was recorded, on the next open', async () => {
+      const { runtime, adapter } = await setup();
+      const host = await openHost(runtime);
+      expect(await applied(runtime, selfCheckpointedFragments.name)).toBe(true);
+      await host.close();
+
+      const { headBytes, blob } = syntheticDocument();
+      const sedimentreeBytes = padTo32(PublicKey.random().asUint8Array().slice(0, 16));
+      const planted = await plantOldShapeFragment(adapter, { sedimentreeBytes, headBytes, blob });
+
+      await openHost(runtime);
+      const rewritten = await adapter.load(planted.fragmentKey);
+      expect(selfCheckpointRepair(rewritten!)).toBeUndefined();
+      expect(await headsSeenBy(adapter)).toEqual([
+        { id: bytesToHex(sedimentreeBytes), heads: [bytesToHex(headBytes)] },
+      ]);
     });
 
     // What a client on @automerge/automerge 3.3.2 stored for a document whose last edit closed a

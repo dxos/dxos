@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = T
       const target = connection.target;
       const db = target ? Obj.getDatabase(target) : undefined;
       if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
 
       return yield* Effect.gen(function* () {

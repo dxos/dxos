@@ -4,34 +4,37 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
 
+/**
+ * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
+ * context id (which holds the `single` event selection) so the two selection modes don't collide.
+ * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
+ */
+export const getRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
 /** Calendar object schema. */
 export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    // Saved views (named filter-bar queries), shown as children of the calendar in the navtree — see `Mailbox.filters`.
+    filters: Schema.Array(Schema.Struct({ name: Schema.String, filter: Schema.String })).pipe(
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
-    /**
-     * Reading a calendar is a chain, as reading a mailbox is: the event replaces the event plank
-     * rather than growing the deck, so moving down the day reuses one plank.
-     */
-    AppAnnotation.DeckAnnotation.set({
-      levels: [{ key: 'calendar' }, { key: 'event' }],
-    }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
     // Providers are resolved from the registry — see `Mailbox`.

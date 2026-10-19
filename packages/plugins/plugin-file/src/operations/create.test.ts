@@ -6,13 +6,15 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { type TestHarness } from '@dxos/app-framework/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
@@ -20,8 +22,9 @@ import { FileCapabilities, FileOperation } from '#types';
 import { FileTooLargeError } from './create.ts';
 
 describe('FileOperation.Create', () => {
-  test('uploads a small PNG to the default (inline) backend', async ({ expect }) => {
+  test('uploads a small PNG to the selected inline backend', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
+    selectBackend(harness, Blob.Storage.inline);
     await using _harness = harness;
 
     const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -118,8 +121,28 @@ describe('FileOperation.Create', () => {
     }
   });
 
+  test('stores on the device, outside the document, when no backend is selected', async ({ expect }) => {
+    const { harness, defaultSpace } = await setup();
+    await using _harness = harness;
+
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { object } = yield* Operation.invoke(
+          FileOperation.Create,
+          { file: makeFile('data.png', 'image/png', bytes), db: defaultSpace.db },
+          { spaceId: defaultSpace.id },
+        );
+        const blob = yield* Database.load(object.data);
+        expect(blob.data._tag === 'external' && blob.data.uri).toMatch(/^ni:/);
+        expect(yield* Effect.promise(() => defaultSpace.db.readBlob(blob))).toEqual(bytes);
+      }),
+    );
+  });
+
   test('rejects files larger than the inline cap on the inline backend', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();
+    selectBackend(harness, Blob.Storage.inline);
     await using _harness = harness;
 
     const oversized = new Uint8Array(Blob.MAX_INLINE_SIZE + 1);
@@ -137,8 +160,12 @@ describe('FileOperation.Create', () => {
 const makeFile = (name: string, type: string, bytes: Uint8Array): globalThis.File =>
   new globalThis.File([bytes as BlobPart], name, { type });
 
+/** Persists a backend choice the way the settings panel does. */
+const selectBackend = (harness: TestHarness, storage: string) =>
+  harness.get(Capabilities.AtomRegistry).set(harness.get(FileCapabilities.SettingsAtom), { backend: storage });
+
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) —
   // contribute the descriptor directly so `resolveActiveStorage` has something to resolve.
   harness.capabilities.contribute({

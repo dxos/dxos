@@ -4,11 +4,11 @@
 
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import type * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';

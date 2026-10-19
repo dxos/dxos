@@ -3,8 +3,8 @@
 //
 
 import { render, waitFor } from '@solidjs/testing-library';
-import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AsyncResult from 'effect/reactivity/AsyncResult';
+import * as Atom from 'effect/reactivity/Atom';
 import { Suspense } from 'solid-js';
 import { beforeEach, describe, expect, test } from 'vitest';
 

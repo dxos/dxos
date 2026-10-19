@@ -118,7 +118,7 @@ const ExplosionScene = () => {
   return (
     <div className='relative dx-fill'>
       {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
-      <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
+      <canvas ref={canvasRef} className='dx-fill dx-cover outline-none' style={{ touchAction: 'none' }} />
     </div>
   );
 };

@@ -4,9 +4,9 @@
 
 import { type Subduction } from '@automerge/automerge-subduction';
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 
 import { type SqliteStorageAdapter } from '../sqlite-storage-adapter.ts';

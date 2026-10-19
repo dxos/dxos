@@ -4,8 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -21,7 +25,7 @@ export type RelatedCardsProps = Pick<PullRequestBody, 'artifacts' | 'claudeCode'
 
 /** What {@link RelatedCards} would show; empty when the pull request links to nothing beyond its diff. */
 export const useRelatedItems = ({ artifacts, claudeCode, previewUrl }: RelatedCardsProps): RelatedItem[] => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return useMemo(() => {
     const items: RelatedItem[] = artifacts.map((artifact) => ({ kind: 'artifact', id: artifact.url, artifact }));
     if (previewUrl) {
@@ -62,14 +66,14 @@ export const RelatedCards = ({ items }: { items: readonly RelatedItem[] }) => (
 );
 
 const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (item.kind === 'link') {
     return (
       <Card.Root data-testid={`pull-request.related.${item.id}`}>
         <CardHeading icon={item.icon} iconClassNames={item.iconClassNames} title={item.title} href={item.href} />
         {item.detail && (
           <Card.Row>
-            <Card.Text variant='description' truncate>
+            <Card.Text variant='muted' truncate>
               {item.detail}
             </Card.Text>
           </Card.Row>
@@ -87,7 +91,7 @@ const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
         href={artifact.url}
       />
       <Card.Row>
-        <Card.Text variant='description' truncate>
+        <Card.Text variant='muted' truncate>
           {artifact.name}
         </Card.Text>
       </Card.Row>
@@ -112,23 +116,23 @@ const CardHeading = ({
   title: string;
   href?: string;
 }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Card.Header>
-      <Card.Block>
-        <Icon icon={icon} classNames={iconClassNames} />
-      </Card.Block>
+      <Layout.Block>
+        <Icon.Icon icon={icon} classNames={iconClassNames} />
+      </Layout.Block>
       <Card.Title>{title}</Card.Title>
       {href && (
-        <Card.Block end>
-          <IconButton
+        <Layout.Block rail='end'>
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             label={t('open-link.label')}
             onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
           />
-        </Card.Block>
+        </Layout.Block>
       )}
     </Card.Header>
   );

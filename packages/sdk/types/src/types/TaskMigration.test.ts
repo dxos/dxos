@@ -186,6 +186,34 @@ describe('task hierarchy migration', () => {
     expect(Task.parentTaskId(get('stray'))).toBe(get('epic').id);
   });
 
+  test('keeps a task whose parent lives in another space as a root', async ({ expect }) => {
+    const { db, peer } = await builder.createDatabase();
+    db.graph.registry.add([
+      Milestone.Milestone,
+      TaskMigration.LegacyTask,
+      TaskMigration.LegacyTaskSet,
+      Task.Task,
+      TaskSet.TaskSet,
+    ]);
+    const other = await peer.createDatabase();
+    const remote = other.add(Obj.make(TaskMigration.LegacyTask, { title: 'remote' }));
+    await other.flush();
+    const { setId } = await seedLegacy(db, [{ title: 'epic' }, { title: 'local' }]);
+    const [local] = (await db.query(Filter.type(TaskMigration.LegacyTask)).run()).filter(
+      (task) => task.title === 'local',
+    );
+    Obj.update(local, (local) => {
+      local.parentTask = Ref.fromURI(Obj.getURI(remote, { prefer: 'absolute' }));
+    });
+    await db.flush();
+
+    await db.runMigrations(TaskMigration.migrations);
+
+    const { taskSet, get, titles } = await load(db);
+    expect(titles(taskSet.tasks)).toEqual(['epic', 'local']);
+    expect(Obj.getParent(get('local'))?.id).toBe(setId);
+  });
+
   test('runs on a client that registers only the current types', async ({ expect }) => {
     // A plugin registers `Task`/`TaskSet` alone; registering the legacy versions would put a second
     // `org.dxos.type.task` in every type picker. The migration must read the legacy data without them.

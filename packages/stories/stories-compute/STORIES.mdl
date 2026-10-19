@@ -1,0 +1,34 @@
+# stories-compute
+
+Storybook demos for the compute service: processes spawned locally and on EDGE through one
+`Process.Manager`, each rendered as a card in a masonry.
+
+test QA-1: Prompt background agents locally and on EDGE
+  desc: |
+    The AgentManager story: each prompt spawns the scripted agent demo process (no model involved),
+    whose card streams a read-only transcript of its plan, tool calls, tool results and answer. The
+    same prompt box spawns locally or on EDGE; the card's location row is the only difference.
+  actors: human
+  status: verified
+  given:
+    - storybook serves `stories/stories-compute/AgentManager` `EdgeLocal`
+    - a local EDGE stack listens on :8787 and its compute-service hosts `org.dxos.stories.compute.agent-demo`
+  steps:
+    - name: Prompt a local agent
+      do: Type "Fix the flaky timeout in the sync engine tests" in the prompt box and press Enter.
+      expect: a card appears with location "local", and its transcript shows the prompt followed by tool calls such as grep_repo and run_tests.
+    - name: Prompt a second local agent
+      do: Click the "Research the history of the Lisbon tram network" suggestion and press Create.
+      expect: a second local card streams search_web and fetch_page calls alongside the first.
+    - name: Switch to EDGE
+      do: Choose EDGE in the location select.
+      expect: the select reads EDGE.
+    - name: Prompt an EDGE agent
+      do: Type "Analyze last quarter sales by region and chart the trend" and press Enter.
+      expect: a card appears with location "edge", and its transcript streams query_database, run_python and create_chart.
+    - name: Prompt a second EDGE agent
+      do: Type "Schedule a design review with the platform team next week" and press Enter.
+      expect: a second EDGE card streams find_contacts, list_calendar and draft_email.
+    - name: Let every agent finish
+      do: Wait for all four transcripts to end.
+      expect: every card ends with an answer and its state reads SUCCEEDED; the delete action replaces Kill.

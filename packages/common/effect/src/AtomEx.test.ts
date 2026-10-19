@@ -3,8 +3,8 @@
 //
 
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import * as AtomEx from './AtomEx.ts';

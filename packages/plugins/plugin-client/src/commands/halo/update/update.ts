@@ -3,10 +3,10 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';

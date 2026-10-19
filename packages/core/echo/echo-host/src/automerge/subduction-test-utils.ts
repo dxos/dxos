@@ -7,6 +7,7 @@ import {
   type DocHandle,
   type DocumentId,
   type DocumentProgress,
+  type Heads,
   type Message,
   type PeerId,
   type QueryState,
@@ -71,6 +72,57 @@ export const waitForEviction = async (expect: ExpectStatic, host: AutomergeHost,
       { timeout: SYNC_WINDOW_MS },
     )
     .toBe(false);
+};
+
+/** Resolves once the document satisfies `predicate`, re-checked on each change event. */
+export const waitForDoc = async <T>(
+  handle: {
+    doc(): T | undefined;
+    on(event: 'change', listener: () => void): unknown;
+    off(event: 'change', listener: () => void): unknown;
+  },
+  predicate: (doc: T | undefined) => boolean,
+  { timeout = SYNC_WINDOW_MS }: { timeout?: number } = {},
+): Promise<void> => {
+  const trigger = new Trigger();
+  const check = () => {
+    if (predicate(handle.doc())) {
+      trigger.wake();
+    }
+  };
+  handle.on('change', check);
+  try {
+    check();
+    await trigger.wait({ timeout });
+  } finally {
+    handle.off('change', check);
+  }
+};
+
+/** Resolves once `host` holds exactly `expected` heads for the document. */
+export const waitForHostHeads = async (
+  host: AutomergeHost,
+  documentId: DocumentId,
+  expected: Heads,
+  { timeout = SYNC_WINDOW_MS }: { timeout?: number } = {},
+): Promise<void> => {
+  const key = (heads: readonly string[]) => [...heads].sort().join(',');
+  const matches = (heads: readonly string[] | undefined) => heads !== undefined && key(heads) === key(expected);
+  const trigger = new Trigger();
+  // Subscribed before reading, so no change is missed.
+  const unsubscribe = host.documentHeadsChanged.on((event) => {
+    if (event.documentId === documentId && matches(event.heads)) {
+      trigger.wake();
+    }
+  });
+  try {
+    const [current] = await host.getHeads([documentId]);
+    if (!matches(current)) {
+      await trigger.wait({ timeout });
+    }
+  } finally {
+    unsubscribe();
+  }
 };
 
 // Subduction control-plane message type, sent by `NetworkAdapterTransport` from

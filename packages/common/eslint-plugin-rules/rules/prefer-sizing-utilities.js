@@ -30,7 +30,7 @@ const UTILITIES = {
   'dx-fill': ['h-full', 'w-full'],
   'dx-grow': ['flex-1', 'min-h-0', 'min-w-0'],
   'dx-expand': ['flex-1', 'min-h-0', 'min-w-0', 'h-full', 'w-full'],
-  'dx-fullscreen': ['absolute', 'inset-0'],
+  'dx-cover': ['absolute', 'inset-0'],
 };
 
 /**
@@ -46,7 +46,7 @@ const COMBINATIONS = [
   { classes: ['flex-1', 'min-h-0'], suggestion: 'dx-grow' },
   { classes: ['grow', 'min-h-0'], suggestion: 'dx-grow' },
   { classes: ['h-full', 'w-full'], suggestion: 'dx-fill' },
-  { classes: ['absolute', 'inset-0'], suggestion: 'dx-fullscreen' },
+  { classes: ['absolute', 'inset-0'], suggestion: 'dx-cover' },
 ];
 
 /** Utility pairs that are the long spelling of another utility. */

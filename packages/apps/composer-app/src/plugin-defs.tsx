@@ -10,6 +10,7 @@ import { type AiService } from '@dxos/ai';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
+import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -43,6 +44,7 @@ import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as HandpanPlugin from '@dxos/plugin-handpan/HandpanPlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
 import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
@@ -58,9 +60,10 @@ import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
-import * as MapPluginSolid from '@dxos/plugin-map-solid/MapPlugin';
+import * as MapSolidMapPlugin from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MeetingRecorderPlugin from '@dxos/plugin-meeting-recorder/MeetingRecorderPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
@@ -92,6 +95,7 @@ import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
 import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
+import * as UmlPlugin from '@dxos/plugin-uml/UmlPlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
@@ -126,6 +130,8 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
+    // The illustrator's canvas variant; activation makes no network call.
+    CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
@@ -153,9 +159,11 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      HandpanPlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
+      AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
@@ -164,6 +172,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       MeetingPlugin.meta.profile.key,
+      MeetingRecorderPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
@@ -175,6 +184,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
+      UmlPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -285,9 +295,11 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
-    isLocal && MapPluginSolid.make(),
+    isLocal && MapSolidMapPlugin.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
+    // Records meetings held in other apps; detection and system audio need the desktop host.
+    MeetingRecorderPlugin.make(),
     MermaidPlugin.make(),
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
@@ -310,6 +322,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ThreadPlugin.make(),
     TldrawPlugin.make(),
     TranscriptionPlugin.make(),
+    UmlPlugin.make(),
     ...experimental,
   ]
     .filter(isTruthy)
@@ -330,10 +343,12 @@ const experimental: Plugin.Plugin[] = [
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HandpanPlugin.make(),
   HeyGenPlugin.make(),
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),
   IdeogramPlugin.make(),
+  AgentPlugin.make(),
   IrohBeaconPlugin.make(),
   LaMetricPlugin.make(),
   LinearPlugin.make(),

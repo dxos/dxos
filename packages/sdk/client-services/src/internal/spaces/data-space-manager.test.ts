@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, waitForCondition } from '@dxos/async';
@@ -19,7 +20,10 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  ProfileDocumentSchema,
+  type SpaceMember as SpaceMemberAssertion,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -60,6 +64,34 @@ describe('DataSpaceManager', () => {
     expect(space.inner.spaceState.members.size).to.equal(1);
     expect(space.inner.spaceState.feeds.size).to.equal(2);
     expect(space.inner.protocol.feeds.size).to.equal(2);
+  });
+
+  test('opening a space brings the member profile up to date with the identity', async () => {
+    const builder = new TestBuilder();
+
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    // Created before the identity had a profile, so the space records none.
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+    const ownProfile = (dataSpace: typeof space) =>
+      Array.from(dataSpace.inner.spaceState.members.values()).find((member) =>
+        member.key.equals(peer.identity.identityKey),
+      )?.profile;
+    expect(ownProfile(space)?.displayName).to.be.undefined;
+
+    // The name is set while the space is not open, so no profile update reaches it.
+    const profile = create(ProfileDocumentSchema, { displayName: 'Alice' });
+    peer.identity.getProfile = () => profile;
+    await peer.dataSpaceManager.close();
+    peer.props.dataSpaceManager = undefined;
+    await openAndClose(peer.dataSpaceManager);
+
+    const reloaded = getFirstSpace(peer);
+    await reloaded.activate(new Context());
+    await waitForCondition({ condition: () => ownProfile(reloaded)?.displayName === 'Alice' });
   });
 
   test('an anchored space still takes its id from the space genesis key', async () => {

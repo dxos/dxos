@@ -3,9 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -71,8 +72,7 @@ export const translations = [
 
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
-        'message-companion.label': 'Message',
-        'no-message-selected.message': 'Select a message.',
+        'attachment-type.label': 'Attachment',
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
         'mailbox-sync.label': 'Mailbox Sync',
@@ -105,6 +105,7 @@ export const translations = [
 
         'calendar-toolbar.menu': 'Calendar toolbar',
         'calendar-toolbar-create-event.menu': 'Create event',
+        'calendar-toolbar-filter.menu': 'Filter events',
         'calendar-toolbar-sync.menu': 'Save events to calendar',
 
         'conversation-toolbar.label': 'Conversation toolbar',
@@ -132,8 +133,9 @@ export const translations = [
         'mailbox-toolbar-sort.menu': 'Sort messages',
         'mailbox-toolbar-extract.menu': 'Extract',
         'mailbox-toolbar-filter.menu': 'Filter messages',
-        'mailbox-toolbar-save-button.label': 'Save',
-        'mailbox-toolbar-clear-button.label': 'Clear',
+
+        'query-filter-save-button.label': 'Save',
+        'query-filter-clear-button.label': 'Clear',
 
         'save-filter.placeholder': 'Filter name',
         'save-filter.button': 'Save',
@@ -192,4 +194,5 @@ export const translations = [
   },
   ...cardTranslations,
   ...componentsTranslations,
-] as const satisfies Resource[];
+  ...queryTranslations,
+] as const satisfies Theme.Resource[];

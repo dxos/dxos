@@ -48,7 +48,7 @@ type KanbanViewSpec
 type KanbanItemsSpec
   fields:
     kind: "items"              # discriminator — kanban owns items explicitly
-    pivotField: string         # property path that drives column membership
+    pivotField: string         # property path that drives column membership; empty places cards by arrangement alone
     items: Ref<object>[]       # items owned directly by the kanban
 ```
 
@@ -388,6 +388,24 @@ test QA-1: Create a board, add a card, delete and restore it
       do: Right-click "QA Board" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.board], target: $given.collection }
       expect: the row leaves the navtree
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Open a new kanban board. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: kanban` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-kanban enabled
+  steps:
+    - name: Create the object
+      do: Create a kanban object from the + menu.
+      expect: it opens in the plank
+    - name: Work in it
+      do: Click across it as the clip gesture does.
+      expect: the object responds to each click
 ```
 
 ---

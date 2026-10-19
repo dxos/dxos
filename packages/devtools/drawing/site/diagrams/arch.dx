@@ -1,0 +1,17 @@
+diagram aspect=16:9
+group web "Web app" {
+  node Browser "Browser"
+  node Api "API server" right-of Browser
+}
+group data "Storage" compact {
+  node Db "Postgres"
+  node Cache "Redis"
+}
+node Queue "Queue"
+node Worker "Job worker"
+edge Browser -> Api "HTTPS"
+edge Api -> Db "reads, writes"
+edge Api -> Cache
+edge Api -> Queue "enqueue"
+edge Queue -> Worker
+edge Worker -> Db

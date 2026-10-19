@@ -4,7 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Field, Grid, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -42,25 +46,29 @@ export const PullRequestFiles = ({
   onReviewedChange,
   onLineComment,
 }: PullRequestFilesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const fence = useMemo(() => (file && file.hunks.length > 0 ? diffFence(file) : undefined), [file]);
 
   if (error) {
-    return <Banner.Empty icon='ph--warning--regular' label={error} classNames='dx-expand' />;
+    return (
+      <Status.Empty icon='ph--warning--regular' classNames='dx-expand'>
+        {error}
+      </Status.Empty>
+    );
   }
   if (!tree) {
-    return <Banner.Empty label={t('files-loading.message')} classNames='dx-expand' />;
+    return <Status.Empty classNames='dx-expand'>{t('files-loading.message')}</Status.Empty>;
   }
 
   return (
-    <Grid cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
+    <Layout.Grid grow cols={['fill', '18rem']} data-testid='pull-request.files'>
       {fence ? (
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />
       ) : (
-        <Banner.Empty label={t(file ? 'file-no-diff.message' : 'no-files.message')} classNames='dx-expand' />
+        <Status.Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Status.Empty>
       )}
-      <ScrollArea.Root thin classNames='border-s border-subdued-separator'>
+      <ScrollArea.Root classNames='border-s border-separator-subtle'>
         <ScrollArea.Viewport classNames='p-2'>
           <Field.Root>
             <Field.Label classNames='px-2'>{t('files-reviewed.label', { reviewed: reviewed.size, total })}</Field.Label>
@@ -74,6 +82,6 @@ export const PullRequestFiles = ({
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Grid>
+    </Layout.Grid>
   );
 };

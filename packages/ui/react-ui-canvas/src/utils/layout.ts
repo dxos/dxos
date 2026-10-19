@@ -12,7 +12,7 @@
 
 import { Layout } from '@dxos/diagram';
 
-import { type ElementId, MAJOR_GRID, type Point, type Scene, type Size, endpointNode } from '../model/types.ts';
+import { type ElementId, MAJOR_GRID, type Point, type Scene, type Size, endpointNode } from '../model/index.ts';
 
 export type LayoutOptions = {
   /** Gap between rows and between the columns within a row, in scene px. */

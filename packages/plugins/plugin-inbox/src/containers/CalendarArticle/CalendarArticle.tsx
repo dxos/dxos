@@ -6,13 +6,13 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useAppGraph, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
@@ -24,13 +24,17 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
+import { useFilterTagIds, useQueryFilter, useTagMap } from '#hooks';
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarPath, getCalendarRangeSelectionId, getFeedObjectPath } from '../../paths.ts';
+import { getCalendarPath, getFeedObjectPath } from '../../paths.ts';
+import { buildSearchSelection } from '../../util/index.ts';
 import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
@@ -38,11 +42,17 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
+export type CalendarArticleProps = AppSurface.ObjectArticleProps<
+  Calendar.Calendar,
+  {
+    /** Seeds the filter box (a saved view's query); Clear restores it. */
+    filter?: string;
+  }
+>;
 
-export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+export const CalendarArticle = ({ role, subject, attendableId, filter: filterProp }: CalendarArticleProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
   // The calendar's graph node id: events open as its children and it is their pivot.
@@ -55,15 +65,26 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const { connection } = useTargetConnection(subject);
 
   const feed = useResolveRef(calendar.feed);
+  const tagIndex = useResolveRef(calendar.tags);
+
+  // Filter.
+  const tagMap = useTagMap(db);
+  const {
+    debouncedText: debouncedFilterText,
+    debouncedFilter,
+    element: filterElement,
+  } = useQueryFilter({ owner: subject, tags: tagMap, initialText: filterProp });
+  const resolveTagIds = useFilterTagIds(tagIndex, debouncedFilter);
+  const selection = useMemo(
+    () => buildSearchSelection(Filter.type(Event.Event), debouncedFilterText, debouncedFilter, { resolveTagIds }),
+    [debouncedFilterText, debouncedFilter, resolveTagIds],
+  );
+  const filtering = debouncedFilterText.trim().length > 0;
+
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
   // to this calendar (not yet pushed to Google). Overlay both on the calendar.
-  const syncedEvents = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
-  );
-  const draftEvents = useQuery(db, Query.select(Filter.type(Event.Event))).filter((event) =>
-    DraftEvent.belongsTo(event, calendar.id),
-  );
+  const syncedEvents = useQuery(db, feed ? Query.select(selection).from(feed) : Query.select(Filter.nothing()));
+  const draftEvents = useQuery(db, Query.select(selection)).filter((event) => DraftEvent.belongsTo(event, calendar.id));
   const events = useMemo(() => [...syncedEvents, ...draftEvents].toSorted(byDate()), [syncedEvents, draftEvents]);
   // The currently active event (selected in the stack/deck); its date drives the grid's highlight.
   const activeEvent = useMemo(() => events.find((event) => event.id === currentId), [events, currentId]);
@@ -72,7 +93,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = useResolveRef(calendar.tags);
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
@@ -108,22 +128,16 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleRangeSelect = useCallback(
     ({ range }: { range: { from: Date; to: Date } }) => {
       void invokePromise(LayoutOperation.Select, {
-        contextId: getCalendarRangeSelectionId(id),
+        contextId: Calendar.getRangeSelectionId(id),
         subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
       });
     },
     [id, invokePromise],
   );
 
-  // The same reading gesture as the mailbox and the task ledger: selecting the event is what drives
-  // `activeEvent` (which selects and scrolls the grid, below), and the detail opens in the event's
-  // own companion where there is room for one — the calendar contributes one companion per event —
-  // or as a plank at the `event` rung otherwise.
-  const handleNavigate = useDetailNavigation({
+  const handleNavigate = ToolkitHooks.useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),
-    level: 'event',
-    companion: (eventId) => eventId,
   });
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes
@@ -176,8 +190,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
@@ -187,37 +201,48 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           'create-event',
           { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
           handleCreate,
+        )
+        .action(
+          'filter',
+          {
+            variant: 'custom',
+            label: ['calendar-toolbar-filter.menu', { ns: meta.profile.key }],
+            render: () => filterElement,
+          },
+          () => {},
         );
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, id, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
         .build();
     },
-    [graph, id, handleCreate],
+    [graph, id, handleCreate, filterElement],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
   return (
     <div role={role} className='@container dx-expand'>
-      <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
-        <Panel.Root classNames='hidden @2xl:block'>
+      {/* A fixed track (seven 40px day columns): `Panel.Root` is an inline-size container, so its min-content width is 0. */}
+      <div className='grid grid-cols-1 @2xl:grid-cols-[280px_1fr] h-full'>
+        <Panel.Root classNames='hidden @2xl:grid'>
           <NaturalCalendar.Root ref={calendarRef}>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <NaturalCalendar.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
-            </Panel.Content>
+            </Panel.Body>
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-          </Panel.Toolbar>
+          </Panel.Header>
 
-          <Panel.Content asChild>
-            {events.length === 0 ? (
+          <Panel.Body asChild>
+            {/* A filter that matches nothing shows an empty list, not the connect prompt. */}
+            {events.length === 0 && !filtering ? (
               <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack
@@ -229,7 +254,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 onAction={handleAction}
               />
             )}
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </div>
     </div>

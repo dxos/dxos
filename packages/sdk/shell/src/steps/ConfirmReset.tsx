@@ -5,9 +5,13 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
-import { Action, TextInput } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
 import { type StepProps } from './StepProps.ts';
 
@@ -50,7 +54,7 @@ export const ConfirmReset = ({
   confirmationValue: confirmationValueProp,
   errorMessage,
 }: ConfirmResetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -78,36 +82,40 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Banner.Root valence='error'>
-        <Banner.Content classNames='mb-trim-md'>
+      <Dialog.Body gap='md'>
+        <Banner.Root valence='error'>
           <Banner.Title>{resolvedTitle}</Banner.Title>
           <Banner.Body>{resolvedMessage}</Banner.Body>
-        </Banner.Content>
-      </Banner.Root>
-      <TextInput
-        {...{ validationMessage }}
-        disabled={disabled}
-        data-testid={`${testIdAffix}.reset-identity-input`}
-        placeholder={t('confirmation.placeholder', { confirmationValue })}
-        onChange={({ target: { value } }) => setInputValue(value)}
-      />
-      <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
+        </Banner.Root>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
+          <Field.Label srOnly>{t('confirmation.placeholder', { confirmationValue })}</Field.Label>
+          <Input.Root
+            disabled={disabled}
+            data-testid={`${testIdAffix}.reset-identity-input`}
+            placeholder={t('confirmation.placeholder', { confirmationValue })}
+            onChange={({ target: { value } }) => setInputValue(value)}
+          />
+          {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+        </Field.Root>
+      </Dialog.Body>
+      <Dialog.Footer>
         {onCancel && (
-          <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
+          <Button.Root disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {resolvedCancelLabel}
-          </Action>
+          </Button.Root>
         )}
         {onConfirm && (
-          <Action
+          <Button.Root
             variant='destructive'
             disabled={disabled || pending || inputValue !== confirmationValue}
             onClick={handleConfirm}
             data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
             {pending ? resolvedPendingLabel : resolvedConfirmLabel}
-          </Action>
+          </Button.Root>
         )}
-      </Dialog.ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

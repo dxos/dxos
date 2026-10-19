@@ -3,8 +3,8 @@
 //
 
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 

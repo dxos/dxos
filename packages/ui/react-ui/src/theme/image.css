@@ -1,0 +1,45 @@
+/*
+ * Image: a fixed-ratio frame, so layout does not shift as the image loads, filled with the well until it does.
+ */
+
+@layer dx-components {
+  .dx-image {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    aspect-ratio: var(--dx-image-aspect, 16 / 9);
+    min-width: 0;
+    background: var(--color-input-surface);
+    color: var(--color-fg-muted);
+  }
+  .dx-image[data-status='loaded'] {
+    background: transparent;
+  }
+  .dx-image[data-backdrop='dominant'][data-status='loaded'] {
+    background: var(--dx-image-backdrop, transparent);
+    transition: background-color 0.5s ease-in-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-image[data-backdrop='dominant'] {
+      transition: none;
+    }
+  }
+  .dx-image > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .dx-image[data-fit='contain'] > img {
+    object-fit: contain;
+  }
+
+  .dx-image-clickable {
+    cursor: pointer;
+  }
+  /* An outline, not the inset ring: the image fills the frame and would paint over an inset shadow. */
+  .dx-image-clickable:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+}

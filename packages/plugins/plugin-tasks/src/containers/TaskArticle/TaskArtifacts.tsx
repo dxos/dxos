@@ -5,8 +5,10 @@
 import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CardMasonry } from '@dxos/plugin-space/components';
-import { Column, useTranslation } from '@dxos/react-ui';
+import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -20,7 +22,7 @@ export type TaskArtifactsProps = {
  * Absent rather than empty for a task with no artifacts.
  */
 export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
   // on the open task would otherwise not reach the grid until the reader selected away and back.
   const [artifacts] = useObject(task, 'artifacts');
@@ -29,8 +31,14 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Column.Section label={t('task-artifacts.label')} data-testid='tasksPlugin.artifacts'>
-      <CardMasonry objects={artifacts} size='compact' inline />
-    </Column.Section>
+    <Layout.Container asChild gutter='inherit' gap='md'>
+      <section data-testid='tasksPlugin.artifacts'>
+        {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+        <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
+          <h2>{t('task-artifacts.label')}</h2>
+        </Typography.Text>
+        <CardMasonry.CardMasonry objects={artifacts} size='compact' inline />
+      </section>
+    </Layout.Container>
   );
 };

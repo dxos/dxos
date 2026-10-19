@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
@@ -51,13 +51,13 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <Transcription model={model} transcript={transcript} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

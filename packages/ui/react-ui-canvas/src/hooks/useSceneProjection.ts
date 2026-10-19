@@ -5,15 +5,19 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useMemo } from 'react';
 
-import { type SceneViewAtoms } from '../model/atoms.ts';
-import { type FreehandProjectionOptions, type Projection, createFreehandProjection } from '../model/projection.ts';
-import { type SceneStore } from '../model/store.ts';
-import { withUndo } from '../utils/undo.ts';
+import {
+  type CanvasAtoms,
+  type FreehandProjectionOptions,
+  type Projection,
+  createFreehandProjection,
+} from '../engine/index.ts';
+import { type SceneStore } from '../model/index.ts';
+import { withUndo } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
 export type UseSceneProjectionOptions = {
   store: SceneStore;
-  atoms: SceneViewAtoms;
+  atoms: CanvasAtoms;
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /**
    * A host-owned projection, already obtained from this hook, used for every scene on the path: for a host
@@ -36,7 +40,20 @@ export const useSceneProjection = ({
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];
   return useMemo(
-    () => projection ?? withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
-    [projection, createProjection, registry, store, sceneId, atoms.undo],
+    () =>
+      projection ??
+      withUndo(
+        createProjection({
+          registry,
+          store,
+          sceneId,
+          // Snap lands on the lattice only while both snap and the lattice toggle are on.
+          constrained: () => registry.get(atoms.snap) && registry.get(atoms.lattice),
+        }),
+        registry,
+        atoms.undo,
+        sceneId,
+      ),
+    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap, atoms.lattice],
   );
 };

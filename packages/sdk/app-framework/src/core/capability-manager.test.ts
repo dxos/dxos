@@ -4,7 +4,7 @@
 
 import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import * as CapabilityManager from './capability-manager.ts';
 import * as Capability from './capability.ts';

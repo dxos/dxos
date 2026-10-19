@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -11,9 +11,9 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { type Link, type Node, createMemoryStore, createSceneSchema, nodePorts } from '@dxos/react-ui-canvas/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
+import { computeNodeDefs, computeNodeRegistry } from '../registry.ts';
+import { createRowPorts } from '../shapes/index.ts';
 import { createControlCircuit, createTemplateCircuit, createTransformCircuit } from '../testing/index.ts';
-import { computeNodeDefs, computeNodeRegistry } from './defs.ts';
-import { anchorsToPorts } from './ports.ts';
 import { createComputeProjection } from './projection.ts';
 import { sceneFromCircuit } from './scene.ts';
 
@@ -24,11 +24,12 @@ const setup = () => {
   const initial = sceneFromCircuit(circuit);
   const registry = Registry.make();
   const store = createMemoryStore([initial]);
+  const update = new Event();
   const projection = createComputeProjection({
     registry,
     store,
     sceneId: initial.id,
-    controller: { graph: model, update: new Event() },
+    controller: { graph: model, update },
   });
   const scene = () => registry.get(projection.scene);
   const nodeOf = (type: string): Node => {
@@ -45,7 +46,7 @@ const setup = () => {
     }
     return node.node;
   };
-  return { model, projection, scene, nodeOf, computeIdOf };
+  return { model, update, projection, scene, nodeOf, computeIdOf };
 };
 
 const line = (id: string, source: Link['source'], target: Link['target']): Link => ({
@@ -81,7 +82,7 @@ describe('compute scene', () => {
     const plain = Object.values(scene.links).find(
       (link) => 'port' in link.target && link.target.port === `input.${DEFAULT_INPUT}`,
     );
-    expect(plain?.directed).toBe(true);
+    expect(plain?.ends).toEqual({ end: 'arrow' });
   });
 
   test('ports follow the anchors: stacked inputs on the west side, outputs east, exact offsets', ({ expect }) => {
@@ -98,7 +99,7 @@ describe('compute scene', () => {
     // Rows keep their order down the side.
     const offsets = inputs.map((port) => port.offset);
     expect([...offsets].sort((left, right) => left - right)).toEqual(offsets);
-    expect(anchorsToPorts({}, { width: 10, height: 10 })).toEqual([]);
+    expect(createRowPorts({ size: { width: 10, height: 10 }, inputs: [], outputs: [] })).toEqual([]);
   });
 });
 
@@ -155,6 +156,17 @@ describe('compute projection', () => {
     projection.apply({ kind: 'update', id: prompt.id, values: { target: { point: chat.center } } });
     expect(edgeTo(text).length).toBe(0);
     expect(model.edges.length).toBe(edges - 1);
+  });
+
+  test('a shape whose compute node is gone keeps drawing, and still deletes', ({ expect }) => {
+    const { model, update, projection, scene, nodeOf, computeIdOf } = setup();
+    const gpt = nodeOf('gpt');
+    // A peer's delete (or the projection's own, before the shape goes) removes the compute node first.
+    model.removeNodes([computeIdOf('gpt')]);
+    update.emit();
+    expect(scene().nodes[gpt.id]?.type).toBe('gpt');
+    projection.apply({ kind: 'delete', ids: [gpt.id] });
+    expect(scene().nodes[gpt.id]).toBeUndefined();
   });
 
   test('restoring a snapshot brings the compute graph back with it', ({ expect }) => {

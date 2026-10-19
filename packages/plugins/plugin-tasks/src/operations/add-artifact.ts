@@ -16,11 +16,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.AddArtifact> = TaskOpe
       const task = yield* Database.load(taskRef);
       const object = yield* Database.load(objectRef);
 
-      // A PR goes to the root of the task's tree, where every sub-task finds it.
-      const target = yield* Task.artifactTarget(task, object);
-      Task.addArtifact(target, object);
+      yield* Task.checkArtifact(task, object);
+      Task.addArtifact(task, object);
       yield* Database.flush();
-      return { task: target };
+      return { task };
     }),
   ),
 );

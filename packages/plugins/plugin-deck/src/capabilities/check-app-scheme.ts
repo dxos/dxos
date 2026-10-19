@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -117,7 +117,7 @@ export default Capability.makeModule(
      * Dispatch all NavigationHandler contributions with the current page URL.
      *
      * Each handler is isolated with `catchAllCause`, not `catchAll`: a handler that invokes an
-     * operation fails as a DEFECT (`Process.fromOperation` uses `Effect.orDie`), which the Fail
+     * operation fails as a DEFECT (`OperationProcess.make` uses `Effect.orDie`), which the Fail
      * channel does not carry. An escaping defect would fail this module's activation and take the
      * popstate listener, the URL<->state sync and the leave-trap down for the whole session — so
      * one handler's failure must not decide whether URL handling exists.

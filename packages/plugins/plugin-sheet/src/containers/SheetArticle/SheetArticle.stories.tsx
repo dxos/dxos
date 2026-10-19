@@ -9,12 +9,13 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -41,7 +42,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ registry }),
     withPluginManager({
-      plugins: [...corePlugins()],
+      plugins: [...CorePlugins.make()],
       capabilities: [
         Capability.contribute(SheetCapabilities.ComputeGraphRegistry, registry),
         Capability.contribute(
@@ -76,7 +77,7 @@ export const Default = () => {
 
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
-      <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+      <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
     </AttendableContainer>
   );
 };
@@ -92,7 +93,7 @@ export const Spec = () => {
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
-        <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+        <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
         <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>

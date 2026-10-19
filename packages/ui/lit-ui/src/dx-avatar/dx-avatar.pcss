@@ -5,11 +5,11 @@
   padding-right: 0.5rem;
 }
 
-.dx-avatar-group .dx-avatar {
+.dx-avatar-group .dx-lit-avatar {
   margin-right: -0.5rem;
 }
 
-.dx-avatar-group .dx-avatar {
+.dx-avatar-group .dx-lit-avatar {
   &[size='0'],
   &[size='px'],
   &[size='0.5'],
@@ -25,79 +25,79 @@ dx-avatar {
   display: contents;
 }
 
-.dx-avatar {
+.dx-lit-avatar {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
   /* Tailwind v4 migration: converted @apply to direct CSS properties */
 
-  .dx-avatar__frame {
+  .dx-lit-avatar__frame {
     width: 100%;
     height: 100%;
   }
 
-  .dx-avatar__frame,
-  .dx-avatar__ring {
+  .dx-lit-avatar__frame,
+  .dx-lit-avatar__ring {
     border-radius: 9999px;
   }
 
   &[data-variant='square'] {
-    .dx-avatar__frame,
-    .dx-avatar__ring {
+    .dx-lit-avatar__frame,
+    .dx-lit-avatar__ring {
       border-radius: 0.125rem;
     }
   }
 
-  .dx-avatar__status-icon {
+  .dx-lit-avatar__status-icon {
     position: absolute;
     bottom: 0;
     right: 0;
   }
 
-  .dx-avatar__ring {
+  .dx-lit-avatar__ring {
     position: absolute;
     inset: 0;
     border-width: 2px;
     border-color: var(--surface-bg);
   }
 
-  &[data-status='active'] .dx-avatar__ring {
+  &[data-status='active'] .dx-lit-avatar__ring {
     border-color: var(--color-success-border);
   }
 
-  &[data-status='inactive'] .dx-avatar__ring {
+  &[data-status='inactive'] .dx-lit-avatar__ring {
     border-color: var(--color-neutral-border);
   }
 
-  &[data-status='current'] .dx-avatar__ring {
+  &[data-status='current'] .dx-lit-avatar__ring {
     border-color: var(--color-focus-ring);
   }
 
-  &[data-status='internal'] .dx-avatar__ring {
+  &[data-status='internal'] .dx-lit-avatar__ring {
     border-color: var(--color-separator);
   }
 
-  &[data-status='error'] .dx-avatar__ring {
+  &[data-status='error'] .dx-lit-avatar__ring {
     border-color: var(--color-error-border);
   }
 
-  &[data-status='warning'] .dx-avatar__ring {
+  &[data-status='warning'] .dx-lit-avatar__ring {
     border-color: var(--color-warning-border);
   }
 
-  &[data-animation='pulse'] .dx-avatar__ring {
+  &[data-animation='pulse'] .dx-lit-avatar__ring {
     animation: halo-pulse var(--duration, 1s) ease-in-out infinite;
   }
 
   &[data-state-loading-status='loaded'] {
-    .dx-avatar__fallback-text,
-    .dx-avatar__status-icon {
+    .dx-lit-avatar__fallback-text,
+    .dx-lit-avatar__status-icon {
       display: none;
     }
   }
 
   &[data-state-loading-status='error'] {
-    .dx-avatar__image {
+    .dx-lit-avatar__image {
       display: none;
     }
   }

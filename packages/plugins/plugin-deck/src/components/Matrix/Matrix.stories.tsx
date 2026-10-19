@@ -8,20 +8,23 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
-import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
@@ -50,14 +53,14 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
     <Mosaic.Tile {...props} asChild>
       <Focus.Item asChild border current={props.current}>
         <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
               <p>{Obj.getLabel(props.data)}</p>
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <JsonHighlighter data={props.data} />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -136,20 +139,20 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
     <Dnd.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
-              <Toolbar.IconButton icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
+              <Button.Root icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
+              <Button.Root icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
               <Toolbar.Text>
                 {currentIndex + 1} / {items.length}
               </Toolbar.Text>
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <Matrix.Content>
               <Matrix.Viewport />
             </Matrix.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Matrix.Root>
     </Dnd.Root>
@@ -178,7 +181,7 @@ export const Default: Story = {
 export const WithPlank: Story = {
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), TestPlugin()],
+      plugins: [...CorePlugins.make(), TestPlugin()],
       capabilities: [TestExtension],
     }),
   ],

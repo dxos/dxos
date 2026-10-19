@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
@@ -91,9 +91,9 @@ const DefaultStory = ({ source, scale = 2, grid }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -155,6 +155,33 @@ rule parent-ref-backs-parent-pointer: Setting a child's parent pointer must be b
   severity: warn
 ```
 
+```mdl
+rule no-bare-ref-schema-alias: Declare a Ref field inline, not through a module-level alias
+  A module-level constant whose whole value is a ref schema —
+  `const RepositoryRef = Ref.Ref(Repository.Repository).annotate({ description })`
+  reused as `repository: RepositoryRef` across operation inputs — is an
+  indirection with nothing behind it: the reader has to jump away from the
+  field to learn it is just a ref to one type, the alias hides the target type
+  at every use site, and the per-field description it carries stops fitting
+  once one input means something different by the same ref. Flag a `const`
+  (exported or not) whose initializer is only `Ref.Ref(X)`, optionally with
+  `.annotate(...)` or `.pipe(...)` of annotations, and which is used as a
+  field in schemas. Fix: write `Ref.Ref(X).annotate({ description: ... })`
+  inline at each field, with the description that field needs.
+  Do not flag an alias that adds real structure beyond the ref — a union with
+  another type, a transform, a struct wrapping the ref with other fields — nor
+  a `type` alias (`type FooRef = Ref.Ref<Foo>`) used only in signatures.
+  Source: review comment https://github.com/dxos/dxos/pull/13526#discussion_r4142528623.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  grep: =\s*Ref\.Ref\(
+  unit: file
+  context: diff
+  system-one: on
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

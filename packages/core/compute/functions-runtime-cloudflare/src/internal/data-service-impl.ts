@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -50,7 +50,9 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
-    const addIds = request.addIds ?? [];
+    // A passive add holds the bytes a query row brought; a function is one call, so nothing it reads
+    // changes under it and fetching the document would undo the point of the row.
+    const addIds = (request.add ?? []).filter(({ passive }) => !passive).map(({ id }) => id);
     const self = this;
     return Effect.gen(function* () {
       const sub =

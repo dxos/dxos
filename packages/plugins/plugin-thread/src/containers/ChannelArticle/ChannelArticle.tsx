@@ -3,18 +3,19 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
@@ -50,15 +51,15 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const members = useMembers(space?.id);
   const id = channel ? Obj.getURI(channel) : undefined;
   const activity = useStatus(space, id);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
-  const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  const callProvider = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider)[0];
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
   const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
   const currentRoomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
   // `chatOnly` (the in-call chat companion) keeps showing messages so the call lives only in the primary.
@@ -114,16 +115,16 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
       {showCall ? (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       ) : (
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <MessageThread
             id={id}
             classNames='dx-document'
@@ -134,7 +135,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             onSend={handleSend}
             readOnly={readOnly}
           />
-        </Panel.Content>
+        </Panel.Body>
       )}
     </Panel.Root>
   );

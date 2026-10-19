@@ -155,6 +155,9 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {

@@ -14,7 +14,8 @@
   ],
   "include": [
     "dx.config.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "references": [
     {
@@ -45,6 +46,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/halo/halo"
     },
     {
@@ -54,16 +58,40 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

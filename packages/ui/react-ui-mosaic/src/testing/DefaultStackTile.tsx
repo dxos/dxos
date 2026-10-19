@@ -5,11 +5,15 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
 
-import { Focus, Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
+import { Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -34,15 +38,15 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
-          <Card.Root fullWidth classNames='dx-current dx-hover'>
+          <Card.Root classNames='dx-current dx-hover'>
             <Card.Header>
-              <Card.DragHandle ref={dragHandleRef} />
+              <DragHandle.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-              <Card.Block end>
+              <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                  <Button.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
                 </ActionMenu>
-              </Card.Block>
+              </Layout.Block>
             </Card.Header>
             {open && (
               <Card.Row>

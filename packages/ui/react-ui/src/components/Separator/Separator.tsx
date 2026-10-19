@@ -1,32 +1,35 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { ark } from '@ark-ui/react/factory';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { recipes } from '../../recipes.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 
-type SeparatorProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
-  orientation?: 'horizontal' | 'vertical';
-  /** A purely visual rule, hidden from assistive tech. */
+export type SeparatorOrientation = 'horizontal' | 'vertical';
+
+export type SeparatorProps = {
+  orientation?: SeparatorOrientation;
+  /** A purely visual rule, hidden from assistive tech (e.g. between listbox options, which admit no separator role). */
   decorative?: boolean;
-  subdued?: boolean;
 };
 
-const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
-  ({ classNames, orientation = 'horizontal', decorative, subdued, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+/** A 1px rule in the separator colour: horizontal across its track, or vertical and control-tall in a row. */
+export const Separator = composable<HTMLDivElement, SeparatorProps>(
+  ({ orientation = 'horizontal', decorative, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props, { classNames: recipes.separator() });
     return (
-      <ark.div
-        {...props}
-        // `separator` is horizontal by default, so only the vertical case needs the orientation spelt out.
+      <div
+        {...rest}
+        // `separator` is horizontal by default, so only the vertical case spells out its orientation.
         {...(decorative
-          ? { role: 'none' }
+          ? { 'role': 'none', 'aria-hidden': true }
           : { role: 'separator', ...(orientation === 'vertical' && { 'aria-orientation': 'vertical' as const }) })}
+        data-scope='separator'
+        data-part='root'
         data-orientation={orientation}
-        className={tx('separator.root', { orientation, subdued }, classNames)}
+        className={className}
         ref={forwardedRef}
       />
     );
@@ -34,7 +37,3 @@ const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
 );
 
 Separator.displayName = 'Separator';
-
-export type { SeparatorProps };
-
-export { Separator };

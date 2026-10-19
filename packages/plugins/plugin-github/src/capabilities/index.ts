@@ -11,14 +11,11 @@ import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const Connector = Capability.lazyModule(
   'GitHubConnector',
@@ -65,7 +62,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations);

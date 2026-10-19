@@ -7,13 +7,14 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
+import type { TriggerDisabledError, TriggerNotResettableError } from '../errors.ts';
 import * as Runnable from '../Runnable.ts';
 import type * as TriggerEvent from './TriggerEvent.ts';
 
@@ -41,16 +42,38 @@ export const specEmail = (): EmailSpec => ({ kind: 'email' });
 export const FeedSpec = Schema.Struct({
   kind: Schema.Literal('feed').annotate(kindLiteralAnnotations),
   feed: Schema.optional(Ref.Ref(Feed.Feed).annotate({ title: 'Feed' })),
+  /**
+   * Consecutive feed items delivered per invocation, as `event.items` in feed order; one when unset.
+   * The last batch of a read is short rather than waiting for the feed to fill it.
+   */
+  batchSize: Schema.optional(
+    Schema.Number.annotate({
+      title: 'Batch size',
+      description: 'Feed items delivered per invocation.',
+    }),
+  ),
 });
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /**
  * Construct a Feed trigger spec from a Feed object.
  */
-export const specFeed = (feed: Feed.Feed): FeedSpec => ({
+export const specFeed = (feed: Feed.Feed, options: { batchSize?: number } = {}): FeedSpec => ({
   kind: 'feed',
   feed: Ref.make(feed),
+  ...(options.batchSize !== undefined && { batchSize: options.batchSize }),
 });
+
+/** Upper bound on {@link FeedSpec.batchSize}: the batch is read in one query and held in one invocation's input. */
+export const MAX_FEED_BATCH_SIZE = 100;
+
+/**
+ * Feed items per invocation for a feed trigger: its `batchSize`, clamped to `[1, MAX_FEED_BATCH_SIZE]`.
+ */
+export const feedBatchSize = (spec: FeedSpec): number => {
+  const size = Math.floor(spec.batchSize ?? 1);
+  return Number.isFinite(size) ? Math.min(MAX_FEED_BATCH_SIZE, Math.max(1, size)) : 1;
+};
 
 /**
  * Subscription.
@@ -287,10 +310,14 @@ export interface InvokeOptions {
   event: TriggerEvent.TriggerEvent;
 }
 
+export interface ResetOptions {
+  trigger: Trigger;
+}
+
 /**
- * Service for monitoring trigger dispatcher state.
+ * Observes and invokes the triggers registered with the dispatchers (local and edge).
  */
-export interface Monitor {
+export interface Manager {
   /**
    * Triggers actively registered in the dispatcher.
    * Could contain entries for both local and edge triggers, but only the edge ones are actually running.
@@ -303,13 +330,23 @@ export interface Monitor {
    * Invoke a trigger.
    * Available only for direct and timer triggers.
    * Invocation respects the trigger's concurrency limit.
+   * Fails with {@link TriggerDisabledError} for a trigger that is switched off.
    */
-  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void, TriggerDisabledError>;
+
+  /**
+   * Rewind a feed trigger to the start of its feed, so every item is delivered again (e.g. after an
+   * extractor's prompt or model changes). Routed by the trigger's `remote` flag, like {@link invokeTrigger}.
+   * Fails with {@link TriggerNotResettableError} for a trigger that is not a feed trigger.
+   */
+  readonly resetTrigger: (options: ResetOptions) => Effect.Effect<void, TriggerNotResettableError>;
 }
 
 /**
- * Service for monitoring trigger executions.
+ * Service providing the {@link Manager}.
  */
-export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
-  '@dxos/functions/TriggerMonitorService',
+export class ManagerService extends Context.Service<ManagerService, Manager>()(
+  '@dxos/compute/Trigger.ManagerService',
 ) {}
+
+export { TriggerDisabledError, TriggerNotResettableError, TriggerStateNotFoundError } from '../errors.ts';

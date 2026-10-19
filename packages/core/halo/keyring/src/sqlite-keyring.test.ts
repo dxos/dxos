@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { verifySignature } from '@dxos/crypto';
-import { RuntimeProvider } from '@dxos/effect';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { SqliteKeyring } from './sqlite-keyring.ts';
 

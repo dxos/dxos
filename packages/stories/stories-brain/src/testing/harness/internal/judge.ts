@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

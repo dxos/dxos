@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -346,6 +347,18 @@ const isEchoReferenceNode = (node: JsonSchemaType): boolean =>
  */
 type Expansions = Map<string, Schema.Codec<any, any>>;
 
+/**
+ * Builds the check for a JSON Schema `pattern`, which uses Unicode regex semantics.
+ */
+const patternCheck = (pattern: string) => {
+  try {
+    return Schema.isPattern(new RegExp(pattern, 'u'));
+  } catch {
+    // Effect exports only Unicode-mode patterns, so one invalid in that mode pins its source to keep it on export.
+    return Schema.isPattern(new RegExp(pattern), { toJsonSchema: () => ({ pattern }) });
+  }
+};
+
 export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Codec<any, any> =>
   toEffectSchemaRec(root, _defs, new Map());
 
@@ -404,7 +417,7 @@ const toEffectSchemaRec = (
       case 'string': {
         // Applied on `Schema.String` rather than the widened `result`, since v4 types the check
         // against the schema it constrains.
-        result = root.pattern ? Schema.String.check(Schema.isPattern(new RegExp(root.pattern))) : Schema.String;
+        result = root.pattern ? Schema.String.check(patternCheck(root.pattern)) : Schema.String;
         break;
       }
       case 'number': {

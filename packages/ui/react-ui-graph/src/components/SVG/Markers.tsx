@@ -5,12 +5,12 @@
 import { select } from 'd3';
 import React, { useEffect, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { createMarkers } from '../../graph/index.ts';
 
-export type MarkersProps = ThemedClassName<{
+export type MarkersProps = Util.ThemedClassName<{
   arrowSize?: number;
 }>;
 

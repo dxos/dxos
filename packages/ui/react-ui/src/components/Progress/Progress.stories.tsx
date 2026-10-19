@@ -1,168 +1,79 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
-import { random } from '@dxos/random';
-
+import { sizeRow } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import { type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { Progress, type ProgressProps } from './Progress.tsx';
 
-const TICK_MS = 100;
-/**
- * Advances by an uneven amount, because real work does: a fixed step glides so smoothly that the
- * width transition has nothing to smooth, and a bar that only ever looks good on even increments is
- * not tested at all.
- */
-const step = () => random.number.int({ min: 1, max: 6 }) / 100;
+type StoryArgs = SizeArgs & Pick<ProgressProps, 'value' | 'indeterminate' | 'error' | 'countdown' | 'paused'>;
 
-type StoryArgs = Partial<ProgressProps>;
-
-/**
- * Runs the bar from empty to full so the width transition is watched rather than sampled: a static
- * fraction says nothing about whether an advance glides or jumps.
- *
- * **Fail** stops it where it got to and repaints it — the one state where a partial bar is the
- * point, since it says how far the run got before it broke. An uncounted run has no such place, so
- * failing fills it instead.
- */
-const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    // An uncounted run has no fraction to accumulate — counting one anyway is what left a stub of
-    // fill behind when it stopped.
-    if (!running || indeterminate) {
-      return;
-    }
-
-    const interval = setInterval(
-      () =>
-        setProgress((progress) => {
-          const next = Math.min(1, progress + step());
-          if (next === 1) {
-            setRunning(false);
-          }
-          return next;
-        }),
-      TICK_MS,
-    );
-    return () => clearInterval(interval);
-  }, [running, indeterminate]);
-
-  const handleStart = useCallback(() => {
-    setFailed(false);
-    setRunning(true);
-  }, []);
-
-  const handleStop = useCallback(() => {
-    setFailed(false);
-    setRunning(false);
-  }, []);
-
-  const handleFail = useCallback(() => {
-    setFailed(true);
-    setRunning(false);
-  }, []);
-
-  const handleReset = useCallback(() => {
-    setFailed(false);
-    setRunning(false);
-    setProgress(0);
-  }, []);
-
-  return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={handleStart}>Start</Toolbar.Button>
-          <Toolbar.Button onClick={handleStop}>Stop</Toolbar.Button>
-          <Toolbar.Button onClick={handleFail}>Fail</Toolbar.Button>
-          <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-          <Toolbar.Separator />
-          <div className='p-2 tabular-nums text-description text-sm'>{Math.round(progress * 100)}%</div>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='h-6' />
-      <Panel.Statusbar>
-        {/* The sweep is what `running` looks like when nothing counts; stopping it has to leave
-            something behind, so the bar falls back to the fraction the run did reach. */}
-        <Progress
-          {...props}
-          progress={progress}
-          // A stopped run is no longer uncounted, it is simply idle — so the sweep gives way to an
-          // empty bar. A FAILED one stays uncounted, which is what fills it red.
-          indeterminate={indeterminate && (running || failed)}
-          error={error ?? failed}
-        />
-      </Panel.Statusbar>
-    </Panel.Root>
-  );
-};
-
-const CountdownStory = ({ countdown, ...props }: StoryArgs) => {
-  const [paused, setPaused] = useState(false);
-  const [run, setRun] = useState(0);
-
-  return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={() => setRun((run) => run + 1)}>Restart</Toolbar.Button>
-          <Toolbar.Button onClick={() => setPaused((paused) => !paused)}>{paused ? 'Resume' : 'Pause'}</Toolbar.Button>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='h-6' />
-      <Panel.Statusbar>
-        {/* Remounting is what restarts a CSS animation, so the run counter is the key. */}
-        <Progress key={run} {...props} countdown={countdown} paused={paused} />
-      </Panel.Statusbar>
-    </Panel.Root>
-  );
-};
+const DefaultStory = ({ value, indeterminate, error, countdown, paused }: StoryArgs) => (
+  <div className='flex flex-col gap-4'>
+    <Progress {...{ value, indeterminate, error, countdown, paused }} label='Upload' data-testid='controlled' />
+    <Progress value={0.25} label='Quarter' data-testid='quarter' />
+    <Progress indeterminate label='Indexing' data-testid='indeterminate' />
+    <Progress indeterminate error label='Failed' data-testid='failed' />
+    <Progress countdown={60_000} data-testid='countdown' />
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-core/components/Progress',
-  component: Progress,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
-  parameters: {
-    layout: 'centered',
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { value: 0.6, indeterminate: false, error: false, countdown: 0, paused: false },
+  argTypes: {
+    value: { control: { type: 'range', min: 0, max: 1, step: 0.05 } },
+    countdown: { control: 'number' },
   },
-} satisfies Meta<typeof Progress>;
+  parameters: { layout: 'centered' },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * The bare bar at a known fraction, for a host that supplies its own chrome. **Start** runs it to
- * full; the fill eases between ticks rather than stepping.
- */
 export const Default: Story = {};
 
-/**
- * No fraction to draw: the fill sweeps instead of resting somewhere misleading. The toolbar's
- * counter still advances, to show the sweep owes nothing to the underlying value.
- */
-export const Indeterminate: Story = {
-  args: {
-    indeterminate: true,
-  },
-};
+/** A determinate bar reports its value and fills that share of the track; the other modes animate or fill. */
+export const Test: Story = {
+  play: async ({ canvasElement }) => {
+    const row = sizeRow(canvasElement, 'md');
+    const canvas = within(row);
 
-/**
- * Counts down to a deadline the host owns, so the bar empties rather than fills.
- */
-export const Countdown: Story = {
-  render: CountdownStory,
-  args: {
-    countdown: 10_000,
+    const quarter = canvas.getByRole('progressbar', { name: 'Quarter' });
+    await expect(quarter).toHaveAttribute('aria-valuenow', '0.25');
+    await expect(quarter).toHaveAttribute('aria-valuemax', '1');
+    const range = quarter.querySelector<HTMLElement>('[data-part="range"]');
+    const track = quarter.getBoundingClientRect();
+    await waitFor(() => expect(range?.getBoundingClientRect().width).toBeCloseTo(track.width / 4, 0));
+    await expect(track.height).toBe(4);
+
+    // Indeterminate: no value, and the range sweeps.
+    const indeterminate = canvas.getByRole('progressbar', { name: 'Indexing' });
+    await expect(indeterminate).not.toHaveAttribute('aria-valuenow');
+    const sweep = indeterminate.querySelector<HTMLElement>('[data-part="range"]');
+    await expect(sweep ? getComputedStyle(sweep).animationName : '').toBe('dx-progress-sweep');
+
+    // A failed indeterminate run fills the track in the error colour and stops.
+    const failed = canvas.getByRole('progressbar', { name: 'Failed' });
+    const failedRange = failed.querySelector<HTMLElement>('[data-part="range"]');
+    await expect(failedRange?.getBoundingClientRect().width).toBeCloseTo(failed.getBoundingClientRect().width, 0);
+    await expect(failedRange ? getComputedStyle(failedRange).animationName : '').toBe('none');
+
+    // A countdown is decoration: hidden from assistive tech, emptying over its duration.
+    const countdown = canvas.getByTestId('countdown');
+    await expect(countdown).toHaveAttribute('aria-hidden', 'true');
+    await expect(within(countdown).queryByRole('progressbar')).toBeNull();
+    const drain = countdown.querySelector<HTMLElement>('[data-part="range"]');
+    await expect(drain ? getComputedStyle(drain).animationDuration : '').toBe('60s');
   },
 };

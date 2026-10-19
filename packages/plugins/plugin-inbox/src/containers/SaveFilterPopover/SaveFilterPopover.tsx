@@ -4,33 +4,39 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 
+import { type QueryFilterOwner } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox } from '#types';
 
-export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
-  const { t } = useTranslation(meta.profile.key);
+export const SaveFilterPopover = ({ owner, filter }: { owner: QueryFilterOwner; filter: string }) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.update(mailbox, (mailbox) => {
-      (mailbox.filters ??= []).push({ name, filter });
+    // Assigned rather than `??=`-then-push: on a detached record the push would land on the plain RHS.
+    Obj.update(owner, (owner) => {
+      owner.filters = [...(owner.filters ?? []), { name, filter }];
     });
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-  }, [mailbox, name, filter, invokePromise]);
+  }, [owner, name, filter, invokePromise]);
 
   return (
-    <Flex gap='sm' classNames='p-2'>
+    <Layout.Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
         <Field.Root>
           <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
-          <Field.Input
+          <Input.Root
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -40,12 +46,12 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
           />
         </Field.Root>
       </div>
-      <Popover.Close asChild>
-        <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
+      <Popover.CloseTrigger asChild>
+        <Button.Root ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
           {t('save-filter.button')}
-        </Button>
-      </Popover.Close>
-    </Flex>
+        </Button.Root>
+      </Popover.CloseTrigger>
+    </Layout.Flex>
   );
 };
 

@@ -3,16 +3,16 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { expect } from 'vitest';
 
 import { Obj } from '@dxos/echo';
@@ -28,6 +28,7 @@ type ProviderConfig = {
   name: string;
   endpoint: string;
   apiFormat: ChatCompletionsAdapter.ApiFormat;
+  provider: string;
   model: string;
 };
 
@@ -36,12 +37,14 @@ const providers: ProviderConfig[] = [
     name: 'Ollama',
     endpoint: 'http://localhost:11434',
     apiFormat: 'ollama',
+    provider: 'ollama',
     model: 'llama3.2:1b',
   },
   {
     name: 'LM Studio',
     endpoint: 'http://localhost:1234',
     apiFormat: 'openai',
+    provider: 'lmstudio',
     model: 'llama-3.2-3b-instruct',
   },
 ];
@@ -53,6 +56,7 @@ const createLayer = (config: ProviderConfig) => {
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: config.endpoint,
     apiFormat: config.apiFormat,
+    provider: config.provider,
   }).pipe(Layer.provide(FetchHttpClient.layer));
   return ChatCompletionsAdapter.layer(config.model).pipe(Layer.provide(clientLayer));
 };
@@ -136,7 +140,7 @@ const assistantMessage = (body: WireRequestBody): WireMessage => {
 const captureRequestBody = (
   apiFormat: ChatCompletionsAdapter.ApiFormat,
   capture: (body: WireRequestBody) => void,
-  provider?: string,
+  provider: string,
 ) => {
   const stub = HttpClient.make((request) =>
     Effect.gen(function* () {
@@ -199,6 +203,50 @@ const promptWithToolCall = [
   },
 ];
 
+/** A model whose every request is rejected with the given status and body. */
+const rejecting = (status: number, body: string) => {
+  const stub = HttpClient.make((request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        new Response(body, { status, headers: { 'content-type': 'application/json' } }),
+      ),
+    ),
+  );
+  const clientLayer = ChatCompletionsAdapter.clientLayer({
+    baseUrl: 'http://test',
+    apiFormat: 'ollama',
+    provider: 'ollama',
+  }).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)));
+  return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
+};
+
+describe('rejected requests', () => {
+  it.effect(
+    "a tool call Ollama cannot parse fails generateText as the model's invalid output",
+    Effect.fn(function* (_) {
+      const error = yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
+        Effect.provide(rejecting(500, JSON.stringify({ error: "error parsing tool call: raw='{ code: `1` }'" }))),
+        Effect.flip,
+      );
+      expect(error.reason._tag).toBe('InvalidOutputError');
+      expect(error.message).toContain('error parsing tool call');
+    }),
+  );
+
+  it.effect(
+    'any other rejection fails generateText with the status and the provider message',
+    Effect.fn(function* (_) {
+      const error = yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
+        Effect.provide(rejecting(404, JSON.stringify({ error: "model 'nope' not found" }))),
+        Effect.flip,
+      );
+      expect(error.reason._tag).toBe('UnknownError');
+      expect(error.message).toContain("HTTP 404: model 'nope' not found");
+    }),
+  );
+});
+
 describe('tool call encoding', () => {
   // Ollama decodes `arguments` into a map and rejects a JSON string with 400.
   it.effect(
@@ -206,7 +254,7 @@ describe('tool call encoding', () => {
     Effect.fn(function* (_) {
       let body: any;
       yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
-        Effect.provide(captureRequestBody('ollama', (captured) => (body = captured))),
+        Effect.provide(captureRequestBody('ollama', (captured) => (body = captured), 'ollama')),
       );
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
@@ -226,7 +274,7 @@ describe('tool call encoding', () => {
       );
       let openai!: WireRequestBody;
       yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
-        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured))),
+        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured), 'openai')),
       );
 
       expect(assistantMessage(deepseek).reasoning_content).toBe('The id looks like an EID.');
@@ -294,7 +342,7 @@ describe('tool call encoding', () => {
     Effect.fn(function* (_) {
       let body: any;
       yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
-        Effect.provide(captureRequestBody('openai', (captured) => (body = captured))),
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'openai')),
       );
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
@@ -317,6 +365,7 @@ const serveSseStream = (lines: readonly string[]) => {
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: 'http://test',
     apiFormat: 'openai',
+    provider: 'openai',
     streamUsage: true,
   }).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)));
   return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));

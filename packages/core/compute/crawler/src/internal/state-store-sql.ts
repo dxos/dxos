@@ -4,9 +4,9 @@
 
 import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { StateError } from '../errors.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/state-store/index.ts';
@@ -102,6 +102,23 @@ export const makeSql = (sql: SqlClient.SqlClient): StateStore.Service => ({
       ? sql`UPDATE crawl_target SET status = ${status} WHERE id = ${targetId}`
       : sql`UPDATE crawl_target SET status = ${status}, last_error = ${error} WHERE id = ${targetId}`
     ).pipe(Effect.asVoid, Effect.mapError(fail('Failed to set status'))),
+
+  resetTargets: (targetIds) =>
+    targetIds?.length === 0
+      ? Effect.void
+      : (targetIds === undefined
+          ? sql`UPDATE crawl_target SET status = 'pending', cursor = NULL, last_run_at = NULL, last_error = NULL`
+          : sql`UPDATE crawl_target SET status = 'pending', cursor = NULL, last_run_at = NULL, last_error = NULL
+              WHERE id IN ${sql.in(targetIds)}`
+        ).pipe(Effect.asVoid, Effect.mapError(fail('Failed to reset targets'))),
+
+  removeTargets: (targetIds) =>
+    targetIds.length === 0
+      ? Effect.void
+      : sql`DELETE FROM crawl_target WHERE id IN ${sql.in(targetIds)}`.pipe(
+          Effect.asVoid,
+          Effect.mapError(fail('Failed to remove targets')),
+        ),
 
   listTargets: () =>
     sql<Row>`SELECT * FROM crawl_target ORDER BY position ASC`.pipe(

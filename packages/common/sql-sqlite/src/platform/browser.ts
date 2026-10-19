@@ -6,8 +6,8 @@ import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import * as SqlExport from '../SqlExport.ts';
 

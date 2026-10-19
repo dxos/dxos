@@ -11,9 +11,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
+import { sleep } from '@dxos/async';
 import { random } from '@dxos/random';
-import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type ObjectLinkProps,
@@ -75,34 +81,31 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Popover.Portal>
-      <Popover.Content
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        classNames={[
-          'origin-(--transform-origin)',
-          'data-[state=open]:animate-popover-in',
-          'data-[state=closed]:animate-popover-out',
-        ]}
-      >
-        <Popover.Viewport>
-          <Card.Root border={false} classNames='dx-card-popover'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--file-text--regular' />
-              </Card.Block>
-              <Card.Title>{target.label}</Card.Title>
-              <Popover.Close asChild>
-                <Card.ActionIconButton action='close' />
-              </Popover.Close>
-            </Card.Header>
-            <Card.Row>
-              <Card.Text variant='description'>{target.label}</Card.Text>
-            </Card.Row>
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content
+      data-testid='preview-card'
+      classNames={[
+        'origin-(--transform-origin)',
+        'data-[state=open]:animate-popover-in',
+        'data-[state=closed]:animate-popover-out',
+      ]}
+    >
+      <Popover.Body>
+        <Card.Root border={false} classNames='dx-card-popover'>
+          <Card.Header>
+            <Layout.Block>
+              <Icon.Icon icon='ph--file-text--regular' />
+            </Layout.Block>
+            <Card.Title>{target.label}</Card.Title>
+            <Popover.CloseTrigger asChild>
+              <Card.Action system='close' />
+            </Popover.CloseTrigger>
+          </Card.Header>
+          <Card.Row>
+            <Card.Text variant='muted'>{target.label}</Card.Text>
+          </Card.Row>
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 
@@ -129,14 +132,14 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
   return (
     <Card.Root>
       <Card.Header>
-        <Card.Block>
-          <Icon icon='ph--arrow-square-up--regular' />
-        </Card.Block>
+        <Layout.Block>
+          <Icon.Icon icon='ph--arrow-square-up--regular' />
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
       {text && (
         <Card.Row>
-          <Card.Text classNames='text-description'>{text}</Card.Text>
+          <Card.Text variant='muted'>{text}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>
@@ -159,7 +162,7 @@ const FixedHeightPreview = ({ label, eid }: ObjectLinkProps) => {
   return (
     <div
       style={{ height }}
-      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-fg-muted'
     >
       {label} · {height}px · {eid}
     </div>
@@ -205,7 +208,7 @@ const SurfaceLikePreview = ({ label, eid }: ObjectLinkProps) => {
     <div
       ref={ref}
       style={{ height }}
-      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-fg-muted'
     >
       {resolved ? `Surface ${label} · ${height}px · ${eid}` : 'resolving…'}
     </div>
@@ -249,7 +252,7 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
 };
 
 const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
     () => [
@@ -282,8 +285,8 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
         <Wrapper>{editor}</Wrapper>
       </div>
       <div className='dx-expand p-1'>
-        <pre className='dx-fill border border-subdued-separator rounded-sm p-3 overflow-auto'>
-          <code className='font-mono text-description text-sm'>{text}</code>
+        <pre className='dx-fill border border-separator-subtle rounded-sm p-3 overflow-auto'>
+          <code className='font-mono text-fg-muted text-sm'>{text}</code>
         </pre>
       </div>
     </div>
@@ -355,6 +358,62 @@ export const Preview: Story = {
     text: previewText,
     image: 'card',
     preview: true,
+  },
+};
+
+/** Longer than the anchor's close grace period, so a card that survives it was deliberately kept open. */
+const PAST_CLOSE_DELAY = 600;
+
+/**
+ * Regression: the pointer travels from the chip onto its hover card (e.g. to reach the card's menu). The card
+ * stays open while the pointer is over it, closes once the pointer leaves both, and stays pinned once used.
+ */
+export const PreviewHoverTest: Story = {
+  args: { ...Preview.args },
+  play: async ({ canvasElement }) => {
+    const anchor = await waitFor(
+      () => {
+        const anchor = canvasElement.querySelector<HTMLElement>('dx-anchor');
+        if (!anchor) {
+          throw new Error('Anchor chip not rendered.');
+        }
+        return anchor;
+      },
+      { timeout: 10_000 },
+    );
+    const outside = canvasElement.querySelector<HTMLElement>('pre');
+    if (!outside) {
+      throw new Error('Source pane not rendered.');
+    }
+    const card = () => document.querySelector<HTMLElement>('[data-testid="preview-card"]');
+    const hoverOpen = async () => {
+      await userEvent.hover(anchor);
+      await waitFor(() => expect(card()).not.toBeNull(), { timeout: 5_000 });
+      const current = card();
+      if (!current) {
+        throw new Error('Preview card not open.');
+      }
+      return current;
+    };
+
+    // 1. Moving from the chip onto the card keeps it open past the close grace period.
+    const opened = await hoverOpen();
+    await userEvent.hover(opened);
+    await sleep(PAST_CLOSE_DELAY);
+    await expect(card()).not.toBeNull();
+
+    // 2. Leaving the card closes it after the grace period.
+    await userEvent.hover(outside);
+    await waitFor(() => expect(card()).toBeNull(), { timeout: 5_000 });
+
+    // 3. Pressing inside the card (e.g. opening its menu) pins it: leaving no longer closes it.
+    const pinned = await hoverOpen();
+    await userEvent.pointer({ keys: '[MouseLeft]', target: pinned });
+    await userEvent.hover(outside);
+    await sleep(PAST_CLOSE_DELAY);
+    await expect(card()).not.toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(card()).toBeNull(), { timeout: 5_000 });
   },
 };
 

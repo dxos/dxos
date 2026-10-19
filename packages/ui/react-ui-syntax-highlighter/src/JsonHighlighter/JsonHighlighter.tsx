@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { composable } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps } from '../SyntaxHighlighter/index.ts';
@@ -35,7 +35,7 @@ const resolveReplacer = (replacer?: JsonReplacer) => {
  * `JSON.stringify`-compatible function (for bespoke serialization). `scroll` picks the axes
  * (default: all). Compose with the `Syntax.*` namespace only for filtering or a depth control.
  */
-export const JsonHighlighter = composable<HTMLDivElement, JsonHighlighterProps>(
+export const JsonHighlighter = Util.composable<HTMLDivElement, JsonHighlighterProps>(
   ({ data, replacer, indent = 2, testId, ...props }, forwardedRef) => {
     return (
       <SyntaxHighlighter {...props} language='json' data-testid={testId} ref={forwardedRef}>

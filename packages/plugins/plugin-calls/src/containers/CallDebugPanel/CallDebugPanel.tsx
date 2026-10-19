@@ -4,14 +4,16 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { Field, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -21,16 +23,16 @@ import { type EncodedTrackName, type GlobalState } from '../../calls/index.ts';
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
 
-export type CallDebugPanelProps = ThemedClassName<{
+export type CallDebugPanelProps = Util.ThemedClassName<{
   /** Overrides the live manager state; used by stories to render fixtures. */
   state?: GlobalState;
 }>;
 
 /** The call's status as a card in the devtools stats stack. */
 export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // `useCapabilities` tolerates the manager being absent, which is the case in stories.
-  const [manager] = useCapabilities(CallsCapabilities.Manager);
+  const [manager] = Hooks.useCapabilities(CallsCapabilities.Manager);
   const liveState = useAtomValue(manager?.stateAtom ?? noCallState);
   const state = stateOverride ?? liveState;
 
@@ -83,11 +85,21 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={<Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+        action={
+          <Input.Switch
+            checked={showDetailedWebRTCStats}
+            onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
+          />
+        }
       />
       <StatCard.Row
         label={t('show-calls-history.title')}
-        action={<Field.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+        action={
+          <Input.Switch
+            checked={showServiceHistory}
+            onCheckedChange={({ checked }) => setShowServiceHistory(checked)}
+          />
+        }
       />
       {showDetailedWebRTCStats && (
         <StatCard.Content>

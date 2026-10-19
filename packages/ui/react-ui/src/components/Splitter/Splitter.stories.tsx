@@ -2,219 +2,115 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { Flex } from '../../layout/Flex/Flex.tsx';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Splitter from './Splitter.tsx';
 
-const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
-  ({ label, ...props }, forwardedRef) => (
-    <Panel.Root {...props} ref={forwardedRef}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>{label}</Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            {Array.from({ length: 100 }).map((_, i) => (
-              <div key={i} className='p-1'>
-                {label}-{i}
-              </div>
-            ))}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
-  ),
+type StoryArgs = Pick<
+  Splitter.RootProps,
+  'orientation' | 'anchor' | 'mode' | 'resizable' | 'defaultSize' | 'minSize' | 'transition'
+>;
+
+const Pane = ({ label }: { label: string }) => (
+  <div className='grid place-items-center' data-testid={`pane-${label}`}>
+    <Typography.Text>{label}</Typography.Text>
+  </div>
 );
 
-const Panes = () => (
-  <>
-    <Splitter.Panel position='start'>
-      <PanelContent label='A' />
-    </Splitter.Panel>
-    <Splitter.Handle />
-    <Splitter.Panel position='end'>
-      <PanelContent label='B' />
-    </Splitter.Panel>
-  </>
-);
-
-// Renders the splitter with no surrounding chrome (Panel.Root keeps the height chain without a toolbar).
-const BasicStory = (args: SplitterRootProps) => (
-  <Panel.Root>
-    <Panel.Content asChild>
-      <Splitter.Root {...args}>
-        <Panes />
+/** A controlled splitter, as the deck drives it: the size (rem) is the app's state and the seam reports drags. */
+const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
+  const [size, setSize] = useState(defaultSize);
+  return (
+    <Flex column classNames='dx-expand border border-separator divide-y divide-separator'>
+      <Splitter.Root {...args} size={size} onSizeChange={setSize}>
+        <Splitter.Panel position='start'>
+          <Pane label='Start' />
+        </Splitter.Panel>
+        <Splitter.ResizeTrigger aria-label='Resize' />
+        <Splitter.Panel position='end'>
+          <Pane label='End' />
+        </Splitter.Panel>
       </Splitter.Root>
-    </Panel.Content>
-  </Panel.Root>
-);
-
-// Toolbar drives the animated collapse via `mode`.
-const ToolbarStory = (args: SplitterRootProps) => {
-  const [mode, setMode] = useState<SplitterMode>(args.mode ?? 'split');
-  return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={() => setMode('start')}>A</Toolbar.Button>
-          <Toolbar.Button onClick={() => setMode('split')}>A+B</Toolbar.Button>
-          <Toolbar.Button onClick={() => setMode('end')}>B</Toolbar.Button>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Splitter.Root {...args} mode={mode}>
-          <Panes />
-        </Splitter.Root>
-      </Panel.Content>
-    </Panel.Root>
+      <Typography.Text data-testid='size' classNames='p-1 tabular-nums'>
+        {size.toFixed(2)}rem
+      </Typography.Text>
+    </Flex>
   );
 };
 
-/**
- * Drives a controlled splitter, as the deck does: the size is the app's state and the seam only
- * reports where it was dragged to. The readout is in rem, which is what the app stores.
- */
-const ControlledStory = (args: SplitterRootProps) => {
-  const [size, setSize] = useState(args.defaultSize ?? 20);
-  return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <Splitter.Root {...args} size={size} onSizeChange={setSize}>
-          <Panes />
-        </Splitter.Root>
-      </Panel.Content>
-      <Panel.Statusbar>
-        <span data-testid='splitter.size'>{size.toFixed(2)}rem</span>
-      </Panel.Statusbar>
-    </Panel.Root>
-  );
-};
-
-const meta: Meta<SplitterRootProps> = {
+const meta = {
   title: 'ui/react-ui-core/components/Splitter',
-  component: Splitter.Root,
-  render: BasicStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
+  render: DefaultStory,
+  decorators: [withLayout({ layout: 'column' }), withTheme()],
+  args: { orientation: 'horizontal', anchor: 'start', mode: 'split', resizable: true, defaultSize: 12, minSize: 6 },
+  argTypes: {
+    orientation: { control: 'inline-radio', options: ['horizontal', 'vertical'] },
+    anchor: { control: 'inline-radio', options: ['start', 'end'] },
+    mode: { control: 'inline-radio', options: ['start', 'split', 'end'] },
   },
-};
+  parameters: { layout: 'centered' },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<SplitterRootProps>;
+type Story = StoryObj<typeof meta>;
 
-export const VerticalStart: Story = {
-  args: {
-    orientation: 'vertical',
-    anchor: 'start',
-    resizable: true,
-    defaultSize: 20,
-    minSize: 6,
-  },
+export const Default: Story = {};
+
+const part = (canvasElement: HTMLElement, name: string) => {
+  const element = canvasElement.querySelector<HTMLElement>(`[data-scope="splitter"][data-part="${name}"]`);
+  if (!element) {
+    throw new Error(`No splitter ${name}`);
+  }
+  return element;
 };
 
-export const VerticalEnd: Story = {
-  args: {
-    orientation: 'vertical',
-    anchor: 'end',
-    resizable: true,
-    defaultSize: 20,
-    minSize: 6,
-  },
-};
+const panelsOf = (canvasElement: HTMLElement) => [
+  ...canvasElement.querySelectorAll<HTMLElement>('[data-scope="splitter"][data-part="panel"]'),
+];
 
-export const VerticalAnimated: Story = {
-  render: ToolbarStory,
-  args: {
-    orientation: 'vertical',
-    transition: 250,
-  },
-};
-
-export const HorizontalStart: Story = {
-  args: {
-    orientation: 'horizontal',
-    anchor: 'start',
-    resizable: true,
-    defaultSize: 30,
-    minSize: 6,
-  },
-};
-
-export const HorizontalEnd: Story = {
-  args: {
-    orientation: 'horizontal',
-    anchor: 'end',
-    resizable: true,
-    defaultSize: 30,
-    minSize: 6,
-  },
-};
-
-export const HorizontalAnimated: Story = {
-  render: ToolbarStory,
-  args: {
-    orientation: 'horizontal',
-    transition: 250,
-  },
-};
-
-export const Controlled: Story = {
-  render: ControlledStory,
-  args: {
-    orientation: 'horizontal',
-    anchor: 'start',
-    resizable: true,
-    defaultSize: 30,
-    minSize: 6,
-  },
-};
-
+/** The anchored pane holds its rem, the seam takes no width, and the keyboard resize round-trips through the size. */
 export const Test: Story = {
-  render: ControlledStory,
-  args: {
-    orientation: 'horizontal',
-    anchor: 'start',
-    resizable: true,
-    defaultSize: 30,
-    minSize: 6,
-  },
-  // The seam speaks percentages internally and rem to the app; what this checks is that the two
-  // agree, and that the seam takes no width of its own — the panes have to meet at it exactly.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const query = <T extends HTMLElement>(part: string): T => {
-      const element = canvasElement.querySelector<T>(`[data-scope="splitter"][data-part="${part}"]`);
-      if (!element) {
-        throw new Error(`No splitter ${part}`);
-      }
-      return element;
-    };
-
-    const root = query('root');
-    const panels = [...canvasElement.querySelectorAll('[data-scope="splitter"][data-part="panel"]')];
-    await expect(panels).toHaveLength(2);
+    const root = part(canvasElement, 'root');
+    const trigger = part(canvasElement, 'resize-trigger');
+    const panels = panelsOf(canvasElement);
     const widths = () => panels.map((panel) => panel.getBoundingClientRect().width);
-    const reported = () => parseFloat(canvas.getByTestId('splitter.size').textContent ?? '');
 
-    await waitFor(async () => expect(Math.round(widths()[0] / rem)).toEqual(30));
-    // The handle straddles the seam rather than taking a slice out of it.
-    await expect(Math.round(widths()[0] + widths()[1])).toEqual(Math.round(root.getBoundingClientRect().width));
-    await expect(canvas.getByTestId('splitter.size')).toHaveTextContent('30.00rem');
+    await waitFor(() => expect(Math.round(widths()[0] / rem)).toBe(12));
+    await expect(Math.round(widths()[0] + widths()[1])).toBe(Math.round(root.getBoundingClientRect().width));
 
-    // The keyboard drives the seam, and what it reports round-trips back through the controlled size.
-    query<HTMLElement>('resize-trigger').focus();
+    // A separator between side-by-side panes is a vertical line.
+    await expect(trigger).toHaveAttribute('role', 'separator');
+    await expect(trigger).toHaveAttribute('aria-orientation', 'vertical');
+    await expect(trigger.getBoundingClientRect().width).toBeCloseTo(7, 0);
+
+    trigger.focus();
     await userEvent.keyboard('{ArrowRight}');
-    await waitFor(async () => expect(canvas.getByTestId('splitter.size')).not.toHaveTextContent('30.00rem'));
-    await waitFor(async () => expect(Math.abs(widths()[0] / rem - reported())).toBeLessThan(0.05));
+    await waitFor(() => expect(canvas.getByTestId('size')).not.toHaveTextContent('12.00rem'));
+    const reported = () => parseFloat(canvas.getByTestId('size').textContent ?? '');
+    await waitFor(() => expect(Math.abs(widths()[0] / rem - reported())).toBeLessThan(0.05));
+  },
+};
+
+/** `mode` collapses to one pane; a non-resizable splitter renders no seam. */
+export const Collapsed: Story = {
+  args: { mode: 'start', resizable: false, orientation: 'vertical', transition: 0 },
+  play: async ({ canvasElement }) => {
+    const root = part(canvasElement, 'root');
+    const panels = panelsOf(canvasElement);
+    await expect(canvasElement.querySelector('[data-part="resize-trigger"]')).toBeNull();
+    await waitFor(() => expect(panels[1].getBoundingClientRect().height).toBe(0));
+    // The root's inner height: a host's divider can border the root itself.
+    await expect(panels[0].getBoundingClientRect().height).toBeCloseTo(root.clientHeight, 0);
   },
 };

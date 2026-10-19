@@ -4,18 +4,20 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import type * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import type * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import type * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
+
+import { type DXN } from '@dxos/keys';
 
 import * as AiModelResolver from '../../AiModelResolver.ts';
 import { AiModelNotAvailableError } from '../../errors.ts';
@@ -28,8 +30,8 @@ import * as Provider from '../../Provider.ts';
  */
 export const DEFAULT_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 
-/** The decision models this resolver serves, one per provider. */
-export const models: readonly Model.Model[] = [Model.typesafeJev, Model.cloudflareJev];
+/** The decision models this resolver serves: every model that speaks the System One wire. */
+export const models: readonly Model.Model[] = Model.decisionModels;
 
 //
 // Wire protocol: one POST carries the state and a map of named questions, answered independently.
@@ -156,6 +158,11 @@ export type Options<R = never> = {
   readonly endpoint?: () => string;
   /** How long one call may take; a stalled endpoint otherwise holds every decision waiting on it. */
   readonly timeout?: Duration.Input;
+  /**
+   * Whether the back-end reads System One's `images` extension (Clef does, jev does not). Without it a
+   * decision that passes images fails rather than being answered blind.
+   */
+  readonly images?: boolean;
 };
 
 export const DEFAULT_TIMEOUT: Duration.Input = '30 seconds';
@@ -164,6 +171,32 @@ const MODULE = 'TypeSafe';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: MODULE, method: 'decide', reason });
+
+const base64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+/**
+ * An image as System One's `images` extension takes it: an embedded data URL. A remote URL is refused
+ * here, since the API does not fetch one.
+ */
+export const toDataUrl = ({ mediaType, data }: DecisionModel.Image): Effect.Effect<string, AiError.AiError> => {
+  if (data instanceof URL) {
+    return data.protocol === 'data:'
+      ? Effect.succeed(data.href)
+      : Effect.fail(
+          aiError(new AiError.InvalidUserInputError({ description: 'System One accepts only embedded images.' })),
+        );
+  }
+  if (typeof data === 'string') {
+    return Effect.succeed(data.startsWith('data:') ? data : `data:${mediaType};base64,${data}`);
+  }
+  return Effect.succeed(`data:${mediaType};base64,${base64(data)}`);
+};
 
 const fromHttpClientError = (error: HttpClientError.HttpClientError): AiError.AiError => {
   switch (error.reason._tag) {
@@ -181,16 +214,18 @@ const fromHttpClientError = (error: HttpClientError.HttpClientError): AiError.Ai
 /** A `DecisionModel` answering through System One's `backend` model. */
 export const makeDecisionModel = <R = never>(
   backend: string,
-  { apiKey, endpoint = () => DEFAULT_ENDPOINT, timeout = DEFAULT_TIMEOUT }: Options<R>,
+  { apiKey, endpoint = () => DEFAULT_ENDPOINT, timeout = DEFAULT_TIMEOUT, images: supportsImages = false }: Options<R>,
 ): Effect.Effect<DecisionModel.DecisionModel, never, HttpClient.HttpClient | R> =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     // Captured so `decide` can resolve the key without the caller providing its services.
     const context = yield* Effect.context<R>();
     return yield* DecisionModel.make({
-      decide: ({ state, decisions }) =>
+      supportsImages,
+      decide: ({ state, decisions, images }) =>
         Effect.gen(function* () {
           const key = yield* apiKey;
+          const dataUrls = images ? yield* Effect.forEach(images, toDataUrl) : undefined;
           const request = HttpClientRequest.post(endpoint()).pipe(
             (request) => (key ? HttpClientRequest.bearerToken(request, key) : request),
             HttpClientRequest.bodyJsonUnsafe({
@@ -199,6 +234,7 @@ export const makeDecisionModel = <R = never>(
               questions: Object.fromEntries(
                 Object.entries(decisions).map(([name, decision]) => [name, toQuestion(decision)]),
               ),
+              ...(dataUrls ? { images: dataUrls } : {}),
             }),
           );
           const json = yield* client.execute(request).pipe(
@@ -235,13 +271,21 @@ export const makeDecisionModel = <R = never>(
 export type Routes<R = never> = {
   /** TypeSafe's own System One API ({@link Model.typesafeJev}). */
   readonly typesafe?: Options<R>;
-  /** Cloudflare Workers AI's `typesafe/jev` behind a System One endpoint ({@link Model.cloudflareJev}). */
+  /**
+   * Cloudflare Workers AI behind a System One endpoint: {@link Model.cloudflareJev},
+   * {@link Model.cloudflareClef} and {@link Model.cloudflareClefFlash}, told apart by back-end name.
+   */
   readonly workersAi?: Options<R>;
+  /**
+   * The model {@link Model.defaultDecisionModel} stands for, read per resolution so a changed setting
+   * applies to the next decision. Defaults to {@link Model.typesafeJev}.
+   */
+  readonly defaultModel?: () => DXN.DXN;
 };
 
 /**
- * Resolves jev per provider, when the request names no provider or names the model's own; language
- * models go upstream.
+ * Resolves each decision model per provider, when the request names no provider or names the model's
+ * own; language models go upstream.
  */
 export const make = <R = never>(
   routes: Routes<R>,
@@ -254,7 +298,9 @@ export const make = <R = never>(
         [Provider.typesafe.id, routes.typesafe],
         [Provider.workersAi.id, routes.workersAi],
       ]);
-      return (id, resolveOptions) => {
+      const defaultModel = routes.defaultModel ?? (() => Model.typesafeJev.id);
+      return (requested, resolveOptions) => {
+        const id = requested === Model.defaultDecisionModel ? defaultModel() : requested;
         const model = models.find(
           (model) =>
             model.id === id && (resolveOptions?.provider === undefined || resolveOptions.provider === model.provider),
@@ -263,7 +309,9 @@ export const make = <R = never>(
         return model && options
           ? Layer.effect(
               DecisionModel.DecisionModel,
-              makeDecisionModel(model.backend, options).pipe(Effect.provide(context)),
+              makeDecisionModel(model.backend, { ...options, images: model.characteristics?.image === true }).pipe(
+                Effect.provide(context),
+              ),
             )
           : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(id)));
       };

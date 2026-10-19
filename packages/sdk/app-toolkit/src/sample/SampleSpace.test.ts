@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { buildArchive, histogram } from '../testing/index.ts';
@@ -28,12 +28,12 @@ const PERSON_SEEDS = [
 type OrgKey = (typeof ORG_SEEDS)[number]['key'];
 type Organizations = Record<OrgKey, Organization.Organization>;
 
-const Organizations = SampleSpace.phase('organizations', {
+const Organizations = SampleSpace.partial('organizations', {
   schemas: [Organization.Organization],
   run: () => SampleSpace.seed(ORG_SEEDS, ({ name }) => Database.add(Obj.make(Organization.Organization, { name }))),
 });
 
-const People = SampleSpace.phase('people', {
+const People = SampleSpace.partial('people', {
   schemas: [Person.Person],
   run: (organizations: Organizations) =>
     SampleSpace.seed(PERSON_SEEDS, ({ fullName, org }) =>
@@ -41,7 +41,7 @@ const People = SampleSpace.phase('people', {
     ),
 });
 
-const Work = SampleSpace.phase('work', {
+const Work = SampleSpace.partial('work', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>
     Effect.gen(function* () {
@@ -57,7 +57,7 @@ const Work = SampleSpace.phase('work', {
     }),
 });
 
-const Journal = SampleSpace.phase('journal', {
+const Journal = SampleSpace.partial('journal', {
   schemas: [Feed.Feed, Task.Task],
   run: () =>
     Effect.gen(function* () {
@@ -72,13 +72,13 @@ const Journal = SampleSpace.phase('journal', {
 const definition = SampleSpace.make({
   space: { name: 'Sample', icon: 'potted-plant', hue: 'amber' },
   reference: '2026-05-20T15:00:00Z',
-  phases: { organizations: Organizations, people: People, work: Work, journal: Journal },
-  build: (phases) =>
+  partials: { organizations: Organizations, people: People, work: Work, journal: Journal },
+  build: (partials) =>
     Effect.gen(function* () {
-      const organizations = yield* phases.organizations();
-      const people = yield* phases.people(organizations);
-      const { taskSet, tasks } = yield* phases.work();
-      const { feed, entries } = yield* phases.journal();
+      const organizations = yield* partials.organizations();
+      const people = yield* partials.people(organizations);
+      const { taskSet, tasks } = yield* partials.work();
+      const { feed, entries } = yield* partials.journal();
       const collection = yield* SampleSpace.collection('Work', [Ref.make(taskSet)]);
       return { organizations, people, taskSet, tasks, feed, entries, collection };
     }),
@@ -95,12 +95,27 @@ const TYPES = [
 ];
 
 describe('definition', () => {
-  test('derives its schemas from its phases', ({ expect }) => {
+  test('derives its schemas from its partials', ({ expect }) => {
     expect(definition.schemas).toContain(Organization.Organization);
     expect(definition.schemas).toContain(Person.Person);
     expect(definition.schemas).toContain(Feed.Feed);
-    // Declared by two phases, registered once.
+    // Declared by two partials, registered once.
     expect(definition.schemas.filter((schema) => schema === Task.Task)).toHaveLength(1);
+  });
+});
+
+describe('partial', () => {
+  test('registers its internal partials schemas through the definition that applies it', ({ expect }) => {
+    const Contacts = SampleSpace.partial('contacts', {
+      partials: { organizations: Organizations, people: People },
+      run: (_: void, partials) => Effect.flatMap(partials.organizations(), partials.people),
+    });
+    const contacts = SampleSpace.make({
+      space: { name: 'Contacts' },
+      partials: { contacts: Contacts },
+      build: (partials) => partials.contacts(),
+    });
+    expect(contacts.schemas).toEqual([Collection.Collection, Organization.Organization, Person.Person]);
   });
 });
 
@@ -149,7 +164,7 @@ describe('applyTo', () => {
     return { db, properties };
   };
 
-  test('runs every phase against a live space', async ({ expect }) => {
+  test('runs every partial against a live space', async ({ expect }) => {
     const space = await createSpace();
     const result = await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
 
@@ -159,7 +174,7 @@ describe('applyTo', () => {
     expect(result.taskSet.description).toBe('2026-05-17T09:00:00.000Z');
   });
 
-  test('files phase children under their parent and its membership array', async ({ expect }) => {
+  test('files partial children under their parent and its membership array', async ({ expect }) => {
     const space = await createSpace();
     const result = await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
 

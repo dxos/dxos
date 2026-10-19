@@ -5,12 +5,14 @@
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';

@@ -13,7 +13,7 @@ import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { type PropertyKey } from '@dxos/echo/internal';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 
@@ -56,7 +56,7 @@ describe('validate', () => {
 
   test('Schema to/from AST', ({ expect }) => {
     const TestSchema = Schema.Struct({
-      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/))),
+      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/u))),
     }).mapFields(Struct.map(Schema.mutableKey));
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;

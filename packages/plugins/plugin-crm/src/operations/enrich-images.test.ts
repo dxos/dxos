@@ -9,7 +9,7 @@ import { expect } from 'vitest';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Organization, Person } from '@dxos/types';
 

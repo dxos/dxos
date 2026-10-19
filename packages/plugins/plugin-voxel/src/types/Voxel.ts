@@ -76,7 +76,9 @@ export const toVoxelMap = (voxels: VoxelData[]): VoxelMap => {
 };
 
 /** Get grid dimensions and block size from a world object. */
-export const getGridDimensions = (world: World): { gridX: number; gridY: number; blockSize: number } => {
+export const getGridDimensions = (
+  world: Pick<World, 'gridX' | 'gridY' | 'blockSize'>,
+): { gridX: number; gridY: number; blockSize: number } => {
   return {
     gridX: world.gridX ?? DEFAULT_GRID_SIZE,
     gridY: world.gridY ?? DEFAULT_GRID_SIZE,

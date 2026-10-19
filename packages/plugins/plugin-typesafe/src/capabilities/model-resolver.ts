@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 
+import { Model } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -87,10 +88,11 @@ export default Capability.makeModule(
 
     // Settings are read per call rather than required: this module activates at Startup, before
     // settings modules are guaranteed to have been contributed.
-    const endpoint = () => {
+    const settings = (): TypeSafeSettings.Settings | undefined => {
       const [settingsAtom] = manager.getAll(TypeSafeCapabilities.Settings);
-      return resolveEndpoint(settingsAtom && registry.get(settingsAtom).endpoint);
+      return settingsAtom && registry.get(settingsAtom);
     };
+    const endpoint = () => resolveEndpoint(settings()?.endpoint);
 
     // Resolved on the first EDGE call rather than here, since the Client capability does not exist
     // yet at Startup.
@@ -130,6 +132,7 @@ export default Capability.makeModule(
         typesafe: { apiKey, endpoint },
         // Workers AI bills the platform Cloudflare account, so there is no vendor key to send.
         workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => WORKERS_AI_ENDPOINT },
+        defaultModel: () => settings()?.decisionModel ?? Model.typesafeJev.id,
       }).pipe(Layer.provide(httpClient)),
     );
   }),

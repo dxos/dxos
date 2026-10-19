@@ -57,7 +57,7 @@ GraphBuilder.createExtension({
 Convenience wrapper that matches ECHO objects of a specific type. The callback receives the typed object.
 
 ```typescript
-import { AppNode } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 
 GraphBuilder.createTypeExtension({
   id: 'item-actions',
@@ -150,7 +150,7 @@ Node.make({
 Creates a plank-level companion node (a side panel attached to a specific object). Return it from an extension declared with `relation: AppNode.companion`; under the default `child` relation it shows up in the navtree instead of the companion tabs.
 
 ```typescript
-import { AppNode } from '@dxos/app-toolkit';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 
 AppNode.makeCompanion({
   variant: 'related', // Identifies which surface renders; the node id is `~related`.

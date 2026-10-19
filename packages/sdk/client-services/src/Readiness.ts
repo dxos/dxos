@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Trigger } from '@dxos/async';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 
 import * as Events from './Events.ts';
 

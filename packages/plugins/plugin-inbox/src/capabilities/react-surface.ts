@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
@@ -25,12 +25,13 @@ import {
   SaveFilterPopover,
   SubscriptionsArticle,
 } from '#containers';
+import { type QueryFilterOwner } from '#hooks';
 import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants.ts';
 import { getSubscriptionsId } from '../paths.ts';
 import { isAttachmentRef } from './app-graph-builder.ts';
-import { EventArticleSurface, MailboxMessageCompanion, MessageArticleSurface } from './InboxSurfaces.tsx';
+import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -62,16 +63,6 @@ export default Capability.makeModule(() =>
         }),
       }),
       Surface.create({
-        // The selected message beside the mailbox, so reading one never navigates over the list.
-        id: 'companion.message',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'message'),
-          AppSurface.companion(AppSurface.Article, Mailbox.Mailbox),
-        ),
-        component: MailboxMessageCompanion,
-        props: ({ role, data: { companionTo, attendableId } }) => ({ role, mailbox: companionTo, attendableId }),
-      }),
-      Surface.create({
         id: 'draftMessage',
         filter: AppSurface.subject(AppSurface.Article, DraftMessage.instanceOf),
         component: EditMessageArticle,
@@ -85,7 +76,7 @@ export default Capability.makeModule(() =>
           AppSurface.subject(AppSurface.Section, isNonDraftMessage),
         ),
         component: MessageArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'attachment',
@@ -103,26 +94,22 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'event',
         filter: AppSurface.oneOf(
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Article, Event.Event),
-            AppSurface.companion(AppSurface.Article, Calendar.Calendar),
-          ),
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Section, Event.Event),
-            AppSurface.companion(AppSurface.Section, Calendar.Calendar),
-          ),
-          // Primary mode (navigated directly — no companion; calendar looked up from parent node).
           AppSurface.object(AppSurface.Article, Event.Event),
           AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: EventArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'calendar',
         filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
         component: CalendarArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, properties } }) => ({
+          role,
+          subject,
+          attendableId,
+          filter: properties?.filter,
+        }),
       }),
       Surface.create({
         id: 'messageCard',
@@ -138,12 +125,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: POPOVER_SAVE_FILTER,
-        filter: AppSurface.component<{ mailbox: Mailbox.Mailbox; filter: string }>(
+        filter: AppSurface.component<{ owner: QueryFilterOwner; filter: string }>(
           AppSurface.Popover,
           POPOVER_SAVE_FILTER,
         ),
         component: SaveFilterPopover,
-        props: ({ data: { props } }) => ({ mailbox: props.mailbox, filter: props.filter }),
+        props: ({ data: { props } }) => ({ owner: props.owner, filter: props.filter }),
       }),
       Surface.create({
         id: 'mailboxProperties',

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { firstOpenableChild } from './openable-children.ts';
 

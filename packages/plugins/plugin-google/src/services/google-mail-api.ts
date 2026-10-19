@@ -5,10 +5,10 @@
 import type * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as HttpClient from 'effect/http/HttpClient';
+import type * as HttpClientError from 'effect/http/HttpClientError';
 import * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
-import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
 
 import * as Credential from '@dxos/compute/Credential';
 

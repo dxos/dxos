@@ -2,19 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { translations } from '#translations';
+
+import { byTestId } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Tour, type TourStepDetails, useTour } from './Tour.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Tour from './Tour.tsx';
 
-const target = (selector: string) => () => document.querySelector<HTMLElement>(selector);
+const target = (testId: string) => () => document.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
 
-const steps: TourStepDetails[] = [
+const STEPS: Tour.StepDetails[] = [
   {
     id: 'welcome',
     type: 'dialog',
@@ -28,7 +32,7 @@ const steps: TourStepDetails[] = [
   {
     id: 'add',
     type: 'tooltip',
-    target: target('[data-testid="tour.add"]'),
+    target: target('tour.add'),
     title: 'Add',
     description: 'Create something new.',
     placement: 'bottom-start',
@@ -42,90 +46,67 @@ const steps: TourStepDetails[] = [
   {
     id: 'search',
     type: 'tooltip',
-    target: target('[data-testid="tour.search"]'),
+    target: target('tour.search'),
     title: 'Search',
     description: 'Find what you made.',
     placement: 'bottom',
     arrow: true,
-    backdrop: true,
-    actions: [
-      { label: 'Back', action: 'prev' },
-      { label: 'Next', action: 'next' },
-    ],
-  },
-  {
-    id: 'menu',
-    type: 'tooltip',
-    target: target('[data-testid="tour.menu"]'),
-    title: 'Menu',
-    description: 'Everything else lives here.',
-    placement: 'bottom-end',
-    arrow: true,
-    backdrop: true,
-    actions: [
-      { label: 'Back', action: 'prev' },
-      { label: 'Done', action: 'dismiss' },
-    ],
+    backdrop: false,
+    actions: [{ label: 'Back', action: 'prev' }],
   },
 ];
 
-/** A toolbar with three targets and a button that starts the tour. */
+/** Three targets and a button that starts the tour; the last step ends with a Done button of its own. */
 const DefaultStory = () => {
-  const tour = useTour({ steps: useMemo(() => steps, []) });
+  const tour = Tour.useTour({ steps: useMemo(() => STEPS, []) });
   return (
-    <Panel.Root classNames='dx-base-surface'>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
-          <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
-          <Toolbar.Separator variant='gap' />
-          <IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='tour.menu' />
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid place-items-center'>
+    <>
+      <Group>
+        <Button icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
+        <Button icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
         <Button onClick={() => tour.start()} data-testid='tour.start'>
           Start tour
         </Button>
-      </Panel.Content>
-
+      </Group>
       <Tour.Root tour={tour}>
-        <Tour.Portal>
-          <Tour.Backdrop />
-          <Tour.Spotlight />
-          <Tour.Positioner>
-            <Tour.Content>
-              <Tour.Arrow />
-              <Tour.Title />
-              <Tour.Description />
-              <Tour.Control>
-                <Tour.ProgressText />
-                <div className='flex gap-1'>
-                  <Tour.Actions>
-                    {(actions) =>
-                      actions.map((action) => (
-                        <Tour.ActionTrigger key={action.label} action={action} asChild>
-                          <Button variant={action.action === 'next' ? 'primary' : 'ghost'}>{action.label}</Button>
-                        </Tour.ActionTrigger>
-                      ))
-                    }
-                  </Tour.Actions>
-                </div>
-              </Tour.Control>
-            </Tour.Content>
-          </Tour.Positioner>
-        </Tour.Portal>
+        <Tour.Content data-testid='tour.card'>
+          <Tour.Header>
+            <Tour.Title />
+            <Tour.CloseTrigger />
+          </Tour.Header>
+          <Tour.Description />
+          <Tour.Control>
+            <Tour.ProgressText />
+            <Group>
+              <Tour.Actions>
+                {(actions) =>
+                  actions.map((action) => (
+                    <Tour.ActionTrigger
+                      key={action.label}
+                      action={action}
+                      variant={action.action === 'next' ? 'primary' : 'ghost'}
+                    />
+                  ))
+                }
+              </Tour.Actions>
+              {tour.lastStep && (
+                <Tour.CloseTrigger asChild>
+                  <Button variant='primary'>Done</Button>
+                </Tour.CloseTrigger>
+              )}
+            </Group>
+          </Tour.Control>
+        </Tour.Content>
       </Tour.Root>
-    </Panel.Root>
+    </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/Tour',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-  },
+  decorators: [withLayout({ classNames: 'p-4 w-[32rem]' }), withTheme()],
+  parameters: { layout: 'centered', translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -134,65 +115,70 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-const card = () => document.querySelector<HTMLElement>('[data-scope="tour"][data-part="content"]');
+const backdrop = () => document.querySelector<HTMLElement>('.dx-tour-backdrop');
 
-const shownCard = () => {
-  const element = card();
-  if (!element) {
-    throw new Error('No tour card');
-  }
-  return element;
-};
-
-const stepOf = () => card()?.dataset.step;
-
-/** Start, walk the steps, and finish: the card follows the steps and each target is highlighted. */
-export const TestWalkthrough: Story = {
+/**
+ * The tour opens on a centred `dialog` step: an `alertdialog` at `level='popup'` named by its title and described by
+ * its description. Action triggers are named by their visible labels. A `tooltip` step highlights its target, places
+ * the card below it with an arrow and, when the step asks, cuts it out of the backdrop. Arrow keys move between steps,
+ * the header's close button and Escape end the tour, and the last step's own Done button (a `CloseTrigger asChild`)
+ * keeps its name. The story ends open.
+ */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(card()).toBeNull();
-    await userEvent.click(canvas.getByTestId('tour.start'));
-    // The dialog step: centred, no target.
-    await waitFor(() => expect(stepOf()).toBe('welcome'));
-    await expect(card()).toHaveAttribute('role', 'alertdialog');
-    await expect(card()).toHaveAttribute('data-type', 'dialog');
-    await expect(within(shownCard()).getByText('Welcome')).toBeVisible();
+    const body = within(canvasElement.ownerDocument.body);
+    const start = byTestId(canvasElement, 'tour.start');
+    const add = byTestId(canvasElement, 'tour.add');
 
-    // The machine labels action triggers by their role ("next step"), so the button is found by its text.
-    await userEvent.click(within(shownCard()).getByText('Start'));
-    await waitFor(() => expect(stepOf()).toBe('add'));
-    await expect(canvas.getByTestId('tour.add')).toHaveAttribute('data-tour-highlighted');
-    await expect(card()).toHaveAttribute('data-type', 'tooltip');
-    // Placed below its target.
-    await waitFor(() => expect(card()).toHaveAttribute('data-side', 'bottom'));
+    await expect(body.queryByTestId('tour.card')).toBeNull();
+    await userEvent.click(start);
+    let card = await body.findByRole('alertdialog', { name: 'Welcome' });
+    await expect(card).toHaveAccessibleDescription(/A short tour/);
+    await expect(card).toHaveAttribute('data-type', 'dialog');
+    await expect(card).toHaveAttribute('data-surface', 'popup');
+    await expect(card).toHaveAttribute('data-size', 'md');
+    await expect(getComputedStyle(card).getPropertyValue('--dx-level').trim()).toBe('5');
+    await expect(card.querySelector('[data-part="arrow"]')).toBeNull();
+    // Centred in the viewport.
+    const rect = card.getBoundingClientRect();
+    await expect(Math.abs(rect.left + rect.width / 2 - window.innerWidth / 2)).toBeLessThanOrEqual(1);
+    await expect(within(card).getByRole('button', { name: 'Skip' })).toBeVisible();
+
+    // A tooltip step, with an arrow and the target cut out of the backdrop.
+    await userEvent.click(within(card).getByRole('button', { name: 'Start' }));
+    card = await body.findByRole('alertdialog', { name: 'Add' });
+    await waitFor(() => expect(add).toHaveAttribute('data-tour-highlighted'));
+    await expect(card).toHaveAttribute('data-type', 'tooltip');
+    await waitFor(() => expect(card.getBoundingClientRect().top).toBeGreaterThan(add.getBoundingClientRect().bottom));
+    await waitFor(() => expect(card.querySelector('[data-part="arrow"]')).not.toBeNull());
+    await expect(backdrop()).toBeVisible();
+    await expect(within(card).getByText('2 of 3')).toBeVisible();
+    const spotlight = document.querySelector<HTMLElement>('.dx-tour-spotlight');
     await waitFor(() =>
-      expect(shownCard().getBoundingClientRect().top).toBeGreaterThan(
-        canvas.getByTestId('tour.add').getBoundingClientRect().bottom,
-      ),
+      expect(spotlight?.getBoundingClientRect().width).toBeCloseTo(add.getBoundingClientRect().width, 0),
     );
-    await expect(within(shownCard()).getByText('2 of 4')).toBeVisible();
 
-    // Keyboard navigation from the card.
+    // Keyboard navigation from the card; the last step opts out of the backdrop.
+    card.focus();
     await userEvent.keyboard('{ArrowRight}');
-    await waitFor(() => expect(stepOf()).toBe('search'));
-    await expect(canvas.getByTestId('tour.add')).not.toHaveAttribute('data-tour-highlighted');
-    await expect(canvas.getByTestId('tour.search')).toHaveAttribute('data-tour-highlighted');
+    card = await body.findByRole('alertdialog', { name: 'Search' });
+    await expect(add).not.toHaveAttribute('data-tour-highlighted');
+    await expect(byTestId(canvasElement, 'tour.search')).toHaveAttribute('data-tour-highlighted');
+    await waitFor(() => expect(backdrop()).not.toBeVisible());
+    await userEvent.click(within(card).getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(body.queryByTestId('tour.card')).toBeNull());
 
-    await userEvent.click(within(shownCard()).getByText('Next'));
-    await waitFor(() => expect(stepOf()).toBe('menu'));
-    await userEvent.click(within(shownCard()).getByText('Done'));
-    await waitFor(() => expect(card()).toBeNull());
-    await expect(canvas.getByTestId('tour.menu')).not.toHaveAttribute('data-tour-highlighted');
-  },
-};
-
-/** Escape leaves the tour from any step. */
-export const TestEscape: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByTestId('tour.start'));
-    await waitFor(() => expect(stepOf()).toBe('welcome'));
+    // The header's close button, then Escape.
+    await userEvent.click(start);
+    card = await body.findByRole('alertdialog', { name: 'Welcome' });
+    await userEvent.click(within(card).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(body.queryByTestId('tour.card')).toBeNull());
+    await userEvent.click(start);
+    await body.findByRole('alertdialog', { name: 'Welcome' });
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(card()).toBeNull());
+    await waitFor(() => expect(body.queryByTestId('tour.card')).toBeNull());
+
+    await userEvent.click(start);
+    await body.findByRole('alertdialog', { name: 'Welcome' });
   },
 };

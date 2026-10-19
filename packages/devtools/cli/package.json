@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.11.1",
+  "version": "0.16.0",
   "private": true,
   "description": "DXOS CLI",
   "homepage": "https://dxos.org",
@@ -17,6 +17,7 @@
     "dx": "./bin/dx"
   },
   "dependencies": {
+    "@dxos/agent-code-mode": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -51,6 +52,7 @@
     "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-jmap": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",

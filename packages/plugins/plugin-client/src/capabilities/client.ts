@@ -10,14 +10,17 @@ import * as Layer from 'effect/Layer';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
+
+import { guardUnload, hasUnsavedChanges, saveUnsavedChanges } from './unsaved-changes.ts';
 
 type ClientCapabilityOptions = Omit<
   ClientOptions.ClientPluginOptions,
@@ -49,6 +52,7 @@ export default Capability.makeModule(
     log('initializing client (forked)...');
 
     let subscription: { unsubscribe: () => void } | undefined;
+    let removeUnloadGuard: (() => void) | undefined;
 
     // Registered BEFORE the fork so it runs AFTER the fiber's interrupt — scope finalizers run in
     // reverse order of addition, so the in-flight initialization stops before the client it is
@@ -57,6 +61,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         log.info('client capability: destroying client');
         subscription?.unsubscribe();
+        removeUnloadGuard?.();
         yield* Effect.tryPromise(() => client.destroy()).pipe(
           // A finalizer must not fail, and a teardown error must not mask the reason for teardown.
           Effect.catch((error) => Effect.sync(() => log.warn('client destroy failed', { error: String(error) }))),
@@ -104,14 +109,25 @@ export default Capability.makeModule(
       // to `origin` instead drops the path and boots the app fresh — which is also what the app's own
       // post-reset flow targets. The two branches differ only when the path isn't already `/`; a
       // normal reconnect keeps the user where they were, a reset returns them to the root.
-      client.services.reconnected?.on(() => {
-        log.info('client reconnected, reloading to re-establish session');
+      //
+      // A reload drops every change only this page holds. The reconnect hands those to the new worker,
+      // so the reload waits until it has them, and is skipped while it does not: a broken session the
+      // user can still save from beats a clean one without their changes. A reset discards them anyway.
+      client.services.reconnected?.on(async () => {
         if (client.resetting) {
+          log.info('client reset, reloading to the app root');
           window.location.href = window.location.origin;
-        } else {
-          window.location.reload();
+          return;
         }
+        if (!(await saveUnsavedChanges(client))) {
+          log.warn('client reconnected with unsaved changes, not reloading');
+          return;
+        }
+        log.info('client reconnected, reloading to re-establish session');
+        window.location.reload();
       });
+
+      removeUnloadGuard = guardUnload(client);
 
       let spacesAvailableFired = false;
       subscription = client.spaces.subscribe(async () => {
@@ -180,6 +196,10 @@ export default Capability.makeModule(
       // through @dxos/halo instead of the client directly).
       Capability.contribute(ClientCapabilities.IdentityService, makeIdentityService(client)),
       Capability.contribute(ClientCapabilities.SpaceService, makeSpaceService(client)),
+      Capability.contribute(AppCapabilities.UnsavedChanges, {
+        has: () => client.initialized && hasUnsavedChanges(client),
+        save: async () => !client.initialized || saveUnsavedChanges(client),
+      }),
     ];
   }),
 );

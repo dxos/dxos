@@ -1,43 +1,52 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
+
+import '../../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Toast } from './Toast.tsx';
+import { translations } from '#translations';
 
-type StoryArgs = {
-  icon?: string;
-  title: string;
-  description: string;
-  /** `Infinity` keeps the toast until it is dismissed. */
-  duration: number;
-  action?: string;
-};
+import { type Size } from '../../sizes.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Toast from './Toast.tsx';
 
-const DefaultStory = ({ icon, title, description, duration, action }: StoryArgs) => {
-  const [open, setOpen] = useState(true);
+type StoryArgs = { size?: Size; duration?: number; title?: string; description?: string };
+
+const toasts = () => [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')];
+
+/** A button declares the toast open; closing it (button, timeout or action) is reported back through `onOpenChange`. */
+const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
+  const [open, setOpen] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [retries, setRetries] = useState(0);
   return (
     <Toast.Provider>
-      <Button onClick={() => setOpen(true)}>Open toast</Button>
-      <Toast.Viewport />
-      <Toast.Root open={open} onOpenChange={setOpen} duration={duration}>
-        <Toast.Title icon={icon} onClose={() => setOpen(false)}>
-          {title}
-        </Toast.Title>
+      <div className='flex flex-col gap-2'>
+        <Button onClick={() => setOpen(true)}>Show toast</Button>
+        <Typography.Text data-testid='log'>{log.join(',')}</Typography.Text>
+        <Typography.Text data-testid='retries'>{retries}</Typography.Text>
+      </div>
+      <Toast.Root
+        open={open}
+        duration={duration}
+        onOpenChange={(next) => {
+          setOpen(next);
+          setLog((entries) => [...entries, next ? 'open' : 'closed']);
+        }}
+      >
+        <Toast.Header icon='ph--warning--regular'>{title}</Toast.Header>
         <Toast.Description>{description}</Toast.Description>
-        {action && (
-          <Toast.Actions>
-            <Toast.Action asChild>
-              <Button variant='primary'>{action}</Button>
-            </Toast.Action>
-          </Toast.Actions>
-        )}
+        <Toast.Footer>
+          <Toast.ActionTrigger onClick={() => setRetries((count) => count + 1)}>Retry</Toast.ActionTrigger>
+        </Toast.Footer>
       </Toast.Root>
+      <Toast.Toaster size={size} />
     </Toast.Provider>
   );
 };
@@ -45,193 +54,70 @@ const DefaultStory = ({ icon, title, description, duration, action }: StoryArgs)
 const meta = {
   title: 'ui/react-ui-core/components/Toast',
   render: DefaultStory,
-  decorators: [withTheme()],
-  argTypes: { duration: { control: { type: 'number' } } },
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withLayout({ classNames: 'p-4' }), withTheme()],
+  args: {
+    size: 'md',
+    duration: 60_000,
+    title: 'Sync failed',
+    description: 'The server could not be reached; changes are kept locally.',
+  },
+  argTypes: { size: { control: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'] } },
+  parameters: { layout: 'centered', translations },
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** One toast; `duration` runs the bar below it down, `Infinity` keeps it, `action` adds a button. */
-export const Default: Story = {
-  args: {
-    icon: 'ph--sparkle--regular',
-    title: 'This is a toast',
-    description: 'The bar below counts down to when this closes; it stops while the pointer is over the toast.',
-    duration: 8_000,
-    action: 'Reload',
-  },
-};
+export const Default: Story = {};
 
-//
-// Stacked
-//
-
-const StackedStory = ({ overlap = true }: { overlap?: boolean }) => {
-  const [toasts, setToasts] = useState<number[]>([]);
-  const add = () => setToasts((current) => [...current, (current.at(-1) ?? 0) + 1]);
-  const remove = (id: number) => setToasts((current) => current.filter((toast) => toast !== id));
-  return (
-    <Toast.Provider overlap={overlap}>
-      <Button onClick={add}>Add toast</Button>
-      <Toast.Viewport />
-      {toasts.map((id) => (
-        <Toast.Root key={id} duration={Infinity} onOpenChange={(open) => !open && remove(id)}>
-          <Toast.Title icon='ph--sparkle--regular' onClose={() => remove(id)}>
-            Toast {id}
-          </Toast.Title>
-          <Toast.Description>Each root is its own toast.</Toast.Description>
-        </Toast.Root>
-      ))}
-    </Toast.Provider>
-  );
-};
-
-/** Every declared root is a toast; `overlap` piles them (expanding under the pointer) or lays out rows. */
-export const Stacked: StoryObj<{ overlap: boolean }> = {
-  render: (args) => <StackedStory {...args} />,
-  args: { overlap: true },
-};
-
-//
-// Tests
-//
-
-const closeToast = async (name: string) => {
-  const target = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].find((root) =>
-    root.textContent?.includes(name),
-  );
-  if (!target) {
-    throw new Error(`No toast found with name: ${name}`);
-  }
-  await userEvent.click(within(target).getByRole('button', { name: /close/i }));
-};
-const gapsBetweenRows = () => {
-  const rects = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]
-    .map((root) => root.getBoundingClientRect())
-    .sort((a, b) => a.top - b.top);
-  return rects.slice(1).map((rect, index) => Math.round(rect.top - rects[index].bottom));
-};
-
-/** Opens from state, is labelled by its title, closes from its action, and reports both changes. */
-export const TestLifecycle: StoryObj = {
-  render: () => {
-    const [open, setOpen] = useState(false);
-    const [log, setLog] = useState<string[]>([]);
-    const handleOpenChange = (next: boolean) => {
-      setOpen(next);
-      setLog((current) => [...current, next ? 'open' : 'closed']);
-    };
-    return (
-      <Toast.Provider>
-        <Button onClick={() => handleOpenChange(true)}>Show toast</Button>
-        <span data-testid='log'>{log.join(',')}</span>
-        <Toast.Viewport />
-        <Toast.Root open={open} onOpenChange={handleOpenChange} duration={Infinity}>
-          <Toast.Title icon='ph--sparkle--regular' onClose={() => handleOpenChange(false)}>
-            Lifecycle toast
-          </Toast.Title>
-          <Toast.Description>Stays until closed.</Toast.Description>
-          <Toast.Actions>
-            <Toast.Action asChild>
-              <Button variant='primary'>OK</Button>
-            </Toast.Action>
-          </Toast.Actions>
-        </Toast.Root>
-      </Toast.Provider>
-    );
-  },
+/** The toast is labelled by its title; its action and its close button each dismiss it. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const status = () => document.querySelector<HTMLElement>('[role="status"]');
-    await expect(status()).toBeNull();
+    await expect(toasts()).toHaveLength(0);
     await userEvent.click(canvas.getByRole('button', { name: 'Show toast' }));
-    const toast = await waitFor(async () => {
-      const element = status();
-      await expect(element).not.toBeNull();
-      if (!element) {
-        throw new Error('Toast status element not found');
-      }
-      return element;
-    });
-    await waitFor(async () => {
-      const labelledBy = toast.getAttribute('aria-labelledby');
-      await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Lifecycle toast');
-    });
-    await userEvent.click(within(toast).getByRole('button', { name: 'OK' }));
-    await waitFor(async () => expect(status()).toBeNull());
-    await expect(canvas.getByTestId('log').textContent).toBe('open,closed');
+
+    await waitFor(() => expect(toasts()).toHaveLength(1));
+    const [toast] = toasts();
+    const labelledBy = toast.getAttribute('aria-labelledby');
+    await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Sync failed');
+    await expect(toast).toHaveAttribute('data-surface', 'popup');
+
+    // The description and actions align under the title, past the icon track.
+    const title = within(toast).getByText('Sync failed').getBoundingClientRect();
+    const description = within(toast)
+      .getByText(/server could not be reached/)
+      .getBoundingClientRect();
+    await expect(description.left).toBeCloseTo(title.left, 0);
+
+    // A timed toast shows its countdown, hidden from assistive tech.
+    await expect(toast.querySelector('[data-scope="progress"]')).toHaveAttribute('aria-hidden', 'true');
+
+    // The action runs and dismisses the toast.
+    await userEvent.click(within(toast).getByRole('button', { name: 'Retry' }));
+    await expect(canvas.getByTestId('retries')).toHaveTextContent('1');
+    await waitFor(() => expect(toasts()).toHaveLength(0));
+    await expect(canvas.getByTestId('log')).toHaveTextContent('closed');
+
+    // Reopened, it closes from its close button.
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toast' }));
+    await waitFor(() => expect(toasts()).toHaveLength(1));
+    await waitFor(() => expect(getComputedStyle(toasts()[0]).opacity).toBe('1'));
+    await userEvent.click(within(toasts()[0]).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(toasts()).toHaveLength(0));
+    await expect(canvas.getByTestId('log')).toHaveTextContent('closed,closed');
   },
 };
 
-/** The pile: siblings scaled down behind the front toast, expanding into rows under the pointer. */
-export const TestPile: StoryObj = {
-  render: () => <StackedStory overlap />,
+/** A toast closes itself when its duration runs out. */
+export const Timeout: Story = {
+  args: { duration: 300 },
   play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
-    for (let count = 1; count <= 3; count++) {
-      await userEvent.click(button);
-      await waitFor(async () =>
-        expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(
-          count,
-        ),
-      );
-    }
-    await waitFor(async () => {
-      const scales = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].map(
-        (root) => parseFloat(getComputedStyle(root).scale) || 1,
-      );
-      await expect(scales.filter((scale) => scale < 1)).toHaveLength(2);
-    });
-    const group = document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]');
-    if (!group) {
-      throw new Error('Toast group element not found');
-    }
-    await userEvent.hover(group);
-    await waitFor(async () => expect(gapsBetweenRows()).toEqual([8, 8]));
-  },
-};
-
-/**
- * The sequence that once left a hole (seven toasts, expanded, 1, 2, 3 and 6 closed): survivors must
- * close ranks. The runner renders under StrictMode, as the dev server does, so a root whose cleanup
- * dismissed on its own — which once retired every toast the moment it appeared — fails here too.
- */
-export const TestClosesRanks: StoryObj = {
-  render: () => <StackedStory overlap />,
-  play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
-    for (let count = 1; count <= 7; count++) {
-      await userEvent.click(button);
-      await waitFor(async () =>
-        expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(
-          count,
-        ),
-      );
-    }
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    await expect(
-      [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].filter(
-        (root) => getComputedStyle(root).opacity === '1',
-      ),
-    ).toHaveLength(7);
-    const group = document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]');
-    if (!group) {
-      throw new Error('Toast group element not found');
-    }
-    await userEvent.hover(group);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    await closeToast('Toast 1');
-    await closeToast('Toast 2');
-    await closeToast('Toast 3');
-    await waitFor(async () =>
-      expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(4),
-    );
-    await closeToast('Toast 6');
-    await waitFor(async () =>
-      expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(3),
-    );
-    await waitFor(async () => expect(gapsBetweenRows()).toEqual([8, 8]));
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toast' }));
+    await waitFor(() => expect(toasts()).toHaveLength(1));
+    await waitFor(() => expect(toasts()).toHaveLength(0), { timeout: 3_000 });
+    await expect(canvas.getByTestId('log')).toHaveTextContent('closed');
   },
 };

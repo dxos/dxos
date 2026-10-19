@@ -1,374 +1,157 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { ark } from '@ark-ui/react/factory';
-import { Tabs as TabsPrimitive } from '@ark-ui/react/tabs';
-import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
+// @import-as-namespace
 
-import { findFirstFocusable } from '@dxos/react-focus';
-import { createContext, useControllableState, useForwardedRef } from '@dxos/react-hooks';
+import { Tabs as TabsPrimitive, useTabsContext } from '@ark-ui/react/tabs';
+import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+
 import { mx } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { Button, type ButtonProps, IconButton, type IconButtonProps } from '../Button/index.ts';
-
-type TabsActivePart = 'list' | 'panel';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { composable, composableProps } from '../../util/slots.ts';
+import { Button } from '../Button/Button.tsx';
 
 type TabsOrientation = 'horizontal' | 'vertical';
 
-const TABS_NAME = 'Tabs';
-
-//
-// Context
-//
-
-type TabsContextValue = {
-  activePart: TabsActivePart;
-  setActivePart: (nextActivePart: TabsActivePart) => void;
-  /** The button variant of the selected tab in a horizontal tablist; `default` unless the host says otherwise. */
-  selectedVariant?: ButtonProps['variant'];
-} & {
-  orientation?: TabsOrientation;
-  value?: string;
-};
-
-const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
-  orientation: 'vertical',
-  activePart: 'list',
-  setActivePart: () => {},
-});
+/** How the selected trigger is filled: the input surface, or the accent (e.g. while the host has attention). */
+type TabsSelectedVariant = 'default' | 'primary';
 
 //
 // Root
 //
 
-type TabsRootCustomProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'dir'> & {
+type TabsRootProps = ThemedClassName<
+  Omit<TabsPrimitive.RootProps, 'value' | 'defaultValue' | 'onValueChange' | 'lazyMount' | 'unmountOnExit'>
+> & {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
-  orientation?: TabsOrientation;
-  /** `manual`: a tab activates on click or Enter; `automatic`: on focus. */
-  activationMode?: 'automatic' | 'manual';
-  /** Keep inactive panels mounted (hidden) instead of unmounting them. */
+  size?: Size;
+  selectedVariant?: TabsSelectedVariant;
+  /** Keep inactive panels mounted (hidden); by default they unmount, so their content re-runs its effects on show. */
   keepMounted?: boolean;
-} & Partial<
-    Pick<TabsContextValue, 'activePart' | 'selectedVariant'> & {
-      onActivePartChange: (nextActivePart: TabsActivePart) => void;
-      defaultActivePart: TabsActivePart;
-      /** Skip master-detail focus moves (e.g. when a child form owns initial focus). */
-      suppressRegionFocus?: boolean;
-    }
-  >;
+};
 
-type TabsRootProps = SlottableProps<TabsRootCustomProps>;
-
-const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
+/**
+ * Ark's tabs: a list of triggers over (horizontal) or beside (vertical) the selected content. A trigger activates on
+ * click or Enter (`activationMode='manual'`); arrow keys move focus along the list. Composable, so a host's `asChild`
+ * (e.g. `Panel.Root`) merges its className and ref onto the tabs element.
+ */
+const TabsRoot = composable<HTMLDivElement, Omit<TabsRootProps, 'classNames'>>(
   (
     {
-      children,
-      activePart: propsActivePart,
-      onActivePartChange,
-      defaultActivePart,
-      value: propsValue,
-      onValueChange,
+      value,
       defaultValue,
-      orientation = 'vertical',
+      onValueChange,
+      orientation = 'horizontal',
       activationMode = 'manual',
+      size,
+      selectedVariant = 'default',
       keepMounted = false,
-      selectedVariant,
-      suppressRegionFocus = false,
-      asChild,
       ...props
     },
     forwardedRef,
-  ) => {
-    const tabsRoot = useForwardedRef(forwardedRef);
-
-    const [activePart = 'list', setActivePart] = useControllableState({
-      prop: propsActivePart,
-      onChange: onActivePartChange,
-      defaultProp: defaultActivePart,
-    });
-
-    const [value, setValue] = useControllableState({
-      prop: propsValue,
-      onChange: onValueChange,
-      defaultProp: defaultValue,
-    });
-
-    const handleValueChange = useCallback(
-      (nextValue: string) => {
-        setActivePart('panel');
-        setValue(nextValue);
-      },
-      [value],
-    );
-
-    useLayoutEffect(() => {
-      if (suppressRegionFocus) {
-        return;
-      }
-
-      const root = tabsRoot.current;
-      if (!root) {
-        return;
-      }
-
-      if (activePart === 'list') {
-        const tablist = root.querySelector<HTMLElement>('[role="tablist"]');
-        findFirstFocusable(tablist)?.focus();
-        return;
-      }
-
-      const panel = root.querySelector<HTMLElement>('[role="tabpanel"][data-selected]');
-      if (!panel) {
-        return;
-      }
-
-      // The machine marks the selected panel focusable; `findFirstFocusable` skips the container
-      // itself, so the panel's content receives focus rather than the panel.
-      findFirstFocusable(panel)?.focus();
-    }, [activePart, value, suppressRegionFocus]);
-
-    return (
-      <TabsContextProvider
-        orientation={orientation}
-        activePart={activePart}
-        setActivePart={setActivePart}
-        value={value}
-        selectedVariant={selectedVariant}
-      >
-        <TabsPrimitive.Root
-          {...composableProps<HTMLDivElement>(props)}
-          asChild={asChild}
-          orientation={orientation}
-          activationMode={activationMode}
-          data-active={activePart}
-          value={value ?? null}
-          onValueChange={({ value }) => handleValueChange(value)}
-          // Inactive panels unmount unless asked otherwise: their content re-runs its effects on
-          // activation, which the panel focus move above relies on.
-          unmountOnExit={!keepMounted}
-          ref={tabsRoot}
-        >
-          {children}
-        </TabsPrimitive.Root>
-      </TabsContextProvider>
-    );
-  },
+  ) => (
+    <TabsPrimitive.Root
+      {...composableProps(props, { classNames: recipes.tabs() })}
+      {...(value !== undefined && { value })}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange && (({ value }) => onValueChange(value))}
+      orientation={orientation}
+      activationMode={activationMode}
+      lazyMount={!keepMounted}
+      unmountOnExit={!keepMounted}
+      data-size={size}
+      data-selected-variant={selectedVariant}
+      ref={forwardedRef}
+    />
+  ),
 );
 
 TabsRoot.displayName = 'Tabs.Root';
 
 //
-// Viewport
+// List
 //
 
-type TabsViewportProps = SlottableProps<
-  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
->;
+type TabsListProps = ThemedClassName<TabsPrimitive.ListProps>;
 
-const TabsViewport = slottable<
-  HTMLDivElement,
-  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
->(({ children, asChild, ...props }, forwardedRef) => {
-  const { activePart } = useTabsContext('TabsViewport');
+/** The tablist: a row (or column) of triggers that scrolls along its axis when they overflow. */
+const TabsList = forwardRef<HTMLDivElement, TabsListProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.List {...props} className={mx(recipes.tabsList(), classNames)} ref={forwardedRef} />
+));
+
+TabsList.displayName = 'Tabs.List';
+
+//
+// Trigger
+//
+
+type TabsTriggerProps =
+  | (ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
+  | (Omit<TabsPrimitive.TriggerProps, 'asChild'> & { asChild: true });
+
+/**
+ * A ghost Button that fills when selected; takes Button's content props (`icon`, `label`, `iconOnly`). With `asChild`
+ * the child element is the tab as it is (e.g. a rail of avatars), taking only the tab's state and behaviour.
+ */
+const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forwardedRef) => {
+  if (props.asChild) {
+    return <TabsPrimitive.Trigger {...props} ref={forwardedRef} />;
+  }
+
+  const { value, disabled, classNames, variant = 'ghost', asChild: _asChild, ...buttonProps } = props;
   return (
-    <ark.div asChild={asChild} {...composableProps<HTMLDivElement>(props)} data-active={activePart} ref={forwardedRef}>
-      {children}
-    </ark.div>
+    <TabsPrimitive.Trigger value={value} disabled={disabled} asChild>
+      <Button {...buttonProps} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
+    </TabsPrimitive.Trigger>
   );
 });
 
-TabsViewport.displayName = 'Tabs.Viewport';
+TabsTrigger.displayName = 'Tabs.Trigger';
 
 //
-// Tablist
+// Content
 //
 
-type TabsTablistProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type TabsContentProps = ThemedClassName<TabsPrimitive.ContentProps>;
 
-const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
-  const { orientation } = useTabsContext('TabsTablist');
-  return (
-    <TabsPrimitive.List
-      {...props}
-      data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
-      className={mx(
-        'max-h-full w-full',
-        orientation === 'vertical'
-          ? 'overflow-y-auto'
-          : [
-              'flex p-1 gap-1 items-stretch justify-start overflow-x-auto',
-              // As a toolbar item the list is one control among others: content-sized, unpadded
-              // (the bar owns the gutter) and never squeezed by a `w-full` sibling.
-              '[[role=toolbar]_&]:w-auto [[role=toolbar]_&]:shrink-0 [[role=toolbar]_&]:p-0',
-            ],
-        classNames,
-      )}
-    >
-      {children}
-    </TabsPrimitive.List>
-  );
-};
+const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.Content {...props} className={mx(recipes.tabsContent(), classNames)} ref={forwardedRef} />
+));
 
-TabsTablist.displayName = 'Tabs.Tablist';
+TabsContent.displayName = 'Tabs.Content';
 
 //
-// BackButton
+// Indicator
 //
 
-const TabsBackButton = ({ classNames, onClick, ...props }: ButtonProps) => {
-  const { setActivePart } = useTabsContext('TabsBackButton');
-  const handleClick = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      setActivePart('list');
-      return onClick?.(event);
-    },
-    [setActivePart, onClick],
-  );
+type TabsIndicatorProps = ThemedClassName<TabsPrimitive.IndicatorProps>;
 
-  return <Button {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
-};
+/** An underline that slides to the selected trigger (Ark measures it into `--left`/`--width`). */
+const TabsIndicator = forwardRef<HTMLDivElement, TabsIndicatorProps>(({ classNames, ...props }, forwardedRef) => (
+  <TabsPrimitive.Indicator {...props} className={mx(recipes.tabsIndicator(), classNames)} ref={forwardedRef} />
+));
 
-TabsBackButton.displayName = 'Tabs.BackButton';
-
-//
-// TabGroupHeading
-//
-
-type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
-
-const TabsTabGroupHeading = ({ classNames, children, ...props }: TabsTabGroupHeadingProps) => (
-  <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
-    {children}
-  </h2>
-);
-
-TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
-
-//
-// Tab
-//
-
-type TabsButtonProps = ButtonProps & { value: string };
-
-const TabsButton = ({ value, classNames, children, onClick, variant, ...props }: TabsButtonProps) => {
-  const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsButton');
-
-  const handleClick = useCallback(
-    // NOTE: This handler is only called if the tab is *already active*.
-    (event: MouseEvent<HTMLButtonElement>) => {
-      setActivePart('panel');
-      onClick?.(event);
-    },
-    [setActivePart, onClick],
-  );
-
-  return (
-    <TabsPrimitive.Trigger value={value} asChild>
-      <Button
-        {...props}
-        variant={
-          variant ?? (orientation === 'horizontal' && contextValue === value ? (selectedVariant ?? 'default') : 'ghost')
-        }
-        classNames={[
-          orientation === 'vertical' && 'block justify-start text-start w-full',
-          orientation === 'vertical' && 'dx-selected',
-          classNames,
-        ]}
-        onClick={handleClick}
-      >
-        {children}
-      </Button>
-    </TabsPrimitive.Trigger>
-  );
-};
-
-TabsButton.displayName = 'Tabs.Button';
-
-//
-// IconButton
-//
-
-type TabsIconButtonProps = IconButtonProps & { value: string };
-
-const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...props }: TabsIconButtonProps) => {
-  const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsIconButton');
-
-  // NOTE: This handler is only called if the tab is *already active*.
-  const handleClick = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      setActivePart('panel');
-      onClick?.(event);
-    },
-    [setActivePart, onClick],
-  );
-
-  return (
-    <TabsPrimitive.Trigger value={value} asChild>
-      <IconButton
-        {...props}
-        iconOnly={iconOnly}
-        variant={
-          variant ?? (orientation === 'horizontal' && contextValue === value ? (selectedVariant ?? 'default') : 'ghost')
-        }
-        classNames={[
-          orientation === 'vertical' && !iconOnly && 'justify-start text-start w-full',
-          orientation === 'vertical' && 'dx-selected',
-          classNames,
-        ]}
-        onClick={handleClick}
-      />
-    </TabsPrimitive.Trigger>
-  );
-};
-
-TabsIconButton.displayName = 'Tabs.IconButton';
-
-//
-// Panel
-//
-// Do NOT wrap TabsPanel children in React.Activity.
-
-type TabsPanelProps = ThemedClassName<ComponentPropsWithoutRef<'div'> & { value: string }>;
-
-const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => (
-  <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
-    {children}
-  </TabsPrimitive.Content>
-);
-
-TabsPanel.displayName = 'Tabs.Panel';
-
-type TabsTabPrimitiveProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>;
-
-//
-// Tabs
-//
-
-export const Tabs = {
-  Root: TabsRoot,
-  Tablist: TabsTablist,
-  Button: TabsButton,
-  IconButton: TabsIconButton,
-  TabPrimitive: TabsPrimitive.Trigger,
-  TabGroupHeading: TabsTabGroupHeading,
-  Viewport: TabsViewport,
-  Panel: TabsPanel,
-  BackButton: TabsBackButton,
-};
-
+TabsIndicator.displayName = 'Tabs.Indicator';
 export type {
-  TabsActivePart,
-  TabsButtonProps,
-  TabsIconButtonProps,
-  TabsPanelProps,
-  TabsRootProps,
-  TabsTabGroupHeadingProps,
-  TabsTablistProps,
-  TabsTabPrimitiveProps,
-  TabsViewportProps,
+  TabsContentProps as ContentProps,
+  TabsIndicatorProps as IndicatorProps,
+  TabsListProps as ListProps,
+  TabsRootProps as RootProps,
+  TabsTriggerProps as TriggerProps,
 };
+
+export {
+  TabsContent as Content,
+  TabsIndicator as Indicator,
+  TabsList as List,
+  TabsRoot as Root,
+  TabsTrigger as Trigger,
+  useTabsContext as useContext,
+};
+export type { TabsOrientation as Orientation, TabsSelectedVariant as SelectedVariant };

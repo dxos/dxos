@@ -47,6 +47,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -105,6 +108,9 @@
     },
     {
       "path": "../../plugins/plugin-google"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
     },
     {
       "path": "../../plugins/plugin-inbox"

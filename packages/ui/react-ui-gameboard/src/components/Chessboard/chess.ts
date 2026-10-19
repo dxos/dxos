@@ -3,8 +3,8 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { type FC, type SVGProps } from 'react';
 
 import { invariant } from '@dxos/invariant';

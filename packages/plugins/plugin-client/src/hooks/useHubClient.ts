@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useEffect } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type HubHttpClient } from '@dxos/edge-client';
 import { useIdentity } from '@dxos/halo-react';
 
@@ -18,8 +18,8 @@ import { ClientCapabilities } from '#types';
  */
 export const useHubHttpClient = (): HubHttpClient | undefined => {
   const identity = useIdentity();
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
-  const [hubHttpClient] = useCapabilities(ClientCapabilities.HubHttpClient);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
+  const [hubHttpClient] = Hooks.useCapabilities(ClientCapabilities.HubHttpClient);
 
   useEffect(() => {
     if (!hubHttpClient || !identity || !identityService) {

@@ -1,0 +1,375 @@
+diff --git a/dist/DiscordGateway/DiscordWS.d.ts b/dist/DiscordGateway/DiscordWS.d.ts
+index 5d57bd2da833d71c730c684b781b8a6b96778111..cc0947c976a64654967c49a0924603625b3e7849 100644
+--- a/dist/DiscordGateway/DiscordWS.d.ts
++++ b/dist/DiscordGateway/DiscordWS.d.ts
+@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
+ import * as Layer from "effect/Layer";
+ import type * as Discord from "../types.ts";
+ import * as Context from "effect/Context";
+-import * as Socket from "effect/unstable/socket/Socket";
++import * as Socket from "effect/socket/Socket";
+ import type * as Scope from "effect/Scope";
+ export type Message = Discord.GatewayReceivePayload;
+ export type MessageSend = Discord.GatewaySendPayload | Reconnect;
+diff --git a/dist/DiscordGateway/DiscordWS.js b/dist/DiscordGateway/DiscordWS.js
+index d1989cb4415e8a6f6f8a993cfb1c9ee1f3ca04a2..293fcb73318692a5e1ad1f4cbfb75d027d9da5f4 100644
+--- a/dist/DiscordGateway/DiscordWS.js
++++ b/dist/DiscordGateway/DiscordWS.js
+@@ -5,7 +5,7 @@ import * as Schedule from "effect/Schedule";
+ import * as Cause from "effect/Cause";
+ import * as Context from "effect/Context";
+ import * as Queue from "effect/Queue";
+-import * as Socket from "effect/unstable/socket/Socket";
++import * as Socket from "effect/socket/Socket";
+ import { CurrentLoggers } from "effect/Logger";
+ import * as LogLevel from "effect/LogLevel";
+ import { MinimumLogLevel } from "effect/References";
+diff --git a/dist/DiscordGateway/Shard/StateStore.d.ts b/dist/DiscordGateway/Shard/StateStore.d.ts
+index 36b5dbd1b6759b124197e943a41bb93e234310c5..085c6ea7acd02173b2ab291ee2cb0eb6460488aa 100644
+--- a/dist/DiscordGateway/Shard/StateStore.d.ts
++++ b/dist/DiscordGateway/Shard/StateStore.d.ts
+@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
+ import * as Option from "effect/Option";
+ import * as Layer from "effect/Layer";
+ import * as Context from "effect/Context";
+-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
++import * as KeyValueStore from "effect/persistence/KeyValueStore";
+ export interface ShardState {
+     readonly resumeUrl: string;
+     readonly sequence: number | null;
+diff --git a/dist/DiscordGateway/Shard/StateStore.js b/dist/DiscordGateway/Shard/StateStore.js
+index e24ff3cc931864d0d2e3c6e92b5b1daae4bb951c..4e082513057179ce26815a5c3bf242249b6416ec 100644
+--- a/dist/DiscordGateway/Shard/StateStore.js
++++ b/dist/DiscordGateway/Shard/StateStore.js
+@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
+ import * as Option from "effect/Option";
+ import * as Layer from "effect/Layer";
+ import * as Context from "effect/Context";
+-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
++import * as KeyValueStore from "effect/persistence/KeyValueStore";
+ import { flow, pipe } from "effect/Function";
+ export class ShardStateStore extends Context.Service()("dfx/Shard/StateStore") {
+     static MemoryLive = Layer.sync(ShardStateStore, () => {
+diff --git a/dist/DiscordGateway/Shard.d.ts b/dist/DiscordGateway/Shard.d.ts
+index f3abfd470680823b878b4ee68fe4b2f454a81186..826cbd57c29d3e7b685b2db48a0a9b76d5268b3b 100644
+--- a/dist/DiscordGateway/Shard.d.ts
++++ b/dist/DiscordGateway/Shard.d.ts
+@@ -11,14 +11,14 @@ export declare const make: Effect.Effect<{
+     readonly connect: (shard: [id: number, count: number]) => Effect.Effect<{
+         readonly id: [id: number, count: number];
+         readonly write: (p: MessageSend) => Effect.Effect<void, never, never>;
+-    }, never, import("effect/Scope").Scope | import("effect/unstable/socket/Socket").WebSocketConstructor>;
++    }, never, import("effect/Scope").Scope | import("effect/socket/Socket").WebSocketConstructor>;
+ }, never, DiscordConfig | DiscordWS | Messaging | ShardStateStore | RateLimiter>;
+ type ShardService = Effect.Success<typeof make>;
+ declare const Shard_base: Context.ServiceClass<Shard, "dfx/DiscordGateway/Shard", {
+     readonly connect: (shard: [id: number, count: number]) => Effect.Effect<{
+         readonly id: [id: number, count: number];
+         readonly write: (p: MessageSend) => Effect.Effect<void, never, never>;
+-    }, never, import("effect/Scope").Scope | import("effect/unstable/socket/Socket").WebSocketConstructor>;
++    }, never, import("effect/Scope").Scope | import("effect/socket/Socket").WebSocketConstructor>;
+ }>;
+ export declare class Shard extends Shard_base {
+ }
+diff --git a/dist/DiscordGateway/Sharder.d.ts b/dist/DiscordGateway/Sharder.d.ts
+index 28ede5a41bd215c5cf737913952782d07a31fa64..fbb44c62d97beea58bf639cc48cd7f2c1a170a07 100644
+--- a/dist/DiscordGateway/Sharder.d.ts
++++ b/dist/DiscordGateway/Sharder.d.ts
+@@ -9,6 +9,6 @@ declare const Sharder_base: Context.ServiceClass<Sharder, "dfx/DiscordGateway/Sh
+ }>;
+ export declare class Sharder extends Sharder_base {
+ }
+-export declare const SharderLive: Layer.Layer<Sharder, never, import("effect/unstable/http/HttpClient").HttpClient | DiscordConfig | import("./DiscordWS.ts").DiscordWSCodec | import("effect/unstable/socket/Socket").WebSocketConstructor | import("./Shard/StateStore.ts").ShardStateStore | import("../RateLimit.ts").RateLimitStore | ShardStore>;
++export declare const SharderLive: Layer.Layer<Sharder, never, import("effect/http/HttpClient").HttpClient | DiscordConfig | import("./DiscordWS.ts").DiscordWSCodec | import("effect/socket/Socket").WebSocketConstructor | import("./Shard/StateStore.ts").ShardStateStore | import("../RateLimit.ts").RateLimitStore | ShardStore>;
+ export {};
+ //# sourceMappingURL=Sharder.d.ts.map
+\ No newline at end of file
+diff --git a/dist/DiscordGateway.d.ts b/dist/DiscordGateway.d.ts
+index ce01faf9de7a68797f835b7cd61077adee8de3e7..779bbcf701be96290421e2b1882c3bd913fe8217 100644
+--- a/dist/DiscordGateway.d.ts
++++ b/dist/DiscordGateway.d.ts
+@@ -1,4 +1,4 @@
+-import type { WebSocketConstructor } from "effect/unstable/socket/Socket";
++import type { WebSocketConstructor } from "effect/socket/Socket";
+ import type { DiscordConfig } from "./DiscordConfig.ts";
+ import type { DiscordWSCodec } from "./DiscordGateway/DiscordWS.ts";
+ import type { Messsaging } from "./DiscordGateway/Messaging.ts";
+@@ -11,7 +11,7 @@ import type * as Discord from "./types.ts";
+ import * as Effect from "effect/Effect";
+ import * as Layer from "effect/Layer";
+ import type * as Stream from "effect/Stream";
+-import type { HttpClient } from "effect/unstable/http/HttpClient";
++import type { HttpClient } from "effect/http/HttpClient";
+ import * as Context from "effect/Context";
+ export declare const TypeId: unique symbol;
+ export type TypeId = typeof TypeId;
+diff --git a/dist/DiscordREST/Generated.d.ts b/dist/DiscordREST/Generated.d.ts
+index daec64f0a8db650c190b461766da577524396931..163cc03e5e6785c5a8b7ff217f4d92a0683086a5 100644
+--- a/dist/DiscordREST/Generated.d.ts
++++ b/dist/DiscordREST/Generated.d.ts
+@@ -1,7 +1,7 @@
+-import type * as HttpClient from "effect/unstable/http/HttpClient";
+-import * as HttpClientError from "effect/unstable/http/HttpClientError";
+-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
++import type * as HttpClient from "effect/http/HttpClient";
++import * as HttpClientError from "effect/http/HttpClientError";
++import * as HttpClientRequest from "effect/http/HttpClientRequest";
++import * as HttpClientResponse from "effect/http/HttpClientResponse";
+ import * as Effect from "effect/Effect";
+ export type SnowflakeType = string;
+ export type ApplicationTypes = 4;
+diff --git a/dist/DiscordREST/Generated.js b/dist/DiscordREST/Generated.js
+index c90c22d85c06bdcf3eeee691b7e3890256216577..1af538e60a367cf3aea3ddda89d38f7824fa4e49 100644
+--- a/dist/DiscordREST/Generated.js
++++ b/dist/DiscordREST/Generated.js
+@@ -1,6 +1,6 @@
+-import * as HttpClientError from "effect/unstable/http/HttpClientError";
+-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
++import * as HttpClientError from "effect/http/HttpClientError";
++import * as HttpClientRequest from "effect/http/HttpClientRequest";
++import * as HttpClientResponse from "effect/http/HttpClientResponse";
+ import * as Data from "effect/Data";
+ import * as Effect from "effect/Effect";
+ export const NameplatePalette = {
+diff --git a/dist/DiscordREST/utils.d.ts b/dist/DiscordREST/utils.d.ts
+index 576a8095b20e74f10c5efbb1f0fb1e636820ac5a..81e3c248ba7d27d0141b032c483ab894730d6e03 100644
+--- a/dist/DiscordREST/utils.d.ts
++++ b/dist/DiscordREST/utils.d.ts
+@@ -1,6 +1,6 @@
+ import * as Duration from "effect/Duration";
+ import * as Option from "effect/Option";
+-import * as Headers from "effect/unstable/http/Headers";
++import * as Headers from "effect/http/Headers";
+ export declare const routeFromConfig: (path: string, method: string) => string;
+ export declare const numberHeader: (headers: Headers.Headers) => (key: string) => Option.Option<number>;
+ export declare const retryAfter: (headers: Headers.Headers) => Option.Option<Duration.Duration>;
+diff --git a/dist/DiscordREST/utils.js b/dist/DiscordREST/utils.js
+index 709b9d198ffaaae9e05e8a66b9bbdc7e6b1f380c..1fd3bfd2a3c3e9c23a3a7da3b7be6743ff456aa5 100644
+--- a/dist/DiscordREST/utils.js
++++ b/dist/DiscordREST/utils.js
+@@ -1,7 +1,7 @@
+ import * as Duration from "effect/Duration";
+ import { pipe } from "effect/Function";
+ import * as Option from "effect/Option";
+-import * as Headers from "effect/unstable/http/Headers";
++import * as Headers from "effect/http/Headers";
+ const majorResources = ["channels", "guilds", "webhooks"];
+ export const routeFromConfig = (path, method) => {
+     // Only keep major ID's
+diff --git a/dist/DiscordREST.d.ts b/dist/DiscordREST.d.ts
+index 71b5f2341608ef623dd79b1a8a4b78ec17d55c81..8cab9b0c6b91412ce1be96e651b051f511ca55e2 100644
+--- a/dist/DiscordREST.d.ts
++++ b/dist/DiscordREST.d.ts
+@@ -4,8 +4,8 @@ import * as Discord from "./types.ts";
+ import * as Effect from "effect/Effect";
+ import * as Layer from "effect/Layer";
+ import * as Context from "effect/Context";
+-import * as HttpClient from "effect/unstable/http/HttpClient";
+-import type { HttpClientError } from "effect/unstable/http/HttpClientError";
++import * as HttpClient from "effect/http/HttpClient";
++import type { HttpClientError } from "effect/http/HttpClientError";
+ export type DiscordRESTError = HttpClientError | Discord.DiscordRestError<"RatelimitedResponse", Discord.RatelimitedResponse> | Discord.DiscordRestError<"ErrorResponse", Discord.ErrorResponse>;
+ declare const DiscordFormData_base: Context.ServiceClass<DiscordFormData, "dfx/DiscordREST/DiscordFormData", FormData>;
+ export declare class DiscordFormData extends DiscordFormData_base {
+diff --git a/dist/DiscordREST.js b/dist/DiscordREST.js
+index a08fc2263b3852872b6cd1582e90500d9d063a85..0cad8a15d106710bfcd51338b77d3ffcd32a20a0 100644
+--- a/dist/DiscordREST.js
++++ b/dist/DiscordREST.js
+@@ -12,9 +12,9 @@ import * as Layer from "effect/Layer";
+ import * as Option from "effect/Option";
+ import * as Redacted from "effect/Redacted";
+ import * as Context from "effect/Context";
+-import * as HttpBody from "effect/unstable/http/HttpBody";
+-import * as HttpClient from "effect/unstable/http/HttpClient";
+-import * as HttpRequest from "effect/unstable/http/HttpClientRequest";
++import * as HttpBody from "effect/http/HttpBody";
++import * as HttpClient from "effect/http/HttpClient";
++import * as HttpRequest from "effect/http/HttpClientRequest";
+ const make = Effect.gen(function* () {
+     const { rest, token } = yield* DiscordConfig;
+     const store = yield* RateLimitStore;
+diff --git a/dist/Interactions/builder.d.ts b/dist/Interactions/builder.d.ts
+index 218edc71b589dfc033f1aa30fc96adc596159a1f..87d8d0d96b7076439c9e4a2ad7d78aca6580dc37 100644
+--- a/dist/Interactions/builder.d.ts
++++ b/dist/Interactions/builder.d.ts
+@@ -40,8 +40,8 @@ export declare class InteractionBuilder<R, E, TE> {
+     }>>> | Exclude<E1, E> | Exclude<Exclude<E, {
+         _tag: T;
+     }>, E>>;
+-    get syncGlobal(): Effect.Effect<Discord.BulkSetApplicationCommands200, import("effect/unstable/http/HttpClientError").HttpClientError | Discord.DiscordRestError<"RatelimitedResponse", Discord.RatelimitedResponse> | Discord.DiscordRestError<"ErrorResponse", Discord.ErrorResponse>, DiscordREST>;
+-    syncGuild(appId: Discord.Snowflake, guildId: Discord.Snowflake): Effect.Effect<Discord.BulkSetGuildApplicationCommands200, import("effect/unstable/http/HttpClientError").HttpClientError | Discord.DiscordRestError<"RatelimitedResponse", Discord.RatelimitedResponse> | Discord.DiscordRestError<"ErrorResponse", Discord.ErrorResponse>, DiscordREST>;
++    get syncGlobal(): Effect.Effect<Discord.BulkSetApplicationCommands200, import("effect/http/HttpClientError").HttpClientError | Discord.DiscordRestError<"RatelimitedResponse", Discord.RatelimitedResponse> | Discord.DiscordRestError<"ErrorResponse", Discord.ErrorResponse>, DiscordREST>;
++    syncGuild(appId: Discord.Snowflake, guildId: Discord.Snowflake): Effect.Effect<Discord.BulkSetGuildApplicationCommands200, import("effect/http/HttpClientError").HttpClientError | Discord.DiscordRestError<"RatelimitedResponse", Discord.RatelimitedResponse> | Discord.DiscordRestError<"ErrorResponse", Discord.ErrorResponse>, DiscordREST>;
+ }
+ export declare const builder: InteractionBuilder<never, never, DiscordRESTError>;
+ export {};
+diff --git a/dist/gateway.d.ts b/dist/gateway.d.ts
+index 5509bb795703dcdeec2ca8c5e2b342ba5c290140..3e99bf4d550bb87108ec763ba40ed395f0dde825 100644
+--- a/dist/gateway.d.ts
++++ b/dist/gateway.d.ts
+@@ -8,9 +8,9 @@ import type { DiscordREST } from "./DiscordREST.ts";
+ import type { InteractionsRegistry } from "./Interactions/gateway.ts";
+ import type { RateLimiter } from "./RateLimit.ts";
+ import * as Layer from "effect/Layer";
+-import type * as HttpClient from "effect/unstable/http/HttpClient";
++import type * as HttpClient from "effect/http/HttpClient";
+ import type { DiscordConfig } from "./DiscordConfig.ts";
+-import type { WebSocketConstructor } from "effect/unstable/socket/Socket";
++import type { WebSocketConstructor } from "effect/socket/Socket";
+ export { DiscordGateway, DiscordGatewayLive } from "./DiscordGateway.ts";
+ export { InteractionsRegistry, InteractionsRegistryLive, interactionsSync, run as runIx, setInteractionsSync, } from "./Interactions/gateway.ts";
+ export { CachePrelude, DiscordWS, SendEvent, Shard, ShardStore };
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index fd6055e451034f2f19c7b2ff425b7d68f4ab2121..eebad3672db8c1ea598ecc9b468a7662be8a5b32 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,4 +1,4 @@
+-import type { HttpClient } from "effect/unstable/http/HttpClient";
++import type { HttpClient } from "effect/http/HttpClient";
+ import * as Cache from "./Cache.ts";
+ import * as DiscordConfig from "./DiscordConfig.ts";
+ import type { DiscordREST } from "./DiscordREST.ts";
+diff --git a/dist/webhooks.d.ts b/dist/webhooks.d.ts
+index 58be6e48e0ab35cc16e75288d599dd0269ac2800..9fe1c69fcaf301a8f93d3a4f961b6bdf54c4f6ad 100644
+--- a/dist/webhooks.d.ts
++++ b/dist/webhooks.d.ts
+@@ -1,4 +1,4 @@
+-import type { HttpClient } from "effect/unstable/http/HttpClient";
++import type { HttpClient } from "effect/http/HttpClient";
+ import type { DiscordConfig } from "./DiscordConfig.ts";
+ import type { DiscordREST } from "./DiscordREST.ts";
+ import type { RateLimiter } from "./RateLimit.ts";
+diff --git a/src/DiscordGateway/DiscordWS.ts b/src/DiscordGateway/DiscordWS.ts
+index 79bf2f0e1a59e1ba3b8c9c95a4b94072d67f7b4c..e1ddc2c57dfe9f689ee35f379eecdca75b8fbef3 100644
+--- a/src/DiscordGateway/DiscordWS.ts
++++ b/src/DiscordGateway/DiscordWS.ts
+@@ -6,7 +6,7 @@ import * as Schedule from "effect/Schedule"
+ import * as Cause from "effect/Cause"
+ import * as Context from "effect/Context"
+ import * as Queue from "effect/Queue"
+-import * as Socket from "effect/unstable/socket/Socket"
++import * as Socket from "effect/socket/Socket"
+ import type * as Scope from "effect/Scope"
+ import { CurrentLoggers } from "effect/Logger"
+ import * as LogLevel from "effect/LogLevel"
+diff --git a/src/DiscordGateway/Shard/StateStore.ts b/src/DiscordGateway/Shard/StateStore.ts
+index 30ce9ac6d51507a225b1aa48219c642878139eba..00e006d7fc585d25819c486a246598cfd33b36b4 100644
+--- a/src/DiscordGateway/Shard/StateStore.ts
++++ b/src/DiscordGateway/Shard/StateStore.ts
+@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect"
+ import * as Option from "effect/Option"
+ import * as Layer from "effect/Layer"
+ import * as Context from "effect/Context"
+-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore"
++import * as KeyValueStore from "effect/persistence/KeyValueStore"
+ import { flow, pipe } from "effect/Function"
+ 
+ export interface ShardState {
+diff --git a/src/DiscordGateway.ts b/src/DiscordGateway.ts
+index 0a5a9415c0642ccdcc2a781f8ab8d1703ec331e1..31306067d35e3320e13954be359d86a7cc9e7c00 100644
+--- a/src/DiscordGateway.ts
++++ b/src/DiscordGateway.ts
+@@ -1,4 +1,4 @@
+-import type { WebSocketConstructor } from "effect/unstable/socket/Socket"
++import type { WebSocketConstructor } from "effect/socket/Socket"
+ import type { DiscordConfig } from "./DiscordConfig.ts"
+ import type { DiscordWSCodec } from "./DiscordGateway/DiscordWS.ts"
+ import type { Messsaging } from "./DiscordGateway/Messaging.ts"
+@@ -12,7 +12,7 @@ import type * as Discord from "./types.ts"
+ import * as Effect from "effect/Effect"
+ import * as Layer from "effect/Layer"
+ import type * as Stream from "effect/Stream"
+-import type { HttpClient } from "effect/unstable/http/HttpClient"
++import type { HttpClient } from "effect/http/HttpClient"
+ import * as Context from "effect/Context"
+ 
+ export const TypeId = Symbol.for("dfx/DiscordGateway")
+diff --git a/src/DiscordREST/Generated.ts b/src/DiscordREST/Generated.ts
+index d7e17ed7ed1987baa848a495923159bbe5bbabce..882891f5caa67e676ed72d7c338d088b4b7609fe 100644
+--- a/src/DiscordREST/Generated.ts
++++ b/src/DiscordREST/Generated.ts
+@@ -1,8 +1,8 @@
+ // oxlint-disable no-shadow
+-import type * as HttpClient from "effect/unstable/http/HttpClient"
+-import * as HttpClientError from "effect/unstable/http/HttpClientError"
+-import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest"
+-import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse"
++import type * as HttpClient from "effect/http/HttpClient"
++import * as HttpClientError from "effect/http/HttpClientError"
++import * as HttpClientRequest from "effect/http/HttpClientRequest"
++import * as HttpClientResponse from "effect/http/HttpClientResponse"
+ import * as Data from "effect/Data"
+ import * as Effect from "effect/Effect"
+ 
+diff --git a/src/DiscordREST/utils.ts b/src/DiscordREST/utils.ts
+index 43458831554477e4cef00df8f282ffce5cad3cb7..76f8dcc4f4bf62d02601017b5bb848bc41a15dd8 100644
+--- a/src/DiscordREST/utils.ts
++++ b/src/DiscordREST/utils.ts
+@@ -1,7 +1,7 @@
+ import * as Duration from "effect/Duration"
+ import { pipe } from "effect/Function"
+ import * as Option from "effect/Option"
+-import * as Headers from "effect/unstable/http/Headers"
++import * as Headers from "effect/http/Headers"
+ 
+ const majorResources = ["channels", "guilds", "webhooks"] as const
+ 
+diff --git a/src/DiscordREST.ts b/src/DiscordREST.ts
+index 85f234ea6b6d1bb94cc17fb0b7672f9229c8a6c5..56823187b07ca835633d30c641ba0bff8d0f00ce 100644
+--- a/src/DiscordREST.ts
++++ b/src/DiscordREST.ts
+@@ -16,11 +16,11 @@ import * as Layer from "effect/Layer"
+ import * as Option from "effect/Option"
+ import * as Redacted from "effect/Redacted"
+ import * as Context from "effect/Context"
+-import * as HttpBody from "effect/unstable/http/HttpBody"
+-import * as HttpClient from "effect/unstable/http/HttpClient"
+-import type { HttpClientError } from "effect/unstable/http/HttpClientError"
+-import * as HttpRequest from "effect/unstable/http/HttpClientRequest"
+-import type * as HttpResponse from "effect/unstable/http/HttpClientResponse"
++import * as HttpBody from "effect/http/HttpBody"
++import * as HttpClient from "effect/http/HttpClient"
++import type { HttpClientError } from "effect/http/HttpClientError"
++import * as HttpRequest from "effect/http/HttpClientRequest"
++import type * as HttpResponse from "effect/http/HttpClientResponse"
+ 
+ const make = Effect.gen(function* () {
+   const { rest, token } = yield* DiscordConfig
+diff --git a/src/gateway.ts b/src/gateway.ts
+index 88a15af4be81388ee29da32e633936c17a3fd4b6..81724888d25cbf1dcea55fef5712d32e8ceaef57 100644
+--- a/src/gateway.ts
++++ b/src/gateway.ts
+@@ -15,9 +15,9 @@ import { InteractionsRegistryLive } from "./Interactions/gateway.ts"
+ import type { RateLimiter } from "./RateLimit.ts"
+ import { MemoryRateLimitStoreLive, RateLimiterLive } from "./RateLimit.ts"
+ import * as Layer from "effect/Layer"
+-import type * as HttpClient from "effect/unstable/http/HttpClient"
++import type * as HttpClient from "effect/http/HttpClient"
+ import type { DiscordConfig } from "./DiscordConfig.ts"
+-import type { WebSocketConstructor } from "effect/unstable/socket/Socket"
++import type { WebSocketConstructor } from "effect/socket/Socket"
+ 
+ export { DiscordGateway, DiscordGatewayLive } from "./DiscordGateway.ts"
+ 
+diff --git a/src/index.ts b/src/index.ts
+index 84d1f6dec9c1c277e1ce995004752089ebd19b40..e72a15f30181111de4063c9f4dba88eb95bb4741 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,4 +1,4 @@
+-import type { HttpClient } from "effect/unstable/http/HttpClient"
++import type { HttpClient } from "effect/http/HttpClient"
+ import * as Cache from "./Cache.ts"
+ import * as DiscordConfig from "./DiscordConfig.ts"
+ import type { DiscordREST } from "./DiscordREST.ts"
+diff --git a/src/webhooks.ts b/src/webhooks.ts
+index a0ec7d39e6a54437087d301c4bfc47714ef29c3f..e182467f73c7eb7c625f4f61f936fc5a5414e314 100644
+--- a/src/webhooks.ts
++++ b/src/webhooks.ts
+@@ -1,4 +1,4 @@
+-import type { HttpClient } from "effect/unstable/http/HttpClient"
++import type { HttpClient } from "effect/http/HttpClient"
+ import type { DiscordConfig } from "./DiscordConfig.ts"
+ import type { DiscordREST } from "./DiscordREST.ts"
+ import { DiscordRESTLive } from "./DiscordREST.ts"

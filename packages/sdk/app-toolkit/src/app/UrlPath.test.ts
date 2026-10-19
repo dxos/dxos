@@ -225,6 +225,34 @@ describe('UrlPath', () => {
     });
   });
 
+  describe('readReferences', () => {
+    const SPACE_A = `B${'A'.repeat(32)}`;
+    const SPACE_B = `B${'B'.repeat(32)}`;
+    const OBJECT_1 = '01JGDXC0000000000000000001';
+    const OBJECT_2 = '01JGDXC0000000000000000002';
+
+    test('reads object ids under their keys, across workspace rebases and tail-joined ids', ({ expect }) => {
+      const references = UrlPath.readReferences(
+        `/w/${SPACE_A}/doc/${OBJECT_1}/comments/w/${SPACE_B}/db/contact+${OBJECT_2}`,
+      );
+      expect(references).toEqual([
+        { key: 'doc', entityId: OBJECT_1, workspace: SPACE_A },
+        { key: 'db', entityId: OBJECT_2, workspace: SPACE_B },
+      ]);
+    });
+
+    test('a tail names its ancestors first, so the last id is the object', ({ expect }) => {
+      expect(UrlPath.readReferences(`/w/${SPACE_A}/message/${OBJECT_1}+${OBJECT_2}`)).toEqual([
+        { key: 'message', entityId: OBJECT_2, workspace: SPACE_A },
+      ]);
+    });
+
+    test('none for a pathname outside the grammar', ({ expect }) => {
+      expect(UrlPath.readReferences(`/doc/${OBJECT_1}`)).toEqual([]);
+      expect(UrlPath.readReferences('/w/%')).toEqual([]);
+    });
+  });
+
   describe('isReservedKey', () => {
     test('does not reserve w (it is a declared anchor key)', ({ expect }) => {
       expect(UrlPath.isReservedKey('w')).toBe(false);
@@ -244,6 +272,29 @@ describe('UrlPath', () => {
     test('does not reserve an ordinary key', ({ expect }) => {
       expect(UrlPath.isReservedKey('doc')).toBe(false);
       expect(UrlPath.isReservedKey('collection')).toBe(false);
+    });
+  });
+
+  describe('withTitle', () => {
+    const base = new URL('https://composer.space/w/space/doc/1?debug=1');
+
+    test('appends the title, keeping other parameters', ({ expect }) => {
+      const url = UrlPath.withTitle(base, '  Quarterly   plan ');
+      expect(url.searchParams.get(UrlPath.TITLE_PARAM)).toBe('Quarterly plan');
+      expect(url.searchParams.get('debug')).toBe('1');
+      expect(base.searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
+    });
+
+    test('truncates a long title with an ellipsis', ({ expect }) => {
+      const title = UrlPath.withTitle(base, 'x'.repeat(200)).searchParams.get(UrlPath.TITLE_PARAM);
+      expect([...(title ?? '')].length).toBe(UrlPath.MAX_TITLE_LENGTH);
+      expect(title?.endsWith('…')).toBe(true);
+    });
+
+    test('removes the parameter when there is no title', ({ expect }) => {
+      const titled = UrlPath.withTitle(base, 'Plan');
+      expect(UrlPath.withTitle(titled, '   ').searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
+      expect(UrlPath.withTitle(titled, undefined).searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
     });
   });
 });

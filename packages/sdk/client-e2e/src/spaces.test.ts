@@ -27,7 +27,7 @@ import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -850,6 +850,68 @@ describe('Spaces', () => {
     const messages = await importedSpace.db.query(Query.type(TestSchema$.Expando).from(importedFeed)).run();
     expect(messages.length).toEqual(2);
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
+  });
+
+  test('a feed exported alone merges into an existing space, once', { timeout: 10_000 }, async () => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const source = await client1.spaces.create();
+    const document = source.db.add(createDocument());
+    const facts = source.db.add(Feed.make({ name: 'facts' }));
+    const other = source.db.add(Feed.make({ name: 'other' }));
+    await source.db.flush();
+    await source.db.appendToFeed(facts, [
+      Obj.make(TestSchema$.Expando, { name: 'fact-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'fact-2' }),
+    ]);
+    await source.db.appendToFeed(other, [Obj.make(TestSchema$.Expando, { name: 'not-exported' })]);
+
+    // A listed id that names no feed does not pull its object in.
+    const archive = await source.internal.export({ feedIds: [facts.id, document.id] });
+    expect(archive.format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
+    const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+    expect(parsed.objects.map((obj: { id: string }) => obj.id)).toEqual([facts.id]);
+
+    const target = await client2.spaces.create();
+    const imported = await client2.spaces.import(archive, { into: target.id });
+    expect(imported.id).toEqual(target.id);
+    // Importing the same archive again adds nothing.
+    await client2.spaces.import(archive, { into: target.id });
+
+    // The import writes on the host; the client sees it once the space's documents replicate.
+    await expect
+      .poll(async () => (await target.db.query(Filter.type(Feed.Feed)).run()).map((feed) => feed.name))
+      .toEqual(['facts']);
+    const feeds = await target.db.query(Filter.type(Feed.Feed)).run();
+    await expect
+      .poll(async () =>
+        (await target.db.query(Query.type(TestSchema$.Expando).from(feeds[0])).run())
+          .map((item: any) => item.name)
+          .sort(),
+      )
+      .toEqual(['fact-1', 'fact-2']);
+  });
+
+  test('merging a feed into the space that already holds it adds no duplicate', { timeout: 10_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    const facts = space.db.add(Feed.make({ name: 'facts' }));
+    await space.db.flush();
+    await space.db.appendToFeed(facts, [Obj.make(TestSchema$.Expando, { name: 'fact-1' })]);
+
+    const archive = await space.internal.export({ feedIds: [facts.id] });
+    await client.spaces.import(archive, { into: space.id });
+    await space.db.flush();
+
+    // The space's own export lists every object structure it stores, so a second copy of the feed would show twice.
+    const stored = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
+    const { objects } = JSON.parse(new TextDecoder().decode(stored.contents));
+    expect(objects.filter((obj: { id: string }) => obj.id === facts.id)).toHaveLength(1);
+    const items = await space.db.query(Query.type(TestSchema$.Expando).from(facts)).run();
+    expect(items.map((item: any) => item.name)).toEqual(['fact-1']);
   });
 
   test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {

@@ -1,150 +1,80 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-// `Dialog` and `AlertDialog` are one implementation over Ark's dialog machine, which owns focus
-// trapping, scroll locking, dismissal and the `aria-labelledby`/`aria-describedby` wiring (present
-// only when a `Title`/`Description` is rendered). DXOS owns the layout parts — `Overlay` as the
-// centring host the content nests in, `Header`/`Body`/`ActionBar` on the Column grid — and the
-// `data-dx-autofocus` contract.
+// @import-as-namespace
 
-import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
-import { ark } from '@ark-ui/react/factory';
+import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithRef, type FC, type ReactNode, forwardRef, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+  type RefObject,
+  createContext,
+  forwardRef,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
-import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
-import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme';
-import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
-import { type DialogSize } from '../../theme/index.ts';
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
-import {
-  type DialogContentHandlers,
-  DialogProvider,
-  OverlayLayoutProvider,
-  useDialogContext,
-  useOverlayLayoutContext,
-} from './DialogContext.ts';
-
-/**
- * Marks the control a dialog wants focused when it opens, overriding the default of the action
- * bar's first control.
- */
-export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-dx-autofocus';
-
-/** The class `Dialog.ActionBar` renders with, which is how the root finds it at open. */
-const ACTION_BAR_CLASS = 'dx-dialog__actionbar';
-
-const TABBABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container, type ContainerProps, DefaultGutterProvider } from '../Container/Container.tsx';
+import { Group } from '../Group/Group.tsx';
+import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 
 /**
- * What takes focus when a dialog opens: the marked control, else the action bar's first control
- * — the header's close button comes first in the DOM, and a reflexive Enter should reach the
- * dialog's own action, not dismiss it — else the content itself when auto focus was vetoed, else
- * the machine's first-tabbable pass.
+ * Marks the control a dialog focuses when it opens (the current constant's role); zag's own initial-focus lookup reads
+ * it, ahead of the first tabbable control.
  */
-const getInitialFocusEl = (content: HTMLElement | null, vetoed: boolean): HTMLElement | null => {
-  if (!content) {
-    return null;
-  }
-  const marked = content.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
-  if (marked) {
-    return marked;
-  }
-  if (vetoed) {
-    return content;
-  }
-  return content.querySelector<HTMLElement>(`.${ACTION_BAR_CLASS} :is(${TABBABLE})`);
-};
-
-/** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
-const prevents = (handler: ((event: Event) => void) | undefined) => {
-  if (!handler) {
-    return false;
-  }
-  const event = new Event('autofocus', { cancelable: true });
-  handler(event);
-  return event.defaultPrevented;
-};
+export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-autofocus';
 
 //
 // Root
 //
 
-type DialogRootProps = {
-  children?: ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** A modal dialog traps focus, locks scroll and hides the page from assistive technology. */
-  modal?: boolean;
+type DialogPlacement = 'start' | 'center' | 'end';
+
+type DialogRootProps = DialogPrimitive.RootProps & {
+  /**
+   * Where the Content sits unless it says otherwise: a host that opens dialogs it does not render (a layout showing
+   * a surface's Content) places them here.
+   */
+  placement?: DialogPlacement;
 };
 
-type DialogRootImplProps = DialogRootProps & {
-  role: 'dialog' | 'alertdialog';
-};
+/** Lets the Content keep the dialog open on an outside click, since a surface often renders the Content alone. */
+const OutsideDismissContext = createContext<((dismissable: boolean) => void) | undefined>(undefined);
 
-const DialogRootImpl = ({
-  children,
-  open: openProp,
-  defaultOpen,
-  onOpenChange,
-  modal = true,
-  role,
-}: DialogRootImplProps) => {
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: onOpenChange,
-  });
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const handlersRef = useRef<DialogContentHandlers>({});
+const PlacementContext = createContext<DialogPlacement | undefined>(undefined);
 
-  // The content vetoes its own auto focus with `preventDefault()`, asked at render so the machine
-  // reads the answer when it opens.
-  const openAutoFocusVetoed = prevents(handlersRef.current.onOpenAutoFocus);
-  const closeAutoFocusVetoed = prevents(handlersRef.current.onCloseAutoFocus);
-
-  const dialog = useDialog({
-    open,
-    onOpenChange: ({ open: next }) => setOpen(next),
-    role,
-    modal,
-    trapFocus: modal,
-    preventScroll: modal,
-    restoreFocus: !closeAutoFocusVetoed,
-    // An alert demands an answer; a click beside it is not one.
-    closeOnInteractOutside: role === 'dialog',
-    initialFocusEl: () => getInitialFocusEl(contentRef.current, openAutoFocusVetoed),
-    onInteractOutside: (event) => handlersRef.current.onInteractOutside?.(event),
-    onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
-    onFocusOutside: (event) => handlersRef.current.onFocusOutside?.(event),
-    onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
-  });
-
-  const context = useMemo(
-    () => ({ open, modal, onOpenChange: setOpen, contentRef, handlersRef }),
-    [open, modal, setOpen],
-  );
-
+/** Ark dialog; content mounts on first open and unmounts on close unless the caller opts out. */
+const DialogRoot = ({
+  lazyMount = true,
+  unmountOnExit = true,
+  closeOnInteractOutside = true,
+  placement,
+  ...props
+}: DialogRootProps) => {
+  const [contentDismissable, setContentDismissable] = useState(true);
   return (
-    <ElevationProvider elevation='dialog'>
-      {/* Closed content is not in the DOM at all. */}
-      <DialogPrimitive.RootProvider value={dialog} lazyMount unmountOnExit>
-        <DialogProvider {...context}>{children}</DialogProvider>
-      </DialogPrimitive.RootProvider>
-    </ElevationProvider>
+    <PlacementContext.Provider value={placement}>
+      <OutsideDismissContext.Provider value={setContentDismissable}>
+        <DialogPrimitive.Root
+          {...props}
+          closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
+          lazyMount={lazyMount}
+          unmountOnExit={unmountOnExit}
+        />
+      </OutsideDismissContext.Provider>
+    </PlacementContext.Provider>
   );
 };
-
-const DialogRoot: FC<DialogRootProps> = (props) => <DialogRootImpl {...props} role='dialog' />;
 
 DialogRoot.displayName = 'Dialog.Root';
 
@@ -152,212 +82,118 @@ DialogRoot.displayName = 'Dialog.Root';
 // Trigger
 //
 
-type DialogTriggerProps = ComponentPropsWithRef<typeof DialogPrimitive.Trigger>;
+type DialogTriggerProps = DialogPrimitive.TriggerProps;
 
-const DialogTrigger = DialogPrimitive.Trigger;
+/** Use `asChild` to open the dialog from a `Button`. */
+const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>((props, forwardedRef) => (
+  <DialogPrimitive.Trigger {...props} ref={forwardedRef} />
+));
 
-//
-// Portal
-//
-
-type DialogPortalProps = {
-  children?: ReactNode;
-  /** Specify a container element to portal the content into. */
-  container?: HTMLElement | null;
-};
-
-const DialogPortal = ({ children, container }: DialogPortalProps) => {
-  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
-  return <Portal container={containerRef}>{children}</Portal>;
-};
-
-DialogPortal.displayName = 'Dialog.Portal';
-
-//
-// Overlay
-//
-
-const DIALOG_OVERLAY_NAME = 'Dialog.Overlay';
-
-type DialogOverlayProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Backdrop>> & {
-  blockAlign?: 'center' | 'start' | 'end';
-};
-
-/**
- * The scrim, which is also where the content sits: consumers nest `Content` inside `Overlay`, so
- * the backdrop doubles as the centring host rather than Ark's separate `Positioner`.
- */
-const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
-  ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DialogPrimitive.Backdrop
-        {...props}
-        data-block-align={blockAlign}
-        className={tx('dialog.overlay', {}, classNames)}
-        ref={forwardedRef}
-      >
-        <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
-      </DialogPrimitive.Backdrop>
-    );
-  },
-);
-
-DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
+DialogTrigger.displayName = 'Dialog.Trigger';
 
 //
 // Content
 //
 
-const DIALOG_CONTENT_NAME = 'Dialog.Content';
+type DialogContentProps = ThemedClassName<DialogPrimitive.ContentProps> & {
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
+  size?: Size;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
+  /**
+   * `end` docks the dialog at the viewport's block end (e.g. a chat panel) and `start` hangs it from the top (e.g. a
+   * picker whose list grows downward) instead of centring it; the Root's `placement` otherwise.
+   */
+  placement?: DialogPlacement;
+  /**
+   * `false` drops the scrim and lets pointer events through around the dialog, for a non-modal (`modal={false}`)
+   * dialog that leaves the page usable.
+   */
+  scrim?: boolean;
+  /** `false` keeps the dialog open on a click outside, e.g. while it holds unsaved input; Escape still closes it. */
+  closeOnInteractOutside?: boolean;
+};
 
-type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> &
-  DialogContentHandlers & {
-    size?: DialogSize;
-    inOverlayLayout?: boolean;
-    /** Material-style elevation, 0–5, onto the surface ladder; a dialog is `overlay` (4) by default. */
-    elevation?: ElevationLevel;
-  };
-
+/** Portalled surface at `level='raised'` over a scrim, centred in the viewport: a column of Header, Body and Footer. */
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   (
-    {
-      classNames,
-      children,
-      size = 'sm',
-      inOverlayLayout: propsInOverlayLayout,
-      elevation,
-      onOpenAutoFocus,
-      onCloseAutoFocus,
-      onInteractOutside,
-      onPointerDownOutside,
-      onFocusOutside,
-      onEscapeKeyDown,
-      ...props
-    },
+    { classNames, size, container, placement: placementProp, scrim = true, closeOnInteractOutside, children, ...props },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
-    const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
-    const { contentRef, handlersRef } = useDialogContext(DIALOG_CONTENT_NAME);
-    // The handlers are read at event time; nothing re-renders on their account.
-    handlersRef.current = {
-      onOpenAutoFocus,
-      onCloseAutoFocus,
-      onInteractOutside,
-      onPointerDownOutside,
-      onFocusOutside,
-      onEscapeKeyDown,
-    };
-
+    const dialog = useDialogContext();
+    const rootPlacement = useContext(PlacementContext);
+    const placement = placementProp ?? rootPlacement ?? 'center';
+    const setDismissable = useContext(OutsideDismissContext);
+    useEffect(() => {
+      if (closeOnInteractOutside !== false || !setDismissable) {
+        return;
+      }
+      setDismissable(false);
+      return () => setDismissable(true);
+    }, [closeOnInteractOutside, setDismissable]);
+    const dialogSize = usePopupSize(size, dialog.open, [dialog.getTriggerProps().id], 'md');
     return (
-      <DialogPrimitive.Content
-        {...props}
-        {...elevationAttrs(elevation)}
-        className={tx(
-          'dialog.content',
-          { size, inOverlayLayout: propsInOverlayLayout || inOverlayLayout, surface: elevationSurface(elevation) },
-          classNames,
-        )}
-        ref={useComposedRefs(forwardedRef, contentRef)}
-      >
-        <Column.Root classNames='dx-expand' gutter='md'>
-          {children}
-        </Column.Root>
-      </DialogPrimitive.Content>
+      <Portal container={container}>
+        {scrim && <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />}
+        <DialogPrimitive.Positioner
+          className={recipes.dialogPositioner()}
+          data-placement={placement}
+          data-scrim={scrim ? undefined : 'none'}
+        >
+          <DialogPrimitive.Content
+            {...props}
+            data-surface='raised'
+            data-size={dialogSize}
+            className={mx(recipes.dialogContent(), classNames)}
+            ref={forwardedRef}
+          >
+            {children}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Positioner>
+      </Portal>
     );
   },
 );
 
-DialogContent.displayName = DIALOG_CONTENT_NAME;
+DialogContent.displayName = 'Dialog.Content';
 
 //
 // Header
 //
 
-type DialogHeaderProps = SlottableProps;
+type DialogHeaderProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const { tx } = useThemeContext();
-  return (
-    <ark.div asChild={asChild} {...rest} className={tx('dialog.header', {}, className)} ref={forwardedRef}>
-      {children}
-    </ark.div>
-  );
-});
+/** A block row holding the Title and an optional trailing CloseTrigger. */
+const DialogHeader = forwardRef<HTMLDivElement, DialogHeaderProps>(({ classNames, ...props }, forwardedRef) => (
+  <div
+    {...props}
+    data-scope='dialog'
+    data-part='header'
+    className={mx(recipes.dialogHeader(), classNames)}
+    ref={forwardedRef}
+  />
+));
 
 DialogHeader.displayName = 'Dialog.Header';
-
-//
-// ActionIconButton
-//
-
-type DialogActionIconButtonAction = 'close' | 'delete';
-
-type DialogActionIconButtonProps = { action: DialogActionIconButtonAction; label?: string };
-
-const DIALOG_ACTION_ICONS: Record<DialogActionIconButtonAction, string> = {
-  close: 'ph--x--regular',
-  delete: 'ph--trash--regular',
-};
-
-const DIALOG_ACTION_LABEL_KEYS: Record<DialogActionIconButtonAction, string> = {
-  // Preserves the legacy `close-dialog.label` translation key for backward compat.
-  close: 'close-dialog.label',
-  delete: 'toolbar-delete.label',
-};
-
-const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconButtonProps>(
-  ({ action, label, ...props }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
-    return (
-      <IconButton
-        {...props}
-        label={label ?? t(DIALOG_ACTION_LABEL_KEYS[action])}
-        icon={DIALOG_ACTION_ICONS[action]}
-        iconOnly
-        size={4}
-        variant='ghost'
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-DialogActionIconButton.displayName = 'Dialog.ActionIconButton';
-
-//
-// Body
-//
-
-type DialogBodyProps = SlottableProps;
-
-const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const { tx } = useThemeContext();
-  return (
-    <ark.div asChild={asChild} {...rest} className={tx('dialog.body', {}, className)} ref={forwardedRef}>
-      {children}
-    </ark.div>
-  );
-});
-
-DialogBody.displayName = 'Dialog.Body';
 
 //
 // Title
 //
 
-type DialogTitleProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Title>> & { srOnly?: boolean };
+type DialogTitleProps = ThemedClassName<DialogPrimitive.TitleProps> & {
+  /** Names the dialog for assistive tech without showing a heading. */
+  srOnly?: boolean;
+};
 
 const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <DialogPrimitive.Title {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
-    );
-  },
+  ({ classNames, srOnly, ...props }, forwardedRef) => (
+    <DialogPrimitive.Title
+      {...props}
+      data-sr-only={srOnly ? '' : undefined}
+      className={mx(recipes.dialogTitle(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
 );
 
 DialogTitle.displayName = 'Dialog.Title';
@@ -366,85 +202,126 @@ DialogTitle.displayName = 'Dialog.Title';
 // Description
 //
 
-type DialogDescriptionProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Description>> & {
+type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DescriptionProps> & {
+  /** Describes the dialog for assistive tech without showing the text. */
   srOnly?: boolean;
 };
 
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
-  ({ classNames, srOnly, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      // A paragraph; Ark's default is a div.
-      <DialogPrimitive.Description asChild {...props}>
-        <p className={tx('dialog.description', { srOnly }, classNames)} ref={forwardedRef}>
-          {children}
-        </p>
-      </DialogPrimitive.Description>
-    );
-  },
+  ({ classNames, srOnly, ...props }, forwardedRef) => (
+    <DialogPrimitive.Description
+      {...props}
+      data-sr-only={srOnly ? '' : undefined}
+      className={mx(recipes.dialogDescription(), classNames)}
+      ref={forwardedRef}
+    />
+  ),
 );
 
 DialogDescription.displayName = 'Dialog.Description';
 
 //
-// ActionBar
+// CloseTrigger
 //
 
-type DialogActionBarProps = SlottableProps;
-
-const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className: classNames, ...rest } = composableProps(props);
-  const { tx } = useThemeContext();
-  return (
-    <ark.div asChild={asChild} {...rest} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-      {children}
-    </ark.div>
-  );
-});
-
-DialogActionBar.displayName = 'Dialog.ActionBar';
-
-//
-// Close
-//
-
-type DialogCloseProps = ComponentPropsWithRef<typeof DialogPrimitive.CloseTrigger>;
-
-const DialogClose = DialogPrimitive.CloseTrigger;
-
-//
-// Dialog
-//
-
-export const Dialog = {
-  Root: DialogRoot,
-  Trigger: DialogTrigger,
-  Portal: DialogPortal,
-  Overlay: DialogOverlay,
-  Content: DialogContent,
-  Header: DialogHeader,
-  Body: DialogBody,
-  Title: DialogTitle,
-  Description: DialogDescription,
-  ActionBar: DialogActionBar,
-  Close: DialogClose,
-  ActionIconButton: DialogActionIconButton,
+type DialogCloseTriggerProps = Omit<DialogPrimitive.CloseTriggerProps, 'children'> & {
+  /** With `asChild`, the child (e.g. a Cancel `Button`) closes the dialog instead of the default icon button. */
+  children?: ReactNode;
+  icon?: string;
+  label?: string;
 };
 
-export { DialogRootImpl };
+const DialogCloseTrigger = forwardRef<HTMLButtonElement, DialogCloseTriggerProps>(
+  ({ asChild, children, icon = 'ph--x--regular', label = 'Close', ...props }, forwardedRef) =>
+    asChild ? (
+      <DialogPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
+        {children}
+      </DialogPrimitive.CloseTrigger>
+    ) : (
+      <DialogPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
+        <Button icon={icon} label={label} iconOnly />
+      </DialogPrimitive.CloseTrigger>
+    ),
+);
 
+DialogCloseTrigger.displayName = 'Dialog.CloseTrigger';
+
+//
+// Body
+//
+
+type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> &
+  Pick<ContainerProps, 'gap'> & {
+    /** `center` holds the content in the middle of the Body, both ways, rather than at its start. */
+    align?: 'start' | 'center';
+    children?: ReactNode;
+  };
+
+/**
+ * Composed scroll (decision 5): a `gutter='md'` Container as the viewport, so the thumb sits in the end gutter; `gap`
+ * spaces its rows, since they are the Container's own items.
+ * The element carries ScrollArea's `data-scope`, since parts cannot rescope a composed child (finding 10).
+ */
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(
+  ({ classNames, gap, align, children, ...props }, forwardedRef) => (
+    <ScrollArea.Root {...props} data-align={align} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
+      <ScrollArea.Viewport asChild>
+        <Container gutter='md' gap={gap}>
+          {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+          <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+        </Container>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  ),
+);
+
+DialogBody.displayName = 'Dialog.Body';
+
+//
+// Footer
+//
+
+type DialogFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+
+/**
+ * An end-justified `Group` of actions; the child div wins the merge, so the part keeps the dialog scope. The
+ * actions stay regular-sized in a small dialog, since they are the dialog's primary targets.
+ */
+const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames, ...props }, forwardedRef) => (
+  <Group asChild justify='end'>
+    <div
+      data-size='md'
+      {...props}
+      data-scope='dialog'
+      data-part='footer'
+      className={mx(recipes.dialogFooter(), classNames)}
+      ref={forwardedRef}
+    />
+  </Group>
+));
+
+DialogFooter.displayName = 'Dialog.Footer';
 export type {
-  DialogActionBarProps,
-  DialogActionIconButtonAction,
-  DialogActionIconButtonProps,
-  DialogBodyProps,
-  DialogCloseProps,
-  DialogContentProps,
-  DialogDescriptionProps,
-  DialogHeaderProps,
-  DialogOverlayProps,
-  DialogPortalProps,
-  DialogRootProps,
-  DialogTitleProps,
-  DialogTriggerProps,
+  DialogBodyProps as BodyProps,
+  DialogCloseTriggerProps as CloseTriggerProps,
+  DialogContentProps as ContentProps,
+  DialogDescriptionProps as DescriptionProps,
+  DialogFooterProps as FooterProps,
+  DialogHeaderProps as HeaderProps,
+  DialogPlacement as Placement,
+  DialogRootProps as RootProps,
+  DialogTitleProps as TitleProps,
+  DialogTriggerProps as TriggerProps,
+};
+
+export {
+  DialogBody as Body,
+  DialogCloseTrigger as CloseTrigger,
+  DialogContent as Content,
+  DialogDescription as Description,
+  DialogFooter as Footer,
+  DialogHeader as Header,
+  DialogRoot as Root,
+  DialogTitle as Title,
+  DialogTrigger as Trigger,
 };

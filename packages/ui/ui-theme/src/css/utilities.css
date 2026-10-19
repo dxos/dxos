@@ -72,13 +72,13 @@
  *
  * ## Picking one
  *
- * | class           | expands to                | use when                                       |
- * | --------------- | ------------------------- | ---------------------------------------------- |
- * | `dx-fill`       | `h-full w-full`           | parent has a definite size                     |
- * | `dx-shrink`     | `min-h-0 min-w-0`         | must not shove siblings, but must not grow       |
- * | `dx-grow`       | `flex-1 dx-shrink`        | flex/grid child taking the remainder            |
- * | `dx-expand`     | `dx-grow dx-fill`         | parent's display type is unknown or varies      |
- * | `dx-fullscreen` | `absolute inset-0`        | pinned to a positioned ancestor                 |
+ * | class       | expands to                | use when                                       |
+ * | ----------- | ------------------------- | ---------------------------------------------- |
+ * | `dx-fill`   | `h-full w-full`           | parent has a definite size                     |
+ * | `dx-shrink` | `min-h-0 min-w-0`         | must not shove siblings, but must not grow       |
+ * | `dx-grow`   | `flex-1 dx-shrink`        | flex/grid child taking the remainder            |
+ * | `dx-expand` | `dx-grow dx-fill`         | parent's display type is unknown or varies      |
+ * | `dx-cover`  | `absolute inset-0`        | pinned to a positioned ancestor                 |
  */
 
 /**
@@ -89,7 +89,7 @@
  * so it sizes to its intrinsic dimensions — a canvas to its DPI-scaled render buffer — and needs
  * `dx-fill` alongside.
  */
-@utility dx-fullscreen {
+@utility dx-cover {
   @apply absolute inset-0;
 }
 

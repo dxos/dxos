@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
 import { pullRequestFailureKey } from './failure.ts';

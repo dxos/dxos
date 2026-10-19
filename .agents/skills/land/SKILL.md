@@ -29,7 +29,8 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 - Current state (open/merged/closed), draft status, merge-ability.
 - Title, body, labels.
 
-If the PR is already merged or closed, tell the user and stop.
+If the PR is already merged or closed, tell the user and stop. If it is a draft,
+run `gh pr ready <number>`: CI skips drafts and the merge queue rejects them.
 
 Check whether the PR belongs to a stack (GitHub native stacked PRs): the stack
 map on the PR page is the test — `baseRefName` ≠ `main` is only a hint, and a
@@ -54,24 +55,20 @@ Confirm the worktree is on the right branch with `git branch --show-current`.
 
 ## Step 4 — Sync with base branch
 
-Keep the branch up to date with `main` (or the base branch):
+Merge `main` (or the base branch) in only when the PR conflicts with it (`mergeable` is
+`CONFLICTING`) or a failure traces to a change on `main`. The merge queue tests the PR on top of
+`main`, and every push to a ready PR reruns the full Check suite, so a clean branch stays as it is.
 
 ```bash
 git fetch origin main
 git merge origin/main --no-edit
 ```
 
-If there are merge conflicts, resolve them. After resolving:
+Resolve the conflicts, then commit and push together with any CI fixes from Step 6:
 
 ```bash
 git add -A
 git commit -m "chore: merge main into branch"
-git push -u origin <headRefName>
-```
-
-If `git merge` is clean, push only if there are new commits:
-
-```bash
 git push -u origin <headRefName>
 ```
 
@@ -114,7 +111,8 @@ For each failing check:
    - Format: `pnpm format`
 3. Apply the fix at the **root cause** — no casts, no `// @ts-ignore`, no `--no-verify`.
 4. Run the specific check locally to confirm the fix.
-5. Commit with a `scope: description` message and push.
+5. Commit with a `scope: description` message. Push once, after every failing check has a fix:
+   each push reruns the full suite.
 
 **Prohibited shortcuts:**
 
@@ -152,7 +150,17 @@ stays as it is. Rules for the body and bump level:
 
 ## Step 8 — Enable auto-merge (merge queue)
 
-Once all required checks pass and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
+Browser and storybook tests run only in the merge queue: the PR enters it with them skipped, and a
+failure there drops it again. Before queueing, run them for the projects the PR changed:
+
+```bash
+MOON_BASE=origin/main moon run :test-browser :test-storybook --affected
+```
+
+When the PR changes a shared UI package, whose dependents' stories that command leaves out, run every
+suite on the branch once in CI instead: `depot ci dispatch --workflow check.yml --ref <headRefName>`.
+
+Once all required checks pass, these tests pass, and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 
 ```
 mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
@@ -219,7 +227,10 @@ On each wakeup (task-completion notification for the sleep):
 2. **If merged**: print success, unsubscribe, stop.
 3. **If closed**: ask the user what happened.
 4. **If open and auto_merge is null** (was dequeued):
-   a. Sync with `main`:
+   a. Find out why. A failed merge-queue run is the usual cause: the browser and storybook tests
+   run only there. Read the failed `Check / …` run's logs (`depot-ci` skill), fix the
+   failure at its root, and push the fix before re-queueing; re-queueing an unfixed failure
+   just fails again. Then sync with `main`:
    ```bash
    git fetch origin main
    git merge origin/main --no-edit

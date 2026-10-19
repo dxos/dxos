@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type GetProfileUsageResponse } from '@dxos/protocols';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { useHubHttpClient } from '../../hooks/index.ts';
 import { UsageView, type UsageViewState } from './UsageView.tsx';
@@ -32,7 +32,7 @@ export const UsageContainer = () => {
   const [lastUpdated, setLastUpdated] = useState<number | undefined>();
   const [refreshCount, setRefreshCount] = useState(0);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!hubHttp) {
       setFetchState({ state: 'unavailable' });
       return;

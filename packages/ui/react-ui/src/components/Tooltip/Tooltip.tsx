@@ -1,333 +1,289 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-// One provider serves every trigger in the app: a single content node, positioned at whichever
-// trigger is active, on Ark's tooltip machine — which supports many triggers on one machine
-// (`triggerValue`, per-value trigger ids). The triggers are our own elements rather than Ark's
-// `Tooltip.Trigger`: Ark's subscribes every trigger to the machine (all re-render on hover) and stamps
-// the open tooltip's ARIA on all of them, where only the active trigger may carry it.
+// @import-as-namespace
 
-import { ark } from '@ark-ui/react/factory';
 import { Portal } from '@ark-ui/react/portal';
-import { Tooltip as TooltipPrimitive, type UseTooltipReturn, useTooltip } from '@ark-ui/react/tooltip';
+import { Tooltip as TooltipPrimitive, useTooltipContext } from '@ark-ui/react/tooltip';
 import React, {
   type ComponentPropsWithoutRef,
-  type ComponentRef,
-  type FC,
-  type FocusEvent,
-  type MouseEvent,
-  type PointerEvent,
   type ReactNode,
+  type RefObject,
+  createContext,
   forwardRef,
-  useCallback,
+  useContext,
   useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
-import { flushSync } from 'react-dom';
 
-import { useControllableState } from '@dxos/react-hooks';
+import { useComposedRefs } from '@dxos/react-hooks';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import {
-  DEFAULT_DELAY_DURATION,
-  TOOLTIP_NAME,
-  TooltipContextProvider,
-  type TooltipEntry,
-  type TooltipSide,
-  type TooltipStateAttribute,
-  useTooltipContext,
-} from './TooltipContext.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+
+/** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
+const POPUP_GUTTER = 2;
+
+/** Short enough to feel responsive, long enough that sweeping the pointer across a toolbar shows nothing. */
+const OPEN_DELAY = 600;
+
+type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
+
+/** The Root's `openDelay`, read by the Trigger, which runs the hover delay itself (DESIGN.md follow-up 33). */
+const OpenDelayContext = createContext(OPEN_DELAY);
 
 //
-// Provider
+// Root
 //
 
-type TooltipProviderProps = {
-  children?: ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /**
-   * The duration from when the pointer enters the trigger until the tooltip gets opened.
-   * @defaultValue 700
-   */
-  delayDuration?: number;
-  /**
-   * When `true`, trying to hover the content will result in the tooltip closing as the pointer leaves the trigger.
-   * @defaultValue false
-   */
-  disableHoverableContent?: boolean;
-  /**
-   * How much time a user has to enter another trigger without incurring a delay again. The machine
-   * keeps one global "instant" window of its own, so this only names the intent.
-   * @defaultValue 300
-   */
-  skipDelayDuration?: number;
-};
+type TooltipRootProps = TooltipPrimitive.RootProps;
 
-const TooltipProvider: FC<TooltipProviderProps> = ({
-  children,
-  open: openProp,
-  defaultOpen = false,
-  onOpenChange,
-  disableHoverableContent = false,
-  delayDuration = DEFAULT_DELAY_DURATION,
-}) => {
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: onOpenChange,
-  });
+/** Ark tooltip; content mounts on open and unmounts on close unless the caller opts out. */
+const TooltipRoot = ({
+  openDelay = OPEN_DELAY,
+  lazyMount = true,
+  unmountOnExit = true,
+  positioning,
+  ...props
+}: TooltipRootProps) => (
+  <OpenDelayContext.Provider value={openDelay}>
+    <TooltipPrimitive.Root
+      {...props}
+      openDelay={openDelay}
+      lazyMount={lazyMount}
+      unmountOnExit={unmountOnExit}
+      positioning={{ gutter: POPUP_GUTTER, ...positioning }}
+    />
+  </OpenDelayContext.Provider>
+);
 
-  // What each trigger shows, by its value; a change to the active entry re-renders the content.
-  const registry = useRef(new Map<string, TooltipEntry>());
-  const [, setRegistryVersion] = useState(0);
-  const activeValueRef = useRef<string | null>(null);
-  const contentId = useId();
-  // The machine copies `positioning` when it opens or switches trigger, so the side must be rendered before that event.
-  const [placement, setPlacement] = useState<TooltipSide>('top');
-  const placementRef = useRef(placement);
-  const prepareTrigger = useCallback((value: string) => {
-    const side = registry.current.get(value)?.side ?? 'top';
-    if (placementRef.current !== side) {
-      placementRef.current = side;
-      flushSync(() => setPlacement(side));
-    }
-  }, []);
-
-  const register = useCallback((value: string, entry: TooltipEntry) => {
-    registry.current.set(value, entry);
-    if (activeValueRef.current === value) {
-      setRegistryVersion((version) => version + 1);
-    }
-    return () => {
-      registry.current.delete(value);
-    };
-  }, []);
-
-  // Open with nothing to point at — `defaultOpen`, or `open` set before any trigger was hovered — the
-  // machine would show an empty tooltip off screen, and switching its trigger while open closes and
-  // reopens it. So the machine is held closed until it has a trigger: the first registered one is
-  // adopted below, after the triggers' layout effects have filled the registry. A hover sets the
-  // machine's trigger before it asks to open, and the ref sees that synchronously, so the hover path
-  // never passes through a closed render — which would close and reopen the tooltip it just showed.
-  const triggerValueRef = useRef<string | null>(null);
-  const [anchored, setAnchored] = useState(false);
-  const tooltip = useTooltip({
-    open: open && (anchored || triggerValueRef.current !== null),
-    onTriggerValueChange: ({ value }) => {
-      triggerValueRef.current = value;
-    },
-    onOpenChange: ({ open: next }) => setOpen(next),
-    openDelay: delayDuration,
-    interactive: !disableHoverableContent,
-    positioning: { placement },
-    // A trigger's DOM id is its value, which is how the machine finds the active one to position at.
-    ids: { content: contentId, trigger: (value) => value ?? '' },
-  });
-  const apiRef = useRef<UseTooltipReturn | null>(tooltip);
-  apiRef.current = tooltip;
-  activeValueRef.current = tooltip.triggerValue;
-
-  const triggerValue = tooltip.triggerValue;
-  useEffect(() => {
-    if (!open) {
-      setAnchored(false);
-      return;
-    }
-    if (anchored) {
-      return;
-    }
-    if (triggerValue) {
-      setAnchored(true);
-      return;
-    }
-    const first = registry.current.keys().next().value;
-    if (!first) {
-      return;
-    }
-    // The side is rendered before the trigger is adopted, so the machine opens with the right
-    // placement; a synchronous flush is not allowed from an effect, hence the second pass.
-    const side = registry.current.get(first)?.side ?? 'top';
-    if (placement !== side) {
-      placementRef.current = side;
-      setPlacement(side);
-      return;
-    }
-    apiRef.current?.setTriggerValue(first);
-    setAnchored(true);
-  }, [open, anchored, triggerValue, placement]);
-
-  const active = tooltip.triggerValue ? registry.current.get(tooltip.triggerValue) : undefined;
-
-  // The open trigger's side can change without an event to forward, so reposition in place. Only
-  // once there is an open trigger: before one is adopted below, this would keep resetting the side
-  // that adoption has just rendered.
-  const activeSide = active?.side ?? 'top';
-  useEffect(() => {
-    if (open && active && placementRef.current !== activeSide) {
-      placementRef.current = activeSide;
-      setPlacement(activeSide);
-      apiRef.current?.reposition({ placement: activeSide });
-    }
-  }, [open, active, activeSide]);
-
-  const stateAttribute: TooltipStateAttribute = open ? 'delayed-open' : 'closed';
-
-  // Applied to the element rather than rendered by `Tooltip.Trigger`, which reads only the stable
-  // context: these describe the one open tooltip, so only the active trigger may carry them.
-  useEffect(() => {
-    const trigger = tooltip.triggerValue ? document.getElementById(tooltip.triggerValue) : null;
-    if (!trigger) {
-      return;
-    }
-
-    // A trigger may already be described by something of its own, so merge rather than replace.
-    const describedBy = trigger.getAttribute('aria-describedby');
-    trigger.setAttribute('data-state', stateAttribute);
-    if (open) {
-      const ids = new Set(describedBy?.split(/\s+/).filter(Boolean));
-      ids.add(contentId);
-      trigger.setAttribute('aria-describedby', [...ids].join(' '));
-    }
-
-    return () => {
-      trigger.setAttribute('data-state', 'closed');
-      if (describedBy === null) {
-        trigger.removeAttribute('aria-describedby');
-      } else {
-        trigger.setAttribute('aria-describedby', describedBy);
-      }
-    };
-  }, [tooltip.triggerValue, open, stateAttribute, contentId]);
-
-  const context = useMemo(
-    () => ({
-      apiRef,
-      contentId,
-      register,
-      prepareTrigger,
-      onOpen: () => apiRef.current?.setOpen(true),
-      onClose: () => apiRef.current?.setOpen(false),
-    }),
-    [contentId, register, prepareTrigger],
-  );
-
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext();
-
-  return (
-    <TooltipContextProvider {...context}>
-      {children}
-      <TooltipPrimitive.RootProvider value={tooltip} lazyMount unmountOnExit>
-        <Portal>
-          <TooltipPrimitive.Positioner className={tx('tooltip.positioner', { elevation })}>
-            <TooltipPrimitive.Content className={tx('tooltip.content', { elevation })}>
-              {active?.content}
-              <TooltipPrimitive.Arrow className={tx('tooltip.arrow')}>
-                <TooltipPrimitive.ArrowTip />
-              </TooltipPrimitive.Arrow>
-            </TooltipPrimitive.Content>
-          </TooltipPrimitive.Positioner>
-        </Portal>
-      </TooltipPrimitive.RootProvider>
-    </TooltipContextProvider>
-  );
-};
-
-TooltipProvider.displayName = TOOLTIP_NAME;
+TooltipRoot.displayName = 'Tooltip.Root';
 
 //
 // Trigger
 //
 
-const TRIGGER_NAME = 'Tooltip.Trigger';
-
-type TooltipTriggerElement = ComponentRef<typeof ark.button>;
-type TooltipTriggerProps = Omit<ComponentPropsWithoutRef<typeof ark.button>, 'content'> & {
+type TooltipTriggerProps = Omit<TooltipPrimitive.TriggerProps, 'content'> & {
+  /** Shorthand, as on the current `Tooltip.Trigger`: the trigger brings its own Root and a Content showing this (any node, so it replaces the HTML `content` attribute). */
   content?: ReactNode;
+  /** With `content`, the side the tooltip opens on; below by default. */
   side?: TooltipSide;
-  /** Called as the pointer arrives; returning `false` keeps the tooltip closed for this hover. */
-  onInteract?: () => boolean | void;
-  /** Accepted for compatibility; the provider owns the delay. */
-  delayDuration?: number;
 };
 
-const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
+/**
+ * Use `asChild` to describe a `Button`. Opens on hover after the Root's delay and on keyboard
+ * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
+ * (DESIGN.md follow-up 33). With `content` it needs no Root or Content around it.
+ */
+const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
+  ({ content, side, ...props }, forwardedRef) =>
+    content === undefined ? (
+      <TooltipTriggerImpl {...props} ref={forwardedRef} />
+    ) : (
+      <TooltipRoot positioning={side ? { placement: side } : undefined}>
+        <TooltipTriggerImpl {...props} ref={forwardedRef} />
+        <TooltipContent>{content}</TooltipContent>
+      </TooltipRoot>
+    ),
+);
+
+TooltipTrigger.displayName = 'Tooltip.Trigger';
+
+const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.TriggerProps>(
   (
-    { onInteract, delayDuration: _delayDuration, side, content, id: idProp, asChild, ...triggerProps },
+    {
+      onBlur,
+      onFocus,
+      onKeyDown,
+      onPointerMove,
+      onPointerOver,
+      onPointerEnter,
+      onPointerLeave,
+      onPointerDown,
+      ...props
+    },
     forwardedRef,
   ) => {
-    const { apiRef, register, prepareTrigger } = useTooltipContext(TRIGGER_NAME);
-    const generatedId = useId();
-    const value = idProp ?? generatedId;
-
-    useLayoutEffect(() => register(value, { content, side }), [register, value, content, side]);
-
-    // The machine's own trigger handlers, fetched at event time so nothing here subscribes to it.
-    // Any forwarded event may open or switch the tooltip, so the trigger is prepared before each one.
-    const machine = useCallback(() => {
-      prepareTrigger(value);
-      return apiRef.current?.getTriggerProps({ value });
-    }, [apiRef, value, prepareTrigger]);
+    const tooltip = useTooltipContext();
+    const openDelay = useContext(OpenDelayContext);
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const pressed = useRef(false);
+    const cancel = () => clearTimeout(timer.current);
+    useEffect(
+      () => () => {
+        cancel();
+        clearTimeout(closeTimer.current);
+      },
+      [],
+    );
 
     return (
-      <ark.button
-        // We purposefully avoid adding `type=button` here because tooltip triggers are also
-        // commonly anchors and the anchor `type` attribute signifies MIME type.
-        // NOTE: The provider sets `data-state` and `aria-describedby` on whichever trigger is active, since
-        //   rendering them from state here would describe every trigger with the one open tooltip. The
-        //   constant below never registers as changed, so React cannot overwrite what the provider set.
-        data-state='closed'
-        {...triggerProps}
-        id={value}
-        asChild={asChild}
-        ref={forwardedRef}
-        onPointerMove={(event: PointerEvent<HTMLButtonElement>) => {
-          triggerProps.onPointerMove?.(event);
+      <TooltipPrimitive.Trigger
+        {...props}
+        onPointerMove={(event) => {
+          onPointerMove?.(event);
+          event.preventDefault();
+        }}
+        onPointerOver={(event) => {
+          onPointerOver?.(event);
+          event.preventDefault();
+        }}
+        onPointerEnter={(event) => {
+          onPointerEnter?.(event);
+          // An enter is a fresh hover: a press can only be stale here (its leave was never seen).
+          pressed.current = false;
+          if (event.defaultPrevented || event.pointerType === 'touch') {
+            return;
+          }
+          cancel();
+          timer.current = setTimeout(() => {
+            if (!pressed.current) {
+              tooltip.setOpen(true);
+            }
+          }, openDelay);
+        }}
+        onPointerLeave={(event) => {
+          onPointerLeave?.(event);
+          pressed.current = false;
+          cancel();
+        }}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          pressed.current = true;
+          cancel();
+          tooltip.setOpen(false);
+        }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          // Keyboard use ends the press, so the next keyboard focus shows the label again.
+          pressed.current = false;
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (pressed.current || !event.currentTarget.matches(':focus-visible')) {
+            event.preventDefault();
+          }
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          // The press that focused the trigger is over once focus leaves; a later focus is judged on its own.
+          pressed.current = false;
           if (event.defaultPrevented) {
             return;
           }
-          if (onInteract?.() === false) {
-            return;
-          }
-          machine()?.onPointerMove?.(event);
+          // Deferred so a tooltip opened by the same focus move claims zag's shared store first (DESIGN.md follow-up 20).
+          event.preventDefault();
+          // A pending hover would otherwise reopen the tooltip on a trigger that no longer has focus.
+          cancel();
+          closeTimer.current = setTimeout(() => tooltip.setOpen(false));
         }}
-        onPointerLeave={(event: PointerEvent<HTMLButtonElement>) => {
-          triggerProps.onPointerLeave?.(event);
-          machine()?.onPointerLeave?.(event);
-        }}
-        onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {
-          triggerProps.onPointerDown?.(event);
-          machine()?.onPointerDown?.(event);
-        }}
-        onBlur={(event: FocusEvent<HTMLButtonElement>) => {
-          triggerProps.onBlur?.(event);
-          machine()?.onBlur?.(event);
-        }}
-        onClick={(event: MouseEvent<HTMLButtonElement>) => {
-          triggerProps.onClick?.(event);
-          machine()?.onClick?.(event);
-        }}
+        ref={forwardedRef}
       />
     );
   },
 );
 
-TooltipTrigger.displayName = TRIGGER_NAME;
-
 //
-// Tooltip
+// Content
 //
 
-export const Tooltip = {
-  Provider: TooltipProvider,
-  Trigger: TooltipTrigger,
+type TooltipContentProps = ThemedClassName<TooltipPrimitive.ContentProps> & {
+  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `sm` without one. */
+  size?: Size;
+  /** Point at the trigger with an arrow in the tooltip's inverted surface colour. */
+  arrow?: boolean;
+  /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
+  container?: RefObject<HTMLElement | null>;
 };
 
-export type { TooltipProviderProps, TooltipSide, TooltipTriggerElement, TooltipTriggerProps };
+/**
+ * Portalled text on the inverted surface (as the current Tooltip; no `data-surface`, whose popup fill it would fight),
+ * capped at 20rem wide, with an arrow unless `arrow={false}`.
+ */
+const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+  ({ classNames, size, arrow = true, container, children, ...props }, forwardedRef) => {
+    const tooltip = useTooltipContext();
+    const popupSize = usePopupSize(size, tooltip.open, [tooltip.getTriggerProps().id], 'sm');
+    return (
+      <Portal container={container}>
+        <TooltipPrimitive.Positioner>
+          <TooltipPrimitive.Content
+            {...props}
+            data-size={popupSize}
+            className={mx(recipes.popup(), recipes.tooltipContent(), classNames)}
+            ref={forwardedRef}
+          >
+            {children}
+            {arrow && (
+              <TooltipPrimitive.Arrow className={recipes.arrow()}>
+                <TooltipPrimitive.ArrowTip className={recipes.arrowTip()} />
+              </TooltipPrimitive.Arrow>
+            )}
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Positioner>
+      </Portal>
+    );
+  },
+);
+
+TooltipContent.displayName = 'Tooltip.Content';
+//
+// TextTooltip
+//
+
+type TextTooltipProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'span'>, 'children'>> & {
+  /** Rendered truncated to one line; the tooltip shows it in full, and only while it is cut off. */
+  text: string;
+  side?: TooltipSide;
+};
+
+/** One line of text that ellipsizes, with a tooltip of the full text on hover only when it is truncated. */
+export const TextTooltip = forwardRef<HTMLSpanElement, TextTooltipProps>(
+  ({ classNames, text, side, ...props }, forwardedRef) => {
+    const [open, setOpen] = useState(false);
+    const localRef = useRef<HTMLSpanElement>(null);
+    const ref = useComposedRefs(forwardedRef, localRef);
+    return (
+      <TooltipRoot
+        open={open}
+        // Measured when the tooltip would open, so a resize that truncates the text needs no observer.
+        onOpenChange={({ open }) => {
+          const element = localRef.current;
+          setOpen(open && !!element && element.scrollWidth > element.clientWidth);
+        }}
+        positioning={side ? { placement: side } : undefined}
+      >
+        <TooltipTriggerImpl asChild>
+          <span
+            {...props}
+            data-scope='text-tooltip'
+            data-part='root'
+            className={mx(recipes.textTooltip(), classNames)}
+            ref={ref}
+          >
+            {text}
+          </span>
+        </TooltipTriggerImpl>
+        <TooltipContent>{text}</TooltipContent>
+      </TooltipRoot>
+    );
+  },
+);
+
+TextTooltip.displayName = 'TextTooltip';
+
+export type {
+  TooltipContentProps as ContentProps,
+  TooltipRootProps as RootProps,
+  TextTooltipProps,
+  TooltipTriggerProps as TriggerProps,
+};
+
+export { TooltipContent as Content, TooltipRoot as Root, TooltipTrigger as Trigger };
+export type { TooltipSide as Side };

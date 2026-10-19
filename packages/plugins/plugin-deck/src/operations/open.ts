@@ -17,23 +17,16 @@ import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { DeckCapabilities } from '#types';
+import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
+import { applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
-  matchOpenEntities,
-  plankIdForName,
-  pushSubjectsToStack,
-  resolveLevelOpen,
-  resolveSeededPlanks,
-  updatePlankNames,
-} from '../util/index.ts';
-import {
   isCompanionOpen,
-  openableChildren,
+  matchOpenEntities,
   openCompanionPlank,
-  resolveDeckSpec,
+  pushSubjectsToStack,
+  resolveDetailOpen,
   updateActiveDeck,
   withViewTransition,
 } from '../util/index.ts';
@@ -42,8 +35,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       log('LayoutOperation.Open handler start');
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
-      const { graph } = builder;
+      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
@@ -87,11 +79,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const navigateSolo = (active: readonly string[]): string[] =>
         input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 
-      const { segments } = yield* DeckCapabilities.getDeck();
-
       let previouslyOpenIds: Set<string>;
       /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
       let scrolled: string | undefined;
+      let shownInCompanion = false;
       {
         const before = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(before.active);
@@ -106,81 +97,67 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const shift = !!input.modifiers?.shift;
         const sliding = deck.active.length >= 2;
         const anchorToOrigin = disposition === 'auto';
-        const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
-
-        // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
-        // the documents it contains rather than a plank showing the collection itself.
         const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-        const seeded = resolveSeededPlanks({
-          initial: resolveDeckSpec(
-            input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
-          )?.initial,
-          addBesideOrigin,
-          flatten: !!flatten,
-          children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
-        });
 
-        // An open at a declared level: the level supplies the plank name and closes the levels below
-        // it, so a chain like `mailbox / message / attachment` stays consistent without the caller
-        // tracking any of it.
-        const levelOpen =
-          input.root && input.level && input.subject[0]
-            ? resolveLevelOpen({
+        const detailOpen =
+          disposition === 'detail' && !shift && input.pivotId && input.subject[0]
+            ? resolveDetailOpen({
                 active: deck.active,
                 plankNames: deck.plankNames,
-                segments,
-                spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
-                root: input.root,
-                level: input.level,
-                subjectId: input.subject[0],
+                pivot: input.pivotId,
+                subject: input.subject[0],
+                flatten,
+                stack: platform === 'mobile',
               })
             : undefined;
+        const addBesideOrigin =
+          shift || disposition === 'add' || disposition === 'detail' || (anchorToOrigin && sliding);
 
         let next: string[];
-        if (platform === 'mobile') {
-          // A stack has one open semantic: push (or surface) the subjects; solo-replace, pivots, and
-          // seeded side-by-side planks are deck-geometry concepts with no stack analog.
+        if (detailOpen) {
+          next = detailOpen.next;
+        } else if (platform === 'mobile') {
           next = pushSubjectsToStack(deck.active, input.subject);
-        } else if (levelOpen) {
-          next = levelOpen.next;
-        } else if (seeded) {
-          next = seeded;
         } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-          // A named open reuses the plank already holding that name, the way a browser tab is reused.
-          const replaceId = input.name
-            ? plankIdForName(input.name, { active: deck.active, plankNames: deck.plankNames, segments })
-            : undefined;
+          const holder = input.name ? deck.plankNames[input.name] : undefined;
+          const replaceId = !shift && holder && deck.active.includes(holder) ? holder : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
           next = navigateSolo(deck.active);
         }
 
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
-        // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
-        // so names whose plank this open closed are dropped rather than left dangling.
-        // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
-        const boundName = levelOpen?.name ?? input.name;
-        const segmentOfId = (id: string) =>
-          segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? Navigation.segmentOf(undefined, id);
-        const nextSegments = next.map(segmentOfId);
-        const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
-        const plankNames = updatePlankNames(
-          deck.plankNames,
-          nextSegments,
-          boundName && boundSegment ? { name: boundName, segment: boundSegment } : undefined,
-        );
-        // The companion follows a level swap: the new plank stands in for the replaced one, and closing
-        // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
-        // one-frame snap measured at exactly the lost width.
-        const companionPlanks =
-          levelOpen?.replacedId &&
+        let companionPlanks = deckUpdates.companionPlanks;
+        const main = next.at(-1);
+        if (detailOpen?.inCompanion && main) {
+          const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+          viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
+            ...prev,
+            variant: CompanionViewState.DETAIL_VARIANT,
+          }));
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, main);
+        } else if (
+          detailOpen?.replacedId &&
           input.subject[0] &&
-          isCompanionOpen(deck.companionPlanks, flatten, levelOpen.replacedId)
-            ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
-            : deckUpdates.companionPlanks;
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
+          isCompanionOpen(deck.companionPlanks, flatten, detailOpen.replacedId)
+        ) {
+          // The companion follows a detail swap: the new plank stands in for the replaced one, and
+          // closing it mid-read would also narrow the deck, which the browser answers by clamping the
+          // scroll — a one-frame snap measured at exactly the lost width.
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, input.subject[0]);
+        }
+        const holder = input.subject[0];
+        const plankNames =
+          detailOpen?.plankNames ??
+          (input.name && holder && next.includes(holder) ? { ...deck.plankNames, [input.name]: holder } : undefined);
+        if (plankNames) {
+          yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+            updateActiveDeck(state, { plankNames }),
+          );
+        }
+        shownInCompanion = !!detailOpen?.inCompanion;
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
         // Subjects the graph has not built yet open at once: the URL projection shows them while they
@@ -201,12 +178,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const newlyOpen = deck.active.filter((i: string) => !previouslyOpenIds.has(i));
 
         // Nothing newly open means no URL changed, so no write carried the intent above.
-        if (scrolled === undefined && input.scrollIntoView !== false && input.subject[0]) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.subject[0], focus: input.focus });
+        const shown = shownInCompanion ? undefined : input.subject[0];
+        if (scrolled === undefined && input.scrollIntoView !== false && shown) {
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: shown, focus: input.focus });
         }
 
-        if (newlyOpen[0] ?? input.subject[0]) {
-          yield* Operation.schedule(LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
+        if (newlyOpen[0] ?? shown) {
+          yield* Operation.schedule(LayoutOperation.Expose, { subject: newlyOpen[0] ?? shown });
         }
 
         for (const subjectId of newlyOpen) {

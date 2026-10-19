@@ -4,7 +4,6 @@
 
 import { ProjectCapabilities } from '#types';
 
-import { composerPlugin } from './composer-plugin.ts';
 import { defaultTemplate } from './default.ts';
 import { inboxResearch } from './inbox-research.ts';
 
@@ -13,6 +12,7 @@ export {
   IDS,
   PARENT_INSTRUCTIONS,
   type Variant,
+  composerPlugin,
   makeComposerPlugin,
   readGuide,
   writePlugin,
@@ -27,9 +27,5 @@ export * from './scaffold.ts';
  */
 export { defaultTemplate };
 
-/** The Composer Plugin template joins them only where it can run (see {@link composerPlugin}). */
-export const defaultTemplates: ProjectCapabilities.Template[] = [
-  defaultTemplate,
-  inboxResearch,
-  ...[composerPlugin()].filter((template) => template !== undefined),
-];
+/** The Composer Plugin template is contributed on its own, once the client says which EDGE it runs on. */
+export const defaultTemplates: ProjectCapabilities.Template[] = [defaultTemplate, inboxResearch];

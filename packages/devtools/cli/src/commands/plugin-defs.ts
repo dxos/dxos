@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type Config } from '@dxos/client';
 import { Blob } from '@dxos/echo';
 import type * as Observability from '@dxos/observability/Observability';
@@ -11,6 +11,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
+import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
@@ -59,6 +60,7 @@ export const getDefaults = (): string[] => [
   // Declared in Projects' `dependsOn`, so it is enabled whenever Projects is.
   AssistantPlugin.meta.profile.key,
   ConnectorPlugin.meta.profile.key,
+  IllustratorPlugin.meta.profile.key,
   InboxPlugin.meta.profile.key,
   MarkdownPlugin.meta.profile.key,
   ObservabilityPlugin.meta.profile.key,
@@ -78,10 +80,11 @@ export const getPlugins = ({ config, namespace, observability }: PluginConfig): 
     // without them `file.createFromUpload` from `dx mcp serve` fails with `Schema not registered`.
     ClientPlugin.make({ config, awaitInitialization: true, types: [File.File, Blob.Blob] }),
     ConnectorPlugin.make(),
+    IllustratorPlugin.make(),
     InboxPlugin.make(),
     MarkdownPlugin.make(),
     ObservabilityPlugin.make({ namespace, observability }),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProjectsPlugin.make(),
     RegistryPlugin.make(),
     RoutinePlugin.make(),

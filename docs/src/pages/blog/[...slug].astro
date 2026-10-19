@@ -3,17 +3,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 
 import Comments from '@bryanguffey/astro-standard-site/components/Comments.astro';
 
-import BlogLayout from '../../layouts/BlogLayout.astro';
 import IconChevronRight from '../../components/svg/IconChevronRight.astro';
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import { getPublishedPosts } from '../../utils/blog.ts';
 
 const canonicalUrl = new URL(`/blog/${Astro.params.slug}`, Astro.site ?? 'https://dxos.org').href;
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const posts = await getPublishedPosts();
   return posts.map((post) => ({
     params: { slug: post.data.slug },
     props: { post },

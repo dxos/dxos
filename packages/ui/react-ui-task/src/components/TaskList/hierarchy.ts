@@ -17,13 +17,14 @@ import { Task } from '@dxos/types';
 
 /** One rendered row: the task, its depth, and where it sits among its siblings. */
 export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<string> => {
+  const childrenOf = Task.childIndex(tasks);
   const ids = new Set<string>();
   const visit = (current: Task.Task): void => {
     if (ids.has(current.id)) {
       return;
     }
     ids.add(current.id);
-    for (const child of Task.subTasks(tasks, current)) {
+    for (const child of childrenOf(current)) {
       visit(child);
     }
   };

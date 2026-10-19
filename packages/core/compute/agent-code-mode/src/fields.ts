@@ -5,10 +5,35 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Ref } from '@dxos/echo';
+import { type Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import type { SandboxField } from './Dialect.ts';
+import type { SandboxField, SandboxType } from './Dialect.ts';
+
+/**
+ * Every object and relation type the database's registry holds, with its fields: what the model is
+ * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
+ * rebuild a type does not list it.
+ */
+export const describeTypes = (db: Database.Database): SandboxType[] =>
+  db.registry
+    .list()
+    .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
+    .flatMap((type) => {
+      const typename = Type.getTypename(type) ?? '';
+      return typename.length > 0
+        ? [
+            {
+              typename,
+              dxn: String(DXN.make(typename, Type.getVersion(type))),
+              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
+              // The same `fields` record the bound type carries, which is what the model would
+              // otherwise go looking for.
+              fields: describeFields(('fields' in type && type.fields) || {}),
+            },
+          ]
+        : [];
+    });
 
 /** How deep a label follows arrays and recursive schemas before settling for `object`. */
 const MAX_DEPTH = 3;

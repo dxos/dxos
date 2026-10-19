@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Process from '@dxos/compute/Process';
@@ -43,7 +43,7 @@ export type UseExecutionGraphOptions = {
  */
 export const useExecutionGraph = (
   space: Space,
-  processesAtom: Atom.Atom<readonly Process.Info[]> | undefined,
+  processesAtom: Atom.Atom<readonly Process.Process[]> | undefined,
   { collapseCompletedSpans, eventLimit, selectedPids = NO_PIDS }: UseExecutionGraphOptions = {},
 ): ExecutionGraph => {
   // Ticks periodically so spans that are still open purely because no new trace event has
@@ -66,13 +66,13 @@ export const useExecutionGraph = (
 };
 
 /** Identity for the graph: only a process appearing, disappearing or changing state redraws it. */
-const sameProcesses = (left: readonly Process.Info[], right: readonly Process.Info[]): boolean =>
+const sameProcesses = (left: readonly Process.Process[], right: readonly Process.Process[]): boolean =>
   left.length === right.length &&
   left.every((process, index) => process.pid === right[index].pid && process.state === right[index].state);
 
 const getExecutionGraph = (
   space: Space,
-  processesAtom: Atom.Atom<readonly Process.Info[]>,
+  processesAtom: Atom.Atom<readonly Process.Process[]>,
   {
     collapseCompletedSpans = true,
     eventLimit = 100,

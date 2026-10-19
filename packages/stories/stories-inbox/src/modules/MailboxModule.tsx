@@ -4,10 +4,11 @@
 
 import React, { useEffect } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -15,7 +16,7 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 
 /** LEFT: the mailbox article (includes the connect/sync auth button). */
 export const MailboxModule = ({ data }: { data?: { attendableId?: string } }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -24,7 +25,7 @@ export const MailboxModule = ({ data }: { data?: { attendableId?: string } }) =>
 
 const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attendableId?: string }) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   // Scope the article's selection to the mailbox object rather than this cell's positional
   // attendableId, so the sibling MessageModule cell (a separate ModuleContainer attention target)
   // reads the same selection context and can open the selected thread.

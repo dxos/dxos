@@ -1,33 +1,48 @@
 ---
 name: 1password
 description: >-
-  Get a credential (API key, token, password, certificate) from 1Password with the `op` CLI.
-  Use whenever a task needs a secret — before asking the user for one, before asking them to
-  create a `.secrets/` file, and before concluding a credential is unavailable. Use when
-  `OP_SERVICE_ACCOUNT_TOKEN` is set, when `op` is installed, or when a script or README names an
-  `op://` reference or a `.env.tpl`.
+  Get a credential (API key, token, password, certificate): first from a variable already
+  exported in the shell, then from 1Password with the `op` CLI — only when
+  `OP_SERVICE_ACCOUNT_TOKEN` is set (the cloud sandbox); in a local session never run
+  `op`. Use whenever a task needs a secret — before asking the user for one, before asking them
+  to create a `.secrets/` file, and before concluding a credential is unavailable. Use when a
+  script or README names an `op://` reference or a `.env.tpl`.
 ---
 
 # Credentials from 1Password
 
-**If `op` works, use it first.** The CLI reads a secret directly into the command that needs
-it, so the value never passes through chat or the transcript. It also needs nothing from the
-user, and the user's time is the scarcest thing in a session. Fall back to a `.secrets/` file
-(`AGENTS.md` → "Handing an agent a credential") only when `op` cannot reach the item.
+**Check the shell first.** If the variable the command reads is already exported, use it and stop
+here; `op` is not needed. Test that it is exported, since an unexported shell variable never reaches
+the command, and test in the shell itself, since a session's environment summary can miss variables
+the shell profile sets. Read it only inside the test, so the value is never printed:
+
+```bash
+[ -n "$(printenv TYPESAFE_API_KEY)" ] && echo exported || echo unset   # substitute the variable's name
+```
+
+**Use `op` only when `OP_SERVICE_ACCOUNT_TOKEN` is set.** That token authenticates the CLI as a
+service account, so it reads a secret straight into the command that needs it with no prompt and
+nothing from the user. Without it, every `op` call — `op whoami` included — goes through the
+desktop app's integration and pops an authorization dialog on the user's screen, so in a local
+session do not run `op` at all, not even to probe.
 
 ## Is it available?
 
 ```bash
-command -v op && op whoami && op vault list
+[ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ] && command -v op && op whoami
 ```
 
+Check the variable first and stop there if it is empty — the `op whoami` after it is only safe
+because the token is present.
+
 - **Cloud sandbox:** `.config/claude-code-setup.sh` installs `op`, and the environment provides
-  `OP_SERVICE_ACCOUNT_TOKEN`, which authenticates it with no sign-in. The service account
-  sees only the vaults it was granted, currently **`CI`**. If `op` is missing because setup
-  did not run, rerun the step labelled `# 2.` in that script.
-- **Local machine:** `op` is normally signed in through the desktop app's integration. If
-  `op whoami` fails, ask the user to unlock 1Password. An agent cannot complete that sign-in.
-- **Not available:** say so once, then use the `.secrets/` flow.
+  `OP_SERVICE_ACCOUNT_TOKEN`. The service account sees only the vaults it was granted,
+  currently **`CI`**. If `op` is missing because setup did not run, rerun the step labelled
+  `# 2.` in that script.
+- **Local session (no token):** skip `op`. If the shell check above found nothing, use
+  the `.secrets/` flow (`AGENTS.md` → "Handing an agent a credential"). If the user
+  keeps the value in 1Password, name the `op://` reference and let them run `op` themselves.
+- **Token set but the item is unreachable:** say so once, then use the `.secrets/` flow.
 
 ## Find the item
 

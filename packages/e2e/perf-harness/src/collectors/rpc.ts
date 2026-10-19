@@ -28,6 +28,8 @@ export type RpcReading = {
   readAt: number;
   calls: number;
   clientCalls: number;
+  /** Served calls per method, cumulative; empty from a realm whose middleware predates it. */
+  callsByMethod: Record<string, number>;
   samples: Array<{ queueWaitMs?: number; serviceMs: number; at: number }>;
   clientSamples: Array<{ roundTripMs: number; at: number }>;
 };
@@ -66,6 +68,7 @@ export const readRpc = async (targets: Attached[]): Promise<RpcReading[]> => {
       readAt: Date.now(),
       calls: readout.calls ?? 0,
       clientCalls: readout.clientCalls ?? 0,
+      callsByMethod: readout.callsByMethod ?? {},
       samples: readout.samples ?? [],
       clientSamples: readout.clientSamples ?? [],
     });
@@ -117,4 +120,25 @@ const summarize = (before: RpcReading | undefined, after: RpcReading): RealmRpc 
 export const diffRpc = (before: RpcReading[], after: RpcReading[]): RealmRpc[] => {
   const opening = new Map(before.map((reading) => [reading.name, reading]));
   return after.map((reading) => summarize(opening.get(reading.name), reading));
+};
+
+/**
+ * Calls served per method over a stage, summed over realms and keyed by `rpc._tag`.
+ *
+ * Summed rather than per realm: a method is served by exactly one realm, so the realm adds nothing
+ * a reader needs, and the NDJSON row stays one flat map.
+ */
+export const diffRpcByMethod = (before: RpcReading[], after: RpcReading[]): Record<string, number> => {
+  const opening = new Map(before.map((reading) => [reading.name, reading.callsByMethod]));
+  const delta: Record<string, number> = {};
+  for (const reading of after) {
+    const previous = opening.get(reading.name) ?? {};
+    for (const [method, calls] of Object.entries(reading.callsByMethod)) {
+      const served = calls - (previous[method] ?? 0);
+      if (served > 0) {
+        delta[method] = (delta[method] ?? 0) + served;
+      }
+    }
+  }
+  return delta;
 };

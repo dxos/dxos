@@ -6,7 +6,7 @@ import { SpanStatusCode } from '@opentelemetry/api';
 import { type ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { describe, expect, test } from 'vitest';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 
 import { AiContentStrippingSpanProcessor, withoutAiContent } from './ai-content.ts';
 

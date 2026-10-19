@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { type OperationInvoke, type SlashCommandResult, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -95,7 +95,7 @@ describe('task slash commands', () => {
 });
 
 /** The commands under test never invoke an operation, so a call is a regression rather than a case. */
-const unexpectedInvoke: OperationInvoke = async () => {
+const unexpectedInvoke: SlashCommand.OperationInvoke = async () => {
   throw new Error('Unexpected operation invocation.');
 };
 
@@ -105,8 +105,8 @@ const setup = async (builder: EchoTestBuilder) => {
   await db.flush();
 
   /** Routes through `resolveSlashCommand`, so the tests exercise the prompt's own dispatch. */
-  const run = async (text: string): Promise<SlashCommandResult | Error> => {
-    const resolved = resolveSlashCommand(text, TaskSlashCommands);
+  const run = async (text: string): Promise<SlashCommand.SlashCommandResult | Error> => {
+    const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
     if (!resolved) {
       return new Error(`Not a task command: ${text}`);
     }

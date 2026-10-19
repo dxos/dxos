@@ -20,7 +20,7 @@ export class Milestone extends Type.makeObject<Milestone>(DXN.make('org.dxos.typ
   Schema.Struct({
     name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName')),
     /** What done means for this milestone. */
-    description: Schema.String.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
+    description: Format.Text.pipe(Schema.annotate({ title: 'Description' }), Schema.optional),
     targetDate: Format.DateOnly.pipe(Schema.annotate({ title: 'Target Date' }), Schema.optional),
   }).pipe(
     Schema.annotate({ title: 'Milestone' }),

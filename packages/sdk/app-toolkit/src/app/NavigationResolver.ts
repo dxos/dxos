@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Entity, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
-import { type Position } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
 import { type AppCapabilities } from '../app-framework/index.ts';
 

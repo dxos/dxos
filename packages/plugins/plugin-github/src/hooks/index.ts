@@ -5,3 +5,5 @@
 export * from './useOpenObject.ts';
 export * from './usePullRequestFiles.ts';
 export * from './usePullRequestDiff.ts';
+export * from './useSyncPullRequest.ts';
+export * from './usePullRequestChecks.ts';

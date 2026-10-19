@@ -4,14 +4,16 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useLabel, useLabels, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,12 +23,12 @@ import { Meeting, MeetingOperation } from '#types';
 
 type MeetingItemProps = {
   meeting: Meeting.Meeting;
-  getLabel: (meeting: Meeting.Meeting) => string;
 };
 
-const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+const MeetingItem = ({ meeting }: MeetingItemProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const label = useLabel(meeting) ?? t('meeting.label') ?? meeting.id;
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleSelectMeeting = useCallback(
     () => invokePromise(MeetingOperation.SetActive, { object: meeting }),
@@ -35,12 +37,12 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
 
   return (
     <Listbox.Item id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center' onClick={handleSelectMeeting}>
-      <span className='truncate'>{getLabel(meeting)}</span>
+      <span className='truncate'>{label}</span>
       {/* Visual affordance only — listbox options can't legally contain focusable
           descendants, so the row itself drives selection via onClick above. */}
-      <Button tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
+      <Button.Root tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
         {t('select-meeting.label')}
-      </Button>
+      </Button.Root>
     </Listbox.Item>
   );
 };
@@ -48,20 +50,17 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
 export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unknown>;
 
 export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
+  const labels = useLabels(meetings);
   const sortedMeetings = useMemo(
-    () => meetings.toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
-    [meetings],
+    () => meetings.toSorted((a, b) => (labels.get(a) ?? '').localeCompare(labels.get(b) ?? '')),
+    [meetings, labels],
   );
-
-  const getLabel = useCallback(
-    (meeting: Meeting.Meeting) => Obj.getLabel(meeting) ?? t('meeting.label') ?? meeting.id,
-    [t],
-  );
+  const getLabel = (meeting: Meeting.Meeting) => labels.get(meeting) ?? t('meeting.label') ?? meeting.id;
 
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
@@ -78,14 +77,14 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
 
   return (
     <div>
-      <Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
-        <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
-      </Flex>
-      <Listbox.Root>
+      <Layout.Flex align='center' justify='end' classNames='px-2 min-h-[3rem]'>
+        <Button.Root onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button.Root>
+      </Layout.Flex>
+      <Listbox.Root items={sortedMeetings.map((meeting) => ({ value: meeting.id, label: getLabel(meeting) }))}>
         <Listbox.Viewport>
           <Listbox.Content aria-label={t('meeting-list.label')}>
             {sortedMeetings.map((meeting) => (
-              <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
+              <MeetingItem key={meeting.id} meeting={meeting} />
             ))}
           </Listbox.Content>
         </Listbox.Viewport>

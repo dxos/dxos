@@ -27,9 +27,9 @@ const createTarget = () => {
   const target = {
     addEventListener: (_type: string, listener: (event: Event) => void) => void listeners.add(listener),
   };
-  const dispatch = (url: string) => {
+  const dispatch = (url: string, payload: unknown = { message: `Unable to preload CSS for ${url}` }) => {
     const event = new Event('vite:preloadError', { cancelable: true });
-    Object.assign(event, { payload: { message: `Unable to preload CSS for ${url}` } });
+    Object.assign(event, { payload });
     for (const listener of listeners) {
       listener(event);
     }
@@ -89,6 +89,35 @@ describe('preload recovery', () => {
     const event = dispatch('https://composer.space/assets/src-abc123.css');
     expect(reload).toHaveBeenCalledTimes(1);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  test('leaves a plugin module from another origin to its importer', () => {
+    const reload = vi.fn();
+    const { target, dispatch } = createTarget();
+    registerPreloadErrorHandler({ target, reload });
+
+    // The failed import of a dev plugin served by its own Vite dev server.
+    const event = dispatch('http://localhost:3967/src/plugin.tsx');
+    expect(reload).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+    expect(sessionStorage.getItem(PRELOAD_RETRY_KEY)).toBeNull();
+    expect(localStorage.getItem(BOOT_ASSET_FAILURE_KEY)).toBeNull();
+  });
+
+  test('leaves a module that failed to link to its importer', () => {
+    const reload = vi.fn();
+    const { target, dispatch } = createTarget();
+    registerPreloadErrorHandler({ target, reload });
+
+    const event = dispatch(
+      '',
+      new SyntaxError(
+        "The requested module '@dxos/echo/Annotation' does not provide an export named 'HiddenAnnotation'",
+      ),
+    );
+    expect(reload).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+    expect(sessionStorage.getItem(PRELOAD_RETRY_KEY)).toBeNull();
   });
 
   test('does not reload when storage is unavailable', () => {

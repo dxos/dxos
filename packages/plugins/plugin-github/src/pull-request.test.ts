@@ -4,7 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { toPullRequestProps } from './pull-request.ts';
+import { PullRequest } from '@dxos/types';
+
+import { pullRequestChanges, toPullRequestProps } from './pull-request.ts';
 import { type GitHubApi } from './services/index.ts';
 
 const reference = { owner: 'dxos', repo: 'dxos', number: 13031 };
@@ -25,6 +27,34 @@ describe('toPullRequestProps', () => {
     expect(toPullRequestProps(reference, pull({ state: 'closed', merged_at: '2026-09-01T00:00:00Z' })).state).toEqual(
       'merged',
     );
+  });
+});
+
+describe('pullRequestChanges', () => {
+  const stored = (description?: string) =>
+    PullRequest.make({
+      ...reference,
+      title: 'Walkthroughs',
+      state: 'open',
+      url: 'https://github.com/dxos/dxos/pull/13031',
+      description,
+    });
+
+  test('an unchanged pull request has no changes', () => {
+    expect(pullRequestChanges(stored(), pull())).toEqual({});
+  });
+
+  test('only the fields that moved on GitHub are written', () => {
+    expect(
+      pullRequestChanges(
+        stored(),
+        pull({ title: 'Walkthroughs v2', state: 'closed', merged_at: '2026-09-01T00:00:00Z' }),
+      ),
+    ).toEqual({ title: 'Walkthroughs v2', state: 'merged' });
+  });
+
+  test('a field the payload leaves out is kept, not cleared', () => {
+    expect(pullRequestChanges(stored('Stored description.'), pull({ body: null }))).toEqual({});
   });
 });
 

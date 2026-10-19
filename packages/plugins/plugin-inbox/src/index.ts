@@ -3,6 +3,8 @@
 //
 
 export * as InboxPlugin from './InboxPlugin.ts';
-export * from '#meta';
+export * from '#operations';
+export * from '#skills';
 export * from '#types';
-export { getCalendarRangeSelectionId } from './paths.ts';
+export * as Containers from './Containers.ts';
+export * as MailSync from './MailSync.ts';

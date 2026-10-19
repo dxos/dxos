@@ -121,6 +121,9 @@
       "path": "../../e2e/perf-harness"
     },
     {
+      "path": "../../plugins/plugin-agent"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -235,6 +238,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-handpan"
+    },
+    {
       "path": "../../plugins/plugin-heygen"
     },
     {
@@ -292,7 +298,13 @@
       "path": "../../plugins/plugin-meeting"
     },
     {
+      "path": "../../plugins/plugin-meeting-recorder"
+    },
+    {
       "path": "../../plugins/plugin-mermaid"
+    },
+    {
+      "path": "../../plugins/plugin-messenger"
     },
     {
       "path": "../../plugins/plugin-mobile"
@@ -431,6 +443,9 @@
     },
     {
       "path": "../../plugins/plugin-typesafe"
+    },
+    {
+      "path": "../../plugins/plugin-uml"
     },
     {
       "path": "../../plugins/plugin-video"

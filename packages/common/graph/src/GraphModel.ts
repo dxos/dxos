@@ -7,12 +7,12 @@
 import * as Function from 'effect/Function';
 import * as EffectGraph from 'effect/Graph';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { inspectCustom } from '@dxos/debug';
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 

@@ -31,7 +31,7 @@ const ORG_SEEDS = [
   },
 ] as const;
 
-export const Team: SampleSpace.Phase<OrgMap> = SampleSpace.phase('team', {
+export const Team: SampleSpace.Partial<OrgMap> = SampleSpace.partial('team', {
   schemas: [Organization.Organization],
   run: () =>
     SampleSpace.seed(ORG_SEEDS, (seed) =>
@@ -71,7 +71,7 @@ const PERSON_SEEDS = [
   },
 ] as const;
 
-export const People: SampleSpace.Phase<PersonMap, OrgMap> = SampleSpace.phase('people', {
+export const People: SampleSpace.Partial<PersonMap, OrgMap> = SampleSpace.partial('people', {
   schemas: [Person.Person],
   run: (organizations: OrgMap) =>
     SampleSpace.seed(PERSON_SEEDS, (seed) =>

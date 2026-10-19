@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker/index.ts';

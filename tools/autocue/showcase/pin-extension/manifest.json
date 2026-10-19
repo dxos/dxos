@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Showcase Pin",
+  "version": "1.0.0",
+  "description": "Pins the current tab's page to 1920x1080 at 2x for recording, like autocue's recordings.",
+  "permissions": ["debugger"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Pin this tab to 1920x1080 at 2x" }
+}

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as idb from 'idb-keyval';
 
 const DB_NAME = 'dxos-process-manager';

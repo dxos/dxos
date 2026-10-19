@@ -1,0 +1,127 @@
+# Conclusions read off inferred types (`design/TYPES.md`). The parser names the type of each symbol it
+# can — `Layer.mergeAll(a, b)` is `Layer<A | B, E, R>` — so what `rules/10-effect.n3` approximates
+# from the constructor's first argument is exact here, and covers what that cannot see: merged,
+# provided and piped layers, and layers whose type is only written in an annotation.
+#
+# A type names a service as its file imported it (`file:<barrel>#Store`, `module:@dxos/x#Store`);
+# `deus:resolvesTo`, from the `resolve-refs` pass and `rules/10-effect.n3`, gives the declaration,
+# which is what is stated when there is one.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix rule: <https://dxos.org/vocab/deus/rule#>.
+@prefix Layer: <https://dxos.org/deus/module/effect/Layer#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix sql: <https://dxos.org/deus/module/effect/sql/SqlClient#>.
+@prefix node: <https://dxos.org/deus/module/@effect/sql-sqlite-node/SqliteClient#>.
+@prefix bun: <https://dxos.org/deus/module/@effect/sql-sqlite-bun/SqliteClient#>.
+@prefix wasm: <https://dxos.org/deus/module/@effect/sql-sqlite-wasm/SqliteClient#>.
+@prefix dxsql: <https://dxos.org/deus/module/@dxos/sql-sqlite/SqliteClient#>.
+@prefix anthropic: <https://dxos.org/deus/module/@effect/ai-anthropic/AnthropicClient#>.
+@prefix openai: <https://dxos.org/deus/module/@effect/ai-openai/OpenAiClient#>.
+@prefix rpc: <https://dxos.org/deus/module/effect/rpc/RpcSerialization#>.
+
+# A layer is any symbol typed `Layer<…>`, however it was built. (Only a symbol has a kind: a property
+# of an object type has a type too, but is no declaration.)
+{ ?s rule:layerType ?t } <= { ?s deus:hasType ?t. ?t deus:typeHead Layer:Layer. ?s deus:kind ?kind }.
+{ ?s rule:layerType ?t } => { ?s rdf:type deus:EffectLayer }.
+
+# The services named at a position of a `Layer` type: one service, or each member of a union.
+{ ?s rule:output ?at } <= { ?s rule:layerType ?t. ?t deus:typeArg0 ?at }.
+{ ?s rule:input ?at } <= { ?s rule:layerType ?t. ?t deus:typeArg2 ?at }.
+{ ?at rule:service ?service } <= { ?at deus:typeKind "ref"; deus:typeHead ?service }.
+{ ?at rule:service ?service } <= {
+  ?at deus:typeKind "union"; deus:typeMember ?member.
+  ?member deus:typeKind "ref"; deus:typeHead ?service.
+}.
+
+# Its declaration when the name resolves to one, else the name as written.
+{ ?name rule:canonical ?declaration } <= { ?name deus:resolvesTo ?declaration }.
+{ ?name rule:canonical ?name } <= {
+  (?declaration { ?name deus:resolvesTo ?declaration } ?declarations) log:collectAllIn ?scope.
+  ?declarations list:length 0.
+}.
+
+# What it provides: `ROut`, the first type argument.
+{ ?s rule:output ?at. ?at rule:service ?service. ?service rule:canonical ?canonical }
+  => { ?s deus:providesService ?canonical }.
+
+# What it still needs: `RIn`, the third — exact, where `deus:requiresService` only says what the
+# implementation reads.
+{ ?s rule:input ?at. ?at rule:service ?service. ?service rule:canonical ?canonical }
+  => { ?s deus:layerRequires ?canonical }.
+
+# Where the type is unknown (a service imported from another file has no `Key` here), what a layer
+# provides still carries over from the layer it is built from, through the functions whose output
+# keeps their input's: `Store.layer.pipe(Layer.provide(Clock.layer))`, `Layer.mergeAll(storeLayer, …)`.
+{ ?f rule:keepsOutput true } <= {
+  ?f list:in (Layer:provide Layer:provideMerge Layer:merge Layer:orDie Layer:fresh Layer:tap Layer:tapError
+    Layer:tapCause Layer:catchTag Layer:catchCause Layer:catch Layer:withSpan Layer:withParentSpan Layer:updateService).
+}.
+{ ?s rule:keepsPipeline true } <= {
+  (?stage { ?s deus:pipedThrough ?stage } ?stages) log:collectAllIn ?scope.
+  (?stage { ?s deus:pipedThrough ?stage. ?stage rule:keepsOutput true } ?kept) log:collectAllIn ?scope.
+  ?stages list:length ?count.
+  ?kept list:length ?count.
+}.
+{ ?s deus:derivedFrom ?base; deus:pipedThrough ?stage. ?s rule:keepsPipeline true. ?base deus:providesService ?service }
+  => { ?s deus:providesService ?service }.
+# The first argument is `self` (or, for a curried `merge`/`provideMerge`, `that`, whose output is kept
+# too). `Layer.provide` is absent: curried, its first argument is the layer provided, not the output.
+{
+  ?s deus:constructedBy ?f. ?f list:in (Layer:mergeAll Layer:merge Layer:provideMerge Layer:orDie Layer:fresh).
+  ?s rule:keepsPipeline true. ?s deus:argument ?base. ?base deus:providesService ?service.
+} => { ?s deus:providesService ?service }.
+
+#
+# Layer factories: a function whose return type is `Layer<…>` — `layerFile(path)`, a static
+# `Db.layer()`. It is no layer itself, so it is a `deus:EffectLayerFactory`, and its
+# `deus:providesService` / `deus:layerRequires` say what the layer it returns provides and needs.
+#
+
+{ ?s rule:factoryLayerType ?t } <= {
+  ?t deus:typeHead Layer:Layer. ?f deus:returnType ?t; deus:typeKind "function". ?s deus:hasType ?f; deus:kind ?kind.
+}.
+{ ?s rule:factoryLayerType ?t } => { ?s rdf:type deus:EffectLayerFactory }.
+{ ?s rule:output ?at } <= { ?s rule:factoryLayerType ?t. ?t deus:typeArg0 ?at }.
+{ ?s rule:input ?at } <= { ?s rule:factoryLayerType ?t. ?t deus:typeArg2 ?at }.
+
+# A layer built by a repo factory provides what the factory's layer does, where the call's own type
+# is unknown (`layerOpfs(…).pipe(…)`): the callee is the declaration, or resolves to it (barrels and
+# aliases included). The output chain is restated, because a same-stratum recursive read of
+# `deus:providesService` here measured 5 s slower on native.
+{ ?f rule:declaredFactory ?f } <= { ?f deus:kind ?kind }.
+{ ?f rule:declaredFactory ?d } <= { ?f deus:resolvesTo ?d }.
+{
+  ?d rule:factoryLayerType ?t. ?f rule:declaredFactory ?d. ?s deus:constructedBy ?f. ?s rule:keepsPipeline true.
+  ?t deus:typeArg0 ?at. ?at rule:service ?service. ?service rule:canonical ?canonical.
+} => { ?s rdf:type deus:EffectLayer. ?s deus:providesService ?canonical }.
+
+# Library layer constructors, whose types live in `node_modules` the parser does not read: what the
+# layer each one returns provides. Listed rather than matched by name, since `#layer*` members
+# include non-Effect ones (`@codemirror/view#layer`). `@dxos/sql-sqlite/SqliteClient` reaches the
+# wasm constructors through a bare `export *`, so it is addressed here too.
+
+node:layer rule:libraryLayer sql:SqlClient, node:SqliteClient.
+<https://dxos.org/deus/module/@effect/sql-sqlite-node#SqliteClient.layer> rule:libraryLayer sql:SqlClient, node:SqliteClient.
+bun:layer rule:libraryLayer sql:SqlClient, bun:SqliteClient.
+<https://dxos.org/deus/module/@effect/sql-sqlite-bun#SqliteClient.layer> rule:libraryLayer sql:SqlClient, bun:SqliteClient.
+wasm:layer rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+wasm:layerMemory rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+<https://dxos.org/deus/module/@effect/sql-sqlite-wasm#SqliteClient.layer> rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+<https://dxos.org/deus/module/@effect/sql-sqlite-wasm#SqliteClient.layerMemory> rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+dxsql:layer rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+dxsql:layerMemory rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+<https://dxos.org/deus/file/packages/common/sql-sqlite/src/SqliteClient.ts#layer> rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+<https://dxos.org/deus/file/packages/common/sql-sqlite/src/SqliteClient.ts#layerMemory> rule:libraryLayer sql:SqlClient, wasm:SqliteClient.
+anthropic:layer rule:libraryLayer anthropic:AnthropicClient.
+anthropic:layerConfig rule:libraryLayer anthropic:AnthropicClient.
+openai:layer rule:libraryLayer openai:OpenAiClient.
+openai:layerConfig rule:libraryLayer openai:OpenAiClient.
+rpc:layerJson rule:libraryLayer rpc:RpcSerialization.
+rpc:layerNdjson rule:libraryLayer rpc:RpcSerialization.
+rpc:layerSchemaBinary rule:libraryLayer rpc:RpcSerialization.
+
+{ ?s deus:constructedBy ?f. ?f rule:libraryLayer ?service. ?s rule:keepsPipeline true }
+  => { ?s rdf:type deus:EffectLayer. ?s deus:providesService ?service }.

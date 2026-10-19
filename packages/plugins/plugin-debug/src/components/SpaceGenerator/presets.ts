@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -19,6 +20,8 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {
+  CanvasBoard,
+  CanvasGraphModel,
   type ComputeShape,
   createAppend,
   createChat,
@@ -33,7 +36,6 @@ import {
   createText,
   createTrigger,
 } from '@dxos/react-ui-canvas-compute';
-import { CanvasBoard, CanvasGraphModel, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { range, trim } from '@dxos/util';
@@ -162,7 +164,6 @@ export const generator = () => ({
           const researchPrompt = space.db.add(
             Instructions.make({
               name: 'Research',
-              description: 'Research organization',
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
@@ -179,7 +180,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              runnable: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
               input: {
                 instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -828,16 +829,13 @@ const rawPosition = (args: RawPositionInput) => {
   };
 };
 
-const position = (rect: { x: number; y: number; width?: number; height?: number }) => {
+/** A rectangle in grid cells scaled to pixels; the size is kept only when both extents are non-zero. */
+const position = ({ x, y, width = 0, height = 0 }: { x: number; y: number; width?: number; height?: number }) => {
   const snap = 32;
-  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
-  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
+  const center = { x: Math.min(x, x + width) * snap, y: Math.min(y, y + height) * snap };
   if (width && height) {
-    return {
-      center: { x, y },
-      size: width && height ? { width, height } : undefined,
-    };
+    return { center, size: { width: Math.abs(width) * snap, height: Math.abs(height) * snap } };
   } else {
-    return { center: { x, y } };
+    return { center };
   }
 };

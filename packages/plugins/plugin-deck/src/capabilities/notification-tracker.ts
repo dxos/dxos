@@ -16,7 +16,7 @@ import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
@@ -43,7 +43,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = yield* Capabilities.AtomRegistry;
     const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
-    const monitor = yield* Capabilities.ProcessMonitor;
+    const monitor = yield* Capabilities.ProcessManager;
     const manager = yield* Capabilities.PluginManager;
     const invoker = yield* Capabilities.OperationInvoker;
     const operationHandlers = yield* Capabilities.OperationHandler;
@@ -65,7 +65,7 @@ export default Capability.makeModule(
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
-      ).catch(() => {});
+      ).catch((err) => log.catch(err));
 
     //
     // Notifications — driven by the process monitor.
@@ -74,7 +74,7 @@ export default Capability.makeModule(
     // Tracks the last-seen state per process so we only toast on transitions.
     const lastState = new Map<Process.ID, Process.State>();
 
-    const handleProcesses = (processes: readonly Process.Info[]) => {
+    const handleProcesses = (processes: readonly Process.Process[]) => {
       const seen = new Set<Process.ID>();
       for (const process of processes) {
         seen.add(process.pid);
@@ -157,7 +157,7 @@ export default Capability.makeModule(
           ? {
               actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
               actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
-              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry, {}),
             }
           : {}),
       };

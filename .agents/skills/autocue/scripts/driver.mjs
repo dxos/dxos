@@ -27,8 +27,9 @@
  * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
  *
  * `--target tauri` drives the native desktop app instead of Chromium: `--app` names its binary (the release
- * build under `packages/apps/composer-app/src-tauri/target/release/app` by default), which runs under
- * `tauri-driver` on its own Xvfb screen (`--headed on` uses `$DISPLAY`), recorded by `tauri/recorder.mjs`.
+ * build under `packages/apps/composer-app/src-tauri/target/release/app` by default). On Linux it runs under
+ * `tauri-driver` on its own Xvfb screen (`--headed on` uses `$DISPLAY`); on macOS a test build serves WebDriver
+ * itself and records from webview snapshots. Either way `tauri/recorder.mjs` records it.
  * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
@@ -46,11 +47,11 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
+import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 import { launchTauri } from './tauri/launch.mjs';
-import { startX11Recorder } from './tauri/recorder.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -87,14 +88,22 @@ const parseArgs = () => {
     'cadence': 600,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
     'log': undefined,
-    // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through tauri-driver).
+    // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through WebDriver).
     'target': 'browser',
-    // Tauri only: the app binary, and the port tauri-driver listens on (its native driver takes the next).
+    // Tauri only: the app binary, and the WebDriver port: tauri-driver's on Linux (its native driver takes the
+    // next), the app's own on macOS.
     'app': fileURLToPath(
       new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url),
     ),
     'driver-port': 4444,
     'headed': 'off',
+    // `on` launches full Chromium's headless mode, which has the GPU, instead of the software-rendered headless shell.
+    'gpu': 'off',
+    // Tauri on macOS: `on` deletes the test build's profile before launch, for a first-run take.
+    'fresh': 'off',
+    // Extra Chromium flags, comma-separated, e.g. a fake microphone fed from a voice file:
+    // `--use-fake-device-for-media-stream,--use-fake-ui-for-media-stream,--use-file-for-fake-audio-capture=/tmp/voice.wav`.
+    'chromium-args': '',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -103,7 +112,8 @@ const parseArgs = () => {
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
   const narrate = options.mode === 'manual' ? 'off' : 'on';
-  options.pills ??= narrate;
+  // The action feed reads as debug chrome in a demo; `--pills on` brings it back.
+  options.pills ??= 'off';
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
@@ -140,6 +150,9 @@ const scale = hires ? options.scale : 1;
 
 const launchOptions = {
   headless: !manual,
+  // The default headless shell renders WebGL in software (SwiftShader), so a 3D plugin records at a few frames a
+  // second and starves the page; full Chromium's headless mode (`--gpu on`) uses the GPU.
+  ...(options.gpu === 'on' && !sandbox ? { channel: 'chromium' } : {}),
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
     // The page follows the window, so a person can resize it for their capture without a fixed viewport
@@ -156,6 +169,9 @@ const launchOptions = {
     // `deviceScaleFactor` alone renders the page at 2x but the screencast still captures at CSS size, so
     // the "2x" video was 1x frames upscaled; forcing the scale browser-wide makes the frames real 2x.
     ...(scale !== 1 ? [`--force-device-scale-factor=${scale}`] : []),
+    ...String(options['chromium-args'])
+      .split(',')
+      .filter((arg) => arg.length > 0),
   ],
 };
 
@@ -173,6 +189,8 @@ const native = tauri
       port: options['driver-port'],
       headed: manual || options.headed === 'on',
       proxy: sandbox,
+      log: path.join(options.out, 'native.log'),
+      fresh: options.fresh === 'on',
       onExit: (reason) => {
         console.error(`${reason}; the driver is exiting`);
         process.exit(1);
@@ -207,6 +225,9 @@ const context = tauri
         deviceScaleFactor: scale,
         colorScheme: options.theme,
         recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+        // trust; the proxy itself verifies the upstream certificate.
+        ignoreHTTPSErrors: Boolean(sandbox),
       });
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
@@ -215,6 +236,18 @@ const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(op
 const logTap = logFile
   ? await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }))
   : undefined;
+// A blinking caret is motion the trimmer cannot tell from typing, so a recording holds it steady.
+if (!manual && !native) {
+  await context.addInitScript(() => {
+    const style = () => {
+      const sheet = document.createElement('style');
+      sheet.textContent = '.cm-cursorLayer, .cm-cursor { animation: none !important; }';
+      document.head.append(sheet);
+    };
+    document.head ? style() : document.addEventListener('DOMContentLoaded', style);
+  });
+}
+
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -230,8 +263,7 @@ if (manual && !native) {
 const recorder = !hires
   ? undefined
   : native
-    ? await startX11Recorder({
-        display: native.display,
+    ? await native.record({
         dir: options.out,
         file: path.join(options.out, 'session.webm'),
         size: { width: viewport.width * scale, height: viewport.height * scale },
@@ -257,36 +289,42 @@ const timeline = [];
 
 /** Captions are re-injected per call because a navigation wipes the overlay. */
 const CAPTION_ID = '__demo_caption__';
+const SPEED_ID = '__demo_speed__';
+/** `speed` ops in recording time, for the trimmer to play those stretches faster. */
+const speedChanges = [];
 
-const showCaption = async (text, subtitle) => {
+/**
+ * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `open` (ms to
+ * hold the title as a centred panel before it moves to the header).
+ */
+const updateFrame = async (update) => {
+  await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
-    ({ id, text, subtitle }) => {
-      document.getElementById(id)?.remove();
-      const banner = document.createElement('div');
-      banner.id = id;
-      banner.style.cssText = [
-        'position:fixed',
-        'left:0',
-        'right:0',
-        'bottom:0',
-        'z-index:2147483647',
-        'padding:14px 20px',
-        'background:rgba(17,17,17,0.92)',
-        'color:#fff',
-        'font:600 16px/1.4 ui-sans-serif,system-ui,sans-serif',
-        'pointer-events:none',
-        'text-align:center',
-      ].join(';');
-      banner.textContent = text;
-      if (subtitle) {
-        const line = document.createElement('div');
-        line.style.cssText = 'opacity:0.65;font-weight:400;font-size:13px;margin-top:4px';
-        line.textContent = subtitle;
-        banner.appendChild(line);
+    ({ id, update }) => {
+      let host = document.getElementById(id);
+      if (!host) {
+        host = document.createElement('div');
+        host.id = id;
+        host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
+        document.body.appendChild(host);
+        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
       }
-      document.body.appendChild(banner);
+      const frame = host.__frame;
+      if ('headerBand' in update) {
+        frame.setHeaderBand(update.headerBand);
+      }
+      if ('header' in update) {
+        frame.setHeader(update.header ?? undefined);
+      }
+      if ('caption' in update) {
+        frame.setCaption(update.caption ?? undefined);
+      }
+      if (update.open) {
+        void frame.playOpen(update.open);
+      }
     },
-    { id: CAPTION_ID, text, subtitle },
+    { id: CAPTION_ID, update },
   );
 };
 
@@ -424,11 +462,18 @@ const cut = async () => {
   // The banner is page DOM, so it would outlive the timeline entry it belongs to; the page is repainted
   // before the cut so the frame the recorder keeps does not carry it either.
   await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID).catch(() => {});
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // Bounded: a hidden native window renders no frames.
+  await page.evaluate(() =>
+    Promise.race([
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      new Promise((resolve) => setTimeout(resolve, 200)),
+    ]),
+  );
   // The repainted frame reaches the recorder over CDP a beat after the paint itself.
   await page.waitForTimeout(150);
   started = recorder.cut();
   timeline.length = 0;
+  speedChanges.length = 0;
   return { cut: true };
 };
 
@@ -537,7 +582,7 @@ const runFlow = async (command) => {
         .filter(([op]) => !['run', 'abort', 'steps', 'status', 'stop'].includes(op))
         .map(([op, handler]) => [
           op,
-          quiet && op === 'caption'
+          quiet && (op === 'caption' || op === 'title')
             ? async () => ({})
             : (args = {}) => handler({ op, ...args, ...(quiet ? { hud: false } : {}) }),
         ]),
@@ -587,12 +632,36 @@ const runFlow = async (command) => {
     try {
       // The take starts where setup ends: a play button, then 3-2-1, so the person recording knows
       // the moment everything before it stops being preparation.
-      if (index > 0 && steps[index - 1].setup && !step.setup && command.countdown !== false) {
+      const opening = !step.setup && (index === 0 || steps[index - 1].setup);
+      if (opening && index > 0 && command.countdown !== false) {
         flow.state = 'cued';
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
       }
+      // `title` opens the take with the Frame's open: the title alone, centred, held until it hands off. It is a
+      // chapter too, so the trimmer gives its still frames the caption hold rather than cutting them.
+      if (opening && command.title) {
+        const open = command.title.open ?? 3_000;
+        timeline.push({ ms: Date.now() - started, text: command.title.value, narration: command.title.value });
+        // With captions off nothing is painted, so the take must not stand still for a title nobody sees.
+        if (options.captions !== 'off') {
+          await interruptible(handlers.title({ ...command.title, open, hold: open + 600 }));
+        }
+      }
+      // `captions: true` captions every on-camera step with its `caption` (or name), as a `.mdl` run would.
+      if (!step.setup && command.captions) {
+        await handlers.caption({ value: step.caption ?? step.name, subtitle: step.subtitle });
+      }
+      // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
+      // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.
+      const at = Date.now();
+      const mark = { ms: at - started, text: step.name, narration: step.narration ?? step.name };
       await interruptible(step.run({ page, demo }));
+      if (!step.setup) {
+        // A boot cut inside the step (its `goto`) moves `started`; the chapter then opens at the cut.
+        mark.ms = Math.max(0, at - started);
+        timeline.push(mark);
+      }
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
       flow.next = index + 1;
     } catch (error) {
@@ -784,7 +853,7 @@ const handlers = {
   },
   caption: async (command) => {
     if (options.captions !== 'off') {
-      await showCaption(command.value, command.subtitle);
+      await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
     }
     timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
     if (command.hold) {
@@ -850,8 +919,63 @@ const handlers = {
     };
   },
   clearCaption: async () => {
-    await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID);
+    await updateFrame({ caption: null });
     return {};
+  },
+  /**
+   * The take's title (`band: true` also keeps it as a band over the top after the open title): `value` / `subtitle`, and `open`
+   * milliseconds (default 3000, 0 for none) to hold it as a centred panel first, as an opening title. `hold` waits
+   * out the open title before returning. An empty `value` clears it.
+   */
+  title: async (command) => {
+    const open = command.open ?? 3_000;
+    if (options.captions !== 'off') {
+      await updateFrame({
+        header: command.value ? { title: command.value, subtitle: command.subtitle } : null,
+        headerBand: command.band ?? false,
+        open: command.value ? open : 0,
+      });
+    }
+    if (command.hold) {
+      await page.waitForTimeout(command.hold);
+    }
+    return { at: (Date.now() - started) / 1000 };
+  },
+  /**
+   * Plays what follows at `factor` times speed in the cut (`factor: 1` returns to normal), for stretches
+   * that are motion without content, like an agent working. A badge marks them, so the jump is not a lie.
+   */
+  speed: async (command) => {
+    // A factor that is not a number would record as null and silently play at 1x under a broken badge.
+    const requested = Math.round(Number(command.factor ?? 1));
+    const factor = Number.isFinite(requested) ? Math.max(1, requested) : 1;
+    speedChanges.push({ ms: Date.now() - started, factor });
+    await page.evaluate(
+      ({ id, factor }) => {
+        document.getElementById(id)?.remove();
+        if (factor === 1) {
+          return;
+        }
+        const badge = document.createElement('div');
+        badge.id = id;
+        badge.style.cssText = [
+          'position:fixed',
+          'top:16px',
+          'right:16px',
+          'z-index:2147483647',
+          'padding:6px 12px',
+          'border-radius:999px',
+          'background:rgba(17,17,17,0.85)',
+          'color:#fff',
+          'font:600 15px/1.2 ui-sans-serif,system-ui,sans-serif',
+          'pointer-events:none',
+        ].join(';');
+        badge.textContent = `\u23e9 ${factor}\u00d7`;
+        document.body.appendChild(badge);
+      },
+      { id: SPEED_ID, factor },
+    );
+    return { factor };
   },
   sleep: async (command) => {
     await page.waitForTimeout(command.ms ?? 1_000);
@@ -868,13 +992,22 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
-    writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
-    const recorded = await recorder?.stop();
-    // Before the session closes: the polled tap drains once more and stops its timer.
-    await logTap?.close();
-    await context?.close();
-    await browser?.close();
-    await native?.close();
+    // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
+    writeFileSync(
+      timelineFile,
+      JSON.stringify({ started, flow: flow.file, steps: timeline, speed: speedChanges }, null, 2),
+    );
+    let recorded;
+    try {
+      recorded = await recorder?.stop();
+    } finally {
+      // Also when the encode fails: the app, browser and log tap must not outlive the session.
+      // Before the session closes: the polled tap drains once more and stops its timer.
+      await logTap?.close();
+      await context?.close();
+      await browser?.close();
+      await native?.close();
+    }
     // `recorded.file` already carries the output directory; only the fallback's bare name needs it.
     const fallback = recorded ? undefined : readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
     const video = recorded ? path.resolve(recorded.file) : fallback && path.resolve(options.out, fallback);
@@ -883,6 +1016,8 @@ const handlers = {
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
+      // The recorder kept writing, but what it wrote after this point is not the app.
+      ...(recorded?.lost ? { lost: recorded.lost } : {}),
     };
   },
 };
@@ -931,10 +1066,12 @@ const server = createServer((request, response) => {
 
     try {
       const result = await handler(command);
+      // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
+      const body = JSON.stringify({ ok: true, ...result });
       response.writeHead(200, { 'content-type': 'application/json' });
       // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
       // off before it flushes, and that response carries the video path.
-      response.end(JSON.stringify({ ok: true, ...result }), () => {
+      response.end(body, () => {
         if (command.op === 'stop' && !manual) {
           // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
           // the exit entirely leaves the process alive on an idle client socket, and exiting before the

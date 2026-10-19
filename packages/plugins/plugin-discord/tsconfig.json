@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -34,13 +37,13 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/sql-sqlite"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -67,6 +70,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -76,10 +82,43 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-agent"
     },
     {
       "path": "../plugin-client"
@@ -89,6 +128,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

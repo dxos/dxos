@@ -72,24 +72,28 @@ export class HaloProxy implements Halo {
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
   private readonly _credentialsChanged = new Event<Credential[]>();
-  private readonly _inboxChanged = new Event<readonly InboxService.Notice[]>();
+  private readonly _inboxChanged = new Event<readonly InboxService.InboxMessage[]>();
+  private readonly _inboxStatusChanged = new Event<InboxService.Status>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
   private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
   private readonly _inbox: HaloInbox = {
-    notices: MulticastObservable.from(this._inboxChanged, []),
-    send: (request) =>
-      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.send'](request), {
+    messages: MulticastObservable.from(this._inboxChanged, []),
+    status: MulticastObservable.from(this._inboxStatusChanged, 'available'),
+    sendMessage: (request) =>
+      runServiceCall(this._runtime, this._serviceProvider.rpc, 'InboxService.sendMessage', request, {
         timeout: RPC_TIMEOUT,
-        label: 'InboxService.send',
       }),
     ack: (ids) =>
-      runServiceCall(this._runtime, this._serviceProvider.rpc['InboxService.ack']({ ids: [...ids] }), {
-        timeout: RPC_TIMEOUT,
-        label: 'InboxService.ack',
-      }),
+      runServiceCall(
+        this._runtime,
+        this._serviceProvider.rpc,
+        'InboxService.ack',
+        { ids: [...ids] },
+        { timeout: RPC_TIMEOUT },
+      ),
   };
   private _invitationProxy?: InvitationsProxy;
 
@@ -254,7 +258,10 @@ export class HaloProxy implements Halo {
 
     this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['InboxService.subscribe'](undefined), {
-        onData: (data) => this._inboxChanged.emit(data.notices),
+        onData: (data) => {
+          this._inboxChanged.emit(data.messages);
+          this._inboxStatusChanged.emit(data.status ?? 'available');
+        },
         // The inbox is optional: an unreachable EDGE must not affect the rest of HALO.
         onError: (error) => log.warn('inbox stream failed', { error }),
       }),
@@ -291,6 +298,7 @@ export class HaloProxy implements Halo {
     this._devicesChanged.emit([]);
     this._contactsChanged.emit([]);
     this._inboxChanged.emit([]);
+    this._inboxStatusChanged.emit('available');
   }
 
   /**
@@ -327,11 +335,13 @@ export class HaloProxy implements Halo {
     });
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.createIdentity']({
+      this._serviceProvider.rpc,
+      'IdentityService.createIdentity',
+      {
         profile: profile,
         deviceProfile: deviceProfileWithDefaults,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'IdentityService.createIdentity' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -343,9 +353,8 @@ export class HaloProxy implements Halo {
    * The client stays open, so {@link createIdentity} may be called straight afterwards.
    */
   async deleteIdentity(): Promise<void> {
-    await runServiceCall(this._runtime, this._serviceProvider.rpc['IdentityService.deleteIdentity'](undefined), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc, 'IdentityService.deleteIdentity', undefined, {
       timeout: RPC_TIMEOUT,
-      label: 'IdentityService.deleteIdentity',
     });
     this._identityChanged.emit(null);
   }
@@ -353,11 +362,10 @@ export class HaloProxy implements Halo {
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.recoverIdentity'](toRecoverIdentityRequest(args)),
-      {
-        timeout: RPC_TIMEOUT,
-        label: 'IdentityService.recoverIdentity',
-      },
+      this._serviceProvider.rpc,
+      'IdentityService.recoverIdentity',
+      toRecoverIdentityRequest(args),
+      { timeout: RPC_TIMEOUT },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -371,11 +379,10 @@ export class HaloProxy implements Halo {
   private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.updateProfile'](profile),
-      {
-        timeout: RPC_TIMEOUT,
-        label: 'IdentityService.updateProfile',
-      },
+      this._serviceProvider.rpc,
+      'IdentityService.updateProfile',
+      profile,
+      { timeout: RPC_TIMEOUT },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -439,11 +446,13 @@ export class HaloProxy implements Halo {
 
     await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.writeCredentials']({
+      this._serviceProvider.rpc,
+      'SpacesService.writeCredentials',
+      {
         spaceKey: requirePublicKey(identity.spaceKey),
         credentials,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.writeCredentials' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
   }
 
@@ -470,11 +479,13 @@ export class HaloProxy implements Halo {
     );
     const presentation = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.signPresentation']({
+      this._serviceProvider.rpc,
+      'IdentityService.signPresentation',
+      {
         presentation: buf.create(PresentationSchema, { credentials }),
         nonce,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
     return presentation;
   }

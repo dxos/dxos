@@ -3,253 +3,206 @@
 //
 
 import React, {
-  type Ref,
+  type ComponentPropsWithRef,
+  type CSSProperties,
   forwardRef,
   useCallback,
   useEffect,
-  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useReducedMotion } from '../../util/index.ts';
-import { type TextCrawlSize } from './sizes.ts';
+import { recipes } from '../../recipes.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
 
 const emptyLines: string[] = [];
 
-// The per-line opacity fade runs at 1/3 of the ribbon translate duration, so
-// the active line is fully bright by the time the ribbon settles in place.
-const LINE_FADE_RATIO = 1 / 3;
-
-export type TextCrawlProps = {
-  /** Auto-advance after `minDuration`. */
+export type TextCrawlProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>> & {
+  lines?: string[];
+  /** The line shown (controlled); absent, the crawl owns it. */
+  index?: number;
+  /** Wraps from the last line back to the first, scrolling on through a copy of the first. */
+  cyclic?: boolean;
+  /** Milliseconds a scroll takes. */
+  transition?: number;
+  /** Advances every `minDuration` (uncontrolled). */
   autoAdvance?: boolean;
-  /** Start at the last line. */
+  /** Starts at, and keeps to, the last line (uncontrolled). */
   greedy?: boolean;
-  /** Minimum time after update before scrolling. */
+  /** Least time a line is shown before advancing. */
   minDuration?: number;
-} & Pick<TextRibbonProps, 'classNames' | 'textClassNames' | 'size' | 'lines' | 'index' | 'cyclic' | 'transition'>;
+};
 
 /**
- * Scrolling text lines.
+ * Text lines in a one-line window that scroll up from one to the next. The line height is the inherited size's
+ * `--dx-line-height`, so the crawl sizes with its row rather than having a scale of its own; the scroll is a CSS
+ * transform driven by `--dx-text-crawl-index`, and only lines other than the shown one are hidden from assistive tech.
  */
-export const TextCrawl = ({
-  autoAdvance = false,
-  greedy = false,
-  minDuration = 1_000,
-  size = 'md',
-  lines = emptyLines,
-  index: indexProp,
-  cyclic,
-  transition = 500,
-  ...props
-}: TextCrawlProps) => {
-  const [index, setIndex] = useState(() => (greedy ? Math.max(0, lines.length - 1) : 0));
-
-  // Control ribbon.
-  const controllerRef = useRef<TextRibbonController>(null);
-  const setPosition = useCallback<TextRibbonController['setPosition']>((index, animate = false) => {
-    controllerRef.current?.setPosition(index, animate);
-  }, []);
-
-  // Determine if reset.
-  const prevLinesRef = useRef<string[]>(lines);
-  const wasReset = useMemo(() => {
-    const prevLines = prevLinesRef.current;
-    const wasReset =
-      lines.length < prevLines.length || prevLines.length === 0 || !prevLines.every((line, i) => line === lines[i]);
-    prevLinesRef.current = lines;
-    return wasReset;
-  }, [lines]);
-
-  // Starting index.
-  const paintedRef = useRef(false);
-  useEffect(() => {
-    setPosition(index, false);
-  }, []);
-
-  // Greedy: keep uncontrolled index on the last line when lines or greedy change.
-  useEffect(() => {
-    if (!greedy || indexProp !== undefined) {
-      return;
-    }
-
-    const lastIndex = Math.max(0, lines.length - 1);
-    if (lines.length === 0) {
-      return;
-    }
-
-    setIndex((prev) => (prev === lastIndex ? prev : lastIndex));
-  }, [greedy, lines, indexProp]);
-
-  // Controlled.
-  useEffect(() => {
-    if (indexProp === undefined || indexProp === index) {
-      return;
-    }
-
-    const next = Math.max(0, Math.min(indexProp, lines.length - 1));
-    setIndex(next);
-    setPosition(next, true);
-  }, [indexProp, index]);
-
-  // Uncontrolled.
-  useEffect(() => {
-    if (indexProp !== undefined) {
-      return;
-    }
-
-    let i: NodeJS.Timeout;
-    // `greedy` means arrive at the last line, not scroll to it — but only on the first paint. It
-    // holds the index at the tail for the whole run, so testing it on every update suppressed the
-    // animation for good and the crawl never moved.
-    const settled = paintedRef.current;
-    paintedRef.current = true;
-    setPosition(index, settled && index !== 0 && !wasReset);
-    if (cyclic && index >= lines.length) {
-      i = setTimeout(() => {
-        setIndex(0);
-        setPosition(0, false);
-      }, transition);
-    }
-
-    return () => {
-      clearTimeout(i);
-    };
-  }, [wasReset, lines, index, indexProp, cyclic]);
-
-  // Auto-advance.
-  const lastUpdatedRef = useRef(Date.now());
-  useEffect(() => {
-    if (!autoAdvance) {
-      return;
-    }
-
-    const next = () => {
-      setIndex((prev) => {
-        const next = Math.min(prev + 1, lines.length);
-        if (next >= lines.length) {
-          if (cyclic) {
-            return next;
-          } else {
-            clearInterval(i);
-            return prev;
-          }
-        }
-
-        return next;
-      });
-    };
-
-    if (wasReset) {
-      setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
-    } else {
-      const now = Date.now();
-      const wasVisible = now - lastUpdatedRef.current >= minDuration;
-      lastUpdatedRef.current = now;
-      if (wasVisible) {
-        next();
-      }
-    }
-
-    const i = setInterval(next, minDuration);
-    return () => clearInterval(i);
-  }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
-
-  return (
-    <TextRibbon
-      ref={controllerRef}
-      size={size}
-      lines={lines}
-      index={index}
-      cyclic={cyclic}
-      transition={transition}
-      {...props}
-    />
-  );
-};
-
-//
-// Ribbon
-//
-
-const sizeClassNames: Record<TextCrawlSize, { lineHeight: number; className: string }> = {
-  sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
-  md: { lineHeight: 24, className: 'h-[24px]' },
-  lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
-};
-
-export interface TextRibbonController {
-  setPosition: (index: number, animate?: boolean) => void;
-}
-
-export type TextRibbonProps = ThemedClassName<{
-  textClassNames?: ClassNameValue;
-  size?: TextCrawlSize;
-  lines?: string[];
-  index?: number;
-  cyclic?: boolean;
-  transition?: number;
-}>;
-
-export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
+export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
   (
     {
       classNames,
-      textClassNames,
-      size = 'md',
       lines = emptyLines,
-      index = 0,
+      index: indexProp,
       cyclic,
       transition = 500,
-    }: TextRibbonProps,
-    forwardedRef: Ref<TextRibbonController>,
+      autoAdvance = false,
+      greedy = false,
+      minDuration = 1_000,
+      style,
+      ...props
+    },
+    forwardedRef,
   ) => {
-    const { className, lineHeight } = sizeClassNames[size];
-    const containerRef = useRef<HTMLDivElement>(null);
-    const reducedMotion = useReducedMotion();
+    const [index, setIndex] = useState(() => (greedy ? Math.max(0, lines.length - 1) : 0));
 
-    const setPosition = useCallback<TextRibbonController['setPosition']>(
-      (index, animate = false) => {
-        if (containerRef.current) {
-          const shouldAnimate = animate && !reducedMotion;
-          containerRef.current.style.transition = shouldAnimate
-            ? `transform ${transition}ms ease-in-out`
-            : 'transform 0ms';
-          containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
+    // Written to the ribbon directly rather than through state, so a jump and the animation that follows it are not
+    // batched into one render.
+    const ribbonRef = useRef<HTMLDivElement>(null);
+    const setPosition = useCallback((position: number, animate = false) => {
+      const ribbon = ribbonRef.current;
+      if (ribbon) {
+        ribbon.style.setProperty('--dx-text-crawl-index', String(position));
+        ribbon.toggleAttribute('data-animate', animate);
+      }
+    }, []);
+
+    // A crawl whose lines shrank or changed (rather than grew) starts over.
+    const prevLinesRef = useRef<string[]>(lines);
+    const wasReset = useMemo(() => {
+      const prevLines = prevLinesRef.current;
+      const reset =
+        lines.length < prevLines.length || prevLines.length === 0 || !prevLines.every((line, i) => line === lines[i]);
+      prevLinesRef.current = lines;
+      return reset;
+    }, [lines]);
+
+    const paintedRef = useRef(false);
+    useEffect(() => {
+      setPosition(index, false);
+    }, []);
+
+    // Greedy: keep an uncontrolled crawl on the last line as lines arrive.
+    useEffect(() => {
+      if (!greedy || indexProp !== undefined || lines.length === 0) {
+        return;
+      }
+
+      const lastIndex = lines.length - 1;
+      setIndex((prev) => (prev === lastIndex ? prev : lastIndex));
+    }, [greedy, lines, indexProp]);
+
+    // Controlled.
+    useEffect(() => {
+      if (indexProp === undefined || indexProp === index) {
+        return;
+      }
+
+      const next = Math.max(0, Math.min(indexProp, lines.length - 1));
+      setIndex(next);
+      setPosition(next, true);
+    }, [indexProp, index]);
+
+    // Uncontrolled.
+    useEffect(() => {
+      if (indexProp !== undefined) {
+        return;
+      }
+
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      // `greedy` arrives at the last line on the first paint only; testing it on every update would suppress the
+      // animation for good.
+      const settled = paintedRef.current;
+      paintedRef.current = true;
+      setPosition(index, settled && index !== 0 && !wasReset);
+      if (cyclic && index >= lines.length) {
+        // Scrolled onto the copy of the first line: jump back to the real one once the scroll lands.
+        timeout = setTimeout(() => {
+          setIndex(0);
+          setPosition(0, false);
+        }, transition);
+      }
+
+      return () => clearTimeout(timeout);
+    }, [wasReset, lines, index, indexProp, cyclic]);
+
+    // Auto-advance.
+    const lastUpdatedRef = useRef(Date.now());
+    useEffect(() => {
+      if (!autoAdvance) {
+        return;
+      }
+
+      let interval: ReturnType<typeof setInterval> | undefined;
+      const next = () => {
+        setIndex((prev) => {
+          const next = Math.min(prev + 1, lines.length);
+          if (next >= lines.length && !cyclic) {
+            clearInterval(interval);
+            return prev;
+          }
+
+          return next;
+        });
+      };
+
+      if (wasReset) {
+        setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
+      } else {
+        const now = Date.now();
+        const wasVisible = now - lastUpdatedRef.current >= minDuration;
+        lastUpdatedRef.current = now;
+        if (wasVisible) {
+          next();
         }
-      },
-      [lineHeight, transition, reducedMotion],
-    );
+      }
 
-    // Controller.
-    useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
+      interval = setInterval(next, minDuration);
+      return () => clearInterval(interval);
+    }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
+
+    const rootStyle: CSSProperties & CSSVariables = {
+      ...style,
+      '--dx-text-crawl-duration': `${transition}ms`,
+    };
+    const shown = (line: number) => index === line || (line === 0 && index === lines.length);
 
     return (
-      <div className={mx('relative overflow-hidden', className, classNames)}>
-        <div ref={containerRef} className={mx('flex flex-col')}>
+      <div
+        {...props}
+        data-scope='text-crawl'
+        data-part='root'
+        style={rootStyle}
+        className={mx(recipes.textCrawl(), classNames)}
+        ref={forwardedRef}
+      >
+        <div data-scope='text-crawl' data-part='ribbon' className={recipes.textCrawlRibbon()} ref={ribbonRef}>
           {lines.map((line, i) => (
-            <Line
+            <div
               key={i}
-              line={lines[i]}
-              active={index === i || (i === 0 && index === lines.length)}
-              transition={transition}
-              reducedMotion={reducedMotion}
-              classNames={[className, textClassNames]}
-            />
+              data-scope='text-crawl'
+              data-part='line'
+              data-active={shown(i) ? '' : undefined}
+              aria-hidden={shown(i) ? undefined : true}
+              className={recipes.textCrawlLine()}
+            >
+              {line}
+            </div>
           ))}
-          {cyclic && (
-            <Line
-              line={lines[0]}
-              active={index === lines.length || index === 0}
-              transition={transition}
-              reducedMotion={reducedMotion}
-              classNames={[className, textClassNames]}
-            />
+          {cyclic && lines.length > 0 && (
+            <div
+              data-scope='text-crawl'
+              data-part='line'
+              data-active={index === lines.length || index === 0 ? '' : undefined}
+              aria-hidden
+              className={recipes.textCrawlLine()}
+            >
+              {lines[0]}
+            </div>
           )}
         </div>
       </div>
@@ -257,21 +210,4 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
   },
 );
 
-const Line = ({
-  classNames,
-  line,
-  active,
-  transition,
-  reducedMotion,
-}: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
-  return (
-    <div
-      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
-      className={mx('flex items-center transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
-    >
-      {/* The ellipsis needs a block with inline content: on the flex line itself the text is an
-          anonymous item and `text-overflow` never applies, so a long line was cut mid-glyph. */}
-      <span className='min-w-0 truncate'>{line}</span>
-    </div>
-  );
-};
+TextCrawl.displayName = 'TextCrawl';

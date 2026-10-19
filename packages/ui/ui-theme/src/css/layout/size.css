@@ -44,10 +44,6 @@
    * Card
    */
 
-  .dx-card {
-    @apply flex flex-col w-full;
-  }
-
   .dx-card-square {
     inline-size: min(min(var(--available-width), var(--spacing-card-max-width)), min(var(--available-height), 100dvh));
     block-size: min(min(var(--available-width), var(--spacing-card-max-width)), min(var(--available-height), 100dvh));

@@ -27,4 +27,12 @@ The same model also runs on Cloudflare Workers AI
 (`ai.typesafe.model.jev.latest`). It goes through EDGE's `/ai/generate/workers-ai/typesafe` route on
 EDGE's Cloudflare account, so no key is sent and every call is metered.
 
+Cloudflare's own decision models, [Clef](https://blog.cloudflare.com/clef-decision-models/)
+(`Model.cloudflareClef`, `@cf/cloudflare/clef`) and Clef Flash (`Model.cloudflareClefFlash`,
+`@cf/cloudflare/clef-flash`), speak the same System One wire and take the same Workers AI route.
+
+**Default model.** A caller with no reason to pin a model asks for `Model.defaultDecisionModel`; the
+plugin's **Default decision model** setting picks which of the four it resolves to (Jev on TypeSafe
+when unset).
+
 See [docs/DESIGN.md](./docs/DESIGN.md); the provider itself lives in `@dxos/ai/resolvers`.

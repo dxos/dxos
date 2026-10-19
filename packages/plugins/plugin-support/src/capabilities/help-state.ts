@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { HelpCapabilities } from '#types';
@@ -15,7 +15,7 @@ import { HelpCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    const stateAtom = createKvsStore({
+    const stateAtom = KvsStore.make({
       key: `${meta.profile.key}.state`,
       schema: HelpCapabilities.StateSchema,
       defaultValue: (): HelpCapabilities.State => ({
@@ -27,7 +27,7 @@ export default Capability.makeModule(
 
     // Synced as its own namespace; the settings UI lists only prefixes equal to a plugin id.
     const toursPrefix = `${meta.profile.key}.tours`;
-    const seenToursAtom = createKvsStore({
+    const seenToursAtom = KvsStore.make({
       key: toursPrefix,
       schema: HelpCapabilities.SeenToursSchema,
       defaultValue: (): HelpCapabilities.SeenTours => ({}),

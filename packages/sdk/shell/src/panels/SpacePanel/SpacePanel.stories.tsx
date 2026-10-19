@@ -5,6 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
@@ -17,6 +18,7 @@ import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../
 import { InvitationManager, type InvitationManagerProps } from '../../steps/index.ts';
 import { StorybookDialog } from '../../story-components/index.ts';
 import { inviteWithState } from '../../testing/fixtures/index.ts';
+import { translations } from '../../translations.ts';
 import { SpaceManagerImpl } from './SpaceManager.tsx';
 import { SpacePanelImpl } from './SpacePanel.tsx';
 import { type SpacePanelImplProps } from './SpacePanelProps.ts';
@@ -33,6 +35,9 @@ const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
   decorators: [withTheme()],
+  parameters: {
+    translations,
+  },
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;
@@ -77,6 +82,17 @@ export const SpaceManagerWithInvites = () => {
       />
     </StorybookDialog>
   );
+};
+
+/** A pending invitation's ✕ ends where the split button below it does, rather than padded inside the panel's edge. */
+export const TestInvitationAlignment = () => <SpaceManagerWithInvites />;
+
+// A function story (not a story object) so the Panels overview can render every export as a component.
+TestInvitationAlignment.play = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  const body = within(canvasElement.ownerDocument.body);
+  const remove = (await body.findByTestId('cancel-invitation')).getBoundingClientRect();
+  const split = (await body.findByTestId('spaces-panel.create-invitation.more')).getBoundingClientRect();
+  await expect(Math.abs(remove.right - split.right)).toBeLessThanOrEqual(1);
 };
 
 export const SpaceManagerWithMoreInvites = () => {

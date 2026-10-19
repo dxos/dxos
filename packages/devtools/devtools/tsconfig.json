@@ -76,6 +76,9 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -124,6 +127,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -134,6 +140,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     }
   ]
 }

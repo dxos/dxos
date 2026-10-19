@@ -2,93 +2,92 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Steps` — a fixed plan drawn as circles joined by lines, built on `@ark-ui/react`'s Steps
-// (zag state machine). The machine owns which stage is complete, in flight or still ahead, and
-// stamps that onto every part as `data-complete` / `data-current` / `data-incomplete` plus the
-// item's `aria-current`. DXOS owns everything the machine has no notion of: how far through the
-// stage in flight the run is, a stage that cannot be counted, a stage that failed, a stage the
-// caller singled out, and the handover that holds an advance back until the line has arrived.
-
 import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
-import React, { useEffect, useState } from 'react';
+import React, { type CSSProperties, forwardRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type StepState } from '../../theme/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-/** One stage of a plan that has identity — a stage the caller can address and select. */
+import { translationKey } from '#translations';
+
+import { recipes } from '../../recipes.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
+
+/** One stage of a plan that has identity: a stage the caller can address and select. */
 export type Step = {
   id: string;
   label?: string;
 };
 
-export type StepOptions = {
-  /** Diameter of a stage's circle. */
-  size: number;
-  /** Thickness of the line between stages. */
-  thickness: number;
-  /** Transition duration (ms) for a line's fill. */
-  duration: number;
-};
+/** Where a stage sits relative to the run: ahead of it, in flight, behind it, or where it failed. */
+export type StepState = 'pending' | 'active' | 'complete' | 'error';
 
-export const defaultStepOptions: StepOptions = {
-  size: 15,
-  thickness: 2,
-  duration: 500,
-};
-
-export type StepsProps = ThemedClassName<{
-  /**
-   * The plan: a count when the stages are anonymous, or the stages themselves when they have
-   * identity. Either way the number is fixed and every stage is drawn.
-   */
+export type StepsProps = ThemedClassName<
+  Omit<StepsPrimitive.RootProps, 'children' | 'count' | 'step' | 'defaultStep' | 'onStepChange' | 'onSelect'>
+> & {
+  /** The plan: a count when the stages are anonymous, or the stages themselves; every stage is drawn. */
   steps: number | Step[];
   /**
-   * Zero-based index of the stage in flight; absent means none has claimed one yet, and a value at
-   * or past the last stage means the run is over — every stage complete and nothing in flight.
+   * Zero-based index of the stage in flight; absent means none has started, and a value at or past the last stage
+   * means the run is over.
    */
   active?: number;
-  /** How far through the stage in flight, 0..1. Drawn on the line leaving that stage. */
+  /** How far through the stage in flight, 0..1, drawn on the line leaving it. */
   fraction?: number;
-  /** The stage in flight cannot be counted: it spins rather than filling its line. */
+  /** The stage in flight cannot be counted, so it spins rather than filling its line. */
   indeterminate?: boolean;
-  /** The run stopped on the stage in flight. */
+  /** The run stopped on the stage in flight; every stage it reached is drawn in the error colour. */
   error?: boolean;
   /** Index of a stage the caller has singled out. */
   selected?: number;
+  /** Makes every stage a toggle button. */
   onSelect?: (step: { index: number; id: string }) => void;
-  options?: StepOptions;
-}>;
+  /** Milliseconds a line takes to fill, and so how long an advance is held back for it to arrive. */
+  duration?: number;
+};
 
 /**
- * A fixed plan, drawn as circles joined by lines.
- *
- * ```
- * (o)————(o)————(*)- - - ( )- - - ( )
- * ```
- *
- * The lines flex, so the stages spread across whatever width the component is given and the gaps stay
- * even however many there are.
- *
- * Two readings on one drawing: which stage is in flight says where the run is in its plan, and the
- * fill of the line leaving that stage says how far through it — so a counted run needs no separate
- * bar. A stage with nothing to count cannot be drawn that way, so it spins instead, which is the
- * honest reading rather than a line resting at a number that means nothing.
+ * The machine has no "not started" step (it throws on an index outside `0..count`), so the plan is declared one stage
+ * longer and every stage shifted up by one: the machine resting on index 0 means nothing has started.
  */
-export const Steps = composable<HTMLDivElement, StepsProps>(
+const PHANTOM = 1;
+
+/**
+ * A fixed plan drawn as icon-sized circles joined by lines that flex, so the gaps stay even however many stages there
+ * are. Which stage is in flight says where the run is in its plan; the fill of the line leaving it says how far through
+ * that stage, so a counted run needs no separate bar (`Progress` is the planless form).
+ */
+export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   (
-    { steps, active, fraction = 0, indeterminate, error, selected, onSelect, options = defaultStepOptions, ...props },
+    {
+      classNames,
+      steps,
+      active,
+      fraction = 0,
+      indeterminate,
+      error,
+      selected,
+      onSelect,
+      duration = 500,
+      style,
+      ...props
+    },
     forwardedRef,
   ) => {
-    const { tx } = useThemeContext();
     const count = stepCount(steps);
-    const { shown, handover } = useHandover(active, options.duration);
+    const { shown, handover } = useHandover(active, duration);
+    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
 
     return (
       <StepsPrimitive.Root
-        {...composableProps(props, { classNames: tx('steps.root', {}), role: 'list' })}
+        {...props}
+        role='list'
         count={count + PHANTOM}
-        step={machineStep(shown, count)}
+        step={shown === undefined ? 0 : Math.min(Math.max(shown, 0) + PHANTOM, count + PHANTOM)}
+        data-error={error ? '' : undefined}
+        style={rootStyle}
+        className={mx(recipes.steps(), classNames)}
         ref={forwardedRef}
       >
         <StepsItems
@@ -100,7 +99,6 @@ export const Steps = composable<HTMLDivElement, StepsProps>(
           error={error}
           selected={selected}
           onSelect={onSelect}
-          options={options}
         />
       </StepsPrimitive.Root>
     );
@@ -109,27 +107,11 @@ export const Steps = composable<HTMLDivElement, StepsProps>(
 
 Steps.displayName = 'Steps';
 
-//
-// Parts
-//
-
-/**
- * The machine has no "not started" step — it throws on an index outside `0..count` — so the plan is
- * declared one stage longer than it is and every stage shifted up by one. Index 0 is that phantom
- * stage: the machine resting on it means nothing has claimed a real one, and every real stage reads
- * as ahead of the run.
- */
-const PHANTOM = 1;
-
-/** Where the machine rests, in its own (shifted) indices. */
-const machineStep = (shown: number | undefined, count: number): number =>
-  shown === undefined ? 0 : Math.min(Math.max(shown, 0) + PHANTOM, count + PHANTOM);
-
-type StepsItemsProps = Required<Pick<StepsProps, 'steps' | 'fraction' | 'options'>> &
-  Pick<StepsProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
-    count: number;
-    handover: boolean;
-  };
+type StepsItemsProps = Pick<StepsProps, 'steps' | 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
+  count: number;
+  fraction: number;
+  handover: boolean;
+};
 
 const StepsItems = ({
   steps,
@@ -140,50 +122,60 @@ const StepsItems = ({
   error,
   selected,
   onSelect,
-  options,
 }: StepsItemsProps) => {
-  const { tx } = useThemeContext();
   const api = useStepsContext();
+  const { t } = useTranslation(translationKey);
 
   return (
     <>
-      {Array.from({ length: count }, (_, index) => {
+      {Array.from({ length: count }, (_unused, index) => {
         const step = stepAt(steps, index);
         const { current, completed } = api.getItemState({ index: index + PHANTOM });
         const state = stepState(current, completed, handover, error);
         const last = index === count - 1;
+        // A circle carries no text and an anonymous plan supplies no label, so its position is the only name it has.
+        const label = step.label?.trim() || t('steps.step.label', { index: index + 1 });
+        const indicator = {
+          'index': index + PHANTOM,
+          'aria-label': label,
+          // Ark hides its indicator from assistive tech; here the circle is the stage's only representation.
+          'aria-hidden': false,
+          'data-state': state,
+          'data-selected': selected === index ? '' : undefined,
+          'data-spinning': state === 'active' && indeterminate ? '' : undefined,
+        } as const;
 
         return (
-          // The item stretches so its trailing line can flex; the last has no line to give it away.
           <StepsPrimitive.Item
             key={step.id}
             index={index + PHANTOM}
             role='listitem'
-            className={tx('steps.item', { last })}
+            data-last={last ? '' : undefined}
+            className={recipes.stepsItem()}
           >
-            <Circle
-              index={index}
-              step={step}
-              state={state}
-              failed={error}
-              selected={selected === index}
-              indeterminate={indeterminate}
-              options={options}
-              onClick={onSelect && (() => onSelect({ index, id: step.id }))}
-            />
+            {onSelect ? (
+              // A real button so it takes focus and answers the keyboard; selection toggles, which `aria-pressed`
+              // describes. Not the machine's trigger, which is a `tab` for a panel this component never renders.
+              <StepsPrimitive.Indicator {...indicator} className={recipes.stepsButton()} asChild>
+                <button
+                  type='button'
+                  aria-pressed={selected === index}
+                  onClick={() => onSelect({ index, id: step.id })}
+                />
+              </StepsPrimitive.Indicator>
+            ) : (
+              // A bare element maps to `generic`, where ARIA discards the label.
+              <StepsPrimitive.Indicator {...indicator} role='img' className={recipes.stepsIndicator()} />
+            )}
             {!last && (
-              // The line leaving a stage carries that stage's progress: full once the run is past
-              // it, fractional while it is the one in flight, empty ahead of it.
-              <StepsPrimitive.Separator className={tx('steps.connector', {})} style={{ height: options.thickness }}>
-                <div
-                  className={tx('steps.fill', { failed: error })}
+              <StepsPrimitive.Separator className={recipes.stepsSeparator()}>
+                <span
+                  className={recipes.stepsFill()}
                   style={{
                     width: `${connectorFraction(completed, current, handover, fraction) * 100}%`,
-                    // Only the line leaving the stage in flight eases, so an incremental advance
-                    // glides rather than jumps. Every other line is already at its end or at
-                    // nothing, and a run that is reset or wound back has to land there at once — a
-                    // line sliding back to zero reads as progress in reverse.
-                    transition: current ? `width ${options.duration}ms linear` : 'none',
+                    // Only the line leaving the stage in flight eases; a reset or rewind lands at once, since a line
+                    // sliding back to zero reads as progress in reverse.
+                    transition: current ? undefined : 'none',
                   }}
                 />
               </StepsPrimitive.Separator>
@@ -195,94 +187,20 @@ const StepsItems = ({
   );
 };
 
-type CircleProps = {
-  index: number;
-  step: Step;
-  state: StepState;
-  /** The run failed, whichever stage this one is. */
-  failed?: boolean;
-  selected?: boolean;
-  indeterminate?: boolean;
-  options: StepOptions;
-  onClick?: () => void;
-};
-
-/** One stage: a circle, ringed by a spinning notch while it runs uncounted. */
-const Circle = ({ index, step, state, failed, selected, indeterminate, options, onClick }: CircleProps) => {
-  const { tx } = useThemeContext();
-  // A circle carries no text, and an anonymous plan supplies no label, so the position is the only
-  // name the control can be given.
-  const label = step.label?.trim() || `Step ${index + 1}`;
-  const spinning = state === 'active' && !!indeterminate;
-
-  return (
-    <div className='relative shrink-0' style={{ width: options.size, height: options.size }}>
-      {onClick ? (
-        // A selectable stage is a real button, so it takes focus and answers the keyboard without a
-        // key handler of its own; selection toggles, which is what `aria-pressed` describes. Not the
-        // machine's own trigger: that is a `tab` pointing at a panel this component never renders.
-        <button
-          type='button'
-          aria-label={label}
-          aria-pressed={!!selected}
-          className={tx('steps.step', { state, failed, selected, interactive: true, spinning })}
-          onClick={onClick}
-        />
-      ) : (
-        // A bare div maps to `generic`, where ARIA discards the label.
-        <div role='img' aria-label={label} className={tx('steps.step', { state, failed, selected, spinning })} />
-      )}
-      {spinning && <Notch className={tx('steps.notch', { state })} />}
-    </div>
-  );
-};
-
-const Notch = ({ className }: { className?: string }) => (
-  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' className={className}>
-    <circle
-      cx='128'
-      cy='128'
-      r='108'
-      strokeDasharray='500 800'
-      strokeDashoffset='0'
-      fill='none'
-      strokeWidth='40'
-      stroke='currentColor'
-    />
-  </svg>
-);
-
-//
-// Util
-//
-
 /** Number of stages in a plan, whichever form it takes. */
-export const stepCount = (steps: number | Step[] | undefined): number =>
-  steps === undefined ? 0 : typeof steps === 'number' ? steps : steps.length;
+const stepCount = (steps: number | Step[]): number => (typeof steps === 'number' ? steps : steps.length);
 
 /** The stage at `index`, synthesizing an id for an anonymous plan. */
-export const stepAt = (steps: number | Step[] | undefined, index: number): Step =>
-  typeof steps === 'number' || steps === undefined ? { id: `step-${index}` } : steps[index];
+const stepAt = (steps: number | Step[], index: number): Step =>
+  typeof steps === 'number' ? { id: `step-${index}` } : steps[index];
 
 /**
- * Holds the advance back until the line leaving the stage being left has finished filling.
- *
- * A run reports the next stage the moment it starts it, so without this the line is still travelling
- * to its end while the stage after it is already coloured and its own line already moving — two
- * things animating at once, and the first one never seen arriving. `shown` is the stage the chain is
- * drawing, and it is what the machine is told, so mid-handover the machine reads the stage being
- * left as the one in flight and everything after it as still ahead.
- *
- * Only an advance waits. Going back, or starting from nothing, has no line in flight to finish, so
- * it lands immediately — a reset that eased into place would read as progress.
+ * Holds an advance back until the line leaving the stage being left has filled, so two things never animate at once.
+ * Only an advance waits: a retreat or a start from nothing has no line in flight, and is derived (not stored) so it
+ * lands in the render that reports it.
  */
 const useHandover = (active: number | undefined, duration: number) => {
   const [held, setHeld] = useState(active);
-
-  // Derived rather than stored, so a retreat lands in the render that reports it. Waiting for an
-  // effect to catch up leaves one painted frame with the run still drawn where it was — and since
-  // the stage being left reads as complete in that frame, its line is drawn full, which is the
-  // whole of what a reset is meant to clear.
   const advancing = active !== undefined && held !== undefined && active > held;
   const shown = advancing ? held : active;
 
@@ -307,8 +225,7 @@ const stepState = (current: boolean, completed: boolean, handover: boolean, erro
   if (!current) {
     return 'pending';
   }
-  // Mid-handover the stage is finished and the next has not started, so nothing is in flight: the
-  // stage ahead stays uncoloured until its line has arrived.
+  // Mid-handover the stage is finished and the next has not started, so nothing is in flight.
   if (handover) {
     return 'complete';
   }
@@ -323,7 +240,6 @@ const connectorFraction = (completed: boolean, current: boolean, handover: boole
   if (!current) {
     return 0;
   }
-  // The run has already reported the next stage and is counting it: the line being waited on is the
-  // one this stage is leaving, so it holds full rather than snapping back to the new count.
+  // The run already counts the next stage, but the line being waited on is this one, so it holds full.
   return handover ? 1 : fraction;
 };

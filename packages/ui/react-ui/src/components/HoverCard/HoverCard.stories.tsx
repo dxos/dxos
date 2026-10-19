@@ -2,45 +2,53 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../../theme/index.css';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
+import { byTestId, expectArrow, expectPopupSize, realHover, realUnhover } from '../../testing/geometry.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { HoverCard, type HoverCardRootProps } from './HoverCard.tsx';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as HoverCard from './HoverCard.tsx';
 
-type StoryProps = Pick<HoverCardRootProps, 'openDelay' | 'closeDelay'> & { side?: 'top' | 'bottom' };
-
-const DefaultStory = ({ openDelay, closeDelay, side = 'top' }: StoryProps) => (
-  // A tall scroller under the trigger, so the card can be seen tracking its trigger as the page moves.
-  <div className='dx-fill overflow-y-auto'>
-    <div className='h-[40rem]' />
-    <div className='flex justify-center'>
-      <HoverCard.Root openDelay={openDelay} closeDelay={closeDelay}>
-        <HoverCard.Trigger asChild>
-          <Button data-testid='hover-card.trigger'>Hover me</Button>
-        </HoverCard.Trigger>
-        <HoverCard.Portal>
-          <HoverCard.Content side={side} classNames='p-3 max-w-64' data-testid='hover-card.content'>
-            <div className='font-medium'>Run Instructions</div>
-            <div className='text-xs text-description'>operation · 11:04:06.000</div>
-            <p className='mt-2 text-sm'>What the trigger stands for, shown without a click.</p>
-            <HoverCard.Arrow />
-          </HoverCard.Content>
-        </HoverCard.Portal>
-      </HoverCard.Root>
-    </div>
-    <div className='h-[40rem]' />
-  </div>
+/** A profile card above a button, and one below a text link without an arrow, at its own `lg` size. */
+const DefaultStory = ({ size = 'md' }: SizeArgs) => (
+  <Group>
+    <HoverCard.Root>
+      <HoverCard.Trigger asChild>
+        <Button data-testid={`profile-${size}-trigger`}>Alice</Button>
+      </HoverCard.Trigger>
+      <HoverCard.Content data-testid={`profile-${size}`}>
+        <Typography.Text>Alice Example</Typography.Text>
+        <Typography.Text tone='muted'>Joined in March · 12 spaces</Typography.Text>
+      </HoverCard.Content>
+    </HoverCard.Root>
+    <HoverCard.Root positioning={{ placement: 'bottom' }}>
+      <HoverCard.Trigger asChild>
+        <a href='#' data-testid={`link-${size}-trigger`}>
+          composer.space
+        </a>
+      </HoverCard.Trigger>
+      <HoverCard.Content size='lg' arrow={false} data-testid={`link-${size}`}>
+        <Typography.Text>A local-first workspace.</Typography.Text>
+      </HoverCard.Content>
+    </HoverCard.Root>
+  </Group>
 );
 
 const meta = {
   title: 'ui/react-ui-core/components/HoverCard',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { openDelay: 300, closeDelay: 200 },
-} satisfies Meta<typeof DefaultStory>;
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'centered' },
+} satisfies Meta<SizeArgs>;
 
 export default meta;
 
@@ -48,19 +56,70 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const TestOpensOnHover: Story = {
-  args: { openDelay: 0, closeDelay: 0 },
+/**
+ * Hovering the trigger opens the card after the delay, above it at `level='popup'` with an arrow, taking the trigger
+ * row's size, above it unless there is no room, its arrow within the trigger's span; the card stays open while the pointer is on it and closes once the pointer leaves both. Keyboard focus
+ * opens it too, and blur closes it. `positioning.placement` and `arrow={false}` put the second card below its link with
+ * no arrow, at its own size. The story ends open.
+ */
+export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const trigger = await canvas.findByTestId('hover-card.trigger');
-    trigger.scrollIntoView();
-    await userEvent.hover(trigger);
-    await waitFor(() => expect(document.querySelector('[data-testid="hover-card.content"]')).toBeTruthy(), {
-      timeout: 5_000,
+    const body = within(canvasElement.ownerDocument.body);
+    const trigger = byTestId(canvasElement, 'profile-md-trigger');
+
+    // Hover opens it after the delay, and leaving the trigger and the card closes it.
+    const hovered = performance.now();
+    await realHover(trigger);
+    const card = await body.findByTestId('profile-md', {}, { timeout: 2_000 });
+    await expect(performance.now() - hovered).toBeGreaterThanOrEqual(250);
+    await realHover(card);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(body.queryByTestId('profile-md')).not.toBeNull();
+    await realUnhover(card);
+    await waitFor(() => expect(body.queryByTestId('profile-md')).toBeNull(), { timeout: 2_000 });
+
+    // Keyboard focus opens it; blur closes it.
+    trigger.focus();
+    await body.findByTestId('profile-md', {}, { timeout: 2_000 });
+    trigger.blur();
+    await waitFor(() => expect(body.queryByTestId('profile-md')).toBeNull(), { timeout: 2_000 });
+
+    // Below its link, no arrow, at its own size.
+    const linkTrigger = byTestId(canvasElement, 'link-md-trigger');
+    await realHover(linkTrigger);
+    const link = await body.findByTestId('link-md', {}, { timeout: 2_000 });
+    await expect(link.querySelector('[data-part="arrow"]')).toBeNull();
+    await expectPopupSize(link, 'lg');
+    await waitFor(async () => {
+      const gap = link.getBoundingClientRect().top - linkTrigger.getBoundingClientRect().bottom;
+      await expect(gap >= 0 && gap <= 3, `gap ${gap}`).toBe(true);
     });
-    await userEvent.unhover(trigger);
-    await waitFor(() => expect(document.querySelector('[data-testid="hover-card.content"]')).toBeFalsy(), {
-      timeout: 5_000,
+    await realUnhover(linkTrigger);
+    await waitFor(() => expect(body.queryByTestId('link-md')).toBeNull(), { timeout: 2_000 });
+
+    // The trigger row's size, above the trigger, centred, with an arrow.
+    const small = byTestId(canvasElement, 'profile-sm-trigger');
+    await realHover(small);
+    const smallCard = await body.findByTestId('profile-sm', {}, { timeout: 2_000 });
+    await expectPopupSize(smallCard, 'sm');
+    await realUnhover(small);
+    await waitFor(() => expect(body.queryByTestId('profile-sm')).toBeNull(), { timeout: 2_000 });
+
+    // The lowest row's card opens above it, or below when the test viewport leaves no room above; never over it.
+    const large = byTestId(canvasElement, 'profile-xl-trigger');
+    await realHover(large);
+    const open = await body.findByTestId('profile-xl', {}, { timeout: 2_000 });
+    await expect(open).toHaveAttribute('data-surface', 'popup');
+    await expect(open).toHaveAttribute('data-size', 'xl');
+    await expect(getComputedStyle(open).getPropertyValue('--dx-level').trim()).toBe('5');
+    await waitFor(async () => {
+      const card = open.getBoundingClientRect();
+      const trigger = large.getBoundingClientRect();
+      await expect(card.bottom <= trigger.top || card.top >= trigger.bottom, `card ${card.top}-${card.bottom}`).toBe(
+        true,
+      );
     });
+    await expectArrow(large, open);
   },
 };

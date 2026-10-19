@@ -14,9 +14,11 @@ import { type Client } from '@dxos/client';
 import { type RecoverIdentityArgs } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { InvitationEncoder } from '@dxos/client/invitations';
+import { Context as DxContext } from '@dxos/context';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
+import { AccessToken } from '@dxos/link';
 import { anyPackBare, fromDate, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device as ClientDevice,
@@ -336,6 +338,20 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
             },
           }),
         ]);
+      },
+      catch: (error) => new IdentityError({ context: { error } }),
+    }),
+
+  createApiToken: ({ label, expiresAt }) =>
+    Effect.tryPromise({
+      try: async () => {
+        const http = client.edge.http;
+        const minted = await http.createApiToken(DxContext.default(), { label, expiresAt });
+        return AccessToken.make({
+          source: new URL(http.baseUrl).hostname,
+          account: client.halo.identity.get()?.did,
+          token: minted.token,
+        });
       },
       catch: (error) => new IdentityError({ context: { error } }),
     }),

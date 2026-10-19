@@ -60,7 +60,27 @@ if ! command -v depot >/dev/null 2>&1 && [ "$(uname -s)" = Linux ] && [ -w /usr/
   ) || log "Depot CLI install failed; continuing without it"
 fi
 
-# 4. proto — installs everything pinned in .prototools (auto-install is enabled).
+# 4. GitHub CLI (`gh`) ≥ 2.99 — the first release with `--attach`, which the `hosting-artifacts`
+#    skill uses to embed images and videos in PR bodies. The container image ships an older `gh`,
+#    so upgrade in place rather than only installing when missing. Best-effort, same as `op`.
+GH_VERSION=2.99.0
+gh_current="$(gh --version 2>/dev/null | sed -n 's/^gh version \([0-9.]*\).*/\1/p')"
+if [ "$(printf '%s\n' "$GH_VERSION" "${gh_current:-0}" | sort -V | head -1)" != "$GH_VERSION" ] &&
+  [ "$(uname -s)" = Linux ] && [ -w /usr/local/bin ]; then
+  log "Installing GitHub CLI ${GH_VERSION} (found ${gh_current:-none})"
+  (
+    set -e
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    case "$(uname -m)" in aarch64 | arm64) arch=arm64 ;; *) arch=amd64 ;; esac
+    curl -fsSLo "$tmp/gh.tar.gz" \
+      "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz"
+    tar xzf "$tmp/gh.tar.gz" -C "$tmp"
+    install -m755 "$tmp/gh_${GH_VERSION}_linux_${arch}/bin/gh" /usr/local/bin/gh
+  ) || log "GitHub CLI install failed; continuing with ${gh_current:-no gh}"
+fi
+
+# 5. proto — installs everything pinned in .prototools (auto-install is enabled).
 if ! command -v proto >/dev/null 2>&1; then
   log "Installing proto"
   curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes >/dev/null
@@ -68,11 +88,11 @@ fi
 log "proto install"
 proto install
 
-# 5. moon workspace setup.
+# 6. moon workspace setup.
 log "moon setup"
 moon setup
 
-# 6. Workspace deps (non-interactive; skip husky hooks).
+# 7. Workspace deps (non-interactive; skip husky hooks).
 log "pnpm install"
 CI=true HUSKY=0 pnpm install --prefer-offline
 

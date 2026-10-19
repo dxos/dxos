@@ -29,8 +29,6 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps, slottable } from '@dxos/react-ui';
 import {
   type DndLocation,
   type DndTileData,
@@ -39,6 +37,7 @@ import {
   resizeAttributes,
   sizeStyle,
 } from '@dxos/react-ui-dnd';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useMosaicContainerContext } from './MosaicContainerContext.ts';
 import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } from './MosaicTileContext.ts';
@@ -50,7 +49,7 @@ import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } fro
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = DndLocation> = ThemedClassName<
+type MosaicTileProps<TData = any, TLocation = DndLocation> = Util.ThemedClassName<
   PropsWithChildren<{
     className?: string;
     dragHandle?: HTMLElement | null;
@@ -79,7 +78,7 @@ type MosaicTileProps<TData = any, TLocation = DndLocation> = ThemedClassName<
   }>
 >;
 
-const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
+const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
   (
     {
       children,
@@ -255,7 +254,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     ]);
 
-    const { className, ...rest } = composableProps(props, { classNames: 'relative outline-none' });
+    const { className, ...rest } = Util.composableProps(props, { classNames: 'relative outline-none' });
 
     // Apply the resize subject marker + explicit extent/bounds only when sized or bounded, so plain
     // tiles keep their intrinsic layout. The axis follows the container orientation (width vs height).

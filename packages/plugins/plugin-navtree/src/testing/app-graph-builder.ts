@@ -3,9 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
-import { type BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -16,7 +15,9 @@ export type StorybookGraphOptions = {
   spaces?: 'growing' | 'none' | 'pending';
 };
 
-export const storybookGraphBuilders = ({ spaces = 'growing' }: StorybookGraphOptions = {}): BuilderExtensions => {
+export const storybookGraphBuilders = ({
+  spaces = 'growing',
+}: StorybookGraphOptions = {}): AppGraphBuilder.BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
   const getProperties = (id: string, defaults: Record<string, unknown>) => {
     const cached = propertiesCache.get(id);

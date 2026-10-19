@@ -13,6 +13,12 @@
       "path": "../../../common/sql-sqlite"
     },
     {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
+    },
+    {
       "path": "../ai"
     },
     {

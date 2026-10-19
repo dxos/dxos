@@ -8,15 +8,19 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
@@ -31,13 +35,12 @@ const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(meta.profile.key);
-  const { invoke } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
-  const [error, setError] = useState<string | undefined>(undefined);
-  const manager = usePluginManager();
-  const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
+  const manager = PluginManagerProvider.usePluginManager();
+  const contributed = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
   const templates = useMemo(
     () =>
       contributed
@@ -69,28 +72,32 @@ export const CreateSpaceDialog = () => {
 
   const handleCreateSpace = useCallback(
     (data: FormValues) => {
-      setError(undefined);
       return Effect.gen(function* () {
+        // The dialog closes at once: a template can take seconds to seed, and the space opens when it is ready.
+        yield* invoke(LayoutOperation.UpdateDialog, { state: false });
         const { space } = yield* invoke(SpaceOperation.Create, data);
         yield* invoke(LayoutOperation.Open, {
           subject: [GraphPath.getSpaceHomePath(space.id)],
           workspace: GraphPath.getSpacePath(space.id),
           navigation: 'immediate',
         });
-        yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
         // `catchCause`, not `catch`: a defect (any rejected promise the create chain wraps with
-        // `Effect.promise`) is invisible to `catch`, leaving the dialog open with no error shown.
+        // `Effect.promise`) is invisible to `catch`. The dialog has closed, so the failure is a toast.
         Effect.catchCause((cause) =>
-          Effect.sync(() => {
+          Effect.gen(function* () {
             log.catch(Cause.squash(cause));
-            setError(t('create-space-dialog.error.message'));
+            yield* invoke(LayoutOperation.AddToast, {
+              id: `${meta.profile.key}.create-space-failed`,
+              icon: 'ph--warning--regular',
+              title: ['create-space-dialog.error.message', { ns: meta.profile.key }],
+            });
           }),
         ),
         EffectEx.runAndForwardErrors,
       );
     },
-    [invoke, t],
+    [invoke],
   );
 
   return (
@@ -109,30 +116,38 @@ export const CreateSpaceDialog = () => {
       >
         <Dialog.Header>
           <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' ref={closeRef} />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close ref={closeRef} />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
               gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.Fields />
-                <Form.ErrorText>{error}</Form.ErrorText>
+                <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
                 {templates.length > 0 && (
                   <Form.FieldSet
                     aria-labelledby='create-space-templates'
                     label={t('create-space-dialog.templates.label')}
                     description={t('create-space-dialog.templates.description')}
                   >
-                    <Listbox.Root value={template} onValueChange={setTemplate}>
+                    <Listbox.Root
+                      value={template}
+                      onValueChange={setTemplate}
+                      items={templates.map(({ id, label, description, glyph }) => ({
+                        value: id,
+                        label,
+                        description,
+                        icon: glyph,
+                      }))}
+                    >
+                      {/* The dialog body scrolls, so the list does not: unscrolled, it inherits the dialog's columns
+                          rather than insetting its rows in a gutter of its own. */}
                       <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id, label, description, glyph }) => (
-                          <Listbox.Item key={id} id={id}>
-                            <Listbox.ItemContent icon={glyph} title={label} description={description} />
-                          </Listbox.Item>
+                        {templates.map(({ id }) => (
+                          <Listbox.Item key={id} id={id} />
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>
@@ -142,7 +157,9 @@ export const CreateSpaceDialog = () => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Dialog.Body>
-        <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        <Dialog.Footer>
+          <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+        </Dialog.Footer>
       </Form.Root>
     </Dialog.Content>
   );

@@ -1,5 +1,122 @@
 # @dxos/teleport-extension-gossip
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/teleport@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- ed1039a: An idle app stops redoing work while nothing changes. Presence's offline sweep fires `updated` only when a peer has aged out since it was reported online; it fired on every sweep, every 20 s per space, and each one made the client re-serialize every space for the app. The replication progress meter re-reads a space's sync state only while that space has a monitor open; the re-read ran every 10 s per space for the app's whole life, and each read had the ECHO worker diff the space's whole collection.
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/teleport@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [6388838]
+- Updated dependencies [e954c0f]
+- Updated dependencies [9ef5485]
+- Updated dependencies [22bea85]
+- Updated dependencies [a069511]
+- Updated dependencies [066b35d]
+- Updated dependencies [b4ceea2]
+- Updated dependencies [bdb02cd]
+- Updated dependencies [48eb05d]
+- Updated dependencies [73daef4]
+- Updated dependencies [fd23a8b]
+- Updated dependencies [4e417e9]
+- Updated dependencies [194b1d3]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [e56276b]
+- Updated dependencies [967b130]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [ce194c0]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [9d2466a]
+- Updated dependencies [4689d66]
+- Updated dependencies [e207c68]
+- Updated dependencies [4663f24]
+- Updated dependencies [2896a58]
+- Updated dependencies [9e91762]
+- Updated dependencies [2df0297]
+- Updated dependencies [3e08678]
+- Updated dependencies [f8bfba0]
+- Updated dependencies [56276cd]
+- Updated dependencies [e8088ea]
+- Updated dependencies [dac61d5]
+- Updated dependencies [1a3de22]
+- Updated dependencies [85e6347]
+- Updated dependencies [4da1052]
+  - @dxos/protocols@0.12.0
+  - @dxos/rpc@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/teleport@0.12.0
+  - @dxos/context@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

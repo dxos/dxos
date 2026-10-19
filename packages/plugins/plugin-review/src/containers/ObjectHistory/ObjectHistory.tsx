@@ -4,14 +4,19 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { NamePopover, useCapabilities } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-trace';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
@@ -27,8 +32,8 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
  * Gated per-type by a `ReviewCapabilities.HistoryProvider` contribution.
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
-  const providers = useCapabilities(ReviewCapabilities.HistoryProvider);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const providers = Hooks.useCapabilities(ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
   useObject(subject, 'history');
@@ -178,16 +183,16 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   return (
     // Surface passes Ref<HTMLElement> and Panel.Root renders a div, so narrowing is safe.
     <Panel.Root role={role} ref={forwardedRef as React.Ref<HTMLDivElement>}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          <NamePopover
+          <NamePopover.Root
             placeholder={t('revision-name.placeholder')}
             submitLabel={t('create.label')}
             open={naming === 'checkpoint'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <IconButton
+            <Button.Root
               icon='ph--bookmark-simple--regular'
               label={t('create-checkpoint.label')}
               // A revision records the tip; disable while viewing a historical checkpoint or a fork
@@ -195,15 +200,15 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               disabled={selection.kind === 'checkpoint' || selection.kind === 'fork'}
               onClick={() => setNaming('checkpoint')}
             />
-          </NamePopover>
-          <NamePopover
+          </NamePopover.Root>
+          <NamePopover.Root
             placeholder={t('branch-name.placeholder')}
             submitLabel={t('create.label')}
             open={naming === 'branch'}
             onSubmit={handleCreate}
             onCancel={() => setNaming(undefined)}
           >
-            <IconButton
+            <Button.Root
               icon='ph--git-branch--regular'
               label={t('create-branch.label')}
               // Forking a sub-branch off a branch (its tip or one of its revisions) is not yet
@@ -214,16 +219,16 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               disabled={!!activeBranch || !!activeVersion?.branch || selection.kind === 'fork'}
               onClick={() => setNaming('branch')}
             />
-          </NamePopover>
+          </NamePopover.Root>
           {activeBranch && (
             <>
-              <IconButton icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
-              <IconButton icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
+              <Button.Root icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />
+              <Button.Root icon='ph--trash--regular' label={t('discard-branch.label')} onClick={handleDiscard} />
             </>
           )}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport ref={setViewport}>
             <Timeline
@@ -235,7 +240,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 });

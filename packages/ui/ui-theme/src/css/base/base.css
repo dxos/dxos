@@ -9,6 +9,8 @@
      * Aspects multiply their offset by this instead of branching on light-dark(), which resolves
      * unreliably when nested inside a relative-color expression. */
     --dx-lift: -1;
+    /* How far a control's fill sits off its host surface, in OKLCH lightness, in either theme (`--color-input-bg`). */
+    --dx-control-offset: 0.07;
     /*
      * Light attenuation.
      *
@@ -28,11 +30,13 @@
      *
      * Adjust a family by changing its factor, not by editing offsets — those are the dark contract.
      */
-    --dx-attenuate-state: 0.5;
+    --dx-attenuate-state: 0.9;
     --dx-attenuate-well: 0.5;
+    /* An input is a lighter well than a group in light mode, so a field reads as a place to type rather than a band. */
+    --dx-attenuate-input: 0.3;
     --dx-attenuate-separator: 0.75;
     --dx-attenuate-separator-line: 0.45;
-    --dx-attenuate-bar: 1;
+    --dx-attenuate-bar: 1.36;
     --dx-attenuate-placeholder: 1;
     --dx-attenuate-scrollbar: 1;
     touch-action: pan-x pan-y;
@@ -51,6 +55,7 @@
     /* Dark is the reference: every family runs at full strength. */
     --dx-attenuate-state: 1;
     --dx-attenuate-well: 1;
+    --dx-attenuate-input: 1;
     --dx-attenuate-separator: 1;
     --dx-attenuate-separator-line: 1;
     --dx-attenuate-bar: 1;
@@ -74,9 +79,9 @@
   html .dark,
   .sb-show-main {
     background-color: var(--color-base-surface);
-    color: var(--color-base-fg);
+    color: var(--color-fg);
     --surface-bg: var(--color-base-surface);
-    --foreground: var(--color-base-fg);
-    --description-text: var(--color-description);
+    --foreground: var(--color-fg);
+    --description-text: var(--color-fg-muted);
   }
 }

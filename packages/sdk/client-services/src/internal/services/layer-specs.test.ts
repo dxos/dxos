@@ -7,15 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { makeClientServicesRpcFromRouter } from '@dxos/client-protocol';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,
@@ -25,7 +26,7 @@ import {
 import { createRtcTransportFactory } from '@dxos/network-manager';
 import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';

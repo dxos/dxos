@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Drawer as DrawerPrimitive, useDrawer } from '@ark-ui/react/drawer';
 import { ark } from '@ark-ui/react/factory';
 import React, {
@@ -20,14 +22,15 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
-import { osTranslations } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
+import { type Label, toLocalizedString } from '@dxos/ui-types/translations';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type Label, toLocalizedString, useTranslation } from '../../providers/index.ts';
-import { type MainStyleProps } from '../../theme/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 import {
   DRAWER_DEFAULT_HEIGHT,
   DRAWER_MAX_HEIGHT,
@@ -38,6 +41,8 @@ import {
   type SidebarState,
   useLandmarkMover,
   useMainContext,
+  useMainLandmark,
+  useSidebars,
 } from './MainContext.ts';
 
 const MAIN_ROOT_NAME = 'Main.Root';
@@ -176,10 +181,8 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.div>, 'children' | 'onClick'>>;
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
-  const [isLg] = useMediaQuery('lg');
   const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
     useMainContext(MAIN_OVERLAY_NAME);
-  const { tx } = useThemeContext();
   return (
     <div
       {...props}
@@ -187,15 +190,9 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
         setNavigationSidebarState('collapsed');
         setComplementarySidebarState('collapsed');
       }}
-      className={tx(
-        'main.overlay',
-        {
-          isLg,
-          inlineStartSidebarOpen: navigationSidebarState,
-          inlineEndSidebarOpen: complementarySidebarState,
-        },
-        classNames,
-      )}
+      data-scope='main'
+      data-part='overlay'
+      className={mx(recipes.mainOverlay(), classNames)}
       data-state={navigationSidebarState === 'expanded' || complementarySidebarState === 'expanded' ? 'open' : 'closed'}
       aria-hidden='true'
       ref={forwardedRef}
@@ -248,7 +245,6 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     forwardedRef,
   ) => {
     const [isLg] = useMediaQuery('lg');
-    const { tx } = useThemeContext();
     const { t } = useTranslation(osTranslations);
 
     // Pointer-opened, the sidebar leaves focus where it was; the machine always focuses something,
@@ -276,18 +272,20 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           event.preventDefault();
         }
       },
-      initialFocusEl: () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
+      initialFocusEl: () =>
+        autoFocusVetoed && document.activeElement instanceof HTMLElement ? document.activeElement : null,
     });
 
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
     //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        const focusGroupParent = (event.target as HTMLElement).closest(`[${FOCUS_GROUP_ATTR}]`);
+        const focusGroupParent =
+          event.target instanceof Element ? event.target.closest<HTMLElement>(`[${FOCUS_GROUP_ATTR}]`) : null;
         if (event.key === 'Escape' && focusGroupParent) {
           event.preventDefault();
           event.stopPropagation();
-          (focusGroupParent as HTMLElement).focus();
+          focusGroupParent.focus();
         }
         props.onKeyDown?.(event);
       },
@@ -298,10 +296,13 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       ...(state === 'closed' && { inert: true }),
       ...props,
       'aria-label': toLocalizedString(label, t),
-      'data-side': side === 'w-end' ? 'ie' : 'is',
+      'data-scope': 'main',
+      'data-part': side === 'w-end' ? 'complementary-sidebar' : 'navigation-sidebar',
+      'data-side': side === 'w-end' ? 'end' : 'start',
+      'data-surface': 'chrome',
       'data-state': state,
       'data-resizing': resizing ? 'true' : 'false',
-      'className': tx('main.sidebar', {}, classNames),
+      'className': mx(recipes.mainSidebar(), classNames),
       'onKeyDownCapture': handleKeyDown,
       'ref': forwardedRef,
     };
@@ -316,7 +317,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         <DrawerPrimitive.Content tabIndex={-1} {...sidebarProps} draggable={swipeToDismiss} hidden={false}>
           {children}
         </DrawerPrimitive.Content>
-        {swipeToOpen && <DrawerPrimitive.SwipeArea className={tx('main.swipeArea', {})} />}
+        {swipeToOpen && <DrawerPrimitive.SwipeArea className={recipes.mainSwipeArea()} />}
       </DrawerPrimitive.RootProvider>
     );
   },
@@ -328,24 +329,29 @@ MainSidebar.displayName = 'Main.Sidebar';
 // Navigation Sidebar
 //
 
-type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
+type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'> & {
+  /** Off when the sidebar's children are focus areas of their own (`useMainLandmark`). */
+  landmark?: boolean;
+};
 
-const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
-  const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
-  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '0');
+const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>(
+  ({ landmark = true, ...props }, forwardedRef) => {
+    const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '0');
 
-  return (
-    <MainSidebar
-      {...mover}
-      {...props}
-      state={navigationSidebarState}
-      onStateChange={setNavigationSidebarState}
-      resizing={resizing}
-      side='w-start'
-      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
-    />
-  );
-});
+    return (
+      <MainSidebar
+        {...(landmark && mover)}
+        {...props}
+        state={navigationSidebarState}
+        onStateChange={setNavigationSidebarState}
+        resizing={resizing}
+        side='w-start'
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, landmark ? moverRef : null)}
+      />
+    );
+  },
+);
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
@@ -353,25 +359,30 @@ MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 // Complementary Sidebar
 //
 
-type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
+type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'> & {
+  /** Off when the sidebar's children are focus areas of their own (`useMainLandmark`). */
+  landmark?: boolean;
+};
 
-const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
-  const { complementarySidebarState, setComplementarySidebarState, resizing } =
-    useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
-  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '2');
+const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>(
+  ({ landmark = true, ...props }, forwardedRef) => {
+    const { complementarySidebarState, setComplementarySidebarState, resizing } =
+      useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
+    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '2');
 
-  return (
-    <MainSidebar
-      {...mover}
-      {...props}
-      state={complementarySidebarState}
-      onStateChange={setComplementarySidebarState}
-      resizing={resizing}
-      side='w-end'
-      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
-    />
-  );
-});
+    return (
+      <MainSidebar
+        {...(landmark && mover)}
+        {...props}
+        state={complementarySidebarState}
+        onStateChange={setComplementarySidebarState}
+        resizing={resizing}
+        side='w-end'
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, landmark ? moverRef : null)}
+      />
+    );
+  },
+);
 
 MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 
@@ -380,24 +391,27 @@ MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 //
 
 type MainContentProps = ThemedClassName<
-  ComponentPropsWithRef<typeof ark.div> &
-    MainStyleProps & {
-      asChild?: boolean;
-    }
+  ComponentPropsWithRef<typeof ark.div> & {
+    asChild?: boolean;
+    size?: Size;
+    /** Fixed to the viewport and scrolling itself (the web app's page), rather than sized by its host. */
+    bounce?: boolean;
+    /** Joins the landmark ring (Tab moves between landmarks) and arrow-key focus group. */
+    handlesFocus?: boolean;
+  }
 >;
 
-type MainContentStyle = CSSProperties & Record<'--main-drawer-height', string>;
+type MainContentStyle = CSSProperties & Record<'--dx-main-drawer-height', string>;
 
 const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
-  ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
+  ({ asChild, classNames, size, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState, drawerState, drawerHeight } = useMainContext(MAIN_NAME);
-    const { tx } = useThemeContext();
     const Comp = role ? ark.div : ark.main;
     const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '1');
     // The padding lives in CSS so it transitions with the sidebars'; only the height is a variable.
     const style: MainContentStyle = {
       ...props.style,
-      '--main-drawer-height': drawerState === 'open' ? `${drawerHeight}rem` : '0rem',
+      '--dx-main-drawer-height': drawerState === 'open' ? `${drawerHeight}rem` : '0rem',
     };
 
     return (
@@ -410,8 +424,11 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         data-sidebar-right-state={complementarySidebarState}
         data-drawer-state={drawerState}
         data-handles-focus={handlesFocus}
+        data-bounce={bounce ? '' : undefined}
+        data-size={size}
+        data-surface='base'
         style={style}
-        className={tx('main.content', { bounce, handlesFocus }, classNames)}
+        className={mx(recipes.mainContent(), classNames)}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, handlesFocus ? moverRef : null)}
       >
         {children}
@@ -446,7 +463,6 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const { tx } = useThemeContext();
     const {
       drawerState,
       setDrawerState,
@@ -543,7 +559,10 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
         aria-label={toLocalizedString(label, t)}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
-        className={tx('main.drawer', {}, classNames)}
+        data-scope='main'
+        data-part='drawer'
+        data-surface='chrome'
+        className={mx(recipes.mainDrawer(), classNames)}
         style={{ ...props.style, blockSize: `${drawerHeight}rem` }}
         ref={composedRef}
       >
@@ -555,7 +574,7 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
           aria-valuenow={drawerHeight}
           aria-valuemin={minHeight}
           aria-valuemax={maxHeight}
-          className={tx('main.drawerHandle', {})}
+          className={recipes.mainDrawerHandle()}
           onKeyDown={handleHandleKeyDown}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -574,24 +593,29 @@ MainDrawer.displayName = MAIN_DRAWER_NAME;
 //
 // Main
 //
-
-export const Main = {
-  Root: MainRoot,
-  Overlay: MainOverlay,
-  Content: MainContent,
-  NavigationSidebar: MainNavigationSidebar,
-  ComplementarySidebar: MainComplementarySidebar,
-  Drawer: MainDrawer,
+export {
+  DRAWER_DEFAULT_HEIGHT as MAIN_DRAWER_DEFAULT_HEIGHT,
+  DRAWER_MAX_HEIGHT as MAIN_DRAWER_MAX_HEIGHT,
+  DRAWER_MIN_HEIGHT as MAIN_DRAWER_MIN_HEIGHT,
+  useMainLandmark,
+  useSidebars as useMainSidebars,
 };
 
-export { DRAWER_DEFAULT_HEIGHT, DRAWER_MAX_HEIGHT, DRAWER_MIN_HEIGHT };
-
 export type {
-  DrawerState,
-  MainContentProps,
-  MainDrawerProps,
-  MainNavigationSidebarProps,
-  MainOverlayProps,
-  MainRootProps,
-  SidebarState,
+  MainContentProps as ContentProps,
+  MainDrawerProps as DrawerProps,
+  DrawerState as DrawerState,
+  MainNavigationSidebarProps as NavigationSidebarProps,
+  MainOverlayProps as OverlayProps,
+  MainRootProps as RootProps,
+  SidebarState as SidebarState,
+};
+
+export {
+  MainComplementarySidebar as ComplementarySidebar,
+  MainContent as Content,
+  MainDrawer as Drawer,
+  MainNavigationSidebar as NavigationSidebar,
+  MainOverlay as Overlay,
+  MainRoot as Root,
 };

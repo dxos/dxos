@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ChangeEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { Emoji } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -35,11 +40,12 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
-  const onChange = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+  // The pin input reports the whole code; a DOM change event would carry only the digit just typed.
+  const handleValueChange = (value: string) => {
     setAuthCode(value);
     if (value.length === pinLength) {
       (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
@@ -48,34 +54,23 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div className='grow flex flex-col justify-center gap-4'>
-        <Field.Root
-          {...(failed && {
-            validationValence: 'error',
-          })}
-        >
+      <Dialog.Body gap='xl' align='center'>
+        <Field.Root {...(failed && { validationValence: 'error' })}>
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Field.Label asChild>
-              <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Field.Label>
+            <Field.Label classNames='text-center'>{t('auth-code-input.label')}</Field.Label>
           ) : (
-            <>
-              <Field.Label>
-                <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
-              </Field.Label>
-              <div className='grow' />
-            </>
+            <Typography.Text tone='muted'>{t('authenticating.label')}</Typography.Text>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <Field.PinInput
+            <Input.Pin
               {...{
                 disabled,
-                'density': 'lg',
+                'size': 'lg',
                 'length': pinLength,
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
                 'pattern': '\\d*',
-                onChange,
+                'onValueChange': handleValueChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,
@@ -85,26 +80,25 @@ export const InvitationAuthenticator = ({
           )}
           {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
         </Field.Root>
-
-        {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-          <>
-            <Label>{t('auth-other-device-emoji.message')}</Label>
-            <div className='flex justify-center'>
+        {invitationId &&
+          authMethod === Invitation_AuthMethod.SHARED_SECRET && (
+            // One block, so the Body's gap sets it apart from the PIN while the message sits right above its emoji.
+            <div className='flex flex-col items-center'>
+              <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>
-          </>
-        )}
-      </div>
-      <ActionBar>
-        <Action
+          )}
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           {t('cancel.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='primary'
           disabled={disabled}
           onClick={() => onInvitationAuthenticate?.(authCode)}
@@ -112,8 +106,8 @@ export const InvitationAuthenticator = ({
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
           {t('next.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

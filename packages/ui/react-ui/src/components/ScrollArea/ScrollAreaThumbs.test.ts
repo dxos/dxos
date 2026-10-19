@@ -6,37 +6,24 @@ import { describe, test } from 'vitest';
 
 import { measure } from './ScrollAreaThumbs.tsx';
 
-// Viewport of 200 over content of 800, inset 10 at both ends: track 180, thumb 45, travel 135.
-// Sized so the proportional length clears MIN_THUMB, which the clamping case covers separately.
-const VIEWPORT = 200;
-const CONTENT = 800;
-const PADDING = 10;
-
-describe('ScrollArea thumb geometry', () => {
-  test('hides the thumb when the content fits', ({ expect }) => {
-    expect(measure(0, VIEWPORT, VIEWPORT, PADDING).visible).toBe(false);
-    // Sub-pixel overflow is not worth a scrollbar.
-    expect(measure(0, VIEWPORT + 1, VIEWPORT, PADDING).visible).toBe(false);
+describe('measure', () => {
+  test('the thumb is the share of the content in view', ({ expect }) => {
+    const thumb = measure(0, 1_000, 400, 0);
+    expect(thumb).toEqual({ visible: true, offset: 0, length: 160 });
   });
 
-  test('scales the thumb to the visible fraction of the content', ({ expect }) => {
-    expect(measure(0, CONTENT, VIEWPORT, PADDING)).toEqual({ visible: true, offset: PADDING, length: 45 });
+  test('a sticky start column shortens the track and leaves the share of the scrolling region', ({ expect }) => {
+    // 200px of 800px scrolling content is in view: a quarter of the 200px track.
+    const thumb = measure(0, 1_000, 400, 0, 200);
+    expect(thumb).toEqual({ visible: true, offset: 200, length: 50 });
   });
 
-  test('maps scroll offset onto the track, inset at both ends', ({ expect }) => {
-    // Fully scrolled: the thumb ends flush with the far inset rather than the viewport edge.
-    const end = measure(CONTENT - VIEWPORT, CONTENT, VIEWPORT, PADDING);
-    expect(end.offset + end.length).toBe(VIEWPORT - PADDING);
-    expect(measure((CONTENT - VIEWPORT) / 2, CONTENT, VIEWPORT, PADDING).offset).toBe(PADDING + 67.5);
+  test('scrolled to the end, the thumb ends at the end of the track', ({ expect }) => {
+    const thumb = measure(600, 1_000, 400, 0, 200);
+    expect(thumb.offset + thumb.length).toBe(400);
   });
 
-  test('hides the thumb when the track cannot seat the minimum length', ({ expect }) => {
-    // Track of 10 (30 - 2 x 10) is shorter than MIN_THUMB, which would overhang the far edge.
-    expect(measure(0, CONTENT, 30, PADDING).visible).toBe(false);
-  });
-
-  test('never shrinks below the minimum grabbable length', ({ expect }) => {
-    const { length } = measure(0, 100_000, VIEWPORT, PADDING);
-    expect(length).toBe(24);
+  test('content that fits shows no thumb', ({ expect }) => {
+    expect(measure(0, 400, 400, 0, 200).visible).toBe(false);
   });
 });

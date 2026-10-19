@@ -44,6 +44,12 @@ import { makeRegistry } from './registry/index.ts';
 const TRACE_REF_RESOLUTION = false;
 
 /**
+ * A space database's answer for one id: the live entity, and whether its index holds the id at all — a
+ * tombstone of a deleted or merged-away entity counts, so nothing is left for a feed scan to find.
+ */
+type DatabaseResolution = { readonly entity?: Entity.Unknown; readonly indexed: boolean };
+
+/**
  * Manages cross-space database interactions.
  */
 export class HypergraphImpl implements Hypergraph.Hypergraph {
@@ -617,9 +623,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           status = 'error';
           throw new Error(`Invalid EID: ${uri}`);
         }
-        if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
-          status = 'error';
-          throw new Error('Cross-space references are not yet supported');
+        // Mirrors `_resolveSync`: a cross-space target resolves in its own space's database when that
+        // database is open here, and is missing otherwise.
+        if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== undefined && echoSpaceId !== context.space) {
+          const { entity: obj } = await this._resolveDatabaseObjectAsync(echoSpaceId, echoUri, options);
+          status = obj ? 'resolved' : 'missing';
+          return obj;
         }
 
         const feedEchoId = context.feed ? EID.tryParse(context.feed) : undefined;
@@ -642,10 +651,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (1) Search space automerge docs first.
-        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri, options);
+        const { entity: obj, indexed } = await this._resolveDatabaseObjectAsync(context.space, echoUri, options);
         if (obj) {
           status = 'resolved';
           return obj;
+        }
+        // A tombstone means the object was deleted, not that the index has yet to see it, and the feed
+        // fallback below downloads every feed in the space whole to find nothing.
+        if (indexed) {
+          status = 'missing';
+          return undefined;
         }
 
         // (2) Search known feeds in this space for an item with this id.
@@ -733,10 +748,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     spaceId: SpaceId,
     objectId: EntityId,
     options?: Ref.LoadOptions,
-  ): Promise<Entity.Unknown | undefined> {
+  ): Promise<DatabaseResolution> {
     const db = this._databases.get(spaceId);
     if (!db) {
-      return undefined;
+      return { indexed: false };
     }
     const select = Query.select(Filter.id(objectId));
     const scoped = options?.deleted === 'include' ? select.options({ deleted: 'include' }) : select;
@@ -744,7 +759,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // A merged-away loser is a redirect, not a tombstone to hand back, so it follows the chain even
     // when the caller asked for deleted entities.
     if (obj && !(isEchoObject(obj) && getObjectCore(obj).getMergedInto() != null)) {
-      return obj;
+      return { entity: obj, indexed: true };
     }
     return await this._followMergeRedirectAsync(db, objectId);
   }
@@ -756,21 +771,23 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * never rewritten still reaches the winner. An entity that is merely deleted carries no
    * redirect and resolves to nothing, as before.
    */
-  private async _followMergeRedirectAsync(db: DatabaseImpl, objectId: EntityId): Promise<Entity.Unknown | undefined> {
+  private async _followMergeRedirectAsync(db: DatabaseImpl, objectId: EntityId): Promise<DatabaseResolution> {
     let current = objectId;
+    let indexed = false;
     for (;;) {
       const [tombstone] = await db
         .query(Query.select(Filter.id(current)).options({ deleted: 'include' }).from(db, { includeFeeds: true }))
         .run();
+      indexed ||= tombstone !== undefined;
       const next = tombstone && isEchoObject(tombstone) ? getObjectCore(tombstone).getMergedInto() : undefined;
       // An edge that fails to decrease the id ends the chain, so cycles and forward references
       // terminate without trusting the data.
       if (next === undefined || next >= current) {
-        return undefined;
+        return { indexed };
       }
       const [live] = await db.query(Query.select(Filter.id(next)).from(db, { includeFeeds: true })).run();
       if (live) {
-        return live;
+        return { entity: live, indexed };
       }
       current = next;
     }
@@ -794,7 +811,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (spaceId === undefined || objectId === undefined) {
       return undefined;
     }
-    const obj = await this._resolveDatabaseObjectAsync(spaceId, objectId);
+    const { entity: obj } = await this._resolveDatabaseObjectAsync(spaceId, objectId);
     return obj != null && Type.isType(obj) ? obj : undefined;
   }
 

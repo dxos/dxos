@@ -7,9 +7,9 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { PreviewEvents } from '@dxos/plugin-preview';
-import { corePlugins } from '@dxos/plugin-testing';
-import { Panel } from '@dxos/react-ui';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -24,15 +24,15 @@ const meta = {
   decorators: [
     (Story) => (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <Story />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     ),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],
@@ -72,6 +72,7 @@ export const Default: Story = {
       'session_016GM9fXXzbrr6JGNeeQBCmj',
     );
     await expect(canvas.getAllByTestId('pull-request.check')).toHaveLength(PULL_REQUEST_13348_RUNS.length);
+    await expect(canvas.getByTestId('pull-request.checks.summary')).toHaveTextContent(/\d+ passed/);
   },
 };
 
@@ -83,7 +84,7 @@ export const FailingChecks: Story = {
       ...PULL_REQUEST_13348_RUNS.slice(2),
       { ...PULL_REQUEST_13348_RUNS[0], name: 'Check / test (shard=6)', outcome: 'failure', conclusion: 'failure' },
       { ...PULL_REQUEST_13348_RUNS[1], name: 'Check / e2e (shard=7)', outcome: 'failure', conclusion: 'timed_out' },
-      { name: 'Check / storybook', outcome: 'pending' },
+      { name: 'Check / storybook', outcome: 'pending', startedAt: new Date(Date.now() - 252_000).toISOString() },
     ],
   },
   play: async ({ canvasElement }) => {
@@ -92,6 +93,26 @@ export const FailingChecks: Story = {
     await expect(first).toHaveAttribute('data-outcome', 'failure');
     await expect(second).toHaveAttribute('data-outcome', 'failure');
     await expect(third).toHaveAttribute('data-outcome', 'pending');
+    await expect(third).toHaveTextContent(/Running · \d+m \d+s/);
+  },
+};
+
+/** Rows are navigated, not followed: a click or an arrow key moves the current row; the trailing button opens the logs. */
+export const CheckNavigation: Story = {
+  args: { ...REAL_PULL_REQUEST },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = await canvas.findByTestId('pull-request.checks', {}, { timeout: 10_000 });
+    // The tab's viewport scrolls, so the list must not trap wheel gestures in a scroller of its own.
+    await expect(list.querySelector('.dx-scroll-viewport')).toBeNull();
+    const [first, second] = canvas.getAllByTestId('pull-request.check');
+    await expect(first).toHaveClass('dx-hover');
+    await userEvent.click(first);
+    await expect(first).toHaveAttribute('aria-current', 'true');
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(second).toHaveAttribute('aria-current', 'true');
+    await expect(first).not.toHaveAttribute('aria-current');
+    await expect(within(first).getByTestId('pull-request.check.open')).toBeInTheDocument();
   },
 };
 

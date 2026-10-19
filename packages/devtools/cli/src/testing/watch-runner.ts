@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { type WatchSupervisorOptions, runWatchSupervisor } from '../commands/mcp/watch.ts';
 

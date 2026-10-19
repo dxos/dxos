@@ -8,38 +8,84 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { memo, useId, useMemo } from 'react';
+import React, {
+  type CSSProperties,
+  Fragment,
+  createContext,
+  memo,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
-import { type NodeRegistry, type NodeViewProps, nodeDef } from '../../model/registry.ts';
-import { type SceneStore } from '../../model/store.ts';
+import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
+import { useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
+  type LineStyle,
   type Link,
+  type LinkId,
+  type LinkKind,
+  MAJOR_GRID_RATIO,
   type Marker,
+  NO_STYLES,
   type Node,
   type NodeId,
+  type NodeRegistry,
+  type NodeViewProps,
   type Scene,
-  isClassNode,
-  isEllipseNode,
+  type SceneStore,
+  type StyleMap,
+  frameTimeAttribute,
+  isFrameNode,
+  isGeneratorNode,
+  isInstanceNode,
   isNoteNode,
-  isPortalNode,
-  isRectNode,
+  isPathNode,
   linkMarkers,
-} from '../../model/types.ts';
-import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
-import { contentBounds } from '../../utils/hit.ts';
-import { sortByZ } from '../../utils/order.ts';
-import { type PartEditing, type PartKey } from '../../utils/parts.ts';
-import { type LinkGeometry, linkGeometry } from '../../utils/route.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
-import { frameClasses } from '../../utils/style.ts';
-import { TextPart } from '../PartEditor/PartEditor.tsx';
+  nodeDef,
+  showsContents,
+  styleVariant,
+} from '../../model/index.ts';
+import {
+  BORDER_CLASSES,
+  CANVAS_FILLS,
+  CAPTION_TEXT,
+  DEFAULT_CELL,
+  type LatticeSpec,
+  type PartEditing,
+  type PartKey,
+  alignClasses,
+  classedLink,
+  classedNode,
+  compositeBounds,
+  contentBounds,
+  elementLayer,
+  frameClasses,
+  instanceScene,
+  instanceTransform,
+  isMultiline,
+  lineClasses,
+  nodeBounds,
+  nodeParts,
+  portalFrame,
+  portalScale,
+  portalTransform,
+  sceneLayers,
+  sceneLinkGeometry,
+  sortByZ,
+  visibleScene,
+} from '../../utils/index.ts';
+import { TextPart } from '../PartEditor/index.ts';
 
-/** Screen px below which a portal is a solid tile; above `PREVIEW_PX` it mounts the child scene live. */
+/** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
-export const PREVIEW_PX = 260;
 /** Default for `liveDepth`: root plus this many live nested levels (decision 10). */
 export const MAX_LIVE_DEPTH = 1;
 /** Hysteresis at the tier boundaries so a portal does not flicker while zooming across one. */
@@ -51,14 +97,11 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
   const { width, height } = nodeBounds(node);
   const px = Math.min(width, height) * zoom;
   const dot = previous === 'dot' ? DOT_PX * (1 + TIER_HYSTERESIS) : DOT_PX * (1 - TIER_HYSTERESIS);
-  const preview = previous === 'preview' ? PREVIEW_PX * (1 + TIER_HYSTERESIS) : PREVIEW_PX * (1 - TIER_HYSTERESIS);
   if (px < dot) {
     return 'dot';
   }
-  if (px < preview || depth >= liveDepth) {
-    return 'preview';
-  }
-  return 'live';
+  // Past `liveDepth` the child is summarised rather than mounted, which bounds how many scenes render live.
+  return depth >= liveDepth ? 'preview' : 'live';
 };
 
 export type ElementHandlers = {
@@ -69,6 +112,10 @@ export type ElementHandlers = {
   /** The in-place editor of `part` finished with `text` (commit) or was dismissed (cancel). */
   onPartCommit?: (node: Node, part: PartKey, text: string) => void;
   onPartCancel?: () => void;
+  /** The pointer entered a link (its id) or left it (`undefined`). */
+  onLinkHover?: (id: LinkId | undefined) => void;
+  /** A node's own open control was pressed (a portal's zoom-in icon). */
+  onNodeOpen?: (node: Node) => void;
 };
 
 export type SceneLayerProps = {
@@ -80,118 +127,437 @@ export type SceneLayerProps = {
   depth: number;
   liveDepth: number;
   selected?: ReadonlySet<ElementId>;
+  /** The selection is drawn as it looks, without its outline (a move in flight shows the shapes themselves). */
+  plain?: boolean;
   hover?: NodeId;
+  /** The link under the pointer, outlined as a hovered shape is. */
+  hoveredLink?: LinkId;
   /** The portal a drill-in is animating into, while it is. */
   opening?: ElementId;
+  /** The portal filling most of the view, and the opacity of everything else on the layer as it does. */
+  focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** The node whose embedded content takes input. */
+  active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
   ghost?: NodeId;
   /** Frames show their id, type and geometry. */
   debug?: boolean;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
+  /** The scene's lattice, when it has one: smart links route through its gutters. */
+  lattice?: LatticeSpec;
+  /** Scene px of one nominal unit (the drawing's major grid cell); a nested layer inherits its parent's. */
+  cell?: number;
+  /** What the scene's generator nodes drew, and when; drawn in a generator layer per scene layer (ANIMATION.md §7.1). */
+  generated?: GeneratorFrames;
 };
 
 export const SceneLayer = memo(
   ({
     store,
-    scene,
+    scene: sceneProp,
     registry,
     zoom,
     depth,
     liveDepth,
     selected,
+    plain,
     hover,
+    hoveredLink,
     opening,
+    focus,
     editing,
+    active,
     ghost,
     debug,
     handlers,
+    lattice: latticeProp,
+    cell: cellProp,
+    generated,
   }: SceneLayerProps) => {
-    // Paint order is z, with the selection on top of it: a selected node is being worked on and must not
-    // hide under a neighbour, while the model's z stays what the user arranged.
-    const nodes = useMemo(() => {
-      const sorted = sortByZ(Object.values(scene.nodes));
-      return selected?.size
-        ? [...sorted.filter((node) => !selected.has(node.id)), ...sorted.filter((node) => selected.has(node.id))]
-        : sorted;
-    }, [scene.nodes, selected]);
+    const inherited = useContext(CellContext);
+    const inheritedGenerated = useContext(GeneratedContext);
+    const cell = cellProp ?? inherited;
+    // A nested scene (a frame's contents, a drill-in in flight) routes on its parent's lattice, so its links do not
+    // jump onto the gutters when it settles as the root.
+    const inheritedLattice = useContext(LatticeContext);
+    const lattice = latticeProp ?? inheritedLattice;
+    // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
+    const scene = useMemo(() => visibleScene(sceneProp), [sceneProp]);
     const links = useMemo(
-      () =>
-        sortByZ(Object.values(scene.links))
-          .map((link) => linkGeometry(scene, registry, link))
-          .filter((geometry): geometry is LinkGeometry => geometry !== undefined),
-      [scene, registry],
+      () => sceneLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
+      [scene, registry, lattice],
+    );
+    // Paint order is the layers', bottom first: each layer's links, then its nodes, then its links' ends, so an upper
+    // layer covers a lower one whole. Within a layer it is z, with the selection on top: a selected node is being
+    // worked on and must not hide under a neighbour, while the model's order stays what the user arranged.
+    const groups = useMemo(() => {
+      const layers = sceneLayers(scene);
+      const nodes = sortByZ(Object.values(scene.nodes));
+      return layers.map((layer) => {
+        const onLayer = nodes.filter((node) => elementLayer(node, layers) === layer.id);
+        return {
+          layer,
+          nodes: selected?.size
+            ? [...onLayer.filter((node) => !selected.has(node.id)), ...onLayer.filter((node) => selected.has(node.id))]
+            : onLayer,
+          links: links.filter(({ link }) => elementLayer(link, layers) === layer.id),
+        };
+      });
+    }, [scene, links, selected]);
+    // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
+    const styles = useAtomValue(store.styles ?? NO_STYLES);
+    const lines = useMemo(
+      () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).style])),
+      [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
-    // One set of end markers per layer, sized in scene units so they scale with the stroke.
+    const look = useSceneLook();
+    const weight = lineWeight(depth, zoom);
+    const linkWidth = look.styleSet.link.width * weight;
+    // End markers keep the line's own weight whatever the set draws the link as, so an arrowhead stays crisp.
+    const markerWidth = LINK_WIDTH * weight;
+    const canvasFill = CANVAS_FILLS.opaque[look.tone];
+    // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
+    const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
+    // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
-    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end') =>
-      marker ? `url(#${markerId}-${marker}-${end})` : undefined;
+    const lineHues = useMemo(() => [...new Set([...lines.values()].map((line) => line?.hue))], [lines]);
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: string | undefined) =>
+      marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
 
     return (
-      <>
-        <svg className='absolute overflow-visible pointer-events-none' width={1} height={1}>
-          <defs>
-            <Markers id={markerId} unit={unit} />
-          </defs>
-          {links.map(({ link, path }) => (
-            <g key={link.id}>
-              {/* A wide transparent twin makes the thin stroke easy to press. */}
-              {handlers && (
-                <path
-                  d={path}
-                  className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                  style={{ pointerEvents: 'stroke' }}
-                  strokeWidth={12 * unit}
-                  onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                  onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                  onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
-                />
-              )}
-              <path
-                d={path}
-                className={mx('fill-none', selected?.has(link.id) ? 'stroke-primary-500' : 'stroke-neutral-500')}
-                strokeWidth={2 * unit}
-                data-link-id={link.id}
-                markerStart={markerUrl(linkMarkers(link).start, 'start')}
-                markerEnd={markerUrl(linkMarkers(link).end, 'end')}
-              />
-            </g>
-          ))}
-        </svg>
-        {nodes.map((node) => (
-          <NodeFrame
-            key={node.id}
-            store={store}
-            scene={scene}
-            registry={registry}
-            node={node}
-            zoom={zoom}
-            depth={depth}
-            liveDepth={liveDepth}
-            selected={selected?.has(node.id) ?? false}
-            hovered={hover === node.id}
-            opening={opening === node.id}
-            editingPart={editing?.id === node.id ? editing.part : undefined}
-            ghost={ghost === node.id}
-            debug={debug}
-            handlers={handlers}
-          />
-        ))}
-      </>
+      <CellContext.Provider value={cell}>
+        <GeneratedContext.Provider value={generated ?? inheritedGenerated}>
+          <LatticeContext.Provider value={lattice}>
+            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+              <defs>
+                {lineHues.map((hue) => (
+                  <Markers
+                    key={hue ?? 'default'}
+                    id={`${markerId}-${hue ?? 'default'}`}
+                    cell={cell}
+                    hue={hue}
+                    width={markerWidth}
+                    canvasFill={canvasFill}
+                  />
+                ))}
+              </defs>
+            </svg>
+            {groups.map((group) => (
+              <Fragment key={group.layer.id}>
+                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                  {group.links.map(({ link, path }) => (
+                    <g key={link.id}>
+                      {/* A wide transparent twin makes the thin stroke easy to press. */}
+                      {handlers && (
+                        <path
+                          d={path}
+                          className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                          style={{ pointerEvents: 'stroke' }}
+                          strokeWidth={12 * unit}
+                          onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                          onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                          onPointerLeave={() => handlers.onLinkHover?.(undefined)}
+                          onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                          onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                        />
+                      )}
+                      <LinkStroke
+                        id={`${markerId}-${link.id}`}
+                        kind={look.styleSet.link.kind}
+                        path={path}
+                        stroke={
+                          plain
+                            ? lineClasses(lines.get(link.id)?.hue).stroke
+                            : selected?.has(link.id)
+                              ? 'stroke-focus'
+                              : hoveredLink === link.id
+                                ? 'stroke-focus/50'
+                                : lineClasses(lines.get(link.id)?.hue).stroke
+                        }
+                        width={linkWidth}
+                        lineStyle={lines.get(link.id)?.lineStyle}
+                        linkId={link.id}
+                      />
+                      {link.text && (
+                        <LinkText
+                          path={path}
+                          text={link.text}
+                          backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
+                          textClass={CAPTION_TEXT[look.tone]}
+                        />
+                      )}
+                    </g>
+                  ))}
+                </svg>
+                {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
+                {generated && group.nodes.some(isGeneratorNode) && (
+                  <GeneratedShapes
+                    store={store}
+                    registry={registry}
+                    zoom={zoom}
+                    depth={depth}
+                    t={generated.t}
+                    shapes={group.nodes.flatMap((node) => generated.frames[node.id]?.shapes ?? [])}
+                    style={fadeStyle}
+                  />
+                )}
+                {group.nodes.map((node) => (
+                  <NodeFrame
+                    key={node.id}
+                    store={store}
+                    scene={scene}
+                    registry={registry}
+                    node={node}
+                    styles={styles}
+                    zoom={zoom}
+                    depth={depth}
+                    liveDepth={liveDepth}
+                    selected={!plain && (selected?.has(node.id) ?? false)}
+                    hovered={hover === node.id}
+                    opening={opening === node.id}
+                    fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                    chromeFade={focus?.id === node.id ? fadeStyle : undefined}
+                    editingPart={editing?.id === node.id ? editing.part : undefined}
+                    active={active === node.id}
+                    ghost={ghost === node.id}
+                    debug={debug}
+                    handlers={handlers}
+                  />
+                ))}
+                {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
+                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                  {group.links.map(({ link, path }) => (
+                    <path
+                      key={link.id}
+                      d={path}
+                      className='fill-none stroke-none'
+                      markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                      markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                    />
+                  ))}
+                </svg>
+              </Fragment>
+            ))}
+          </LatticeContext.Provider>
+        </GeneratedContext.Provider>
+      </CellContext.Provider>
     );
   },
 );
 
 SceneLayer.displayName = 'SceneLayer';
 
+/** The generator frames of the root layer, for the generator nodes' own views (their status). */
+const GeneratedContext = createContext<GeneratorFrames | undefined>(undefined);
+
+type GeneratedShapesProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+  t: number;
+  shapes: readonly Shape[];
+  style?: CSSProperties;
+};
+
+/** A shape's paint: its CSS colour, else its theme hue, else the text colour. */
+const paint = (shape: { hue?: string; color?: string }, kind: 'fill' | 'stroke') =>
+  shape.color
+    ? { [kind]: shape.color }
+    : {
+        className: shape.hue ? lineClasses(shape.hue)[kind] : undefined,
+        [kind]: shape.hue ? undefined : 'currentColor',
+      };
+
+/** A generator layer: the shapes the layer's generators returned, in scene coordinates. */
+const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
+  <>
+    <svg
+      className='absolute overflow-visible pointer-events-none'
+      style={style}
+      width={1}
+      height={1}
+      data-frame-time={frameTimeAttribute(t)}
+      data-testid='generator-layer'
+    >
+      {shapes.map((shape, index) => {
+        switch (shape.kind) {
+          case 'circle':
+            return (
+              <circle
+                key={index}
+                cx={shape.center.x}
+                cy={shape.center.y}
+                r={shape.radius}
+                opacity={shape.opacity}
+                {...paint(shape, 'fill')}
+              />
+            );
+          case 'rect':
+            return (
+              <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
+            );
+          case 'path':
+            return (
+              <path
+                key={index}
+                d={shape.d}
+                fill='none'
+                strokeWidth={shape.width ?? 2}
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                opacity={shape.opacity}
+                {...(shape.reveal !== undefined
+                  ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
+                  : {})}
+                {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
+              />
+            );
+          case 'instance':
+            return null;
+        }
+      })}
+    </svg>
+    {shapes.map((shape, index) =>
+      shape.kind === 'instance' ? (
+        <InstanceShape
+          key={index}
+          store={store}
+          registry={registry}
+          zoom={zoom}
+          depth={depth}
+          composite={shape.composite}
+          center={shape.center}
+          scale={shape.scale ?? 1}
+          opacity={shape.opacity}
+        />
+      ) : null,
+    )}
+  </>
+);
+
+type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+  composite: string;
+  center: { x: number; y: number };
+  scale: number;
+  opacity?: number;
+};
+
+/** A composite a generator placed: drawn about `center`, scaled, read-only. */
+const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
+  const scene = useAtomValue(store.scene(composite));
+  const content = useMemo(() => (scene ? compositeBounds(scene) : undefined), [scene]);
+  if (!scene || !content) {
+    return null;
+  }
+  const x = center.x - (content.x + content.width / 2) * scale;
+  const y = center.y - (content.y + content.height / 2) * scale;
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0', opacity }}
+    >
+      <SceneLayer store={store} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
+    </div>
+  );
+};
+
+/** A paused generator's reason, shown over its frame. */
+const GeneratorWarning = ({ status }: { status: Extract<GeneratorStatus, { state: 'paused' }> }) => (
+  <div
+    className='absolute top-1 left-1 right-1 flex items-start gap-1 p-1 rounded-sm text-xs bg-modal-surface text-error-text pointer-events-none'
+    data-testid='generator-paused'
+    title={status.message}
+  >
+    <span className='shrink-0'>{status.reason === 'budget' ? 'Over budget:' : 'Error:'}</span>
+    <span className='line-clamp-3'>{status.message}</span>
+  </div>
+);
+
+/**
+ * A generator node draws nothing of its own: its shapes are in the layer's generator layer. A paused generator shows
+ * why over its frame.
+ */
+export const GeneratorNodeView = ({ node }: NodeViewProps) => {
+  const generated = useContext(GeneratedContext);
+  const status = generated?.frames[node.id]?.status;
+  return status?.state === 'paused' ? <GeneratorWarning status={status} /> : null;
+};
+
+/** The width of a node frame's border, which a nested scene drawn inside it steps out over. */
+const FRAME_BORDER = '--scene-frame-border' as const;
+
+/** A link's stroke, in scene units like a node's 2px border, so a link keeps its weight beside the shapes at any zoom. */
+const LINK_WIDTH = 2;
+
+/** The most a nested scene's lines thicken by. */
+const MAX_LINE_WEIGHT = 2;
+
+/**
+ * How much thicker a layer draws its lines: a scene seen inside another is small, so its borders and links thicken,
+ * up to double, as it shrinks; at its own size (as it is drilled into) it is back to 1, so nothing jumps at the swap.
+ */
+export const lineWeight = (depth: number, zoom: number): number =>
+  depth > 0 ? Math.min(MAX_LINE_WEIGHT, Math.max(1, 1 / Math.max(zoom, 0.05))) : 1;
+
+/** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
+const CellContext = createContext(DEFAULT_CELL);
+
+/** The lattice smart links route on, inherited by nested layers. */
+const LatticeContext = createContext<LatticeSpec | undefined>(undefined);
+
+/** The scene's minor grid, in px, on each node frame for the text inside it. */
+const MINOR_GRID = '--dx-minor-grid';
+
+/**
+ * A text part covers the frame from its outer edge, border included, so its lines start on the grid the frame's edge is
+ * on rather than a border width inside it.
+ */
+// Spelled out, not built from `FRAME_BORDER`: Tailwind only emits classes it can read verbatim.
+// The text's own box is flush with the frame's edge and pads its text a grid unit either side; its lines need no
+// padding above or below, being on the grid already. The child is the static text's span or the editor's root alike,
+// so the text does not move when editing starts.
+const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-(--dx-minor-grid)';
+
+/** A line is a whole number of minor grid units tall, the text centred in it, so lines of text sit on the grid. */
+const LINE_ON_GRID = mx(
+  // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
+  '[--dx-line:round(up,1.25em,var(--dx-minor-grid))] leading-(--dx-line)!',
+);
+
+/**
+ * A text node's lines are 1.5em, tighter than the grid's, and its block is padded so the text sits a minor grid unit
+ * from the top and bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
+ */
+const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-minor-grid)-0.25em))]');
+
+/** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
+const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
+  dash === 'dashed' ? `${4 * width} ${3 * width}` : dash === 'dotted' ? `0 ${2.5 * width}` : undefined;
+
+/** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
+const END_BOX = 0.25;
+
 /** The end markers, one per kind and end: a start marker points back along the path, an end marker along it. */
-const Markers = ({ id, unit }: { id: string; unit: number }) => {
-  const size = 6 * unit;
-  // An arrowhead has to read as a direction at a glance, so it carries twice the weight of an end dot.
-  const arrow = 2 * size;
+type MarkersProps = {
+  id: string;
+  cell: number;
+  hue: string | undefined;
+  width: number;
+  /** The canvas colour a hollow end is filled with, so the line stops at its rim. */
+  canvasFill: string;
+};
+
+const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
+  const line = lineClasses(hue);
+  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
+  // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
+  const box = END_BOX * cell;
+  const arrow = box;
+  const triangle = (box * 12) / 10;
+  const circle = (box * 10) / 8;
+  // An outline matches the line's width, in its marker's view units.
+  const outline = (size: number, view: number) => (width * view) / size;
   const ends = ['start', 'end'] as const;
   return (
     <>
@@ -199,17 +565,41 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
         <marker
           key={`arrow-${end}`}
           id={`${id}-arrow-${end}`}
-          viewBox='0 0 10 10'
-          refX={9}
+          viewBox='-1 -1 12 12'
+          refX={10}
           refY={5}
-          markerWidth={arrow}
-          markerHeight={arrow}
+          markerWidth={(arrow * 12) / 10}
+          markerHeight={(arrow * 12) / 10}
           markerUnits='userSpaceOnUse'
           orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
         >
-          <path d='M 0 0 L 10 5 L 0 10 z' className='fill-neutral-500' />
+          {/* An open arrowhead: two strokes, not a filled head. */}
+          <path
+            d='M 0 0 L 10 5 L 0 10'
+            className={mx('fill-none', line.stroke)}
+            strokeWidth={outline((arrow * 12) / 10, 12)}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
         </marker>
       ))}
+      {/* Inheritance (UML generalization): a triangle filled with the canvas, so the line stops at its base. */}
+      {ends.map((end) => (
+        <marker
+          key={`triangle-${end}`}
+          id={`${id}-triangle-${end}`}
+          viewBox='-1 -1 12 12'
+          refX={10}
+          refY={5}
+          markerWidth={triangle}
+          markerHeight={triangle}
+          markerUnits='userSpaceOnUse'
+          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
+        >
+          <path d='M 0 0 L 10 5 L 0 10 z' className={mx(canvasFill, line.stroke)} strokeWidth={outline(triangle, 12)} />
+        </marker>
+      ))}
+      {/* A circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
       {ends.map((end) => (
         <marker
           key={`circle-${end}`}
@@ -217,15 +607,184 @@ const Markers = ({ id, unit }: { id: string; unit: number }) => {
           viewBox='0 0 10 10'
           refX={5}
           refY={5}
-          markerWidth={size}
-          markerHeight={size}
+          markerWidth={circle}
+          markerHeight={circle}
           markerUnits='userSpaceOnUse'
         >
-          <circle cx={5} cy={5} r={4} className='fill-neutral-500' />
+          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle, 10)} />
         </marker>
       ))}
     </>
   );
+};
+
+type LinkStrokeProps = {
+  /** Unique within the document, for a rails or glass link's mask. */
+  id: string;
+  kind: LinkKind;
+  path: string;
+  stroke: string;
+  width: number;
+  lineStyle: LineStyle['lineStyle'];
+  linkId: string;
+};
+
+/**
+ * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
+ * a faint strip; or glass, a translucent strip with fine edges.
+ */
+const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkStrokeProps) => {
+  const dash = dashArray(lineStyle, width);
+  if (kind === 'line') {
+    return (
+      <path
+        d={path}
+        className={mx('fill-none', stroke)}
+        strokeWidth={width}
+        strokeDasharray={dash}
+        strokeLinecap={lineStyle === 'dotted' ? 'round' : undefined}
+        data-link-id={linkId}
+      />
+    );
+  }
+  if (kind === 'tube') {
+    return (
+      <g strokeLinejoin='round' strokeDasharray={dash} data-link-id={linkId}>
+        <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} />
+        <path d={path} className='fill-none stroke-white' strokeWidth={width * 0.45} opacity={0.4} />
+      </g>
+    );
+  }
+  // The edges are the strip with its middle masked out: an SVG stroke cannot be offset to either side of its path.
+  const rail = kind === 'rails' ? Math.max(1, width / 5) : Math.max(0.75, width / 10);
+  const maskId = `${id.replace(/[^\w-]/g, '_')}-edges`;
+  return (
+    <g strokeLinejoin='round' strokeDasharray={dash} data-link-id={linkId}>
+      <mask id={maskId} maskUnits='userSpaceOnUse' x={-1e6} y={-1e6} width={2e6} height={2e6}>
+        <path d={path} fill='none' stroke='white' strokeWidth={width} />
+        <path d={path} fill='none' stroke='black' strokeWidth={width - rail * 2} />
+      </mask>
+      <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} opacity={kind === 'rails' ? 0.12 : 0.3} />
+      <path
+        d={path}
+        className={mx('fill-none', stroke)}
+        strokeWidth={width}
+        mask={`url(#${maskId})`}
+        opacity={kind === 'rails' ? 1 : 0.7}
+      />
+    </g>
+  );
+};
+
+type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string };
+
+/** A caption's backdrop margin around its text, in scene units. */
+const LINK_TEXT_PAD = { x: 8, y: 2 };
+
+/** A link's caption at the middle of its route, over a halo of the canvas so it reads where it crosses lines. */
+const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
+  const ref = useRef<SVGPathElement>(null);
+  const textRef = useRef<SVGTextElement>(null);
+  // The full caption, laid out but invisible, so it can be measured however much of it is shown.
+  const measureRef = useRef<SVGTextElement>(null);
+  const [at, setAt] = useState<{ x: number; y: number; room?: number }>();
+  const [shown, setShown] = useState(text);
+  const [box, setBox] = useState<{ x: number; y: number; width: number; height: number }>();
+  // The route is only known as drawn: its midpoint is measured along the path, not between its ends.
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element) {
+      const length = element.getTotalLength();
+      const { x, y } = element.getPointAtLength(length / 2);
+      setAt({ x, y, room: horizontalRun(element, length) });
+    }
+  }, [path]);
+  // On a horizontal run the caption fits between the run's ends, clear of the arrowheads, so a long one is shortened.
+  useLayoutEffect(() => {
+    const element = measureRef.current;
+    if (!element || !at) {
+      return;
+    }
+    const room = at.room === undefined ? Infinity : at.room - LINK_TEXT_PAD.x * 2 - LINK_TEXT_CLEARANCE * 2;
+    if (text.length === 0 || element.getComputedTextLength() <= room) {
+      setShown(text);
+      return;
+    }
+    // The ellipsis takes about one character's width of what it replaces.
+    const ellipsis = element.getComputedTextLength() / text.length;
+    let count = text.length - 1;
+    while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
+      count--;
+    }
+    setShown(`${text.slice(0, count).trimEnd()}…`);
+  }, [at, text]);
+  // The backdrop fits the text as set, so it is measured once the text is placed.
+  useLayoutEffect(() => {
+    const element = textRef.current;
+    if (element && at) {
+      const { x, y, width, height } = element.getBBox();
+      setBox({
+        x: x - LINK_TEXT_PAD.x,
+        y: y - LINK_TEXT_PAD.y,
+        width: width + LINK_TEXT_PAD.x * 2,
+        height: height + LINK_TEXT_PAD.y * 2,
+      });
+    }
+  }, [at, shown]);
+  return (
+    <>
+      <path ref={ref} d={path} className='fill-none stroke-none' />
+      {at && (
+        <>
+          {/* Opaque, so the caption reads over the lines it sits on. */}
+          {box && <rect {...box} rx={box.height / 2} className={backdrop} data-link-text-box />}
+          <text
+            ref={textRef}
+            x={at.x}
+            y={at.y}
+            textAnchor='middle'
+            dominantBaseline='central'
+            className={mx(textClass, 'text-sm')}
+            data-link-text
+          >
+            {shown !== text && <title>{text}</title>}
+            {shown}
+          </text>
+          <text ref={measureRef} x={at.x} y={at.y} className='text-sm invisible' aria-hidden>
+            {text}
+          </text>
+        </>
+      )}
+    </>
+  );
+};
+
+/** Scene units kept clear at each end of a caption's run, for the arrowhead or bend there. */
+const LINK_TEXT_CLEARANCE = 12;
+
+/** Step, in scene units, when walking a route out from its midpoint. */
+const RUN_STEP = 2;
+
+/**
+ * The length of the straight horizontal run through a path's midpoint, or undefined when the midpoint is on a vertical
+ * run (a caption there is not bounded by the line it sits on).
+ */
+const horizontalRun = (element: SVGPathElement, length: number): number | undefined => {
+  const middle = length / 2;
+  const { y } = element.getPointAtLength(middle);
+  const level = (at: number) => Math.abs(element.getPointAtLength(at).y - y) < 0.5;
+  if (!level(Math.max(0, middle - RUN_STEP)) || !level(Math.min(length, middle + RUN_STEP))) {
+    return undefined;
+  }
+  let start = middle;
+  while (start > 0 && level(Math.max(0, start - RUN_STEP))) {
+    start = Math.max(0, start - RUN_STEP);
+  }
+  let end = middle;
+  while (end < length && level(Math.min(length, end + RUN_STEP))) {
+    end = Math.min(length, end + RUN_STEP);
+  }
+  return end - start;
 };
 
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
@@ -234,60 +793,162 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   ghost?: boolean;
   debug?: boolean;
   handlers?: ElementHandlers;
+  /** The fade while another node is zoomed into. */
+  fade?: CSSProperties;
+  /** The fade of this node's own frame (fill and border) while it is zoomed into; its contents stay. */
+  chromeFade?: CSSProperties;
+  /** The drawing's style classes, under the node's own style. */
+  styles?: StyleMap;
 };
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
-const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props }: NodeFrameProps) => {
-  const { node, registry, selected } = props;
-  const bounds = nodeBounds(node);
-  const interactive = handlers !== undefined && !ghost;
-  const Component = nodeDef(registry, node)?.component ?? UnknownNodeView;
-  const editing = useMemo<PartEditing | undefined>(
-    () =>
-      editingPart && handlers
-        ? {
-            part: editingPart,
-            commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
-            cancel: () => handlers.onPartCancel?.(),
-          }
-        : undefined,
-    [editingPart, handlers, node],
-  );
-  return (
-    <div
-      className={mx(
-        'absolute box-border border-4 overflow-hidden',
-        ...frameClasses(node, selected, hovered),
-        interactive && !node.locked && 'cursor-grab',
-        ghost && 'opacity-50 border-dashed pointer-events-none',
-      )}
-      // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
-      // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
-      style={{
-        left: bounds.x,
-        top: bounds.y,
-        width: bounds.width,
-        height: bounds.height,
-        fontSize: node.style?.fontSize,
-      }}
-      data-node-id={node.id}
-      data-ghost={ghost || undefined}
-      onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
-    >
-      <Component {...props} editing={editing} />
-      {debug && (
+const NodeFrame = memo(
+  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, ...props }: NodeFrameProps) => {
+    const { node, registry, selected } = props;
+    const cell = useContext(CellContext);
+    // A type the registry does not know is drawn as the core base: a box with its label.
+    const def = nodeDef(registry, node);
+    const drawn = useMemo(() => bareNode(classedNode(node, styles), def?.bare), [node, styles, def?.bare]);
+    const bounds = nodeBounds(node);
+    const interactive = handlers !== undefined && !ghost;
+    const Component = def?.component ?? BoxNodeView;
+    const Toolbar = interactive ? def?.toolbar : undefined;
+    const editing = useMemo<PartEditing | undefined>(
+      () =>
+        editingPart && handlers
+          ? {
+              part: editingPart,
+              multiline: nodeParts(registry, node).some((part) => part.field === editingPart && isMultiline(part)),
+              commit: (text) => handlers.onPartCommit?.(node, editingPart, text),
+              cancel: () => handlers.onPartCancel?.(),
+            }
+          : undefined,
+      [editingPart, handlers, node, registry],
+    );
+    const onOpen = useMemo(
+      () => (interactive && handlers.onNodeOpen ? () => handlers.onNodeOpen?.(node) : undefined),
+      [interactive, handlers, node],
+    );
+    // Being zoomed into, the frame becomes the child scene's canvas, so it drops its fill (the first class)
+    // at once and keeps only its own border, not the selection's or the hover's.
+    // `fontSize` is inherited by every text part, so an override set on the node reaches the label,
+    // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
+    // The frame's border is 2px, thickened with the layer's lines (`lineWeight`); fading, it is padding instead.
+    const look = useSceneLook();
+    const nominal = styleVariant(look.styleSet, drawn.style?.tone).borderWidth;
+    const border = nominal * lineWeight(props.depth, props.zoom);
+    const thick = border !== nominal;
+    // A bare type drawing no fill or border has no frame at all: the frame clips its contents, so a transparent border
+    // would shave the drawing (a 4px rule drew 2px) and a rounded corner would cut a glyph's sharp corners.
+    const borderless =
+      def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade;
+    const frameStyle: CSSProperties & Record<`--${string}`, string> = {
+      left: bounds.x,
+      top: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      fontSize: drawn.style?.fontSize,
+      [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
+      [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
+      ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
+      ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
+      ...fade,
+      ...nodeOpacity(drawn, fade),
+    };
+    const frameLook = props.opening
+      ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
+      : frameClasses(drawn, selected, hovered, def?.ellipse, look);
+    return (
+      <>
         <div
-          className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-description pointer-events-none'
-          data-testid='node-debug'
+          className={mx(
+            'absolute box-border overflow-hidden',
+            // Fading, the border becomes padding of the same width so the contents stay put.
+            ...(chromeFade
+              ? [BORDER_CLASSES[nominal].padding, 'isolate']
+              : [BORDER_CLASSES[nominal].border, ...frameLook]),
+            // Every text part inherits the face, as it does `fontSize`.
+            drawn.style?.fontFamily === 'monospace' && 'font-mono',
+            interactive && !node.locked && 'cursor-grab',
+            ghost && 'opacity-50 border-dashed pointer-events-none',
+          )}
+          style={frameStyle}
+          data-node-id={node.id}
+          data-ghost={ghost || undefined}
+          onPointerDown={
+            interactive
+              ? (event) => {
+                  // React bubbles a portal's events through the tree: a press in a menu the node's content opened is
+                  // not a press on the node.
+                  if (event.target instanceof Element && event.currentTarget.contains(event.target)) {
+                    handlers.onNodePointerDown?.(node, event);
+                  }
+                }
+              : undefined
+          }
         >
-          {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+          {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
+          {chromeFade && (
+            <div
+              aria-hidden
+              className={mx('dx-cover -z-10', BORDER_CLASSES[nominal].border, 'pointer-events-none', ...frameLook)}
+              style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
+            />
+          )}
+          <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          {debug && (
+            <div
+              className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
+              data-testid='node-debug'
+            >
+              {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-});
+        {Toolbar && (
+          // Outside the frame, which clips its contents; scaled back to screen size from its bottom-right corner. Its
+          // own width (`w-max`): near the layer's edge an absolute box would shrink to the space left. Shown with the
+          // frame's hover or selection, and kept while the pointer crosses onto it.
+          <div
+            className={mx(
+              'absolute flex w-max pb-1 transition-opacity',
+              hovered || selected ? 'opacity-100' : 'opacity-0 hover:opacity-100',
+            )}
+            style={{
+              left: bounds.x + bounds.width,
+              top: bounds.y,
+              transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
+              transformOrigin: 'bottom right',
+              ...fade,
+              ...nodeOpacity(drawn, fade),
+            }}
+            data-testid='node-toolbar'
+            onPointerDown={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+          >
+            <Toolbar {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          </div>
+        )}
+      </>
+    );
+  },
+);
 
 NodeFrame.displayName = 'NodeFrame';
+
+/** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
+const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
+  const opacity = node.style?.opacity;
+  if (opacity === undefined || opacity >= 1) {
+    return undefined;
+  }
+  const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
+  return { opacity: Math.max(0, opacity) * faded };
+};
+
+/** A node of a `bare` type: no fill or border unless its style sets them. */
+const bareNode = (node: Node, bare: boolean | undefined): Node =>
+  bare ? { ...node, style: { fill: false, border: false, ...node.style } } : node;
 
 /**
  * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the
@@ -295,77 +956,94 @@ NodeFrame.displayName = 'NodeFrame';
  */
 const sizeClass = (node: Node, className: string) => (node.style?.fontSize === undefined ? className : undefined);
 
-const LabelNodeView = ({ node, editing }: NodeViewProps) => {
-  const label = isRectNode(node) || isEllipseNode(node) ? (node.label ?? '') : '';
-  return (
-    <TextPart
-      part='label'
-      text={label}
-      editing={editing}
-      classNames={mx('dx-fullscreen flex items-center justify-center text-center', sizeClass(node, 'text-2xl'))}
-    >
-      {label}
-    </TextPart>
-  );
+type LabelPartProps = Pick<NodeViewProps, 'node' | 'editing'> & { label: string };
+
+/** The centred, editable label of a box (and an ellipse). */
+const LabelPart = ({ node, editing, label }: LabelPartProps) => (
+  <TextPart
+    part='label'
+    text={label}
+    editing={editing}
+    classNames={mx(
+      TEXT_BOX,
+      'whitespace-pre-wrap',
+      LINE_ON_GRID,
+      alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
+      // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
+      sizeClass(node, 'text-[24px]'),
+    )}
+  >
+    {label}
+  </TextPart>
+);
+
+/** A node's core-base `label`, read from any type: a type the registry does not know still carries it. */
+const baseLabel = (node: Node): string => {
+  const label: unknown = Reflect.get(node, 'label');
+  return typeof label === 'string' ? label : '';
 };
 
-export const RectNodeView = LabelNodeView;
+const LabelNodeView = ({ node, editing }: NodeViewProps) => (
+  <LabelPart node={node} editing={editing} label={baseLabel(node)} />
+);
+
+/** The `box` prototype's body: its centred label. */
+export const BoxNodeView = LabelNodeView;
 
 export const EllipseNodeView = LabelNodeView;
 
-export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isClassNode(node)) {
-    return null;
-  }
-  return (
-    <div className={mx('dx-fullscreen flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
-      <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
-        {node.name}
-      </TextPart>
-      <TextPart
-        part='attributes'
-        text={node.attributes.join('\n')}
-        editing={editing}
-        classNames='px-2 py-1 flex-1 min-h-4'
-      >
-        {node.attributes.map((attribute, index) => (
-          <div key={index}>{attribute}</div>
-        ))}
-      </TextPart>
-      <TextPart part='methods' text={node.methods.join('\n')} editing={editing} classNames='px-2 py-1 flex-1 min-h-4'>
-        {node.methods.map((method, index) => (
-          <div key={index}>{method}</div>
-        ))}
-      </TextPart>
-    </div>
-  );
-};
-
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
-export const UnknownNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen flex items-center justify-center text-xs text-description'>{node.type}</div>
+export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
+  <div className='dx-cover flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
 );
 
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
   const text = isNoteNode(node) ? node.text : '';
   return (
-    <TextPart part='text' text={text} editing={editing} classNames='dx-fullscreen p-3'>
+    <TextPart
+      part='text'
+      text={text}
+      editing={editing}
+      classNames={mx(
+        TEXT_BOX,
+        'whitespace-pre-wrap',
+        TEXT_LINES,
+        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+      )}
+    >
       {text}
     </TextPart>
   );
 };
 
-export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, opening }: NodeViewProps) => {
-  const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
-  // Being entered, the portal is already the child scene on the canvas: live, and without the tile tint.
+/**
+ * A frame over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
+ * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
+ */
+export const FrameNodeView = (props: NodeViewProps) => {
+  const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
+  const child = useAtomValue(store.scene(isFrameNode(node) ? node.scene : ''));
+  const contents = opening || (isFrameNode(node) && showsContents(node));
+  // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
+  // A scene named by no one shows no title, rather than its id.
+  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? '';
+  // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
+  if (!contents || tier === 'dot') {
+    return (
+      <>
+        <LabelPart node={node} editing={editing} label={title} />
+        {onOpen && <OpenControl onOpen={onOpen} />}
+      </>
+    );
+  }
   return (
-    <div className={mx('dx-fullscreen', tier === 'dot' && 'bg-primary-500/40')}>
+    <div className='dx-cover'>
       {tier === 'preview' && child && (
-        <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
-          <span className='text-2xl'>{child.name ?? child.id}</span>
-          <span className='text-description'>
+        <div className='dx-cover flex flex-col items-center justify-center gap-1 pointer-events-none'>
+          <span className='text-lg'>{title}</span>
+          <span>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
         </div>
@@ -376,10 +1054,16 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
           // The nested layer is read-only: only the root scene receives handlers.
           // Pulled out by the frame's border, so the child's origin is the node's corner as
           // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
-          // the scene jumped by that at the drill-in swap.
+          // the scene jumped by that at the drill-in swap. The width is the frame's own (`FRAME_BORDER`),
+          // since a fading frame trades its border for padding.
           <div
-            className='absolute -top-1 -left-1 pointer-events-none'
-            style={{ transform: portalTransform(node, bounds), transformOrigin: '0 0' }}
+            className='absolute pointer-events-none'
+            style={{
+              top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+              left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+              transform: portalTransform(node, bounds),
+              transformOrigin: '0 0',
+            }}
           >
             <SceneLayer
               store={store}
@@ -391,11 +1075,98 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
             />
           </div>
         )}
-      {!opening && (
-        <span className='absolute top-1 left-2 text-xs text-subdued pointer-events-none'>
-          {child?.name ?? child?.id}
-        </span>
+      {/* The preview centres the title already; the live scene fills the frame, so it names it in the corner. */}
+      {!opening && tier === 'live' && (
+        <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>{title}</span>
       )}
+      {!opening && onOpen && <OpenControl onOpen={onOpen} />}
     </div>
   );
 };
+
+/**
+ * A composite object's instance: the composite scene, with the instance's overrides, scaled into the frame
+ * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
+ */
+export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
+  const composite = useAtomValue(store.scene(isInstanceNode(node) ? node.composite : ''));
+  const drawn = useMemo(
+    () => (composite && isInstanceNode(node) ? instanceScene(node, composite) : undefined),
+    [node, composite],
+  );
+  const bounds = nodeBounds(node);
+  const transform = useMemo(
+    () => (drawn && isInstanceNode(node) ? instanceTransform(bounds, compositeBounds(drawn), node.fit) : undefined),
+    // Keyed on the geometry rather than the bounds object, which is new on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
+  );
+  if (!drawn || !transform) {
+    return <UnknownNodeView node={node} />;
+  }
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{
+        // Out by the frame's border, so the composite's coordinates map onto the node's corner (as a portal's do).
+        top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        transform: `translate(${transform.offset.x - bounds.x}px, ${transform.offset.y - bounds.y}px) scale(${transform.scale})`,
+        transformOrigin: '0 0',
+      }}
+      data-instance={node.id}
+    >
+      <SceneLayer
+        store={store}
+        scene={drawn}
+        registry={registry}
+        zoom={zoom * transform.scale}
+        depth={depth + 1}
+        liveDepth={liveDepth}
+      />
+    </div>
+  );
+};
+
+/** Vector art: the node's path, scaled from its `viewBox` to the frame and filled with its text colour. */
+export const PathNodeView = ({ node }: NodeViewProps) => {
+  if (!isPathNode(node)) {
+    return null;
+  }
+  const { x, y, width, height } = node.viewBox;
+  return (
+    <svg
+      className='absolute overflow-visible pointer-events-none'
+      style={{
+        top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+      }}
+      width={node.size.width}
+      height={node.size.height}
+      viewBox={`${x} ${y} ${width} ${height}`}
+      preserveAspectRatio='none'
+    >
+      <path d={node.d} fill={node.fill ?? 'currentColor'} fillRule='evenodd' />
+    </svg>
+  );
+};
+
+export type OpenControlProps = { label?: string; onOpen: () => void };
+
+/** The open control at a frame's top-right; it takes the press, so it neither drags nor selects the node. */
+export const OpenControl = ({ label = 'Open scene', onOpen }: OpenControlProps) => (
+  <Button.Root
+    variant='ghost'
+    iconOnly
+    icon='ph--arrows-out--regular'
+    label={label}
+    classNames='absolute top-1 right-1'
+    data-testid='portal-open'
+    onPointerDown={(event) => event.stopPropagation()}
+    onDoubleClick={(event) => event.stopPropagation()}
+    onClick={(event) => {
+      event.stopPropagation();
+      onOpen();
+    }}
+  />
+);

@@ -5,9 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -122,11 +122,10 @@ describe('GenerateHomeSuggestions', () => {
   );
 
   it.effect(
-    'a changed set reuses cached prompts within the refresh interval',
+    'cached prompts are reused within the refresh interval whatever the recent set is',
     Effect.fnUntraced(
       function* (_) {
         const { db } = yield* Database.Service;
-        yield* addNotes(5);
         const stored = ['Refine the proposal', 'Review the schedule', 'Draft a summary'];
         testRegistry.set(testCacheAtom, {
           [db.spaceId]: { generatedAt: Date.now() - HOUR_MS / 2, prompts: stored, fingerprint: 'another set' },

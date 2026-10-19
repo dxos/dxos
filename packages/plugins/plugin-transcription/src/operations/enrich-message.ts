@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { enrichTranscriptMessage } from '@dxos/assistant/extraction';
+import { enrichTranscriptMessage } from '@dxos/assistant/Extraction';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 

@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { Model, Scene } from '#types';
@@ -43,10 +43,11 @@ const meta = {
   title: 'plugins/plugin-spacetime/containers/SceneArticle',
   render: DefaultStory,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Scene.Scene, Model.Object],
           onClientInitialized: ({ client }) =>
@@ -54,7 +55,9 @@ const meta = {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              space.db.add(Scene.make({ name: 'Test Scene' }));
+              // The scene refers to its cube, so the cube has to be in the space too or the scene opens empty.
+              const cube = space.db.add(Model.make({ primitive: 'cube' }));
+              space.db.add(Obj.make(Scene.Scene, { name: 'Test Scene', objects: [Ref.make(cube)] }));
             }),
         }),
         StorybookPlugin.make({}),

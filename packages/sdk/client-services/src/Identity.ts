@@ -10,6 +10,7 @@ import { type Context as DxosContext } from '@dxos/context';
 import {
   type CredentialSigner,
   DeviceStateMachine,
+  type InboxEnvelopeSigner,
   ProfileStateMachine,
   createCredentialSignerWithChain,
   createCredentialSignerWithKey,
@@ -205,6 +206,19 @@ export class Identity {
       this._deviceStateMachine.deviceCredentialChain,
       this.deviceKey,
     );
+  }
+
+  /**
+   * Signs inbox envelopes as identity, with the device key and its delegation chain.
+   */
+  getInboxEnvelopeSigner(): InboxEnvelopeSigner {
+    invariant(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
+    return {
+      identityKey: this.identityKey,
+      signingKey: this.deviceKey,
+      chain: this._deviceStateMachine.deviceCredentialChain,
+      signer: this._signer,
+    };
   }
 
   /**

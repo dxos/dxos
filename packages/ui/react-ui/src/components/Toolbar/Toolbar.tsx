@@ -1,134 +1,81 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
-import React, {
-  type ComponentPropsWithoutRef,
-  type FocusEvent,
-  type KeyboardEvent,
-  type MouseEventHandler,
-  forwardRef,
-  useCallback,
-} from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMachine } from '@zag-js/react';
+import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
-import { useFocusGroup } from '@dxos/react-focus';
-import { useComposedRefs } from '@dxos/react-hooks';
-import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
-import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
-
-import { translationKey } from '#translations';
-
-import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider } from '../../providers/DensityProvider/index.ts';
-import { type ToolbarStyleProps } from '../../theme/index.ts';
-import { composable, composableProps, slottable } from '../../util/index.ts';
-import {
-  Button,
-  type ButtonGroupProps,
-  type ButtonProps,
-  IconButton,
-  type IconButtonProps,
-  Toggle,
-  ToggleGroup,
-  ToggleGroupIconItem,
-  type ToggleGroupIconItemProps,
-  ToggleGroupItem,
-  type ToggleGroupItemProps,
-  type ToggleGroupProps,
-  type ToggleProps,
-} from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Link, type LinkProps } from '../Link/index.ts';
-import { Menu } from '../Menu/index.ts';
-import { Separator, type SeparatorProps } from '../Separator/index.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { composable, composableProps, slottable } from '../../util/slots.ts';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import { Separator, type SeparatorProps } from '../Separator/Separator.tsx';
+import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
+import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
+import * as toolbar from './toolbar-machine.ts';
 
 //
 // Root
 //
 
-type ToolbarRootProps = Omit<ComponentPropsWithoutRef<'div'>, 'dir'> &
-  Omit<ToolbarStyleProps, 'surface'> & {
-    /** Material-style elevation, 0–5, onto the surface ladder: the bar paints that level and its shadow. */
-    elevation?: ElevationLevel;
-    orientation?: 'horizontal' | 'vertical';
-    /** Wrap arrow navigation at the ends (default true). */
-    loop?: boolean;
-  };
+type ToolbarRootProps = {
+  size?: Size;
+  orientation?: toolbar.Orientation;
+  /** Arrow keys wrap from the last item to the first and back; on by default. */
+  loop?: boolean;
+  /** Disables every control in the toolbar. */
+  disabled?: boolean;
+  /**
+   * Dims the controls without disabling them, for a toolbar whose host is not in play (an unattended plank): they stay
+   * operable, so the first press both brings the host into play and acts.
+   */
+  inactive?: boolean;
+};
 
 /**
- * A `role="toolbar"` that is one `Tab` stop: arrow keys along `orientation` move between its
- * controls and the last-focused control is where focus returns. The roving focus is
- * `@dxos/react-focus`'s — Ark has no toolbar — so any focusable child is a toolbar item.
+ * The toolbar element as a composable part, so the ScrollArea viewport slot merges onto it (a plain `ark.div` gets the
+ * dev warning wrapper, which breaks the frame's child rules).
  */
-const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
+const ToolbarElement = composable<HTMLDivElement, HTMLAttributes<HTMLDivElement> & { asChild?: boolean }>(
+  (props, forwardedRef) => <ark.div {...composableProps(props)} ref={forwardedRef} />,
+);
+
+/**
+ * `role=toolbar` with the roving focus that role promises (decision 9); items that overflow scroll along its axis in a
+ * thin ScrollArea whose bar shows on hover, the toolbar itself being the viewport.
+ */
+const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
   (
-    {
-      children,
-      density,
-      disabled,
-      layoutManaged,
-      elevation,
-      orientation = 'horizontal',
-      loop = true,
-      onKeyDown,
-      onFocus,
-      ...props
-    },
+    { children, asChild, size, orientation = 'horizontal', loop = true, disabled, inactive, ...props },
     forwardedRef,
   ) => {
-    const { className, role, ...rest } = composableProps(props);
-    const { tx } = useThemeContext();
-    const {
-      ref: focusGroupRef,
-      onKeyDown: onFocusGroupKeyDown,
-      onFocus: onFocusGroupFocus,
-      ...focusGroupAttrs
-    } = useFocusGroup({ axis: orientation, memorizeCurrent: true, cyclic: loop });
-
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLDivElement>) => {
-        onFocusGroupKeyDown(event);
-        onKeyDown?.(event);
-      },
-      [onFocusGroupKeyDown, onKeyDown],
-    );
-    const handleFocus = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        onFocusGroupFocus(event);
-        onFocus?.(event);
-      },
-      [onFocusGroupFocus, onFocus],
-    );
-
+    const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
+    const api = toolbar.connect(service);
+    const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
+    const rootProps = api.getRootProps();
     return (
-      <ark.div
-        {...rest}
-        {...focusGroupAttrs}
-        // Every role the caller sets is forwarded, `role=''` included: dropping it would leave the
-        // default in place and silently invert the caller's intent.
-        role={role ?? 'toolbar'}
-        {...(orientation === 'vertical' && { 'aria-orientation': 'vertical' })}
-        data-orientation={orientation}
-        data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
-        {...elevationAttrs(elevation)}
-        className={tx(
-          'toolbar.root',
-          { density, disabled, layoutManaged, surface: elevationSurface(elevation) },
-          className,
-        )}
-        onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
-      >
-        {/* The class alone cannot resize the bar's controls: `Button` and `Input` stamp
-            `data-density` from context — `md` from the root provider unless something nearer says
-            otherwise — and that stamp sits ON the control, so it shadows the `--dx-control` the bar's
-            class set around it. The context is what those controls read, so the bar provides both:
-            the class for descendants that only read the variable, the context for those that stamp. */}
-        {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
-      </ark.div>
+      <ToolbarContext.Provider value={api}>
+        <ScrollArea.Root size={size} width='thin' orientation={orientation} classNames={recipes.toolbarScroll()}>
+          <ScrollArea.Viewport asChild>
+            <ToolbarElement
+              asChild={asChild}
+              {...rest}
+              {...rootProps}
+              // A toolbar that is also a landmark (an app bar's `banner`) keeps the role it is given.
+              role={rest.role ?? rootProps.role}
+              data-size={size}
+              data-inactive={inactive ? '' : undefined}
+              classNames={className}
+              ref={forwardedRef}
+            >
+              {children}
+            </ToolbarElement>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </ToolbarContext.Provider>
     );
   },
 );
@@ -136,16 +83,47 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
 ToolbarRoot.displayName = 'Toolbar.Root';
 
 //
+// Separator
+//
+
+type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'> & {
+  /** `gap` is an empty spacer that grows, pushing the items after it to the toolbar's end. */
+  variant?: 'line' | 'gap';
+};
+
+/**
+ * A rule across the toolbar's axis (vertical in a horizontal toolbar), or with `variant='gap'` a growing spacer; not an
+ * item, so roving focus skips it.
+ */
+const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ variant, ...props }, forwardedRef) => {
+  const api = useContext(ToolbarContext);
+  if (variant === 'gap') {
+    const { className, ...rest } = composableProps(props, { classNames: recipes.toolbarGap() });
+    return <div {...rest} role='none' data-scope='toolbar' data-part='gap' className={className} ref={forwardedRef} />;
+  }
+
+  return (
+    <Separator
+      {...props}
+      orientation={api?.orientation === 'vertical' ? 'horizontal' : 'vertical'}
+      ref={forwardedRef}
+    />
+  );
+});
+
+ToolbarSeparator.displayName = 'Toolbar.Separator';
+
+//
 // Text
 //
 
-type ToolbarTextProps = SlottableProps;
+type ToolbarTextProps = {};
 
-const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const { tx } = useThemeContext();
+/** A run of text that takes the free space and truncates; not an item, so roving focus skips it. */
+const ToolbarText = slottable<HTMLDivElement, ToolbarTextProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props, { classNames: recipes.toolbarText() });
   return (
-    <ark.div asChild={asChild} {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} data-scope='toolbar' data-part='text' className={className} ref={forwardedRef}>
       {children}
     </ark.div>
   );
@@ -154,259 +132,72 @@ const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
 ToolbarText.displayName = 'Toolbar.Text';
 
 //
-// Button
-//
-
-type ToolbarButtonProps = ButtonProps;
-
-const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => {
-  return <Button {...props} ref={forwardedRef} />;
-});
-
-ToolbarButton.displayName = 'Toolbar.Button';
-
-//
-// IconButton
-//
-
-type ToolbarIconButtonProps = IconButtonProps;
-
-const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
-  return <IconButton {...props} ref={forwardedRef} />;
-});
-
-ToolbarIconButton.displayName = 'Toolbar.IconButton';
-
-type ToolbarToggleProps = ToggleProps;
-
-const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
-  return <Toggle {...props} ref={forwardedRef} />;
-});
-
-ToolbarToggle.displayName = 'Toolbar.Toggle';
-
-//
 // Link
 //
 
-type ToolbarLinkProps = LinkProps;
+type ToolbarLinkProps = AnchorHTMLAttributes<HTMLAnchorElement>;
 
-const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
-  return <Link {...props} ref={forwardedRef} />;
-});
+/** A link that is a toolbar item (roving focus); opens in a new tab by default, like the current `Link`. */
+const ToolbarLink = composable<HTMLAnchorElement, ToolbarLinkProps>(
+  ({ children, target = '_blank', rel = 'noreferrer', onFocus, onClick, ...props }, forwardedRef) => {
+    const { disabled, ...toolbarItem } = useToolbarItem() ?? { disabled: undefined, onFocus: undefined };
+    const { className, ...rest } = composableProps<HTMLAnchorElement>(props, { classNames: recipes.toolbarLink() });
+    return (
+      <a
+        {...rest}
+        {...toolbarItem}
+        target={target}
+        rel={rel}
+        aria-disabled={disabled}
+        onFocus={(event) => {
+          onFocus?.(event);
+          toolbarItem.onFocus?.();
+        }}
+        onClick={(event) => {
+          if (disabled) {
+            event.preventDefault();
+            return;
+          }
+          onClick?.(event);
+        }}
+        data-scope='toolbar'
+        data-part='link'
+        className={className}
+        ref={forwardedRef}
+      >
+        {children}
+      </a>
+    );
+  },
+);
 
 ToolbarLink.displayName = 'Toolbar.Link';
-
-type ToolbarToggleGroupProps = ToggleGroupProps & ButtonGroupProps;
 
 //
 // ToggleGroup
 //
 
-/** A toggle group inside the bar leaves arrow navigation to the bar. */
-const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => {
-  return <ToggleGroup {...props} rovingFocus={false} ref={forwardedRef} />;
-});
+type ToolbarToggleGroupProps = ToggleGroup.RootProps;
+
+/** A ToggleGroup whose items join the toolbar's roving focus, so the group adds no tab stop or arrow handling of its own. */
+const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => (
+  <ToggleGroup.Root {...props} rovingFocus={false} ref={forwardedRef} />
+));
 
 ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
-
-type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
-
-const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>((props, forwardedRef) => {
-  return <ToggleGroupItem {...props} ref={forwardedRef} />;
-});
-
-ToolbarToggleGroupItem.displayName = 'Toolbar.ToggleGroupItem';
-
-type ToolbarToggleGroupIconItemProps = ToggleGroupIconItemProps;
-
-const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
-  (props, forwardedRef) => {
-    return <ToggleGroupIconItem {...props} ref={forwardedRef} />;
-  },
-);
-
-ToolbarToggleGroupIconItem.displayName = 'Toolbar.ToggleGroupIconItem';
-
-//
-// Separator
-//
-
-type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
-
-const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
-  ({ variant = 'gap', ...props }, forwardedRef) => {
-    return variant === 'line' ? (
-      <Separator orientation='vertical' {...props} ref={forwardedRef} />
-    ) : (
-      <div role='separator' aria-orientation='vertical' className='grow' ref={forwardedRef} />
-    );
-  },
-);
-
-ToolbarSeparator.displayName = 'Toolbar.Separator';
-
-//
-// DragHandle
-//
-
-type ToolbarDragHandleProps = { testId?: string; label?: string };
-
-const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
-  ({ testId = 'drag-handle', label }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    return (
-      <ToolbarIconButton
-        data-testid={testId}
-        tabIndex={-1}
-        noTooltip
-        iconOnly
-        icon='ph--dots-six-vertical--regular'
-        variant='ghost'
-        label={label ?? t('toolbar-drag-handle.label')}
-        classNames='dx-focus-ring-none cursor-pointer'
-        disabled={!forwardedRef}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-ToolbarDragHandle.displayName = 'Toolbar.DragHandle';
-
-//
-// ActionIconButton
-//
-
-/**
- * Known semantic actions a toolbar icon-button can represent. Each action
- * picks its own phosphor icon + default translation key so call sites just
- * declare intent (`action='delete'`) rather than re-specifying the icon /
- * label every time.
- */
-type ToolbarActionIconButtonAction = 'close' | 'delete';
-
-type ToolbarActionIconButtonProps = {
-  action: ToolbarActionIconButtonAction;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
-  label?: string;
-};
-
-const TOOLBAR_ACTION_ICONS: Record<ToolbarActionIconButtonAction, string> = {
-  close: 'ph--x--regular',
-  delete: 'ph--trash--regular',
-};
-
-const TOOLBAR_ACTION_LABEL_KEYS: Record<ToolbarActionIconButtonAction, string> = {
-  close: 'toolbar-close.label',
-  delete: 'toolbar-delete.label',
-};
-
-const ToolbarActionIconButton = forwardRef<HTMLButtonElement, ToolbarActionIconButtonProps>(
-  ({ action, onClick, label }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-
-    return (
-      <ToolbarIconButton
-        iconOnly
-        icon={TOOLBAR_ACTION_ICONS[action]}
-        variant='ghost'
-        label={label ?? t(TOOLBAR_ACTION_LABEL_KEYS[action])}
-        classNames='cursor-pointer'
-        onClick={onClick}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
-
-//
-// Menu
-//
-
-type ToolbarMenuItem<T extends any | void = void> = {
-  label: string;
-  /** Optional leading icon (e.g. `ph--trash--regular`). */
-  icon?: string;
-  onClick: (context: T) => void;
-};
-
-type ToolbarMenuProps<T extends any | void = void> = {
-  context?: T;
-  items?: ToolbarMenuItem<T>[];
-};
-
-// TODO(burdon): Make slottable.
-function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) {
-  const { t } = useTranslation(translationKey);
-
-  return (
-    <Menu.Root>
-      <Menu.Trigger disabled={!items?.length} asChild>
-        <ToolbarIconButton
-          iconOnly
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          label={t('toolbar-menu.label')}
-        />
-      </Menu.Trigger>
-      {(items?.length ?? 0) > 0 && (
-        <Menu.Portal>
-          <Menu.Content>
-            <Menu.Viewport>
-              {items?.map(({ label, icon, onClick: onSelect }, index) => (
-                <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
-                  {icon && <Icon icon={icon} />}
-                  {label}
-                </Menu.Item>
-              ))}
-            </Menu.Viewport>
-            <Menu.Arrow />
-          </Menu.Content>
-        </Menu.Portal>
-      )}
-    </Menu.Root>
-  );
-}
-
-ToolbarMenu.displayName = 'Toolbar.Menu';
-
-//
-// Toolbar
-//
-
-export const Toolbar = {
-  Root: ToolbarRoot,
-  Text: ToolbarText,
-  Button: ToolbarButton,
-  IconButton: ToolbarIconButton,
-  Link: ToolbarLink,
-  Toggle: ToolbarToggle,
-  ToggleGroup: ToolbarToggleGroup,
-  ToggleGroupItem: ToolbarToggleGroupItem,
-  ToggleGroupIconItem: ToolbarToggleGroupIconItem,
-  Separator: ToolbarSeparator,
-  DragHandle: ToolbarDragHandle,
-  ActionIconButton: ToolbarActionIconButton,
-  Menu: ToolbarMenu,
-};
-
 export type {
-  ToolbarActionIconButtonAction,
-  ToolbarActionIconButtonProps,
-  ToolbarButtonProps,
-  ToolbarDragHandleProps,
-  ToolbarIconButtonProps,
-  ToolbarLinkProps,
-  ToolbarMenuItem,
-  ToolbarMenuProps,
-  ToolbarRootProps,
-  ToolbarSeparatorProps,
-  ToolbarTextProps,
-  ToolbarToggleGroupIconItemProps,
-  ToolbarToggleGroupItemProps,
-  ToolbarToggleGroupProps,
-  ToolbarToggleProps,
+  ToolbarLinkProps as LinkProps,
+  ToolbarRootProps as RootProps,
+  ToolbarSeparatorProps as SeparatorProps,
+  ToolbarTextProps as TextProps,
+  ToolbarToggleGroupProps as ToggleGroupProps,
 };
+
+export {
+  ToolbarLink as Link,
+  ToolbarRoot as Root,
+  ToolbarSeparator as Separator,
+  ToolbarText as Text,
+  ToolbarToggleGroup as ToggleGroup,
+};
+export * from './toolbar-context.ts';

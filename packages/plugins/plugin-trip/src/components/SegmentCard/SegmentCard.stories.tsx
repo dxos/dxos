@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
 import { Dnd } from '@dxos/react-ui-dnd';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
+import * as Focus from '@dxos/react-ui/Focus';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';

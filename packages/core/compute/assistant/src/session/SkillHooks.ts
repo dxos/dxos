@@ -26,6 +26,7 @@ export type HookPhase = 'begin-request' | 'end-request';
 export type HookInvoker<R> = (
   operation: Operation.Definition.Any,
   input: Record<string, unknown>,
+  hook: Skill.Hook,
 ) => Effect.Effect<void, never, R>;
 
 /**
@@ -61,7 +62,7 @@ export const runHooks = <R>({
           const operation = Operation.deserialize(record);
           // Hooks carry no event payload (the spec is a bare tag), so the input template is passed
           // through verbatim — the hook's operation reads any conversation state it needs itself.
-          yield* invoke(operation, { ...hook.input });
+          yield* invoke(operation, { ...hook.input }, hook);
         }).pipe(
           Effect.catchCause((cause) =>
             // Meta key rather than `Skill.getKey`: a space-authored skill has none, and an error

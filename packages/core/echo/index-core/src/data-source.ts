@@ -3,7 +3,7 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import type { SpaceId } from '@dxos/keys';
@@ -17,7 +17,8 @@ export interface DataSourceCursor {
   spaceId: SpaceId | null;
 
   /**
-   * documentId or queueNamespace.
+   * documentId or queueNamespace. A cursor naming a document covers exactly the batch objects
+   * carrying that `documentId`, and the engine advances it once the last of them is written.
    */
   resourceId: string | null;
 

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import * as Annotation from '@dxos/echo/Annotation';
 
 /** The `/generate` endpoint's `aspect_ratio` names; 16:9 is the storyboard's frame shape. */
 export const IDEOGRAM_ASPECT_RATIOS = [
@@ -28,7 +28,7 @@ export const IDEOGRAM_DEFAULT_ASPECT_RATIO: (typeof IDEOGRAM_ASPECT_RATIOS)[numb
  * `prompt`; the count is supplied by the generate op. Studio renders these as a schema-driven form.
  */
 export const IdeogramRequestConfig = Schema.Struct({
-  model: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false)).annotate({ title: 'Model' })),
+  model: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false)).annotate({ title: 'Model' })),
   prompt: Schema.NonEmptyString.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotate({ title: 'Prompt' }),

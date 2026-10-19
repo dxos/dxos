@@ -20,9 +20,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { AssistantCapabilities, AssistantEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
   {
@@ -36,6 +33,11 @@ export const AgentHydrator = Capability.lazyModule(
 export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service.ts'), {
   name: 'AgentRuntime',
 });
+export const Agents = Capability.lazyModule(
+  'Agents',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./agents.ts'),
+);
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
 });
@@ -88,7 +90,8 @@ export const CompanionChatProvisioner = Capability.lazyModule(
 // Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
 export const QuestionResumer = Capability.lazyModule(
   'QuestionResumer',
-  { requires: [Capabilities.OperationInvoker], provides: [] },
+  // Headless hosts (EDGE) provide no operation invoker; it resumes questions only in the app.
+  { requires: [Capabilities.OperationInvoker], provides: [], environments: ['browser', 'node', 'tauri'] },
   () => import('./question-resumer.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
@@ -157,6 +160,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

@@ -1,118 +1,164 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { ark } from '@ark-ui/react/factory';
-import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
+import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
-import {
-  type ChromaticPalette,
-  type Density,
-  type Elevation,
-  type MessageValence,
-  type NeutralPalette,
-} from '@dxos/ui-types';
+import { type ChromaticPalette, type ClassNameValue, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
+import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
+import { composable, composableProps } from '../../util/slots.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
 
-type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {
-  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence' | 'tag';
-  /** The `tag` variant's palette, as on `Tag`; ignored by the other variants. */
-  hue?: ChromaticPalette | NeutralPalette | MessageValence;
-  density?: Density;
-  elevation?: Elevation;
-  asChild?: boolean;
-  /** Render a trailing caret indicating the button opens a menu. */
+/** The current Button's variants; `primary` marks the one action a surface leads with (e.g. a form's Save). */
+export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence';
+
+export type ButtonValence = MessageValence;
+
+/** Tag's palette (`TagHue`), repeated here since Tag builds on nothing of Button's. */
+export type ButtonHue = NeutralPalette | ChromaticPalette | MessageValence;
+
+export type ButtonVariantProps = {
+  variant?: ButtonVariant;
+  /** Colour of the `valence` variant; without it the button adopts an enclosing valence surface's, else neutral. */
+  valence?: ButtonValence;
+  /** Fills the button with a Tag's hue (`--color-<hue>-surface`/`-fg`), in place of the variant's fill. */
+  hue?: ButtonHue;
+  /**
+   * Dense inline padding (one control inset), e.g. for a run of pager buttons. An icon-only button loses its square,
+   * narrowing to its icon plus an inset either side, and compact icon-only buttons in an Input adornment abut (a
+   * stepper's − and +).
+   */
+  compact?: boolean;
+  /** A trailing caret marking a button that opens a menu. */
   caretDown?: boolean;
+  /** `start` packs icon and label at the start (a full-width menu-like button) instead of centring them. */
+  align?: 'center' | 'start';
+  /** Spins the leading icon, as a busy indicator. */
+  spin?: boolean;
+  /** Sizes just this button (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
+  size?: Size;
+  /** The icons at this size's scale instead of the button's. */
+  iconSize?: Size;
+  /** Classes for the leading icon (e.g. a state colour), where the button's own colour would not reach it. */
+  iconClassNames?: ClassNameValue;
 };
 
-const Button = memo(
-  forwardRef<HTMLButtonElement, ButtonProps>(
-    (
-      {
-        classNames,
-        children,
-        density: densityProp,
-        elevation: elevationProp,
-        variant = 'default',
-        hue,
-        asChild,
-        caretDown,
-        ...props
-      },
-      ref,
-    ) => {
-      const { inGroup } = useButtonGroupContext(BUTTON_NAME);
-      const { tx } = useThemeContext();
-      const elevation = useElevationContext(elevationProp);
-      const density = useDensityContext(densityProp);
-      return (
-        <ark.button
-          asChild={asChild}
-          ref={ref}
-          {...props}
-          data-variant={variant}
-          data-hue={variant === 'tag' ? (hue ?? 'neutral') : undefined}
-          data-density={density}
-          data-props={inGroup ? 'grouped' : ''}
-          className={tx(
-            'button.root',
-            {
-              variant,
-              inGroup,
-              disabled: props.disabled,
-              density,
-              elevation,
-            },
-            classNames,
-          )}
-          {...(props.disabled && { disabled: true })}
-        >
-          {/* `asChild` clones its single child; only add the caret in the non-`asChild` case so the
-              child stays exactly one element. */}
-          {caretDown && !asChild ? (
-            <>
-              {children}
-              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
-            </>
-          ) : (
-            children
-          )}
-        </ark.button>
-      );
+/** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
+export type ButtonContentProps =
+  | {
+      /** Leading icon. */
+      icon?: string;
+      /** Trailing icon (e.g. a caret). */
+      iconEnd?: string;
+      /** Visible text; `children` take precedence. */
+      label?: string;
+      iconOnly?: false;
+      showTooltip?: never;
+      tooltipSide?: never;
+      children?: ReactNode;
+    }
+  | {
+      icon: string;
+      /** Required: names the button (`aria-label`) and shows in a Tooltip. */
+      label: string;
+      /** A control-sized square inset in a block-sized cell (follow-up 19), showing only the icon. */
+      iconOnly: true;
+      /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
+      showTooltip?: boolean;
+      /** Side of the trigger the label Tooltip opens on; below by default. */
+      tooltipSide?: Tooltip.Side;
+      iconEnd?: never;
+      children?: never;
+    };
+
+export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
+  ButtonVariantProps &
+  ButtonContentProps;
+
+// `button` by default: the browser's `submit` would post an enclosing form on every click.
+export const Button = composable<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      type = 'button',
+      variant = 'default',
+      valence,
+      hue,
+      compact,
+      caretDown,
+      align,
+      spin,
+      size,
+      iconSize,
+      iconClassNames,
+      id,
+      onFocus,
+      icon,
+      iconEnd,
+      label,
+      iconOnly,
+      showTooltip = true,
+      tooltipSide,
+      children,
+      ...buttonProps
     },
-  ),
-);
-
-Button.displayName = BUTTON_NAME;
-
-type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
-  elevation?: Elevation;
-  asChild?: boolean;
-};
-
-const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
-  ({ children, elevation: propsElevation, classNames, asChild, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const elevation = useElevationContext(propsElevation);
-    return (
-      <ark.div
-        asChild={asChild}
-        {...props}
-        className={tx('button.group', { elevation }, classNames)}
+    forwardedRef,
+  ) => {
+    const disabled = Fieldset.useFieldsetDisabled(buttonProps.disabled);
+    const toolbarItem = useToolbarItem(disabled);
+    const { className, ...attributes } = composableProps(buttonProps, { classNames: recipes.button() });
+    const button = (
+      <button
+        {...attributes}
+        disabled={disabled}
+        {...toolbarItem}
+        id={id}
+        onFocus={(event) => {
+          onFocus?.(event);
+          toolbarItem?.onFocus();
+        }}
+        type={type}
+        aria-label={iconOnly ? label : undefined}
+        data-scope='button'
+        data-part='root'
+        data-square={iconOnly ? '' : undefined}
+        data-size={size}
+        data-variant={variant}
+        data-valence={variant === 'valence' ? valence : undefined}
+        data-hue={hue}
+        data-compact={compact ? '' : undefined}
+        data-caret={caretDown ? '' : undefined}
+        data-align={align === 'start' ? align : undefined}
+        className={className}
         ref={forwardedRef}
       >
-        <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-      </ark.div>
+        {icon && <Icon.Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
+        {/* Icon-only children stand in for the icon (e.g. a swatch), so they keep the square's padding. */}
+        {iconOnly ? !icon && children : (children ?? label)}
+        {iconEnd && <Icon.Icon icon={iconEnd} size={iconSize} />}
+        {caretDown && <Icon.Icon icon='ph--caret-down--bold' />}
+      </button>
+    );
+
+    if (!iconOnly || !showTooltip) {
+      return button;
+    }
+
+    return (
+      // An `asChild` parent (e.g. `Popover.Trigger`) may own the id, so the tooltip looks its trigger up by it.
+      <Tooltip.Root
+        ids={id ? { trigger: id } : undefined}
+        positioning={tooltipSide ? { placement: tooltipSide } : undefined}
+      >
+        <Tooltip.Trigger asChild>{button}</Tooltip.Trigger>
+        <Tooltip.Content>{label}</Tooltip.Content>
+      </Tooltip.Root>
     );
   },
 );
 
-ButtonGroup.displayName = BUTTON_GROUP_NAME;
-
-export { Button, ButtonGroup };
-
-export type { ButtonGroupProps, ButtonProps };
+Button.displayName = 'Button';

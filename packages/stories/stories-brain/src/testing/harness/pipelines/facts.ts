@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Database, type Feed, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
