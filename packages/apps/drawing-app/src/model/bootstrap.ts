@@ -4,14 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, Filter, Ref } from '@dxos/echo';
+import { Database, Filter } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { STARTER_SOURCE, compileDrawing } from './drawing-io.ts';
@@ -37,39 +34,19 @@ export const openSpace = Effect.fn('openSpace')(function* (client: Client) {
   return space;
 });
 
-/** Moves the drawing onto the Canvas variant, so its boxes can be dragged with their arrows bound. */
-const ensureCanvas = Effect.fn('ensureCanvas')(function* (
-  invoker: Capabilities.OperationInvoker,
-  space: Space,
-  drawing: Drawing.Drawing,
-) {
-  const canvas = yield* Effect.promise(() => drawing.canvas.load());
-  if (canvas.schema !== Canvas.SCENE_SCHEMA) {
-    yield* invoker.invoke(
-      DrawingOperation.Convert,
-      { drawing: Ref.make(drawing), variant: Canvas.SCENE_SCHEMA },
-      { spaceId: space.id },
-    );
-  }
-  remember(drawing);
-  return drawing;
-});
-
-/** Imports a `.dx.svg` (Composer's export or a drawing.sh render) into the space and opens it on the Canvas. */
-export const importDrawing: (
-  invoker: Capabilities.OperationInvoker,
-  space: Space,
-  svg: string,
-) => Effect.Effect<Drawing.Drawing, Error> = Effect.fn('importDrawing')(function* (
-  invoker: Capabilities.OperationInvoker,
-  space: Space,
-  svg: string,
-) {
+/**
+ * Imports a `.dx.svg` (Composer's export or a drawing.sh render) into the space as it was saved: a laid-out drawing
+ * opens in the read view Composer shows, and the user picks an editor from there.
+ */
+export const importDrawing: (space: Space, svg: string) => Effect.Effect<Drawing.Drawing, Error> = Effect.fn(
+  'importDrawing',
+)(function* (space: Space, svg: string) {
   const drawing = yield* IllustratorModel.DrawingFile.importDxSvg(svg).pipe(
     Effect.provide(Database.layer(space.db)),
     Effect.mapError((error) => new LoadError({ message: error.message, cause: error })),
   );
-  return yield* ensureCanvas(invoker, space, drawing);
+  remember(drawing);
+  return drawing;
 });
 
 /** Fetches a `.dx.svg` by URL; the host must allow this origin by CORS. */
@@ -90,7 +67,6 @@ export const fetchDrawing = Effect.fn('fetchDrawing')(function* (url: string) {
 });
 
 export type OpenDrawingOptions = {
-  invoker: Capabilities.OperationInvoker;
   space: Space;
   src?: string;
 };
@@ -98,23 +74,25 @@ export type OpenDrawingOptions = {
 /** The drawing to open: the `?src` file, else the one last open, else a starter compiled from the default DSL. */
 export const openDrawing: (options: OpenDrawingOptions) => Effect.Effect<Drawing.Drawing, Error> = Effect.fn(
   'openDrawing',
-)(function* ({ invoker, space, src }: OpenDrawingOptions) {
+)(function* ({ space, src }: OpenDrawingOptions) {
   if (src) {
-    return yield* importDrawing(invoker, space, yield* fetchDrawing(src));
+    return yield* importDrawing(space, yield* fetchDrawing(src));
   }
 
   const drawings = yield* Effect.promise(() => space.db.query(Filter.type(Drawing.Drawing)).run());
   const lastId = recall();
   const previous = drawings.find(({ id }) => id === lastId) ?? drawings.at(-1);
   if (previous) {
-    return yield* ensureCanvas(invoker, space, previous);
+    remember(previous);
+    return previous;
   }
 
   const { drawing, canvas } = yield* compileDrawing('Untitled', STARTER_SOURCE);
   space.db.add(canvas);
   space.db.add(drawing);
   yield* Effect.promise(() => space.db.flush());
-  return yield* ensureCanvas(invoker, space, drawing);
+  remember(drawing);
+  return drawing;
 });
 
 // The last-open drawing is a per-browser convenience, so storage that is blocked or cleared just opens the newest one.
