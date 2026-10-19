@@ -35,8 +35,9 @@ const handler: Operation.WithHandler<typeof CanvasOperation.ImportTldraw> = Canv
 
       const canvas = yield* Database.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
       const drawing = Drawing.make({ name: name ?? source.name, canvas });
-      // Filed where a new drawing goes by default (the space's root collection), so it shows in the navigator.
-      yield* ContainerModel.add({ object: drawing, target: yield* DefaultParent.resolve(drawing) });
+      // Filed beside the source, else where a new drawing goes by default, so it shows in the navigator.
+      const [beside] = yield* Database.query(ContainerModel.containing(source)).run;
+      yield* ContainerModel.add({ object: drawing, target: beside ?? (yield* DefaultParent.resolve(drawing)) });
 
       const all = Object.values(views);
       return {

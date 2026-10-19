@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Collection, Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
@@ -17,12 +17,12 @@ import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { CanvasOperationHandlerSet } from '#operations';
 import { Canvas, CanvasOperation } from '#types';
 
-import { frameWithChildren } from '../import/testing.ts';
+import { frameWithChildren, shapesAndArrow } from '../import/testing.ts';
 import { readViews, rootOf } from '../model/content.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CanvasOperationHandlerSet.handlers,
-  types: [Drawing.Drawing, Drawing.Canvas],
+  types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection],
   disableLlmMemoization: true,
 });
 
@@ -56,6 +56,27 @@ describe('ImportTldraw', () => {
         });
 
         expect(Object.keys(sourceCanvas.content).sort()).toEqual(Object.keys(content).sort());
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
+
+  it.effect(
+    'files the copy in the collection that holds the source',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const sourceCanvas = yield* Database.add(
+          Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content: shapesAndArrow() }),
+        );
+        const source = yield* Database.add(Drawing.make({ name: 'Nested', canvas: sourceCanvas }));
+        const folder = yield* Database.add(Collection.make({ objects: [Ref.make(source)] }));
+        yield* Database.flush();
+
+        const result = yield* Operation.invoke(CanvasOperation.ImportTldraw, { drawing: Ref.make(source) });
+        const drawing = yield* Database.load(result.drawing);
+        expect(folder.objects.map((ref) => ref.target)).toEqual([source, drawing]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
