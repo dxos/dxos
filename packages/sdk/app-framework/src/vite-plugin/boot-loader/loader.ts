@@ -134,7 +134,12 @@ const compileLoaderBundle = async (): Promise<string> => {
 };
 
 let bundlePromise: Promise<string> | undefined;
-const getLoaderBundle = (): Promise<string> => (bundlePromise ??= compileLoaderBundle());
+const getLoaderBundle = (): Promise<string> =>
+  (bundlePromise ??= compileLoaderBundle().catch((err) => {
+    // A transient esbuild spawn failure (e.g. `spawn EBADF`) must not poison every later request.
+    bundlePromise = undefined;
+    throw err;
+  }));
 
 /**
  * Vite plugin that injects a Solid "boot loader" app into the host app's
@@ -178,6 +183,11 @@ export const bootLoaderPlugin = ({
 }: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
+    buildStart() {
+      // Spawn esbuild at startup rather than on the first page load, when the process stdio is known good.
+      // A failure here resurfaces from `transformIndexHtml`, which retries.
+      getLoaderBundle().catch(() => {});
+    },
     async transformIndexHtml(_html, ctx) {
       const filename = basename(ctx.filename ?? 'index.html');
       if (!include.includes(filename)) {
