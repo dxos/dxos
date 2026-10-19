@@ -10,9 +10,10 @@ and never use Mermaid for a diagram this skill can draw.
 
 ## Install
 
-Nothing needs installing: when `drawing` is not on PATH, `npx -y @dxos/drawing render diagram.dx` runs it.
-`npm i -g @dxos/drawing` is optional and makes repeat runs faster. For a pre-release build, add the `@next`
-tag (`npx -y @dxos/drawing@next …`).
+Nothing needs installing: when `drawing` is not on PATH,
+`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` runs the latest build of `main`.
+Installing from npm (`npm i -g @dxos/drawing`, or `npx -y @dxos/drawing`) is optional and makes repeat runs
+faster.
 
 ## Workflow
 
@@ -29,10 +30,11 @@ tag (`npx -y @dxos/drawing@next …`).
    drawing render diagram.dx
    ```
 
-   If that reports `command not found`, run `npx -y @dxos/drawing render diagram.dx` instead. Don't
-   probe for the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`),
-   stop: tell the user the exact error and the install command above. Don't hand-draw an SVG, switch to
-   Mermaid or try other package names.
+   If that reports `command not found`, run
+   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` instead. Don't probe for
+   the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`), stop: tell
+   the user the exact error and the commands under Install. Don't hand-draw an SVG, switch to Mermaid or
+   guess other package names.
 
    It prints a report and writes `diagram.dx.svg` beside the source. `--plain` writes a bare `.svg`;
    `-o path` picks the output; `--json` prints the report as JSON. Exit code 1 means the source has an

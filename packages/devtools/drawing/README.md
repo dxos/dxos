@@ -19,14 +19,15 @@ package ships it too.
 ## Use the CLI
 
 ```bash
-npx -y @dxos/drawing render arch.dx          # writes arch.dx.svg and prints the layout report
-npx -y @dxos/drawing render arch.dx --plain  # a bare arch.svg
-npx -y @dxos/drawing check arch.dx --json    # the report only
-npx -y @dxos/drawing source arch.dx.svg      # the .dx the SVG carries
+DRAWING=https://pkg.pr.new/dxos/dxos/@dxos/drawing@main
+npx -y $DRAWING render arch.dx          # writes arch.dx.svg and prints the layout report
+npx -y $DRAWING render arch.dx --plain  # a bare arch.svg
+npx -y $DRAWING check arch.dx --json    # the report only
+npx -y $DRAWING source arch.dx.svg      # the .dx the SVG carries
 ```
 
-`npm i -g @dxos/drawing` puts `drawing` on PATH for faster repeat runs; `@dxos/drawing@next` is the pre-release
-build.
+`@main` is the latest build of `main`; `@<sha>` (e.g. `@dxos/drawing@c201f2c`) pins a specific commit. From npm,
+`npm i -g @dxos/drawing` puts `drawing` on PATH, and `npx -y @dxos/drawing` runs the release.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.
 
