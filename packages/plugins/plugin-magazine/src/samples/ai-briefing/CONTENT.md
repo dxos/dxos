@@ -2,8 +2,9 @@
 
 A reader keeps up with AI and tech news from five real publications: two newsrooms, one magazine,
 one podcast newsletter and one engineer's blog. The space starts with the subscriptions and an empty
-magazine. Pressing Curate fetches the latest posts from every feed and has the agent pick the AI
-stories for the magazine, so the content is live but the set of sources is fixed.
+magazine. Right after the space is created, one curation run fetches the latest posts from every
+feed and has the agent pick the AI stories for the magazine, so the content is live but the set of
+sources is fixed.
 
 - Code: `feeds.ts` (seed tables), `partial.ts`, exported as `Partial` from `./index.ts`.
 - Requires: nothing
@@ -35,10 +36,13 @@ stories for the magazine, so the content is live but the set of sources is fixed
   `magazine` → AI Briefing, `enabled: false`.
 - No `Collection`. The magazine and subscriptions have no parent, so the navtree lists AI Briefing
   in the Content group's Magazines section, with the 5 subscriptions as its children in table order.
-- Curation is manual: the user presses Curate on the magazine. `CurateMagazine` syncs all 5 feeds,
-  then runs the agent through EDGE inference. No API key is needed when the identity has an EDGE
-  credential.
-  - If the agent call fails, the feeds keep their posts and the magazine stays empty.
+- After creation: the template's `followups` schedule one `CurateMagazine` run on the magazine
+  (`SampleSpace.Definition.followups`, run by `SpaceTemplate.apply` when the caller passes
+  `operations`). Space creation does not wait for it. Archives built with `buildArchive` skip it.
+  - `CurateMagazine` syncs all 5 feeds, then runs the agent through EDGE inference. No API key is
+    needed when the identity has an EDGE credential.
+  - If the agent call fails, the feeds keep their posts and the magazine stays empty; pressing Curate
+    retries.
   - If a feed fetch fails, that subscription stays empty and the others still sync.
 - RSS parsing: `fetchRss` reads `media:content` and `media:thumbnail` as a post's image when the
   description has no `<img>`. Wired carries its images only there.
@@ -47,8 +51,8 @@ stories for the magazine, so the content is live but the set of sources is fixed
 
 1. Create a space from the AI Briefing template. The navtree's Content group has a Magazines
    section with AI Briefing, and expanding it shows the 5 feeds.
-2. Open AI Briefing and press Curate. Within about five minutes it fills with up to 10 tiles drawn
-   from the feeds; the agent reads full articles, so it is not instant.
+2. Open AI Briefing. Within about five minutes of creation it fills with up to 10 tiles drawn from
+   the feeds; the agent reads full articles, so it is not instant.
 3. Click a tile. The post opens with its body.
 4. Open each feed. Each one lists the posts the sync fetched.
 5. Open the routine list. Curate AI Briefing is present with its trigger off.

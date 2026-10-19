@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
@@ -373,6 +374,8 @@ export interface Definition<Partials extends PartialMap, A> {
   /** Every schema declared by the definition's partials, deduplicated. */
   readonly schemas: ReadonlyArray<Type.AnyEntity>;
   readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, Services>;
+  /** Operations to schedule once the content is written, given what `build` returned. Only a live space runs them. */
+  readonly followups?: (result: A) => Effect.Effect<void, never, Operation.Service>;
 }
 
 /**
@@ -387,12 +390,14 @@ export const make = <Partials extends PartialMap, A>(definition: {
   readonly reference?: Date | string;
   readonly partials: Partials;
   readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, Services>;
+  readonly followups?: (result: A) => Effect.Effect<void, never, Operation.Service>;
 }): Definition<Partials, A> => ({
   space: definition.space,
   reference: definition.reference ?? new Date(),
   partials: definition.partials,
   schemas: [...new Set([...BASE_SCHEMAS, ...Object.values(definition.partials).flatMap((part) => part.schemas)])],
   build: definition.build,
+  followups: definition.followups,
 });
 
 //
@@ -465,6 +470,7 @@ export const makeTemplate = <Partials extends PartialMap, A>(options: {
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
+    readonly operations?: Operation.OperationService;
   }) => Promise<void>;
 } => ({
   id: options.id,
@@ -475,8 +481,12 @@ export const makeTemplate = <Partials extends PartialMap, A>(options: {
   icon: asIconValue(options.icon ?? options.definition.space.icon),
   hue: options.hue ?? options.definition.space.hue,
   hidden: options.hidden,
-  apply: async ({ client, space }) => {
+  apply: async ({ client, space, operations }) => {
     await client.addTypes([...options.definition.schemas]);
-    await EffectEx.runPromise(applyTo(options.definition, space));
+    const result = await EffectEx.runPromise(applyTo(options.definition, space));
+    const { followups } = options.definition;
+    if (followups && operations) {
+      await EffectEx.runPromise(followups(result).pipe(Effect.provideService(Operation.Service, operations)));
+    }
   },
 });

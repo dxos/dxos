@@ -295,8 +295,12 @@ export type SpaceTemplate = Readonly<{
   hue?: string;
   /** Omit from the create picker; reachable only by id. */
   hidden?: boolean;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+  /** Registers the content's types on the client, then writes it into the new space; with `operations`, schedules its follow-ups. */
+  apply: (options: {
+    readonly client: Client;
+    readonly space: Space;
+    readonly operations?: Operation.OperationService;
+  }) => Promise<void>;
 }>;
 
 /**

@@ -44,8 +44,9 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSpaceFromTempla
         });
         const client = yield* Capability.get(ClientCapabilities.Client);
         AppSpace.setSpaceTemplateId(space, template.id);
+        const operations = yield* Operation.Service;
         yield* Effect.tryPromise({
-          try: () => template.apply({ client, space }),
+          try: () => template.apply({ client, space, operations }),
           catch: (cause) => new SpaceTemplateApplyError({ context: { id: template.id }, cause }),
         }).pipe(Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))));
 

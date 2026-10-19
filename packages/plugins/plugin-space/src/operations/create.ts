@@ -97,9 +97,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       // After the root collection exists, so a template writes into a space the navtree can reach.
       // A failure here is held rather than thrown: the space is already created and still needs its
       // callbacks to run, so it is reported once initialization below is complete.
+      const operations = yield* Operation.Service;
       const applyError = match
         ? yield* Effect.tryPromise({
-            try: () => match.apply({ client, space }),
+            try: () => match.apply({ client, space, operations }),
             catch: (cause) => new TemplateApplyError({ context: { template, spaceId: space.id }, cause }),
           }).pipe(
             Effect.as(undefined),
