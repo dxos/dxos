@@ -22,7 +22,7 @@ and two panels that show the whole hierarchy (Views and Objects). It frees the w
 | **Object**    | A reusable container definition: its nodes and links, drawn wherever it is placed. An Object is not zoomed into; it is opened in **isolation** to edit its definition, and every placement redraws.                                   |
 | **Instance**  | A node that places an Object: the Object's contents scaled into the instance's box (`fit`), with per-instance `overrides`.                                                                                                            |
 | **Group**     | What the Group command makes: an **anonymous Object** and one Instance of it in place of the selection. It is an Object in every respect but one: it is not in the Objects library until it is **named** or **placed a second time**. |
-| **Tag**       | A label applied to any node, link, group or Object, many per element. A tag hides or locks everything it labels. It has no effect on drawing order. (Formerly _layer_.)                                                               |
+| **Tag**       | A label applied to any node, link, group or Object, many per element. A tag hides, locks or sets the opacity of everything it labels. It has no effect on drawing order. (Formerly _layer_.)                                          |
 | **Order**     | A container's children are an ordered list; the canvas draws them in that order, first at the back. Moving an element in the Views tree restacks it.                                                                                  |
 | **Scene**     | Reserved for animation (a timeline over a View). Not used for containers.                                                                                                                                                             |
 
@@ -63,18 +63,18 @@ Tag     ─ labels ─▶ Node | Link | Instance | Object (many to many)
    name, type or tag. Selecting a View row opens it in the viewport by the drill path, so Up and Back still work.
 4. **Group makes an anonymous Object**, promoted to the library when named or placed a second time. Compose is
    removed.
-5. **Layers become Tags.** A tag hides or locks; drawing order belongs to the tree. The Tags panel manages them and
+5. **Layers become Tags.** A tag hides, locks or sets opacity; drawing order belongs to the tree. The Tags panel manages them and
    the Views tree shows each element's tags as chips. The About counts move onto tree rows.
 
 ## 5. Model changes by phase
 
-| Phase                 | Model                                                                                                                                                                                                               | UI                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1. View               | Rename the public types and the `frame` node type; read `frame` as `view` on load.                                                                                                                                  | "View" everywhere; the View tool.                                                         |
-| 2. Groups are Objects | Group writes an Object definition (`kind: 'composite'`) with `anonymous: true` and an Instance; naming or a second placement clears `anonymous`. Remove `groupIntoScene` and the Compose command.                   | Group and Ungroup on the selection; the library hides anonymous Objects.                  |
-| 3. Tags               | `Tag { id, name, hidden?, locked? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions; migrate `scene.layers` + `node.layer` to tags. Hidden or locked is the union over an element's tags. | The Tags panel (from LayersInspector); tag chips in Properties and the tree.              |
-| 4. Order              | Drawing order is the container's child order (`z` within the container); drop layer `z`. Migrate by sorting each container on (layer `z`, node `z`) once.                                                           | Drag rows in the Views tree to restack; Bring forward / Send back act on the order.       |
-| 5. Panels             | None.                                                                                                                                                                                                               | Views panel (tree, filter, select, open); Objects panel (library); delete AboutInspector. |
+| Phase                 | Model                                                                                                                                                                                                                                                                                    | UI                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1. View               | Rename the public types and the `frame` node type; read `frame` as `view` on load.                                                                                                                                                                                                       | "View" everywhere; the View tool.                                                         |
+| 2. Groups are Objects | Group writes an Object definition (`kind: 'composite'`) with `anonymous: true` and an Instance; naming or a second placement clears `anonymous`. Remove `groupIntoScene` and the Compose command.                                                                                        | Group and Ungroup on the selection; the library hides anonymous Objects.                  |
+| 3. Tags               | `Tag { id, name, hidden?, locked?, opacity? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions; migrate `scene.layers` + `node.layer` to tags. Hidden or locked is the union over an element's tags; opacity is the product of its tags' opacities and its own. | The Tags panel (from LayersInspector); tag chips in Properties and the tree.              |
+| 4. Order              | Drawing order is the container's child order (`z` within the container); drop layer `z`. Migrate by sorting each container on (layer `z`, node `z`) once.                                                                                                                                | Drag rows in the Views tree to restack; Bring forward / Send back act on the order.       |
+| 5. Panels             | None.                                                                                                                                                                                                                                                                                    | Views panel (tree, filter, select, open); Objects panel (library); delete AboutInspector. |
 
 ## 6. Risks
 
@@ -119,8 +119,9 @@ Gaps, and where each fix belongs:
 
 ## 7. Open questions
 
-1. Tag effects beyond hide and lock: opacity, or a colour shown on the chip?
-2. Should the tree list links under their container, or under their source node?
+1. ~~Tag effects beyond hide and lock~~ Decided 2026-10-18: tags also carry opacity (multiplied with the element's own).
+2. ~~Links under their container or their source node~~ Decided 2026-10-18: under the container, since a link's
+   source can change.
 3. Merge a View's contents record into its node (one record per View)? It makes "a View is a node" literal but
    rewrites the store, navigation and persistence; deferred until the panels have settled the shape.
 4. Orphaned contents (a View or Object record nothing points to): show them in an "Unplaced" group, or delete them

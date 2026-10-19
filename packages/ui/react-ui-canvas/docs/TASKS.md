@@ -19,8 +19,8 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 
 ## Phase 3 — Tags
 
-- [ ] `Tag { id, name, hidden?, locked? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions.
-- [ ] Hidden and locked are the union over an element's tags (rendering, hit testing, selection).
+- [ ] `Tag { id, name, hidden?, locked?, opacity? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions.
+- [ ] Hidden and locked are the union over an element's tags (rendering, hit testing, selection); opacity multiplies.
 - [ ] Migrate `scene.layers` + `node.layer` to tags on load; fixture test comparing drawn output before and after.
 - [ ] LayersInspector becomes the Tags panel; tag chips in Properties.
 
@@ -37,7 +37,7 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [ ] react-ui-list: `filterTreeModel(model, predicate)` (matches plus ancestors, ancestors open while filtering).
 - [ ] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
 - [ ] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
-- [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents).
+- [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents); links listed under their container.
 
 - [ ] Views panel: the hierarchy under the root (Views → nodes and links → Instances → their Object's contents), with counts on rows.
 - [ ] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag.
