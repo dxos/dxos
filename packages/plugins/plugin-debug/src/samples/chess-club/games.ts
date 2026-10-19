@@ -170,6 +170,7 @@ export const Games: SampleSpace.Partial<GamesResult> = SampleSpace.partial('game
           yield* Database.add(
             Game.make({
               name: seed.name,
+              description: Chess.fen({ pgn, fen: seed.fen }),
               players: [
                 { role: 'white', name: seed.white },
                 { role: 'black', name: seed.black },

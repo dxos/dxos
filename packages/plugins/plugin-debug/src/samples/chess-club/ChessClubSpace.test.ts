@@ -69,10 +69,18 @@ describe('Chess Club template', () => {
         '@type'?: string;
         'projection'?: { pivotFieldId?: string; fields?: Array<{ id: string; path: string }> };
         'coordinates'?: number[][];
+        'description'?: string;
         'name'?: string;
         'voxels'?: Record<string, { hue: string }>;
       }>;
     } = JSON.parse(json);
+    // Every game's description is its current position, which the Games table shows as a column.
+    const descriptions = objects
+      .filter((object) => object['@type']?.includes('type.game:'))
+      .map((game) => game.description);
+    expect(descriptions).toHaveLength(16);
+    expect(descriptions.every((fen) => typeof fen === 'string' && fen.split(' ').length === 6)).toBe(true);
+    expect(descriptions).toContain('rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3');
     const view = objects.find((object) => object['@type']?.includes('type.view'));
     const pivot = view?.projection?.fields?.find((field) => field.id === view.projection?.pivotFieldId);
     expect(pivot?.path).toBe('location');
