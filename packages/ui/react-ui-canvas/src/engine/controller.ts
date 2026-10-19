@@ -63,7 +63,7 @@ import {
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
-import { type Projection } from './projection.ts';
+import { type Projection, readonlyCapabilities } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
 export type ControllerGrid = { major: number; snap: (value: number) => number };
@@ -236,7 +236,8 @@ export const createCanvasController = ({
   look: lookHandlers,
   createId: newId = createId,
 }: CanvasControllerOptions): CanvasController => {
-  const capabilities = (): Capabilities => projection().capabilities;
+  // A read-only canvas edits nothing whatever its projection allows, as `CanvasRoot` gates its own controls.
+  const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : projection().capabilities);
   const currentScene = () => registry.get(projection().scene);
   const currentView = (): SceneId | undefined => registry.get(atoms.path).at(-1);
 

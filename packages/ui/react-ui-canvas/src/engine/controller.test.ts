@@ -204,6 +204,19 @@ describe('CanvasController', () => {
   });
 
   describe('editing', () => {
+    test('read-only: copy works, but paste, cut and delete change nothing', ({ expect }) => {
+      const { registry, atoms, controller, scene } = setup({ readonly: true });
+      // `select` refuses a read-only view, so the selection is set as a host would restore it.
+      registry.set(atoms.selection, new Set(['a']));
+      controller.editing.copy();
+      expect(registry.get(atoms.clipboard)).toBeDefined();
+      const before = scene();
+      controller.editing.paste();
+      controller.editing.cut();
+      expect(controller.selection.delete()).toBe(false);
+      expect(scene()).toBe(before);
+    });
+
     test('copy then paste places a copy one major step away, and selects it', ({ expect }) => {
       const { registry, atoms, controller, scene } = setup();
       controller.selection.select(['a']);
