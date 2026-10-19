@@ -131,7 +131,7 @@ const sessionEnv = () => {
 
 // The OTP value is redacted from the echoed command line.
 const run = (command, args, cwd = REPO_ROOT) => {
-  const shown = args.map((arg, index) => (args[index - 1] === '--otp' ? '******' : arg));
+  const shown = args.map((arg) => (arg.startsWith('--otp=') ? '--otp=******' : arg));
   console.log(`$ ${command} ${shown.join(' ')}`);
   execFileSync(command, args, { cwd, stdio: 'inherit', env: session ? sessionEnv() : process.env });
 };
@@ -139,8 +139,9 @@ const run = (command, args, cwd = REPO_ROOT) => {
 const opRead = (reference) =>
   execFileSync('op', ['read', '--no-newline', reference], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
 
-// A TOTP code lasts 30 seconds, so each command that needs one reads it fresh.
-const otpArgs = () => (session ? ['--otp', opRead(OP_NPM_BOT.otp)] : []);
+// A TOTP code lasts 30 seconds, so each command that needs one reads it fresh; `npm trust` parses only
+// the `--otp=<code>` form (a separate value is taken as a positional argument).
+const otpArgs = () => (session ? [`--otp=${opRead(OP_NPM_BOT.otp)}`] : []);
 
 // Logs in as npm-bot through the registry's legacy login endpoint, which takes the OTP as a header.
 const startOpSession = async () => {
@@ -179,7 +180,7 @@ const endOpSession = async () => {
     const response = await fetch(`${NPM_REGISTRY}/-/user/token/${token}`, {
       method: 'DELETE',
       headers: { authorization: `Bearer ${token}` },
-    });
+    }).catch((error) => ({ ok: false, status: error.message }));
     if (!response.ok) {
       console.warn(
         `WARNING: revoking the npm session token failed (status ${response.status}); revoke it on npmjs.com.`,

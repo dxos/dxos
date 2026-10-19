@@ -1,11 +1,22 @@
-// app.drawing.sh: the app bundle, served as static assets from a Worker on the drawing.sh zone.
+// app.drawing.sh: the app bundle, served as static assets from a Worker on the drawing.sh zone, plus the share
+// API (`src/worker/main.ts`) that `drawing open` and the drawing.sh editor post a diagram's source to.
 // Deploy: `moon run drawing-app:bundle && pnpm exec wrangler deploy -c packages/apps/drawing-app/wrangler.jsonc`.
+// Local: `moon run drawing-app:bundle`, then `pnpm exec wrangler dev` here (local R2 and rate limiter).
 {
   "name": "drawing-app",
+  "main": "./src/worker/main.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./out/drawing-app",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+    // Everything else is asset-first; only the API needs the Worker.
+    "run_worker_first": ["/api/*"],
   },
+  // Each shared diagram's `.dx` source under its id. A lifecycle rule (see README) deletes an object 30 days after
+  // its last write, and the Worker rewrites a share opened more than a day after its last write.
+  "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
+  // Per-IP cap on `POST /api/share`.
+  "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }],
   "routes": [{ "pattern": "app.drawing.sh", "custom_domain": true }],
 }
