@@ -8,7 +8,7 @@
 // runs the same core in-process (a headless check; tests).
 //
 
-import { type NodeId, type Scene, isGeneratorNode } from '../model/types.ts';
+import { type NodeId, type Scene, isGeneratorNode } from '../model/index.ts';
 import { type GeneratorCompiler } from './compile.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
 import { type GeneratorFrame, type GeneratorSource } from './types.ts';

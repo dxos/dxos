@@ -9,11 +9,11 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
-const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-sceneview--freehand', PORT);
+const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-components-canvas--freehand', PORT);
 
 // The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
-test.describe('SceneView', () => {
+test.describe('Canvas', () => {
   let page: Page;
   let scene: SceneManager;
   let close: (() => Promise<void>) | undefined;
@@ -323,7 +323,7 @@ test.describe('SceneView', () => {
   test('a read-only view selects nothing, draws no handles and applies no edit', async ({ browser }) => {
     await close?.();
     ({ page, close } = await setupPage(browser, {
-      url: storybookUrl('ui-react-ui-canvas-sceneview--readonly', PORT),
+      url: storybookUrl('ui-react-ui-canvas-components-canvas--readonly', PORT),
       viewportSize: { width: 1400, height: 800 },
     }));
     page.on('pageerror', (error) => errors.push(error.message));

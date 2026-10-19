@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Diagnostics } from '@dxos/diagram';
 
-import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Box, type BuilderElement, SceneBuilder } from './builder.ts';
+import { type Box, type BuilderElement, SceneBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
 import { diagnosticElements, toDiagramObjects } from './diagram.ts';
 
 const box = (x: number, y: number) => ({ x, y, width: 128, height: 64 });

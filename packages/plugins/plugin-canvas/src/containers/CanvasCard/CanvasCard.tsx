@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { SceneView, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
+import { Canvas, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
 
 import { canvasRecordOf } from '#model';
@@ -38,7 +38,7 @@ export const CanvasCard = ({ canvas }: CanvasCardProps) => {
       <Card.Section classNames='aspect-square'>
         {bound && (
           <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
-            <SceneView.Root
+            <Canvas.Root
               key={bound.root}
               // Spans the card's rails as well as its content column; inert, so a press or wheel reaches the card rather
               // than panning the drawing.
@@ -52,8 +52,8 @@ export const CanvasCard = ({ canvas }: CanvasCardProps) => {
               readonly
               initialDisplay={CARD_DISPLAY}
             >
-              <SceneView.Canvas liveDepth={0} />
-            </SceneView.Root>
+              <Canvas.Viewport liveDepth={0} />
+            </Canvas.Root>
           </CanvasDatabaseContext.Provider>
         )}
       </Card.Section>

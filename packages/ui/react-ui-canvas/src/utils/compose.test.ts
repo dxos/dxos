@@ -4,10 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../model/projection.ts';
-import { createTimeline, setKey } from '../model/timeline.ts';
-import { type InstanceNode, type Scene, isInstanceNode } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { type InstanceNode, type Scene, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,

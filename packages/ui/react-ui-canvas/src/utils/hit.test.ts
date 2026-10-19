@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BuiltinNode, type Scene } from '../model/types.ts';
+import { type BuiltinNode, type Scene } from '../model/index.ts';
 import { boundsFromPoints, contentBounds, hitTest, nodesIntersecting } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {

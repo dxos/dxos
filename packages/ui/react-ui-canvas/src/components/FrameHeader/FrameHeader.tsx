@@ -8,7 +8,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { FLOATING_PANEL } from '../../utils/chrome.ts';
+import { FLOATING_PANEL } from '../../utils/index.ts';
 
 /** The bar the canvas's own toolbars sit in, so the controls match them. */
 const BAR = mx('gap-1 px-2 py-1', FLOATING_PANEL);

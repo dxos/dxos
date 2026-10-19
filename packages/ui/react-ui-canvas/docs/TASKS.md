@@ -1,0 +1,64 @@
+# Views, objects and tags — Tasks
+
+Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, and smoke-rendered in Storybook.
+
+## Phase 1 — View
+
+- [ ] Rename the public types: `SceneId` → `ViewId`, `SceneStore` → `ViewStore`, `SceneKind` → `ViewKind`, `Canvas.Scenes` → `Canvas.Views`.
+- [ ] Rename the `frame` node type to `view` (schema, registry, tool, palette key); read stored `frame` as `view` on load.
+- [ ] Update every call site, plugin-canvas included; no compatibility re-exports.
+- [ ] User-facing strings say "View" (tool, menus, tooltips, breadcrumbs).
+- [ ] Rename stories and their titles; restart Storybook and smoke-render the touched stories.
+
+## Phase 2 — Groups are objects
+
+- [ ] Group writes an anonymous Object definition and one Instance in place of the selection (from `composeSelection`).
+- [ ] Naming an anonymous Object, or placing it a second time, adds it to the library.
+- [ ] Ungroup replaces an Instance of an anonymous Object with its contents and deletes the definition.
+- [ ] Remove `groupIntoScene` and the Compose command.
+
+## Phase 3 — Tags
+
+- [ ] `Tag { id, name, hidden?, locked?, opacity? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions.
+- [ ] Hidden and locked are the union over an element's tags (rendering, hit testing, selection); opacity multiplies.
+- [ ] Migrate `scene.layers` + `node.layer` to tags on load; fixture test comparing drawn output before and after.
+- [ ] LayersInspector becomes the Tags panel; tag chips in Properties.
+
+## Phase 3b — Orphans
+
+- [ ] Deleting the last node that points at a View or anonymous Object record deletes the record in the same intent; undo restores both.
+- [ ] Clean up records already orphaned on load (fixtures and saved documents).
+
+## Phase 4 — Order
+
+- [ ] Drawing order is each container's child order; drop layer `z` from ordering.
+- [ ] Migrate each container by sorting on (layer `z`, node `z`) once.
+- [ ] Bring forward / Send back act on the container order.
+
+## Phase 5 — Panels
+
+Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
+
+- [ ] react-ui-list: `filterTreeModel(model, predicate)` (matches plus ancestors, ancestors open while filtering).
+- [ ] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
+- [ ] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
+- [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents); links listed under their container.
+
+- [ ] Views panel: the hierarchy under the root (Views → nodes and links → Instances → their Object's contents), with counts on rows.
+- [ ] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag.
+- [ ] Views panel: drag rows to restack within a container.
+- [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden.
+- [ ] Delete AboutInspector, its story and its Canvas part.
+
+## Phase 6 — Undo (VIEWS.md §8)
+
+- [ ] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
+- [ ] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
+- [ ] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
+- [ ] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
+- [ ] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
+- [ ] Remove `utils/undo.ts` and the `undo` atom.
+
+## Follow-ups
+
+- [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).

@@ -3,3 +3,4 @@
 //
 
 export * from './SceneLayer.tsx';
+export * from './registry.ts';

@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/style-set.ts';
-import { type Node, type StyleMap } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { CLASSIC_LOOK, type Node, type StyleMap, defaultThemeRegistry, resolveLook } from '../model/index.ts';
 import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
 
 describe('style classes', () => {
