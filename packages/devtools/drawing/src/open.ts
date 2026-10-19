@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 import { DxSvg } from '@dxos/diagram';
+import { BaseError } from '@dxos/errors';
 
 import { source } from './render.ts';
 
@@ -15,7 +15,7 @@ import { source } from './render.ts';
 export const DEFAULT_APP_URL = 'https://app.drawing.sh';
 
 /** A diagram could not be shared or its link could not be made. */
-export class OpenError extends Data.TaggedError('OpenError')<{ readonly message: string }> {}
+export class OpenError extends BaseError.extend('OpenError', 'The diagram could not be shared') {}
 
 /** What the share API answers a `POST /api/share` with. */
 export type Share = { readonly id: string; readonly url: string };

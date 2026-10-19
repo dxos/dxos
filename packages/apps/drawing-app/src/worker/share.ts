@@ -5,6 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 
 /** The share API's route; `POST` stores a drawing's source, `GET <path>/<id>` reads it back. */
 export const SHARE_PATH = '/api/share';
@@ -120,12 +121,11 @@ const create = Effect.fn('create')(function* (request: Request, env: ShareEnv, n
     return respond(request, `A drawing's source is limited to ${MAX_SOURCE_BYTES} bytes.`, 413);
   }
 
-  let text: string;
-  try {
-    text = new TextDecoder('utf-8', { fatal: true }).decode(body);
-  } catch {
+  const decoded = yield* Effect.try(() => new TextDecoder('utf-8', { fatal: true }).decode(body)).pipe(Effect.option);
+  if (Option.isNone(decoded)) {
     return respond(request, 'The source must be UTF-8 text.', 400);
   }
+  const text = decoded.value;
   if (text.trim().length === 0) {
     return respond(request, 'The source is empty.', 400);
   }

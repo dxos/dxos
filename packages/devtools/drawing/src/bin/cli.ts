@@ -88,8 +88,8 @@ const printSources = (files: readonly string[], out: string | undefined): number
 };
 
 /** Shares one diagram and prints its link; the browser opens it unless `print` is set or there is no display. */
-const openDiagram = (file: string, { print }: { print: boolean }): Effect.Effect<number> =>
-  Effect.gen(function* () {
+const openDiagram = Effect.fn('openDiagram')(
+  function* (file: string, { print }: { print: boolean }) {
     const content = readInput(file);
     const text = yield* diagramSource(file, content);
     const appUrl = process.env.DRAWING_APP_URL || DEFAULT_APP_URL;
@@ -100,14 +100,14 @@ const openDiagram = (file: string, { print }: { print: boolean }): Effect.Effect
       console.error('Could not launch a browser; open the link above.');
     }
     return 0;
-  }).pipe(
-    Effect.catchTag('OpenError', ({ message }) =>
-      Effect.sync(() => {
-        console.error(message);
-        return 1;
-      }),
-    ),
-  );
+  },
+  Effect.catchTag('OpenError', ({ message }) =>
+    Effect.sync(() => {
+      console.error(message);
+      return 1;
+    }),
+  ),
+);
 
 const main = async (): Promise<number> => {
   const { values, positionals } = parseArgs({
