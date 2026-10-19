@@ -10,6 +10,7 @@ import {
   type Bounds,
   type Camera,
   type ElementId,
+  MAJOR_GRID_RATIO,
   type Node,
   type NodeRegistry,
   type Scene,
@@ -36,15 +37,16 @@ import { type SceneCamera } from './useSceneCamera.ts';
 const EMPTY_FRAME: Bounds = { x: 0, y: 0, width: 0, height: 0 };
 
 /**
- * What an empty scene is framed as through a portal: the viewport, centred on its origin, so drilling into a blank frame
- * zooms until the frame fills the view rather than staying put on a zero-size box.
+ * What an empty scene is framed as through `portal`: about the viewport, centred on its origin, so drilling into a blank
+ * frame zooms until the frame fills the view rather than staying put on a zero-size box. Its size is the portal's times a
+ * power of the grid ratio, so the grid's levels in the child line up with the parent's when the scenes swap.
  */
-const emptyBounds = (viewport: Size): Bounds => ({
-  x: -viewport.width / 2,
-  y: -viewport.height / 2,
-  width: viewport.width,
-  height: viewport.height,
-});
+const emptyBounds = (portal: Node, viewport: Size): Bounds => {
+  const { width, height } = nodeBounds(portal);
+  const fill = Math.min(viewport.width / width, viewport.height / height);
+  const scale = MAJOR_GRID_RATIO ** Math.max(0, Math.round(Math.log(fill) / Math.log(MAJOR_GRID_RATIO)));
+  return { x: (-width * scale) / 2, y: (-height * scale) / 2, width: width * scale, height: height * scale };
+};
 
 /** The shapes of a scene, unpadded: what Fit frames, with its inset as the only margin. */
 const fitFrame = (scene: Scene): Bounds => contentBounds(scene, 0, 1) ?? EMPTY_FRAME;
@@ -114,7 +116,7 @@ export const useSceneNavigation = ({
 }: UseSceneNavigationOptions): SceneNavigation => {
   /** A child scene's frame inside its portal; an empty one stands in as the viewport. */
   const childFrame = useCallback(
-    (portal: Node, child: Scene): Bounds => portalFrame(portal, contentBounds(child) ?? emptyBounds(viewport)),
+    (portal: Node, child: Scene): Bounds => portalFrame(portal, contentBounds(child) ?? emptyBounds(portal, viewport)),
     [viewport],
   );
 
@@ -141,17 +143,21 @@ export const useSceneNavigation = ({
   // A scene entered through a portal keeps the frame it arrived with. Deriving it from the content on
   // every edit moves the child under the user as they work, and maps a drill-out differently from the
   // drill-in that opened it; the root has no portal to sit in, so its bounds stay derived.
-  const frameRef = useRef<{ key: string; frame: Bounds } | undefined>(undefined);
+  // Kept for every level of the path, so drilling back out of a nested frame finds each parent as it was entered.
+  const framesRef = useRef(new Map<string, Bounds>());
   const bounds = useMemo(() => {
+    const key = path.join(' ');
+    for (const kept of [...framesRef.current.keys()]) {
+      if (key !== kept && !key.startsWith(`${kept} `)) {
+        framesRef.current.delete(kept);
+      }
+    }
     if (path.length < 2) {
-      frameRef.current = undefined;
       return frameOf(path, scene);
     }
-    const key = path.join(' ');
-    if (frameRef.current?.key !== key) {
-      frameRef.current = { key, frame: frameOf(path, scene) };
-    }
-    return frameRef.current.frame;
+    const kept = framesRef.current.get(key) ?? frameOf(path, scene);
+    framesRef.current.set(key, kept);
+    return kept;
   }, [frameOf, path, scene]);
 
   const fitTarget = useMemo(() => fitFrame(scene), [scene]);
@@ -243,7 +249,7 @@ export const useSceneNavigation = ({
         }
         // The level being left exits through the frame it was entered with, so the camera lands where
         // the drill-in took it from however the child was edited in between.
-        exited = exitPortal(exited, portal, level === 0 ? bounds : childFrame(portal, child));
+        exited = exitPortal(exited, portal, framesRef.current.get(next.join(' ')) ?? childFrame(portal, child));
         next = next.slice(0, -1);
       }
       registry.set(atoms.path, next);
@@ -267,7 +273,6 @@ export const useSceneNavigation = ({
       select,
       pushHistory,
       frameOf,
-      bounds,
       childFrame,
     ],
   );
