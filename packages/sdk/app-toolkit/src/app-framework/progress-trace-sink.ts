@@ -64,6 +64,15 @@ type MonitorEntry = {
   ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
+  /** Count and total the meter shows, so a continuation's numbers can be placed after them. */
+  shown: { current?: number; total?: number };
+  /**
+   * What the chain had shown when a new pid took over, held until that pid's first count says whether
+   * it restarted from zero; see {@link applyCounts}.
+   */
+  handover?: { current?: number; total?: number };
+  /** Added to every count the current pid reports, once it turns out to count only its own batch. */
+  base?: { current: number; total: number };
 };
 
 /**
@@ -217,6 +226,9 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
       // having counted moments earlier. Keep the handle and re-point the target instead. The stall
       // timer carries over untouched — a continuation is the same run, so its clock keeps running.
+      if (target.pid !== undefined && existing.target.pid !== undefined && target.pid !== existing.target.pid) {
+        existing.handover = { ...existing.shown };
+      }
       existing.target = target;
       return existing.handle;
     }
@@ -231,8 +243,43 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     // an edge trigger (trigger); the handler routes local vs edge by runtime.
     const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key) : undefined;
     const handle = registry.register(key, { label, onCancel });
-    monitors.set(key, { handle, target });
+    monitors.set(key, { handle, target, shown: {} });
     return handle;
+  };
+
+  /**
+   * Applies an update's count and total, placed after the counts earlier runs of the chain reached.
+   *
+   * A run that yields `Operation.runAgain()` continues under a new pid, and the meter is one meter for
+   * the whole chain. A continuation that keeps counting where the last one stopped needs nothing. One
+   * that restarts from zero for its own batch (mail sync: each run counts the messages it enumerates)
+   * would drag the bar back to the start, so its counts are added to what the chain had shown. The
+   * first count from the new pid tells the two apart. The total then goes back to unknown until the new
+   * batch reports its own, because the old total, already reached, would read as complete.
+   */
+  const applyCounts = (entry: MonitorEntry, progress: { current?: number; total?: number }) => {
+    const { handover } = entry;
+    if (handover && progress.current !== undefined) {
+      entry.handover = undefined;
+      const reached = handover.current ?? 0;
+      if (progress.current < reached) {
+        entry.base = { current: reached, total: handover.total ?? reached };
+        entry.shown.total = undefined;
+        entry.handle.total(undefined);
+      } else {
+        entry.base = undefined;
+      }
+    }
+
+    const base = entry.base ?? { current: 0, total: 0 };
+    if (progress.total !== undefined) {
+      entry.shown.total = base.total + progress.total;
+      entry.handle.total(entry.shown.total);
+    }
+    if (progress.current !== undefined) {
+      entry.shown.current = base.current + progress.current;
+      entry.handle.set(entry.shown.current);
+    }
   };
 
   const applyStatusUpdate = (data: StatusPayload, target: CancelTarget) => {
@@ -296,6 +343,8 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       return;
     }
 
+    const entry = monitors.get(key);
+
     // The plan first: a phase change resets the item count, so applying it after `set` would discard
     // the very total/current this update carries.
     if (data.progress.phases !== undefined || data.progress.phase !== undefined) {
@@ -306,18 +355,18 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       // an explicit `undefined` and an absent one are the same bytes on the wire, so the phase change
       // is the only signal that survives. `plan` deliberately does not reset (it must not discard the
       // numbers THIS update carries), which is why the reset is here — before they are applied.
-      const entry = monitors.get(key);
       if (entry && data.progress.phase !== undefined && data.progress.phase !== entry.phase) {
         entry.phase = data.progress.phase;
+        // The chain offset is a count too, and it belongs to the phase that is ending.
+        entry.shown = {};
+        entry.base = undefined;
+        entry.handover = undefined;
         handle.total(undefined);
         handle.set(0);
       }
     }
-    if (data.progress.total !== undefined) {
-      handle.total(data.progress.total);
-    }
-    if (data.progress.current !== undefined) {
-      handle.set(data.progress.current);
+    if (entry) {
+      applyCounts(entry, data.progress);
     }
     if (data.progress.estimate !== undefined) {
       handle.estimate(data.progress.estimate);
