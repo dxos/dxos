@@ -42,10 +42,10 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
 };
 
 /** The element a pointer at the centre of `element` would hit, so a covered control fails even when `click` would not. */
-const expectHittable = (element: HTMLElement) => {
+const expectHittable = async (element: HTMLElement) => {
   const { x, y, width, height } = element.getBoundingClientRect();
   const hit = document.elementFromPoint(x + width / 2, y + height / 2);
-  expect(hit && element.contains(hit)).toBe(true);
+  await expect(hit && element.contains(hit)).toBe(true);
 };
 
 const meta = {
@@ -92,7 +92,7 @@ export const Cards: Story = {
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });
     await expect(canvas.getAllByText('2 open tasks').length).toBeGreaterThan(0);
     // The body must sit below the toolbar, not over it.
-    expectHittable(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
+    await expectHittable(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
   },
 };
 
@@ -104,6 +104,6 @@ export const Canvas: Story = {
       await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
     );
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    expectHittable(canvas.getByTestId('projectsPlugin.featureMap.cards'));
+    await expectHittable(canvas.getByTestId('projectsPlugin.featureMap.cards'));
   },
 };
