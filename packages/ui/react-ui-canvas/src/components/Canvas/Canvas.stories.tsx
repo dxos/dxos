@@ -36,7 +36,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame' | 'nested';
   inspectors?: InspectorMode;
 };
 
@@ -212,6 +212,27 @@ const createScenesTree = () => {
     .build();
 };
 
+/** The root view: A, B centred and view C, linked A → B → C; C holds D → E. */
+const createNestedTree = () => {
+  const size = { width: 256, height: 128 };
+  const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
+  return SceneBuilder.scene('scene:root', [
+    SceneBuilder.rect('a', at(-512)).properties({ label: 'A' }),
+    SceneBuilder.rect('b', at(0)).properties({ label: 'B' }),
+    SceneBuilder.scene('c', [
+      SceneBuilder.rect('d', at(-256)).properties({ label: 'D' }),
+      SceneBuilder.rect('e', at(256)).properties({ label: 'E' }),
+      SceneBuilder.link('smart', 'd', 'e'),
+    ])
+      .name('C')
+      .at({ x: 512 - 192, y: -128, width: 384, height: 256 }),
+    SceneBuilder.link('smart', 'a', 'b'),
+    SceneBuilder.link('smart', 'b', 'c'),
+  ])
+    .name('root')
+    .build();
+};
+
 /** A labelled frame onto a nested scene of two linked shapes, beside a rectangle. */
 const createFrameTree = () => {
   const root = 'scene:root';
@@ -247,7 +268,9 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
               ? createScenesTree()
               : fixture === 'frame'
                 ? createFrameTree()
-                : createSceneTree(depth);
+                : fixture === 'nested'
+                  ? createNestedTree()
+                  : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -297,16 +320,6 @@ export const Default: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square' },
 };
 
-/** One scene, no portals: selection, move, resize, linking and the palette. */
-export const Freehand: Story = {
-  args: { depth: 1, liveDepth: 1 },
-};
-
-/** Four levels of portals: drill in and out, tiers, auto drill; `liveDepth` sets how many levels render live. */
-export const Nested: Story = {
-  args: { depth: 4, liveDepth: 1 },
-};
-
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
 export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
@@ -328,9 +341,9 @@ export const Readonly: Story = {
   },
 };
 
-/** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
-export const Model: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'model' },
+/** A view nested in the root: drill into C and back out; `liveDepth` sets how many levels render live. */
+export const NestedSimple: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'nested' },
 };
 
 /**
@@ -338,8 +351,13 @@ export const Model: Story = {
  * of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
  */
 /** A, an empty scene B and C in a column: open B, draw in it, and compare sizes at 100% on both levels. */
-export const Scenes: Story = {
+export const NestedDeep: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'scenes' },
+};
+
+/** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
+export const Model: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'model' },
 };
 
 export const Lattice: Story = {

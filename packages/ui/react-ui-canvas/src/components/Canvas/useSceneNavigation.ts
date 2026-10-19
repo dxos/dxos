@@ -82,6 +82,8 @@ export type SceneNavigation = {
   frameOf: (path: SceneId[], scene: Scene) => Bounds;
   /** The current scene's frame, held for the visit rather than re-derived as its content changes. */
   bounds: Bounds;
+  /** A child scene's frame inside its portal, as drilling in maps it. */
+  childFrame: (portal: Node, child: Scene) => Bounds;
   /** What Fit shows: the current scene's shapes themselves (the margin is the fit's own inset). */
   fitTarget: Bounds;
   pushHistory: (entry: HistoryEntry) => void;
@@ -321,5 +323,5 @@ export const useSceneNavigation = ({
     return () => clearTimeout(timer);
   }, [camera, scene, bounds, path, viewport, drag, hostOpen, drillIn, drillOut, registry, atoms.history, isAnimating]);
 
-  return { nameOf, portalTo, frameOf, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory };
+  return { nameOf, portalTo, frameOf, bounds, childFrame, fitTarget, pushHistory, drillIn, drillOut, goHistory };
 };

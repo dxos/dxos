@@ -116,6 +116,7 @@ import {
   createLayer,
   createLink,
   duplicateSelection,
+  enterPortal,
   fitBounds,
   groupIntoScene,
   hitTest,
@@ -138,6 +139,7 @@ import {
   sceneLayers,
   sceneOptions,
   sceneToScreen,
+  screenBounds,
   screenToScene,
   topZ,
   undo,
@@ -505,6 +507,7 @@ const CanvasRoot = ({
     nameOf,
     portalTo,
     bounds,
+    childFrame,
     fitTarget: sceneFitTarget,
     pushHistory,
     drillIn: drillInto,
@@ -1592,6 +1595,7 @@ const CanvasRoot = ({
       navigating={navigating}
       opening={opening}
       drillIn={drillIn}
+      childFrame={childFrame}
       copy={copy}
       cut={cut}
       paste={paste}
@@ -1749,6 +1753,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     isolation,
     objectActions,
     drillIn,
+    childFrame,
     generated,
   } = useCanvasContext('Canvas.Viewport');
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
@@ -1777,6 +1782,25 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
   const snapGridDrawn = snapEnabled && snapLines && !(latticeOn && projection.lattice);
   // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
   const dotsDrawn = look.background.grid === 'dots';
+  // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
+  // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
+  const focusNode = focus && focus.opacity < 1 ? displayScene.nodes[focus.id] : undefined;
+  const focusPortal = focusNode && isFrameNode(focusNode) ? focusNode : undefined;
+  const focusScene = useAtomValue(store.scene(focusPortal?.scene ?? ''));
+  const subGrid = useMemo(() => {
+    if (!focus || !focusPortal || !focusScene) {
+      return undefined;
+    }
+    const rect = screenBounds(camera, nodeBounds(focusPortal));
+    const inner = enterPortal(camera, focusPortal, childFrame(focusPortal, focusScene));
+    return {
+      rect,
+      zoom: inner.zoom,
+      offset: { x: inner.x * inner.zoom - rect.x, y: inner.y * inner.zoom - rect.y },
+      opacity: 1 - focus.opacity,
+    };
+  }, [focus, focusPortal, focusScene, camera, childFrame]);
+  const gridOpacity = subGrid ? 1 - subGrid.opacity : undefined;
   // With WebGL, the surface and washes are drawn per pixel on the GPU (smooth, with no grain needed); the SVG field then
   // draws only the grid. Without it (a test DOM), the SVG draws the washes as before.
   const gpuWashes = look.background.washes.length > 0 && supportsWashCanvas();
@@ -1823,6 +1847,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
           showAxes={false}
           ratios={GRID_LEVELS}
           range={GRID_RANGE}
+          opacity={gridOpacity}
         />
       )}
       {measured && dotsDrawn && (
@@ -1835,6 +1860,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
           showAxes={false}
           ratios={GRID_LEVELS}
           range={DOTS_RANGE}
+          opacity={gridOpacity}
           fade={
             look.background.fade
               ? {
@@ -1846,6 +1872,24 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
               : undefined
           }
         />
+      )}
+      {measured && subGrid && (snapGridDrawn || dotsDrawn) && (
+        <div
+          className='absolute overflow-hidden pointer-events-none'
+          style={{ left: subGrid.rect.x, top: subGrid.rect.y, width: subGrid.rect.width, height: subGrid.rect.height }}
+        >
+          <GridComponent
+            variant={dotsDrawn ? 'dots' : 'lines'}
+            dotsClassName={GRID_CLASSES[look.tone].dots}
+            size={grid}
+            scale={subGrid.zoom}
+            offset={subGrid.offset}
+            showAxes={false}
+            ratios={GRID_LEVELS}
+            range={dotsDrawn ? DOTS_RANGE : GRID_RANGE}
+            opacity={subGrid.opacity}
+          />
+        </div>
       )}
       <div
         className={mx('absolute pointer-events-none', !measured && 'invisible')}

@@ -167,7 +167,7 @@ export type CanvasContextValue = {
   /** What the scene's generators drew, and for which time. */
   generated: GeneratorFrames | undefined;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
-  Pick<SceneNavigation, 'drillIn'> &
+  Pick<SceneNavigation, 'drillIn' | 'childFrame'> &
   Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
   Pick<
     PointerMachine,
