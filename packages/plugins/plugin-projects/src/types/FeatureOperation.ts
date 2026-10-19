@@ -25,7 +25,7 @@ export class DependencyCycleError extends BaseError.extend(
 
 export const Create = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.feature.create'),
+    key: DXN.make('org.dxos.operation.projects.createFeature'),
     name: 'Create feature',
     icon: 'ph--puzzle-piece--regular',
     description: trim`
@@ -50,7 +50,7 @@ export const Create = Operation.make({
 
 export const Update = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.feature.update'),
+    key: DXN.make('org.dxos.operation.projects.updateFeature'),
     name: 'Update feature',
     icon: 'ph--pencil-simple--regular',
     description: trim`
@@ -72,7 +72,7 @@ export const Update = Operation.make({
 
 export const AddDependency = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.feature.addDependency'),
+    key: DXN.make('org.dxos.operation.projects.addFeatureDependency'),
     name: 'Add feature dependency',
     icon: 'ph--tree-structure--regular',
     description: trim`
@@ -90,7 +90,7 @@ export const AddDependency = Operation.make({
 
 export const RemoveDependency = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.feature.removeDependency'),
+    key: DXN.make('org.dxos.operation.projects.removeFeatureDependency'),
     name: 'Remove feature dependency',
     icon: 'ph--tree-structure--regular',
     description: 'Removes the record that a feature needs another one. Removing a missing dependency is a no-op.',
@@ -105,7 +105,7 @@ export const RemoveDependency = Operation.make({
 
 export const LinkTask = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.feature.linkTask'),
+    key: DXN.make('org.dxos.operation.projects.linkFeatureTask'),
     name: 'Link task to feature',
     icon: 'ph--link--regular',
     description: trim`
@@ -123,7 +123,7 @@ export const LinkTask = Operation.make({
 
 export const CreateShowcase = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.showcase.create'),
+    key: DXN.make('org.dxos.operation.projects.createShowcase'),
     name: 'Create showcase',
     icon: 'ph--presentation-chart--regular',
     description: trim`
@@ -145,7 +145,7 @@ export const CreateShowcase = Operation.make({
 
 export const AddToMap = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.featureMap.add'),
+    key: DXN.make('org.dxos.operation.projects.addFeatureToMap'),
     name: 'Add feature to map',
     icon: 'ph--graph--regular',
     description: 'Adds an existing feature to a feature map. Adding one twice is a no-op.',
@@ -173,7 +173,7 @@ export type FeatureSummary = Schema.Schema.Type<typeof FeatureSummary>;
 
 export const GetMap = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.projects.featureMap.get'),
+    key: DXN.make('org.dxos.operation.projects.getFeatureMap'),
     name: 'Get feature map',
     icon: 'ph--graph--regular',
     description: trim`
