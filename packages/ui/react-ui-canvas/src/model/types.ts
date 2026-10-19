@@ -229,8 +229,24 @@ export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
+  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
+  bumps: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
+  ),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
+
+/** A regular polygon inscribed in the frame (stretched with it), a vertex at the top; labelled like a box. */
+export const PolygonNode = Schema.Struct({
+  type: Schema.Literal('polygon'),
+  ...nodeBase,
+  ...boxFields,
+  /** Unset, `DEFAULT_POLYGON_SIDES`. */
+  sides: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
+  ),
+});
+export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
@@ -314,6 +330,7 @@ export const BuiltinNode = Schema.Union([
   RectNode,
   EllipseNode,
   CloudNode,
+  PolygonNode,
   NoteNode,
   FrameNode,
   InstanceNode,
@@ -326,6 +343,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'rect',
   'ellipse',
   'cloud',
+  'polygon',
   'note',
   'frame',
   'instance',
@@ -342,6 +360,7 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
+export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
@@ -542,6 +561,7 @@ export const Scene = createSceneSchema([
   RectNode,
   EllipseNode,
   CloudNode,
+  PolygonNode,
   NoteNode,
   FrameNode,
   InstanceNode,

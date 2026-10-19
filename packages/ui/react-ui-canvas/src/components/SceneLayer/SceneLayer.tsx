@@ -42,7 +42,6 @@ import {
   type NodeViewProps,
   type Scene,
   type SceneStore,
-  type Size,
   type StyleMap,
   frameTimeAttribute,
   isFrameNode,
@@ -326,6 +325,7 @@ export const SceneLayer = memo(
                     editingPart={editing?.id === node.id ? editing.part : undefined}
                     active={active === node.id}
                     ghost={ghost === node.id}
+                    framed={ghost === node.id || (!!plain && (selected?.has(node.id) ?? false))}
                     debug={debug}
                     handlers={handlers}
                   />
@@ -801,11 +801,13 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   chromeFade?: CSSProperties;
   /** The drawing's style classes, under the node's own style. */
   styles?: StyleMap;
+  /** Outlines the node's frame lightly, for a shape being moved or drawn, whose own outline may not be its frame. */
+  framed?: boolean;
 };
 
 /** Positions a node, owns its frame styling and pointer events; the node definition renders the body. */
 const NodeFrame = memo(
-  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, ...props }: NodeFrameProps) => {
+  ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, framed, ...props }: NodeFrameProps) => {
     const { node, registry, selected } = props;
     const cell = useContext(CellContext);
     // A type the registry does not know is drawn as the core base: a box with its label.
@@ -856,6 +858,8 @@ const NodeFrame = memo(
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
+      // An outline, so the frame's layout is untouched; a screen pixel at any zoom.
+      ...(framed ? { outlineWidth: 1 / Math.max(props.zoom, 0.05), outlineStyle: 'solid' } : {}),
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
@@ -877,6 +881,7 @@ const NodeFrame = memo(
             drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
             ghost && 'opacity-50 border-dashed pointer-events-none',
+            framed && 'outline-focus/40',
           )}
           style={frameStyle}
           data-node-id={node.id}
@@ -904,7 +909,7 @@ const NodeFrame = memo(
           {silhouette ? (
             // The look's classes on a box-less wrapper, so the silhouette's layers inherit its colours.
             <div className={mx('contents', ...frameLook)}>
-              <Silhouette outline={silhouette} size={node.size} border={border} />
+              <Silhouette outline={silhouette} node={drawn} border={border} />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
           ) : (
@@ -950,16 +955,16 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; size: Size; border: number };
+type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; node: Node; border: number };
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, size, border }: SilhouetteProps) => {
-  const { width, height } = size;
+const Silhouette = ({ outline, node, border }: SilhouetteProps) => {
+  const { width, height } = node.size;
   const masks = useMemo(() => {
-    const path = outline({ width, height }, border / 2);
+    const path = outline(node, border / 2);
     const image = (body: string) =>
       `url("data:image/svg+xml,${encodeURIComponent(
         `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'>${body}</svg>`,
@@ -968,7 +973,7 @@ const Silhouette = ({ outline, size, border }: SilhouetteProps) => {
       fill: image(`<path d='${path}' fill='white'/>`),
       stroke: image(`<path d='${path}' fill='none' stroke='white' stroke-width='${border}'/>`),
     };
-  }, [outline, width, height, border]);
+  }, [outline, node, width, height, border]);
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
@@ -1049,6 +1054,8 @@ export const BoxNodeView = LabelNodeView;
 export const EllipseNodeView = LabelNodeView;
 
 export const CloudNodeView = LabelNodeView;
+
+export const PolygonNodeView = LabelNodeView;
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (

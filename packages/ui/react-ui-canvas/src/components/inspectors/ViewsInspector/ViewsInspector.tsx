@@ -45,6 +45,7 @@ const ICONS: Record<string, string> = {
   rect: 'ph--square--regular',
   ellipse: 'ph--circle--regular',
   cloud: 'ph--cloud--regular',
+  polygon: 'ph--hexagon--regular',
   note: 'ph--note--regular',
   path: 'ph--pen-nib--regular',
   frame: 'ph--frame-corners--regular',

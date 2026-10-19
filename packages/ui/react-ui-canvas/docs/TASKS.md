@@ -76,9 +76,9 @@ Design: DESIGN.md §13.
 
 Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 
-- [ ] react-ui-list: `filterTreeModel(model, predicate)` (matches plus ancestors, ancestors open while filtering).
-- [ ] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
-- [ ] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
+- [x] react-ui-list: `filterTreeModel(model, predicate)` (matches plus ancestors, ancestors open while filtering).
+- [x] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
+- [x] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
 - [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents); links listed under their container.
   - [x] First cut (2026-10-18): `utils/view-tree.ts` `buildViewTree` (tested) behind a static tree model in `ViewsInspector`, with stories over the shared fixtures (`src/testing/`); select reports the row, View rows open by path. Not yet wired into `Canvas`, no filter or reveal.
 
