@@ -56,13 +56,19 @@ const textOf = (element: Node | Link): string | undefined => {
   return undefined;
 };
 
-/** A link end as its row names it: the node's own text, else its type; a free end is a point. */
-const endLabel = (scene: View, end: Endpoint): string => {
+/** A node as its row names it: its own text, else the View or Object it shows, else its type. */
+const nodeLabel = (scenes: ViewMap, node: Node): string =>
+  textOf(node) ??
+  (isViewNode(node) ? scenes[node.scene]?.name : isInstanceNode(node) ? scenes[node.composite]?.name : undefined) ??
+  node.type;
+
+/** A link end as its row names it, by its node's label; a free end is a point. */
+const endLabel = (scenes: ViewMap, scene: View, end: Endpoint): string => {
   if (!('node' in end)) {
     return 'point';
   }
   const node = scene.nodes[end.node];
-  return node ? (textOf(node) ?? node.type) : end.node;
+  return node ? nodeLabel(scenes, node) : end.node;
 };
 
 /**
@@ -148,7 +154,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
       element: link.id,
       container: scene.id,
       path,
-      label: textOf(link) ?? `${endLabel(scene, link.source)} → ${endLabel(scene, link.target)}`,
+      label: textOf(link) ?? `${endLabel(scenes, scene, link.source)} → ${endLabel(scenes, scene, link.target)}`,
       type: link.type,
       ...inObject,
       children: [],

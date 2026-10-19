@@ -28,6 +28,8 @@ describe('buildViewTree', () => {
     const nested = view.children.find((item) => item.kind === 'view');
     expect(nested?.path).toEqual([tree.root, 'c']);
     expect(labels(nested?.children.filter((item) => item.kind === 'node') ?? [])).toEqual(['D', 'E']);
+    // A link is named by its ends, a View by the name of the View it opens.
+    expect(labels(view.children.filter((item) => item.kind === 'link'))).toEqual(['A → B', 'B → C']);
   });
 
   test('an instance shows its object read-only, under every placement, with ids unique per path', ({ expect }) => {
