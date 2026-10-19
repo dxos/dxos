@@ -421,16 +421,25 @@ const DefaultStory = ({
   /** Each close-up's hold: the toolbar steps between them by playing the transition that joins them. */
   const closeUps = useMemo(
     () =>
-      shots.reduce<{ start: number; spans: { start: number; end: number }[] }>(
+      shots.reduce<{ start: number; spans: { start: number; end: number; focus: string }[] }>(
         ({ start, spans }, shot) => ({
           start: start + shot.ms,
-          spans: shot.focus ? [...spans, { start, end: start + shot.ms }] : spans,
+          spans: shot.focus ? [...spans, { start, end: start + shot.ms, focus: shot.focus }] : spans,
         }),
         { start: 0, spans: [] },
       ).spans,
     [shots],
   );
   const landings = useMemo(() => closeUps.map((hold) => hold.start), [closeUps]);
+  // In the shift loops only the close-up plays: grid cells rest on their first frame, so a clip starts without a jump
+  // as the camera lands on it, and a clip the camera leaves rests where it stopped.
+  const stills = variant === 'shift' || variant === 'console';
+  const playingCell = closeUps.find((hold) => hold.start <= elapsed && elapsed < hold.end)?.focus;
+  /** A still cell's clip time at `ms`: 0 before its first hold, through the hold as it plays, then where it stopped. */
+  const stillTime = (id: string, ms: number) =>
+    closeUps
+      .filter((hold) => hold.focus === id && hold.start <= ms)
+      .reduce((_, hold) => Math.min(ms, hold.end) - hold.start, 0);
   // A step plays the timeline from `from` to `to` at real speed (backwards when `to` is earlier), then rests on `land`.
   const [step, setStep] = useState<{ from: number; to: number; land: number }>();
   const current = closeUps.findLastIndex((hold) => hold.start <= elapsed);
@@ -542,6 +551,9 @@ const DefaultStory = ({
             if (!video || !onScreen || !Number.isFinite(video.duration)) {
               return undefined;
             }
+            if (stills) {
+              return seekVideo(video, (stillTime(cell.id, ms) / 1_000) % video.duration);
+            }
             const start = holdStart.get(cell.id);
             const local = Math.max(0, start === undefined ? ms : ms - start) / 1_000;
             // A toured clip plays once and rests on its last frame as the camera leaves it, looping only once the
@@ -550,20 +562,7 @@ const DefaultStory = ({
               start !== undefined && ms < zoomStart
                 ? Math.min(local, Math.max(0, video.duration - 0.02))
                 : local % video.duration;
-            if (Math.abs(video.currentTime - time) < 0.001) {
-              return undefined;
-            }
-            // A decode error or an unseekable source never fires `seeked`, so a stalled seek gives up after a second.
-            return new Promise<void>((resolve) => {
-              const timeout = setTimeout(resolve, 1_000);
-              const done = () => {
-                clearTimeout(timeout);
-                resolve();
-              };
-              video.addEventListener('seeked', done, { once: true });
-              video.addEventListener('error', done, { once: true });
-              video.currentTime = time;
-            });
+            return seekVideo(video, time);
           }),
         );
         // Two frames: one for React to commit the camera, one for the compositor to paint it.
@@ -573,7 +572,7 @@ const DefaultStory = ({
     return () => {
       delete window.grid;
     };
-  }, [ready, shots, total, stepped, cells, viewport]);
+  }, [ready, shots, total, stepped, cells, viewport, stills, closeUps]);
 
   const frame = frameAt(shots, elapsed);
   const camera = frame?.camera;
@@ -624,7 +623,7 @@ const DefaultStory = ({
                 border={border}
                 meta={frame.meta?.(cell)}
                 strength={borderFade ? Math.min(1, Math.max(0, 1.5 * (1 - bounds.width / viewport.width))) : 1}
-                playing={!stepped && autoplay}
+                playing={!stepped && autoplay && (!stills || cell.id === playingCell)}
                 onLoad={(video) => {
                   if (video) {
                     videos.current.set(cell.id, video);
@@ -696,6 +695,24 @@ const DefaultStory = ({
       </div>
     </div>
   );
+};
+
+/** Seeks a clip to `time` seconds, resolving once the frame is decoded (or at once if it is already there). */
+const seekVideo = (video: HTMLVideoElement, time: number): Promise<void> | undefined => {
+  if (Math.abs(video.currentTime - time) < 0.001) {
+    return undefined;
+  }
+  // A decode error or an unseekable source never fires `seeked`, so a stalled seek gives up after a second.
+  return new Promise<void>((resolve) => {
+    const timeout = setTimeout(resolve, 1_000);
+    const done = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+    video.addEventListener('seeked', done, { once: true });
+    video.addEventListener('error', done, { once: true });
+    video.currentTime = time;
+  });
 };
 
 /** The frame `time` ms into the path, or nothing before the viewport is measured. */
