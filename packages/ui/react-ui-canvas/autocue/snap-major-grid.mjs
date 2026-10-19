@@ -52,6 +52,11 @@ export const steps = [
       if ((await snap.getAttribute('aria-pressed')) !== 'true') {
         await snap.click();
       }
+      // Lines rather than dots, so the major lines the node lands on are visible.
+      const lines = page.getByTestId('theme-grid-lines');
+      if ((await lines.count()) > 0 && (await lines.getAttribute('aria-pressed')) !== 'true') {
+        await lines.click();
+      }
       const from = await centre(page);
       await page.mouse.click(from.x, from.y);
       await page.locator('[data-testid="properties"] [role="spinbutton"]').first().waitFor();
