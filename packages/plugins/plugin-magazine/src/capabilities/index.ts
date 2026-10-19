@@ -8,9 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
-import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -33,11 +31,6 @@ export const TextContent = AppCapability.textContent(() => import('./text-conten
 });
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-export const CurateOnCreate = Capability.lazyModule(
-  'CurateOnCreate',
-  { provides: [SpaceCapabilities.OnCreateSpace], activatesOn: SpaceEvents.SpaceCreated },
-  () => import('./curate-on-create.ts'),
-);
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
