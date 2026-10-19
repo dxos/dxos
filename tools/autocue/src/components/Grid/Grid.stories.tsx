@@ -94,7 +94,7 @@ type GridProps = {
   shiftDistance?: number;
   /** Shift loop: stays on the zoomed-out 3x3, so the shifts can be watched without the zooms. */
   overview?: boolean;
-  /** Shift loop: zoomed out, the columns scroll continuously at this many cells per second instead of stepping. */
+  /** Shift loop: zoomed out, the columns drift down continuously at about this many cells per second instead of stepping. */
   drift?: number;
   /** How each cell is framed; see `border.ts`. Unset is the original tile. */
   border?: Border;
@@ -847,5 +847,5 @@ export const ShiftClips: Story = { args: shiftArgs('clips') };
 export const ShiftOverviewNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true } };
 export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overview: true } };
 
-/** The zoomed-out 3x3 with its columns scrolling slowly and continuously at different speeds, alternating up and down. */
+/** The zoomed-out 3x3 with its columns all drifting down slowly and continuously, each at a different speed. */
 export const ShiftDriftClips: Story = { args: { ...shiftArgs('clips'), overview: true, drift: 0.2 } };

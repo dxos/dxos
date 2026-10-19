@@ -359,8 +359,8 @@ export type ShiftOptions = {
   /** Holds the camera on the zoomed-out 3x3 throughout, so only the shifts move. */
   overview?: boolean;
   /**
-   * Cells per second: in place of the stepped loop, the zoomed-out 3x3's columns scroll continuously at this speed,
-   * alternating up and down, for the whole timeline.
+   * Cells per second: in place of the stepped loop, the zoomed-out 3x3's columns all drift down continuously, each at
+   * its own multiple of this speed, for the whole timeline.
    */
   drift?: number;
 };
@@ -489,7 +489,7 @@ export const shiftShots = ({
             return point
               ? bounds({
                   x: point.x,
-                  y: wrapRow(point.y + direction(point.x) * speed(point.x) * drift * ((t * ms) / 1_000)),
+                  y: wrapRow(point.y + speed(point.x) * drift * ((t * ms) / 1_000)),
                 })
               : hidden;
           },
