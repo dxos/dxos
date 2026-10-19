@@ -82,7 +82,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
       </Panel.Header>
       <Panel.Body asChild>
         {mode === 'canvas' ? (
-          <div className='dx-cover relative' data-testid='feature-map.canvas'>
+          <div className='relative' data-testid='feature-map.canvas'>
             <FeatureCanvas
               features={features}
               positions={subject.positions}
@@ -90,7 +90,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
             />
           </div>
         ) : (
-          <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <FeatureBoard features={features} onOpen={(id) => void openObject(id)} />
             </ScrollArea.Viewport>
