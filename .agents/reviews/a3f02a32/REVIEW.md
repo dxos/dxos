@@ -16,7 +16,7 @@ _17 error(s), 191 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- a3f02a32-1 - unresolved - one-changeset-per-pr - .changeset/retire-unloadable-documents.md:1
+- a3f02a32-1 - ignored - one-changeset-per-pr - .changeset/retire-unloadable-documents.md:1
 - a3f02a32-2 - unresolved - no-try-catch-in-effect-code - packages/apps/composer-app/src/pages/recovery.ts:159
 - a3f02a32-3 - unresolved - namespace-brand-key-prefixing - packages/apps/composer-app/src/util/window-corners.ts:55
 - a3f02a32-4 - unresolved - retries-via-schedule-with-evidence - packages/apps/composer-crx/src/core/actions/invoke.ts:54
@@ -130,7 +130,7 @@ _17 error(s), 191 warning(s)._
 - a3f02a32-112 - unresolved - retries-via-schedule-with-evidence - packages/plugins/plugin-space/src/commands/space/join/join.ts:70
 - a3f02a32-113 - unresolved - leaf-owns-its-subscription - packages/plugins/plugin-space/src/containers/CollectionArticle/CollectionArticle.tsx:130
 - a3f02a32-114 - unresolved - retries-via-schedule-with-evidence - packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts:150
-- a3f02a32-115 - unresolved - constants-not-nullary-factories - packages/plugins/plugin-wnfs/src/helpers/common.ts:62
+- a3f02a32-115 - resolved - constants-not-nullary-factories - packages/plugins/plugin-wnfs/src/helpers/common.ts:62
 - a3f02a32-116 - unresolved - workaround-is-documented-and-removable - packages/sdk/app-framework/src/vite-plugin/composer/index.ts:88
 - a3f02a32-117 - unresolved - typename-via-schema-not-string - packages/sdk/app-graph/src/stories/EchoGraph.stories.tsx:67
 - a3f02a32-118 - unresolved - retries-via-schedule-with-evidence - packages/sdk/client-services/src/internal/invitations/invitations-handler.ts:584
@@ -183,7 +183,7 @@ _17 error(s), 191 warning(s)._
 - a3f02a32-165 - unresolved - import-as-namespace-is-all-or-nothing - packages/ui/react-ui/src/components/HoverCard/index.ts:1
 - a3f02a32-166 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui/src/components/Image/Image.stories.tsx:44
 - a3f02a32-167 - unresolved - story-for-new-ui-component - packages/ui/react-ui/src/components/Label/Label.tsx:15
-- a3f02a32-168 - unresolved - event-handler-naming-convention - packages/ui/react-ui/src/components/Main/Main.tsx:532
+- a3f02a32-168 - ignored - event-handler-naming-convention - packages/ui/react-ui/src/components/Main/Main.tsx:532
 - a3f02a32-169 - unresolved - no-styling-wrapper-divs - packages/ui/react-ui/src/components/MediaPlayer/MediaPlayer.stories.tsx:21
 - a3f02a32-170 - unresolved - no-lint-suppression-to-pass - packages/ui/react-ui/src/components/Menu/Menu.test.tsx:11
 - a3f02a32-171 - unresolved - comment-hygiene - packages/ui/react-ui/src/components/Panel/Panel.tsx:38
@@ -1079,3 +1079,4 @@ measured chars per token: 3.10
 
 - Fixes attempted: `named-react-imports` findings 124, 128, 129, 134 are false positives. The package compiles with `jsx: react`, so `import React from 'react'` supplies the JSX factory (removing it raised TS2686). They are marked ignored.
 - The 267 follow-up batches for uncertain pairs and `system-one: off` rules were not run; 53 pairs were unanswered after `max_tokens_exceeded` failures.
+- Fixed 115 (`storeName()` became the `STORE_NAME` constant). Ignored 1 (the changeset belongs to the earlier PR #14020, not this one) and 168 (`handleHandleKeyDown` handles the drag handle's key-down, so the name is deliberate).
