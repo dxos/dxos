@@ -1,6 +1,6 @@
 ---
 name: npm-publishing
-description: Make a workspace package publishable on npm — the first (bootstrap) publish of a new `@dxos/*` package and its npm trusted publisher (OIDC) for `publish-all.yml`, via `scripts/publish-package.mjs`. Use when asked to publish a package to npm, make a package public, set up or fix a package's trusted publisher, or when CI's `check-packages-published` gate fails. Also explains where regular releases (`@latest`, `@next`, pkg.pr.new) come from, which are never published by hand.
+description: Make a workspace package publishable on npm — the first (bootstrap) publish of a new `@dxos/*` package and its npm trusted publisher (OIDC) for `publish-all.yml`, via `scripts/publish-package.mjs`. Use when asked to publish a package to npm, make a package public, set up or fix a package's trusted publisher, or when the publish preflight (`check-packages-published`) fails. Also explains where regular releases (`@latest`, `@next`, pkg.pr.new) come from, which are never published by hand.
 ---
 
 # npm publishing
@@ -85,6 +85,20 @@ too, so ask the user to check the access page only if the `--trust` run did not 
 The script restores `package.json` after the publish, so the only change to commit is the removal of
 `"private": true` (plus any `publishConfig` fix). Add a changeset only if the PR also changes the package
 (`agents/instructions/changesets.md`).
+
+## npm bot account
+
+The `npm-bot` npm account's credentials live in 1Password (`CI` vault, item `NPM bot`). Use the references, never
+the values (`1password` skill):
+
+| Field             | Reference                           |
+| ----------------- | ----------------------------------- |
+| Username          | `op://CI/NPM bot/username`          |
+| Password          | `op://CI/NPM bot/password`          |
+| One-time password | `op://CI/NPM bot/one-time password` |
+
+A TOTP code lasts 30 seconds, so read it fresh for each npm command that asks for one (`--otp "$(op read -n
+'op://CI/NPM bot/one-time password?attribute=otp')"`), never once for a loop.
 
 ## Many packages
 
