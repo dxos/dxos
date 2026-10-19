@@ -14,7 +14,7 @@
  * `--holds` sets each tour cell's hold in turn (one cell per entry), `--overlap` starts the zoom-out that long before
  * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
  * `--supersample 2` screenshots each frame at twice the pixel density and area-averages it down, so the tiles do not
- * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `console-numbers`, …; see
+ * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `mosaic-tours`, …; see
  * GRID-TRANSITIONS.md) and `--args` adds story args in Storybook's `key:value;…` URL form.
  */
 

@@ -356,6 +356,8 @@ export type ShiftOptions = {
   shift: number;
   /** Cells each shift moves: 1 or 2, or 0 to vary it from cycle to cycle. */
   distance: number;
+  /** Holds the camera on the zoomed-out 3x3 throughout, so only the shifts move. */
+  overview?: boolean;
 };
 
 /** Strong ease-in-out for the zooms: quick to leave and quick to settle. */
@@ -391,6 +393,7 @@ export const shiftShots = ({
   zoom,
   shift,
   distance,
+  overview = false,
 }: ShiftOptions): ShiftShot[] => {
   const pitch = { x: TILE.width + gap, y: TILE.height + gap };
   const closeUps = Math.max(1, slots.length);
@@ -455,8 +458,9 @@ export const shiftShots = ({
     viewport,
     gap,
   );
-  const out = interpolateCamera(near, far, viewport);
-  const into = interpolateCamera(far, near, viewport);
+  const close = overview ? far : near;
+  const out = overview ? () => far : interpolateCamera(near, far, viewport);
+  const into = overview ? () => far : interpolateCamera(far, near, viewport);
   const hidden: Bounds = { x: cols * pitch.x * 4, y: 0, ...TILE };
   const at = (placed: Map<Cell, Point>) => (cell: Cell) => {
     const point = placed.get(cell);
@@ -468,7 +472,7 @@ export const shiftShots = ({
     const last = step === closeUps - 1;
     const hold = Math.max(0, slots[step] - (last ? 0 : 2 * zoom + shift));
     const focus = centreOf(placed)?.id;
-    const legs: ShiftShot[] = [{ ms: hold, focus, frame: () => ({ camera: near, place: at(placed) }) }];
+    const legs: ShiftShot[] = [{ ms: hold, focus, frame: () => ({ camera: close, place: at(placed) }) }];
     if (step < shifts.length) {
       const move = shifts[step];
       legs.push(

@@ -11,17 +11,16 @@ Stories (storybook on :9009; the border style is the `border` control on any sto
 
 1. `shift`: [clips](http://localhost:9009/?path=/story/tools-autocue-grid--shift-clips) ·
    [tours](http://localhost:9009/?path=/story/tools-autocue-grid--shift-tours) ·
-   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-numbers)
-2. `console`: [clips](http://localhost:9009/?path=/story/tools-autocue-grid--console-clips) ·
-   [tours](http://localhost:9009/?path=/story/tools-autocue-grid--console-tours) ·
-   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--console-numbers)
-3. `columns`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--columns-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-numbers) ·
+   overview [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-overview-numbers) ·
+   [clips](http://localhost:9009/?path=/story/tools-autocue-grid--shift-overview-clips)
+2. `columns`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--columns-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--columns-numbers)
-4. `steps`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--steps-tours) ·
+3. `steps`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--steps-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--steps-numbers)
-5. `mosaic`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--mosaic-tours) ·
+4. `mosaic`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--mosaic-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--mosaic-numbers)
-6. `zoom`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-tours) ·
+5. `zoom`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-numbers) ·
    [default](http://localhost:9009/?path=/story/tools-autocue-grid--default)
 
@@ -97,7 +96,7 @@ All variants are deterministic in time: `window.grid.seek(ms)` gives the same fr
 | Variant   | Stories (`tools-autocue-grid--…`)                   | What it does                                                                      |
 | --------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `shift`   | `shift-numbers`, `shift-tours`, `shift-clips`       | **Variant 1.** A loop of close-up, snap out to 3x3, row or column shift, snap in. |
-| `console` | `console-numbers`, `console-tours`, `console-clips` | The shift loop on a wall laid out as one giant Composer window.                   |
+| `console` | none: set `variant: 'console'` on a shift story     | The shift loop on a wall laid out as one giant Composer window.                   |
 | `zoom`    | `default` (unchanged), `zoom-numbers`, `zoom-tours` | Baseline: the original tour and straight zoom-out to the whole 6x6.               |
 | `columns` | `columns-numbers`, `columns-tours`                  | After the tour, pulls back to 3 columns that scroll up and down, alternating.     |
 | `steps`   | `steps-numbers`, `steps-tours`                      | After the tour, a camera montage over 2x2 windows: pull out, push in, whip-pan.   |

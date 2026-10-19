@@ -92,6 +92,8 @@ type GridProps = {
   shiftMs?: number;
   /** Shift loop: cells each shift moves, 1 or 2; 0 varies it from cycle to cycle. */
   shiftDistance?: number;
+  /** Shift loop: stays on the zoomed-out 3x3, so the shifts can be watched without the zooms. */
+  overview?: boolean;
   /** How each cell is framed; see `border.ts`. Unset is the original tile. */
   border?: Border;
   /** Fades the frame out as a cell grows to fill the view, so a close-up shows the clip edge to edge. */
@@ -269,6 +271,7 @@ const DefaultStory = ({
   zoomMs = 600,
   shiftMs = 600,
   shiftDistance = 0,
+  overview = false,
   border,
   borderFade = false,
 }: GridProps) => {
@@ -351,7 +354,7 @@ const DefaultStory = ({
       const montage = (montageProp?.length ? montageProp : MONTAGE).flatMap(
         (index) => byId.get(`${Number(index) % cols},${Math.floor(Number(index) / cols)}`) ?? [],
       );
-      return (variant === 'console' ? deckShots : shiftShots)({
+      const options = {
         cells,
         sequence: [...tourCells, ...montage],
         slots: [...tourCells.map(() => Number(tourSlot)), ...montage.map(() => Number(montageSlot))],
@@ -362,7 +365,8 @@ const DefaultStory = ({
         zoom: Number(zoomMs),
         shift: Number(shiftMs),
         distance: Number(shiftDistance),
-      });
+      };
+      return variant === 'console' ? deckShots(options) : shiftShots({ ...options, overview: Boolean(overview) });
     }
     const cameras = tour.map(([col, row]) =>
       fitBounds({ x: col * (TILE.width + gap), y: row * (TILE.height + gap), ...TILE }, viewport),
@@ -411,6 +415,7 @@ const DefaultStory = ({
     zoomMs,
     shiftMs,
     shiftDistance,
+    overview,
   ]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
   /** Each close-up's hold: the toolbar steps between them by playing the transition that joins them. */
@@ -736,6 +741,7 @@ const meta: Meta<GridProps> = {
     zoomMs: { type: { name: 'number' }, control: 'number' },
     shiftMs: { type: { name: 'number' }, control: 'number' },
     shiftDistance: { type: { name: 'number' }, control: { type: 'select' }, options: [0, 1, 2] },
+    overview: { type: { name: 'boolean' }, control: 'boolean' },
     border: { type: { name: 'enum', value: [...BORDERS] }, control: 'select', options: BORDERS },
     borderFade: { type: { name: 'boolean' }, control: 'boolean' },
     content: {
@@ -812,7 +818,6 @@ export const ShiftNumbers: Story = { args: shiftArgs('numbers') };
 export const ShiftTours: Story = { args: shiftArgs('tours') };
 export const ShiftClips: Story = { args: shiftArgs('clips') };
 
-/** The console: the shift loop on a wall laid out as one giant Composer window, on the same 60s timeline. */
-export const ConsoleNumbers: Story = { args: { ...shiftArgs('numbers'), variant: 'console' } };
-export const ConsoleTours: Story = { args: { ...shiftArgs('tours'), variant: 'console' } };
-export const ConsoleClips: Story = { args: { ...shiftArgs('clips'), variant: 'console' } };
+/** The shift loop seen from the zoomed-out 3x3 throughout: only the rows and columns move. */
+export const ShiftOverviewNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true } };
+export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overview: true } };
