@@ -11,14 +11,7 @@
  * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
  */
 
-import {
-  SHORT_MS,
-  fromTemplate,
-  reveal,
-  scroll,
-  showcase,
-  visible,
-} from '../../../../tools/autocue/showcase/steps.mjs';
+import { SHORT_MS, fromTemplate, scroll, showcase, visible } from '../../../../tools/autocue/showcase/steps.mjs';
 
 export const CLIP_MS = SHORT_MS;
 
