@@ -34,9 +34,19 @@ const only = { ids: opt('id')?.split(','), length: opt('length'), format: opt('f
 const version = String(opt('version') ?? '1').padStart(2, '0');
 // The palette (see src/components/Ident/theme.tsx): every composition takes it as props, and the file name carries it.
 const inputProps = { theme: opt('theme') ?? 'dark', logoColor: opt('logo-color') };
-const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}${opt('fps') ? `_${Number(opt('fps'))}fps` : ''}`;
 // A showcase cut runs at 60 fps; the compositions time everything from `fps`, so they render at any rate.
-const fpsOverride = opt('fps') ? Number(opt('fps')) : undefined;
+const fpsOverride = (() => {
+  if (!args.includes('--fps')) {
+    return undefined;
+  }
+  const fps = Number(opt('fps'));
+  if (opt('fps')?.startsWith('--') || !Number.isFinite(fps) || fps <= 0) {
+    console.error(`--fps takes a positive number, not ${opt('fps') ?? 'nothing'}`);
+    process.exit(2);
+  }
+  return fps;
+})();
+const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}${fpsOverride ? `_${fpsOverride}fps` : ''}`;
 const browserExecutable = process.env.REMOTION_BROWSER || null;
 // The DXOS trail is WebGL; headless Chrome's default GL backend cannot run its float-texture shaders.
 const chromiumOptions = { gl: 'angle' };

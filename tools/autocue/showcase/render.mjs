@@ -55,8 +55,13 @@ const args = [
 ];
 // A full story id (`tools-autocue-showcase--grid-only`) renders a story outside Grid.stories.tsx.
 const storyId = values.story.includes('--') ? values.story : `tools-autocue-grid--${values.story}`;
-const url =
-  `${values.url}/iframe.html?id=${storyId}&viewMode=story` + `&args=${args.join(';')}&globals=theme:${values.theme}`;
+// Encoded as one parameter each, so an `&` inside an arg value cannot start a new query parameter.
+const url = `${values.url}/iframe.html?${new URLSearchParams({
+  id: storyId,
+  viewMode: 'story',
+  args: args.join(';'),
+  globals: `theme:${values.theme}`,
+})}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });

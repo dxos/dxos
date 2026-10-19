@@ -471,6 +471,8 @@ export const Grid = ({
   const stills = (variant === 'shift' || variant === 'console') && !(Number(drift) && !Number(driftAfter));
   const playingCell = closeUps.find((hold) => hold.start <= elapsed && elapsed < hold.end)?.focus;
   const live = shots.length > 0 && shotAt(shots, elapsed).shot.live === true;
+  const elapsedRef = useRef(0);
+  elapsedRef.current = elapsed;
   const ended = useRef(onEnded);
   ended.current = onEnded;
   /** A still cell's clip time at `ms`: 0 before its first hold, through the hold as it plays, then where it stopped. */
@@ -523,9 +525,11 @@ export const Grid = ({
       return;
     }
     let frame = 0;
+    // Resumes where the clock is, so a re-run caused by a resize (new shots) does not jump back to `offset`.
+    const resume = Math.max(offset, elapsedRef.current);
     // Resuming mid-hold keeps the close-up's clip where it paused; starting at a landing plays it from its opening.
-    let focused = landings.includes(offset) ? undefined : shotAt(shots, offset).shot.focus;
-    const start = performance.now() - offset;
+    let focused = landings.includes(resume) ? undefined : shotAt(shots, resume).shot.focus;
+    const start = performance.now() - resume;
     const tick = (now: number) => {
       const time = Math.min(total, now - start);
       setElapsed(time);
