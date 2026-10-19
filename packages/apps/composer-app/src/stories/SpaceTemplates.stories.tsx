@@ -64,7 +64,6 @@ const TEMPLATES = {
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
-  readingRoom: 'org.dxos.plugin.magazine.template.reading-room',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
   tidepool: 'org.dxos.plugin-debug.template.tidepool',
@@ -322,8 +321,6 @@ export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play }
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
 
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
-
-export const ReadingRoom: Story = { args: { template: TEMPLATES.readingRoom }, play };
 
 export const Review: Story = { args: { template: TEMPLATES.review }, play };
 
