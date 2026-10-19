@@ -364,6 +364,12 @@ export const snap = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4
 /** The distances a varying shift takes in turn. */
 export const DISTANCES = [1, 2, 1, 1, 2, 2, 1, 2];
 
+/** The outer line (-1 first, 1 third) that moves at double speed on a shift, picked per step so a run is repeatable. */
+export const fastLine = (step: number): -1 | 1 => (hash(step, 11) < 0.5 ? -1 : 1);
+
+/** A line's speed on a shift: the fast line covers twice the distance in the same time. */
+export const lineSpeed = (line: number, fast: number) => (Math.round(line) === fast ? 2 : 1);
+
 /**
  * The shift loop: a close-up fills the frame and plays; the camera zooms out to the 3x3 around it; alternate rows
  * (then, next cycle, alternate columns) slide one or two cells in opposite directions; the camera zooms in on
@@ -389,20 +395,21 @@ export const shiftShots = ({
     // Rows on even steps, columns on odd ones.
     axis: step % 2 === 0 ? ('row' as const) : ('col' as const),
     by: distance === 1 || distance === 2 ? distance : DISTANCES[step % DISTANCES.length],
+    fast: fastLine(step),
   }));
   /** Direction a line moves: top row right, middle left, bottom right; left column down, middle up, right down. */
   const direction = (line: number) => (Math.abs(line) % 2 === 1 ? 1 : -1);
   const wrapCol = (x: number) => wrap(x, -Math.floor(cols / 2), cols);
   const wrapRow = (y: number) => wrap(y, -Math.floor(rows / 2), rows);
   type Point = { x: number; y: number };
-  const apply = (point: Point, { axis, by }: (typeof shifts)[number], t = 1): Point =>
+  const apply = (point: Point, { axis, by, fast }: (typeof shifts)[number], t = 1): Point =>
     axis === 'row'
-      ? { x: wrapCol(point.x + direction(point.y) * by * t), y: point.y }
-      : { x: point.x, y: wrapRow(point.y + direction(point.x) * by * t) };
-  const unapply = (point: Point, { axis, by }: (typeof shifts)[number]): Point =>
+      ? { x: wrapCol(point.x + direction(point.y) * lineSpeed(point.y, fast) * by * t), y: point.y }
+      : { x: point.x, y: wrapRow(point.y + direction(point.x) * lineSpeed(point.x, fast) * by * t) };
+  const unapply = (point: Point, { axis, by, fast }: (typeof shifts)[number]): Point =>
     axis === 'row'
-      ? { x: wrapCol(point.x - direction(point.y) * by), y: point.y }
-      : { x: point.x, y: wrapRow(point.y - direction(point.x) * by) };
+      ? { x: wrapCol(point.x - direction(point.y) * lineSpeed(point.y, fast) * by), y: point.y }
+      : { x: point.x, y: wrapRow(point.y - direction(point.x) * lineSpeed(point.x, fast) * by) };
 
   // Seed: each close-up starts where the shifts before its turn carry it into the centre; a start another close-up
   // already claimed is left to whichever cell lands there.

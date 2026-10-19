@@ -4,7 +4,18 @@
 
 import { type Bounds, type Size, fitBounds, interpolateCamera } from '@dxos/react-ui-canvas';
 
-import { type Cell, type Decor, DISTANCES, type ShiftShot, hash, snap, whip, wrap } from './reveal.ts';
+import {
+  type Cell,
+  type Decor,
+  DISTANCES,
+  type ShiftShot,
+  fastLine,
+  hash,
+  lineSpeed,
+  snap,
+  whip,
+  wrap,
+} from './reveal.ts';
 
 /** Scene units between regions and between planks: drawn in the separator colour, as Composer's hairlines. */
 const SEPARATOR = 4;
@@ -103,20 +114,21 @@ export const deckShots = ({ cells, sequence, slots, viewport, zoom, shift, dista
   const shifts = Array.from({ length: closeUps - 1 }, (_, step) => ({
     axis: step % 2 === 0 ? ('deck' as const) : ('stack' as const),
     by: distance === 1 || distance === 2 ? distance : DISTANCES[step % DISTANCES.length],
+    fast: fastLine(step),
   }));
   const wrapX = (x: number) => wrap(x, -Math.floor(PLANK_COLS / 2), PLANK_COLS);
   const wrapY = (y: number) => wrap(y, -Math.floor(PLANK_ROWS / 2), PLANK_ROWS);
   /** A stack's direction: the centre plank scrolls up, the planks either side down. */
   const direction = (x: number) => (Math.abs(Math.round(x)) % 2 === 1 ? 1 : -1);
   // Sideways, the deck scrolls as if to the right, so planks move left.
-  const apply = (point: Point, { axis, by }: (typeof shifts)[number], t = 1): Point =>
+  const apply = (point: Point, { axis, by, fast }: (typeof shifts)[number], t = 1): Point =>
     axis === 'deck'
       ? { x: wrapX(point.x - by * t), y: point.y }
-      : { x: point.x, y: wrapY(point.y + direction(point.x) * by * t) };
-  const unapply = (point: Point, { axis, by }: (typeof shifts)[number]): Point =>
+      : { x: point.x, y: wrapY(point.y + direction(point.x) * lineSpeed(point.x, fast) * by * t) };
+  const unapply = (point: Point, { axis, by, fast }: (typeof shifts)[number]): Point =>
     axis === 'deck'
       ? { x: wrapX(point.x + by), y: point.y }
-      : { x: point.x, y: wrapY(point.y - direction(point.x) * by) };
+      : { x: point.x, y: wrapY(point.y - direction(point.x) * lineSpeed(point.x, fast) * by) };
 
   // Seed each close-up where the shifts before its turn carry it into the centre; the rest fill in a fixed shuffle.
   const key = ({ x, y }: Point) => `${x},${y}`;
