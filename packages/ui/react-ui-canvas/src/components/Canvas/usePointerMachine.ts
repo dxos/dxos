@@ -123,7 +123,7 @@ export type UsePointerMachineOptions = {
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
-  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'moveDelta'>;
+  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'isClick' | 'moveDelta'>;
 
 export type PointerMachine = {
   /** Root element handlers. */
@@ -189,6 +189,7 @@ export const usePointerMachine = ({
   major,
   snap,
   snapMinor,
+  isClick,
   moveDelta,
 }: UsePointerMachineOptions): PointerMachine => {
   const toScene = useCallback(
@@ -606,13 +607,15 @@ export const usePointerMachine = ({
           const delta = { x: point.x - anchor.x, y: point.y - anchor.y };
           const node = scene.nodes[current.id];
           const def = node && nodeDef(nodeRegistry, node);
-          const bounds = resizeBounds(current.start, current.handle, delta, {
-            minSize: def?.minSize ?? { width: major, height: major },
-            maxSize: def?.maxSize,
-            symmetric: event.shiftKey,
-            // The moving edge lands on the major grid, as a move does, so a node's edges stay on major lines.
-            snap,
-          });
+          const bounds = isClick(delta)
+            ? current.start
+            : resizeBounds(current.start, current.handle, delta, {
+                minSize: def?.minSize ?? { width: major, height: major },
+                maxSize: def?.maxSize,
+                symmetric: event.shiftKey,
+                // The moving edge lands on the major grid, as a move does, so a node's edges stay on major lines.
+                snap,
+              });
           setDrag({ ...current, bounds });
           break;
         }
@@ -653,6 +656,7 @@ export const usePointerMachine = ({
       toScene,
       snap,
       snapMinor,
+      isClick,
       moveDelta,
       scene.nodes,
       scene.links,

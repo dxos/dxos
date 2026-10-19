@@ -44,6 +44,17 @@ describe('sceneSnap', () => {
     expect([bounds.x + bounds.width, bounds.y + bounds.height].every(onMajor)).toBe(true);
   });
 
+  test("a click's jitter does not snap a node that sits off the major grid", ({ expect }) => {
+    const { moveDelta, isClick } = sceneSnap(DEFAULT_GRID, ZOOM, true);
+    // A palette drop leaves the node on the minor grid.
+    const anchor = { x: 16, y: 16 };
+    expect(moveDelta(anchor, { x: 1, y: 1 })).toEqual({ x: 0, y: 0 });
+    expect(isClick({ x: 1, y: 1 })).toBe(true);
+    // Past half a minor cell the press is a drag and the node lands on the major grid.
+    expect(isClick({ x: 8, y: 0 })).toBe(false);
+    expect(moveDelta(anchor, { x: 8, y: 0 })).toEqual({ x: -16, y: -16 });
+  });
+
   test('control points keep the minor grid', ({ expect }) => {
     const { snapMinor } = sceneSnap(DEFAULT_GRID, ZOOM, true);
     expect(snapMinor(23)).toBe(16);

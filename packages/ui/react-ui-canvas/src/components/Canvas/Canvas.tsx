@@ -1025,7 +1025,7 @@ const CanvasRoot = ({
   // Pointer state machine.
   //
 
-  const { minor, major, snap, snapMinor, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleGuides = useCallback(
     () => registry.set(atoms.guides, !registry.get(atoms.guides)),
@@ -1083,6 +1083,7 @@ const CanvasRoot = ({
     major,
     snap,
     snapMinor,
+    isClick,
     moveDelta,
   });
 

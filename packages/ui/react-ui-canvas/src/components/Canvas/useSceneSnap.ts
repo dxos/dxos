@@ -23,6 +23,8 @@ export type SceneSnap = {
   major: number;
   snap: (value: number) => number;
   snapMinor: (value: number) => number;
+  /** A press that has moved less than half a minor cell with snap on: a click, which moves and resizes nothing. */
+  isClick: (offset: Point) => boolean;
   /** The offset a move applies, so the pressed node's top-left (`anchor`) lands on the major grid. */
   moveDelta: (anchor: Point, offset: Point) => Point;
 };
@@ -45,11 +47,14 @@ const snapOn = (minor: number, enabled: boolean): SceneSnap => {
   const snap = (value: number) => (enabled ? Math.round(value / major) * major : value);
   // A link's control point is finer than a node: a bend need not sit on a major line.
   const snapMinor = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
-  const moveDelta = (anchor: Point, offset: Point): Point => ({
-    x: snap(anchor.x + offset.x) - anchor.x,
-    y: snap(anchor.y + offset.y) - anchor.y,
-  });
-  return { minor, major, snap, snapMinor, moveDelta };
+  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump up to half a major
+  // cell on a click's jitter, so a press that has not left half a minor cell does not snap.
+  const isClick = (offset: Point) => enabled && Math.hypot(offset.x, offset.y) < minor / 2;
+  const moveDelta = (anchor: Point, offset: Point): Point =>
+    isClick(offset)
+      ? { x: 0, y: 0 }
+      : { x: snap(anchor.x + offset.x) - anchor.x, y: snap(anchor.y + offset.y) - anchor.y };
+  return { minor, major, snap, snapMinor, isClick, moveDelta };
 };
 
 /** The snap for a view's grid, zoom and snap toggle. */
