@@ -507,8 +507,8 @@ export const feedSite = (key: FeedKey): string => {
   return new URL(feed.url).origin;
 };
 
-/** Posts the reader has opened. */
-export const READ: readonly string[] = ['braies', 'heavy-lifters', 'local-first'];
+/** Posts the reader has opened; none is in the magazine, so its tiles all show at full strength. */
+export const READ: readonly string[] = ['one-orbit', 'canyon-road', 'desk-setups'];
 
 /** Posts the reader has starred. */
 export const STARRED: readonly string[] = ['dark-sky', 'sync-engines'];
