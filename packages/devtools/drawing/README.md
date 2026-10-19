@@ -12,16 +12,21 @@ writes an SVG. The `.dx.svg` embeds its source, so it renders anywhere and stays
 npx skills add dxos/dxos --skill drawing
 ```
 
-The skill is `skills/drawing/SKILL.md`: the workflow and the language reference.
+The skill is [`skills/drawing/SKILL.md`](../../../skills/drawing/SKILL.md) at the repository root, where `npx skills`
+finds it: the workflow and the language reference. The build copies it into this package's `skills/` so the npm
+package ships it too.
 
 ## Use the CLI
 
 ```bash
-npx -y @dxos/drawing render arch.dx          # writes arch.dx.svg and prints the layout report
-npx -y @dxos/drawing render arch.dx --plain  # a bare arch.svg
-npx -y @dxos/drawing check arch.dx --json    # the report only
-npx -y @dxos/drawing source arch.dx.svg      # the .dx the SVG carries
+npm i -g @dxos/drawing@next                       # puts `drawing` on PATH
+npx -y @dxos/drawing@next render arch.dx          # writes arch.dx.svg and prints the layout report
+npx -y @dxos/drawing@next render arch.dx --plain  # a bare arch.svg
+npx -y @dxos/drawing@next check arch.dx --json    # the report only
+npx -y @dxos/drawing@next source arch.dx.svg      # the .dx the SVG carries
 ```
+
+Use the `@next` tag until a stable release is on `@latest`.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.
 
@@ -35,7 +40,7 @@ A drawing.sh file carries only its source; the importer lays it out again.
 | Path                 | What                                                                 |
 | -------------------- | -------------------------------------------------------------------- |
 | `src/`               | `render` and the `drawing` CLI                                        |
-| `skills/drawing/`    | The agent skill                                                       |
+| `skills/drawing/`    | Build output: a copy of the root `skills/drawing` skill, for npm      |
 | `site/`              | The drawing.sh landing page and live editor (`@dxos/drawing-site`): `moon run site:serve`, `moon run site:deploy` |
 | `autocue/`           | The agent-first demo flow (`agent-demo.mjs`) and its sample repo      |
 | `docs/launch/`       | Launch post drafts                                                    |
