@@ -19,7 +19,7 @@ package ships it too.
 ## Use the CLI
 
 ```bash
-DRAWING=https://pkg.pr.new/dxos/dxos/@dxos/drawing@main
+DRAWING=https://pkg.pr.new/dxos/dxos/@dxos/drawing@0cc622dceb38943f22df4d9669e86dc55459d95c
 npx -y $DRAWING render arch.dx                 # writes arch.dx.svg and prints the layout report
 npx -y $DRAWING render - -o docs/arch.dx.svg   # the .dx from stdin
 npx -y $DRAWING render arch.dx --plain         # a bare arch.svg
@@ -28,8 +28,10 @@ npx -y $DRAWING source arch.dx.svg             # the .dx the SVG carries (-o wri
 npx -y $DRAWING open arch.dx.svg               # a link that opens it in app.drawing.sh (--print: don't launch)
 ```
 
-`@main` is the latest build of `main`; `@<sha>` (e.g. `@dxos/drawing@c201f2c`) pins a specific commit. From npm,
-`npm i -g @dxos/drawing` puts `drawing` on PATH, and `npx -y @dxos/drawing` runs the release.
+The URL pins one commit, so agents run immutable code rather than the moving `@main`. After a CLI change lands
+and pkg.pr.new publishes its merge commit, re-pin the skill and this README with
+`node packages/devtools/drawing/scripts/pin-skill.mjs <40-char sha>`. Optionally, from npm, `npm i -g @dxos/drawing`
+puts `drawing` on PATH.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.
 
