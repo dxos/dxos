@@ -242,6 +242,11 @@ export const Floating: Story = {
     // Floating, the panel holds the same sections it does docked.
     await expect(await canvas.findByTestId('dock-section-about')).toBeInTheDocument();
     await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    await expect(
+      [...canvasElement.querySelectorAll('[data-testid^="dock-section-"]')].map((section) =>
+        section.getAttribute('data-testid'),
+      ),
+    ).toEqual(['dock-section-views', 'dock-section-objects', 'dock-section-layers', 'dock-section-about']);
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));

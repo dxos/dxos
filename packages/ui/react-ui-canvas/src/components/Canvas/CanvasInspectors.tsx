@@ -184,14 +184,14 @@ const LAYERS_INSPECTOR: InspectorSectionDef = {
   id: 'layers',
   title: 'Layers',
   icon: 'ph--stack--regular',
-  order: 2,
+  order: 3,
 };
 
 const OBJECTS_INSPECTOR: InspectorSectionDef = {
   id: 'objects',
   title: 'Objects',
   icon: 'ph--cube--regular',
-  order: 3,
+  order: 2,
 };
 
 const ABOUT_INSPECTOR: InspectorSectionDef = {
