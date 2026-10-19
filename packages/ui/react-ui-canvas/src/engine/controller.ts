@@ -58,6 +58,7 @@ import {
   nodeBounds,
   pasteFragment,
   recordScenes,
+  restackZ,
   topZ,
   unionBounds,
   zoomAt,
@@ -127,6 +128,11 @@ export type NavigationCommands = {
   /** Backs out a level: out of isolation first. */
   back: () => void;
   goHistory: (offset: number) => void;
+  /**
+   * Opens the View at `path` (root first) from wherever the view is: out to the shared ancestor, then in through each
+   * frame, animating only the last step; then selects `select` there. A path the canvas cannot reach stops where it can.
+   */
+  openView: (path: readonly SceneId[], options?: { animate?: boolean; select?: Iterable<ElementId> }) => void;
   /** Opens the breadcrumb at `index`; in isolation the first leads back out. */
   openPath: (index: number) => void;
   /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
@@ -165,6 +171,15 @@ export type SelectionCommands = {
   group: () => ElementId | undefined;
   /** A new style class with the one selected element's look, which the element then follows. */
   classFrom: () => string | undefined;
+};
+
+/** The intent helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
+export type DocumentIntentCommands = {
+  /**
+   * Moves `element` just before or after its sibling `target` in the drawing order of `container`, which must be the
+   * open View, as one intent (one undo step); false when nothing moved.
+   */
+  restack: (container: SceneId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -211,6 +226,7 @@ export type TimeCommands = {
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
  */
 export type CanvasController = {
+  document: DocumentIntentCommands;
   navigation: NavigationCommands;
   look: LookCommands;
   selection: SelectionCommands;
@@ -586,7 +602,36 @@ export const createCanvasController = ({
     camera().animateTo(zoomAt(camera().target(), centre(), zoom));
   };
 
+  const openView: NavigationCommands['openView'] = (target, { animate = true, select: ids } = {}) => {
+    if (registry.get(atoms.isolation)) {
+      exitIsolation();
+    }
+    const current = registry.get(atoms.path);
+    if (target[0] !== current[0]) {
+      return;
+    }
+    let shared = 1;
+    while (shared < Math.min(current.length, target.length) && current[shared] === target[shared]) {
+      shared++;
+    }
+    const descend = target.slice(shared);
+    if (shared < current.length) {
+      drillOut(current.length - shared, animate && descend.length === 0);
+    }
+    for (const [index, id] of descend.entries()) {
+      const portal = portalTo(registry.get(atoms.path).at(-1), id);
+      if (!portal) {
+        break;
+      }
+      drillInto(portal, animate && index === descend.length - 1);
+    }
+    if (ids) {
+      select(ids);
+    }
+  };
+
   const navigation: NavigationCommands = {
+    openView,
     drillIn: (node, animate) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animate)),
     drillOut,
     back: () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),
@@ -655,5 +700,18 @@ export const createCanvasController = ({
     setBackgroundGrid: (grid) => lookHandlers?.().onBackgroundGridChange?.(grid),
   };
 
-  return { navigation, look, selection, editing, tools, time };
+  const document: DocumentIntentCommands = {
+    restack: (container, element, target, position) => {
+      const scene = currentScene();
+      const z =
+        scene.id === container && capabilities().update ? restackZ(scene, element, target, position) : undefined;
+      if (z === undefined) {
+        return false;
+      }
+      projection().apply({ kind: 'reorder', id: element, z });
+      return true;
+    },
+  };
+
+  return { document, navigation, look, selection, editing, tools, time };
 };

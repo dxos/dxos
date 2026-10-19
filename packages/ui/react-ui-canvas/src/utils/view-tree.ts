@@ -146,13 +146,111 @@ export const restackZ = (
   const elements: readonly { id: ElementId; z: string }[] = scene.nodes[id]
     ? Object.values(scene.nodes)
     : Object.values(scene.links);
-  const group = elements.map(({ id, z }) => ({ id, z }));
-  const ordered = sortByZ(group).filter((element) => element.id !== id);
+  const group = sortByZ(elements.map(({ id, z }) => ({ id, z })));
+  const at = group.findIndex((element) => element.id === id);
+  const ordered = group.filter((element) => element.id !== id);
   const index = ordered.findIndex((element) => element.id === target);
-  if (index < 0 || id === target) {
+  // Already there: the element sits just before (or after) the target.
+  const placed = group[position === 'before' ? at + 1 : at - 1]?.id === target;
+  if (at < 0 || index < 0 || id === target || placed) {
     return undefined;
   }
   const [low, high] =
     position === 'before' ? [ordered[index - 1], ordered[index]] : [ordered[index], ordered[index + 1]];
   return between(low?.z, high?.z);
 };
+
+/** The View path a row's element is drawn in: a View row's frame sits in its parent, every other row in its own. */
+export const rowView = (item: ViewTreeItem): SceneId[] => (item.kind === 'view' ? item.path.slice(0, -1) : item.path);
+
+/** Whether a row selects on the canvas: the root View has no element, and an object's contents are edited elsewhere. */
+export const isSelectableRow = (item: ViewTreeItem): boolean =>
+  !item.readonly && item.element !== undefined && item.path.length > 0;
+
+const samePath = (left: readonly SceneId[] | undefined, right: readonly SceneId[]) =>
+  left !== undefined && left.length === right.length && left.every((id, index) => id === right[index]);
+
+/** A canvas selection a row activation asks for: the View to open, and what to select there. */
+export type ViewRowSelection = { path: SceneId[]; ids: ElementId[] };
+
+export type SelectRowsOptions = {
+  item: ViewTreeItem;
+  /** A shift-click's rows, anchor to `item`; only those drawn in `item`'s View are taken. */
+  range?: readonly ViewTreeItem[];
+  /** Meta held: toggle `item` (or add the range) within the selection, when it is in the open View. */
+  meta?: boolean;
+  /** The state a meta-click takes the row to. */
+  current?: boolean;
+  /** The canvas selection now. */
+  selection: ReadonlySet<ElementId>;
+  /** The open View's path; undefined in isolation, where no row's View is open. */
+  path?: readonly SceneId[];
+};
+
+/**
+ * What activating a row selects on the canvas: the row's element alone, toggled into the selection with meta, or a
+ * range of rows in the same View; undefined for a row that selects nothing.
+ */
+export const selectRows = ({
+  item,
+  range,
+  meta = false,
+  current = true,
+  selection,
+  path,
+}: SelectRowsOptions): ViewRowSelection | undefined => {
+  if (!isSelectableRow(item) || item.element === undefined) {
+    return undefined;
+  }
+  const view = rowView(item);
+  const open = samePath(path, view);
+  if (range) {
+    const ids = range.flatMap((row) =>
+      isSelectableRow(row) && row.element !== undefined && samePath(rowView(row), view) ? [row.element] : [],
+    );
+    return { path: view, ids: meta && open ? [...new Set([...selection, ...ids])] : ids };
+  }
+  if (meta && open) {
+    const next = new Set(selection);
+    current ? next.add(item.element) : next.delete(item.element);
+    return { path: view, ids: [...next] };
+  }
+  return { path: view, ids: [item.element] };
+};
+
+/** A row dropped before or after a sibling: restack `element` in `container`'s drawing order. */
+export type ViewReorder = {
+  container: SceneId;
+  element: ElementId;
+  target: ElementId;
+  position: 'before' | 'after';
+};
+
+/**
+ * Whether `from` may be dropped beside `to`: siblings in the open View's container (another container is another View's
+ * drawing, which the open View's projection cannot restack), nodes among nodes and links among links, and neither an
+ * object's contents.
+ */
+export const canRestack = (from: ViewTreeItem, to: ViewTreeItem, view: SceneId | undefined): boolean =>
+  !from.readonly &&
+  !to.readonly &&
+  from.element !== undefined &&
+  to.element !== undefined &&
+  from.container !== undefined &&
+  from.container === view &&
+  from.container === to.container &&
+  (from.kind === 'link') === (to.kind === 'link');
+
+/** The restack a drop above or below `to` asks for; undefined for any other drop. */
+export const viewReorder = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewReorder | undefined =>
+  from.container !== undefined &&
+  from.element !== undefined &&
+  to.element !== undefined &&
+  (instruction === 'reorder-above' || instruction === 'reorder-below')
+    ? {
+        container: from.container,
+        element: from.element,
+        target: to.element,
+        position: instruction === 'reorder-above' ? 'before' : 'after',
+      }
+    : undefined;

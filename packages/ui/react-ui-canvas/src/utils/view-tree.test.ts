@@ -5,7 +5,15 @@
 import { describe, test } from 'vitest';
 
 import { createNestedSimpleTree, createObjectsTree } from '../testing/index.ts';
-import { buildViewTree, restackZ } from './view-tree.ts';
+import {
+  type ViewTreeItem,
+  buildViewTree,
+  canRestack,
+  restackZ,
+  rowView,
+  selectRows,
+  viewReorder,
+} from './view-tree.ts';
 
 const labels = (items: { label: string }[]) => items.map((item) => item.label);
 
@@ -57,5 +65,75 @@ describe('buildViewTree', () => {
     // A node is not restacked among links, nor against itself.
     expect(restackZ(scene, 'a', 'a', 'before')).toBeUndefined();
     expect(restackZ(scene, 'a', Object.keys(scene.links)[0], 'before')).toBeUndefined();
+    // Nor when it is already there.
+    expect(restackZ(scene, 'a', 'b', 'before')).toBeUndefined();
+    expect(restackZ(scene, 'c', 'b', 'after')).toBeUndefined();
+  });
+
+  test('selectRows selects a row in its View; meta toggles and a range stays in one View', ({ expect }) => {
+    const tree = createNestedSimpleTree();
+    const views = buildViewTree(Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), tree.root);
+    const rows = new Map<string, ViewTreeItem>();
+    const walk = (item: ViewTreeItem) => {
+      rows.set(item.id, item);
+      item.children.forEach(walk);
+    };
+    walk(views);
+    const row = (id: string) => {
+      const item = rows.get(id);
+      if (!item) {
+        throw new Error(`no row ${id}`);
+      }
+      return item;
+    };
+    const root = [tree.root];
+    const selection = new Set(['a']);
+    // The root View row and an element in a nested View.
+    expect(selectRows({ item: views, selection, path: root })).toBeUndefined();
+    expect(selectRows({ item: row('c/d'), selection, path: root })).toEqual({ path: [tree.root, 'c'], ids: ['d'] });
+    // A View row selects its frame in the parent View.
+    expect(rowView(row('c'))).toEqual(root);
+    expect(selectRows({ item: row('c'), selection, path: root })).toEqual({ path: root, ids: ['c'] });
+    // Meta toggles within the open View, and starts over in another.
+    expect(selectRows({ item: row('b'), meta: true, selection, path: root })?.ids).toEqual(['a', 'b']);
+    expect(selectRows({ item: row('a'), meta: true, current: false, selection, path: root })?.ids).toEqual([]);
+    expect(selectRows({ item: row('c/d'), meta: true, selection, path: root })?.ids).toEqual(['d']);
+    // A range keeps the rows drawn in the clicked row's View.
+    const range = [row('b'), row('c'), row('c/d'), row('c/e')];
+    expect(selectRows({ item: row('c'), range, selection, path: root })?.ids).toEqual(['b', 'c']);
+    expect(selectRows({ item: row('c'), range, meta: true, selection, path: root })?.ids).toEqual(['a', 'b', 'c']);
+  });
+
+  test('a drop restacks among siblings in the open View only, above or below', ({ expect }) => {
+    const tree = createObjectsTree();
+    const views = buildViewTree(Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), tree.root);
+    const rows = new Map<string, ViewTreeItem>();
+    const walk = (item: ViewTreeItem) => {
+      rows.set(item.id, item);
+      item.children.forEach(walk);
+    };
+    walk(views);
+    const row = (id: string) => {
+      const item = rows.get(id) ?? [...rows.values()].find((item) => item.element === id);
+      if (!item) {
+        throw new Error(`no row ${id}`);
+      }
+      return item;
+    };
+    const root = tree.root;
+    expect(canRestack(row('card-1'), row('title'), root)).toBe(true);
+    // Another View open, a row in a nested View, an object's contents, or a link: no drop.
+    expect(canRestack(row('card-1'), row('title'), 'section')).toBe(false);
+    expect(canRestack(row('card-1'), row('section/caption'), root)).toBe(false);
+    expect(canRestack(row('card-1'), row('logo-1/mark'), root)).toBe(false);
+    expect(canRestack(row('card-1'), [...rows.values()].filter((item) => item.kind === 'link')[0], root)).toBe(false);
+    expect(viewReorder(row('card-1'), row('title'), 'reorder-above')).toEqual({
+      container: root,
+      element: 'card-1',
+      target: 'title',
+      position: 'before',
+    });
+    expect(viewReorder(row('card-1'), row('title'), 'reorder-below')?.position).toBe('after');
+    expect(viewReorder(row('card-1'), row('title'), 'make-child')).toBeUndefined();
   });
 });

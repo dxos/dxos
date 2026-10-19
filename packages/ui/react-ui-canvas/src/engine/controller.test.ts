@@ -33,6 +33,16 @@ const nested = () =>
       .at({ x: 512, y: 0, width: 512, height: 256 }),
   ]).build();
 
+/** Root holds A and a frame onto Child; Child holds C and a frame onto Grand, which holds G. */
+const deep = () =>
+  SceneBuilder.scene('root', [
+    SceneBuilder.rect('a', box(0)),
+    SceneBuilder.scene('child', [
+      SceneBuilder.rect('c', box(0)),
+      SceneBuilder.scene('grand', [SceneBuilder.rect('g', box(0))]).at({ x: 512, y: 0, width: 512, height: 256 }),
+    ]).at({ x: 512, y: 0, width: 512, height: 256 }),
+  ]).build();
+
 const setup = ({
   readonly = false,
   tree = flat(),
@@ -94,6 +104,31 @@ describe('CanvasController', () => {
       expect(registry.get(atoms.path)).toEqual(['root']);
     });
 
+    test('openView drills down a path, across to a sibling branch, and selects there', ({ expect }) => {
+      const { registry, atoms, controller } = setup({ tree: deep() });
+      controller.navigation.openView(['root', 'child', 'grand'], { animate: false, select: ['g'] });
+      expect(registry.get(atoms.path)).toEqual(['root', 'child', 'grand']);
+      expect([...registry.get(atoms.selection)]).toEqual(['g']);
+      controller.navigation.openView(['root', 'child'], { animate: false, select: ['c'] });
+      expect(registry.get(atoms.path)).toEqual(['root', 'child']);
+      expect([...registry.get(atoms.selection)]).toEqual(['c']);
+      controller.navigation.openView(['root'], { animate: false });
+      expect(registry.get(atoms.path)).toEqual(['root']);
+      // A path from another root, or through a frame that is not there, goes no further than it can.
+      controller.navigation.openView(['other'], { animate: false });
+      expect(registry.get(atoms.path)).toEqual(['root']);
+      controller.navigation.openView(['root', 'grand'], { animate: false });
+      expect(registry.get(atoms.path)).toEqual(['root']);
+    });
+
+    test('openView leaves isolation first', ({ expect }) => {
+      const { registry, atoms, controller } = setup({ tree: deep() });
+      controller.navigation.isolate('grand');
+      controller.navigation.openView(['root', 'child'], { animate: false });
+      expect(registry.get(atoms.isolation)).toBeUndefined();
+      expect(registry.get(atoms.path)).toEqual(['root', 'child']);
+    });
+
     test('goHistory moves back and forward along the visited paths', ({ expect }) => {
       const { registry, atoms, controller, scene } = setup({ tree: nested() });
       controller.navigation.drillIn(scene().nodes.child, false);
@@ -138,6 +173,35 @@ describe('CanvasController', () => {
       controller.selection.select(['a']);
       controller.navigation.fitSelection();
       expect(registry.get(atoms.camera)).toEqual({ zoom: 1, x: 384, y: 320 });
+    });
+  });
+
+  describe('document', () => {
+    test("restack moves an element among its siblings in the open View's order, as one intent", ({ expect }) => {
+      const { controller, scene, projection } = setup();
+      const order = () =>
+        Object.values(scene().nodes)
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((node) => node.id);
+      expect(order()).toEqual(['a', 'b']);
+      let applied = 0;
+      const apply = projection.apply;
+      projection.apply = (intent) => {
+        applied++;
+        apply(intent);
+      };
+      expect(controller.document.restack('root', 'b', 'a', 'before')).toBe(true);
+      expect(order()).toEqual(['b', 'a']);
+      expect(applied).toBe(1);
+      // Another container, or a move that changes nothing, applies nothing.
+      expect(controller.document.restack('child', 'b', 'a', 'before')).toBe(false);
+      expect(controller.document.restack('root', 'b', 'a', 'before')).toBe(false);
+      expect(applied).toBe(1);
+    });
+
+    test('restack changes nothing on a read-only canvas', ({ expect }) => {
+      const { controller } = setup({ readonly: true });
+      expect(controller.document.restack('root', 'b', 'a', 'before')).toBe(false);
     });
   });
 
