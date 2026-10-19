@@ -3,10 +3,14 @@
 //
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import React, { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import { AiService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -31,6 +35,7 @@ import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -54,10 +59,12 @@ import { isNonNullable } from '@dxos/util';
 
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
+  aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
+  readingRoom: 'org.dxos.plugin.magazine.template.reading-room',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
   tidepool: 'org.dxos.plugin-debug.template.tidepool',
@@ -183,11 +190,35 @@ const withIframePath: Decorator = (Story) => {
 
 type StoryArgs = { template: string };
 
+/** Story parameters the decorator reads. */
+type StoryParameters = {
+  /** Replaces the app's AI service; without one, operations that need a model fail (the client has no EDGE). */
+  aiServiceMiddleware?: (aiService: AiService.Service) => AiService.Service;
+};
+
+/**
+ * Resolves every model through the preview EDGE's provider proxy, which needs no signed-in identity,
+ * unlike the app's `/ai/generate` route.
+ */
+const previewEdgeAiService = (): AiService.Service => {
+  const remote = Layer.orDie(AiServiceTestingPreset('edge-remote'));
+  return AiService.make({
+    languageModel: (model, options) =>
+      Layer.unwrap(Effect.map(AiService.tag, (service) => service.languageModel(model, options))).pipe(
+        Layer.provide(remote),
+      ),
+    decisionModel: (model, options) =>
+      Layer.unwrap(Effect.map(AiService.tag, (service) => service.decisionModel(model, options))).pipe(
+        Layer.provide(remote),
+      ),
+  });
+};
+
 const meta = {
   title: 'apps/composer-app/SpaceTemplates',
   render: ({ template }) => <TemplateSpace template={template} />,
   decorators: [
-    withPluginManager({
+    withPluginManager<StoryArgs>(({ parameters }) => ({
       plugins: [
         // Core: the subset of `getCorePlugins` the deck and navtree need, without onboarding,
         // observability or the PWA, which assume a real deployment.
@@ -208,7 +239,7 @@ const meta = {
 
         // Content: the plugins whose objects the templates seed, and which contribute them.
         // Required by projects and chess respectively.
-        AssistantPlugin.make(),
+        AssistantPlugin.make({ aiServiceMiddleware: parameters.aiServiceMiddleware }),
         GamePlugin.make(),
         BoardPlugin.make(),
         CanvasPlugin.make(),
@@ -218,6 +249,7 @@ const meta = {
         IllustratorPlugin.make(),
         InboxPlugin.make(),
         KanbanPlugin.make(),
+        MagazinePlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
         ProjectsPlugin.make(),
@@ -228,7 +260,7 @@ const meta = {
         TasksPlugin.make(),
         ThreadPlugin.make(),
       ],
-    }),
+    })),
     withIframePath,
   ],
   parameters: {
@@ -285,6 +317,17 @@ const play: Story['play'] = async ({ canvasElement }) => {
   );
 };
 
+/**
+ * Seeds five live AI news feeds and an empty magazine, then schedules one curation run that syncs the
+ * feeds and curates the magazine through the preview EDGE's model proxy. The play test checks only the
+ * seeded content.
+ */
+export const AiBriefing: Story = {
+  args: { template: TEMPLATES.aiBriefing },
+  parameters: { aiServiceMiddleware: previewEdgeAiService } satisfies StoryParameters,
+  play,
+};
+
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
 
 export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
@@ -294,6 +337,8 @@ export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play }
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
 
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
+
+export const ReadingRoom: Story = { args: { template: TEMPLATES.readingRoom }, play };
 
 export const Review: Story = { args: { template: TEMPLATES.review }, play };
 

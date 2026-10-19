@@ -5,7 +5,6 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
@@ -16,6 +15,8 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
 import { Subscription } from '#types';
+
+import { formatDate, getImageUrl, getSnippet } from '../../util/index.ts';
 
 export type PostStackAction = { type: 'current'; postId: string };
 
@@ -67,7 +68,7 @@ export const PostStack = Util.composable<HTMLDivElement, PostStackProps>(
                 draggable={false}
                 getId={(item) => item.post.id}
                 getScrollElement={() => viewport}
-                estimateSize={() => 120}
+                estimateSize={() => 360}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -101,49 +102,39 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
     return null;
   }
 
-  const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
+  // Synced descriptions are Markdown with the hero image inline; the card shows it as a poster and the text as a snippet.
+  const imageUrl = getImageUrl(post);
+  const snippet = getSnippet({ description: post.description ?? post.content }) || undefined;
+  const published = formatDate(post.published);
+  const title = post.title ?? t('post-title.placeholder');
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
+          {imageUrl && <Card.Poster alt={post.title ?? ''} src={imageUrl} fit='cover' classNames='rounded-t-xs' />}
           <Card.Header>
-            <Layout.Block>
-              <Icon.Icon icon='ph--rss-simple--regular' />
-            </Layout.Block>
-            <Card.Text truncate>{post.title ?? t('post-title.placeholder')}</Card.Text>
+            <Card.Title lines={2}>{title}</Card.Title>
             {post.link && (
               <Layout.Block rail='end'>
-                <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Icon.Icon icon='ph--arrow-square-out--regular' size='md' />
+                <a href={post.link} target='_blank' rel='noreferrer'>
+                  <Icon.Icon icon='ph--arrow-square-out--regular' />
                 </a>
               </Layout.Block>
             )}
           </Card.Header>
           <Card.Body>
-            {post.author && (
+            {snippet && (
               <Card.Row>
-                <Layout.Block>
-                  <Icon.Icon icon='ph--user--regular' />
-                </Layout.Block>
-                <Card.Text variant='muted'>{post.author}</Card.Text>
+                <Card.Text variant='muted' lines={3}>
+                  {snippet}
+                </Card.Text>
               </Card.Row>
             )}
-            {(post.description || post.content) && (
-              <Card.Row>
-                <MarkdownView
-                  content={post.description ?? post.content}
-                  classNames='line-clamp-5 text-sm text-fg-muted'
-                />
-              </Card.Row>
-            )}
-            {published && (
-              <Card.Row>
-                <Layout.Block>
-                  <Icon.Icon icon='ph--calendar--regular' />
-                </Layout.Block>
-                <Card.Text variant='muted' classNames='text-info-text'>
-                  {published}
+            {(post.author || published) && (
+              <Card.Row trailing={published && <Card.Text variant='muted'>{published}</Card.Text>}>
+                <Card.Text variant='muted' truncate>
+                  {post.author}
                 </Card.Text>
               </Card.Row>
             )}

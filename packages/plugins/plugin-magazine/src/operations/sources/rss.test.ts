@@ -133,6 +133,41 @@ describe('fetchRss', () => {
     expect(result.posts[0].link).toBe('https://example.com/post-3');
   });
 
+  test('appends the Media RSS image to a description that has none', async ({ expect }) => {
+    mockFetchOnce(`<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Media Feed</title>
+    <item>
+      <title>Thumbnail only</title>
+      <guid>media-1</guid>
+      <description>Plain summary.</description>
+      <media:content/>
+      <media:thumbnail url="https://example.com/thumb.jpg" width="2400" height="1600"/>
+    </item>
+    <item>
+      <title>Image content</title>
+      <guid>media-2</guid>
+      <media:content url="https://example.com/clip.mp4" medium="video"/>
+      <media:content url="https://example.com/hero.jpg" medium="image"/>
+    </item>
+    <item>
+      <title>Inline image</title>
+      <guid>media-3</guid>
+      <description><![CDATA[<p>Summary.</p><img src="https://example.com/inline.jpg">]]></description>
+      <media:thumbnail url="https://example.com/ignored.jpg"/>
+    </item>
+  </channel>
+</rss>`);
+
+    const { posts } = await runFetchRss('https://example.com/rss');
+
+    expect(posts[0].description).toBe('Plain summary.\n\n![](https://example.com/thumb.jpg)');
+    expect(posts[1].description).toBe('![](https://example.com/hero.jpg)');
+    expect(posts[2].description).toContain('https://example.com/inline.jpg');
+    expect(posts[2].description).not.toContain('ignored.jpg');
+  });
+
   test('handles deeply nested HTML in description without exceeding parser limits', async ({ expect }) => {
     // Build nested HTML 200 levels deep — well past fast-xml-parser's default 100-tag cap.
     let nested = 'leaf';
@@ -192,8 +227,10 @@ describe('fetchRss', () => {
     );
     expect(post.guid).toBe('https://www.theregister.com/a/5250322');
 
-    // CDATA-wrapped <description> summary is unwrapped (and trimmed).
-    expect(post.description).toBe("Government gets a say in 'trusted partner' access, and that worries policy experts");
+    // CDATA-wrapped <description> summary is unwrapped (and trimmed), then gets the item's Media RSS image.
+    expect(post.description).toBe(
+      "Government gets a say in 'trusted partner' access, and that worries policy experts\n\n![](https://image.theregister.com/?imageId=261924&width=800)",
+    );
 
     // <content:encoded> HTML is unwrapped from CDATA and converted to markdown — no raw block tags survive.
     expect(post.content).toBeDefined();

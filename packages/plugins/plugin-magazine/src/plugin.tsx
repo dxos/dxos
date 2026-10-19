@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   CreateObject,
+  CurateOnCreate,
   OperationHandler,
   PluginAsset,
   ReactSurface,
@@ -22,6 +23,7 @@ import { meta } from '#meta';
 export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(CurateOnCreate),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),

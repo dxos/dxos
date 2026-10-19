@@ -4,7 +4,7 @@
 
 import { Subscription } from '#types';
 
-import { extractImageUrls, makeSnippet, stripHtml } from './text.ts';
+import { extractImageUrls, makeSnippet, stripHtml, stripMarkdown } from './text.ts';
 
 /**
  * Pure derivations of a Post's display snippet/hero-image, preferring the refined values on a
@@ -13,7 +13,7 @@ import { extractImageUrls, makeSnippet, stripHtml } from './text.ts';
 
 /** Plain-text snippet: the refined contentFeed value if loaded, else derived from `post.description`. */
 export const getSnippet = (post: { description?: string }, content?: Subscription.PostContent): string =>
-  content?.snippet ?? makeSnippet(stripHtml(post.description ?? ''));
+  content?.snippet ?? makeSnippet(stripMarkdown(stripHtml(post.description ?? '')));
 
 /** Hero image url: the refined contentFeed value if loaded, else derived from `post.description`. */
 export const getImageUrl = (post: { description?: string }, content?: Subscription.PostContent): string | undefined =>
