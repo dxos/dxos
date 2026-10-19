@@ -99,8 +99,40 @@ const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefi
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
+/** The exported file's light theme: what `STYLE` sets, and the plain colors the themed fills fall back to. */
+const SURFACE_HEX = '#ffffff';
+const INK_HEX = '#262626';
+const TEXT_HEX: Record<string, string> = {
+  'text-neutral-400': '#a3a3a3',
+  'text-neutral-500': '#737373',
+  'text-sky-500': '#0ea5e9',
+  'text-emerald-500': '#10b981',
+  'text-amber-500': '#f59e0b',
+  'text-violet-500': '#8b5cf6',
+  'text-orange-500': '#f97316',
+  'text-rose-500': '#f43f5e',
+};
+
+/** Surface fill; the fallback is what renderers without custom properties (librsvg, sharp) resolve. */
+const SURFACE_FILL = `var(--surface-bg, ${SURFACE_HEX})`;
+
+const TINT_PERCENT = 10;
+
 /** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
-const TINT_STYLE = 'fill:color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))';
+const TINT_STYLE = `fill:color-mix(in srgb, currentColor ${TINT_PERCENT}%, var(--surface-bg, transparent))`;
+
+/** `TINT_STYLE` precomputed for the file's light theme, as `color-mix(in srgb, …)` mixes it. */
+const tintFallback = (color?: Scene.Color): string => {
+  const hex = TEXT_HEX[colorClass(color)?.split(' ')[0] ?? ''] ?? INK_HEX;
+  const channel = (offset: number, source: string) => parseInt(source.slice(offset, offset + 2), 16);
+  return `#${[1, 3, 5]
+    .map((offset) =>
+      Math.round((channel(offset, hex) * TINT_PERCENT + channel(offset, SURFACE_HEX) * (100 - TINT_PERCENT)) / 100)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
+};
 
 /** The scene's bounds with a margin, and the absolute box rects arrows bind to. */
 export const resolveScene = (
@@ -194,7 +226,13 @@ const sceneElement = (
         : element.fill === 'solid'
           ? 'fill-neutral-100 dark:fill-neutral-800'
           : 'fill-transparent';
-      const paint = { class: fill, style: tinted ? TINT_STYLE : undefined };
+      // Renderers without `color-mix` (librsvg, so sharp and ImageMagick) drop the style and would paint the
+      // default black; they take the plain `fill` attribute instead, which the style overrides everywhere else.
+      const paint = {
+        class: fill,
+        fill: tinted ? tintFallback(element.color) : undefined,
+        style: tinted ? TINT_STYLE : undefined,
+      };
       const shape =
         element.kind === 'ellipse'
           ? el('ellipse', { cx: mid.x, cy: mid.y, rx: rect.w / 2, ry: rect.h / 2, ...paint })
@@ -365,7 +403,7 @@ const markerDefs = (markers: MarkerIds): string => {
       square,
       el('path', {
         'd': 'M 1 1 L 11 6 L 1 11 z',
-        'fill': 'var(--surface-bg, transparent)',
+        'fill': SURFACE_FILL,
         'class': INK,
         'stroke-width': 1.2,
       }),
@@ -388,7 +426,7 @@ const markerDefs = (markers: MarkerIds): string => {
       diamond,
       el('path', {
         'd': 'M 1 5 L 9 1 L 17 5 L 9 9 z',
-        'fill': 'var(--surface-bg, transparent)',
+        'fill': SURFACE_FILL,
         'class': INK,
         'stroke-width': 1.2,
       }),
@@ -446,7 +484,7 @@ export const sceneMarkup = (objects: readonly Scene.WorldObject[], { idPrefix = 
  * inlines the handful it uses (light theme, Tailwind's neutral palette).
  */
 const STYLE = `
-  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: #262626; background: #ffffff; }
+  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: ${INK_HEX}; background: ${SURFACE_HEX}; }
   .stroke-current { stroke: currentColor; }
   .fill-current { fill: currentColor; }
   .fill-transparent { fill: transparent; }
@@ -455,16 +493,10 @@ const STYLE = `
   .fill-neutral-100 { fill: #f5f5f5; }
   .fill-neutral-800 { fill: #262626; }
   .stroke-neutral-800 { stroke: #262626; }
-  svg { --surface-bg: #ffffff; }
-  .text-neutral-400 { color: #a3a3a3; }
-  .text-neutral-500 { color: #737373; }
-  .text-sky-500 { color: #0ea5e9; }
-  .text-emerald-500 { color: #10b981; }
-  .text-amber-500 { color: #f59e0b; }
-  .text-violet-500 { color: #8b5cf6; }
-  .text-orange-500 { color: #f97316; }
-  .text-rose-500 { color: #f43f5e; }
-  .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
+  svg { --surface-bg: ${SURFACE_HEX}; }
+${Object.entries(TEXT_HEX)
+  .map(([name, hex]) => `  .${name} { color: ${hex}; }\n`)
+  .join('')}  .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;
 
 /**

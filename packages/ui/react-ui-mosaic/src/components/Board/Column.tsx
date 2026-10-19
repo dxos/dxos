@@ -280,10 +280,10 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
       >
         <BoardColumnHeader label={(column && Obj.getLabel(column)) ?? data.id} dragHandleRef={setDragHandle} />
         <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
-        <div className='flex flex-col col-span-full'>
+        <Layout.Flex column classNames='col-span-full'>
           <BoardColumnFooter data={data} />
           <DebugInfo />
-        </div>
+        </Layout.Flex>
       </BoardColumnRootInner>
     );
   },

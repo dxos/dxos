@@ -170,6 +170,20 @@
       .install button:hover {
         background: var(--accent-hover);
       }
+      /* Every label shares one grid cell, so the button is as wide as its widest label in every state. */
+      .install button {
+        display: grid;
+        place-items: center;
+      }
+      .install button span {
+        grid-area: 1 / 1;
+        visibility: hidden;
+      }
+      .install button[data-state='idle'] [data-label='idle'],
+      .install button[data-state='copied'] [data-label='copied'],
+      .install button[data-state='failed'] [data-label='failed'] {
+        visibility: visible;
+      }
       .alt {
         margin: 14px 0 0;
         font-size: 15px;
@@ -217,6 +231,31 @@
         color: var(--ink);
         font-weight: 500;
       }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-left: -10px;
+      }
+      .tabs button {
+        font: 500 12px var(--mono);
+        color: var(--muted);
+        background: none;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 4px 9px;
+        cursor: pointer;
+      }
+      .tabs button:hover:not(:disabled) {
+        color: var(--ink);
+      }
+      .tabs button[aria-selected='true'] {
+        color: var(--ink);
+        border-color: var(--grid);
+      }
+      /* Disabled until the editor loads, since only the live editor can switch languages. */
+      .tabs button:disabled {
+        cursor: default;
+      }
       .actions {
         display: flex;
         gap: 8px;
@@ -245,33 +284,20 @@
         border-color: var(--accent-hover);
         color: var(--on-accent);
       }
-      /* Not a <button disabled>: a disabled control takes no hover or focus, so its tooltip would never show. */
-      .action[aria-disabled='true'] {
-        position: relative;
+      button.action {
+        cursor: pointer;
+      }
+      button.action:hover:enabled {
+        border-color: var(--route);
+        color: var(--route);
+      }
+      /* Disabled until the editor loads, since the editor's text is what gets opened. */
+      button.action:disabled {
         color: var(--muted);
-        cursor: not-allowed;
+        cursor: default;
       }
-      .action[aria-disabled='true']::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        right: 0;
-        top: calc(100% + 8px);
-        z-index: 1;
-        width: max-content;
-        max-width: 240px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: var(--console);
-        color: #fff;
-        font: 400 12px/1.4 var(--sans);
-        white-space: normal;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.12s;
-      }
-      .action[aria-disabled='true']:hover::after,
-      .action[aria-disabled='true']:focus-visible::after {
-        opacity: 1;
+      button.action[aria-busy='true'] {
+        cursor: progress;
       }
       .editor {
         flex: 1;
@@ -535,6 +561,8 @@
         gap: 1px;
       }
       .relation {
+        display: flex;
+        flex-direction: column;
         background: var(--sheet);
         padding: 20px 22px 14px;
       }
@@ -547,10 +575,12 @@
         color: var(--muted);
         font-size: 15px;
       }
+      /* Pinned to the bottom so drawings line up across a row whatever the caption length. */
       .relation svg {
         width: 100%;
         height: auto;
         display: block;
+        margin-top: auto;
       }
       .file {
         display: grid;
@@ -654,7 +684,10 @@
           </p>
           <div class="install">
             <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
-            <button type="button" id="copy">Copy</button>
+            <button type="button" id="copy" data-state="idle" aria-live="polite">
+              <span data-label="idle">Copy</span><span data-label="copied">Copied</span
+              ><span data-label="failed">Failed</span>
+            </button>
           </div>
           <p class="alt">
             Works with Claude Code, Cursor, Codex and any agent that reads <code>SKILL.md</code>. Without an agent:
@@ -665,7 +698,10 @@
         <div class="sheet" id="playground" aria-label="A diagram source and the drawing it produces">
           <div class="source">
             <div class="tab">
-              <span><b>arch.dx</b> — edit it</span>
+              <span class="tabs" role="tablist" aria-label="Source language">
+                <button type="button" role="tab" data-language="dx" aria-selected="true">DX</button>
+                <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>Mermaid</button>
+              </span>
             </div>
             <div class="editor" id="editor"><pre class="fallback">{{SOURCE}}</pre></div>
           </div>
@@ -673,15 +709,15 @@
             <div class="tab">
               <span><b>arch.dx.svg</b></span>
               <span class="actions">
-                <a
+                <button
+                  type="button"
                   class="action"
                   id="open-in-composer"
-                  role="link"
-                  aria-disabled="true"
-                  tabindex="0"
-                  data-tooltip="Coming soon: open the drawing in Composer and keep editing it on a canvas."
-                  >Open in Composer</a
+                  title="Open this drawing on an editable canvas at app.drawing.sh"
+                  disabled
                 >
+                  Open in Composer
+                </button>
                 <a class="action primary" id="download" href="arch.dx.svg" download="arch.dx.svg">Download</a>
               </span>
             </div>

@@ -10,6 +10,7 @@ import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
@@ -84,6 +85,14 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
+  /** Each index status the host reports; see `DataService.IndexStatus`. */
+  readonly indexStatusUpdated = new Event<DataService.IndexStatus>();
+
+  /** Each index activity the host reports; see `DataService.IndexActivity`. */
+  readonly indexActivityUpdated = new Event<DataService.IndexActivity>();
+
+  #indexStatusCleanup: (() => void) | undefined;
+
   constructor(_: EchoClientProps = {}) {
     super();
   }
@@ -121,6 +130,29 @@ export class EchoClient extends Resource {
 
     this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(this._queryService);
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+    this.#subscribeIndexStatus();
+  }
+
+  #subscribeIndexStatus(): void {
+    invariant(this._dataService);
+    this.#indexStatusCleanup?.();
+    const onError = (err: Error) => {
+      if (!(err instanceof RpcClosedError)) {
+        log.warn('index status stream failed', { err });
+      }
+    };
+    const status = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
+      onData: (status) => this.indexStatusUpdated.emit(status),
+      onError,
+    });
+    const activity = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexActivity'](), {
+      onData: (activity) => this.indexActivityUpdated.emit(activity),
+      onError,
+    });
+    this.#indexStatusCleanup = () => {
+      status();
+      activity();
+    };
   }
 
   #createIndexQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
@@ -133,10 +165,13 @@ export class EchoClient extends Resource {
         subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
+      indexProgress: this.indexStatusUpdated,
     });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    this.#indexStatusCleanup?.();
+    this.#indexStatusCleanup = undefined;
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
@@ -249,6 +284,9 @@ export class EchoClient extends Resource {
    */
   async _notifyReconnect(): Promise<void> {
     log('notifying databases of reconnection');
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      this.#subscribeIndexStatus();
+    }
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }

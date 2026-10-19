@@ -5,11 +5,13 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -93,6 +95,7 @@ export const make = <const Op extends Operation.Definition.Any>(
             // edge path validates the same way in `wrapFunctionHandler`; validating here too
             // keeps a local invocation and a remote one to one contract.
             yield* validateOperationInput(op, input);
+            yield* admitOperation(op, input);
 
             const opHandler = yield* OperationHandlerSet.getHandler(handlers, op).pipe(Effect.orDie);
             const output = yield* opHandler
@@ -145,6 +148,28 @@ export const make = <const Op extends Operation.Definition.Any>(
     }),
   );
 };
+
+/**
+ * Refuse an operation that declares requirements unless the invoking process's guard admits it.
+ * An operation that declares none is never checked, which is what keeps permissions opt-in; a
+ * process with no guard holds no permissions, so it is refused rather than let through.
+ */
+const admitOperation = (op: Operation.Definition.Any, input: unknown): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    if (Operation.getRequirements(op).length === 0) {
+      return;
+    }
+    const guard = yield* Effect.serviceOption(Process.GuardService);
+    if (Option.isNone(guard)) {
+      return yield* Effect.die(
+        new Operation.OperationDeniedError({
+          message: `Operation "${op.meta.key}" requires permissions and the invoking process holds none`,
+          context: { key: op.meta.key },
+        }),
+      );
+    }
+    yield* guard.value.check(op, input);
+  });
 
 /**
  * Reject an operation input the operation's own schema does not admit, naming the offending value.

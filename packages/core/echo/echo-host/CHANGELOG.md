@@ -1,5 +1,34 @@
 # @dxos/echo-host
 
+## 0.16.0
+
+### Patch Changes
+
+- 4007fa2: Quarantine documents whose load runs out of memory instead of hanging the worker, rebuild them from the index, and retire them through the space directory so every peer wipes its copy. A peer never acts on an entry naming a document another space or a live link still uses. Sync cursors whose history has outgrown their state are retired the same way before they stop loading, and any document past 1M changes or ops logs an `oversized automerge document` warning.
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/index-core@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/sql-sqlite@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/typings@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/feed@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/teleport@0.16.0
+  - @dxos/teleport-extension-automerge-replicator@0.16.0
+  - @dxos/protocols@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

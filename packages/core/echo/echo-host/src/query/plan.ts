@@ -116,6 +116,9 @@ export namespace QueryPlan {
 
     /** Deleted state the scan filters to, folding in the plan's `FilterDeletedStep`. */
     deleted?: boolean;
+
+    /** Rows the scan drops ahead of the step's `limit`, folding in the plan's `SkipStep`s. */
+    skip?: number;
   };
 
   /**

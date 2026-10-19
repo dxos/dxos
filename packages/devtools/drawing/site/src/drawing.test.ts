@@ -8,7 +8,8 @@ import { UmlGrid } from '@dxos/diagram';
 import { source } from '@dxos/drawing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { draw } from './drawing.ts';
+import mermaidSource from '../diagrams/arch.mmd?raw';
+import { draw, drawMermaid } from './drawing.ts';
 import { GRID } from './markup.ts';
 
 const SOURCE = `
@@ -50,5 +51,19 @@ describe('draw', () => {
     expect(drawing.stageHtml).toBeUndefined();
     expect(drawing.report.failed).toBe(true);
     expect(drawing.reportHtml).toContain('did not compile');
+  });
+
+  test('draws the Mermaid sample through its .dx conversion', async ({ expect }) => {
+    const drawing = await EffectEx.runPromise(drawMermaid(mermaidSource, 'arch'));
+    expect(drawing.report.failed).toBe(false);
+    expect([drawing.report.nodes, drawing.report.connectors]).toEqual([8, 6]);
+    expect(drawing.stageHtml).toBeDefined();
+    expect(source(drawing.file.svg)).toContain('API server');
+  });
+
+  test('reports Mermaid it cannot convert', async ({ expect }) => {
+    await expect(EffectEx.runPromise(drawMermaid('sequenceDiagram\n  A->>B: hi'))).rejects.toThrow(
+      'Only a Mermaid flowchart or classDiagram converts',
+    );
   });
 });

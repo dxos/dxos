@@ -48,7 +48,7 @@ export type CanvasRootProps = Util.ThemedClassName<{
   initialDisplay?: Partial<SceneDisplay>;
   /** Called when a display toggle changes, so a host can persist it. */
   onDisplayChange?: (display: SceneDisplay) => void;
-  /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
+  /** Minor grid spacing in scene px; moves, resizes and creation snap to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
   margin?: number;

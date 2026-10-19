@@ -124,7 +124,15 @@ const makeSavedFilterNodes = (
           data: () =>
             Effect.sync(() => {
               Obj.update(owner, (owner) => {
-                owner.filters = (owner.filters ?? []).filter((entry) => entry.name !== name);
+                const filters = owner.filters;
+                if (!filters) {
+                  return;
+                }
+                for (let index = filters.length - 1; index >= 0; index--) {
+                  if (filters[index].name === name) {
+                    filters.splice(index, 1);
+                  }
+                }
               });
             }),
           properties: {
@@ -319,12 +327,15 @@ export default Capability.makeModule(
             AppGraphNode.makeAction({
               id: 'createDraft',
               data: () =>
-                Operation.invoke(InboxOperation.DraftEmailAndOpen, {
-                  db,
-                  mailbox,
-                  // This action hangs off the Drafts view, so the draft opens as a plank beside it.
-                  contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
-                }),
+                Operation.invoke(
+                  InboxOperation.DraftEmailAndOpen,
+                  {
+                    mailbox,
+                    // This action hangs off the Drafts view, so the draft opens as a plank beside it.
+                    contextId: getMailboxDraftsPath(db.spaceId, mailbox.id),
+                  },
+                  { spaceId: db.spaceId },
+                ),
               properties: {
                 label: ['create-draft.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',

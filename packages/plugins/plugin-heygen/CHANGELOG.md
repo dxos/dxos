@@ -1,5 +1,19 @@
 # @dxos/plugin-heygen
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-studio@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

@@ -1,5 +1,39 @@
 # @dxos/plugin-deck
 
+## 0.16.0
+
+### Patch Changes
+
+- dc7785a: Composer UI polish: board and calendar controls show translated labels; board cards truncate their titles and draw a light border; card posters cap at 200px; person cards show a 120px headshot with initials in the header; kanbans gain an optional description, which their card shows under the title; and stacked plot bars are supported. A virtual stack re-measures its tiles when a smooth scroll stops, so mailbox tiles no longer overlap; the companion pane stays open when switching planks; a flat plank's breadcrumb title keeps its size and place; L0 space avatars get a stable colour from their id; canvas inspectors float by default; and the calendar article gets the mailbox's filter box with saved views (`QueryEditor` takes `commandHint={false}` to drop its "Press '#' for commands" hint). Agents can enable the Drawing skill themselves.
+- 2f76f26: A tab, labelled button or other filled control at either end of a `Toolbar` now starts one gap in from the edge, in line with a list's icon column; plank and complementary headers start their leading control 4px in and the companion header 8px in; and a tab that shows its label only when selected keeps its icon in place as selection changes.
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-observability@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-dnd@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-mosaic@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-focus@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

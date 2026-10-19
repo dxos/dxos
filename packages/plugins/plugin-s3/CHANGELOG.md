@@ -1,5 +1,21 @@
 # @dxos/plugin-s3
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-file@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/blob@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

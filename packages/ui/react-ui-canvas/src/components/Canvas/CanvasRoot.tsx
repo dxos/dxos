@@ -169,7 +169,7 @@ export const CanvasRoot = ({
 
   // Set once the user takes the camera over; a restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
-  const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
   const { fitting, enterFit, exitFit, hasCameraTrack } = useSceneView({
     registry,
@@ -326,6 +326,8 @@ export const CanvasRoot = ({
     major,
     snap,
     snapMinor,
+    isClick,
+    moveDelta,
   });
 
   // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way

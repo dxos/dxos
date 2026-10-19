@@ -1,5 +1,72 @@
 # @dxos/plugin-debug
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [e26ed70]
+- Updated dependencies [4be32be]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/plugin-inbox@0.16.0
+  - @dxos/plugin-canvas@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/plugin-google@0.16.0
+  - @dxos/react-ui-canvas-compute@0.16.0
+  - @dxos/devtools@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-chess@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-game@0.16.0
+  - @dxos/plugin-illustrator@0.16.0
+  - @dxos/plugin-kanban@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-sheet@0.16.0
+  - @dxos/plugin-status-bar@0.16.0
+  - @dxos/plugin-tldraw@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-debug@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/react-ui-table@0.16.0
+  - @dxos/react-ui-terminal@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/conductor@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/compute-hyperformula@0.16.0
+  - @dxos/operation@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/log-store-idb@0.16.0
+  - @dxos/random@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

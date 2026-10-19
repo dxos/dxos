@@ -27,13 +27,12 @@ const makeView = (schema: Type.AnyEntity, fields: string[]) => {
  * Tables over people and organizations, kept in the database rather than a collection: the CRM
  * section (plugin-crm) is where people and organizations are browsed.
  */
-export const makeViews = () =>
-  Effect.gen(function* () {
-    const personFields = yield* makeView(Person.Person, ['fullName', 'jobTitle', 'organization', 'emails']);
-    const personTable = yield* Database.add(Table.make({ name: 'Contacts', ...personFields }));
+export const makeViews = Effect.fnUntraced(function* () {
+  const personFields = yield* makeView(Person.Person, ['fullName', 'jobTitle', 'organization', 'emails']);
+  const personTable = yield* Database.add(Table.make({ name: 'Contacts', ...personFields }));
 
-    const organizationFields = yield* makeView(Organization.Organization, ['name', 'status', 'website', 'description']);
-    const organizationTable = yield* Database.add(Table.make({ name: 'Organizations', ...organizationFields }));
+  const organizationFields = yield* makeView(Organization.Organization, ['name', 'status', 'website', 'description']);
+  const organizationTable = yield* Database.add(Table.make({ name: 'Organizations', ...organizationFields }));
 
-    return { personTable, organizationTable } satisfies Views;
-  });
+  return { personTable, organizationTable } satisfies Views;
+});

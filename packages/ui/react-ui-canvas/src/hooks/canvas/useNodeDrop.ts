@@ -40,8 +40,8 @@ export const useNodeDrop = ({
     if (!element) {
       return;
     }
-    // The pointer is the shape's centre; its top-left snaps to the minor grid, as a move does, so the shape
-    // lands where it was dropped rather than up to half a major cell away.
+    // The pointer is the shape's centre; its top-left snaps to the minor grid, so the shape lands where it
+    // was dropped rather than up to half a major cell away.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
       const def = nodeRegistry[type];

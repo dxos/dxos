@@ -13,7 +13,13 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
+import {
+  AutomergeHost,
+  DataServiceImpl,
+  type DataServiceProps,
+  IndexStatusTracker,
+  SpaceStateManager,
+} from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -1224,6 +1230,7 @@ const setup = async (
       removedIndexEntries: 0,
       purgedFeedBlocks: 0,
     }),
+    indexStatus: new IndexStatusTracker(),
   });
 
   // Bridge the host's DataService handlers to an in-process effect-rpc client (no wire hop).

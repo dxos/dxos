@@ -757,6 +757,15 @@ export const read = (text: string): Reading => {
 
   /** Drops what names nothing, then forms the buses; run once every statement is read. */
   const resolveSemantic = (): void => {
+    // The layout sizes a frame from its members and fails on an empty one, which is what redeclaring
+    // existing nodes inside a new group leaves behind.
+    const occupied = new Set(diagram.nodes.flatMap((node) => (node.group === undefined ? [] : [node.group])));
+    diagram.groups = diagram.groups.filter((group) => {
+      if (!occupied.has(group.id)) {
+        report(group.range, `Group "${group.id}" has no members; declare its nodes inside its braces.`, 'warning');
+      }
+      return occupied.has(group.id);
+    });
     const nodeIds = new Set(diagram.nodes.map((node) => node.id));
     const groupIds = new Set(diagram.groups.map((group) => group.id));
     const known = (end: Semantic.End) => {

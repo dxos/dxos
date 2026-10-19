@@ -262,16 +262,18 @@ export const MessageArticle = ({
           { mailbox: Ref.make(mailbox), message },
           { spaceId: db.spaceId },
         );
-        void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, {
-          db,
-          mode: 'reply',
-          message,
-          mailbox,
-          body: result?.data?.body,
-        });
+        void invoker.invokePromise(
+          InboxOperation.DraftEmailAndOpen,
+          { mode: 'reply', message, mailbox, body: result?.data?.body },
+          { spaceId: db.spaceId },
+        );
       } catch (err) {
         log.catch(err);
-        void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox });
+        void invoker.invokePromise(
+          InboxOperation.DraftEmailAndOpen,
+          { mode: 'reply', message, mailbox },
+          { spaceId: db.spaceId },
+        );
       }
     },
     [db, invoker, mailbox, replyGenerator],

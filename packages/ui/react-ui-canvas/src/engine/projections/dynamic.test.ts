@@ -37,6 +37,30 @@ describe('dynamic projection', () => {
     expect(Object.keys(scene.links).length).toBe(3);
   });
 
+  test('a host supplies the node type, link style and capabilities', ({ expect }) => {
+    const scene = layoutGraph(
+      graph,
+      { positions: {} },
+      {
+        nodes: defaultNodeRegistry,
+        createNode: (node, props) => ({ type: 'card', ...props, label: node.id }),
+        link: { type: 'line', ends: { end: 'arrow' } },
+      },
+    );
+    expect(scene.nodes.root).toMatchObject({ type: 'card', label: 'root' });
+    expect(scene.links.e1).toMatchObject({ type: 'line', ends: { end: 'arrow' } });
+
+    const registry = Registry.make();
+    const projection = createDynamicProjection({
+      registry,
+      graph: Atom.make(graph),
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry },
+      capabilities: { move: true },
+    });
+    expect(projection.capabilities).toEqual({ move: true });
+  });
+
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {
     const registry = Registry.make();
     const graphAtom = Atom.keepAlive(Atom.make<GraphModel>(graph));

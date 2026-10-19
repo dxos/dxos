@@ -64,8 +64,28 @@ jobs:
             echo 'release=false' >> "$GITHUB_OUTPUT"
           fi
 
-  publish:
+  # A never-published package has no trusted publisher, so `changeset publish` fails on it with ENEEDAUTH
+  # after shipping the others; checking first costs seconds instead of a partial release.
+  preflight:
     needs: detect
+    if: needs.detect.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.11 # Keep in sync with .prototools.
+
+      - name: Check public packages are published
+        run: bun scripts/check-packages-published.ts
+
+  publish:
+    needs: [detect, preflight]
     if: needs.detect.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
     # GitHub keeps one pending run per group and cancels it when a newer one arrives.
     concurrency:
