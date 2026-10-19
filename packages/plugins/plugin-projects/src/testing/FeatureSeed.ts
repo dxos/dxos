@@ -1,0 +1,77 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import { type Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Milestone, Task } from '@dxos/types';
+
+import { Feature, FeatureMap, Showcase } from '#types';
+
+import { type FeatureModel } from '../components/FeatureCard/feature.ts';
+import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
+
+/**
+ * Writes card models into a database as the objects and relations they are derived from — features with
+ * their subfeatures, `DependsOn`, tasks and milestones with `Implements`, and showcases with `Showcases` —
+ * and a map listing the top-level features. Ids in the models are only keys within the seed.
+ */
+export const seed = (
+  db: Database.Database,
+  { name = 'Inbox and agents', features = SAMPLE_FEATURES }: { name?: string; features?: readonly FeatureModel[] } = {},
+): FeatureMap.FeatureMap => {
+  const objects = new Map<string, Feature.Feature>();
+  for (const model of features) {
+    const feature = db.add(
+      Feature.make({
+        name: model.name,
+        description: model.description,
+        status: model.status,
+        specs: [...model.specs],
+      }),
+    );
+    Obj.update(feature, (feature) => {
+      for (const subfeature of model.subfeatures) {
+        feature.subfeatures?.push(Ref.make(Feature.make({ name: subfeature.name, status: subfeature.status })));
+      }
+    });
+    objects.set(model.id, feature);
+  }
+
+  const milestones = new Map<string, Milestone.Milestone>();
+  const milestone = (name: string) => {
+    const existing = milestones.get(name) ?? db.add(Milestone.make({ name }));
+    milestones.set(name, existing);
+    return existing;
+  };
+
+  for (const model of features) {
+    const feature = objects.get(model.id);
+    if (!feature) {
+      continue;
+    }
+    for (const id of model.dependsOn) {
+      const dependency = objects.get(id);
+      if (dependency) {
+        db.add(Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: dependency }));
+      }
+    }
+    for (const { title, done, milestone: milestoneName } of model.tasks) {
+      const task = db.add(
+        Task.make({
+          title,
+          status: done ? 'done' : 'started',
+          milestone: milestoneName ? Ref.make(milestone(milestoneName)) : undefined,
+        }),
+      );
+      db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: feature }));
+    }
+    for (const { name: showcaseName } of model.showcases) {
+      const showcase = db.add(Showcase.make({ name: showcaseName, content: `# ${showcaseName}` }));
+      db.add(Showcase.makeShowcases({ [Relation.Source]: showcase, [Relation.Target]: feature }));
+    }
+  }
+
+  return db.add(FeatureMap.make({ name, features: [...objects.values()].map((feature) => Ref.make(feature)) }));
+};

@@ -11,12 +11,19 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { type Task } from '@dxos/types';
 
-import { MoveTaskDialog, ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle } from '#containers';
+import {
+  FeatureMapArticle,
+  MoveTaskDialog,
+  ProjectArticle,
+  ProjectArtifactsArticle,
+  ProjectChatsArticle,
+} from '#containers';
 import { MOVE_TASK_DIALOG } from '#meta';
+import { FeatureMap } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
-/** React surfaces contributed by plugin-projects — the Project detail article. */
+/** React surfaces contributed by plugin-projects — the Project and FeatureMap articles. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -24,6 +31,12 @@ export default Capability.makeModule(() =>
         id: 'project.article',
         filter: AppSurface.object(AppSurface.Article, Project.Project),
         component: ProjectArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'featureMap.article',
+        filter: AppSurface.object(AppSurface.Article, FeatureMap.FeatureMap),
+        component: FeatureMapArticle,
         props: ({ role, data }) => ({ role, ...data }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting

@@ -10,12 +10,12 @@ import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
-import { type FeatureModel, type FeatureStage, getFeatureRelation, makeFeatureLookup } from './feature.ts';
-import { FEATURE_STAGE_STYLE, FeatureCard } from './FeatureCard.tsx';
+import { type FeatureModel, type FeatureStatus, getFeatureRelation, makeFeatureLookup } from './feature.ts';
+import { FEATURE_STATUS_STYLE, FeatureCard } from './FeatureCard.tsx';
 
-const STAGES: FeatureStage[] = ['planned', 'preview', 'stable'];
+const STATUSES: FeatureStatus[] = ['failing', 'planned', 'in-progress', 'prototype', 'operational'];
 
-export type FeatureMapProps = {
+export type FeatureBoardProps = {
   features: readonly FeatureModel[];
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
@@ -23,24 +23,16 @@ export type FeatureMapProps = {
 };
 
 /**
- * Features grouped into one column per spec, in the order given. Selecting a card labels the
- * features it needs and the features that need it, and fades the rest, so a dependency chain
- * reads across plugins without drawing edges.
+ * The cards view of a feature map: one card per feature in map order, under a count per status.
+ * Selecting a card labels the features it needs and the features that need it, and fades the rest,
+ * so a dependency chain reads without drawing edges.
  */
-export const FeatureMap = ({ features, selectedId: selectedIdProp, onSelect }: FeatureMapProps) => {
+export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect }: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string>();
   const selectedId = selectedIdProp ?? selectedIdState;
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   const selected = selectedId ? lookup(selectedId) : undefined;
-
-  const columns = useMemo(() => {
-    const bySpec = new Map<string, FeatureModel[]>();
-    for (const feature of features) {
-      bySpec.set(feature.specKey, [...(bySpec.get(feature.specKey) ?? []), feature]);
-    }
-    return [...bySpec.values()];
-  }, [features]);
 
   const handleSelect = (id: string | undefined) => {
     const next = id === selectedId ? undefined : id;
@@ -49,46 +41,38 @@ export const FeatureMap = ({ features, selectedId: selectedIdProp, onSelect }: F
   };
 
   return (
-    <div
-      className='grid grid-flow-col auto-cols-[minmax(17rem,1fr)] gap-3 overflow-x-auto p-3'
-      data-testid='feature-map'
-    >
-      {columns.map((column) => (
-        <section key={column[0].specKey} className='flex flex-col gap-2' aria-label={column[0].specName}>
-          <header className='flex flex-col gap-1 px-1'>
-            <h2 className='text-sm font-medium'>{column[0].specName}</h2>
-            <div className='flex gap-1'>
-              {STAGES.map((stage) => {
-                const count = column.filter((feature) => feature.stage === stage).length;
-                return (
-                  count > 0 && (
-                    <Tag.Tag key={stage} hue={FEATURE_STAGE_STYLE[stage].hue}>
-                      <Icon.Icon icon={FEATURE_STAGE_STYLE[stage].icon} size='xs' />
-                      {t('feature-map.stage-count.label', { count, stage: t(`feature-stage.${stage}.label`) })}
-                    </Tag.Tag>
-                  )
-                );
-              })}
+    <div className='flex flex-col gap-3 p-3' data-testid='feature-board'>
+      <div className='flex flex-wrap gap-1'>
+        {STATUSES.map((status) => {
+          const count = features.filter((feature) => feature.status === status).length;
+          return (
+            count > 0 && (
+              <Tag.Tag key={status} hue={FEATURE_STATUS_STYLE[status].hue}>
+                <Icon.Icon icon={FEATURE_STATUS_STYLE[status].icon} size='xs' />
+                {t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
+              </Tag.Tag>
+            )
+          );
+        })}
+      </div>
+      <div className='grid grid-cols-[repeat(auto-fill,minmax(17rem,1fr))] gap-3 items-start'>
+        {features.map((feature) => {
+          const relation = getFeatureRelation(feature, selected);
+          const faded = selected && feature.id !== selected.id && !relation;
+          return (
+            <div key={feature.id} className={faded ? 'opacity-40 transition-opacity' : 'transition-opacity'}>
+              <FeatureCard
+                feature={feature}
+                lookup={lookup}
+                selected={feature.id === selectedId}
+                relation={relation}
+                onSelect={(feature) => handleSelect(feature.id)}
+                onSelectDependency={handleSelect}
+              />
             </div>
-          </header>
-          {column.map((feature) => {
-            const relation = getFeatureRelation(feature, selected);
-            const faded = selected && feature.id !== selected.id && !relation;
-            return (
-              <div key={feature.id} className={faded ? 'opacity-40 transition-opacity' : 'transition-opacity'}>
-                <FeatureCard
-                  feature={feature}
-                  lookup={lookup}
-                  selected={feature.id === selectedId}
-                  relation={relation}
-                  onSelect={(feature) => handleSelect(feature.id)}
-                  onSelectDependency={handleSelect}
-                />
-              </div>
-            );
-          })}
-        </section>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 };

@@ -54,22 +54,33 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** One card per stage: the icon, hue and word change together. Compact cards show one signal and a dependency count. */
-export const Stages: Story = {
+const card = (canvasElement: HTMLElement, id: string) => {
+  const element = canvasElement.querySelector<HTMLElement>(`[data-feature="${id}"]`);
+  if (!element) {
+    throw new Error(`no card for ${id}`);
+  }
+  return element;
+};
+
+/** One card per status: the icon, hue and word change together. */
+export const Statuses: Story = {
   args: {
-    ids: ['org.dxos.plugin.inbox#F-9', 'org.dxos.plugin.inbox#F-3', 'org.dxos.plugin.connector#F-1'],
+    ids: ['triage', 'feature-map', 'sync', 'tasks', 'delegate'],
+  },
+};
+
+/** Compact cards show the most serious signal, a "+N" count for the rest, and counts instead of lists. */
+export const Compact: Story = {
+  args: {
+    ids: ['compose', 'triage', 'sync'],
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const card = canvasElement.querySelector<HTMLElement>('[data-feature="org.dxos.plugin.inbox#F-9"]');
-    if (!card) {
-      throw new Error('no card for org.dxos.plugin.inbox#F-9');
-    }
-    const triage = within(card);
-    await expect(await triage.findByTestId('feature-signal.blocked')).toBeInTheDocument();
-    await expect(triage.queryByTestId('feature-signal.unplanned')).toBeNull();
-    await expect(triage.getByTestId('feature-signal.more')).toHaveTextContent('+1');
-    await expect(canvas.getAllByText('Depends on 1').length).toBeGreaterThan(0);
+    const compose = within(card(canvasElement, 'compose'));
+    await expect(await compose.findByTestId('feature-signal.ahead')).toBeInTheDocument();
+    await expect(compose.queryByTestId('feature-signal.no-evidence')).toBeNull();
+    await expect(compose.getByTestId('feature-signal.more')).toHaveTextContent('+1');
+    await expect(compose.getByText('Depends on 2')).toBeInTheDocument();
+    await expect(within(card(canvasElement, 'sync')).getByText('2 subfeatures')).toBeInTheDocument();
   },
 };
 
@@ -77,34 +88,29 @@ export const Stages: Story = {
 export const Signals: Story = {
   args: {
     expanded: true,
-    ids: [
-      'org.dxos.plugin.inbox#F-4',
-      'org.dxos.plugin.inbox#F-9',
-      'org.dxos.product.composer#F-1',
-      'org.dxos.plugin.projects#F-5',
-    ],
+    ids: ['compose', 'triage', 'feature-map'],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    for (const signal of ['overclaimed', 'untested', 'blocked', 'unplanned', 'missing-dependency', 'in-flight']) {
+    for (const signal of ['blocked', 'ahead', 'no-evidence', 'in-flight', 'unplanned']) {
       await expect((await canvas.findAllByTestId(`feature-signal.${signal}`)).length).toBeGreaterThan(0);
     }
-    await expect(canvas.getByText('agent · F-2')).toBeInTheDocument();
   },
 };
 
-/** The detail form: description, each requirement with its coverage, and the implementing tasks. */
+/** The detail form: description, dependencies, subfeatures, the implementing tasks, showcases and specs. */
 export const Expanded: Story = {
   args: {
-    ids: ['org.dxos.plugin.inbox#F-3'],
+    ids: ['sync'],
     expanded: true,
     onSelectDependency: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('1 of 3 requirements tested')).toBeInTheDocument();
-    await expect(canvas.getByText('2 open tasks')).toBeInTheDocument();
-    await userEvent.click(canvas.getByText('Connector · OAuth tokens'));
-    await expect(args.onSelectDependency).toHaveBeenCalledWith('org.dxos.plugin.connector#F-2');
+    await expect(await canvas.findByText('2 open tasks')).toBeInTheDocument();
+    await expect(canvas.getByText('IMAP')).toBeInTheDocument();
+    await expect(canvas.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
+    await userEvent.click(canvas.getByText('OAuth tokens'));
+    await expect(args.onSelectDependency).toHaveBeenCalledWith('tokens');
   },
 };

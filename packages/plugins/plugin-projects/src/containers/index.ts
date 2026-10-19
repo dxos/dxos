@@ -8,6 +8,10 @@ import { lazy } from 'react';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
 
+export const FeatureMapArticle: ComponentType<any> = lazy(() =>
+  import('./FeatureMapArticle/index.ts').then((module) => ({ default: module.FeatureMapArticle })),
+);
+
 export const ProjectArticle: ComponentType<any> = lazy(() =>
   import('./ProjectArticle/index.ts').then((module) => ({ default: module.ProjectArticle })),
 );

@@ -4,6 +4,7 @@
 
 export * as Feature from './Feature.ts';
 export * as FeatureMap from './FeatureMap.ts';
+export * as FeatureMapView from './FeatureMapView.ts';
 export * as ProjectCapabilities from './ProjectCapabilities.ts';
 export * as ProjectMailboxOperation from './ProjectMailboxOperation.ts';
 export * as ProjectOperation from './ProjectOperation.ts';

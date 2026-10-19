@@ -2,21 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Feature } from '#types';
+
 /**
- * View model for the feature-map prototype (`agents/superpowers/specs/2026-10-17-feature-map-ontology.md`).
- * Plain data rather than ECHO objects: the `Feature` type is still a proposal, and the stories need
- * to show the UX before the schema lands.
+ * View model for feature cards (`agents/superpowers/specs/2026-10-17-feature-map-ontology.md`).
+ * Plain data so cards render the same from live objects ({@link buildFeatureModels}) and from stories.
  */
 
-export type FeatureStage = 'planned' | 'preview' | 'stable';
-
-export type FeatureRequirement = {
-  /** Requirement key within the feature, e.g. `F-3.1`. */
-  key: string;
-  text: string;
-  /** Some `test … covers:` names this requirement. */
-  covered: boolean;
-};
+export type FeatureStatus = Feature.Status;
 
 export type FeatureTask = {
   id: string;
@@ -25,68 +18,57 @@ export type FeatureTask = {
   milestone?: string;
 };
 
-export type FeatureModel = {
-  /** Global id: `<spec.key>#<key>`. */
+export type FeatureRef = {
   id: string;
-  specKey: string;
-  specName: string;
-  /** Block id within the spec, e.g. `F-3`. */
-  key: string;
+  name: string;
+};
+
+export type FeatureModel = {
+  id: string;
   name: string;
   description?: string;
-  stage: FeatureStage;
-  /** Global ids of the features this one needs. */
-  dependsOn: string[];
-  requirements: FeatureRequirement[];
+  status: FeatureStatus;
+  /** Repo paths of the specs that describe the feature. */
+  specs: readonly string[];
+  subfeatures: readonly (FeatureRef & { status: FeatureStatus })[];
+  /** Ids of the features this one needs (`DependsOn` targets). */
+  dependsOn: readonly string[];
   /** Tasks with an `Implements` relation to this feature. */
-  tasks: FeatureTask[];
+  tasks: readonly FeatureTask[];
+  /** Showcases that demonstrate this feature; the card leads with the first. */
+  showcases: readonly FeatureRef[];
 };
 
 /** A derived warning or status; never stored. */
-export type FeatureSignal = 'in-flight' | 'blocked' | 'overclaimed' | 'missing-dependency' | 'untested' | 'unplanned';
+export type FeatureSignal = 'blocked' | 'ahead' | 'no-evidence' | 'in-flight' | 'unplanned';
 
-/** How a card relates to the selected feature on the map. */
+/** How a card relates to the selected feature. */
 export type FeatureRelation = 'dependency' | 'dependent';
 
 export type FeatureLookup = (id: string) => FeatureModel | undefined;
 
-const STAGE_RANK: Record<FeatureStage, number> = { planned: 0, preview: 1, stable: 2 };
-
-/**
- * Short form of a global id for when the feature cannot be resolved: the last segment of the spec key
- * (`agent` for `org.dxos.plugin.agent`) and the block key, so a missing dependency stays readable when truncated.
- */
-export const getFeatureIdParts = (id: string): { spec: string; key: string } => {
-  const [specKey, key = ''] = id.split('#');
-  return { spec: specKey.split('.').at(-1) ?? specKey, key };
-};
-
-/** Builds a lookup by global id. */
+/** Builds a lookup by id. */
 export const makeFeatureLookup = (features: readonly FeatureModel[]): FeatureLookup => {
   const byId = new Map(features.map((feature) => [feature.id, feature]));
   return (id) => byId.get(id);
 };
 
-/** Signals in display order: problems first, then status. */
+/** Signals in display order: problems first, then status. Dependencies outside the lookup are ignored. */
 export const getFeatureSignals = (feature: FeatureModel, lookup: FeatureLookup): FeatureSignal[] => {
-  const dependencies = feature.dependsOn.map((id) => lookup(id));
-  const resolved = dependencies.filter((dependency) => dependency !== undefined);
+  const dependencies = feature.dependsOn.flatMap((id) => lookup(id) ?? []);
   const signals: FeatureSignal[] = [];
-  if (resolved.length < dependencies.length) {
-    signals.push('missing-dependency');
-  }
-  if (resolved.some((dependency) => dependency.stage === 'planned')) {
+  if (dependencies.some((dependency) => dependency.status === 'planned' || dependency.status === 'failing')) {
     signals.push('blocked');
   }
-  if (resolved.some((dependency) => STAGE_RANK[dependency.stage] < STAGE_RANK[feature.stage])) {
-    signals.push('overclaimed');
+  if (feature.status === 'operational' && dependencies.some((dependency) => dependency.status !== 'operational')) {
+    signals.push('ahead');
   }
-  if (feature.stage === 'stable' && !feature.requirements.some((requirement) => requirement.covered)) {
-    signals.push('untested');
+  if (feature.status === 'operational' && feature.showcases.length === 0) {
+    signals.push('no-evidence');
   }
   if (feature.tasks.some((task) => !task.done)) {
     signals.push('in-flight');
-  } else if (feature.stage === 'planned' && feature.tasks.length === 0) {
+  } else if (feature.status === 'planned' && feature.tasks.length === 0) {
     signals.push('unplanned');
   }
   return signals;
@@ -111,4 +93,84 @@ export const getFeatureRelation = (
     return 'dependent';
   }
   return undefined;
+};
+
+/**
+ * Whether adding `source → target` to the `DependsOn` edges would close a cycle, i.e. `source` is already
+ * reachable from `target`. Returns the path `target … source` when it would, so the caller can name it.
+ */
+export const findDependencyCycle = (
+  edges: readonly (readonly [source: string, target: string])[],
+  source: string,
+  target: string,
+): string[] | undefined => {
+  const next = new Map<string, string[]>();
+  for (const [from, to] of edges) {
+    next.set(from, [...(next.get(from) ?? []), to]);
+  }
+  const visit = (id: string, path: string[]): string[] | undefined => {
+    if (id === source) {
+      return path;
+    }
+    for (const to of next.get(id) ?? []) {
+      if (!path.includes(to)) {
+        const found = visit(to, [...path, to]);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return undefined;
+  };
+  return visit(target, [target]);
+};
+
+//
+// From ECHO.
+//
+
+export type FeatureGraphInput = {
+  features: readonly {
+    id: string;
+    name: string;
+    description?: string;
+    status: FeatureStatus;
+    specs?: readonly string[];
+    subfeatures: readonly (FeatureRef & { status: FeatureStatus })[];
+  }[];
+  /** `DependsOn` edges as `[source, target]` feature ids. */
+  dependsOn: readonly (readonly [string, string])[];
+  /** `Implements` edges as `[task, featureId]`. */
+  implementedBy: readonly (readonly [FeatureTask, string])[];
+  /** `Showcases` edges as `[showcase, targetId]`. */
+  showcasedBy: readonly (readonly [FeatureRef, string])[];
+};
+
+/** Joins features with their relations into card models, keeping the order of `features`. */
+export const buildFeatureModels = ({
+  features,
+  dependsOn,
+  implementedBy,
+  showcasedBy,
+}: FeatureGraphInput): FeatureModel[] => {
+  const group = <T>(pairs: readonly (readonly [T, string])[], key: (pair: readonly [T, string]) => string) => {
+    const map = new Map<string, T[]>();
+    for (const pair of pairs) {
+      map.set(key(pair), [...(map.get(key(pair)) ?? []), pair[0]]);
+    }
+    return map;
+  };
+  const dependencies = new Map<string, string[]>();
+  for (const [source, target] of dependsOn) {
+    dependencies.set(source, [...(dependencies.get(source) ?? []), target]);
+  }
+  const tasks = group(implementedBy, ([, featureId]) => featureId);
+  const showcases = group(showcasedBy, ([, targetId]) => targetId);
+  return features.map((feature) => ({
+    ...feature,
+    specs: feature.specs ?? [],
+    dependsOn: dependencies.get(feature.id) ?? [],
+    tasks: tasks.get(feature.id) ?? [],
+    showcases: showcases.get(feature.id) ?? [],
+  }));
 };

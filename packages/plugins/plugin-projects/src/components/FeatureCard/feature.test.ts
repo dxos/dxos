@@ -6,8 +6,9 @@ import { describe, test } from 'vitest';
 
 import {
   type FeatureModel,
+  buildFeatureModels,
+  findDependencyCycle,
   getDependents,
-  getFeatureIdParts,
   getFeatureRelation,
   getFeatureSignals,
   makeFeatureLookup,
@@ -15,47 +16,42 @@ import {
 
 const feature = (id: string, props: Partial<FeatureModel> = {}): FeatureModel => ({
   id,
-  specKey: id.split('#')[0],
-  specName: id.split('#')[0],
-  key: id.split('#')[1],
   name: id,
-  stage: 'preview',
+  status: 'prototype',
+  specs: [],
+  subfeatures: [],
   dependsOn: [],
-  requirements: [],
   tasks: [],
+  showcases: [],
   ...props,
 });
 
 describe('getFeatureSignals', () => {
-  test('a planned dependency blocks and a less mature one overclaims', ({ expect }) => {
-    const planned = feature('a#F-1', { stage: 'planned', tasks: [{ id: 't', title: 't', done: false }] });
-    const preview = feature('a#F-2');
-    const stable = feature('a#F-3', {
-      stage: 'stable',
-      dependsOn: [planned.id, preview.id],
-      requirements: [{ key: 'F-3.1', text: 'x', covered: true }],
-    });
-    const lookup = makeFeatureLookup([planned, preview, stable]);
-    expect(getFeatureSignals(stable, lookup)).toEqual(['blocked', 'overclaimed']);
-    expect(getFeatureSignals(planned, lookup)).toEqual(['in-flight']);
+  test('a planned or failing dependency blocks; operational ahead of a dependency without a showcase', ({ expect }) => {
+    const failing = feature('a', { status: 'failing' });
+    const top = feature('b', { status: 'operational', dependsOn: [failing.id] });
+    expect(getFeatureSignals(top, makeFeatureLookup([failing, top]))).toEqual(['blocked', 'ahead', 'no-evidence']);
   });
 
-  test('a stable feature with no covered requirement is untested', ({ expect }) => {
-    const stable = feature('a#F-1', { stage: 'stable', requirements: [{ key: 'F-1.1', text: 'x', covered: false }] });
-    expect(getFeatureSignals(stable, makeFeatureLookup([stable]))).toEqual(['untested']);
+  test('open tasks are in flight; a planned feature with none is unplanned', ({ expect }) => {
+    const lookup = makeFeatureLookup([]);
+    expect(getFeatureSignals(feature('a', { tasks: [{ id: 't', title: 't', done: false }] }), lookup)).toEqual([
+      'in-flight',
+    ]);
+    expect(getFeatureSignals(feature('b', { status: 'planned' }), lookup)).toEqual(['unplanned']);
   });
 
-  test('a planned feature with no tasks is unplanned; an unknown dependency is reported', ({ expect }) => {
-    const planned = feature('a#F-1', { stage: 'planned', dependsOn: ['b#F-9'] });
-    expect(getFeatureSignals(planned, makeFeatureLookup([planned]))).toEqual(['missing-dependency', 'unplanned']);
+  test('a dependency outside the map is ignored', ({ expect }) => {
+    const top = feature('a', { status: 'operational', dependsOn: ['elsewhere'], showcases: [{ id: 's', name: 's' }] });
+    expect(getFeatureSignals(top, makeFeatureLookup([top]))).toEqual([]);
   });
 });
 
 describe('relations', () => {
   test('dependencies and dependents of the selected feature', ({ expect }) => {
-    const base = feature('a#F-1');
-    const middle = feature('a#F-2', { dependsOn: [base.id] });
-    const top = feature('b#F-1', { dependsOn: [middle.id] });
+    const base = feature('a');
+    const middle = feature('b', { dependsOn: [base.id] });
+    const top = feature('c', { dependsOn: [middle.id] });
     const features = [base, middle, top];
     expect(getDependents(middle.id, features)).toEqual([top.id]);
     expect(getFeatureRelation(base, middle)).toBe('dependency');
@@ -63,11 +59,31 @@ describe('relations', () => {
     expect(getFeatureRelation(middle, middle)).toBeUndefined();
     expect(getFeatureRelation(top, base)).toBeUndefined();
   });
+
+  test('an edge that would close a cycle is found with its path', ({ expect }) => {
+    const edges = [
+      ['a', 'b'],
+      ['b', 'c'],
+    ] as const;
+    expect(findDependencyCycle(edges, 'c', 'a')).toEqual(['a', 'b', 'c']);
+    expect(findDependencyCycle(edges, 'a', 'c')).toBeUndefined();
+    expect(findDependencyCycle(edges, 'a', 'a')).toEqual(['a']);
+  });
 });
 
-describe('getFeatureIdParts', () => {
-  test('keeps the last spec key segment and the block key', ({ expect }) => {
-    expect(getFeatureIdParts('org.dxos.plugin.agent#F-2')).toEqual({ spec: 'agent', key: 'F-2' });
-    expect(getFeatureIdParts('local#F-1')).toEqual({ spec: 'local', key: 'F-1' });
+describe('buildFeatureModels', () => {
+  test('joins relations onto features in map order', ({ expect }) => {
+    const models = buildFeatureModels({
+      features: [
+        { id: 'b', name: 'B', status: 'planned', subfeatures: [] },
+        { id: 'a', name: 'A', status: 'operational', specs: ['x.mdl#F-1'], subfeatures: [] },
+      ],
+      dependsOn: [['b', 'a']],
+      implementedBy: [[{ id: 't', title: 'T', done: false }, 'b']],
+      showcasedBy: [[{ id: 's', name: 'S' }, 'a']],
+    });
+    expect(models.map((model) => model.id)).toEqual(['b', 'a']);
+    expect(models[0]).toMatchObject({ dependsOn: ['a'], tasks: [{ id: 't' }], showcases: [], specs: [] });
+    expect(models[1]).toMatchObject({ dependsOn: [], showcases: [{ id: 's' }], specs: ['x.mdl#F-1'] });
   });
 });

@@ -23,6 +23,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'Feature': 'src/types/Feature.ts',
     'FeatureMap': 'src/types/FeatureMap.ts',
+    'FeatureMapView': 'src/types/FeatureMapView.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',
     'ProjectOperation': 'src/types/ProjectOperation.ts',
