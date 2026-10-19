@@ -17,10 +17,10 @@ import {
   type ControlPointRef,
   type Drag,
   type Handle,
+  type LinkEnd,
   type Projection,
   type ToolsCommands,
 } from '../../engine/index.ts';
-import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
 import {
   type Camera,
   type Capabilities,
@@ -53,6 +53,7 @@ import {
   createLink,
   createNode,
   duplicateSelection,
+  handlePoint,
   hitTest,
   insertIndex,
   linkGeometry,
@@ -68,7 +69,8 @@ import {
   sideToward,
   topZ,
 } from '../../utils/index.ts';
-import { type LinkEnd, handlePoint } from '../ControlFrame/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
+import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 

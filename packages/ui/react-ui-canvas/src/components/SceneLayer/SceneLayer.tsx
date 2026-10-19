@@ -25,11 +25,10 @@ import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
-import { useSceneLook } from '../../hooks/index.ts';
+import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
-  type Link,
   type LinkId,
   type LinkKind,
   MAJOR_GRID_RATIO,
@@ -103,20 +102,6 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
   }
   // Past `liveDepth` the child is summarised rather than mounted, which bounds how many scenes render live.
   return depth >= liveDepth ? 'preview' : 'live';
-};
-
-export type ElementHandlers = {
-  onNodePointerDown?: (node: Node, event: React.PointerEvent) => void;
-  onLinkPointerDown?: (link: Link, event: React.PointerEvent) => void;
-  onLinkDoubleClick?: (link: Link, event: React.MouseEvent) => void;
-  onLinkContextMenu?: (link: Link, event: React.MouseEvent) => void;
-  /** The in-place editor of `part` finished with `text` (commit) or was dismissed (cancel). */
-  onPartCommit?: (node: Node, part: PartKey, text: string) => void;
-  onPartCancel?: () => void;
-  /** The pointer entered a link (its id) or left it (`undefined`). */
-  onLinkHover?: (id: LinkId | undefined) => void;
-  /** A node's own open control was pressed (a portal's zoom-in icon). */
-  onNodeOpen?: (node: Node) => void;
 };
 
 export type SceneLayerProps = {

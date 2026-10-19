@@ -18,60 +18,27 @@ import {
   type ToolsCommands,
 } from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
-import { type useRegistry } from '../../hooks/index.ts';
+import {
+  type DocumentCommands,
+  type ElementHandlers,
+  type ObjectActions,
+  type PointerMachine,
+  type SceneCamera,
+  type useRegistry,
+} from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Bounds,
   type Capabilities,
   type LinkRegistry,
-  type NodeId,
   type NodeRegistry,
-  type NodeType,
   type Scene,
-  type SceneId,
   type SceneLook,
   type SceneStore,
   type Size,
   type ThemeRegistry,
   type Timeline,
 } from '../../model/index.ts';
-import { type ElementHandlers } from '../SceneLayer/index.ts';
-import { type PointerMachine } from './usePointerMachine.ts';
-import { type SceneCamera } from './useSceneCamera.ts';
-
-/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
-export type TimelineKeys = {
-  active: boolean;
-  togglePlay: () => void;
-  /** Moves the playhead by whole frames. */
-  step: (frames: number) => void;
-  /** Moves the playhead to the selection's next or previous key. */
-  jumpKey: (direction: 1 | -1) => void;
-  addKey: () => void;
-  /** Removes the selection's keys at the playhead. */
-  removeKey: () => void;
-};
-
-/** The composite-object actions (ANIMATION.md §4.2); each is one undo step. */
-export type ObjectActions = {
-  compose: () => void;
-  ungroup: (id: NodeId) => void;
-  makeUnique: (id: NodeId) => void;
-  duplicate: (composite: SceneId) => void;
-  place: (composite: SceneId) => void;
-  rename: (composite: SceneId, name: string) => void;
-  remove: (composite: SceneId, instances: boolean) => void;
-};
-
-/** The document edits the toolbars offer beyond the controller's: history, creation at the view's centre, auto layout. */
-export type DocumentCommands = {
-  undo: () => void;
-  redo: () => void;
-  /** A default-sized node of `type` centred in the view, its top-left on the grid. */
-  create: (type: NodeType) => void;
-  /** Lays out the selection of two or more, else the board. */
-  layout: () => void;
-};
 
 /**
  * What `Canvas.Root` gives every part (DESIGN.md §13.1): the services, the atoms and the controller. Nothing here

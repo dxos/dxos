@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './canvas/index.ts';
 export * from './useChanging.ts';
 export * from './useClock.ts';
 export * from './useGeneratorFrames.ts';

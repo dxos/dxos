@@ -10,15 +10,24 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
+
+import { type CanvasController } from '../../engine/index.ts';
 import {
+  type Capabilities,
+  type ElementId,
   type Intent,
   type Layer,
   type LayerId,
+  type Scene,
   type SceneId,
+  type SceneStore,
   createTimeline,
+  getElement,
   isInstanceNode,
+  isLink,
 } from '../../model/index.ts';
 import {
   activeLayer,
@@ -84,6 +93,61 @@ export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilte
 };
 
 CanvasProperties.displayName = 'Canvas.Properties';
+
+//
+// Selection actions
+//
+
+export type UseSelectionActionsOptions = {
+  scene: Scene;
+  selection: ReadonlySet<ElementId>;
+  store: SceneStore;
+  capabilities: Capabilities;
+  readonly: boolean;
+  controller: CanvasController;
+};
+
+/** Commands on the selection, at the start of the inspector panel's toolbar; none when none applies. */
+export const useSelectionActions = ({
+  scene,
+  selection,
+  store,
+  capabilities,
+  readonly,
+  controller,
+}: UseSelectionActionsOptions): ReactNode => {
+  const selectedElements = [...selection].flatMap((id) => getElement(scene, id) ?? []);
+  const canGroup =
+    capabilities.create &&
+    capabilities.delete &&
+    selectedElements.length > 1 &&
+    selectedElements.some((element) => !isLink(element));
+  const canClass = store.styles !== undefined && capabilities.update && selectedElements.length === 1;
+  return readonly || (!canGroup && !canClass) ? undefined : (
+    <>
+      {canGroup && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--frame-corners--regular'
+          label='New scene from selection'
+          data-testid='inspector-group'
+          onClick={controller.selection.group}
+        />
+      )}
+      {canClass && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--swatches--regular'
+          label='New class from selection'
+          data-testid='inspector-new-class'
+          onClick={controller.selection.classFrom}
+        />
+      )}
+    </>
+  );
+};
 
 //
 // Inspectors

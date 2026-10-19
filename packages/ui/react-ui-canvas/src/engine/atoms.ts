@@ -30,6 +30,8 @@ import { type Clipboard, type PartKey, type UndoState, emptyUndo } from '../util
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
+export type LinkEnd = 'source' | 'target';
+
 /**
  * The pointer machine's state. A node gesture (move, resize, create, a spline point) shows its geometry
  * snapped as it goes; a link band follows the pointer exactly and snaps once, as it lands.
@@ -61,7 +63,7 @@ export type Drag =
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
-  | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
+  | { kind: 'end'; id: LinkId; end: LinkEnd; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
 /**
  * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the

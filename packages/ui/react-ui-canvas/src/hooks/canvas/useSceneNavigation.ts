@@ -5,7 +5,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { type CanvasAtoms, type Drag, type NavigationCommands } from '../../engine/index.ts';
-import { type useRegistry } from '../../hooks/index.ts';
 import {
   type Bounds,
   type Camera,
@@ -18,6 +17,7 @@ import {
   nodeDef,
 } from '../../model/index.ts';
 import { coverage, nodeBounds } from '../../utils/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 
 /** A portal covering this much of the viewport becomes the root; a root below this yields to its parent. */
@@ -39,7 +39,6 @@ export type UseSceneNavigationOptions = {
 } & Pick<SceneCamera, 'isAnimating'>;
 
 export type SceneNavigation = {
-  nameOf: (id: SceneId) => string;
   /** The current scene's frame, held for the visit rather than re-derived as its content changes. */
   bounds: Bounds;
 };
@@ -62,8 +61,6 @@ export const useSceneNavigation = ({
   drag,
   isAnimating,
 }: UseSceneNavigationOptions): SceneNavigation => {
-  const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
-
   // The scenes and the view's size are what the frame is derived from on entry, so a change to either reads it again.
   const bounds = useMemo(() => navigation.frame(path, scene), [navigation, path, scene, scenes, viewport]);
 
@@ -95,5 +92,5 @@ export const useSceneNavigation = ({
     return () => clearTimeout(timer);
   }, [camera, scene, bounds, path, viewport, drag, hostOpen, navigation, registry, atoms.history, isAnimating]);
 
-  return { nameOf, bounds };
+  return { bounds };
 };

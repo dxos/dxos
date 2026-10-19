@@ -26,5 +26,6 @@ export * from './scenes.ts';
 export * from './shapes.ts';
 export * from './style.ts';
 export * from './surfaces.ts';
+export * from './tools.ts';
 export * from './undo.ts';
 export * from './view-tree.ts';

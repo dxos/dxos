@@ -19,18 +19,9 @@ export const ZOOM_SETTLE = 250;
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 export const DEFAULT_MARGIN = 2;
-/** Quiet time after the view's last resize before fit mode refits, so a drag-resize refits once, where it ends. */
-export const FIT_DEBOUNCE_MS = 150;
 
-/** Quiet time after the camera's last move before `onCameraChange` reports it. */
-export const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
 export const ZOOM_STEP = 1.25;
-/** How long a link stays hovered after the pointer leaves it, so the pointer can reach its end handles. */
-export const LINK_HOVER_GRACE_MS = 150;
-
-/** How long a move's pointer rests before the shapes snap to where they will land. */
-export const SETTLE_MS = 200;
 
 /** The first breadcrumb in isolation, which reads `Objects` and leads back out. */
 export const OBJECTS_CRUMB = '\u0000objects';
@@ -51,12 +42,3 @@ export const LIGHT_MODE: CSSProperties & Record<`--${string}`, string> = {
   '--dx-attenuate-separator': '0.75',
   '--dx-attenuate-separator-line': '0.45',
 };
-
-/** The link drawn as a preview during a drag; it never reaches the model. */
-export const PREVIEW_LINK_ID = 'preview-link';
-
-/**
- * The view's display toggles a host may persist: snapping (which draws the grid), the lattice guides, and fit mode
- * (the camera keeps the scene framed until the user pans or zooms).
- */
-export type SceneDisplay = { snap: boolean; guides: boolean; fit: boolean };

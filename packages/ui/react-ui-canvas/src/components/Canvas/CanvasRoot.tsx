@@ -9,220 +9,51 @@
 // the projection as an intent; the view never writes coordinates itself (decision 11).
 //
 
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { animate, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
+import { type GeneratorSource } from '../../generator/index.ts';
 import {
-  type CanvasAtoms,
-  type Drag,
-  type FreehandProjectionOptions,
-  type InspectorMode,
-  type Projection,
-  animate,
-  createCanvasAtoms,
-  createCanvasController,
-  readonlyCapabilities,
-  reduceIntent,
-} from '../../engine/index.ts';
-import { type GeneratorCompiler, type GeneratorSource } from '../../generator/index.ts';
-import {
-  SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
-  isTrackpadScroll,
+  useCanvasController,
   useClock,
+  useDocumentCommands,
+  useElementHandlers,
+  useExposedClock,
   useGeneratorFrames,
+  useGesturePreview,
+  useNodeDrop,
+  useObjectActions,
+  usePointerMachine,
   useRegistry,
+  useResolvedLook,
+  useSceneCamera,
+  useSceneKeys,
+  useSceneNavigation,
   useSceneProjection,
+  useSceneSnap,
+  useSceneView,
+  useSceneWheel,
   useViewport,
-  useWheel,
 } from '../../hooks/index.ts';
-import {
-  type BackgroundGrid,
-  type Bounds,
-  type Camera,
-  DEFAULT_GRID,
-  type Endpoint,
-  type InstanceNode,
-  type Intent,
-  type LinkId,
-  type LinkRegistry,
-  MAJOR_GRID_RATIO,
-  type Node,
-  type NodeId,
-  type NodeRegistry,
-  type NodeType,
-  type Point,
-  type Scene,
-  type SceneId,
-  type SceneStore,
-  type ThemeRegistry,
-  type Timeline,
-  applyCameraKey,
-  defaultThemeRegistry,
-  getElement,
-  isInstanceNode,
-  isLink,
-  isPointEndpoint,
-  keyAction,
-  nodeAnimatable,
-  nodeDef,
-  exposeClock as publishClock,
-  resolveBackground,
-  resolveLook,
-  sampleCamera,
-  timelineFps,
-} from '../../model/index.ts';
-import {
-  NOMINAL_ZOOM,
-  type PartKey,
-  activeLayer,
-  composeSelection,
-  compositeBounds,
-  compositeScenes,
-  copyComposite,
-  createId,
-  createLink,
-  duplicateSelection,
-  fitBounds,
-  fitFrame,
-  hitTest,
-  instanceCounts,
-  instancePorts,
-  nodeBounds,
-  nodeDragType,
-  nominalSize,
-  panBy,
-  partText,
-  partValues,
-  recordScenes,
-  recordStoreStep,
-  redo,
-  renamePortLinks,
-  retargetInstance,
-  screenToScene,
-  topZ,
-  undo,
-  ungroupInstance,
-  visibleScene,
-  zoomAt,
-} from '../../utils/index.ts';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO, defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
+import { fitFrame, visibleScene } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
-import { type ElementHandlers, defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
+import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
   CanvasGestureProvider,
   CanvasLookProvider,
   CanvasServicesProvider,
   CanvasTimeProvider,
-  type DocumentCommands,
 } from './CanvasContext.ts';
-import {
-  CAMERA_SETTLE_MS,
-  DEFAULT_MARGIN,
-  FIT_DEBOUNCE_MS,
-  LIGHT_MODE,
-  LINK_HOVER_GRACE_MS,
-  PREVIEW_LINK_ID,
-  type SceneDisplay,
-  SETTLE_MS,
-} from './constants.ts';
-import { PREVIEW_NODE_ID, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
-import { useSceneCamera } from './useSceneCamera.ts';
-import { useSceneKeys } from './useSceneKeys.ts';
-import { useSceneNavigation } from './useSceneNavigation.ts';
-import { useSceneSnap } from './useSceneSnap.ts';
-
-export type CanvasRootProps = Util.ThemedClassName<{
-  store: SceneStore;
-  root: SceneId;
-  nodes?: NodeRegistry;
-  links?: LinkRegistry;
-  /** Projection per scene; freehand (identity) by default. */
-  createProjection?: (options: FreehandProjectionOptions) => Projection;
-  /** A host-owned projection instead, shared with the host's panels (see `useSceneProjection`). */
-  projection?: Projection;
-  /** Externally owned view state, e.g. to drive two views or persist the camera. */
-  atoms?: CanvasAtoms;
-  /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
-  initialCamera?: Camera;
-  /** Called once the camera settles on the root scene, so a host can persist it. */
-  onCameraChange?: (camera: Camera) => void;
-  /**
-   * The display toggles as last left; each is on when unset. With fit on, `initialCamera` is not restored: the view
-   * opens fitted.
-   */
-  initialDisplay?: Partial<SceneDisplay>;
-  /** Called when a display toggle changes, so a host can persist it. */
-  onDisplayChange?: (display: SceneDisplay) => void;
-  /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
-  grid?: number;
-  /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
-  margin?: number;
-  /**
-   * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
-   * whatever the projection would allow.
-   */
-  readonly?: boolean;
-  /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
-  onReadonlyChange?: (readonly: boolean) => void;
-  /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */
-  inspectors?: InspectorMode;
-  /**
-   * Called when the dock is closed or an inspector's menu docks or floats them; the dock's close button and the menu
-   * item show only when given, as the host owns `inspectors`.
-   */
-  onInspectorsChange?: (mode: InspectorMode) => void;
-  /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
-  themes?: ThemeRegistry;
-  /**
-   * Changing it asks fit mode to animate to the scene's frame as it now stands: an edit never refits by itself, so a
-   * host that grows or reveals content on purpose says so with a new value.
-   */
-  refitKey?: string | number;
-  /** Milliseconds a refit asked for by `refitKey` takes, so it can keep time with the host's own reveal. */
-  refitDuration?: number;
-  /**
-   * While set, the view travels across the scene at this velocity (scene units per second, positive rightward and
-   * downward), taking the camera out of fit mode: a slow pan a host can start and stop, as in a presentation.
-   */
-  drift?: Point;
-  /** Called with the stretch of the scene in view (scene coordinates) whenever the camera or the view's size changes. */
-  onViewChange?: (view: Bounds) => void;
-  /** The theme chosen for this drawing, over `defaultTheme`; the theme bar picks it. */
-  theme?: string;
-  /** The theme drawn when `theme` is unset; flat when this is unset too or unknown. */
-  defaultTheme?: string;
-  /** Overrides the theme's style set. */
-  styleSet?: string;
-  /** Overrides the theme's background. */
-  background?: string;
-  /** Overrides the background's grid; the theme bar picks it. */
-  backgroundGrid?: BackgroundGrid;
-  /** Called when the theme bar picks a theme, or `undefined` to take the default; the picker shows only when given. */
-  onThemeChange?: (theme: string | undefined) => void;
-  /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
-  onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
-  /** What Fit frames instead of the scene's shapes, e.g. a film's frame; the inset still applies. */
-  frame?: Bounds;
-  /**
-   * Publishes the view's clock for a frame renderer (`scripts/render-story.mjs`), which seeks it frame by frame and waits
-   * on `data-frame-time` (ANIMATION.md §7.2).
-   */
-  exportable?: boolean;
-  /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
-  generators?: Readonly<Record<string, GeneratorSource>>;
-  /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */
-  compileGenerator?: GeneratorCompiler;
-  /** Starts the generator worker; without it generators run in the page. */
-  createGeneratorWorker?: () => Worker;
-  children?: ReactNode;
-}>;
+import { useSelectionActions } from './CanvasInspectors.tsx';
+import { type CanvasRootProps } from './CanvasRootProps.ts';
+import { DEFAULT_MARGIN, LIGHT_MODE } from './constants.ts';
 
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
@@ -265,17 +96,7 @@ export const CanvasRoot = ({
   createGeneratorWorker,
   children,
 }: CanvasRootProps) => {
-  const look = useMemo(() => {
-    const resolved = resolveLook(themes, { theme: theme ?? defaultTheme, styleSet, background });
-    return backgroundGrid && backgroundGrid !== resolved.background.grid
-      ? { ...resolved, background: { ...resolved.background, grid: backgroundGrid } }
-      : resolved;
-  }, [themes, theme, defaultTheme, styleSet, background, backgroundGrid]);
-  // The grid the theme's own background draws, so the bar can tell an override from it.
-  const themeGrid = useMemo(
-    () => resolveBackground(themes, background ?? look.theme.background).grid,
-    [themes, background, look.theme.background],
-  );
+  const { look, themeGrid } = useResolvedLook(themes, { theme, defaultTheme, styleSet, background, backgroundGrid });
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createCanvasAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -328,46 +149,10 @@ export const CanvasRoot = ({
       registry.set(atoms.active, undefined);
     }
   }, [active, selection, registry, atoms.active]);
-  const guides = useAtomValue(atoms.guides);
-  // Fit mode keeps the current scene framed as the view resizes or opens another scene, until the user pans or zooms.
-  // A view opens fitted, in fit mode, unless the host restores it with fit mode off (and then its camera).
-  // An atom rather than state, so the camera bar reads it without the root's context changing with it.
-  const [fittingAtom] = useState(() => Atom.keepAlive(Atom.make<boolean>(initialDisplay?.fit ?? true)));
-  const fitting = useAtomValue(fittingAtom);
-  const setFitting = useCallback((value: boolean) => registry.set(fittingAtom, value), [registry, fittingAtom]);
-  const exitFit = useCallback(() => setFitting(false), [setFitting]);
-  // Seeded once per atoms, before the host hears of any change, so restoring the toggles reports nothing back.
-  const reportedRef = useRef<SceneDisplay | undefined>(undefined);
-  useLayoutEffect(() => {
-    if (initialDisplay?.snap !== undefined) {
-      registry.set(atoms.snap, initialDisplay.snap);
-    }
-    if (initialDisplay?.guides !== undefined) {
-      registry.set(atoms.guides, initialDisplay.guides);
-    }
-    reportedRef.current = { snap: registry.get(atoms.snap), guides: registry.get(atoms.guides), fit: fitting };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [atoms]);
-  useEffect(() => {
-    const reported = reportedRef.current;
-    if (
-      !onDisplayChange ||
-      !reported ||
-      (reported.snap === snapEnabled && reported.guides === guides && reported.fit === fitting)
-    ) {
-      return;
-    }
-    reportedRef.current = { snap: snapEnabled, guides, fit: fitting };
-    onDisplayChange({ snap: snapEnabled, guides, fit: fitting });
-  }, [onDisplayChange, snapEnabled, guides, fitting]);
   const sceneId = path[path.length - 1];
 
   // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
   const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
-
-  //
-  // Camera.
-  //
 
   const {
     setCamera,
@@ -382,62 +167,54 @@ export const CanvasRoot = ({
     setOpening,
   } = useSceneCamera(registry, atoms, viewport);
 
-  // Keep the scene fitted while the viewport settles, until the user takes the camera over. A layout
-  // effect, so the fit lands before the first paint instead of one frame after it.
-  // A restored camera counts as taken over, so the fit leaves it where it was.
+  // Set once the user takes the camera over; a restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
-  // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
-  // camera holds still under someone editing.
-  const fitKey = `${viewport.width}x${viewport.height}:${refitKey ?? ''}`;
-  const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
-
-  // The commands read the view as it is when they run, so the controller is made once per canvas.
-  const live = {
-    projection,
-    baseProjection,
-    nodeRegistry,
-    readonly,
-    grid: { major, snap },
+  const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
+  const { fitting, enterFit, exitFit, hasCameraTrack } = useSceneView({
+    registry,
+    atoms,
+    rootRef,
     viewport,
+    interactedRef,
+    path,
+    camera,
+    drag,
+    timeline,
+    time,
+    fitTarget,
     inset,
-    frame,
-    camera: { animateTo, target: cameraTarget, setOpening },
-    fit: {
-      // Fit frames the scene now and keeps it framed (fit mode) until the user pans or zooms.
-      enterFit: () => {
-        setFitting(true);
-        fittedRef.current = { scene: sceneId, key: fitKey };
-      },
-      exitFit,
-      takeOver: () => {
-        interactedRef.current = true;
-      },
+    initialCamera,
+    initialDisplay,
+    onDisplayChange,
+    onCameraChange,
+    onViewChange,
+    refitKey,
+    refitDuration,
+    drift,
+    setCamera,
+    animateTo,
+    isAnimating,
+  });
+
+  const controller = useCanvasController({
+    registry,
+    atoms,
+    store,
+    live: {
+      projection,
+      baseProjection,
+      nodeRegistry,
+      readonly,
+      grid: { major, snap },
+      viewport,
+      inset,
+      frame,
+      camera: { animateTo, target: cameraTarget, setOpening },
+      fit: { enterFit, exitFit, takeOver: () => (interactedRef.current = true) },
+      look: { onThemeChange, onBackgroundGridChange },
     },
-    look: { onThemeChange, onBackgroundGridChange },
-  };
-  const liveRef = useRef(live);
-  liveRef.current = live;
-  const controller = useMemo(
-    () =>
-      createCanvasController({
-        registry,
-        atoms,
-        store,
-        projection: () => liveRef.current.projection,
-        baseProjection: () => liveRef.current.baseProjection,
-        nodeRegistry: () => liveRef.current.nodeRegistry,
-        readonly: () => liveRef.current.readonly,
-        grid: () => liveRef.current.grid,
-        viewport: () => liveRef.current.viewport,
-        inset: () => liveRef.current.inset,
-        frame: () => liveRef.current.frame,
-        camera: () => liveRef.current.camera,
-        fit: () => liveRef.current.fit,
-        look: () => liveRef.current.look,
-      }),
-    [registry, atoms, store],
-  );
+  });
   const { navigation } = controller;
 
   // Read-only, nothing is selected: a selection only exists to be edited.
@@ -448,7 +225,7 @@ export const CanvasRoot = ({
     }
   }, [readonly, select]);
 
-  const { nameOf, bounds } = useSceneNavigation({
+  const { bounds } = useSceneNavigation({
     registry,
     atoms,
     navigation,
@@ -461,192 +238,21 @@ export const CanvasRoot = ({
     drag,
     isAnimating,
   });
-  const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
-
   const measured = viewport.width > 0 && viewport.height > 0;
-  useLayoutEffect(() => {
-    if (initialCamera && !fitting) {
-      setCamera(initialCamera);
-    }
-    // Only the camera the view opened with is restored; later values are the host echoing ours back.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setCamera]);
 
-  // In fit mode the first fit lands before the first paint; opening another scene animates to its frame, and a resize
-  // animates to the new fit once the view has stopped changing size for `FIT_DEBOUNCE_MS`.
-  useLayoutEffect(() => {
-    if (fitting && measured && !fittedRef.current) {
-      // Measured now, not from the observed size: a docked inspector mounting in the same frame narrows the canvas
-      // before the observer reports it, and fitting the stale size would animate a refit straight after load.
-      const element = rootRef.current;
-      const size = element ? { width: element.clientWidth, height: element.clientHeight } : viewport;
-      fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}:${refitKey ?? ''}` };
-      setCamera(fitBounds(fitTarget, size, inset, NOMINAL_ZOOM));
-    }
-  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, refitKey]);
-  // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
-  // would restart the debounce before it fires. The latest helpers and frame are read when it does.
-  const fitLatestRef = useRef({
-    animateTo,
-    isAnimating,
-    frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM),
-  });
-  fitLatestRef.current = { animateTo, isAnimating, frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM) };
-  useEffect(() => {
-    const fitted = fittedRef.current;
-    if (!fitting || !measured || !fitted) {
-      return;
-    }
-    // Another scene opened: frame it now.
-    if (fitted.scene !== sceneId) {
-      fittedRef.current = { scene: sceneId, key: fitKey };
-      fitLatestRef.current.animateTo(fitLatestRef.current.frame());
-      return;
-    }
-    if (fitted.key === fitKey) {
-      return;
-    }
-    // A resize refits once it settles; an animation in flight (a drill) finishes first, since `animateTo` would cancel
-    // it before it lands.
-    let timeout: ReturnType<typeof setTimeout>;
-    // A refit the host asked for starts at once and takes its time; a resize waits for the size to settle.
-    const asked = fitted.key.slice(fitted.key.indexOf(':') + 1) !== String(refitKey ?? '');
-    const fit = () => {
-      if (fitLatestRef.current.isAnimating()) {
-        timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
-        return;
-      }
-      fittedRef.current = { scene: sceneId, key: fitKey };
-      fitLatestRef.current.animateTo(fitLatestRef.current.frame(), undefined, asked ? refitDuration : undefined);
-    };
-    timeout = setTimeout(fit, asked ? 0 : FIT_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-  }, [fitting, measured, sceneId, fitKey, refitDuration]);
-  useEffect(() => {
-    if (onViewChange && viewport.width > 0) {
-      onViewChange({
-        x: -camera.x,
-        y: -camera.y,
-        width: viewport.width / camera.zoom,
-        height: viewport.height / camera.zoom,
-      });
-    }
-  }, [onViewChange, camera, viewport]);
-  // The pan advances with the view's clock rather than a loop of its own (ANIMATION.md §2.1): while drifting the clock
-  // plays, and each tick moves the camera by the velocity times the time it advanced. The velocity is read from a ref,
-  // so a change of speed neither restarts anything nor loses a frame.
-  const driftRef = useRef<Point>({ x: 0, y: 0 });
-  driftRef.current = { x: drift?.x ?? 0, y: drift?.y ?? 0 };
-  const drifting = driftRef.current.x !== 0 || driftRef.current.y !== 0;
-  useEffect(() => {
-    if (!drifting) {
-      return;
-    }
-    exitFit();
-    const started = !registry.get(atoms.clock.playing);
-    registry.set(atoms.clock.playing, true);
-    let last = registry.get(atoms.clock.time);
-    const unsubscribe = registry.subscribe(atoms.clock.time, (time) => {
-      const seconds = time - last;
-      last = time;
-      if (seconds > 0) {
-        // The camera offsets the content, so the view moves right as it moves left.
-        const { x, y } = driftRef.current;
-        setCamera((camera) => panBy(camera, { x: -x * seconds, y: -y * seconds }));
-      }
-    });
-    return () => {
-      unsubscribe();
-      if (started) {
-        registry.set(atoms.clock.playing, false);
-      }
-    };
-  }, [drifting, exitFit, setCamera, registry, atoms.clock]);
+  useExposedClock(registry, atoms.clock, timeline, exportable);
 
-  // A camera track drives the camera as the clock moves (ANIMATION.md §5.5); keys hold the view's centre, so the same
-  // point is framed whatever the viewport's size.
-  const hasCameraTrack = sampleCamera(timeline, 0) !== undefined;
-  useLayoutEffect(() => {
-    const key = sampleCamera(timeline, time);
-    if (key && measured) {
-      setCamera((camera) => applyCameraKey(camera, key, viewport.width, viewport.height));
-    }
-  }, [timeline, time, measured, viewport.width, viewport.height, setCamera]);
-  useEffect(() => {
-    if (hasCameraTrack) {
-      exitFit();
-    }
-  }, [hasCameraTrack, exitFit]);
-
-  // Published for a frame renderer, which seeks the clock rather than faking the browser's (ANIMATION.md §7.2).
-  const timelineRef = useRef<Timeline | undefined>(timeline);
-  timelineRef.current = timeline;
-  useEffect(
-    () =>
-      exportable
-        ? publishClock(registry, atoms.clock, () => ({
-            duration: timelineRef.current?.duration ?? 0,
-            fps: timelineFps(timelineRef.current),
-          }))
-        : undefined,
-    [exportable, registry, atoms.clock],
-  );
-
-  // Dragging the canvas takes the camera over.
-  useEffect(() => {
-    if (drag?.kind === 'pan') {
-      exitFit();
-      if (hasCameraTrack) {
-        registry.set(atoms.clock.playing, false);
-      }
-    }
-  }, [drag?.kind, exitFit, hasCameraTrack, registry, atoms.clock]);
-  // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
-  const atRoot = path.length === 1;
-  useEffect(() => {
-    if (!onCameraChange || !atRoot || !interactedRef.current) {
-      return;
-    }
-    const timeout = setTimeout(() => onCameraChange(camera), CAMERA_SETTLE_MS);
-    return () => clearTimeout(timeout);
-  }, [onCameraChange, atRoot, camera]);
-
-  useWheel(
+  useSceneWheel({
     rootRef,
-    useCallback(
-      (event, pointer) => {
-        interactedRef.current = true;
-        exitFit();
-        cancelAnimation();
-        touchNavigation();
-        // A camera the user moves during playback stops the camera track driving it.
-        if (hasCameraTrack) {
-          registry.set(atoms.clock.playing, false);
-        }
-        if (event.ctrlKey || event.metaKey) {
-          // A trackpad pinch: small deltas, so a steeper rate.
-          setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.006)));
-        } else if (event.shiftKey || isTrackpadScroll(event)) {
-          // A two-finger swipe pans both ways, as on any trackpad canvas.
-          setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
-        } else {
-          // Mouse-wheel notches up and down zoom about the pointer; a sideways scroll still pans.
-          setCamera((camera) =>
-            zoomAt(
-              panBy(camera, { x: -event.deltaX / camera.zoom, y: 0 }),
-              pointer,
-              camera.zoom * Math.exp(-event.deltaY * 0.001),
-            ),
-          );
-        }
-      },
-      [setCamera, cancelAnimation, touchNavigation, exitFit, hasCameraTrack, registry, atoms.clock],
-    ),
-  );
-
-  //
-  // Timeline.
-  //
+    registry,
+    atoms,
+    interactedRef,
+    exitFit,
+    cancelAnimation,
+    touchNavigation,
+    hasCameraTrack,
+    setCamera,
+  });
 
   const timelineKeys = useMemo(
     () => ({
@@ -660,167 +266,16 @@ export const CanvasRoot = ({
     [timeline, controller],
   );
 
-  //
-  // Composite objects (ANIMATION.md §4.2). Each action is one undo step; one that adds a scene records it with the step.
-  //
-
-  const objectActions = useMemo(() => {
-    const sceneId = () => registry.get(atoms.path).at(-1) ?? root;
-    /** Writes `scenes` into the store, applies `intents`, and records both as one undo step. */
-    const commit = (scenes: Record<SceneId, Scene>, intents: Intent[]) => {
-      const before = registry.get(store.scenes);
-      const model = baseProjection.snapshot();
-      registry.set(store.scenes, { ...before, ...scenes });
-      if (intents.length > 0) {
-        baseProjection.apply({ kind: 'batch', intents });
-      }
-      // A refused (or empty) batch recorded no step to attach the scenes to, so the change is a step of its own.
-      if (baseProjection.snapshot() === model) {
-        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
-      } else {
-        recordScenes(registry, atoms.undo, sceneId(), before);
-      }
-    };
-    return {
-      /** Groups the selection as a new object, replaced by one instance of it. */
-      compose: () => {
-        const current = registry.get(baseProjection.scene);
-        const count = compositeScenes(registry.get(store.scenes)).length;
-        const instanceId = createId('instance');
-        const composition = composeSelection(current, registry.get(atoms.selection), {
-          compositeId: createId('object'),
-          instanceId,
-          name: `Object ${count + 1}`,
-          layer: activeLayer(current, registry.get(atoms.layer)),
-        });
-        if (!composition) {
-          return;
-        }
-        commit({ [composition.composite.id]: composition.composite }, composition.intents);
-        select([instanceId]);
-      },
-      /** Replaces an instance with its composite's nodes. */
-      ungroup: (id: NodeId) => {
-        const current = registry.get(baseProjection.scene);
-        const instance = current.nodes[id];
-        const composite =
-          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
-        if (!instance || !isInstanceNode(instance) || !composite) {
-          return;
-        }
-        const intents = ungroupInstance(current, instance, composite, createId);
-        baseProjection.apply({ kind: 'batch', intents });
-        select(intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : [])));
-      },
-      /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
-      makeUnique: (id: NodeId) => {
-        const current = registry.get(baseProjection.scene);
-        const instance = current.nodes[id];
-        const composite =
-          instance && isInstanceNode(instance) ? registry.get(store.scenes)[instance.composite] : undefined;
-        if (!instance || !isInstanceNode(instance) || !composite) {
-          return;
-        }
-        const copy = copyComposite(composite, createId('object'), createId);
-        const unique = retargetInstance(instance, copy.composite.id, copy.rename);
-        commit({ [copy.composite.id]: copy.composite }, [
-          {
-            kind: 'update',
-            id,
-            values: { composite: unique.composite, overrides: unique.overrides, ports: unique.ports },
-          },
-          ...renamePortLinks(current, instance, unique),
-        ]);
-      },
-      /** Copies a composite's definition; no instance changes. */
-      duplicate: (composite: SceneId) => {
-        const definition = registry.get(store.scenes)[composite];
-        if (!definition) {
-          return;
-        }
-        const copy = copyComposite(definition, createId('object'), createId);
-        commit({ [copy.composite.id]: copy.composite }, []);
-      },
-      /** Places an instance of a composite at the centre of the view, at its own size. */
-      place: (composite: SceneId) => {
-        const definition = registry.get(store.scenes)[composite];
-        const content = definition && compositeBounds(definition);
-        if (!definition || !content || registry.get(atoms.isolation)) {
-          return;
-        }
-        const camera = registry.get(atoms.camera);
-        const { width, height } = liveRef.current.viewport;
-        const center = screenToScene(camera, { x: width / 2, y: height / 2 });
-        const frame = {
-          x: center.x - content.width / 2,
-          y: center.y - content.height / 2,
-          width: content.width,
-          height: content.height,
-        };
-        const current = registry.get(baseProjection.scene);
-        const instance: InstanceNode = {
-          type: 'instance',
-          id: createId('instance'),
-          z: topZ(Object.values(current.nodes)),
-          center,
-          size: { width: content.width, height: content.height },
-          composite,
-          ports: instancePorts(frame, definition),
-          layer: activeLayer(current, registry.get(atoms.layer)),
-        };
-        baseProjection.apply({ kind: 'create', node: instance });
-        select([instance.id]);
-      },
-      rename: (composite: SceneId, name: string) => {
-        const definition = registry.get(store.scenes)[composite];
-        if (definition) {
-          commit({ [composite]: { ...definition, name } }, []);
-        }
-      },
-      /** Removes a composite; with `instances`, every instance of it in the drawing too, else only an unused one. */
-      remove: (composite: SceneId, instances: boolean) => {
-        const before = registry.get(store.scenes);
-        if (!instances && (instanceCounts(before)[composite] ?? 0) > 0) {
-          return;
-        }
-        const { [composite]: _, ...rest } = before;
-        const scenes: Record<SceneId, Scene> = {};
-        for (const [id, scene] of Object.entries(rest)) {
-          const used = Object.values(scene.nodes).filter(
-            (node) => isInstanceNode(node) && node.composite === composite,
-          );
-          scenes[id] =
-            used.length > 0 ? reduceIntent(scene, { kind: 'delete', ids: used.map((node) => node.id) }) : scene;
-        }
-        if (registry.get(atoms.isolation)?.composite === composite) {
-          navigation.exitIsolation();
-        }
-        const model = baseProjection.snapshot();
-        registry.set(store.scenes, scenes);
-        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
-      },
-    };
-  }, [registry, atoms, store.scenes, baseProjection, root, select, navigation]);
-
-  //
-  // Navigation.
-  //
-
-  // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
-  const onUndo = useCallback(() => {
-    if (!readonly && undo(projection, registry, atoms.undo, sceneId, store)) {
-      select([]);
-    }
-  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
-  const onRedo = useCallback(() => {
-    if (!readonly && redo(projection, registry, atoms.undo, sceneId, store)) {
-      select([]);
-    }
-  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
-
-  //
-  // Pointer state machine.
-  //
+  const objectActions = useObjectActions({
+    registry,
+    atoms,
+    store,
+    baseProjection,
+    root,
+    select,
+    navigation,
+    viewport,
+  });
 
   const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
   const {
@@ -883,11 +338,23 @@ export const CanvasRoot = ({
     }
   }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
 
-  //
-  // Clipboard.
-  //
-
   const { copy, cut, paste } = controller.editing;
+  const documentCommands = useDocumentCommands({
+    registry,
+    atoms,
+    store,
+    projection,
+    readonly,
+    sceneId,
+    select,
+    nodeRegistry,
+    capabilities,
+    cell,
+    viewport,
+    snapMinor,
+    createdNode,
+    commitCreated,
+  });
 
   const onSceneKey = useSceneKeys({
     registry,
@@ -904,8 +371,8 @@ export const CanvasRoot = ({
     toggleGuides,
     toggleLattice,
     toggleDebug,
-    onUndo,
-    onRedo,
+    onUndo: documentCommands.undo,
+    onRedo: documentCommands.redo,
     major,
     copy,
     cut,
@@ -931,271 +398,31 @@ export const CanvasRoot = ({
     [onSceneKey, registry, atoms.active],
   );
 
-  //
-  // Render.
-  //
+  const { displayScene, blocked, landing, createFrame } = useGesturePreview({
+    scene,
+    drag,
+    projection,
+    minor,
+    createdNode,
+  });
 
-  /** The node a create gesture would land while one is in flight; the ghost and the frame both read it. */
-  const createPreview = useMemo(
-    () => (drag?.kind === 'create' ? createdNode(drag, PREVIEW_NODE_ID) : undefined),
-    [drag, createdNode],
-  );
+  const { handlers, onDoubleClick } = useElementHandlers({
+    registry,
+    atoms,
+    nodeRegistry,
+    projection,
+    capabilities,
+    navigation,
+    scene,
+    select,
+    toScene,
+    onNodePointerDown,
+    onLinkPointerDown,
+    onLinkDoubleClick,
+    onLinkContextMenu,
+  });
 
-  // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging and
-  // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
-  // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
-  // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  // A move follows the pointer while it moves; once it rests for `SETTLE_MS`, the shapes snap to where they will land.
-  const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
-  const [settled, setSettled] = useState(false);
-  useEffect(() => {
-    setSettled(false);
-    if (!moveRaw) {
-      return;
-    }
-    const timer = setTimeout(() => setSettled(true), SETTLE_MS);
-    return () => clearTimeout(timer);
-  }, [moveRaw?.x, moveRaw?.y]);
-
-  const { displayScene, blocked, landing } = useMemo<{
-    displayScene: Scene;
-    blocked: boolean;
-    /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
-    landing?: Bounds[];
-  }>(() => {
-    const preview = (intent: Intent) => {
-      const constrained = projection.constrain ? projection.constrain(intent) : intent;
-      return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
-    };
-    if (drag?.kind === 'move') {
-      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      const { ids, copy } = drag;
-      const moveBy = (delta: Point): Intent => {
-        let next = 0;
-        const duplicate = copy
-          ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
-          : undefined;
-        return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
-      };
-      // The nodes follow the pointer smoothly; the frames they will snap to on the drop are drawn under them.
-      const landed = preview(moveBy(drag.delta));
-      const moved = copy
-        ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
-        : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
-      return settled
-        ? { displayScene: landed.displayScene, blocked: landed.blocked }
-        : {
-            displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
-            blocked: landed.blocked,
-            // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-            landing: landed.blocked ? moved.map(nodeBounds) : undefined,
-          };
-    }
-    if (drag?.kind === 'resize') {
-      return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
-    }
-    // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
-    // or dragged in from the palette (whose drag carries no image of its own).
-    if (drag?.kind === 'create') {
-      return createPreview ? preview({ kind: 'create', node: createPreview }) : { displayScene: scene, blocked: false };
-    }
-    if (drag?.kind === 'point') {
-      return {
-        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } }),
-        blocked: false,
-      };
-    }
-    // A link previews only once it has gone a grid cell, so a click with a link tool draws nothing.
-    if (drag?.kind === 'link' && isLinkDrawn(drag, minor) && (drag.target || isPointEndpoint(drag.source))) {
-      // A port drag previews once it reaches a target; a free-ended link previews as it will land.
-      const link = createLink({
-        type: drag.type,
-        id: PREVIEW_LINK_ID,
-        z: topZ(Object.values(scene.links)),
-        source: drag.source,
-        target: drag.target ?? { point: drag.to },
-        midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
-      });
-      return { displayScene: reduceIntent(scene, { kind: 'link', link }), blocked: false };
-    }
-    if (drag?.kind === 'end') {
-      // The link is drawn as it will land: re-attached over a target, free-ended over empty canvas.
-      const end: Endpoint = drag.target ?? { point: drag.to };
-      return {
-        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } }),
-        blocked: false,
-      };
-    }
-    return { displayScene: scene, blocked: false };
-  }, [scene, drag, settled, createPreview, projection, minor]);
-
-  /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
-  const createFrame = useMemo(() => {
-    const preview = createPreview && displayScene.nodes[createPreview.id];
-    return preview ? nodeBounds(preview) : undefined;
-  }, [createPreview, displayScene]);
-
-  const onPartCommit = useCallback(
-    (node: Node, part: PartKey, text: string) => {
-      registry.set(atoms.editing, undefined);
-      const values = partValues(nodeRegistry, node, part, text);
-      if (values && capabilities.update && text !== partText(nodeRegistry, node, part)) {
-        projection.apply({ kind: 'update', id: node.id, values });
-      }
-    },
-    [registry, atoms.editing, capabilities.update, projection, nodeRegistry],
-  );
-  const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
-
-  // Leaving a link waits a moment before it clears, so the pointer can reach the end handles drawn over it.
-  const linkHoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const onLinkHover = useCallback(
-    (id: LinkId | undefined) => {
-      clearTimeout(linkHoverTimer.current);
-      if (id) {
-        registry.set(atoms.linkHover, id);
-      } else {
-        linkHoverTimer.current = setTimeout(() => registry.set(atoms.linkHover, undefined), LINK_HOVER_GRACE_MS);
-      }
-    },
-    [registry, atoms.linkHover],
-  );
-  useEffect(() => () => clearTimeout(linkHoverTimer.current), []);
-
-  const handlers = useMemo<ElementHandlers>(
-    () => ({
-      onNodePointerDown,
-      onLinkHover,
-      onLinkPointerDown,
-      onLinkDoubleClick,
-      onLinkContextMenu,
-      onPartCommit,
-      onPartCancel,
-      onNodeOpen: navigation.drillIn,
-    }),
-    [
-      onNodePointerDown,
-      onLinkHover,
-      onLinkPointerDown,
-      onLinkDoubleClick,
-      onLinkContextMenu,
-      onPartCommit,
-      onPartCancel,
-      navigation,
-    ],
-  );
-
-  // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
-  // double-click never reaches the node element itself. A text part under the pointer opens its editor;
-  // the DOM is asked only which part, and the node comes from the model, so a part of a nested (live)
-  // scene never matches the root node over it.
-  const onDoubleClick = useCallback(
-    (event: React.MouseEvent) => {
-      const node = hitTest(scene, toScene(event));
-      if (!node) {
-        return;
-      }
-      const target = document.elementFromPoint(event.clientX, event.clientY);
-      // A floating panel over the node took the clicks, so the node beneath is not the one meant; content embedded in
-      // the node (an editor) keeps its own double-click (selecting a word).
-      if (
-        !(target instanceof Element) ||
-        !target.closest('[data-node-id]') ||
-        target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`)
-      ) {
-        return;
-      }
-      const partElement = target.closest('[data-part]');
-      const part =
-        partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
-          ? (partElement?.getAttribute('data-part') ?? undefined)
-          : undefined;
-      if (part && capabilities.update && partText(nodeRegistry, node, part) !== undefined) {
-        select([node.id]);
-        registry.set(atoms.editing, { id: node.id, part });
-      } else if (nodeDef(nodeRegistry, node)?.openable) {
-        navigation.drillIn(node);
-      }
-    },
-    [scene, toScene, nodeRegistry, navigation, capabilities.update, select, registry, atoms.editing],
-  );
-
-  // A node type dragged in (from the palette or a host's draggable) previews as a create drag would and
-  // lands through the same drop, so what the ghost shows is what is created.
-  const onPointerUpRef = useRef(onPointerUp);
-  onPointerUpRef.current = onPointerUp;
-  useEffect(() => {
-    const element = rootRef.current;
-    if (!element) {
-      return;
-    }
-    // The pointer is the shape's centre; its top-left snaps to the minor grid, as a move does, so the shape
-    // lands where it was dropped rather than up to half a major cell away.
-    const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
-      const point = toScene(input);
-      const def = nodeRegistry[type];
-      const size = def ? nominalSize(def.defaultSize, cell) : { width: 0, height: 0 };
-      const from = { x: snapMinor(point.x - size.width / 2), y: snapMinor(point.y - size.height / 2) };
-      return { kind: 'create', type, from, to: from, dropped: true };
-    };
-    return dropTargetForElements({
-      element,
-      canDrop: ({ source }) => capabilities.create === true && nodeDragType(source.data) !== undefined,
-      onDragEnter: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
-        }
-      },
-      onDrag: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
-        }
-      },
-      onDragLeave: cancelDrag,
-      // Placed where it is released: the last drag-over can lag the pointer by a step.
-      onDrop: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
-        }
-        onPointerUpRef.current();
-      },
-    });
-  }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
-
-  /** A default-sized node of `type` centred in the view, its top-left on the grid. */
-  const createAtCentre = (type: NodeType) => {
-    const def = nodeRegistry[type];
-    if (!def || !capabilities.create) {
-      return;
-    }
-    const size = nominalSize(def.defaultSize, cell);
-    const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
-    const from = { x: snapMinor(centre.x - size.width / 2), y: snapMinor(centre.y - size.height / 2) };
-    // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
-    const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
-    if (node) {
-      commitCreated(node);
-    }
-  };
-  // Read when a command runs, so the commands keep their identity while the view moves and the scene is edited.
-  const documentRef = useRef({ onUndo, onRedo, createAtCentre });
-  documentRef.current = { onUndo, onRedo, createAtCentre };
-  const documentCommands = useMemo<DocumentCommands>(
-    () => ({
-      undo: () => documentRef.current.onUndo(),
-      redo: () => documentRef.current.onRedo(),
-      create: (type) => documentRef.current.createAtCentre(type),
-      // A selection of two or more is what the user asked to tidy; one node alone means the board.
-      layout: () => {
-        const selection = registry.get(atoms.selection);
-        liveRef.current.projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined });
-      },
-    }),
-    [registry, atoms.selection],
-  );
+  useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 
   // Once per atoms, so the providers' values hold still while the root re-renders.
   const timeAtoms = useMemo(
@@ -1207,39 +434,7 @@ export const CanvasRoot = ({
     [atoms],
   );
 
-  // Commands on the selection, at the start of the inspector panel's toolbar.
-  const selectedElements = [...selection].flatMap((id) => getElement(scene, id) ?? []);
-  const canGroup =
-    capabilities.create &&
-    capabilities.delete &&
-    selectedElements.length > 1 &&
-    selectedElements.some((element) => !isLink(element));
-  const canClass = store.styles !== undefined && capabilities.update && selectedElements.length === 1;
-  const inspectorActions =
-    readonly || (!canGroup && !canClass) ? undefined : (
-      <>
-        {canGroup && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--frame-corners--regular'
-            label='New scene from selection'
-            data-testid='inspector-group'
-            onClick={controller.selection.group}
-          />
-        )}
-        {canClass && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--swatches--regular'
-            label='New class from selection'
-            data-testid='inspector-new-class'
-            onClick={controller.selection.classFrom}
-          />
-        )}
-      </>
-    );
+  const inspectorActions = useSelectionActions({ scene, selection, store, capabilities, readonly, controller });
 
   return (
     <CanvasServicesProvider
@@ -1255,7 +450,7 @@ export const CanvasRoot = ({
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
       grid={grid}
-      fitting={fittingAtom}
+      fitting={fitting}
       timeline={timelineAtom}
       document={documentCommands}
       objectActions={objectActions}

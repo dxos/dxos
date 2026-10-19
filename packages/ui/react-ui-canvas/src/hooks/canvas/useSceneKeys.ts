@@ -11,7 +11,6 @@ import {
   type Projection,
   type ToolsCommands,
 } from '../../engine/index.ts';
-import { type useRegistry } from '../../hooks/index.ts';
 import {
   type Capabilities,
   type ElementId,
@@ -22,10 +21,23 @@ import {
   keyAction,
   nodeDef,
 } from '../../model/index.ts';
-import { toolForKey } from '../panels/index.ts';
-import { type TimelineKeys } from './CanvasContext.ts';
+import { toolForKey } from '../../utils/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
+
+/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
+export type TimelineKeys = {
+  active: boolean;
+  togglePlay: () => void;
+  /** Moves the playhead by whole frames. */
+  step: (frames: number) => void;
+  /** Moves the playhead to the selection's next or previous key. */
+  jumpKey: (direction: 1 | -1) => void;
+  addKey: () => void;
+  /** Removes the selection's keys at the playhead. */
+  removeKey: () => void;
+};
 
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
