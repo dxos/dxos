@@ -61,7 +61,9 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('readi
           return yield* Effect.die(new Error(`The ${key} subscription has no post feed.`));
         }
         // Newest first, as a sync appends them.
-        const entries = POSTS.filter((seed) => seed.feed === key).map((seed) => posts[seed.key]);
+        const entries = POSTS.filter((seed) => seed.feed === key)
+          .map((seed) => posts[seed.key])
+          .sort((postA, postB) => (postB.published ?? '').localeCompare(postA.published ?? ''));
         yield* Database.appendToFeed(feed, entries);
       }
 

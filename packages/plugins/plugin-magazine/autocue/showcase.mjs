@@ -48,7 +48,9 @@ export const steps = showcase({
     }
     // The photographs come from the network; start the clip once the first rows have loaded.
     await page.waitForFunction(
-      (selector) => [...document.querySelectorAll(selector)].filter((image) => image.complete).length >= 6,
+      (selector) =>
+        [...document.querySelectorAll(selector)].filter((image) => image.complete && image.naturalWidth > 0).length >=
+        6,
       tiles,
       { timeout: 30_000 },
     );

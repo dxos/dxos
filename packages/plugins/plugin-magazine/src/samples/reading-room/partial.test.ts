@@ -18,6 +18,7 @@ type Entry = {
   readonly '@type'?: string;
   readonly 'name'?: string;
   readonly 'description'?: string;
+  readonly 'published'?: string;
   readonly 'imageUrl'?: string;
   readonly 'source'?: Ref;
   readonly 'objects'?: Ref[];
@@ -56,6 +57,11 @@ describe('Reading Room', () => {
       return tally;
     }, {});
     expect(Object.values(perFeed)).toEqual([10, 10, 10]);
+    // Each feed lists its posts newest first, as a sync appends them.
+    for (const feed of archive.feeds) {
+      const published = ofType(feed.messages, Subscription.Post).map((post) => post.published ?? '');
+      expect(published).toEqual([...published].sort().reverse());
+    }
     expect(posts.every((post) => post.description?.includes('<img src="https://images.unsplash.com/'))).toBe(true);
     expect(ofType(messages, Subscription.PostContent).every((content) => content.imageUrl)).toBe(true);
 
