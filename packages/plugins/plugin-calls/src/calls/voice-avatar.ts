@@ -87,8 +87,8 @@ export const TUNING_PRESETS = {
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
  * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival; `ink-line`: the
- * same ink as a horizontal stroke with frequency running linearly along it; `ink-morph`: that stroke, which curls
- * into a ring while speaking.
+ * same ink as a horizontal stroke with frequency running linearly along it; `ink-morph`: a flattened ink ring that
+ * opens to a circle while speaking.
  */
 export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink' | 'ink-line' | 'ink-morph';
 
@@ -555,9 +555,10 @@ const inkShape = (scene: THREE.Scene): Shape => {
 /** Samples along the ink line. */
 const LINE_SAMPLES = 320;
 const LINE_HALF_WIDTH = 2.4;
-/** The morph's ring radius, matching the ink ring's. */
+/** The morph's ring radius, matching the ink ring's, and its height when flattened, as a share of it. */
 const MORPH_RADIUS = 1.05;
-/** Seconds to curl into the ring and to relax back; slower back, so a pause between words keeps the ring. */
+const MORPH_FLAT = 0.04;
+/** Seconds to open into the circle and to flatten back; slower back, so a pause between words keeps it open. */
 const MORPH_IN = 0.35;
 const MORPH_OUT = 1.2;
 
@@ -565,8 +566,9 @@ const MORPH_OUT = 1.2;
  * The ink aesthetic as a horizontal stroke, frequency running linearly from left (low) to right (high). Where a
  * frequency sounds the stroke thickens and vibrates in place (faster toward the high end) and sheds blots that drift
  * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack `separation` apart, the
- * middle one thickest; the stroke tapers to a point at both ends. With `morph`, speaking curls the stroke about its
- * midpoint into a ring (constant curvature, so it bows and then closes), and silence relaxes it back.
+ * middle one thickest; the stroke tapers to a point at both ends. With `morph` it is instead a closed ring of fixed
+ * width, flattened in silence and opening to a circle while speaking; frequency still runs left to right, along both
+ * its top and bottom halves, so the flattened ring reads as the line and has no seam.
  */
 const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
   scene.background = new THREE.Color('#e9e7e2');
@@ -609,30 +611,36 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
     return linear[below] + (linear[above] - linear[below]) * (point - below);
   };
 
-  /** Bend from 0 (straight) to 1 (closed ring). */
-  let curl = 0;
+  /** How open the morph's ring is, from 0 (flattened) to 1 (a circle). */
+  let open = 0;
   /**
-   * The curve at `position` (0..1): its point and unit normal. A constant-curvature arc about the bottom midpoint,
-   * its length easing from the line's to the ring's circumference, centred vertically on the origin.
+   * The stroke at `position` (0..1 along it): its point, unit normal, and where it sits in the spectrum (0..1, left to
+   * right). The line runs straight; the morph's ring starts at its left point and runs over the top and back
+   * underneath, its height following `open`.
    */
   const curve = (position: number) => {
-    const eased = curl * curl * (3 - 2 * curl);
-    const span = Math.PI * 2 * eased;
-    const length = 2 * LINE_HALF_WIDTH + (Math.PI * 2 * MORPH_RADIUS - 2 * LINE_HALF_WIDTH) * eased;
-    const along = position - 0.5;
-    if (span < 1e-4) {
-      return { x: along * length, y: 0, nx: 0, ny: 1 };
+    if (!morph) {
+      return { x: (position - 0.5) * 2 * LINE_HALF_WIDTH, y: 0, nx: 0, ny: 1, spectrum: position };
     }
-    const radius = length / span;
-    const angle = span * along;
-    // Halfway between the arc's lowest and highest points, so the shape stays centred as it closes.
-    const lift = (radius * (1 - Math.cos(span / 2))) / 2;
-    return {
-      x: radius * Math.sin(angle),
-      y: radius * (1 - Math.cos(angle)) - lift,
-      nx: -Math.sin(angle),
-      ny: Math.cos(angle),
-    };
+    const eased = open * open * (3 - 2 * open);
+    const height = MORPH_RADIUS * (MORPH_FLAT + (1 - MORPH_FLAT) * eased);
+    const angle = Math.PI - Math.PI * 2 * position;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    // The ellipse's outward normal, (cos / width, sin / height) normalised.
+    const nx = cos / MORPH_RADIUS;
+    const ny = sin / height;
+    const norm = Math.hypot(nx, ny);
+    return { x: MORPH_RADIUS * cos, y: height * sin, nx: nx / norm, ny: ny / norm, spectrum: (1 + cos) / 2 };
+  };
+
+  /** A point on the stroke at spectrum position `spectrum`: on the ring, on its top or bottom half at random. */
+  const atSpectrum = (spectrum: number) => {
+    if (!morph) {
+      return curve(spectrum);
+    }
+    const angle = Math.acos(2 * spectrum - 1) * (Math.random() < 0.5 ? 1 : -1);
+    return curve(((((Math.PI - angle) / (Math.PI * 2)) % 1) + 1) % 1);
   };
 
   let phase = 0;
@@ -646,7 +654,7 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
       phase += delta * waveSpeed;
       if (morph) {
         const target = level > 0.05 ? 1 : 0;
-        curl += (target - curl) * Math.min(1, delta / (target > curl ? MORPH_IN : MORPH_OUT));
+        open += (target - open) * Math.min(1, delta / (target > open ? MORPH_IN : MORPH_OUT));
       }
       const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
       const idle = Math.max(0, 1 - level * 4);
@@ -662,12 +670,13 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
         const taper = count > 1 ? 1 - 0.7 * (Math.abs(index - middle) / middle) ** 1.2 : 1;
         const weight = (count > 1 ? share : 1) * taper;
         for (let sample = 0; sample <= LINE_SAMPLES; sample++) {
-          const position = sample / LINE_SAMPLES;
-          // The waves are laid out along the stroke, so they bend with it.
+          const point = curve(sample / LINE_SAMPLES);
+          // Waves and energy follow the spectrum position, so they run left to right whatever the shape.
+          const position = point.spectrum;
           const x = (position * 2 - 1) * LINE_HALF_WIDTH;
           const energy = energyAt(linear, position);
-          // A brush stroke tapers to a point at both ends; closing into a ring, the ends meet and fill out.
-          const brush = Math.sin(Math.PI * position) ** 0.6 * (1 - curl) + curl;
+          // The line, a brush stroke, tapers to a point at both ends; the ring has no ends.
+          const brush = morph ? 1 : Math.sin(Math.PI * position) ** 0.6;
           const width =
             ((0.035 + Math.sin(x * 2.1 + own * 0.7) * 0.006 + Math.sin(x * 4.7 - own * 0.4) * 0.004) * weight +
               energy * 0.22 * weight * thickness) *
@@ -688,7 +697,6 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
                   (Math.sin(x * 9 + own * 7.3) * 0.008 +
                     Math.sin(x * 15 - own * 11.9 + 3) * 0.005 +
                     Math.sin(x * 24 + own * 17.1 + 1) * 0.004));
-          const point = curve(position);
           const above = offset + width / 2;
           const below = offset - width / 2;
           strand.positions.set(
@@ -716,7 +724,7 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
         const due = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
         for (let spawn = 0; spawn < due; spawn++) {
           const blot = blots[spawned++ % blots.length];
-          const point = curve((index + Math.random()) / linear.length);
+          const point = atSpectrum((index + Math.random()) / linear.length);
           const side = Math.random() < 0.5 ? -1 : 1;
           blot.dx = point.nx * side;
           blot.dy = point.ny * side;
