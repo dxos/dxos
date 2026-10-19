@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import {
+  Canvas,
   type CreateProps,
   DYNAMIC_SCENE_ID,
   type DynamicOptions,
@@ -17,11 +18,10 @@ import {
   type NodeViewProps,
   type Overlay,
   type Point,
-  SceneView,
+  createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
   createNodeRegistry,
-  createSceneViewAtoms,
   defaultNodePrototypes,
   defaultNodeTypes,
   nodeBase,
@@ -112,7 +112,7 @@ export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: F
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
   const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createSceneViewAtoms(DYNAMIC_SCENE_ID), []);
+  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_SCENE_ID), []);
 
   useEffect(() => {
     atomRegistry.set(graph, toGraph(features));
@@ -143,16 +143,16 @@ export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: F
 
   return (
     <FeatureLookupContext.Provider value={lookup}>
-      <SceneView.Root
+      <Canvas.Root
         store={store}
         root={DYNAMIC_SCENE_ID}
         atoms={atoms}
         nodes={nodes}
         createProjection={createProjection}
       >
-        <SceneView.Canvas />
-        <SceneView.Navigation />
-      </SceneView.Root>
+        <Canvas.Viewport />
+        <Canvas.Navigation />
+      </Canvas.Root>
     </FeatureLookupContext.Provider>
   );
 };
