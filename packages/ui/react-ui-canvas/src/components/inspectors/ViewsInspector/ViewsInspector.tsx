@@ -8,13 +8,11 @@ import {
   Tree,
   type TreeData,
   type TreeDropEvent,
-  type TreeNode,
   type TreeRootHandle,
   type TreeSelectEvent,
   createStaticTreeModel,
   filterTreeModel,
 } from '@dxos/react-ui-list';
-import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
@@ -87,7 +85,7 @@ const matches = (item: ViewTreeItem, text: string) =>
 /**
  * The views tree (VIEWS.md §4, decision 3): the root View, its nodes and links, the Views nested in it, and inside
  * each instance its object's contents, read-only. Activating a row reports the selection it asks for; a View row
- * opens (its Open action, Enter or a double-click); a filter narrows the rows by label or type.
+ * opens (Enter or a double-click); a filter narrows the rows by label or type.
  */
 export const ViewsInspector = ({
   classNames,
@@ -141,8 +139,7 @@ export const ViewsInspector = ({
                   icon: iconFor(row),
                   testId: `views-row-${row.id}`,
                   ...(row.kind === 'view' ? { count: row.children.length } : {}),
-                  // Placed objects' contents are drawn where they are defined, so they stay where they are.
-                  draggable: !row.readonly && row.container !== undefined,
+                  draggable: row.container !== undefined,
                 }
               : {},
           // The root View starts open, to show what the canvas holds; everything below it waits closed.
@@ -225,53 +222,21 @@ export const ViewsInspector = ({
     [rows, onOpen],
   );
 
-  // A row moves only among its siblings in the open View, as a restack: another container is another View's drawing.
-  const view = place && !place.isolate ? place.path.at(-1) : undefined;
-  const canDrop = useCallback(
-    ({ source, target }: { source: TreeData; target: TreeData }) => {
-      const from: Row = source.item;
-      const to: Row = target.item;
-      return isItem(from) && isItem(to) && canRestack(from, to, view);
-    },
-    [view],
-  );
+  // A row moves only among its siblings, as a restack of their container's drawing order.
+  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
+    const from: Row = source.item;
+    const to: Row = target.item;
+    return isItem(from) && isItem(to) && canRestack(from, to);
+  }, []);
   const handleDrop = useCallback(
     ({ instruction, source, target }: TreeDropEvent<Row>) => {
       const from: Row = source.item;
       const to: Row = target.item;
       const reorder =
-        isItem(from) && isItem(to) && canRestack(from, to, view) ? viewReorder(from, to, instruction.type) : undefined;
+        isItem(from) && isItem(to) && canRestack(from, to) ? viewReorder(from, to, instruction.type) : undefined;
       reorder && onReorder?.(reorder);
     },
-    [view, onReorder],
-  );
-
-  const renderRow = useCallback(
-    (node: TreeNode<Row>) => {
-      const item = node.item && isItem(node.item) ? node.item : undefined;
-      return (
-        <Tree.Item node={node}>
-          <Tree.ItemIndicator />
-          <Tree.ItemIcon />
-          <Tree.ItemText />
-          <Tree.ItemCount />
-          {item?.kind === 'view' && onOpen && (
-            <Tree.ItemActions>
-              <Button.Root
-                variant='ghost'
-                iconOnly
-                size='sm'
-                icon='ph--arrow-square-in--regular'
-                label='Open view'
-                data-testid={`views-open-${item.id}`}
-                onClick={() => onOpen(item.path)}
-              />
-            </Tree.ItemActions>
-          )}
-        </Tree.Item>
-      );
-    },
-    [onOpen],
+    [onReorder],
   );
 
   return (
@@ -306,7 +271,7 @@ export const ViewsInspector = ({
       >
         <Tree.Label srOnly>Views</Tree.Label>
         {/* The inspector panel scrolls its sections, so the rows take their full height rather than scroll here. */}
-        <Tree.Content scroll={false}>{renderRow}</Tree.Content>
+        <Tree.Content scroll={false} />
       </Tree.Root>
     </div>
   );

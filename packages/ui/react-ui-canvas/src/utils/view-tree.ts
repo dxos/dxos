@@ -4,6 +4,7 @@
 
 import {
   type ElementId,
+  type Endpoint,
   type Link,
   type Node,
   type View,
@@ -53,6 +54,15 @@ const textOf = (element: Node | Link): string | undefined => {
     }
   }
   return undefined;
+};
+
+/** A link end as its row names it: the node's own text, else its type; a free end is a point. */
+const endLabel = (scene: View, end: Endpoint): string => {
+  if (!('node' in end)) {
+    return 'point';
+  }
+  const node = scene.nodes[end.node];
+  return node ? (textOf(node) ?? node.type) : end.node;
 };
 
 /**
@@ -138,9 +148,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
       element: link.id,
       container: scene.id,
       path,
-      label:
-        textOf(link) ??
-        `${'node' in link.source ? link.source.node : 'point'} → ${'node' in link.target ? link.target.node : 'point'}`,
+      label: textOf(link) ?? `${endLabel(scene, link.source)} → ${endLabel(scene, link.target)}`,
       type: link.type,
       ...inObject,
       children: [],
@@ -258,17 +266,13 @@ export type ViewReorder = {
 };
 
 /**
- * Whether `from` may be dropped beside `to`: siblings in the open View's container (another container is another View's
- * drawing, which the open View's projection cannot restack), nodes among nodes and links among links, and neither an
- * object's contents.
+ * Whether `from` may be dropped beside `to`: siblings in one container (a View, or an Object's definition, which every
+ * Instance then draws in the new order), nodes among nodes and links among links.
  */
-export const canRestack = (from: ViewTreeItem, to: ViewTreeItem, view: ViewId | undefined): boolean =>
-  !from.readonly &&
-  !to.readonly &&
+export const canRestack = (from: ViewTreeItem, to: ViewTreeItem): boolean =>
   from.element !== undefined &&
   to.element !== undefined &&
   from.container !== undefined &&
-  from.container === view &&
   from.container === to.container &&
   (from.kind === 'link') === (to.kind === 'link');
 

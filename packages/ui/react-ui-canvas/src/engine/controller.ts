@@ -64,6 +64,7 @@ import {
   pastedRecords,
   pasteFragment,
   promotedBy,
+  recordStoreStep,
   recordViews,
   restackZ,
   topZ,
@@ -811,13 +812,36 @@ export const createCanvasController = ({
 
   const document: DocumentIntentCommands = {
     restack: (container, element, target, position) => {
-      const scene = currentScene();
-      const z =
-        scene.id === container && capabilities().update ? restackZ(scene, element, target, position) : undefined;
-      if (z === undefined) {
+      if (!capabilities().update) {
         return false;
       }
-      projection().apply({ kind: 'reorder', id: element, z });
+      const scene = currentScene();
+      if (scene.id === container) {
+        const z = restackZ(scene, element, target, position);
+        z !== undefined && projection().apply({ kind: 'reorder', id: element, z });
+        return z !== undefined;
+      }
+      // Another View, or an Object's definition: written to the store, as the open View's projection draws only its own.
+      const views = registry.get(store.views);
+      const host = views[container];
+      const z = host && restackZ(host, element, target, position);
+      if (!host || z === undefined) {
+        return false;
+      }
+      const node = host.nodes[element];
+      const link = host.links[element];
+      const moved: View = node
+        ? { ...host, nodes: { ...host.nodes, [element]: { ...node, z } } }
+        : link
+          ? { ...host, links: { ...host.links, [element]: { ...link, z } } }
+          : host;
+      // Its own undo step: the projection's model is unchanged, so only the views are restored.
+      const model = projection().snapshot();
+      registry.set(store.views, { ...views, [container]: moved });
+      const view = currentView();
+      if (view) {
+        recordStoreStep(registry, atoms.undo, view, model, views);
+      }
       return true;
     },
     duplicate: (ids, delta) => {

@@ -307,9 +307,8 @@ export const Views: Story = {
     await userEvent.clear(filter);
     await waitFor(() => expect(viewRow(views, 'a')).toBeInTheDocument());
 
-    // 5. A View row's Open drills the canvas into it.
-    await userEvent.hover(viewRow(views, 'c'));
-    await userEvent.click(within(views).getByTestId('views-open-c'));
+    // 5. Double-clicking a View row drills the canvas into it.
+    await userEvent.dblClick(viewRow(views, 'c'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
 
     // 6. A row in another View opens that View first, then selects there.

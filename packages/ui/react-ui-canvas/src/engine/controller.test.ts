@@ -230,6 +230,25 @@ describe('CanvasController', () => {
       expect(applied).toBe(1);
     });
 
+    test("restack in another container (an Object's definition) writes the store, as one undo step", ({ expect }) => {
+      const tree = ViewBuilder.view('root', [
+        ViewBuilder.rect('a', box(0)),
+        ViewBuilder.view('child', [ViewBuilder.rect('c', box(0)), ViewBuilder.rect('d', box(512))])
+          .name('Child')
+          .at({ x: 512, y: 0, width: 512, height: 256 }),
+      ]).build();
+      const { registry, store, atoms, controller, projection } = setup({ tree });
+      const order = () =>
+        Object.values(registry.get(store.views).child.nodes)
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((node) => node.id);
+      expect(order()).toEqual(['c', 'd']);
+      expect(controller.document.restack('child', 'd', 'c', 'before')).toBe(true);
+      expect(order()).toEqual(['d', 'c']);
+      undo(projection, registry, atoms.undo, tree.root, store);
+      expect(order()).toEqual(['c', 'd']);
+    });
+
     test('restack changes nothing on a read-only canvas', ({ expect }) => {
       const { controller } = setup({ readonly: true });
       expect(controller.document.restack('root', 'b', 'a', 'before')).toBe(false);

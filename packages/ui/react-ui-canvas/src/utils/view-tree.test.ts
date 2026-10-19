@@ -126,7 +126,7 @@ describe('buildViewTree', () => {
     });
   });
 
-  test('a drop restacks among siblings in the open View only, above or below', ({ expect }) => {
+  test('a drop restacks among siblings of one container, above or below', ({ expect }) => {
     const tree = createObjectsTree();
     const views = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
     const rows = new Map<string, ViewTreeItem>();
@@ -143,12 +143,14 @@ describe('buildViewTree', () => {
       return item;
     };
     const root = tree.root;
-    expect(canRestack(row('card-1'), row('title'), root)).toBe(true);
-    // Another View open, a row in a nested View, an object's contents, or a link: no drop.
-    expect(canRestack(row('card-1'), row('title'), 'section')).toBe(false);
-    expect(canRestack(row('card-1'), row('section/caption'), root)).toBe(false);
-    expect(canRestack(row('card-1'), row('logo-1/mark'), root)).toBe(false);
-    expect(canRestack(row('card-1'), [...rows.values()].filter((item) => item.kind === 'link')[0], root)).toBe(false);
+    expect(canRestack(row('card-1'), row('title'))).toBe(true);
+    // Siblings inside a nested View, or inside an Object's definition (shared by every Instance), restack there too.
+    expect(canRestack(row('section/caption'), row('section/logo-2'))).toBe(true);
+    expect(canRestack(row('logo-1/mark'), row('logo-1/word'))).toBe(true);
+    // Across containers, or a node among links: no drop.
+    expect(canRestack(row('card-1'), row('section/caption'))).toBe(false);
+    expect(canRestack(row('card-1'), row('logo-1/mark'))).toBe(false);
+    expect(canRestack(row('card-1'), [...rows.values()].filter((item) => item.kind === 'link')[0])).toBe(false);
     expect(viewReorder(row('card-1'), row('title'), 'reorder-above')).toEqual({
       container: root,
       element: 'card-1',

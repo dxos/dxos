@@ -118,8 +118,7 @@ export const Test: Story = {
     );
 
     // 3. A View row opens that View by its path from the root.
-    await userEvent.hover(canvas.getByTestId('views-row-c'));
-    await userEvent.click(canvas.getByTestId('views-open-c'));
+    await userEvent.dblClick(canvas.getByTestId('views-row-c'));
     await expect(args.onOpen).toHaveBeenCalledWith(['scene:root', 'c']);
   },
 };
