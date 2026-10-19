@@ -1,6 +1,6 @@
 ---
 name: npm-publishing
-description: Make a workspace package publishable on npm — the first (bootstrap) publish of a new `@dxos/*` package and its npm trusted publisher (OIDC) for `publish-all.yml`, via `scripts/publish-package.mjs`. Use when asked to publish a package to npm, make a package public, set up or fix a package's trusted publisher, or when CI's `check-packages-published` gate fails. Also explains where regular releases (`@latest`, `@next`, pkg.pr.new) come from, which are never published by hand.
+description: Make a workspace package publishable on npm — the first (bootstrap) publish of a new `@dxos/*` package and its npm trusted publisher (OIDC) for `publish-all.yml`, via `scripts/publish-package.mjs`. Use when asked to publish a package to npm, make a package public, set up or fix a package's trusted publisher, or when the publish preflight (`check-packages-published`) fails. Also explains where regular releases (`@latest`, `@next`, pkg.pr.new) come from, which are never published by hand.
 ---
 
 # npm publishing
