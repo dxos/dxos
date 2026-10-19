@@ -3,6 +3,7 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
@@ -208,6 +209,30 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live('lends the Composer MCP token beside the agent credential, so the agent can reach the space', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      const minter = new FakeMinter();
+      const withMcp: EdgeAgent.Options = {
+        ...options,
+        // A space credential under the reserved name must not replace the identity's own token.
+        definition: {
+          ...options.definition,
+          credentials: Effect.succeed({ ...ENV, [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'from-space' }),
+        },
+        composerMcp: EdgeAgent.composerMcpCredentials(() => minter),
+      };
+      yield* EdgeAgent.runTurn(withMcp, { chat, feed }, { prompt: 'which spaces do I have?' });
+      yield* EdgeAgent.runTurn(withMcp, { chat, feed }, { prompt: 'again' });
+      expect(edge.lent).toEqual([
+        { env: { ...ENV, [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' } },
+        { env: { ...ENV, [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' } },
+      ]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live('fails the turn with the reason EDGE refused the credentials, before prompting', () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup(() => []);
@@ -367,3 +392,128 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 });
+
+describe('composerMcpCredentials', () => {
+  const HOUR = 60 * 60 * 1000;
+
+  it.effect('mints one token per identity and replaces it as it nears expiry', () =>
+    Effect.gen(function* () {
+      let now = 0;
+      const minter = new FakeMinter();
+      const credentials = EdgeAgent.composerMcpCredentials(
+        () => minter,
+        () => now,
+      );
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' });
+      now = 20 * HOUR;
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' });
+      now = 23.5 * HOUR;
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-2' });
+      expect(minter.minted.map(({ expiresAt }) => expiresAt)).toEqual([24 * HOUR, 47.5 * HOUR]);
+
+      // Another identity signed in on the same service never inherits the previous one's token.
+      minter.did = 'did:halo:bob';
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-3' });
+      // Switching back reuses the first identity's token rather than minting another.
+      minter.did = 'did:halo:alice';
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-2' });
+      expect(minter.minted).toHaveLength(3);
+    }),
+  );
+
+  it.effect('shares one mint between concurrent turns', () =>
+    Effect.gen(function* () {
+      const minter = new FakeMinter();
+      const gate = yield* Deferred.make<void>();
+      minter.during = Deferred.await(gate);
+      const credentials = EdgeAgent.composerMcpCredentials(() => minter);
+      const turns = yield* Effect.all([credentials, credentials], { concurrency: 'unbounded' }).pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(gate, undefined);
+      const env = { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' };
+      expect(yield* Fiber.join(turns)).toEqual([env, env]);
+      expect(minter.minted).toHaveLength(1);
+    }),
+  );
+
+  it.effect('does not lend a token to an identity service that replaced the minting one', () =>
+    Effect.gen(function* () {
+      const first = new FakeMinter('first');
+      const second = new FakeMinter('second', 'did:halo:bob');
+      let current: EdgeAgent.ApiTokenMinter = first;
+      first.during = Effect.sync(() => {
+        current = second;
+      });
+      const credentials = EdgeAgent.composerMcpCredentials(() => current);
+      expect(yield* credentials).toEqual({});
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'second-1' });
+    }),
+  );
+
+  it.effect('keeps sharing the mint when one waiting turn is interrupted', () =>
+    Effect.gen(function* () {
+      const minter = new FakeMinter();
+      const gate = yield* Deferred.make<void>();
+      minter.during = Deferred.await(gate);
+      const credentials = EdgeAgent.composerMcpCredentials(() => minter);
+      const interrupted = yield* Effect.forkChild(credentials);
+      const waiting = yield* Effect.forkChild(credentials);
+      yield* Effect.yieldNow;
+      yield* Fiber.interrupt(interrupted);
+      const later = yield* Effect.forkChild(credentials);
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(gate, undefined);
+      const env = { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-1' };
+      expect(yield* Fiber.join(waiting)).toEqual(env);
+      expect(yield* Fiber.join(later)).toEqual(env);
+      expect(minter.minted).toHaveLength(1);
+    }),
+  );
+
+  it.effect('drops a token whose identity signed out while it was minted', () =>
+    Effect.gen(function* () {
+      const minter = new FakeMinter();
+      minter.during = Effect.sync(() => {
+        minter.did = 'did:halo:bob';
+      });
+      const credentials = EdgeAgent.composerMcpCredentials(() => minter);
+      expect(yield* credentials).toEqual({});
+      minter.during = Effect.void;
+      expect(yield* credentials).toEqual({ [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: 'dx-token-2' });
+    }),
+  );
+
+  it.effect('lends nothing without an identity, or when minting fails', () =>
+    Effect.gen(function* () {
+      expect(yield* EdgeAgent.composerMcpCredentials(() => undefined)).toEqual({});
+      const signedOut = new FakeMinter();
+      signedOut.did = undefined;
+      expect(yield* EdgeAgent.composerMcpCredentials(() => signedOut)).toEqual({});
+      const failing: EdgeAgent.ApiTokenMinter = {
+        getEdgeIdentity: () => Option.some({ identityDid: 'did:halo:alice' }),
+        createApiToken: () => Effect.fail(new AgentError({ message: 'no account' })),
+      };
+      expect(yield* EdgeAgent.composerMcpCredentials(() => failing)).toEqual({});
+    }),
+  );
+});
+
+/** Mints numbered tokens for the identity signed in at the time, and records what it was asked for. */
+class FakeMinter implements EdgeAgent.ApiTokenMinter {
+  readonly minted: { label: string; expiresAt?: number }[] = [];
+  /** Runs while a mint is in flight, before it completes. */
+  during: Effect.Effect<void> = Effect.void;
+
+  constructor(
+    readonly prefix = 'dx-token',
+    public did: string | undefined = 'did:halo:alice',
+  ) {}
+
+  getEdgeIdentity = () => Option.fromUndefinedOr(this.did).pipe(Option.map((identityDid) => ({ identityDid })));
+
+  createApiToken = (options: { label: string; expiresAt?: number }) =>
+    Effect.sync(() => {
+      this.minted.push(options);
+      return { token: `${this.prefix}-${this.minted.length}` };
+    }).pipe(Effect.tap(() => this.during));
+}

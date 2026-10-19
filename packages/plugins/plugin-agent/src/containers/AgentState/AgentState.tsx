@@ -19,7 +19,7 @@ import {
   type AgentStateCounts,
   type AgentStateSkill,
 } from '#components';
-import { AgentOperation, ChatParticipant, Goal, Knowledge, Mode, Profile } from '#types';
+import { AgentOperation, BrainService, ChatParticipant, Goal, Mode, Profile } from '#types';
 
 import { useBrainStore } from '../useBrainStore.ts';
 import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
@@ -60,9 +60,10 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
         chats.forEach((chat) => get(Obj.atomProperty(chat, 'tasks')));
         tasks.forEach((task) => get(Obj.atomProperty(task, 'status')));
 
-        // Memories are graphs in the brain; their statements are not counted again as facts.
-        const memories = Knowledge.fromFacts((facts ?? []).map(({ fact }) => fact));
-        const statements = (facts ?? []).filter(({ fact }) => fact.kind === undefined);
+        const statements = BrainService.currentFacts(
+          (facts ?? []).map(({ fact }) => fact),
+          new Date().toISOString(),
+        );
 
         // The agent's own checklist: tasks its chats carry, matched by id so unloaded refs still count.
         const taskIds = new Set(
@@ -71,17 +72,10 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
         const ownTasks = tasks.filter((task) => taskIds.has(task.id));
 
         const counts: AgentStateCounts = {
-          memories: {
-            active: memories.filter((memory) => memory.status === 'active').length,
-            superseded: memories.filter((memory) => memory.status !== 'active').length,
+          facts: {
+            count: statements.length,
+            speakers: new Set(statements.flatMap((fact) => fact.attribution.agent ?? [])).size,
           },
-          facts:
-            statements.length > 0
-              ? {
-                  count: statements.length,
-                  speakers: new Set(statements.flatMap(({ fact }) => fact.attribution.agent ?? [])).size,
-                }
-              : undefined,
           goals: {
             proposed: goals.filter((goal) => goal.status === 'proposed').length,
             confirmed: goals.filter((goal) => goal.status === 'confirmed' || goal.status === 'active').length,

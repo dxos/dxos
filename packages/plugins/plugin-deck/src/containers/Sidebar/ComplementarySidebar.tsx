@@ -93,6 +93,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           style={iconSize(5)}
           className={mx(
             'absolute z-5 inset-y-0 end-0 w-(--dx-r0-size)!',
+            // Its bottom-end corner is the window's in a rounded macOS window (`data-window-corners`).
+            '[html[data-window-corners="rounded"]_&]:rounded-ee-(--dx-window-radius)',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-separator-subtle',
             'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}
@@ -209,7 +211,7 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
         {/* The rail's height, like a plank's `Pane.Toolbar`, so the toolbars below line up across the deck. */}
         <Toolbar.Root size='lg' style={iconSize(5)} classNames='h-(--dx-rail-content) dx-header-surface'>
           <Button.Root
-            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
+            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0 ms-1'
             label={Theme.toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
             iconOnly

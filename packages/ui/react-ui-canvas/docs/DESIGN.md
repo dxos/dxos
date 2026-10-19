@@ -3,7 +3,7 @@
 Status: spec for review (2026-09-20, rev 8: open node types, port direction, free endpoints and markers (§4), toolbar, marquee modes, symmetric resize, ghost and palette drops (§8), e2e (§9); rev 7: text parts with in-place editing and node style (§4), grid-aligned portal frame and navigation shield (§5), always-on grid (§7); rev 6: typed nodes and links (§4, decision 9), palette and spline editing (§8), `MIGRATION.md`; rev 5: §4b layers and data structures as built, §9 synced; rev 4: §6b mobile
 navigation mode; rev 3: §3b illustrator DSL reuse, PR 0). Inputs: `AUDIT.md` (existing surfaces), `RESEARCH.md` (external
 landscape), and a throwaway spike (deleted once the engine's `Nested` story covered it; its findings are folded
-into §5). Engine: `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`; barrel `src/index.ts`, also served as `./scene`), stories `ui/react-ui-canvas/SceneView`.
+into §5). Engine: `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`; barrel `src/index.ts`, also served as `./scene`), stories `ui/react-ui-canvas/Canvas`.
 
 ## 1. Goal
 
@@ -43,7 +43,7 @@ Non-goals for the prototype: freehand drawing, cross-scene links, multiplayer cu
 ```
  drawing model (source of truth)      projection (layout)                 surface (render + interact)
  ┌──────────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
- │ 1 freehand: Scene cells  │──id──▶ │ positioned Scene         │──atom─▶│ SceneView / SceneLayer   │
+ │ 1 freehand: Scene cells  │──id──▶ │ positioned Scene         │──atom─▶│ Canvas / SceneLayer   │
  │   with center/size       │◀─set── │                          │◀intent─│ control frame, ports,    │
  ├──────────────────────────┤        ├──────────────────────────┤        │ camera, selection, tools │
  │ 2 constrained: DSL       │──solve▶│ positioned Scene         │──atom─▶│                          │
@@ -123,6 +123,9 @@ Recommendation: **A**, as "PR 0" of this project. It costs one mechanical PR and
 planned in §9; the `projections/*` modules become thin dialect wrappers. Decision 13 below records it.
 
 ## 4. Data model
+
+> The container terms below (scene, frame, composite, layer) are being reconciled into Views, Objects and Tags:
+> see [VIEWS.md](./VIEWS.md).
 
 ```ts
 Point  = { x, y }            Size = { width, height }
@@ -211,7 +214,7 @@ Four layers, each one an Effect atom the next one subscribes to; nothing below a
 ```
  store              projection               view state                surface
  ┌───────────────┐  ┌────────────────────┐   ┌───────────────────────┐ ┌──────────────────────────────┐
- │ SceneStore    │  │ Projection         │   │ SceneViewAtoms        │ │ SceneView                    │
+ │ SceneStore    │  │ Projection         │   │ CanvasAtoms        │ │ Canvas                    │
  │  scenes:      │─▶│  scene: Atom<Scene>│──▶│  camera, path,        │▶│  grid ▸ SceneLayer ▸ overlay │
  │   Atom<Map>   │  │  apply(Intent)     │◀──│  selection, hover,    │ │  pointer machine, keys       │
  │  scene(id)    │◀─│  capabilities      │   │  tool, snap, drag,    │ │  CellProperties, Palette,    │
@@ -220,12 +223,12 @@ Four layers, each one an Effect atom the next one subscribes to; nothing below a
                      | dynamic                (per view, never stored)  (React; reads atoms, emits intents)
 ```
 
-| Layer          | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Data structure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Store**      | Every scene of a document, by id (`store.ts`). In memory now; the ECHO `Canvas.content` map in phase 3. Writes go through `updateScene(registry, store, id, fn)`, a no-op when `fn` returns the same object.                                                                                                                                                                                                                                                              | `SceneStore = { scenes: Atom.Writable<Record<SceneId, Scene>>, scene(id): Atom<Scene \| undefined> }`; the per-id atom is derived and cached so a view subscribes to exactly the scene it shows.                                                                                                                                                                                                                                                                                                                                             |
-| **Projection** | The meaning of an intent for one scene (`projection.ts`, `projections/*`). `freehand` is the identity (`reduceIntent`, a pure reducer over `Scene`); `constrained` keeps a `ConstrainedModel {nodes, constraints}` and re-solves; `dynamic` keeps a `GraphModel {nodes, edges}` plus an `Overlay {positions}` and re-lays out. Each returns a `Projection` over its own atoms.                                                                                            | `Projection = { scene: Atom<Scene>, apply(intent), capabilities }`. `Intent = move {ids, delta} \| resize {id, bounds} \| link {link} \| create {node} \| delete {ids} \| reorder {id, z} \| update {id, values}`. `Capabilities` flags which intents the projection accepts; the surface greys out the rest.                                                                                                                                                                                                                                |
-| **View state** | Everything ephemeral for one view (`atoms.ts`): the camera, the scene path (breadcrumbs), selection, hover, the active tool, the grid/snap toggle, the in-flight drag and the drill history. Created by `createSceneViewAtoms(root)` and optionally owned by the host, so two views of one scene stay independent and a panel (properties, constraint list) shares the view's selection.                                                                                  | `SceneViewAtoms = { camera: Atom.Writable<Camera>, path: Atom.Writable<SceneId[]>, selection: Atom.Writable<ReadonlySet<CellId>>, hover, tool: Tool, snap: boolean, drag: Drag \| undefined, history: {entries, index} }`. `Drag` is a union of the pointer machine's states: `pan {last}`, `marquee {from, to, additive}`, `move {ids, origin, anchor, delta}`, `resize {id, handle, start, bounds}`, `link {source, from, to, target?}`, `create {tool, from, to}`; the transient result is rendered, the intent is emitted on pointer-up. |
-| **Surface**    | Rendering and gestures (`SceneView.tsx`, `SceneLayer.tsx`, `ControlFrame.tsx`). `SceneView` reads the atoms, runs the pointer state machine and key handling, and calls `projection.apply`. `SceneLayer` renders one scene under one CSS transform: a `div` per placed cell (component from the registry) and an `svg` of link paths; a live portal mounts a nested read-only layer. `ControlFrame` draws the selection outline, handles, ports, marquee and rubber band. | `NodeRegistry = Record<NodeType, NodeDef>` and `LinkRegistry = Record<LinkType, LinkDef>` (decision 12); the palette is generated from both. `LinkGeometry = { link, path, source: RouteEnd, target: RouteEnd }` is computed per render from `pairPorts` + `curvePath`. `Tier = dot \| preview \| live` per portal from its screen size with hysteresis.                                                                                                                                                                                     |
+| Layer          | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Data structure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Store**      | Every scene of a document, by id (`store.ts`). In memory now; the ECHO `Canvas.content` map in phase 3. Writes go through `updateScene(registry, store, id, fn)`, a no-op when `fn` returns the same object.                                                                                                                                                                                                                                                        | `SceneStore = { scenes: Atom.Writable<Record<SceneId, Scene>>, scene(id): Atom<Scene \| undefined> }`; the per-id atom is derived and cached so a view subscribes to exactly the scene it shows.                                                                                                                                                                                                                                                                                                                                          |
+| **Projection** | The meaning of an intent for one scene (`projection.ts`, `projections/*`). `freehand` is the identity (`reduceIntent`, a pure reducer over `Scene`); `constrained` keeps a `ConstrainedModel {nodes, constraints}` and re-solves; `dynamic` keeps a `GraphModel {nodes, edges}` plus an `Overlay {positions}` and re-lays out. Each returns a `Projection` over its own atoms.                                                                                      | `Projection = { scene: Atom<Scene>, apply(intent), capabilities }`. `Intent = move {ids, delta} \| resize {id, bounds} \| link {link} \| create {node} \| delete {ids} \| reorder {id, z} \| update {id, values}`. `Capabilities` flags which intents the projection accepts; the surface greys out the rest.                                                                                                                                                                                                                             |
+| **View state** | Everything ephemeral for one view (`atoms.ts`): the camera, the scene path (breadcrumbs), selection, hover, the active tool, the grid/snap toggle, the in-flight drag and the drill history. Created by `createCanvasAtoms(root)` and optionally owned by the host, so two views of one scene stay independent and a panel (properties, constraint list) shares the view's selection.                                                                               | `CanvasAtoms = { camera: Atom.Writable<Camera>, path: Atom.Writable<SceneId[]>, selection: Atom.Writable<ReadonlySet<CellId>>, hover, tool: Tool, snap: boolean, drag: Drag \| undefined, history: {entries, index} }`. `Drag` is a union of the pointer machine's states: `pan {last}`, `marquee {from, to, additive}`, `move {ids, origin, anchor, delta}`, `resize {id, handle, start, bounds}`, `link {source, from, to, target?}`, `create {tool, from, to}`; the transient result is rendered, the intent is emitted on pointer-up. |
+| **Surface**    | Rendering and gestures (`Canvas.tsx`, `SceneLayer.tsx`, `ControlFrame.tsx`). `Canvas` reads the atoms, runs the pointer state machine and key handling, and calls `projection.apply`. `SceneLayer` renders one scene under one CSS transform: a `div` per placed cell (component from the registry) and an `svg` of link paths; a live portal mounts a nested read-only layer. `ControlFrame` draws the selection outline, handles, ports, marquee and rubber band. | `NodeRegistry = Record<NodeType, NodeDef>` and `LinkRegistry = Record<LinkType, LinkDef>` (decision 12); the palette is generated from both. `LinkGeometry = { link, path, source: RouteEnd, target: RouteEnd }` is computed per render from `pairPorts` + `curvePath`. `Tier = dot \| preview \| live` per portal from its screen size with hysteresis.                                                                                                                                                                                  |
 
 The model on the wire between the layers is the positioned `Scene` of §4: `{ id, name?, nodes, links }` with typed `Node`s (centre plus per-type properties) and typed `Link`s (endpoints plus, for a spline, control points), every element carrying `{ id, type, z, locked? }`. Scene bounds, hit tests, port positions and link routes are all derived from it (`hit.ts`, `ports.ts`, `route.ts`, `camera.ts`) and never stored; `order.ts` supplies the fractional `z` keys.
 
@@ -243,17 +246,17 @@ its prototype chain's, and throws on an unknown prototype, a cycle, or a type le
 registry, the palette or the scene schema, so lookups stay one record read. Schemas compose the same way by
 spreading the prototype's field set (`boxFields`) into each type's struct.
 
-| Prototype / type | Declares                                                                                                                          |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                       |
-| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                          |
-| `frame`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
+| Prototype / type | Declares                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                            |
+| `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                               |
+| `frame`          | `extends: 'box'`; its schema adds `scene` and `link.contents`, its view adds the child scene and an open control, `openable`, 512x256. |
 
 The frame is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
-top-right) that drills in like a double-click. `contents` chooses the body: the child scene (preview, then
+top-right) that drills in like a double-click. `link.contents` chooses the body: the child scene (preview, then
 live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed frame
 still reads as its contents and naming one turns it into a plain box. A host may give a frame other content
-(plugin-canvas: a referenced ECHO object as a `Surface`) by replacing its component; `NodeDef.hostOpen`
+(plugin-canvas: a referenced ECHO object, `link.object`, as a `Surface`) by replacing its component; `NodeDef.hostOpen`
 then lets the host open such a node itself, and auto-drill passes it by.
 
 **Instance prototypes (designed, not built; TASKS "Object classes and prototypes").** A node may name a
@@ -311,7 +314,7 @@ resolved values in.
 _Written before decision 9 renamed cells: "cell" below means a node, and the `cells:`/`cell:` aspect names stay as spelled._
 
 The 2D camera is replaced, not shrunk. Below the `md` breakpoint or when the primary input is coarse
-(`(pointer: coarse) and (hover: none)`), and always when the host asks for it (`mode='columns'`), `SceneView`
+(`(pointer: coarse) and (hover: none)`), and always when the host asks for it (`mode='columns'`), `Canvas`
 renders the current scene as **columns**: a horizontally paged strip of full-height panels, one per **aspect**.
 The `columns` mode reads the same positioned `Scene` from the same `Projection`; it adds no model state.
 
@@ -380,9 +383,9 @@ Root `div` with `contain: strict`, `touch-none`, focusable. Layers, bottom to to
    on both sides of the swap: the major grid is preserved across levels. `g` and the Snap button toggle snapping only. **Creation snaps to the major grid**
    (`MAJOR_GRID`, 64 scene px), the derived scene bounds grow outward to it, and the fixture and the solver /
    layout defaults (pitch, size, origin) are multiples of it, so an untouched layout is already snapped and the
-   frame sits on lines. **Moving and resizing snap to the minor grid** (a drag, a resize handle, a spline's
-   control point, or an arrow nudge; shift nudges by a major cell): a node arrives on the major grid, and neither its position nor
-   its size is coarse thereafter. Ports are exempt: each sits exactly at its offset along its side, so a short side still
+   frame sits on lines. **Moving and resizing snap to the major grid** too (a drag lands the pressed node's
+   top-left on it, a resize handle its moving edge), so a node's edges stay on major lines. A spline's control
+   point, an arrow nudge (shift nudges by a major cell) and a palette drop land on the minor grid. Ports are exempt: each sits exactly at its offset along its side, so a short side still
    spreads them.
 2. **Scene layer**: one `div` whose transform is `scale(zoom) translate(x, y)`, set **imperatively from the
    camera atom** (no React re-render on pan/zoom). Inside, one `div` per placed cell positioned at its bounds, and
@@ -401,7 +404,7 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 
 | Gesture                    | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wheel                      | Pan. Ctrl/cmd+wheel (trackpad pinch) zooms about the cursor. Touch pinch zooms about the midpoint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Wheel                      | Up and down zoom about the cursor; a sideways scroll or shift+wheel pans. Ctrl/cmd+wheel (trackpad pinch) also zooms about the cursor. Touch pinch zooms about the midpoint.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Space+drag, hand tool      | Pan. Drag on background in `select` = marquee (intersection); shift adds, alt subtracts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Click / shift-click        | Select / toggle; cmd+A selects all. Hit testing from the model in scene coordinates, never `getClientRects`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Drag selected nodes        | Transient offset atom, snapped in scene coordinates; on pointer-up one `move` intent (the undo unit). The projection decides what that means (§3).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -411,7 +414,7 @@ Pointer Events state machine. The tool is `{kind: 'select'}`, `{kind: 'hand'}`, 
 | Link tool on empty canvas  | Draws a free-ended link from the press to the release, previewed as it will land; an end that reaches a node attaches there. A click without a drag draws nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Palette                    | Two groups generated from the registries: node types (R rectangle, E ellipse, C class, T text, S scene) and link types (L line, K curve, P spline). A node tool then click or drag on the canvas emits `create` (a click places the type's default size at the click); while drawing, the type's own view shows as a translucent ghost of the node that will land. A node entry can also be dragged onto the canvas (pragmatic-dnd; any source carrying `nodeDragData(type)` drops the same way), previewed by the same ghost. A link tool shows every port; dragging one creates that type.                                                                                                                      |
 | Toolbar                    | Optional `Toolbar` component (decision 5) over actions the view exposes: Up / breadcrumbs, Fit, zoom in / out, Snap, Undo / Redo, Cut / Copy / Paste / Delete, a Create menu (a default-sized node at the centre of the view), Layout (disabled until a projection offers it, M4), Debug, and a zoom / pointer / depth readout. `showToolbar={false}` hides it; a host may render its own over the same actions.                                                                                                                                                                                                                                                                                                  |
-| Read-only                  | `readonly` on `SceneView` replaces the projection's capabilities with none: selection, hover, pan, zoom and drill still work, but no handle, port, palette tool, toolbar edit, key or in-place editor reaches the model, and `Properties readonly` shows the fields without letting them change. The `Readonly` story is the fixture.                                                                                                                                                                                                                                                                                                                                                                             |
+| Read-only                  | `readonly` on `Canvas` replaces the projection's capabilities with none: selection, hover, pan, zoom and drill still work, but no handle, port, palette tool, toolbar edit, key or in-place editor reaches the model, and `Properties readonly` shows the fields without letting them change. The `Readonly` story is the fixture.                                                                                                                                                                                                                                                                                                                                                                                |
 | Click a link / its handles | Links are selectable (a wide transparent twin of the stroke takes the press) and deletable. A selected link shows its two end handles: dragging one re-attaches that end: over a node the link is drawn re-attached to the port nearest the pointer, over free space it is drawn free-ended at the pointer, and dropping writes whichever it shows. A selected spline also shows diamond handles on its control points: click selects one (Delete or the right-click menu's "Remove control point" removes it), drag moves it, double-click on the stroke inserts one at the nearest segment, alt-click removes; all `update` intents. A spline leaves and enters its ports along the side normals, like a curve. |
 | Keys                       | One table, `model/keys.ts`: every chord is a `KeyBinding` under a `KeyAction`, the view maps the action to what it means in the current state, and the toolbar prints its labels from the same table. Arrows nudge (shift ×4), Delete, Escape, Home (fit), G (snap), D (debug: every frame labelled with id, type, geometry and z), navigation keys from §6; tool letters stay on the registry entries. Attention scoping is the host's (M4).                                                                                                                                                                                                                                                                     |
 | External drag-in           | pragmatic-dnd drop target on the root (`utils/dnd.ts`); internal gestures are pointer-driven.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -479,7 +482,7 @@ packages/plugins/plugin-canvas/src/            (phase 3: the illustrator drawing
   model/content.ts  Drawing.Canvas.content encoding: one record per scene, node and link; readScenes / writeScenes
   model/handler.ts  SceneHandler: illustrator DSL objects ↔ root-scene nodes and links (identity on the records)
   model/store.ts    bindCanvasStore: SceneStore ↔ canvas records inside Obj.update; createCanvas
-  containers/       CanvasArticle: SceneView over the bound store
+  containers/       CanvasArticle: Canvas over the bound store
   capabilities/     DrawingVariant (IllustratorCapabilities.VariantProvider), Translations
 
 packages/ui/react-ui-canvas/src/
@@ -513,7 +516,7 @@ packages/ui/react-ui-canvas/src/
       testing.ts           createSceneTree fixture: root diagram plus flow / model / cycle / note child scenes (not exported)
     hooks/                 useRegistry, useSceneProjection, useViewport, useWheel
     components/            one folder per component, with its stories
-      SceneView/           root view: grid, camera, pointer state machine, keys, drill-in/out, snap, toolbar, menus; SceneView / Constrained / Dynamic stories
+      Canvas/           root view: grid, camera, pointer state machine, keys, drill-in/out, snap, toolbar, menus; Canvas / Constrained / Dynamic stories
       SceneLayer/          one scene under one transform: node views, link svg, portal tiers, nested live layer
       ControlFrame/        selection outline, resize handles, ports, link end and spline handles, marquee, rubber band
       PartEditor/          TextPart: static text or the in-place react-ui-editor over a node's text part
@@ -538,7 +541,7 @@ nothing from illustrator is copied.
    (`@dxos/diagram`), update import sites, add the DSL gaps (arrow ports, portal element, `index`).
 1. **Phase 1 (first PR)**: types, registry, projection seam, freehand + constrained + dynamic projections
    (minimal), store, camera, hit testing, ports with automatic pairing, curve routing, fractional index;
-   `SceneView` with grid, wheel/pinch/pan, select/marquee, control frame with move + resize, port-drag linking,
+   `Canvas` with grid, wheel/pinch/pan, select/marquee, control frame with move + resize, port-drag linking,
    drill-in/out (double-click, auto, Escape, breadcrumbs, history), palette with rect / link / scene; **four
    stories**: `Freehand` (nested fixture), `Constrained` (cardinal constraints; dragging rewrites them),
    `Dynamic` (object graph → layout; toggle nodes to re-layout; drag writes an override), `Nested` (depth 4);
@@ -583,3 +586,91 @@ nothing from illustrator is copied.
    first decides whether phase 2 needs the `CellDef` hook.
 7. Mode switch trigger: media queries only, or also a user toggle in the toolbar on desktop (columns as a reading
    mode for large diagrams)?
+
+## 13. Canvas core: services, state and a controller (designed 2026-10-18, not built)
+
+`CanvasRoot` (`components/Canvas/Canvas.tsx`, ~1,380 of its 2,507 lines) builds one context of 88 fields and passes it to
+eleven parts. An inventory (2026-10-18) found:
+
+| Measure               | Count                                                                           |
+| --------------------- | ------------------------------------------------------------------------------- |
+| Fields by kind        | atom-state 20, derived 14, command 16, handler 14, service 8, config 8, other 8 |
+| Fields by change rate | static 21, rare 26, per-edit 19, per-gesture 14, per-frame 8                    |
+| Fields by readers     | none 14, one part 57 (39 of them Viewport), several parts 17                    |
+
+Three consequences:
+
+1. **Every part re-renders on every camera change.** The provider memoizes on all field values
+   (`react-hooks/src/createContext.ts:28`), and eight fields change per frame (camera, pointer, focus, frameUnit,
+   latticeBounds, time, generated, toolbarActions). During playback the scene-keyed fields (`scene`, `displayScene`,
+   handlers, paste) are per-frame too, since the projection animates.
+2. **`toolbarActions` is per-frame by accident**: `createAtCentre` closes over the camera-derived `pointer`.
+3. **Most of the context is Viewport's private state routed through the root**, and fourteen fields are read by no
+   part (the root binds them itself).
+
+### 13.1 Target: aspects
+
+The state stays where it is (the store, the projection, `CanvasAtoms`); what changes is how parts reach it. The context
+is split by **aspect**: a functional slice of the canvas pairing the atoms that hold its state with the commands that
+change it. Every value an aspect exposes is stable for the life of the canvas (atoms, registries, command functions),
+so a part re-renders only for the atoms it subscribes to, never because the context changed.
+
+```
+Document (persisted)        SceneStore: scenes, scene(id), styles
+Projection (per View)       baseProjection → animate(…, clock) → { scene, apply, capabilities }
+View state (CanvasAtoms)    Navigation · Selection · Gesture · Editing · Tools · Time · Look
+                                │  each aspect: its atoms + its controller commands
+Context (one provider)      services: registry, atoms, store, registries, capabilities, readonly, controller
+  ├─ useCanvasDocument()    ├─ useCanvasNavigation()   ├─ useCanvasSelection()   ├─ useCanvasTools()
+  ├─ useCanvasLook()        └─ optional providers:  TimeProvider · GestureProvider · EditingProvider
+Parts                       read atoms with useAtomValue; call commands; derive their own values
+```
+
+Delivery: **one static provider** in `CanvasRoot` holds the services, the atoms and the controller, and each aspect
+has a hook that returns only its slice. Sharing one provider costs nothing because nothing in it changes. Three aspects
+that a canvas may lack or a host may replace get **their own provider**: Time (no timeline), Gesture and Editing (a
+read-only view mounts neither, so its parts cannot reach their commands).
+
+| Aspect         | Purpose                                      | State (atoms)                                                      | Commands                                                                                        | Derived (computed by its reader)                                                                                               | Hook / provider                  | Read by                                               |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- | ----------------------------------------------------- |
+| **Document**   | What the canvas shows and the one write path | `store.scenes`, `store.styles`, `projection.scene`; `capabilities` | `apply` and the intent helpers: create, delete, update, reorder, group, ungroup                 | `scene` (current View), `look` inputs                                                                                          | `useCanvasDocument()` · shared   | Viewport, Properties, Layers, Objects, About          |
+| **Navigation** | Where the camera is and which View is open   | `camera`, `path`, `history`, `isolation`                           | `drillIn`, `drillOut`, `goHistory`, `isolate`, `exitIsolation`, `fit`, `zoomIn/Out/At`, `panBy` | `bounds` (kept entry frame), `fitTarget`, `focus`, `frameUnit`                                                                 | `useCanvasNavigation()` · shared | Viewport, Navigation, Objects, Debug                  |
+| **Selection**  | What is selected or under the pointer        | `selection`, `hover`, `linkHover`, `point`                         | `select`, `selectAll`, `clearSelection`, `deleteSelection`, `duplicateSelection`                | the selected instance, `selected` flag for the inspector panel                                                                 | `useCanvasSelection()` · shared  | Viewport, Properties, Layers, Actions                 |
+| **Gesture**    | The pointer gesture in flight                | `drag`                                                             | the pointer machine's handlers (internal), `cancelDrag`                                         | `displayScene` (projection × drag), `createFrame`, `landing`, `blocked` — a derived atom, as Viewport and Objects both read it | `GestureProvider` · separate     | Viewport only (handlers); `displayScene` via its atom |
+| **Editing**    | Text editing and the clipboard               | `editing`, `active`, `clipboard`                                   | `editPart`, `commitPart`, `cancelPart`, `copy`, `cut`, `paste`                                  | —                                                                                                                              | `EditingProvider` · separate     | Viewport, Actions                                     |
+| **Tools**      | The active tool and the grid aids            | `tool`, `linkType`, `layer`, `snap`, `guides`, `lattice`, `debug`  | `setTool`, `toggleSnap`, `toggleGuides`, `toggleLattice`, `toggleDebug`, `createAtCentre`       | `grid` (snap spacing for the zoom), `latticeBounds`                                                                            | `useCanvasTools()` · shared      | Tools, Theme, Viewport, Debug                         |
+| **Time**       | The clock and keyframing                     | `clock.time`, `clock.playing`, `autoKey`                           | `play`, `pause`, `seek`, `toggleAutoKey`, the timeline key commands                             | `fps`, the sampled scene (inside `projection`)                                                                                 | `TimeProvider` · separate        | Timeline, Viewport                                    |
+| **Look**       | Theme and background                         | theme override, background grid (host props or atoms)              | `setTheme`, `setBackgroundGrid`                                                                 | `look`, `themeGrid`                                                                                                            | `useCanvasLook()` · shared       | Theme, Viewport                                       |
+
+Rules:
+
+1. **Values never go in a context.** An aspect hook returns atoms and functions; a part calls `useAtomValue` on the
+   atoms it draws. The services object is created once per canvas and never rebuilt.
+2. **Commands read state when called**, from the registry, never from a render-time closure, so their identity never
+   depends on state (the `createAtCentre`/`pointer` bug in the findings above is this rule broken).
+3. **Derived state lives with its reader.** A value read by one part is computed in that part; a value read by several
+   parts becomes a derived atom on the aspect (`displayScene`).
+4. **The controller is organised by aspect**: `controller.navigation.drillIn(…)`, `controller.selection.delete()`, and
+   so on, React-free in `engine/controller.ts`, unit-tested per aspect. Every command that edits the document goes
+   through `Document`'s `apply`, which Phase 6 replaces with `CanvasOperation.Apply` (VIEWS.md §8).
+5. **Undo leaves `CanvasAtoms`** in Phase 6 (the scoped `HistoryTracker`), and `layers` becomes the document-wide tag
+   table in Phase 3; both are aspect changes, not new contexts.
+
+### 13.2 Phases
+
+Each phase is one commit with the Canvas, panels and inspectors story tests and a Storybook smoke render after it.
+
+1. **Prune.** Remove the 14 dead fields (bind them in `CanvasRoot` only); read the camera at call time in
+   `createAtCentre`; drop the unused memo dependencies; fix the inconsistencies the inventory found (the
+   `drillIn` type, the duplicated menu delete, Timeline writing atoms directly, panels calling `useRegistry()`).
+2. **Viewport owns its state.** Viewport reads its atom-state itself and computes its own derived values
+   (`latticeBounds`, `focus`, `frameUnit`, `createFrame`, link-hover handlers, `themeGrid`).
+3. **Aspects.** The services provider, the shared aspect hooks and the Time, Gesture and Editing providers; the
+   `displayScene` derived atom. A story test counts panel renders across a scripted pan and asserts they do not
+   grow with it.
+4. **Controller.** `createCanvasController` in `engine/`, organised by aspect, with node unit tests per aspect;
+   `CanvasRoot`, the keys, menus and panels call it.
+5. **Split Viewport** into Background, Scene and Overlay, and the remaining parts into their own files.
+
+Done when: no part but Viewport re-renders on a pan (measured by the story test), the controller's commands are
+unit-tested without React, and no file in `components/Canvas` exceeds ~600 lines.

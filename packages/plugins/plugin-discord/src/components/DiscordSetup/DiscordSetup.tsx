@@ -59,6 +59,8 @@ type DiscordSetupToolbarProps = {
   onConnect?: () => void;
   onSignOut?: () => void;
   onRefresh?: () => void;
+  /** The hub console's page for the bots on this EDGE; its action opens it in a new tab. */
+  consoleUrl?: string;
 };
 
 /** Signs the user in to (or out of) Discord, and re-reads the servers. */
@@ -69,6 +71,7 @@ const DiscordSetupToolbar = ({
   onConnect,
   onSignOut,
   onRefresh,
+  consoleUrl,
 }: DiscordSetupToolbarProps) => {
   const menuActions = useMenuBuilder(
     () =>
@@ -95,8 +98,20 @@ const DiscordSetupToolbar = ({
           },
           () => (signedIn ? onSignOut : onConnect)?.(),
         )
+        .subgraph(
+          consoleUrl !== undefined &&
+            ((builder) =>
+              builder.action(
+                'console',
+                {
+                  label: ['discord-setup-console.label', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-square-out--regular',
+                },
+                () => window.open(consoleUrl, '_blank', 'noopener,noreferrer'),
+              )),
+        )
         .build(),
-    [signedIn, busy, onConnect, onSignOut, onRefresh],
+    [signedIn, busy, onConnect, onSignOut, onRefresh, consoleUrl],
   );
 
   const { t } = Hooks.useTranslation(meta.profile.key);

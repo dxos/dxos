@@ -1,6 +1,6 @@
 {
   "name": "@dxos/brand",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,6 +22,11 @@
       "source": "./src/channels.ts",
       "types": "./dist/types/src/channels.d.ts",
       "import": "./dist/lib/channels.mjs"
+    },
+    "./paths": {
+      "source": "./src/paths.ts",
+      "types": "./dist/types/src/paths.d.ts",
+      "import": "./dist/lib/paths.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,6 +34,9 @@
     "*": {
       "channels": [
         "dist/types/src/channels.d.ts"
+      ],
+      "paths": [
+        "dist/types/src/paths.d.ts"
       ]
     }
   },

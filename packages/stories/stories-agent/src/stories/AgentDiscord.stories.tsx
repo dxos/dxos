@@ -13,13 +13,10 @@ import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
   type DiscordBotArgs,
   type FakeDiscordBot,
-  KAI_APPLICATION_IDS,
   ModuleContainer,
   type ModuleLayout,
   createDecorators,
   edgeFake,
-  ensureBotRecord,
-  getEdgeEnvironment,
   installFakeDiscordBot,
   setupAgent,
   setupDiscordAgent,
@@ -42,13 +39,13 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
-
 const companion = (variant: string) => ({
   type: StoryRole.AgentCompanion,
   data: { variant },
   id: `companion-${variant}`,
 });
+
+type Story = StoryObj<StoryArgs>;
 
 /**
  * Installing the DXOS Discord app (Kai) and routing a Discord channel to the agent, in a durable test space on a
@@ -78,7 +75,6 @@ export const Setup: Story = {
     config: storyConfig({ persistent: args.persistent }),
     onReady: async ({ db, invoker }) => {
       await setupAgent({ db, invoker, remote: true });
-      await ensureBotRecord(db, KAI_APPLICATION_IDS[getEdgeEnvironment()]);
     },
   })),
   argTypes: { persistent: { control: 'boolean' } },
@@ -86,7 +82,7 @@ export const Setup: Story = {
     persistent: true,
     layout: [
       [companion('discord'), StoryRole.DiscordBot],
-      [StoryRole.AgentProperties, StoryRole.EmailChannel],
+      [StoryRole.AgentProperties, companion('email')],
       [companion('activity'), StoryRole.Conversation],
       [companion('brain')],
     ],
@@ -139,7 +135,7 @@ export const Scripted: Story = {
     const skills = await canvas.findByRole('group', { name: 'Skills' }, { timeout: 30_000 });
     await within(skills).findByText('Community support', {}, { timeout: 30_000 });
     // Setup recorded each team member's expertise, which the skill reads to choose who to offer.
-    await canvas.findByText(/Dmytro Maretskyi \(DXOS\) is the one to ask about ECHO/, {}, { timeout: 30_000 });
+    await canvas.findByText(/Dmytro knows about ECHO/, {}, { timeout: 30_000 });
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Connect channels' }, { timeout: 30_000 }));
     await findEntry(monitor, 'running · connecting');

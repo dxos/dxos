@@ -27,6 +27,11 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
     tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    // Saved views (named filter-bar queries), shown as children of the calendar in the navtree — see `Mailbox.filters`.
+    filters: Schema.Array(Schema.Struct({ name: Schema.String, filter: Schema.String })).pipe(
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),

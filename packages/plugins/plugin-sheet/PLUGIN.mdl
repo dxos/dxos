@@ -424,6 +424,52 @@ test QA-2: Build a budget and watch its totals recompute
       expect: B6 updates to 380 without any other action
 ```
 
+```mdl
+test QA-3: Chart a sales report in the Charts companion
+  desc: The charts demo — open the Bramble template's sales report and switch between its charts.
+  actors: human
+  status: passing            # 2026-10-16, recorded by autocue/sales-charts.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create the Bramble Coffee Roasters space
+      do: Open the app menu, choose "Create space", pick the Bramble Coffee Roasters template and click Create.
+      expect: the new space opens with its collections in the sidebar
+    - name: Open the sales report
+      do: In the sidebar, open Collections › Reference › Sales report.
+      expect: the sheet opens with green header rows over the monthly sales and revenue tables
+    - name: Show the bags sold chart
+      do: Open the Charts companion.
+      expect: |
+        it lists "Bags sold by blend" and "Revenue by channel", with the first selected and its grouped
+        bar chart drawn below
+    - name: Switch to the revenue chart
+      do: Click "Revenue by channel".
+      expect: a pie chart of revenue by channel replaces the bar chart, and its range F1:G4 is selected in the sheet
+    - name: Switch back to the bags sold chart
+      do: Click "Bags sold by blend".
+      expect: the bar chart returns and A1:D7 is selected in the sheet
+
+test QA-4: Showcase clip
+  desc: |
+    The 10s showcase clip: Fill a sheet with values and formulas. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: sheet` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sheet enabled
+  steps:
+    - name: Create a sheet
+      do: Create a Sheet.
+      expect: an empty grid opens
+    - name: Enter values and formulas
+      do: Type four rows of a label, a value and a formula.
+      expect: the formulas compute as each row is entered
+```
+
 ---
 
 ## Appendix: Extension Definitions

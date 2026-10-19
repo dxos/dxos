@@ -17,14 +17,15 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
+  type BackgroundGrid,
   type Camera,
+  Canvas,
+  type CanvasPropertiesProps,
   type Element,
   type InspectorMode,
   type Node,
   type SceneDisplay,
   type SceneId,
-  SceneView,
-  type SceneViewPropertiesProps,
   createLatticeProjection,
   isFrameNode,
   isLink,
@@ -33,11 +34,20 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import {
+  canvasRecordOf,
+  generatorCompiler,
+  isCanvasDrawing,
+  objectRef,
+  objectUri,
+  parseLinkedSceneId,
+  resolveDrawingLook,
+  updateCanvasRecord,
+} from '#model';
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
+import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -65,18 +75,30 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
-  const [snapshot] = useObject(canvas);
+  const [snapshot, updateCanvas] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
   const lattice = record?.lattice === true;
+  // The drawing's look is shared with collaborators, so it wins over the viewer's own default.
+  const look = resolveDrawingLook(record, settings);
+  const handleThemeChange = useCallback(
+    (theme: string | undefined) => updateCanvas((canvas) => updateCanvasRecord(canvas.content, { theme })),
+    [updateCanvas],
+  );
+  const handleBackgroundGridChange = useCallback(
+    (backgroundGrid: BackgroundGrid | undefined) =>
+      updateCanvas((canvas) => updateCanvasRecord(canvas.content, { backgroundGrid })),
+    [updateCanvas],
+  );
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
   const {
     camera: savedCamera,
     readonly: viewReadonly,
-    floating = false,
+    floating = true,
     grid: snap,
     guides,
     fit,
@@ -85,6 +107,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
   // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
+  // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
+  const article = role === AppSurface.Article.role;
   const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
@@ -109,7 +133,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   // A frame may show any object listed in the navigator but this drawing itself.
   const { t } = UiHooks.useTranslation();
-  const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
+  const getOptions = useCallback<NonNullable<CanvasPropertiesProps['getOptions']>>(
     (results) =>
       ObjectCombobox.toOptions(results, {
         t,
@@ -121,7 +145,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
   // empty, so linking never hides what was drawn there.
   const overrides = useCallback(
-    (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
+    (elements: readonly Element[]): ReturnType<NonNullable<CanvasPropertiesProps['overrides']>> => {
       const scenes = bound ? registry.get(bound.store.scenes) : {};
       const locked = elements.some((element) => {
         if (isLink(element) || !isFrameNode(element) || objectUri(element) || parseLinkedSceneId(element.scene)) {
@@ -139,7 +163,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
           !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
       );
       return {
-        ...(locked ? { object: { readonly: true } } : {}),
+        ...(locked ? { 'link.object': { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
         ...(surfaced ? {} : { role: { hidden: true } }),
       };
@@ -156,45 +180,55 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         {bound && (
           // An unset preference leaves the engine's own default in place.
           <CanvasDatabaseContext.Provider value={db}>
-            <SceneView.Root
+            <Canvas.Root
               key={bound.root}
+              classNames={article ? 'border-t border-separator-subtle' : undefined}
               store={bound.store}
               root={bound.root}
               nodes={nodes}
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
+              theme={look.theme}
+              defaultTheme={look.defaultTheme}
+              styleSet={look.styleSet}
+              background={look.background}
+              backgroundGrid={article ? look.backgroundGrid : 'none'}
+              onThemeChange={section ? undefined : handleThemeChange}
+              onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
               readonly={readonly}
               onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
-              initialDisplay={{ snap, guides, fit }}
-              onDisplayChange={handleDisplayChange}
+              initialDisplay={{ snap, guides: article && guides, fit }}
+              // Outside the article the guides are forced off, so this view must not write that back as the setting.
+              onDisplayChange={article ? handleDisplayChange : undefined}
               inspectors={floating ? 'floating' : 'docked'}
               onInspectorsChange={handleInspectorsChange}
+              generators={generators}
+              compileGenerator={generatorCompiler}
+              createGeneratorWorker={createGeneratorWorker}
             >
-              <SceneView.Canvas liveDepth={settings.liveDepth} />
+              <Canvas.Viewport liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
               {(settings.showToolbar ?? true) && (
                 <>
-                  <SceneView.Navigation />
-                  <SceneView.Actions />
-                  <SceneView.Debug />
+                  <Canvas.Navigation />
+                  <Canvas.Actions />
+                  <Canvas.Debug />
+                  {!section && <Canvas.Theme />}
                 </>
               )}
               {!section && (
                 <>
-                  {(settings.showPalette ?? true) && <SceneView.Palette />}
-                  <SceneView.Properties
-                    db={db}
-                    getOptions={getOptions}
-                    overrides={overrides}
-                    sceneFilter={isLocalScene}
-                  />
-                  <SceneView.Layers />
-                  <SceneView.About />
+                  {(settings.showPalette ?? true) && <Canvas.Tools />}
+                  <Canvas.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
+                  <Canvas.Timeline />
+                  <Canvas.Layers />
+                  <Canvas.Objects />
+                  <Canvas.About />
                 </>
               )}
-            </SceneView.Root>
+            </Canvas.Root>
           </CanvasDatabaseContext.Provider>
         )}
       </Panel.Body>

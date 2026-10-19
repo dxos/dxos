@@ -39,15 +39,21 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   const channels = values?.channels ?? [];
   const conversations = useAgentConversations(agent);
 
+  // The list owns its channels, so a channel taken off it is deleted rather than left hidden.
   const handleRemoveChannel = useCallback(
     (uri: string) => {
-      if (list) {
-        Obj.update(list, (list) => {
-          list.channels = list.channels.filter((ref) => ref.uri !== uri);
-        });
+      if (!list || !db) {
+        return;
+      }
+      const channel = list.channels.find((ref) => ref.uri === uri)?.peek();
+      Obj.update(list, (list) => {
+        list.channels = list.channels.filter((ref) => ref.uri !== uri);
+      });
+      if (channel) {
+        db.remove(channel);
       }
     },
-    [list],
+    [list, db],
   );
 
   const handleSelect = useCallback(

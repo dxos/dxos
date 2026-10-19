@@ -11,6 +11,7 @@ on:
       - gh-docker
     paths:
       - .github/Dockerfile
+      - .github/ci-packages.sh
       - .depot/workflows/docker-image.yml
   workflow_dispatch:
 

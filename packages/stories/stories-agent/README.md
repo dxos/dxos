@@ -26,8 +26,8 @@ Two kinds of Discord app take part, and each EDGE environment has its own Kai:
 | staging | Kai Staging | `1559968567775072356` |
 | production | Kai | `1555777706459660288` |
 
-The story picks the Kai of the EDGE its toolbar targets (`KAI_APPLICATION_IDS` in `src/testing/discord.ts`). Each
-Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
+Composer picks the Kai of the EDGE it talks to (`KAI_APPLICATION_IDS` in plugin-discord's `src/constants.ts`), so a
+space records no bot; staging has no entry there, since `EDGE_URLS` names no staging EDGE. Each Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
 unprefixed `discord-service` section for local).
 
 In each Kai app's portal, once:
@@ -91,6 +91,28 @@ In the **Setup** story:
 4. **Activity** toolbar → **Connect channels** (plug) starts the bot; the **Discord bot** panel reaches ready.
 5. Mention `@Kai` in that channel. Kai replies in a thread once its turn ends, and the conversation appears under
    **Activity → Conversations**.
+
+In the **PipelineDiscord → Setup** story (`?path=/story/stories-stories-agent-pipelinediscord--setup`), a Discord
+back-index runs as a remote timer trigger on EDGE: plugin-discord's `CrawlDiscordChannels` reads the channels' history
+with the Discord token stored in the space, keeps its progress in a `CrawlState` object and appends the facts it
+extracts to a fact feed; the agent's brain indexes the fact feed once it is registered. It needs an EDGE that serves
+the brain's `/compute/brain/:spaceId/:agentId/fact-feeds` routes and runs operation-service with this branch's
+plugin-discord: the edge branch `dm/elegant-euler-at56gd`, either checked out in `<edge>` and started with
+`node scripts/stack.mjs start` (section 2), or deployed to the EDGE the toolbar picks.
+
+1. **Discord** panel: sign in, install Kai and **Connect** a channel, as steps 1–3 above. The sign-in stores the
+   Discord connection, and its token, in the space.
+2. **Discord back-index** panel: pick the **Connection**, check the channel under **Channels**, set **Max days**
+   (e.g. 30), leave **Descend threads** on, and pick an **Interval**.
+3. **Start**: the crawl state, the fact feed and the trigger are created, and the channel appears under **Targets**.
+   Each run of the trigger, or **Run now**, moves the targets' cursors and the **Messages read** and **Facts in the
+   feed** counters; the **Timeline** records each change of the crawl state.
+4. Switch **Agent brain** on: the brain indexes the fact feed, and the **brain** companion lists the facts.
+5. **Pause** and **Resume** switch the trigger off and on; a row's reset button re-reads that channel or thread from
+   the start, and **Reset all** re-reads every target, without a model call for a message read before.
+
+The **PipelineDiscord → Scripted** story runs the same panel with EDGE faked (`startFakeBackIndexRunner` steps the
+crawl state while the trigger is on, `installFakeBrain` answers the fact feed routes), with no Discord or EDGE at all.
 
 ### 5. Check the bot
 

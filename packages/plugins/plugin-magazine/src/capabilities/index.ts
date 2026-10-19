@@ -29,6 +29,7 @@ export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const TextContent = AppCapability.textContent(() => import('./text-content.ts'), {
   activatesOn: ActivationEvents.Startup,
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {

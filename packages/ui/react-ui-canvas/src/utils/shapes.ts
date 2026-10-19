@@ -22,7 +22,7 @@ import {
   type Node,
   type Point,
   type Size,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { type PartField } from './parts.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
@@ -60,6 +60,9 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   ellipse: { width: 2, height: 2 },
   note: { width: 4, height: 2 },
   frame: { width: 4, height: 2 },
+  instance: { width: 4, height: 2 },
+  path: { width: 2, height: 2 },
+  generator: { width: 4, height: 4 },
 };
 
 /** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
@@ -68,6 +71,9 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   ellipse: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
   frame: { width: 512, height: 256 },
+  instance: { width: 512, height: 256 },
+  path: { width: 256, height: 256 },
+  generator: { width: 512, height: 512 },
 };
 
 /** The bounding box a new basic shape gets at the default grid. */
@@ -79,7 +85,7 @@ export type CreateNodeProps = {
   z: string;
   center: Point;
   size?: Size;
-  /** A frame's child scene id. */
+  /** A frame's child scene id, or an instance's composite. */
   scene?: string;
 };
 
@@ -102,6 +108,21 @@ export const createNode = ({
       return { type, id, z, center, size, text: 'Note' };
     case 'frame':
       return { type, id, z, center, size, scene: scene ?? id };
+    case 'instance':
+      return { type, id, z, center, size, composite: scene ?? '' };
+    case 'generator':
+      return { type, id, z, center, size, generator: scene ?? '', params: {} };
+    case 'path':
+      // A diamond until the path is set.
+      return {
+        type,
+        id,
+        z,
+        center,
+        size,
+        d: 'M 50 0 L 100 50 L 50 100 L 0 50 Z',
+        viewBox: { x: 0, y: 0, width: 100, height: 100 },
+      };
   }
 };
 

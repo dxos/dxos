@@ -120,6 +120,29 @@ export const cellSelected = (
   );
 };
 
+/**
+ * The sides of a multi-cell selection that `col`/`row` sits on (`top`, `bottom`, `start`, `end`), space-separated
+ * for an attribute's `~=` selector; undefined for cells inside it, outside it, or a single-cell selection.
+ */
+export const cellSelectionEdges = (
+  col: number,
+  row: number,
+  plane: DxGridPlane,
+  selection: DxGridSelectionProps,
+): string | undefined => {
+  if (!selection.visible || !cellSelected(col, row, plane, selection)) {
+    return undefined;
+  }
+
+  const edges = [
+    row === selection.rowMin && 'top',
+    row === selection.rowMax && 'bottom',
+    col === selection.colMin && 'start',
+    col === selection.colMax && 'end',
+  ].filter((edge) => edge !== false);
+  return edges.length > 0 ? edges.join(' ') : undefined;
+};
+
 export const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
   const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
   return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };

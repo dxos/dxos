@@ -384,6 +384,9 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
   // an extensioned dynamic import, which knip's traversal does not follow.
   'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
+  // `src/open.ts` is reached only from the `drawing` bin (`src/bin/cli.ts`), which the production pass
+  // does not count as an entry, and keeping it out of `src/index.ts` keeps `node:child_process` out of browsers.
+  'packages/devtools/drawing': ['@dxos/errors'],
 };
 
 /**

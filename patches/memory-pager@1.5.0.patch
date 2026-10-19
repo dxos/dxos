@@ -1,0 +1,34 @@
+diff --git a/index.js b/index.js
+index 687f346f30e6e8e6f3247f06c4946643ae2baba8..1681fade50acba77d1a89ea4953fbb9d70b7634a 100644
+--- a/index.js
++++ b/index.js
+@@ -6,8 +6,8 @@ function Pager (pageSize, opts) {
+   this.length = 0
+   this.updates = []
+   this.path = new Uint16Array(4)
+-  this.pages = new Array(32768)
+-  this.maxPages = this.pages.length
++  this.pages = []
++  this.maxPages = 32768
+   this.level = 0
+   this.pageSize = pageSize || 1024
+   this.deduplicate = opts ? opts.deduplicate : null
+@@ -51,7 +51,7 @@ Pager.prototype._array = function (i, noAllocate) {
+ 
+     if (!next) {
+       if (noAllocate) return
+-      next = arr[p] = new Array(32768)
++      next = arr[p] = []
+     }
+ 
+     arr = next
+@@ -118,8 +118,7 @@ Pager.prototype.toBuffer = function () {
+ function grow (pager, index) {
+   while (pager.maxPages < index) {
+     var old = pager.pages
+-    pager.pages = new Array(32768)
+-    pager.pages[0] = old
++    pager.pages = [old]
+     pager.level++
+     pager.maxPages *= 32768
+   }

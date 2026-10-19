@@ -1,0 +1,3 @@
+node A "Author"
+node B "Book" right-of A
+edge A one-to-many B

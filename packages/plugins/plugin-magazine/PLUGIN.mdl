@@ -609,6 +609,28 @@ test QA-2: Open a curated tile and confirm read state
       expect: the opened tile now renders dimmed, and its Post.readAt holds an ISO timestamp
 ```
 
+```mdl
+test QA-3: Showcase clip
+  desc: |
+    The 10s showcase clip: Browse the Weekend Reading magazine and open an article. Recorded light at 60 fps with no
+    ident, captions or count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: magazine` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - plugin-magazine enabled
+  steps:
+    - name: Seed the space
+      do: Create a space from the Reading Room template and open Weekend Reading.
+      expect: the masonry shows 12 tiles, each with a photograph
+    - name: Browse
+      do: Scroll down the masonry and back.
+      expect: every tile shows its photograph, title, snippet and feed name
+    - name: Read
+      do: Click a tile.
+      expect: the post opens beside the magazine with its photograph and article body, with no network fetch
+```
+
 ---
 
 ## Design Notes

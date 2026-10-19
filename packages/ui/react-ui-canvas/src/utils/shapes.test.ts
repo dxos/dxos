@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type SplineLink } from '../model/types.ts';
+import { type SplineLink } from '../model/index.ts';
 import { cloneShape, createNode, flipLink } from './shapes.ts';
 
 describe('shapes', () => {

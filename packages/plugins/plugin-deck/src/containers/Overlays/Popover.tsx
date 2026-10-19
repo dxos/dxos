@@ -16,6 +16,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
@@ -156,36 +157,44 @@ export const PopoverContent = () => {
          * header (icon + title + menu) always renders, and the body falls back to a fixed-
          * height "no preview" row when no subject resolves a card Surface (e.g. system-type
          * objects like a raw Feed that have no registered card and no renderable fields). The card is the popover's
-         * content, regular-size and edge to edge as the current card popover; it scrolls itself (`dx-card-popover`) and
-         * keeps a card's minimum width, but is only as tall as its rows, so a short card leaves no empty space.
+         * content, regular-size and edge to edge as the current card popover. Its scroll area is capped (`dx-card-popover`)
+         * and keeps a card's minimum width, but is only as tall as its rows, so a short card leaves no empty space; it
+         * scrolls with the app's thin overlay thumb rather than the native bar.
          */
-        <ObjectCard.Root border={false} classNames={['dx-card-popover dx-card-min-width', roundedClassNames]}>
-          <ObjectCard.Header
-            subject={popoverSubject}
-            menu={
-              // TODO(wittjosiah): Reconcile with Card.Menu.
-              <Layout.Block rail='end'>
-                {popoverSubject !== undefined && <CardSlot.MenuSlot subject={popoverSubject} menu={menu} />}
-                <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
-                </ActionMenu>
-              </Layout.Block>
-            }
-          >
-            {title}
-          </ObjectCard.Header>
+        <ScrollArea.Root
+          width='thin'
+          classNames={['dx-card-popover dx-card-min-width overflow-hidden', roundedClassNames]}
+        >
+          <ScrollArea.Viewport>
+            <ObjectCard.Root border={false} classNames={roundedClassNames}>
+              <ObjectCard.Header
+                subject={popoverSubject}
+                menu={
+                  // TODO(wittjosiah): Reconcile with Card.Menu.
+                  <Layout.Block rail='end'>
+                    {popoverSubject !== undefined && <CardSlot.MenuSlot subject={popoverSubject} menu={menu} />}
+                    <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
+                      <Button.Root variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                    </ActionMenu>
+                  </Layout.Block>
+                }
+              >
+                {title}
+              </ObjectCard.Header>
 
-          {content && 'subject' in content ? (
-            /** CardContent must render the Card.Body. */
-            <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
-          ) : (
-            <Card.Body classNames='min-h-8'>
-              <Card.Row>
-                <Card.Text variant='muted'>{t('popover-no-preview.message')}</Card.Text>
-              </Card.Row>
-            </Card.Body>
-          )}
-        </ObjectCard.Root>
+              {content && 'subject' in content ? (
+                /** CardContent must render the Card.Body. */
+                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
+              ) : (
+                <Card.Body classNames='min-h-8'>
+                  <Card.Row>
+                    <Card.Text variant='muted'>{t('popover-no-preview.message')}</Card.Text>
+                  </Card.Row>
+                </Card.Body>
+              )}
+            </ObjectCard.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       )}
     </Popover.Content>
   );

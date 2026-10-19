@@ -40,7 +40,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(other) },
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', link: { object: Ref.make(other) } },
       };
     });
     await db.flush();
@@ -83,7 +83,7 @@ describe('bindCanvasStore', () => {
     const frameOn = (id: string, object: Drawing.Drawing) => ({
       kind: 'node',
       scene: 'root',
-      node: { id, type: 'frame', z: 'a1', ...frame, scene: id, object: Ref.make(object) },
+      node: { id, type: 'frame', z: 'a1', ...frame, scene: id, link: { object: Ref.make(object) } },
     });
     Obj.update(middleCanvas, (middleCanvas) => {
       middleCanvas.content['scene:g'] = { kind: 'scene', id: 'g' };
@@ -122,7 +122,7 @@ describe('bindCanvasStore', () => {
       ...scenes,
       [middleId]: {
         ...scenes[middleId],
-        nodes: { ...scenes[middleId].nodes, g: { ...inner, object: Ref.make(other) } },
+        nodes: { ...scenes[middleId].nodes, g: { ...inner, link: { object: Ref.make(other) } } },
       },
     });
     await expect.poll(middleFrame).toBe('Other');
@@ -151,7 +151,10 @@ describe('bindCanvasStore', () => {
     const scenes = registry.get(bound.store.scenes);
     registry.set(bound.store.scenes, {
       ...scenes,
-      root: { ...scenes.root, nodes: { ...scenes.root.nodes, f: { ...scenes.root.nodes.f, object: Ref.make(other) } } },
+      root: {
+        ...scenes.root,
+        nodes: { ...scenes.root.nodes, f: { ...scenes.root.nodes.f, link: { object: Ref.make(other) } } },
+      },
     });
     const shown = () => {
       const node = registry.get(bound.store.scenes).root.nodes.f;
@@ -171,7 +174,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(self) },
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', link: { object: Ref.make(self) } },
       };
     });
     await db.flush();
@@ -199,7 +202,15 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(person), role: 'section' },
+        node: {
+          id: 'f',
+          type: 'frame',
+          z: 'a0',
+          ...frame,
+          scene: 'f',
+          link: { object: Ref.make(person) },
+          role: 'section',
+        },
       };
     });
     await db.flush();

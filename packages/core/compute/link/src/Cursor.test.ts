@@ -540,6 +540,30 @@ describe('token accessors', () => {
     expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-a']);
   });
 
+  test('snapshot writes cost O(changed entry): unchanged rewrites write nothing', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    const description = 'x'.repeat(200);
+    const snapshot = (index: number) => ({ title: `Issue ${index}`, description, status: 'todo' });
+    for (let index = 0; index < 20; index++) {
+      Cursor.writeSnapshot(cursor, String(index), snapshot(index));
+    }
+    const changeCount = Obj.getChanges(cursor).length;
+
+    // A re-sync of unchanged items must not grow the history.
+    for (let index = 0; index < 20; index++) {
+      Cursor.writeSnapshot(cursor, String(index), snapshot(index));
+    }
+    expect(Obj.getChanges(cursor).length).toBe(changeCount);
+
+    // Changing one entry must not rewrite the other 19.
+    Cursor.writeSnapshot(cursor, '0', { ...snapshot(0), status: 'done' });
+    const changes = Obj.getChanges(cursor);
+    expect(changes.length).toBe(changeCount + 1);
+    expect(changes.at(-1)?.ops ?? Infinity).toBeLessThan(description.length * 2);
+    expect(Cursor.readSnapshot(cursor, '0')).toEqual({ ...snapshot(0), status: 'done' });
+    expect(Cursor.readSnapshot(cursor, '19')).toEqual(snapshot(19));
+  });
+
   test('the token is preserved alongside snapshots (both are opaque spec fields)', async ({ expect }) => {
     const cursor = await makeExternalCursor();
     Cursor.writeToken(cursor, 'state-abc');

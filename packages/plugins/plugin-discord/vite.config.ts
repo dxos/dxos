@@ -18,6 +18,8 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'DiscordTargetOptions': 'src/types/DiscordTargetOptions.ts',
     'DiscordAdminOperation': 'src/types/DiscordAdminOperation.ts',
+    'DiscordAgentOperation': 'src/types/DiscordAgentOperation.ts',
+    'DiscordBot': 'src/types/DiscordBot.ts',
     'DiscordChannel': 'src/types/DiscordChannel.ts',
     'DiscordEvents': 'src/types/DiscordEvents.ts',
     'DiscordOperation': 'src/types/DiscordOperation.ts',

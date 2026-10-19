@@ -13,8 +13,16 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
+import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type Credential,
+  DefaultSpaceSchema,
+  MembershipPolicy,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { AppCapabilities } from '../app-framework/index.ts';
 import { GraphPath } from '../app/index.ts';
@@ -37,6 +45,12 @@ export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
  */
 const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
 
+/**
+ * Space tag for an agent's default space: the space an agent's own identity owns, minted with that identity on
+ * EDGE. Its members are the agent's admins.
+ */
+export const AGENT_SPACE_TAG = 'org.dxos.space.agent';
+
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
 
@@ -48,6 +62,31 @@ export const hasTag = (space: Space, tag: string): boolean => space.tags.include
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
+
+/**
+ * The agents among `spaces` that `self` may not add elsewhere: the owners of agent spaces `self` cannot write to. Only
+ * an agent's admins, the members who may write to its space, may add it to another space, which EDGE enforces; the
+ * contact picker leaves the others out, though an agent whose space `self` is not in cannot be told from a person.
+ */
+export const agentsNotAdministeredBy = (
+  spaces: readonly { readonly tags: readonly string[]; readonly members: { get(): SpaceMember[] } }[],
+  self: PublicKey,
+): PublicKey[] =>
+  spaces
+    .filter((space) => space.tags.includes(AGENT_SPACE_TAG))
+    .filter(
+      (space) =>
+        !space.members
+          .get()
+          .some(
+            (member) =>
+              (member.role === SpaceMember_Role.ADMIN || member.role === SpaceMember_Role.EDITOR) &&
+              (toPublicKey(member.identity?.identityKey)?.equals(self) ?? false),
+          ),
+    )
+    .flatMap((space) => space.members.get())
+    .filter((member) => member.role === SpaceMember_Role.OWNER)
+    .flatMap((member) => toPublicKey(member.identity?.identityKey) ?? []);
 
 /**
  * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since

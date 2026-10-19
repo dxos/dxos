@@ -88,13 +88,10 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 <RelatedTypeFilter classNames='self-start' types={types} onToggle={toggle} />
                 {/* The masonry's own gutter would inset these cards relative to the record card above,
                     which shares this column — the scroll padding is the article's to own, not theirs. */}
-                {/* `centered={false}` on the ROOT, which is column alignment — distinct from
-                    `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
-                    columns drift right of the record card above them, which shares this column. */}
+                {/* `centered={false}`: centred columns drift right of the record card above them, which shares
+                    this column. `scroll={false}`: the article's viewport scrolls the cards with the record. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
-                  <Masonry.Content padding={false}>
-                    <Masonry.Viewport items={related} />
-                  </Masonry.Content>
+                  <Masonry.Viewport items={related} scroll={false} />
                 </Masonry.Root>
               </Layout.Flex>
             )}

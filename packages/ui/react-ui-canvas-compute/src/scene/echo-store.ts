@@ -5,7 +5,7 @@
 //
 // The scene store over a `CanvasBoard` (MIGRATION.md M4): `layout.nodes` are the scene's nodes and
 // `layout.edges` its links, so a board written by the old editor opens on the engine unchanged. The
-// store is the only seam that changes — `SceneView` takes this exactly as it takes the memory store.
+// store is the only seam that changes — `Canvas` takes this exactly as it takes the memory store.
 //
 // The two representations differ in three places, and each is translated rather than migrated:
 // z-order (an array in the layout, a fractional key in the scene), style (`guide` / `classNames` at the

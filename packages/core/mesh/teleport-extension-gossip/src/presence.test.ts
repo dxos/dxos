@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { latch, sleep } from '@dxos/async';
+import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
 
 import { TestAgent } from './testing.ts';
@@ -73,6 +73,38 @@ describe('Presence', () => {
 
     // Check if third peer is offline for first and second peer.
     await agent1.waitForAgentsOnline([agent2], TIMEOUT);
+  });
+
+  test('A sweep reports nothing while no peer has gone offline', async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const agent = new TestAgent({ announceInterval: 10, offlineTimeout: 50 });
+    onTestFinished(() => agent.destroy());
+    let updates = 0;
+    agent.presence.updated.on(() => {
+      updates++;
+    });
+
+    await vi.advanceTimersByTimeAsync(500);
+    expect(updates).toBe(0);
+  });
+
+  test('A peer that stops announcing is reported offline', async () => {
+    const builder = new TestBuilder();
+    onTestFinished(() => builder.destroy());
+    const [agent1, agent2] = builder.createPeers({
+      factory: () => new TestAgent({ announceInterval: 10, offlineTimeout: 50 }),
+    });
+    await builder.connect(agent1, agent2);
+    await agent1.waitForAgentsOnline([agent2], TIMEOUT);
+
+    await agent2.presence.close();
+    await asyncTimeout(
+      agent1.presence.updated.waitFor(() => agent1.presence.getPeersOnline().length === 0),
+      TIMEOUT,
+    );
   });
 
   test('Four peers connected', async () => {

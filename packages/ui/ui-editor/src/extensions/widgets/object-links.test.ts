@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { forceParsing } from '@codemirror/language';
+import { forceParsing, syntaxTree } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 import { describe, test } from 'vitest';
@@ -131,6 +131,22 @@ describe('objectLinks', () => {
     const built = decorations(view);
     expect(built.some((decoration) => !decoration.block)).toBe(true);
     expect(built.some((decoration) => decoration.block)).toBe(true);
+    view.destroy();
+  });
+
+  // Background parsing extends the tree in steps with no document change, and a parse that runs out
+  // of time fills skipped ranges in as they scroll into view; each step must decorate what it parsed.
+  test('widgets follow a parse that advances without a document change', async ({ expect }) => {
+    const doc = Array.from({ length: 4_000 }, (_, i) => `See [x](eid:${i}) ${'and more text '.repeat(15)}\n\n`).join(
+      '',
+    );
+    const view = createView(doc, { link: recording });
+    const initial = decorations(view).length;
+    const parsed = syntaxTree(view.state).length;
+    await expect.poll(() => syntaxTree(view.state).length, { timeout: 10_000 }).toBeGreaterThan(parsed);
+    await flush();
+    expect(syntaxTree(view.state).length).toBeLessThan(doc.length);
+    expect(decorations(view).length).toBeGreaterThan(initial);
     view.destroy();
   });
 

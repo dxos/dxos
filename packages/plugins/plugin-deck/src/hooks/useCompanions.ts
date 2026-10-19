@@ -3,9 +3,12 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import { useContext, useLayoutEffect, useState } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
@@ -23,9 +26,12 @@ import { DeckSchema } from '#types';
  * surfaces as a React "cannot update a component while rendering a different component" warning. Reading
  * it from an effect defers that notification to the commit phase where cross-component updates are allowed.
  * A layout effect, so a plank with no companions re-renders without its pane before the first paint.
+ *
+ * On an `id` change the previous companions are held until the builder flushes, since an empty read straight
+ * after expanding means "not flushed yet" and committing it would close the companion pane and reopen it.
  */
 export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
-  const { graph } = Hooks.useAppGraph();
+  const builder = Hooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const [companions, setCompanions] = useState<AppGraphNode.Node[] | undefined>(undefined);
 
@@ -35,6 +41,7 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
       return;
     }
 
+    const { graph } = builder;
     AppGraph.expandSync(graph, id, AppNode.companion);
     const atom = graph.connections(id, AppNode.companion);
     const update = () => {
@@ -47,9 +54,20 @@ export const useCompanions = (id?: string): AppGraphNode.Node[] | undefined => {
       );
     };
 
-    update();
-    return registry.subscribe(atom, update);
-  }, [graph, registry, id]);
+    const unsubscribe = registry.subscribe(atom, update);
+    if (registry.get(atom).length > 0) {
+      update();
+      return unsubscribe;
+    }
+
+    const settle = Effect.runFork(
+      Effect.promise(() => AppGraphBuilder.flush(builder)).pipe(Effect.andThen(Effect.sync(update))),
+    );
+    return () => {
+      unsubscribe();
+      void Effect.runFork(Fiber.interrupt(settle));
+    };
+  }, [builder, registry, id]);
 
   return companions;
 };

@@ -1,5 +1,17 @@
 # @dxos/lockfile-explorer
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/util@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

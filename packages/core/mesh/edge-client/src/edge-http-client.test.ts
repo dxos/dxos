@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { SpaceId } from '@dxos/keys';
 import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -732,5 +733,66 @@ describe('EdgeHttpClient inbox', () => {
     );
     const client = new EdgeHttpClient('https://edge.example.com');
     await expect(client.listInbox(Context.default())).rejects.toThrow();
+  });
+});
+
+describe('EdgeHttpClient brain fact feeds', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const SPACE_ID = SpaceId.random();
+  const FEED = `echo://${SPACE_ID}/01J00000000000000000000000`;
+
+  test('calls the fact feed routes and decodes the feeds', async ({ expect }) => {
+    const calls: { method?: string; path: string; body?: unknown }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: any, init?: RequestInit) => {
+        const url = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+        if (url.pathname === '/auth') {
+          return new Response(null, { status: 200 });
+        }
+        calls.push({
+          method: init?.method,
+          path: `${url.pathname}${url.search}`,
+          body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+        });
+        return new Response(JSON.stringify({ success: true, data: { feeds: [FEED] } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    const ctx = Context.default();
+    const agent = 'did:key:z6Mk';
+    const base = `/compute/brain/${SPACE_ID}/${encodeURIComponent(agent)}/fact-feeds`;
+
+    expect(await client.addBrainFactFeed(ctx, SPACE_ID, agent, FEED)).toEqual({ feeds: [FEED] });
+    expect(await client.listBrainFactFeeds(ctx, SPACE_ID, agent)).toEqual({ feeds: [FEED] });
+    await client.removeBrainFactFeed(ctx, SPACE_ID, agent, FEED);
+
+    expect(calls.map(({ method, path }) => `${method} ${path}`)).toEqual([
+      `POST ${base}`,
+      `GET ${base}`,
+      `DELETE ${base}?${new URLSearchParams({ feed: FEED })}`,
+    ]);
+    expect(calls[0].body).toEqual({ feed: FEED });
+  });
+
+  test('rejects a malformed answer', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ success: true, data: { feeds: 'none' } }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+      ),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(client.listBrainFactFeeds(Context.default(), SPACE_ID, 'agent-1')).rejects.toThrow();
   });
 });

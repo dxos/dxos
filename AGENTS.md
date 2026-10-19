@@ -304,7 +304,11 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+- **Browser, storybook and e2e tests run in the merge queue, not on PRs.** A browser or storybook failure
+  there drops the PR from the queue; reproduce it with `moon run <project>:test-storybook` (or
+  `:test-browser`), fix, and re-queue. `depot ci dispatch --workflow check.yml --ref <branch>` runs every
+  suite on a branch once, when a change needs them before queueing.
+- **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
@@ -383,6 +387,8 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **A status page for a long session** — one Artifact board with questions, work in progress and
+  results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).
@@ -394,6 +400,8 @@ Do not paste real credential values into any shell command, and do not paste the
   - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
     runs the boot budget locally, the same target CI runs as `moon run composer-app:check-boot-budget`.
   - A node test suite is slow or leaks? `test-perf-leaks` skill.
+- **Publishing a package to npm** — first publish of a new package and its trusted publisher via
+  `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).

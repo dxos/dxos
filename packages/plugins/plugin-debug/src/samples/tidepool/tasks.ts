@@ -212,7 +212,7 @@ const buildTasks = (
  * The project's work: three milestones and a two-level task tree. The set lists the roots and each
  * parent lists its sub-tasks, both written through `SampleSpace.children`.
  */
-export const Tasks: SampleSpace.Phase<TasksResult, PersonMap> = SampleSpace.phase('tasks', {
+export const Tasks: SampleSpace.Partial<TasksResult, PersonMap> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task, Milestone.Milestone],
   run: (people: PersonMap) =>
     Effect.gen(function* () {

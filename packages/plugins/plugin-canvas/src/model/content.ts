@@ -12,6 +12,8 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  BackgroundGrid,
+  CAMERA_TARGET,
   DEFAULT_LAYER,
   type FrameNode,
   Layer,
@@ -19,15 +21,19 @@ import {
   Link,
   type Node,
   NodeBase,
+  OPACITY_PATH,
   type Scene,
   type SceneId,
+  SceneKind,
   type SceneMap,
   StyleClass,
   type StyleMap,
+  Timeline,
   elementLayer,
   isFrameNode,
   sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+  trackId,
+} from '@dxos/react-ui-canvas/headless';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
@@ -52,6 +58,14 @@ export const CanvasRecord = Schema.Struct({
   grid: Schema.optional(Schema.Number),
   /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
   readonly: Schema.optional(Schema.Boolean),
+  /** The theme every collaborator sees, over each one's own default; an id the theme registry resolves. */
+  theme: Schema.optional(Schema.String),
+  /** Overrides the theme's style set. */
+  styleSet: Schema.optional(Schema.String),
+  /** Overrides the theme's background. */
+  background: Schema.optional(Schema.String),
+  /** Overrides the background's grid. */
+  backgroundGrid: Schema.optional(BackgroundGrid),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -62,6 +76,10 @@ export const SceneRecord = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
+  /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
+  sceneKind: Schema.optional(SceneKind),
+  /** The scene's animation, kept whole with it: keys are edited as a set and few. */
+  timeline: Schema.optional(Timeline),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -268,6 +286,26 @@ export const updateCanvasRecord = (content: ContentMap, values: Partial<Omit<Can
   }
 };
 
+/** What a drawing passes the view to pick its look: its own theme over the user's, then its overrides of the parts. */
+export type DrawingLook = Pick<CanvasRecord, 'theme' | 'styleSet' | 'background' | 'backgroundGrid'> & {
+  defaultTheme?: string;
+};
+
+/**
+ * The look a drawing draws with: its own theme (shared with collaborators) over the user's default, else classic, then
+ * the drawing's overrides of the theme's style set, background and grid.
+ */
+export const resolveDrawingLook = (
+  record: Pick<CanvasRecord, 'theme' | 'styleSet' | 'background' | 'backgroundGrid'> | undefined,
+  defaults: { theme?: string },
+): DrawingLook => ({
+  theme: record?.theme,
+  defaultTheme: defaults.theme,
+  styleSet: record?.styleSet,
+  background: record?.background,
+  backgroundGrid: record?.backgroundGrid,
+});
+
 /** The root scene id, when the content has been seeded. */
 export const rootOf = (content: ContentMap): SceneId | undefined => {
   const canvas = content[CANVAS_KEY];
@@ -381,6 +419,56 @@ const withLegacyLine = (link: Link): Link => {
   return Object.keys(style).length > 0 ? { ...link, style } : link;
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/**
+ * A node saved before its opacity moved into its style, or a frame saved before its `object` and `contents` moved
+ * into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
+ * place.
+ */
+const withLegacyNode = (node: Node): Node => {
+  const opacity: unknown = Reflect.get(node, 'opacity');
+  const object: unknown = Reflect.get(node, 'object');
+  const contents: unknown = Reflect.get(node, 'contents');
+  Reflect.deleteProperty(node, 'opacity');
+  let style = node.style;
+  if (typeof opacity === 'number' && style?.opacity === undefined) {
+    style = { ...style, opacity };
+  }
+  // Only a frame ever carried `object` and `contents`; on another type they are a host's own fields.
+  const framed = isFrameNode(node) && (object !== undefined || contents !== undefined);
+  if (!framed) {
+    return style === node.style ? node : { ...node, style };
+  }
+  Reflect.deleteProperty(node, 'object');
+  Reflect.deleteProperty(node, 'contents');
+  const current: unknown = Reflect.get(node, 'link');
+  const link = {
+    ...(object !== undefined ? { object } : {}),
+    ...(typeof contents === 'boolean' ? { contents } : {}),
+    ...(isRecord(current) ? current : {}),
+  };
+  return Object.assign({}, node, style ? { style } : {}, { link });
+};
+
+/** A timeline saved before a node's opacity moved into its style keys `style.opacity` where it keyed `opacity`. */
+const withLegacyTimeline = (timeline: Timeline): Timeline => {
+  const legacy = Object.values(timeline.tracks).some(
+    (track) => track.property === 'opacity' && track.target !== CAMERA_TARGET,
+  );
+  if (!legacy) {
+    return timeline;
+  }
+  const tracks = Object.fromEntries(
+    Object.entries(timeline.tracks).map(([id, track]) =>
+      track.property === 'opacity' && track.target !== CAMERA_TARGET
+        ? [trackId(track.target, OPACITY_PATH), { ...track, property: OPACITY_PATH }]
+        : [id, track],
+    ),
+  );
+  return { ...timeline, tracks };
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
@@ -395,7 +483,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = clone(record.node);
+      nodes[record.scene][record.node.id] = withLegacyNode(clone(record.node));
     } else if (isLinkRecord(record) && links[record.scene]) {
       links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }
@@ -408,6 +496,8 @@ export const readScenes = (content: ContentMap): SceneMap => {
       nodes: nodes[header.id],
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
+      ...(header.sceneKind ? { kind: header.sceneKind } : {}),
+      ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
     };
   }
   return scenes;
@@ -429,6 +519,8 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
       id: scene.id,
       ...(scene.name ? { name: scene.name } : {}),
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+      ...(scene.kind && scene.kind !== 'scene' ? { sceneKind: scene.kind } : {}),
+      ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {
       content[key] = record;
@@ -473,4 +565,25 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
     }
   }
   return changed;
+};
+
+/** The scene record `id`, when the content has one. */
+export const sceneRecordOf = (content: ContentMap, id: SceneId): SceneRecord | undefined => {
+  const record: unknown = content[sceneKey(id)];
+  return isSceneRecord(record) ? record : undefined;
+};
+
+/** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
+export const putNodeRecord = (content: ContentMap, scene: SceneId, node: Node): void => {
+  content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
+};
+
+/** Replaces scene `scene`'s timeline in place; the scene must exist. */
+export const putTimeline = (content: ContentMap, scene: SceneId, timeline: Timeline): boolean => {
+  const record = sceneRecordOf(content, scene);
+  if (!record) {
+    return false;
+  }
+  content[sceneKey(scene)] = { ...clone(record), timeline: clone(timeline) } satisfies SceneRecord;
+  return true;
 };

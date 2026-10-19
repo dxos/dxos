@@ -23,8 +23,8 @@ catalog:
   '@ark-ui/react': ^5.39.1
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
-  '@astrojs/rss': ^4.0.18
-  '@astrojs/starlight': ^0.40.0
+  '@astrojs/rss': ^4.0.19
+  '@astrojs/starlight': ^0.42.6
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -159,7 +159,7 @@ catalog:
   '@opentui/core-win32-x64': 0.1.61
   '@opentui/solid': 0.1.61
   '@oxc-project/runtime': ^0.129.0
-  '@oxc-project/types': 0.139.0
+  '@oxc-project/types': 0.154.0
   '@panproto/core': 0.56.1
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
@@ -172,6 +172,8 @@ catalog:
   '@remotion/bundler': 4.0.534
   '@remotion/cli': 4.0.534
   '@remotion/fonts': 4.0.534
+  '@remotion/motion-blur': 4.0.534
+  '@remotion/player': 4.0.534
   '@remotion/renderer': 4.0.534
   '@replit/codemirror-vim': ^6.3.0
   '@replit/codemirror-vscode-keymap': ^6.0.2
@@ -330,7 +332,7 @@ catalog:
   argparse: ^2.0.1
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^6.4.6
+  astro: ^7.4.0
   asynciterator: 3.9.0
   autoprefixer: ^10.5.0
   babel-preset-solid: ^1.9.9
@@ -596,7 +598,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: ~1.2.4
+  rolldown: ~1.2.14
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
@@ -615,7 +617,7 @@ catalog:
   sort-package-json: ^1.57.0
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
-  starlight-links-validator: ^0.24.0
+  starlight-links-validator: ^0.27.0
   storybook: ^10.6.0
   storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5
@@ -658,7 +660,7 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.2.2
+  vite: ^8.3.4
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^1.1.0
   vite-plugin-glslify: ^2.3.0
@@ -727,7 +729,6 @@ onlyBuiltDependencies:
 overrides:
   '@automerge/automerge': 'catalog:'
   '@automerge/automerge-subduction': 'catalog:'
-  '@dxos/docs>vite': ^7.3.2
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': 'catalog:'
   '@lezer/highlight': 'catalog:'
@@ -738,15 +739,14 @@ overrides:
   '@remotion/elevenlabs>zod': 4.3.6
   '@remotion/media>zod': 4.3.6
   '@remotion/openai-whisper>zod': 4.3.6
-  '@remotion/studio>zod': 4.3.6
   '@remotion/studio-protocol>zod': 4.3.6
   '@remotion/studio-server>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
   '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
   ajv@8: '>=8.18.0'
-  astro>vite: ^7.3.2
   axios: 1.14.0
   base-x@4: 4.0.1
   cookie: '>=0.7.0'
@@ -778,7 +778,7 @@ overrides:
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
   undici: '>=7.18.2'
-  vite: '>=8.2.1'
+  vite: '>=8.3.4'
   web-ext: ^10.5.0
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
@@ -790,6 +790,7 @@ patchedDependencies:
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
+  memory-pager@1.5.0: patches/memory-pager@1.5.0.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
   vitest@4.1.10: patches/vitest@4.1.10.patch
