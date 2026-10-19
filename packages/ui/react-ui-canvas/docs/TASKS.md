@@ -2,6 +2,25 @@
 
 Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, and smoke-rendered in Storybook.
 
+## Order (agreed 2026-10-18)
+
+1. Land PR #14030; then the held canvas changes (grid crossfade, text-node leading, Nested story) as their own PR.
+2. Barrels: once `@dxos/eslint-plugin-rules/folder-barrel-imports` lands, enable it for react-ui-canvas and fix its violations.
+3. Phase 0 below: refactor `CanvasRoot` and its context.
+4. Phases 1-6.
+
+## Phase 0 — Canvas core refactor
+
+Design: DESIGN.md §13.
+
+- [x] Inventory every `CanvasContextValue` field: kind, source, change rate, readers.
+- [x] Design: services context, parts read atoms, a React-free `CanvasController`, derived state with its reader.
+- [ ] 0.1 Prune: dead fields, `createAtCentre` camera read, unused memo deps, inventory inconsistencies.
+- [ ] 0.2 Viewport reads its own atom-state and computes its own derived values.
+- [ ] 0.3 Aspects (DESIGN.md §13.1): services provider, aspect hooks, Time/Gesture/Editing providers, `displayScene` atom; story test that panels do not re-render on a pan.
+- [ ] 0.4 `createCanvasController` in `engine/`, organised by aspect, unit-tested per aspect; callers use it.
+- [ ] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.
+
 ## Phase 1 — View
 
 - [ ] Rename the public types: `SceneId` → `ViewId`, `SceneStore` → `ViewStore`, `SceneKind` → `ViewKind`, `Canvas.Scenes` → `Canvas.Views`.

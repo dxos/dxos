@@ -46,6 +46,8 @@ export type GridProps = Util.ThemedClassName<{
   dotsClassName?: string;
   /** In screen px, the field the grid fades out towards the edges of, as a background with `fade` asks. */
   fade?: Bounds;
+  /** The whole grid's opacity, for crossfading it with another. */
+  opacity?: number;
 }>;
 
 /** Multi-level grid in screen space, fed the camera's scale and offset. */
@@ -61,6 +63,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       variant = 'lines',
       dotsClassName = 'fill-neutral-500',
       fade,
+      opacity,
       classNames,
     },
     forwardedRef,
@@ -82,6 +85,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       <svg
         data-testid='dx-canvas-grid'
         ref={svgRef}
+        opacity={opacity}
         // `dx-cover` (absolute inset-0) does not stretch a replaced <svg> element — without an explicit
         // size it falls back to the intrinsic 300x150, clipping the 100%-sized grid rects. Force full size.
         className={mx(

@@ -515,14 +515,21 @@ const MINOR_GRID = '--dx-minor-grid';
  */
 // Spelled out, not built from `FRAME_BORDER`: Tailwind only emits classes it can read verbatim.
 // The text's own box is flush with the frame's edge and pads its text a grid unit either side; its lines need no
-// padding above or below, being on the grid already.
-const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>span]:px-(--dx-minor-grid)';
+// padding above or below, being on the grid already. The child is the static text's span or the editor's root alike,
+// so the text does not move when editing starts.
+const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-(--dx-minor-grid)';
 
 /** A line is a whole number of minor grid units tall, the text centred in it, so lines of text sit on the grid. */
 const LINE_ON_GRID = mx(
   // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
   '[--dx-line:round(up,1.25em,var(--dx-minor-grid))] leading-(--dx-line)!',
 );
+
+/**
+ * A text node's lines are 1.5em, tighter than the grid's, and its block is padded so the text sits a minor grid unit
+ * from the top and bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
+ */
+const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-minor-grid)-0.25em))]');
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
 const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
@@ -1000,7 +1007,7 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
       classNames={mx(
         TEXT_BOX,
         'whitespace-pre-wrap',
-        LINE_ON_GRID,
+        TEXT_LINES,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
       )}
     >
