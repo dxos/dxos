@@ -25,6 +25,7 @@ import {
   type Side,
   isPointEndpoint,
 } from '../model/index.ts';
+import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec } from './lattice.ts';
 import {
@@ -162,7 +163,45 @@ export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
   return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
 };
 
-export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
+export type LinkGeometry = {
+  link: Link;
+  path: string;
+  source: RouteEnd;
+  target: RouteEnd;
+  /** A diagram connector's route, which the diagram renderer draws in place of `path`. */
+  diagram?: DiagramRoute;
+};
+
+/** The straight segments through `points`, as the diagram renderer draws a route. */
+const polylinePath = (points: readonly Point[]): string =>
+  points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
+
+/** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
+const diagramGeometry = (scene: Scene, link: Link): LinkGeometry | undefined => {
+  if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
+    return undefined;
+  }
+  const [source, target] = [scene.nodes[link.source.node], scene.nodes[link.target.node]];
+  if (!source || !target) {
+    return undefined;
+  }
+  const obstacles = Object.values(scene.nodes)
+    .filter((node) => node !== source && node !== target && isRouteObstacle(node))
+    .map(nodeBounds);
+  const route = diagramRoute(link.connector, nodeBounds(source), nodeBounds(target), obstacles);
+  const { points } = route;
+  if (points.length < 2) {
+    return undefined;
+  }
+  const [first, second, last, previous] = [points[0], points[1], points[points.length - 1], points[points.length - 2]];
+  return {
+    link,
+    path: polylinePath(points),
+    source: { point: first, side: sideToward(first, second) },
+    target: { point: last, side: sideToward(last, previous) },
+    diagram: route,
+  };
+};
 
 /** The side of a free end: the one facing the other end, so the route leaves it toward that end. */
 export const sideToward = (from: Point, to: Point): Side => {
@@ -276,6 +315,10 @@ export const linkGeometry = (
   link: Link,
   lattice?: LatticeSpec,
 ): LinkGeometry | undefined => {
+  const diagram = diagramGeometry(scene, link);
+  if (diagram) {
+    return diagram;
+  }
   const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
   const routed = route && latticeEnds(scene, registry, link, route);
   if (routed) {
@@ -343,6 +386,13 @@ export const sceneLinkGeometry = (
   if (!lattice) {
     return links.flatMap((link) => linkGeometry(scene, registry, link) ?? []);
   }
+  // A diagram connector keeps its own route, so it neither takes the gutters nor is nudged into a lane.
+  const diagrams = new Map(
+    links.flatMap((link) => {
+      const geometry = diagramGeometry(scene, link);
+      return geometry ? [[link.id, geometry] as const] : [];
+    }),
+  );
   const nodes = Object.values(scene.nodes);
   const rect = (bounds: { x: number; y: number; width: number; height: number }) => ({
     x: bounds.x,
@@ -355,19 +405,22 @@ export const sceneLinkGeometry = (
     return node ? rect(nodeBounds(node)) : undefined;
   };
   const route = { spec: lattice, nodes };
-  const routed = links.flatMap((link) => {
-    const chosen = latticeEnds(scene, registry, link, route);
-    if (chosen) {
-      return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
-    }
-    const ends = resolveEnds(scene, registry, link.source, link.target);
-    if (!ends) {
-      return [];
-    }
-    const [from, to] = ends;
-    const points = link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
-    return [{ link, from, to, points }];
-  });
+  const routed = links
+    .filter((link) => !diagrams.has(link.id))
+    .flatMap((link) => {
+      const chosen = latticeEnds(scene, registry, link, route);
+      if (chosen) {
+        return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
+      }
+      const ends = resolveEnds(scene, registry, link.source, link.target);
+      if (!ends) {
+        return [];
+      }
+      const [from, to] = ends;
+      const points =
+        link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
+      return [{ link, from, to, points }];
+    });
   const smart = routed.filter((entry) => entry.points !== undefined);
   const nudged = Nudge.nudge(
     smart.map(({ link, points }) => ({
@@ -378,16 +431,20 @@ export const sceneLinkGeometry = (
     { spacing: DEFAULT_GRID, obstacles: nodes.map((node) => rect(nodeBounds(node))) },
   );
   const lanes = new Map(smart.map((entry, index) => [entry.link.id, nudged[index]]));
-  return routed.map(({ link, from, to }) => {
-    const points = lanes.get(link.id);
-    if (!points || points.length < 2) {
-      return { link, path: linkPath(link, from, to), source: from, target: to };
-    }
-    // A nudged port may slide along its side, so the ends are read back from the lane.
-    const source = { point: points[0], side: from.side };
-    const target = { point: points[points.length - 1], side: to.side };
-    return { link, path: splinePath(points), source, target };
-  });
+  const geometries = new Map(
+    routed.map(({ link, from, to }) => {
+      const points = lanes.get(link.id);
+      if (!points || points.length < 2) {
+        return [link.id, { link, path: linkPath(link, from, to), source: from, target: to }] as const;
+      }
+      // A nudged port may slide along its side, so the ends are read back from the lane.
+      const source = { point: points[0], side: from.side };
+      const target = { point: points[points.length - 1], side: to.side };
+      return [link.id, { link, path: splinePath(points), source, target }] as const;
+    }),
+  );
+  // In the order given, which is the paint order.
+  return links.flatMap((link) => diagrams.get(link.id) ?? geometries.get(link.id) ?? []);
 };
 
 /** Index at which a new control point at `point` keeps the polyline `ends`+`points` in order. */

@@ -33,6 +33,7 @@ import {
 import { Canvas } from '#types';
 
 import {
+  type CanvasRecord,
   clone,
   hasLegacyRoot,
   hasUnplacedLayers,
@@ -44,6 +45,7 @@ import {
   readStyles,
   rootOf,
   seedContent,
+  updateCanvasRecord,
   writeScenes,
   writeStyles,
 } from './content.ts';
@@ -318,9 +320,10 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   };
 };
 
-/** A fresh canvas for the variant: the root scene and nothing else. */
-export const createCanvas = (): Drawing.Canvas => {
+/** A fresh canvas for the variant: the root scene with the drawing's `settings`, and nothing else. */
+export const createCanvas = (settings: Partial<Omit<CanvasRecord, 'kind' | 'root'>> = {}): Drawing.Canvas => {
   const content = {};
   seedContent(content);
+  updateCanvasRecord(content, settings);
   return Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content });
 };

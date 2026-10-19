@@ -78,8 +78,8 @@ import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 
-/** Identity, ordering and geometry lists are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+/** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'element', 'heading', 'connector'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea

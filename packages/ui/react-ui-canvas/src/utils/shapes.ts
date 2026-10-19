@@ -63,6 +63,7 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   instance: { width: 4, height: 2 },
   path: { width: 2, height: 2 },
   generator: { width: 4, height: 4 },
+  diagram: { width: 2, height: 1 },
 };
 
 /** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
@@ -74,6 +75,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   instance: { width: 512, height: 256 },
   path: { width: 256, height: 256 },
   generator: { width: 512, height: 512 },
+  diagram: { width: 256, height: 128 },
 };
 
 /** The bounding box a new basic shape gets at the default grid. */
@@ -112,6 +114,9 @@ export const createNode = ({
       return { type, id, z, center, size, composite: scene ?? '' };
     case 'generator':
       return { type, id, z, center, size, generator: scene ?? '', params: {} };
+    case 'diagram':
+      // The element's geometry is the frame's, whatever the element says.
+      return { type, id, z, center, size, element: { kind: 'rect', id, x: 0, y: 0, w: size.width, h: size.height } };
     case 'path':
       // A diamond until the path is set.
       return {
