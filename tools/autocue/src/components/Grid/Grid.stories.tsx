@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type Bounds, type Camera, easeInOut, fitBounds, screenBounds, useViewport } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -154,6 +155,15 @@ type TileProps = {
 
 const Tile = ({ clip, label, index, bounds, onLoad, playing, border, strength = 1, meta }: TileProps) => {
   const [failed, setFailed] = useState(false);
+  const video = useRef<HTMLVideoElement>(null);
+  // `autoPlay` only applies on mount, so pausing the story pauses the clip directly.
+  useEffect(() => {
+    if (playing) {
+      void video.current?.play().catch(() => {});
+    } else {
+      video.current?.pause();
+    }
+  }, [playing]);
   // A numbered tile has nothing to load, so it reports in as soon as it mounts.
   useEffect(() => {
     if (clip === undefined) {
@@ -176,6 +186,7 @@ const Tile = ({ clip, label, index, bounds, onLoad, playing, border, strength = 
         <div className='grid dx-fill place-items-center text-[120px] text-fg-muted'>{label}</div>
       ) : (
         <video
+          ref={video}
           className={`dx-fill object-cover ${meta?.align === 'left' ? 'object-left' : meta?.align === 'right' ? 'object-right' : ''}`}
           src={src}
           autoPlay={playing}
@@ -265,6 +276,9 @@ const DefaultStory = ({
   const viewport = useViewport(ref);
   const [elapsed, setElapsed] = useState(0);
   const [run, setRun] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
+  // Where the real-time clock starts, so pausing, resuming and stepping pick up from that point.
+  const [offset, setOffset] = useState(0);
   const videos = useRef(new Map<string, HTMLVideoElement>());
   // The tour starts once its first tile has loaded (or turned out to have no clip).
   const [ready, setReady] = useState(false);
@@ -399,14 +413,31 @@ const DefaultStory = ({
     shiftDistance,
   ]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
+  /** When each close-up lands: the steps the toolbar moves between. */
+  const landings = useMemo(
+    () =>
+      shots.reduce<{ start: number; times: number[] }>(
+        ({ start, times }, shot) => ({ start: start + shot.ms, times: shot.focus ? [...times, start] : times }),
+        { start: 0, times: [] },
+      ).times,
+    [shots],
+  );
+  // Back within the first half second of a close-up goes to the one before, as a media player's previous does.
+  const previous = landings.findLast((time) => time < elapsed - 500);
+  const next = landings.find((time) => time > elapsed + 1);
+  const seekTo = (time: number) => {
+    setOffset(time);
+    setElapsed(time);
+  };
 
   useEffect(() => {
-    if (!ready || shots.length === 0 || stepped) {
+    if (!ready || shots.length === 0 || stepped || !autoplay) {
       return;
     }
     let frame = 0;
-    let focused: string | undefined;
-    const start = performance.now();
+    // Resuming mid-hold keeps the close-up's clip where it paused; starting at a landing plays it from its opening.
+    let focused = landings.includes(offset) ? undefined : shotAt(shots, offset).shot.focus;
+    const start = performance.now() - offset;
     const tick = (now: number) => {
       const time = Math.min(total, now - start);
       setElapsed(time);
@@ -426,7 +457,19 @@ const DefaultStory = ({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, ready, shots, total, stepped]);
+  }, [run, ready, shots, total, stepped, autoplay, offset, landings]);
+
+  // A paused step lands its close-up's clip at its opening frame, as playing into it would.
+  useEffect(() => {
+    if (autoplay || stepped) {
+      return;
+    }
+    const focus = shotAt(shots, offset).shot.focus;
+    const video = focus === undefined ? undefined : videos.current.get(focus);
+    if (video) {
+      video.currentTime = 0;
+    }
+  }, [offset, autoplay, stepped, shots]);
 
   useEffect(() => {
     if (!ready || shots.length === 0 || !stepped) {
@@ -534,7 +577,7 @@ const DefaultStory = ({
               border={border}
               meta={frame.meta?.(cell)}
               strength={borderFade ? Math.min(1, Math.max(0, 1.5 * (1 - bounds.width / viewport.width))) : 1}
-              playing={!stepped}
+              playing={!stepped && autoplay}
               onLoad={(video) => {
                 if (video) {
                   videos.current.set(cell.id, video);
@@ -557,14 +600,45 @@ const DefaultStory = ({
             tile
           );
         })}
-      <div className={controls ? 'absolute top-2 left-2 w-fit' : 'hidden'}>
-        <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
+      <div className={controls ? 'absolute bottom-4 left-1/2 -translate-x-1/2 w-fit' : 'hidden'}>
+        <Toolbar.Root
+          size='sm'
+          classNames='gap-1 px-2 py-1 rounded-md bg-modal-surface border border-separator shadow-md'
+          data-testid='grid-toolbar'
+        >
           <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--arrow-counter-clockwise--regular'
             label='Replay'
-            onClick={() => setRun((run) => run + 1)}
+            onClick={() => {
+              seekTo(0);
+              setRun((run) => run + 1);
+            }}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--caret-left--regular'
+            label='Previous close-up'
+            disabled={previous === undefined}
+            onClick={() => previous !== undefined && seekTo(previous)}
+          />
+          <Input.Switch
+            label='Autoplay'
+            checked={autoplay}
+            onCheckedChange={({ checked }) => {
+              setOffset(elapsed);
+              setAutoplay(checked);
+            }}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--caret-right--regular'
+            label='Next close-up'
+            disabled={next === undefined}
+            onClick={() => next !== undefined && seekTo(next)}
           />
           <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
             {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
