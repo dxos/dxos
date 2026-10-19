@@ -171,7 +171,8 @@ export default Capability.makeModule(
       return [];
     }
 
-    const sync = makeAdminSync((path, init) => edge.value.request(Context.default(), path, init));
+    const request: EdgeRequest = (path, init) => edge.value.request(Context.default(), path, init);
+    let sync = makeAdminSync(request);
     const wake = yield* Queue.sliding<void>(1);
     const notify = () => void Queue.offerUnsafe(wake, undefined);
     // An agent space's members change without the list of spaces changing, so each agent space is watched too.
@@ -182,8 +183,10 @@ export default Capability.makeModule(
       watched.forEach((subscription) => subscription.unsubscribe());
       watched.clear();
     };
-    // The client replaces its space list when its services reconnect, so the subscriptions follow it.
+    // The client replaces its space list when its services reconnect, so the subscriptions follow it. The services may
+    // hold another identity by then, so what EDGE confirmed and was told starts over.
     const unsubscribeReloaded = client.reloaded.on(() => {
+      sync = makeAdminSync(request);
       unwatch();
       spaces = client.spaces.subscribe(notify);
       notify();
