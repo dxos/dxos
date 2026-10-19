@@ -29,14 +29,14 @@ export type ShowcaseArticleProps = AppSurface.ObjectArticleProps<Showcase.Showca
 
 /**
  * Article surface for a {@link Showcase.Showcase}: its name, the markdown write-up (edited through the app's
- * text section), its screenshots and videos, the pull requests the work landed in, and what it demonstrates.
+ * text section), its artifacts as the app's card for each type, and what it demonstrates.
  */
 export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [showcase, updateShowcase] = useObject(subject);
   const db = Obj.getDatabase(subject);
   const content = useResolveRef(showcase.content);
-  const targets = useQuery(db, Query.select(Filter.id(subject.id)).sourceOf(Showcase.Showcases).target());
+  const targets = useQuery(db, Query.select(Filter.id(subject.id)).sourceOf(Showcase.Demonstrates).target());
   const openObject = useOpenObject(db, attendableId);
 
   // Read once per showcase; the uncontrolled form owns edits after mount.
@@ -83,13 +83,8 @@ export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticle
             )}
 
             <ObjectCards
-              label={t('showcase-article.media.label')}
-              refs={showcase.media}
-              onOpen={(id) => void openObject(id)}
-            />
-            <ObjectCards
-              label={t('showcase-article.pull-requests.label')}
-              refs={showcase.pullRequests}
+              label={t('showcase-article.artifacts.label')}
+              refs={showcase.artifacts}
               onOpen={(id) => void openObject(id)}
             />
           </ScrollArea.Viewport>

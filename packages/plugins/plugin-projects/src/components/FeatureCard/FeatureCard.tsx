@@ -11,6 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
+import { Feature } from '#types';
 
 import {
   type FeatureLookup,
@@ -56,7 +57,7 @@ export type FeatureCardBodyProps = {
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
-  /** Opens a listed subfeature, task or showcase by id; rows are plain text without it. */
+  /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
 };
 
@@ -233,11 +234,11 @@ export const FeatureCardBody = ({
 
       {expanded && feature.subfeatures.length > 0 && (
         <Card.Section title={t('feature-card.subfeatures.title')}>
-          {feature.subfeatures.map((subfeature) => (
+          {feature.subfeatures.map((subfeature, index) => (
             <Card.Row
-              key={subfeature.id}
+              key={index}
               icon={FEATURE_STATUS_STYLE[subfeature.status].icon}
-              onClick={open(subfeature.id)}
+              trailing={<Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>}
             >
               <Card.Text truncate>{subfeature.name}</Card.Text>
             </Card.Row>
@@ -273,9 +274,7 @@ export const FeatureCardBody = ({
       {expanded && showFields && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
           {feature.specs.map((spec) => (
-            <Card.Row key={spec} icon='ph--file-code--regular' title={spec}>
-              <Card.Text truncate>{spec}</Card.Text>
-            </Card.Row>
+            <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
           ))}
         </Card.Section>
       )}

@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Filter, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, Task } from '@dxos/types';
@@ -32,7 +32,7 @@ describe('Feature', () => {
         Feature.Implements,
         FeatureMap.FeatureMap,
         Showcase.Showcase,
-        Showcase.Showcases,
+        Showcase.Demonstrates,
         Task.Task,
         Text.Text,
         File.File,
@@ -40,19 +40,26 @@ describe('Feature', () => {
       ],
     });
 
-  test('subfeatures are owned and deleted with their parent', async ({ expect }) => {
+  test('subfeatures are records on the feature; spec paths open on GitHub', async ({ expect }) => {
     const { db } = await open();
-    const sync = db.add(Feature.make({ name: 'Sync', status: 'operational' }));
-    const draft = Feature.make({ name: 'Drafts', status: 'planned' });
-    Obj.update(sync, (sync) => {
-      sync.subfeatures?.push(Ref.make(draft));
-    });
+    const sync = db.add(
+      Feature.make({
+        name: 'Sync',
+        status: 'prototype',
+        subfeatures: [
+          { name: 'Gmail', status: 'operational' },
+          { name: 'IMAP', status: 'planned' },
+        ],
+      }),
+    );
     await db.flush();
+    expect(sync.subfeatures?.map(({ name }) => name)).toEqual(['Gmail', 'IMAP']);
+    expect(await db.query(Filter.type(Feature.Feature)).run()).toHaveLength(1);
 
-    expect(await db.query(Filter.childOf(sync)).run()).toHaveLength(1);
-    db.remove(sync);
-    await db.flush();
-    expect(await db.query(Filter.type(Feature.Feature)).run()).toHaveLength(0);
+    expect(Feature.getSpecUrl('packages/plugins/plugin-inbox/PLUGIN.mdl#F-3')).toBe(
+      'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-inbox/PLUGIN.mdl',
+    );
+    expect(Feature.getSpecUrl('https://example.com/spec.md')).toBe('https://example.com/spec.md');
   });
 
   test('dependencies, implementing tasks and showcases are relations', async ({ expect }) => {
@@ -63,8 +70,8 @@ describe('Feature', () => {
     db.add(Feature.makeDependsOn({ [Relation.Source]: compose, [Relation.Target]: tokens }));
     db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: compose }));
     const showcase = db.add(Showcase.make({ name: 'Sending a reply', content: 'Reply from the inbox.' }));
-    db.add(Showcase.makeShowcases({ [Relation.Source]: showcase, [Relation.Target]: compose }));
-    db.add(Showcase.makeShowcases({ [Relation.Source]: showcase, [Relation.Target]: task }));
+    db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: compose }));
+    db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: task }));
     db.add(FeatureMap.make({ name: 'Inbox', features: [Ref.make(compose), Ref.make(tokens)] }));
     await db.flush();
 
@@ -74,7 +81,7 @@ describe('Feature', () => {
     const tasks = await db.query(Query.select(Filter.id(compose.id)).targetOf(Feature.Implements).source()).run();
     expect(tasks.map((task) => task.id)).toEqual([task.id]);
 
-    const showcases = await db.query(Query.select(Filter.id(task.id)).targetOf(Showcase.Showcases).source()).run();
+    const showcases = await db.query(Query.select(Filter.id(task.id)).targetOf(Showcase.Demonstrates).source()).run();
     expect(showcases.map((showcase) => showcase.id)).toEqual([showcase.id]);
     expect((await showcase.content.load()).content).toBe('Reply from the inbox.');
   });

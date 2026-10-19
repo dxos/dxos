@@ -80,7 +80,7 @@ const meta = {
                   }),
                 );
                 Obj.update(showcase, (showcase) => {
-                  showcase.pullRequests.push(Ref.make(pullRequest));
+                  showcase.artifacts.push(Ref.make(pullRequest));
                 });
                 await defaultSpace.db.flush({ indexes: true });
               });

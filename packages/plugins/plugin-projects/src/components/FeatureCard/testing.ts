@@ -41,8 +41,8 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
     dependsOn: ['tokens'],
     specs: ['packages/plugins/plugin-inbox/PLUGIN.mdl#F-3', 'packages/plugins/plugin-inbox/PLUGIN.mdl#F-6'],
     subfeatures: [
-      { id: 'sync-gmail', name: 'Gmail', status: 'prototype' },
-      { id: 'sync-imap', name: 'IMAP', status: 'planned' },
+      { name: 'Gmail', status: 'prototype' },
+      { name: 'IMAP', status: 'planned' },
     ],
     tasks: [
       { id: 'task-1', title: 'Move sync to EDGE', done: false, milestone: 'M2' },

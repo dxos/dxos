@@ -25,5 +25,5 @@ export default [
   Feature.Implements,
   FeatureMap.FeatureMap,
   Showcase.Showcase,
-  Showcase.Showcases,
+  Showcase.Demonstrates,
 ];

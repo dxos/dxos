@@ -22,24 +22,24 @@ import { useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
-type Values = Pick<Feature.Feature, 'name' | 'description' | 'status' | 'specs'>;
+type Values = Pick<Feature.Feature, 'name' | 'description' | 'status' | 'specs' | 'subfeatures'>;
 
 const Values = Schema.make<Schema.Codec<Values, any>>(
-  SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'specs']),
+  SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'specs', 'subfeatures']),
 );
 
 export type FeatureArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>;
 
 /**
  * Article surface for a {@link Feature.Feature}: its fields as a form, then what it depends on, what depends
- * on it, its subfeatures, the tasks working toward it and the showcases that demonstrate it. Every listed
- * object opens beside it.
+ * on it, its subfeatures, the tasks working toward it and the showcases that demonstrate it. Listed
+ * features, tasks and showcases open beside it.
  */
 export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [, updateFeature] = useObject(subject);
   const db = Obj.getDatabase(subject);
-  const graph = useFeatureGraph(db);
+  const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
   const dependents = useMemo(
     () => getDependents(subject.id, graph.features).flatMap((id) => graph.lookup(id) ?? []),
@@ -49,7 +49,13 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
 
   // Read once per feature; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<Values>>(
-    () => ({ name: subject.name, description: subject.description, status: subject.status, specs: subject.specs }),
+    () => ({
+      name: subject.name,
+      description: subject.description,
+      status: subject.status,
+      specs: subject.specs,
+      subfeatures: subject.subfeatures,
+    }),
     [subject],
   );
 
@@ -64,6 +70,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
           feature.status = values.status;
         }
         feature.specs = values.specs && [...values.specs];
+        feature.subfeatures = values.subfeatures?.map((subfeature) => ({ ...subfeature }));
       }),
     [updateFeature],
   );

@@ -34,16 +34,9 @@ export const ShowcaseCardContent = ({ subject }: ShowcaseCardContentProps) => {
           </Card.Text>
         </Card.Row>
       )}
-      {showcase.media.length > 0 && (
-        <Card.Row icon='ph--image--regular'>
-          <Card.Text truncate>{t('showcase-card.media.label', { count: showcase.media.length })}</Card.Text>
-        </Card.Row>
-      )}
-      {showcase.pullRequests.length > 0 && (
-        <Card.Row icon='ph--git-pull-request--regular'>
-          <Card.Text truncate>
-            {t('showcase-card.pull-requests.label', { count: showcase.pullRequests.length })}
-          </Card.Text>
+      {showcase.artifacts.length > 0 && (
+        <Card.Row icon='ph--paperclip--regular'>
+          <Card.Text truncate>{t('showcase-card.artifacts.label', { count: showcase.artifacts.length })}</Card.Text>
         </Card.Row>
       )}
     </Card.Body>

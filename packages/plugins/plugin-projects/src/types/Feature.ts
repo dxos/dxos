@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
 
@@ -29,6 +29,13 @@ export const StatusOptions: Task.Option<Status>[] = [
 //
 // Feature
 //
+
+/** A part of a feature with its own status; specs, dependencies and tasks belong to the feature. */
+export const Subfeature = Schema.Struct({
+  name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+  status: Status.pipe(Schema.annotate({ title: 'Status' })),
+});
+export type Subfeature = Schema.Schema.Type<typeof Subfeature>;
 
 /**
  * A goal state: something the product should do. Authored in ECHO; the repo specs that describe how
@@ -57,17 +64,10 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
     specs: Schema.optional(Schema.Array(Schema.String).pipe(Schema.annotate({ title: 'Specs' }))),
 
     /**
-     * The parts this feature breaks down into, in display order. Owned, so `Filter.childOf(feature)`
-     * finds them and deleting a feature deletes its subtree; claims only an unparented feature so a
-     * stale entry cannot re-parent one on an unrelated write.
+     * The parts this feature breaks down into, in display order. Records rather than features: the map is
+     * two levels deep, a part has a status but no specs, dependencies or tasks of its own.
      */
-    subfeatures: Schema.optional(
-      Schema.Array(Schema.suspend((): Ref.RefSchema<Feature> => Ref.Ref(Feature))).pipe(
-        Annotation.FormInputAnnotation.set(false),
-        Annotation.SetParent.set({ override: false }),
-        Schema.annotate({ title: 'Subfeatures' }),
-      ),
-    ),
+    subfeatures: Schema.optional(Schema.Array(Subfeature).pipe(Schema.annotate({ title: 'Subfeatures' }))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),
@@ -109,6 +109,16 @@ export const findDependencyCycle = (
   };
   return visit(target, [target]);
 };
+
+/** Repository that relative spec paths resolve against. */
+export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
+
+/**
+ * Where a spec opens on GitHub: a URL is kept; a repo path (`packages/…/PLUGIN.mdl#F-3`) opens its file on the
+ * default branch, without the block anchor, which GitHub cannot resolve inside an `.mdl` file.
+ */
+export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>
+  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${spec.replace(/#.*$/, '').replace(/^\/+/, '')}`;
 
 //
 // Relations

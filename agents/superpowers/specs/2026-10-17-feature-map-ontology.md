@@ -19,14 +19,13 @@ Feature     (org.dxos.type.feature)
   name:        string
   description?: string            short markdown
   status:      planned | in-progress | prototype | operational | failing
-  specs:       string[]           repo paths, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3
-  subfeatures: Ref<Feature>[]     owned (SetParent), ordered
+  specs:       string[]           repo paths, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3 (open on GitHub)
+  subfeatures: { name, status }[] embedded records, ordered; one level, no specs
 
 Showcase    (org.dxos.type.showcase)
   name:         string
   content:      Ref<Text>          owned markdown body
-  media:        Ref<File>[]        owned screenshots and videos
-  pullRequests: Ref<PullRequest>[] not owned
+  artifacts:    Ref<Obj>[]         files, PRs and other evidence; not owned (like Task.artifacts)
 
 FeatureMap  (org.dxos.type.featureMap)
   name:      string
@@ -35,19 +34,18 @@ FeatureMap  (org.dxos.type.featureMap)
 
 DependsOn   (org.dxos.relation.dependsOn)    Feature → Feature
 Implements  (org.dxos.relation.implements)   Task → Feature
-Showcases   (org.dxos.relation.showcases)    Showcase → Feature | Task
+Demonstrates (org.dxos.relation.demonstrates) Showcase → Feature | Task
 ```
 
 Tags are the standard ECHO meta tags (`Obj.getMeta(obj).tags`, `Tagging`,
 `Filter.tag`); no type declares a `tags` field.
 
 ```text
-              ┌── subfeatures ──┐
-FeatureMap ─▶ Feature ◀─────────┘
+FeatureMap ─▶ Feature { subfeatures: [{ name, status }] }
                 │ ▲  ▲
-     DependsOn ─┘ │  └── Showcases ── Showcase ── media ─▶ File
-                  │                      │   └─ pullRequests ─▶ PullRequest
-           Implements                Showcases
+     DependsOn ─┘ │  └── Demonstrates ── Showcase ── artifacts ─▶ File | PullRequest | …
+                  │                      │
+           Implements                Demonstrates
                   │                      │
                  Task ◀──────────────────┘
 ```
@@ -77,28 +75,31 @@ FeatureMap ─▶ Feature ◀─────────┘
    the feature that pairs naturally with a failing test or QA run, and it does not
    imply who broke it.
 
-3. **Subfeatures are a tree; dependencies are a DAG.** "Broken down into" is
-   ownership: a subfeature belongs to exactly one parent and goes with it, which
-   is `subfeatures` with `SetParent`, the same idiom as `Task.subtasks`.
-   "Depends on" is not ownership and crosses plugins, so it is a `DependsOn`
-   relation. The create operation rejects an edge that would close a cycle and
-   names the features in it.
+3. **Two levels: features, then subfeatures; dependencies are a DAG.** A
+   subfeature is a record inside its feature (`{ name, status }`), not a feature
+   of its own: it has a status, but specs, dependencies, tasks and showcases
+   belong to the feature. Two levels keep the map readable and keep every edge
+   between objects that can be opened. "Depends on" crosses plugins, so it is a
+   `DependsOn` relation; the add-dependency operation rejects an edge that would
+   close a cycle and names the features in it.
 
 4. **Joins to work and evidence are relations.** A task can move several
    features and a feature has many tasks, so `Implements` is many-to-many. A
-   showcase can demonstrate a feature, a task, or both, so `Showcases` targets
+   showcase can demonstrate a feature, a task, or both, so `Demonstrates` targets
    either. Relations also keep `Task` in `@dxos/types` free of a projects
    dependency.
 
 5. **A showcase is what an agent makes to prove a result.** A markdown body says
-   what was shown and how to reproduce it; `media` holds the screenshots and
-   videos (owned, so they are deleted with it); `pullRequests` points at the
-   synced PR objects, which it does not own.
+   what was shown and how to reproduce it, and `artifacts` lists the evidence —
+   screenshot and video files, synced PRs, anything else — as plain refs, like
+   `Task.artifacts`: the showcase points at them and does not own them.
 
 6. **A feature map is a board, not a hierarchy.** It lists the features to show
    and remembers where the user dragged them on the canvas. A feature can be on
    several maps. Membership is explicit rather than "every feature in the space"
-   so a map can be scoped to one plugin, one product or one release.
+   so a map can be scoped to one plugin, one product or one release, and its refs
+   are also the query scope: the views load only those features and their
+   relations, so cost follows the map, not the space.
 
 7. **Derived warnings stay derived.** The card still computes, never stores:
    - **blocked**: a dependency is `planned` or `failing`;

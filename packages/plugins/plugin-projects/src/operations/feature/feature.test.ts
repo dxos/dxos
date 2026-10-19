@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
@@ -30,7 +30,7 @@ const testLayer = () =>
       Feature.Implements,
       FeatureMap.FeatureMap,
       Showcase.Showcase,
-      Showcase.Showcases,
+      Showcase.Demonstrates,
       Task.Task,
       Milestone.Milestone,
       Text.Text,
@@ -40,20 +40,22 @@ const testLayer = () =>
   });
 
 describe('feature operations', () => {
-  it.effect('create places a feature on a map or under a parent', () =>
+  it.effect('create places a feature on a map; update sets its fields and subfeatures', () =>
     Effect.gen(function* () {
       const map = yield* Database.add(FeatureMap.make({ name: 'Inbox' }));
       const { feature: sync } = yield* create.handler({ name: 'Provider sync', map: Ref.make(map) });
       expect(sync.status).toBe('planned');
       expect(map.features).toHaveLength(1);
 
-      const { feature: gmail } = yield* create.handler({ name: 'Gmail', parent: Ref.make(sync), status: 'prototype' });
-      expect(Obj.getParent(gmail)?.id).toBe(sync.id);
-      expect(sync.subfeatures).toHaveLength(1);
-
-      yield* update.handler({ feature: Ref.make(sync), status: 'operational', specs: ['a.mdl#F-1'] });
+      yield* update.handler({
+        feature: Ref.make(sync),
+        status: 'operational',
+        specs: ['a.mdl#F-1'],
+        subfeatures: [{ name: 'Gmail', status: 'prototype' }],
+      });
       expect(sync.status).toBe('operational');
       expect(sync.specs).toEqual(['a.mdl#F-1']);
+      expect(sync.subfeatures).toEqual([{ name: 'Gmail', status: 'prototype' }]);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -96,7 +98,8 @@ describe('feature operations', () => {
         targets: [Ref.make(compose), Ref.make(task)],
       });
 
-      const shown = yield* Database.query(Query.select(Filter.id(task.id)).targetOf(Showcase.Showcases).source()).run;
+      const shown = yield* Database.query(Query.select(Filter.id(task.id)).targetOf(Showcase.Demonstrates).source())
+        .run;
       expect(shown.map(({ id }) => id)).toEqual([showcase.id]);
 
       const result = yield* getMap.handler({ map: Ref.make(map) });

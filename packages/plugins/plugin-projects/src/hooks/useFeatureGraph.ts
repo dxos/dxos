@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Database, EID, Filter, Relation } from '@dxos/echo';
+import { type Database, EID, Filter, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Task } from '@dxos/types';
 
@@ -18,49 +18,72 @@ import {
   makeFeatureLookup,
 } from '../components/FeatureCard/index.ts';
 
-const entityId = (uri: string) => EID.getEntityId(EID.parse(uri));
+const entityId = (uri: string) => EID.getEntityId(EID.parse(uri)) ?? uri;
 
 const DONE: ReadonlySet<Task.Status> = new Set(['done', 'duplicate', 'cancelled']);
 
 export type FeatureGraph = {
-  /** Every feature in the space, joined with its relations. */
+  /** The scoped features, joined with their relations. */
   features: readonly FeatureModel[];
   lookup: FeatureLookup;
 };
 
+export type FeatureGraphOptions = {
+  /** Also load the features the scope depends on and the ones that depend on it, for one feature's signals. */
+  neighbours?: boolean;
+};
+
+/** Query of the given ids, keyed by their sorted list so a re-render with the same set reuses the subscription. */
+const useScope = (ids: readonly string[]) => {
+  const key = [...new Set(ids)].sort().join(',');
+  return useMemo(() => (key ? Query.select(Filter.id(...key.split(','))) : undefined), [key]);
+};
+
 /**
- * Card models for every feature in the space, joined with their `DependsOn`, `Implements` and `Showcases`
- * relations. One subscription per type however many cards render, and signals see dependencies that are
- * not on the map being shown.
+ * Card models for the features named by `ids` — a map's refs, or one feature — joined with their `DependsOn`,
+ * `Implements` and `Demonstrates` relations. Every query is scoped to those ids, so the cost follows the map's
+ * size rather than the space's.
  */
-export const useFeatureGraph = (db: Database.Database | undefined): FeatureGraph => {
-  const features = useQuery(db, Filter.type(Feature.Feature));
-  const dependsOn = useQuery(db, Filter.type(Feature.DependsOn));
-  const implementsTasks = useQuery(db, Filter.type(Feature.Implements));
-  const showcases = useQuery(db, Filter.type(Showcase.Showcases));
+export const useFeatureGraph = (
+  db: Database.Database | undefined,
+  ids: readonly string[],
+  { neighbours = false }: FeatureGraphOptions = {},
+): FeatureGraph => {
+  const scope = useScope(ids);
+  const outgoing = useQuery(scope && db, (scope ?? Query.select(Filter.nothing())).sourceOf(Feature.DependsOn));
+  const incoming = useQuery(
+    neighbours && scope ? db : undefined,
+    (scope ?? Query.select(Filter.nothing())).targetOf(Feature.DependsOn),
+  );
+
+  const edges = useMemo(() => {
+    const byId = new Map([...outgoing, ...incoming].map((relation) => [relation.id, relation]));
+    return [...byId.values()].map(
+      (relation) => [entityId(Relation.getSourceURI(relation)), entityId(Relation.getTargetURI(relation))] as const,
+    );
+  }, [outgoing, incoming]);
+
+  const featureScope = useScope(neighbours ? [...ids, ...edges.flat()] : ids);
+  const featureQuery = featureScope ?? Query.select(Filter.nothing());
+  const features = useQuery(featureScope && db, featureQuery);
+  const implementsTasks = useQuery(featureScope && db, featureQuery.targetOf(Feature.Implements));
+  const demonstrates = useQuery(featureScope && db, featureQuery.targetOf(Showcase.Demonstrates));
 
   return useMemo(() => {
+    const members = features.filter((feature) => Feature.instanceOf(feature));
     const input: FeatureGraphInput = {
-      features: features.map((feature) => ({
+      features: members.map((feature) => ({
         id: feature.id,
         name: feature.name,
         description: feature.description,
         status: feature.status,
         specs: feature.specs,
-        subfeatures: (feature.subfeatures ?? []).flatMap((ref) => {
-          const subfeature = ref.target;
-          return subfeature ? [{ id: subfeature.id, name: subfeature.name, status: subfeature.status }] : [];
-        }),
+        subfeatures: feature.subfeatures ?? [],
       })),
-      dependsOn: dependsOn.flatMap((relation) => {
-        const source = entityId(Relation.getSourceURI(relation));
-        const target = entityId(Relation.getTargetURI(relation));
-        return source && target ? [[source, target] as const] : [];
-      }),
+      dependsOn: edges,
       implementedBy: implementsTasks.flatMap((relation) => {
         const task = Relation.getSource(relation);
-        const target = entityId(Relation.getTargetURI(relation));
-        return task && target
+        return task
           ? [
               [
                 {
@@ -69,18 +92,19 @@ export const useFeatureGraph = (db: Database.Database | undefined): FeatureGraph
                   done: task.status !== undefined && DONE.has(task.status),
                   milestone: task.milestone?.target?.name,
                 },
-                target,
+                entityId(Relation.getTargetURI(relation)),
               ] as const,
             ]
           : [];
       }),
-      showcasedBy: showcases.flatMap((relation) => {
+      showcasedBy: demonstrates.flatMap((relation) => {
         const showcase = Relation.getSource(relation);
-        const target = entityId(Relation.getTargetURI(relation));
-        return showcase && target ? [[{ id: showcase.id, name: showcase.name }, target] as const] : [];
+        return showcase
+          ? [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const]
+          : [];
       }),
     };
     const models = buildFeatureModels(input);
     return { features: models, lookup: makeFeatureLookup(models) };
-  }, [features, dependsOn, implementsTasks, showcases]);
+  }, [features, edges, implementsTasks, demonstrates]);
 };

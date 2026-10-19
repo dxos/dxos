@@ -19,21 +19,16 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetMap> = FeatureOp
       const features: FeatureOperation.FeatureSummary[] = [];
       for (const ref of map.features) {
         const feature = yield* Database.load(ref);
-        const subfeatures = [];
-        for (const subRef of feature.subfeatures ?? []) {
-          const subfeature = yield* Database.load(subRef);
-          subfeatures.push({ id: subfeature.id, name: subfeature.name, status: subfeature.status });
-        }
         const selected = Query.select(Filter.id(feature.id));
         const dependsOn = yield* Database.query(selected.sourceOf(Feature.DependsOn)).run;
         const tasks = yield* Database.query(selected.targetOf(Feature.Implements).source()).run;
-        const showcases = yield* Database.query(selected.targetOf(Showcase.Showcases).source()).run;
+        const showcases = yield* Database.query(selected.targetOf(Showcase.Demonstrates).source()).run;
         features.push({
           id: feature.id,
           name: feature.name,
           status: feature.status,
           specs: [...(feature.specs ?? [])],
-          subfeatures,
+          subfeatures: (feature.subfeatures ?? []).map((subfeature) => ({ ...subfeature })),
           dependsOn: dependsOn.map((relation) => endpoints(relation)[1]),
           tasks: tasks
             .filter((task): task is Task.Task => Obj.instanceOf(Task.Task, task))

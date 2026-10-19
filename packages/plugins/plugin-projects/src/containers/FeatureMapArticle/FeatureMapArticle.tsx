@@ -33,11 +33,10 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, subject.id);
   const db = Obj.getDatabase(subject);
   const [refs = []] = useObject(subject, 'features');
-  const graph = useFeatureGraph(db);
-  const features = useMemo(
-    () => refs.flatMap((ref) => graph.lookup(EID.getEntityId(EID.parse(ref.uri)) ?? '') ?? []),
-    [refs, graph],
-  );
+  // The map's refs are the scope: only these features and their relations are queried.
+  const ids = useMemo(() => refs.flatMap((ref) => EID.getEntityId(EID.parse(ref.uri)) ?? []), [refs]);
+  const graph = useFeatureGraph(db, ids);
+  const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
   const openObject = useOpenObject(db, attendableId);
 
   const menu = useMenuBuilder(

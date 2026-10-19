@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
-import { File, PullRequest, Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
@@ -30,7 +30,7 @@ export const Create = Operation.make({
     icon: 'ph--puzzle-piece--regular',
     description: trim`
       Creates a feature: a goal state the product should reach, such as "Compose & send works against Gmail".
-      Pass a parent to make it a subfeature of an existing feature, and a map to place it on a feature map.
+      Pass a map to place it on a feature map. Parts of a feature are subfeatures, set with the update operation.
       Specs stay in the repo; list their paths (e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3) in specs.
     `,
   },
@@ -54,7 +54,8 @@ export const Update = Operation.make({
     name: 'Update feature',
     icon: 'ph--pencil-simple--regular',
     description: trim`
-      Changes a feature's name, description, status or specs; fields left out are kept.
+      Changes a feature's name, description, status, specs or subfeatures; fields left out are kept.
+      Subfeatures are the feature's parts, each with its own status, and replace the whole list when given.
       Set status when you observe it: in-progress when work starts, prototype when it works in a demo,
       operational when people can rely on it, failing when it worked before and does not now.
     `,
@@ -66,6 +67,7 @@ export const Update = Operation.make({
     description: Schema.optional(Schema.String),
     status: Schema.optional(Feature.Status),
     specs: Schema.optional(Schema.Array(Schema.String)),
+    subfeatures: Schema.optional(Schema.Array(Feature.Subfeature)),
   }),
   output: Schema.Void,
 }).pipe(Operation.mutation('write'));
@@ -128,8 +130,8 @@ export const CreateShowcase = Operation.make({
     icon: 'ph--presentation-chart--regular',
     description: trim`
       Creates a showcase: the evidence that a feature works or a task is done. Write what you showed and how
-      to reproduce it as markdown in content, attach screenshots and videos you uploaded as files in media,
-      and the pull requests the work landed in. Pass every feature and task it demonstrates in targets.
+      to reproduce it as markdown in content, and put the screenshots and videos you uploaded as files and the
+      pull requests the work landed in into artifacts. Pass every feature and task it demonstrates in targets.
     `,
   },
   services: [Database.Service],
@@ -137,8 +139,9 @@ export const CreateShowcase = Operation.make({
     name: Schema.String,
     content: Schema.String.annotate({ description: 'Markdown body.' }),
     targets: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'The features and tasks it demonstrates.' }),
-    media: Schema.optional(Schema.Array(Ref.Ref(File.File))),
-    pullRequests: Schema.optional(Schema.Array(Ref.Ref(PullRequest.PullRequest))),
+    artifacts: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'Files, pull requests and other evidence.' }),
+    ),
   }),
   output: Schema.Struct({ showcase: Type.getSchema(Showcase.Showcase) }),
 }).pipe(Operation.mutation('write'));
@@ -164,7 +167,7 @@ export const FeatureSummary = Schema.Struct({
   name: Schema.String,
   status: Feature.Status,
   specs: Schema.Array(Schema.String),
-  subfeatures: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String, status: Feature.Status })),
+  subfeatures: Schema.Array(Feature.Subfeature),
   dependsOn: Schema.Array(Schema.String),
   tasks: Schema.Array(Schema.Struct({ id: Schema.String, title: Schema.String, status: Schema.optional(Task.Status) })),
   showcases: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),

@@ -30,7 +30,7 @@ export type FeatureModel = {
   status: FeatureStatus;
   /** Repo paths of the specs that describe the feature. */
   specs: readonly string[];
-  subfeatures: readonly (FeatureRef & { status: FeatureStatus })[];
+  subfeatures: readonly Feature.Subfeature[];
   /** Ids of the features this one needs (`DependsOn` targets). */
   dependsOn: readonly string[];
   /** Tasks with an `Implements` relation to this feature. */
@@ -106,13 +106,13 @@ export type FeatureGraphInput = {
     description?: string;
     status: FeatureStatus;
     specs?: readonly string[];
-    subfeatures: readonly (FeatureRef & { status: FeatureStatus })[];
+    subfeatures: readonly Feature.Subfeature[];
   }[];
   /** `DependsOn` edges as `[source, target]` feature ids. */
   dependsOn: readonly (readonly [string, string])[];
   /** `Implements` edges as `[task, featureId]`. */
   implementedBy: readonly (readonly [FeatureTask, string])[];
-  /** `Showcases` edges as `[showcase, targetId]`. */
+  /** `Demonstrates` edges as `[showcase, targetId]`. */
   showcasedBy: readonly (readonly [FeatureRef, string])[];
 };
 

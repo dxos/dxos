@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Database, Obj, Ref, Relation } from '@dxos/echo';
+import { type Database, Ref, Relation } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
@@ -20,7 +20,7 @@ export const types = [
   Feature.Implements,
   FeatureMap.FeatureMap,
   Showcase.Showcase,
-  Showcase.Showcases,
+  Showcase.Demonstrates,
   Task.Task,
   Milestone.Milestone,
   Text.Text,
@@ -30,7 +30,7 @@ export const types = [
 
 /**
  * Writes card models into a database as the objects and relations they are derived from — features with
- * their subfeatures, `DependsOn`, tasks and milestones with `Implements`, and showcases with `Showcases` —
+ * their subfeatures, `DependsOn`, tasks and milestones with `Implements`, and showcases with `Demonstrates` —
  * and a map listing the top-level features. Ids in the models are only keys within the seed.
  */
 export const seed = (
@@ -45,13 +45,9 @@ export const seed = (
         description: model.description,
         status: model.status,
         specs: [...model.specs],
+        subfeatures: model.subfeatures.map((subfeature) => ({ ...subfeature })),
       }),
     );
-    Obj.update(feature, (feature) => {
-      for (const subfeature of model.subfeatures) {
-        feature.subfeatures?.push(Ref.make(Feature.make({ name: subfeature.name, status: subfeature.status })));
-      }
-    });
     objects.set(model.id, feature);
   }
 
@@ -90,7 +86,7 @@ export const seed = (
           content: `# ${showcaseName}\n\nWhat was shown, and how to reproduce it:\n\n1. Open the feature.\n2. Follow the steps.\n`,
         }),
       );
-      db.add(Showcase.makeShowcases({ [Relation.Source]: showcase, [Relation.Target]: feature }));
+      db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: feature }));
     }
   }
 
