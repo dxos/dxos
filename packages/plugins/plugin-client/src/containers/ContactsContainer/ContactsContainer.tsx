@@ -24,7 +24,13 @@ export const ContactsContainer = () => {
   const spaces = useSpaces();
   const [filter, setFilter] = useState('');
   const contactSpaces = useMemo(
-    (): ContactSpace[] => spaces.map((space) => ({ id: space.id, key: space.key, name: space.properties.name })),
+    (): ContactSpace[] =>
+      spaces.map((space) => ({
+        id: space.id,
+        key: space.key,
+        name: space.properties.name,
+        hue: space.properties.hue,
+      })),
     [spaces],
   );
 
