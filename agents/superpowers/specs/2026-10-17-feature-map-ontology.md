@@ -1,203 +1,146 @@
 # Feature map ontology (projects × plugins prototype)
 
-Status: proposal, 2026-10-17. Feeds the projects/plugins feature-map prototype.
+Status: proposal, revised 2026-10-19. Feeds the projects/plugins feature-map prototype.
 
 ## The one-line answer
 
-**A spec says what exists, a project says what is being done, and one relation joins
-them.** A `Feature` is a block in a spec, not a task and not a milestone; a `Task`
-points at the features it changes; everything a map shows beyond that is derived.
+**A feature is a goal state, a task is work toward it, and a showcase is the evidence
+that it was reached.** Features are ECHO objects that people and agents author;
+specs stay in the repo and a feature only points at them.
 
-## What already exists
+## Types
 
-| Layer | Thing                                                        | Where                          | Authored in |
-| ----- | ------------------------------------------------------------ | ------------------------------ | ----------- |
-| Spec  | `PLUGIN.mdl` / `SPEC.mdl` (130 files, 96 plugins)            | git                            | `.mdl` text |
-| Spec  | `feat F-n` → `req F-n.m` (502 feats)                         | inside the mdl                 | `.mdl` text |
-| Spec  | `scenario T-n`, `test QA-n` with `covers: [F-1.1, T-1]`      | inside the mdl                 | `.mdl` text |
-| Spec  | `Spec` object (`org.dxos.type.spec`, body is a `Text`)       | plugin-code                    | ECHO        |
-| Work  | `Project` → `TaskSet` → `Milestone[]`, `Task[]` (`subtasks`) | `@dxos/compute`, `@dxos/types` | ECHO        |
-| Work  | `Repo`, `Issue`, `PullRequest`                               | `@dxos/types`                  | synced      |
-
-The gap is the edge between the two halves: nothing says "this task changes
-inbox F-3", so there is no way to draw which features a project moves, or which
-features have no work, no tests, or no owner.
-
-## Proposed model
+All three object types and the three relations live in plugin-projects
+(`src/types/`), next to `ProjectView`. They depend on `@dxos/types` (`Task`, `File`,
+`PullRequest`) and `@dxos/schema` (`Text`); nothing in `@dxos/types` depends on them.
 
 ```text
-Spec  (org.dxos.type.spec — existing, extended)
-  key:    string            frontmatter id, e.g. org.dxos.plugin.inbox
-  kind:   plugin | package | product | dialect
-  name, version
-  content: Ref<Text>        the mdl source (owned)
-  repo?:  Ref<Repo>, path?: string
+Feature     (org.dxos.type.feature)
+  name:        string
+  description?: string            short markdown
+  status:      planned | in-progress | prototype | operational | failing
+  specs:       string[]           repo paths, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3
+  subfeatures: Ref<Feature>[]     owned (SetParent), ordered
 
-Feature  (org.dxos.type.feature — NEW; parent = Spec)
-  key:    string            block id, e.g. F-3      (global id: <spec.key>#F-3)
-  name:   string            the block title
-  description?: Text        inline prose
-  stage:  planned | preview | stable     (default: planned)
-  dependsOn: Ref<Feature>[] features this one needs, in this spec or another
-  requirements: Requirement[]   embedded { key: 'F-3.1', text }
-  scenarios:    Scenario[]      embedded { key: 'T-1', given, when, then }
+Showcase    (org.dxos.type.showcase)
+  name:         string
+  content:      Ref<Text>          owned markdown body
+  media:        Ref<File>[]        owned screenshots and videos
+  pullRequests: Ref<PullRequest>[] not owned
 
-Implements  (org.dxos.relation.implements — NEW relation)
-  source: Task  →  target: Feature
-  requirement?: string      optional req key, e.g. 'F-3.2'
+FeatureMap  (org.dxos.type.featureMap)
+  name:      string
+  features:  Ref<Feature>[]       the board's members, in card order
+  positions: Record<featureId, { x, y }>   canvas positions the user dragged
+
+DependsOn   (org.dxos.relation.dependsOn)    Feature → Feature
+Implements  (org.dxos.relation.implements)   Task → Feature
+Showcases   (org.dxos.relation.showcases)    Showcase → Feature | Task
 ```
 
-Nothing changes on `Project`, `TaskSet`, `Milestone` or `Task`.
-
-### The map, as levels
+Tags are the standard ECHO meta tags (`Obj.getMeta(obj).tags`, `Tagging`,
+`Filter.tag`); no type declares a `tags` field.
 
 ```text
-Spec ─ owns ─▶ Feature ─ dependsOn ─▶ Feature (any spec)
-                  │  ▲
-     requirements ┘  └── Implements ── Task ── milestone ─▶ Milestone
-                                         └── TaskSet ◀── Project
+              ┌── subfeatures ──┐
+FeatureMap ─▶ Feature ◀─────────┘
+                │ ▲  ▲
+     DependsOn ─┘ │  └── Showcases ── Showcase ── media ─▶ File
+                  │                      │   └─ pullRequests ─▶ PullRequest
+           Implements                Showcases
+                  │                      │
+                 Task ◀──────────────────┘
 ```
-
-Spec → Feature → Requirement is the "what" axis, and `dependsOn` turns the
-features into a graph across plugins. Project → Milestone → Task is the
-"when/who" axis. `Implements` is the only join between the two.
-
-### Writing it in the mdl
-
-```mdl
-feat F-4: Compose & send
-  stage: preview
-  depends: [F-1, org.dxos.plugin.connector#F-2]
-  req F-4.1: ...
-```
-
-A bare id (`F-1`) is a feature in the same spec. A qualified id
-(`<spec.key>#F-n`) is a feature in another spec. Both resolve to a `Ref<Feature>`
-on import.
 
 ## Decisions and why
 
-1. **Git is the source of truth for features; ECHO holds a projection.** The 502
-   feats already live in `.mdl`, are reviewed in PRs, and are what agents read. A
-   second, hand-edited copy in a space would drift on the first commit. An importer
-   parses each `Spec.content` and upserts `Feature` objects keyed by
-   `Obj.getMeta(feature).keys = [{ source: 'mdl', id: '<spec.key>#F-3' }]` — the
-   same pattern the Linear/GitHub task sync already uses. Editing a feature in
-   Composer means editing the spec text, then re-deriving.
+1. **Features are authored in ECHO; specs stay in the repo.** A feature is the
+   goal ("Compose & send works against Gmail"), which a person or an agent states
+   and revises in Composer. The `.mdl` spec is the contract for how one plugin
+   meets it and is reviewed in PRs, so it stays in git and a feature only lists
+   repo paths in `specs`. There is no importer and no ECHO `Spec` copy, so the two
+   cannot drift: if a spec moves, the path is stale and the card says so.
 
-2. **`Feature` is an object; `Requirement` and `Scenario` are embedded.** A feature
-   needs identity so tasks can point at it, agents can query it, and the map can
-   render a node for it. Requirements are atomic lines that are only ever read with
-   their feature; making ~1,900 of them objects buys nothing. A task that targets one
-   requirement says so with `Implements.requirement`. If requirements later sync out
-   as Linear issues on their own, promote them then — the same outline → `Task`
-   promotion rule the projects design already uses.
+2. **Status is one authored word with five values.** It answers "where is this
+   now?", and it is set by whoever knows, usually the agent that shipped or
+   checked the work.
 
-3. **The join is a relation, not a field on `Task`.** A task often touches more
-   than one feature (moving sync to EDGE is inbox F-3 and F-6), so the edge is
-   many-to-many. A relation also keeps user-authored links off the projected
-   `Feature`, which the importer rewrites, and keeps `@dxos/types` `Task` free of a
-   spec dependency. This is the one place the "structure as a ref on the child"
-   rule in `plugin-projects/docs/DESIGN.md` does not fit, because that rule assumes
-   many-to-one.
+   | Status      | Meaning                                             |
+   | ----------- | --------------------------------------------------- |
+   | planned     | Wanted; no work started.                            |
+   | in-progress | Someone is building it.                             |
+   | prototype   | It works in a demo or behind a flag; not relied on. |
+   | operational | It works and people rely on it.                     |
+   | failing     | It used to be operational and does not work now.    |
 
-4. **Maturity is three words, authored; progress is derived.** `stage` answers
-   one question: can a user rely on this? `planned` means it does not exist yet,
-   `preview` means it exists but may change or break, and `stable` means it is
-   supported. That is all a map needs to colour a card. The plugin tags
-   (`labs`, `alpha`, `beta`) all mean `preview` here, and a feature that is going
-   away is deleted from the spec rather than flagged. `stage` is a claim a person
-   makes, so it lives in the mdl next to the feature, like
-   `op … status: unimplemented` does today. Progress is never stored. The map
-   computes it:
+   `failing` replaces "regressed" and "broken": it is a present-tense fact about
+   the feature that pairs naturally with a failing test or QA run, and it does not
+   imply who broke it.
 
-   | Signal      | Derived from                                            |
-   | ----------- | ------------------------------------------------------- |
-   | in flight   | any open `Task` with `Implements` → feature             |
-   | shipping in | the milestones of those tasks                           |
-   | covered     | every `req` appears in some `test … covers:`            |
-   | untested    | `stable`, and no `req` of it is covered                 |
-   | unplanned   | `planned`, and no task implements it                    |
-   | blocked     | a feature it depends on is `planned`                    |
-   | overclaimed | its stage is above the stage of a feature it depends on |
+3. **Subfeatures are a tree; dependencies are a DAG.** "Broken down into" is
+   ownership: a subfeature belongs to exactly one parent and goes with it, which
+   is `subfeatures` with `SetParent`, the same idiom as `Task.subtasks`.
+   "Depends on" is not ownership and crosses plugins, so it is a `DependsOn`
+   relation. The create operation rejects an edge that would close a cycle and
+   names the features in it.
 
-   Coverage is counted per requirement. A `covers:` entry naming the feature
-   (`F-3`) or a scenario does not count, because neither says which requirement
-   was checked.
+4. **Joins to work and evidence are relations.** A task can move several
+   features and a feature has many tasks, so `Implements` is many-to-many. A
+   showcase can demonstrate a feature, a task, or both, so `Showcases` targets
+   either. Relations also keep `Task` in `@dxos/types` free of a projects
+   dependency.
 
-5. **No `Plugin` type.** A plugin on the map is a `Spec` with `kind: plugin`; its
-   key equals `dx.config.ts` `plugin.key` (e.g. `org.dxos.plugin.inbox`), which is
-   the join to the runtime registry when the map needs install state or version.
-   A separate catalog type would be a third copy of the same id.
+5. **A showcase is what an agent makes to prove a result.** A markdown body says
+   what was shown and how to reproduce it; `media` holds the screenshots and
+   videos (owned, so they are deleted with it); `pullRequests` points at the
+   synced PR objects, which it does not own.
 
-6. **Dependencies are one edge between features, authored in the spec.**
-   `dependsOn` means "this feature does not work without that one". It is the
-   only edge between features, so it also covers cross-plugin capabilities: one
-   that spans plugins ("delegate a task to an agent": projects + assistant +
-   agent) is a feature in a `kind: product` spec that depends on the plugin
-   features it needs. Every feature still belongs to exactly one spec. Four rules
-   keep the edge trustworthy:
-   - **Authored, not inferred.** The dependency is a design claim, so it lives in
-     the mdl and is reviewed in the PR that makes it. Package imports or shared
-     operations are evidence for the claim, not the claim itself.
-   - **A ref on the dependent feature.** Every other structural edge in the
-     projects model is a ref stored once on one side, and this one can be too,
-     because the importer writes the whole projection. Dependents ("what breaks
-     if I change F-3?") are a reverse lookup and are not stored.
-   - **Feature to feature only.** A requirement or a task cannot be a dependency.
-     When one requirement is all that matters, it goes in the prose of the
-     dependent feature.
-   - **Acyclic.** The importer rejects a cycle and names the features in it, the
-     same way the mdl linter rejects an unresolved `[id]`. A dependency on a
-     feature that no longer exists is reported, not silently dropped.
+6. **A feature map is a board, not a hierarchy.** It lists the features to show
+   and remembers where the user dragged them on the canvas. A feature can be on
+   several maps. Membership is explicit rather than "every feature in the space"
+   so a map can be scoped to one plugin, one product or one release.
 
-7. **Projects do not list features.** "Features in this project" is the set
-   reached through its tasks. A stored `Project.features` array would be a second
-   statement of the same fact and would drift exactly like the old
-   `parentTask`/`tasks` pair did.
+7. **Derived warnings stay derived.** The card still computes, never stores:
+   - **blocked**: a dependency is `planned` or `failing`;
+   - **ahead of a dependency**: it is `operational` while a dependency is not;
+   - **missing dependency**: a `DependsOn` target was deleted;
+   - **no evidence**: `operational` with no showcase;
+   - **no work planned**: `planned` with no implementing task.
 
-## UX
+## Rendering
 
-Storybook: `plugins/plugin-projects/components/FeatureCard` and `…/FeatureMap`
-(`packages/plugins/plugin-projects/src/components/FeatureCard/`). They render a
-plain view model (`feature.ts`), so the UX can be judged before the schema lands.
+`FeatureMap` gets one article with two views, switched from the toolbar and
+remembered per map:
 
-- **Card.** Header: stage icon, name, block id (`F-3`). One tag row: the stage,
-  then the derived signals, problems first. Then a coverage line
-  ("1 of 3 requirements tested"), an open-task line with its milestones, and a
-  "Depends on" section with one row per dependency, labelled with its plugin
-  when it is in another spec. Clicking a row selects that feature.
-- **Expanded card.** Adds the description, each requirement with a covered or
-  uncovered mark, and the implementing tasks.
-- **Map.** One column per spec, with stage counts in the column header.
-  Selecting a card labels the features it needs ("Needed by selection") and
-  the features that need it ("Needs selection") and fades the rest, so a chain
-  reads across plugins without drawing edges. Clicking the selected card again
-  clears it.
-- Stage and every signal carry an icon and a word, never colour alone.
+- **Cards (default).** Feature cards in map order. A card shows the status, the
+  most serious warning plus a "+N" count, a "Depends on N" row, open tasks with
+  their milestones, and the latest showcase. Expanded and selected cards list
+  everything.
+- **Canvas.** The same cards inside `@dxos/react-ui-canvas` boxes, laid out by
+  dependency rank with straight arrows for `DependsOn`. The only edit is moving
+  a box; positions are written to `FeatureMap.positions`. It reuses the dynamic
+  projection (`layoutGraph`, `createDynamicProjection`) and needs three small
+  extension points there:
+  1. a node factory, so graph nodes can be a `feature` node type rather than `rect`;
+  2. link type and arrow ends, so edges are `line` with an end arrow rather than `curve`;
+  3. a capabilities option, so the projection allows `move` only.
+
+  The node view renders the object through `Surface` (`CardContent`), the same
+  pattern as plugin-canvas's frame nodes.
 
 ## Prototype scope
 
-1. Add `key`/`kind`/`repo`/`path` to `Spec`; add `Feature` and `Implements`; add
-   `stage` and `depends` to the mdl `feat` extension.
-2. Importer: mdl → `Spec` + `Feature` upsert by meta key; deleted feats are removed
-   and their `Implements` relations need no sweep: ECHO treats a relation with a
-   deleted endpoint as deleted at read time, so default queries drop it (unlike
-   milestone delete, which clears `task.milestone` explicitly).
-3. A seed that imports the repo's 96 `PLUGIN.mdl` files into a sample space.
-4. One map view: plugins as columns, features as cards coloured by `stage`, with
-   dependency edges drawn between them, the derived signals as badges, and the
-   project's milestones as a filter.
-5. A project-skill verb `feature-link` (task, feature, requirement?) so agents
-   create the edge when they pick up work.
+1. Types and relations above, registered in plugin-projects, with create entries
+   and translations.
+2. `FeatureMapArticle` with the Cards view on live objects.
+3. The canvas extension points in `react-ui-canvas`, then the Canvas view.
+4. Operations for agents: create a feature, link a task (`Implements`), add a
+   dependency (cycle-checked), and create a showcase from text, files and PRs.
+5. A sample space with the inbox/connector/projects features used in the stories.
 
 ## Open questions
 
-1. Should the prototype live in plugin-projects, plugin-code (which owns `Spec`),
-   or a new plugin-features? Proposal: types in `@dxos/types` next to `Task`, the
-   view in plugin-projects.
-2. Should dependencies be backfilled for the 502 existing feats? Proposal: no.
-   Write them as features are touched, and let an agent propose a first pass
-   from package imports for a person to review.
-3. Do `test QA-n` blocks need to be objects too, so a map can show pass/fail from
-   the last QA run? Proposal: not for the prototype — coverage only.
+1. Should a `Project` list the feature maps it moves, or is "features reached
+   through its tasks" enough? Proposal: derived, as before.
+2. Should `failing` be set automatically when a QA test that covers a linked spec
+   fails? Proposal: later; for now an agent sets it when it observes the failure.
