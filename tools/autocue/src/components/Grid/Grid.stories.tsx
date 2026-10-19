@@ -267,7 +267,7 @@ const DefaultStory = ({
   montageSlot = 3_000,
   montage: montageProp,
   zoomMs = 600,
-  shiftMs = 300,
+  shiftMs = 600,
   shiftDistance = 0,
   border,
   borderFade = false,
@@ -789,7 +789,7 @@ export const MosaicNumbers: Story = { args: variantArgs('mosaic', 'numbers') };
 export const MosaicTours: Story = { args: variantArgs('mosaic', 'tours') };
 
 /**
- * The shift loop: markdown, projects and inbox as 10s close-ups, then ten 3s montage close-ups, each reached by a 1.5s
+ * The shift loop: markdown, projects and inbox as 10s close-ups, then ten 3s montage close-ups, each reached by a 1.8s
  * zoom out, row or column shift and zoom in (about 60s in all).
  */
 const shiftArgs = (content: Content): GridProps => ({
@@ -797,7 +797,7 @@ const shiftArgs = (content: Content): GridProps => ({
   tourSlot: 10_000,
   montageSlot: 3_000,
   zoomMs: 600,
-  shiftMs: 300,
+  shiftMs: 600,
   shiftDistance: 0,
 });
 

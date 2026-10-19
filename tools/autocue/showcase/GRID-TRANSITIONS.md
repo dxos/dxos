@@ -116,7 +116,7 @@ Open a story in both themes with `http://localhost:9009/iframe.html?id=tools-aut
 1. Cell A is a close-up that fills the frame, and its clip plays.
 2. The camera snaps out to the 3x3 around it (`zoomMs`, 600ms, strong ease-in-out).
 3. After the zoom has finished, the rows shift. The top row moves right, the middle row left, the bottom row right.
-   The next cycle shifts the columns instead: left down, middle up, right down. A shift is fast (`shiftMs`, 300ms,
+   The next cycle shifts the columns instead: left down, middle up, right down. A shift matches the zoom (`shiftMs`, 600ms,
    sharp ease). It moves 1 or 2 cells, and the distance varies from cycle to cycle (`shiftDistance`: 0 varies it,
    1 or 2 fixes it).
 4. The camera snaps in on the cell that has landed in the centre, which becomes close-up B.
@@ -131,8 +131,8 @@ Timeline (the defaults, all args):
 - Close-ups 4 to 13 are 10 cells in 3s slots (`montageSlot`). The montage is meeting first, then explorer, map,
   chess, spacetime, explorer, chess, meeting, explorer, chess (`montage`, row-major cell indices), so map and
   spacetime show once each.
-- A slot runs from one landed close-up to the next: its hold plus one 1.5s transition (0.6s out, 0.3s shift, 0.6s
-  in). A 3s slot is therefore 1.5s of hold. The total is 60s.
+- A slot runs from one landed close-up to the next: its hold plus one 1.8s transition (0.6s out, 0.6s shift, 0.6s
+  in). A 3s slot is therefore 1.2s of hold. The total is 60s.
 
 ### 2. `console` — the Composer deck
 
