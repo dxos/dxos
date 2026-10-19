@@ -13,7 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { reduceIntent } from '../../../engine/index.ts';
 import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
-import { type ViewTreeItem, restackZ } from '../../../utils/index.ts';
+import { type ViewRowSelection, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { ViewsInspector } from './ViewsInspector.tsx';
 
@@ -25,11 +25,11 @@ const FIXTURES = {
 
 type StoryArgs = {
   fixture: keyof typeof FIXTURES;
-  onSelect?: (item: ViewTreeItem) => void;
+  onSelect?: (selection: ViewRowSelection) => void;
   onOpen?: (path: SceneId[]) => void;
 };
 
-/** The views tree over a shared fixture; picking a row selects its element, as the canvas would. */
+/** The views tree over a shared fixture; picking a row opens its View and selects its element, as the canvas would. */
 const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
   const initial = useMemo((): { scenes: SceneMap; root: SceneId } => {
     const tree = FIXTURES[fixture]();
@@ -38,16 +38,23 @@ const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
   // Local state stands in for the store: a drag restacks the element in its scene.
   const [scenes, setScenes] = useState(initial.scenes);
   const [selected, setSelected] = useState<ReadonlySet<ElementId>>(new Set());
+  const [path, setPath] = useState<SceneId[]>([initial.root]);
   return (
     <ViewsInspector
       scenes={scenes}
       root={initial.root}
+      path={path}
       selected={selected}
-      onSelect={(item) => {
-        setSelected(new Set(item.element ? [item.element] : []));
-        onSelect?.(item);
+      onSelect={(selection) => {
+        setPath(selection.path);
+        setSelected(new Set(selection.ids));
+        onSelect?.(selection);
       }}
-      onOpen={onOpen}
+      onOpen={(next) => {
+        setPath(next);
+        setSelected(new Set());
+        onOpen?.(next);
+      }}
       onReorder={({ container, element, target, position }) =>
         setScenes((scenes) => {
           const scene = scenes[container];
@@ -107,7 +114,7 @@ export const Test: Story = {
     // 2. Picking a node's row reports it, with the View it is in.
     await userEvent.click(canvas.getByTestId('views-row-b'));
     await waitFor(() =>
-      expect(args.onSelect).toHaveBeenCalledWith(expect.objectContaining({ element: 'b', path: ['scene:root'] })),
+      expect(args.onSelect).toHaveBeenCalledWith(expect.objectContaining({ ids: ['b'], path: ['scene:root'] })),
     );
 
     // 3. A View row opens that View by its path from the root.

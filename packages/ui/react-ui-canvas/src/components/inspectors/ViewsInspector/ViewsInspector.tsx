@@ -2,43 +2,52 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Tree,
   type TreeData,
   type TreeDropEvent,
   type TreeNode,
+  type TreeRootHandle,
   type TreeSelectEvent,
   createStaticTreeModel,
+  filterTreeModel,
 } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../../hooks/index.ts';
 import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
-import { type ViewTreeItem, buildViewTree } from '../../../utils/index.ts';
+import {
+  type ViewReorder,
+  type ViewRowSelection,
+  type ViewTreeItem,
+  buildViewTree,
+  canRestack,
+  isSelectableRow,
+  rowView,
+  selectRows,
+  viewReorder,
+} from '../../../utils/index.ts';
 import { type InspectorProps } from '../types.ts';
 
 export type ViewsInspectorProps = InspectorProps & {
   scenes: SceneMap;
   /** The canvas's root View. */
   root: SceneId;
-  /** The canvas selection: the rows of these elements show as selected. */
+  /** The open View's path, root first; undefined while an object is open on its own. */
+  path?: readonly SceneId[];
+  /** The canvas selection, in the open View: the rows of these elements show as selected, and the first is revealed. */
   selected?: ReadonlySet<ElementId>;
-  /** A row was picked: select its element on the canvas, in the View it belongs to (`item.path`). */
-  onSelect?: (item: ViewTreeItem) => void;
+  /** A row was activated: open `selection.path` and select `selection.ids` there; `item` is the row activated. */
+  onSelect?: (selection: ViewRowSelection, item: ViewTreeItem) => void;
   /** Opens a View in the viewport, by its path from the root. */
   onOpen?: (path: SceneId[]) => void;
-  /** A row was dragged before or after a sibling: restack its element in `container`'s drawing order. */
-  onReorder?: (event: ViewReorderEvent) => void;
-};
-
-export type ViewReorderEvent = {
-  container: SceneId;
-  element: ElementId;
-  target: ElementId;
-  position: 'before' | 'after';
+  /** A row was dragged before or after a sibling in the open View: restack its element in `container`'s drawing order. */
+  onReorder?: (event: ViewReorder) => void;
 };
 
 const ICONS: Record<string, string> = {
@@ -69,22 +78,55 @@ const isItem = (row: Row): row is ViewTreeItem => row.id !== ROOT;
 // The default tracks plus one for the row's action.
 const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content min-content';
 
+/** Whether a row matches the filter text, by its label or its type. */
+const matches = (item: ViewTreeItem, text: string) =>
+  item.label.toLowerCase().includes(text) || (item.type ?? item.kind).toLowerCase().includes(text);
+
 /**
  * The views tree (VIEWS.md §4, decision 3): the root View, its nodes and links, the Views nested in it, and inside
- * each instance its object's contents, read-only. Selecting a row reports it to the host; a View row opens it.
+ * each instance its object's contents, read-only. Activating a row reports the selection it asks for; a View row
+ * opens (its Open action, Enter or a double-click); a filter narrows the rows by label or type.
  */
 export const ViewsInspector = ({
   classNames,
   scenes,
   root,
+  path,
   selected,
   onSelect,
   onOpen,
   onReorder,
 }: ViewsInspectorProps) => {
   const registry = useRegistry();
+  const treeRef = useRef<TreeRootHandle>(null);
   const tree = useMemo(() => buildViewTree(scenes, root), [scenes, root]);
-  // Made once per tree, not per selection: a new model starts every row closed, so a click would collapse its branch.
+
+  // Every row with its path as the Tree keys it, for the selection, the reveal and a double-click's lookup.
+  const rows = useMemo(() => {
+    const all = new Map<string, { item: ViewTreeItem; path: string[] }>();
+    const walk = (item: ViewTreeItem, parent: string[]) => {
+      const rowPath = [...parent, item.id];
+      all.set(item.id, { item, path: rowPath });
+      item.children.forEach((child) => walk(child, rowPath));
+    };
+    walk(tree, [TREE_ID]);
+    return all;
+  }, [tree]);
+
+  const isCurrent = useCallback(
+    (item: ViewTreeItem) =>
+      isSelectableRow(item) &&
+      item.element !== undefined &&
+      (selected?.has(item.element) ?? false) &&
+      path !== undefined &&
+      rowView(item).join(' ') === path.join(' '),
+    [selected, path],
+  );
+  const isCurrentRef = useRef(isCurrent);
+  isCurrentRef.current = isCurrent;
+
+  // Open state outlives the model, which is rebuilt with each edit: keyed by path, a row stays as the user left it.
+  const openRef = useRef(new Map<string, boolean>());
   const model = useMemo(
     () =>
       createStaticTreeModel<Row>(
@@ -103,37 +145,43 @@ export const ViewsInspector = ({
                 }
               : {},
           // The root View starts open, to show what the canvas holds; everything below it waits closed.
-          isOpen: (row) => row.id === ROOT || row === tree,
+          isOpen: (row, rowPath) => openRef.current.get(rowPath.join(' ')) ?? (row.id === ROOT || row === tree),
+          isCurrent: (row) => isItem(row) && isCurrentRef.current(row),
         },
       ),
     [tree],
   );
 
-  // Every row with its path as the Tree keys it, for writing the selection into the rows' state.
-  const rows = useMemo(() => {
-    const all: { item: ViewTreeItem; path: string[] }[] = [];
-    const walk = (item: ViewTreeItem, parent: string[]) => {
-      const path = [...parent, item.id];
-      all.push({ item, path });
-      item.children.forEach((child) => walk(child, path));
-    };
-    walk(tree, [TREE_ID]);
-    return all;
-  }, [tree]);
+  const [filter, setFilter] = useState('');
+  const text = filter.trim().toLowerCase();
+  const shown = useMemo(
+    () => (text.length > 0 ? filterTreeModel<Row>(model, (row) => isItem(row) && matches(row, text)) : model),
+    [model, text],
+  );
+
   useEffect(() => {
-    for (const { item, path } of rows) {
-      const current = !item.readonly && item.element !== undefined && (selected?.has(item.element) ?? false);
-      const atom = model.stateAtom(path);
+    for (const { item, path: rowPath } of rows.values()) {
+      const current = isCurrent(item);
+      const atom = model.stateAtom(rowPath);
       const state = registry.get(atom);
       if (state.current !== current) {
         registry.set(atom, { ...state, current });
       }
     }
-  }, [rows, selected, model, registry]);
+  }, [rows, isCurrent, model, registry]);
+
+  // The canvas selection brings its row into view without taking focus, which stays with the canvas.
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  useEffect(() => {
+    const first = [...rowsRef.current.values()].find(({ item }) => isCurrentRef.current(item));
+    first && treeRef.current?.reveal(first.path, { focus: false });
+  }, [selected, path]);
 
   const onOpenChange = useCallback(
-    ({ path, open }: { path: string[]; open: boolean }) => {
-      const atom = model.stateAtom(path);
+    ({ path: rowPath, open }: { path: string[]; open: boolean }) => {
+      openRef.current.set(rowPath.join(' '), open);
+      const atom = model.stateAtom(rowPath);
       registry.set(atom, { ...registry.get(atom), open });
     },
     [model, registry],
@@ -141,44 +189,60 @@ export const ViewsInspector = ({
 
   // The host owns the selection; the rows follow it through the effect above.
   const handleSelect = useCallback(
-    ({ item, current }: TreeSelectEvent<Row>) => {
-      if (current && isItem(item)) {
-        onSelect?.(item);
+    ({ item, current, meta, keyboard, range }: TreeSelectEvent<Row>) => {
+      if (!isItem(item)) {
+        return;
       }
+      if (keyboard && item.kind === 'view' && onOpen) {
+        onOpen(item.path);
+        return;
+      }
+      const selection = selectRows({
+        item,
+        range: range?.flatMap((row) => (isItem(row.item) ? [row.item] : [])),
+        meta,
+        current,
+        selection: selected ?? new Set(),
+        path,
+      });
+      selection && onSelect?.(selection, item);
     },
-    [onSelect],
+    [onSelect, onOpen, selected, path],
   );
 
-  // A row moves only among its siblings, as a restack: another container is another View's drawing.
-  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-    const from: Row = source.item;
-    const to: Row = target.item;
-    return (
-      isItem(from) &&
-      isItem(to) &&
-      !to.readonly &&
-      from.container !== undefined &&
-      from.container === to.container &&
-      (from.kind === 'link') === (to.kind === 'link')
-    );
-  }, []);
+  const handleDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      const id =
+        event.target instanceof Element
+          ? event.target.closest('[data-tree-row]')?.getAttribute('data-object-id')
+          : undefined;
+      const item = id ? rows.get(id)?.item : undefined;
+      if (item?.kind === 'view' && onOpen) {
+        onOpen(item.path);
+      }
+    },
+    [rows, onOpen],
+  );
+
+  // A row moves only among its siblings in the open View, as a restack: another container is another View's drawing.
+  const view = path?.at(-1);
+  const canDrop = useCallback(
+    ({ source, target }: { source: TreeData; target: TreeData }) => {
+      const from: Row = source.item;
+      const to: Row = target.item;
+      return isItem(from) && isItem(to) && canRestack(from, to, view);
+    },
+    [view],
+  );
   const handleDrop = useCallback(
     ({ instruction, source, target }: TreeDropEvent<Row>) => {
       const from: Row = source.item;
       const to: Row = target.item;
-      if (!isItem(from) || !isItem(to) || !from.container || !from.element || !to.element) {
-        return;
-      }
-      if (instruction.type === 'reorder-above' || instruction.type === 'reorder-below') {
-        onReorder?.({
-          container: from.container,
-          element: from.element,
-          target: to.element,
-          position: instruction.type === 'reorder-above' ? 'before' : 'after',
-        });
-      }
+      const reorder =
+        isItem(from) && isItem(to) && canRestack(from, to, view) ? viewReorder(from, to, instruction.type) : undefined;
+      reorder && onReorder?.(reorder);
     },
-    [onReorder],
+    [view, onReorder],
   );
 
   const renderRow = useCallback(
@@ -210,14 +274,27 @@ export const ViewsInspector = ({
   );
 
   return (
-    <div className={mx('flex flex-col min-h-0', classNames)} data-testid='views'>
+    <div className={mx('flex flex-col min-h-0', classNames)} data-testid='views' onDoubleClick={handleDoubleClick}>
+      <Toolbar.Root>
+        <Input.Root
+          placeholder='Filter'
+          value={filter}
+          noAutoFill
+          autoComplete='off'
+          spellCheck={false}
+          data-testid='views-filter'
+          onChange={(event) => setFilter(event.target.value)}
+        />
+      </Toolbar.Root>
       <Tree.Root
-        model={model}
+        ref={treeRef}
+        model={shown}
         rootId={model.rootId}
         id={TREE_ID}
         selectionMode='multiple'
         columns={COLUMNS}
         draggable={onReorder !== undefined}
+        canSelect={({ item }) => isItem(item) && (isSelectableRow(item) || item.kind === 'view')}
         canDrop={canDrop}
         getDropKind={({ instruction }) =>
           instruction.type === 'reorder-above' || instruction.type === 'reorder-below' ? 'move' : 'reject'
