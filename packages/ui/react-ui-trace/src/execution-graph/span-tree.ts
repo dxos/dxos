@@ -27,6 +27,8 @@ export const ROOT_SPAN_ID = '<main>';
 export interface SpanMeta {
   readonly pid?: string;
   readonly parentPid?: string;
+  /** Pid of the run's first invocation, on a run-again continuation; see `Trace.Meta.runId`. */
+  readonly runId?: string;
   readonly processName?: string;
   readonly conversationId?: string;
   readonly triggerId?: string;
@@ -62,6 +64,7 @@ export const isSpanEndEvent = (event: Trace.FlatEvent): boolean => END_EVENT_TYP
 const computeMeta = (rawMeta: Trace.Meta): SpanMeta => ({
   pid: rawMeta.pid,
   parentPid: rawMeta.parentPid,
+  runId: rawMeta.runId,
   processName: rawMeta.processName,
   conversationId: rawMeta.conversation ? EID.getEntityId(EID.parse(rawMeta.conversation.uri)) : undefined,
   triggerId: rawMeta.trigger ? EID.getEntityId(EID.parse(rawMeta.trigger.uri)) : undefined,
