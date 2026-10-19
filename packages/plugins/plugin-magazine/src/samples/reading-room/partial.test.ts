@@ -24,6 +24,7 @@ type Entry = {
   readonly 'objects'?: Ref[];
   readonly 'posts'?: Ref[];
   readonly 'postState'?: Ref;
+  readonly 'tags'?: Ref;
   readonly 'state'?: Record<string, { readonly rank?: number; snippet?: string; imageUrl?: string; readAt?: string }>;
   readonly 'index'?: Record<string, string[]>;
 };
@@ -85,16 +86,13 @@ describe('Reading Room', () => {
 
     // Read markers and starred tags live on the posts' subscriptions.
     const subscriptions = ofType(archive.objects, Subscription.Subscription);
-    const childOf = (subscription: Entry, key: 'postState' | 'tags') => {
-      const ref = (subscription as Record<string, unknown>)[key] as Ref | undefined;
-      return ref && objects.get(idOf(ref) ?? '');
-    };
+    const childOf = (ref: Ref | undefined) => (ref ? objects.get(idOf(ref) ?? '') : undefined);
     const read = subscriptions.flatMap((subscription) =>
-      Object.values(childOf(subscription, 'postState')?.state ?? {}).filter((state) => state.readAt),
+      Object.values(childOf(subscription.postState)?.state ?? {}).filter((state) => state.readAt),
     );
     expect(read).toHaveLength(3);
     const starred = subscriptions.flatMap((subscription) =>
-      Object.values(childOf(subscription, 'tags')?.index ?? {}).flat(),
+      Object.values(childOf(subscription.tags)?.index ?? {}).flat(),
     );
     expect(starred).toHaveLength(2);
 
