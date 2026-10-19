@@ -11,8 +11,8 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type SceneId } from '../../../model/index.ts';
-import { type InspectorProps } from '../index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
+import { type InspectorProps } from '../types.ts';
 
 /** A composite as the panel lists it. */
 export type ObjectEntry = { id: SceneId; name: string; instances: number };

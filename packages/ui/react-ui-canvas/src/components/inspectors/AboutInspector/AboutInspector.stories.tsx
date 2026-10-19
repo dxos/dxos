@@ -14,7 +14,14 @@ const meta: Meta<typeof AboutInspector> = {
   title: 'ui/react-ui-canvas/components/inspectors/AboutInspector',
   component: AboutInspector,
   decorators: [
-    withInspectorFrame({ id: 'about', title: 'About', icon: 'ph--info--regular', order: 0, show: 'never' }),
+    withInspectorFrame({
+      id: 'about',
+      title: 'About',
+      icon: 'ph--info--regular',
+      order: 0,
+      show: 'never',
+      defaultOpen: true,
+    }),
     withTheme(),
     withLayout({ layout: 'centered' }),
   ],

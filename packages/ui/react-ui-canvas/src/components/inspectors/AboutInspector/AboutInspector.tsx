@@ -7,7 +7,7 @@ import React, { Fragment, type ReactNode } from 'react';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { type InspectorProps } from '../index.ts';
+import { type InspectorProps } from '../types.ts';
 
 export type AboutStat = { id: string; label: string; value: ReactNode };
 

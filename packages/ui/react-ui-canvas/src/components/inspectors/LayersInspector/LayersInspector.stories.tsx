@@ -70,7 +70,14 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-canvas/components/inspectors/LayersInspector',
   render: DefaultStory,
   decorators: [
-    withInspectorFrame({ id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 0, show: 'empty' }),
+    withInspectorFrame({
+      id: 'layers',
+      title: 'Layers',
+      icon: 'ph--stack--regular',
+      order: 0,
+      show: 'empty',
+      defaultOpen: true,
+    }),
     withTheme(),
     withLayout({ layout: 'centered' }),
   ],

@@ -8,7 +8,8 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { type PanelProps } from '../index.ts';
+import { FLOATING_BAR } from '../../../utils/index.ts';
+import { type PanelProps } from '../types.ts';
 
 export type TimelinePanelProps = PanelProps & {
   /** Seconds. */
@@ -118,7 +119,7 @@ export const TimelinePanel = ({
   );
   const at = (t: number) => `${duration > 0 ? (t / duration) * 100 : 0}%`;
   return (
-    <Toolbar.Root classNames={mx('min-w-[24rem]', classNames)} data-testid='timeline'>
+    <Toolbar.Root classNames={mx('min-w-[24rem]', FLOATING_BAR, classNames)} data-testid='timeline'>
       <Button.Root
         variant='ghost'
         iconOnly

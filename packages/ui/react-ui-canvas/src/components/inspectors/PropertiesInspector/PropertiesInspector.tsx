@@ -70,7 +70,7 @@ import {
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
 import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
-import { type InspectorProps } from '../index.ts';
+import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
@@ -329,12 +329,9 @@ export const PropertiesInspector = ({
     [typesKey, nodes, fields],
   );
 
+  // Nothing to edit: the host hides the inspector (and its section) rather than show an empty one.
   if (elements.length === 0) {
-    return (
-      <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-        <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
-      </div>
-    );
+    return null;
   }
 
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;

@@ -16,6 +16,7 @@ import React, {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -38,6 +39,8 @@ export type InspectorSectionDef = {
   order: number;
   /** While the panel floats, when the section shows; docked, every section does. */
   show: 'selection' | 'empty' | 'never';
+  /** Open when it first shows; otherwise it starts closed, so only the inspectors that matter first take room. */
+  defaultOpen?: boolean;
 };
 
 type InspectorPanelContextValue = {
@@ -77,14 +80,21 @@ const InspectorPanelRoot = ({
 }: InspectorPanelRootProps) => {
   const [sections, setSections] = useState<InspectorSectionDef[]>([]);
   const [slots, setSlots] = useState<Record<string, HTMLElement | null>>({});
-  // Closed rather than open, so a section that shows later starts open.
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
+  // Sections seen before, so one starts closed (unless `defaultOpen`) only the first time it registers.
+  const seen = useRef(new Set<string>());
   const shows = useCallback(
     (section: InspectorSectionDef) =>
       docked || (!readonly && (section.show === 'selection' ? selected : section.show === 'empty' ? !selected : false)),
     [docked, readonly, selected],
   );
   const register = useCallback((section: InspectorSectionDef) => {
+    if (!seen.current.has(section.id)) {
+      seen.current.add(section.id);
+      if (!section.defaultOpen) {
+        setClosed((current) => new Set([...current, section.id]));
+      }
+    }
     setSections((current) =>
       [...current.filter((entry) => entry.id !== section.id), section].sort((left, right) => left.order - right.order),
     );
@@ -141,7 +151,12 @@ const InspectorPanelContent = () => {
       classNames={
         docked
           ? 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
-          : mx('absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden', FLOATING_PANEL)
+          : // The docked panel's surface, so the inspectors look the same wherever the panel sits.
+            mx(
+              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden',
+              FLOATING_PANEL,
+              'bg-base-surface',
+            )
       }
       data-testid='scene-view-dock'
       data-floating={!docked || undefined}
@@ -235,15 +250,15 @@ export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectio
  */
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
-  const { id, title, icon, order, show } = section;
+  const { id, title, icon, order, show, defaultOpen } = section;
   useLayoutEffect(() => {
     if (!panel) {
       return;
     }
-    return panel.register({ id, title, icon, order, show });
+    return panel.register({ id, title, icon, order, show, defaultOpen });
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [panel?.register, id, title, icon, order, show]);
+  }, [panel?.register, id, title, icon, order, show, defaultOpen]);
   if (!panel) {
     return <>{children}</>;
   }

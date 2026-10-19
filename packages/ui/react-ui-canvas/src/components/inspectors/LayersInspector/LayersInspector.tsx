@@ -11,8 +11,8 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type Layer, type LayerId } from '../../../model/index.ts';
-import { type InspectorProps } from '../index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
+import { type InspectorProps } from '../types.ts';
 
 export type LayersInspectorProps = InspectorProps & {
   /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */

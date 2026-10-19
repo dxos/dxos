@@ -2121,7 +2121,10 @@ const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: Ca
     registry.set(atoms.point, undefined);
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
-  // Docked, the panel stays in its section whatever is selected (it says when nothing is).
+  // With nothing selected there is nothing to edit, so the section goes, docked or floating.
+  if (selection.size === 0) {
+    return null;
+  }
   return (
     <InspectorSection section={PROPERTIES_INSPECTOR}>
       <PropertiesInspector
@@ -2153,6 +2156,7 @@ const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
   show: 'selection',
+  defaultOpen: true,
 };
 
 // Floating, the layers take the properties' place while nothing is selected.

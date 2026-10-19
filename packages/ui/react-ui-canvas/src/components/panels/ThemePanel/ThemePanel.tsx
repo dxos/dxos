@@ -21,8 +21,8 @@ import {
   shortcutFor,
   styleVariant,
 } from '../../../model/index.ts';
-import { BACKGROUND_FILLS, FLOATING_PANEL, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
-import { type PanelProps } from '../index.ts';
+import { BACKGROUND_FILLS, FLOATING_BAR, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
+import { type PanelProps } from '../types.ts';
 
 /** The canvas colour behind a swatch in its theme's mode. */
 const SWATCH_CANVAS: Record<LookTone, string> = {
@@ -86,7 +86,7 @@ const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: stri
   { grid: 'lines', icon: 'ph--grid-four--regular', label: 'Lines on the minor and major grid' },
 ];
 
-const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
+const barClasses = mx('w-full', FLOATING_BAR);
 
 export type ThemePanelProps = PanelProps & {
   registry: ThemeRegistry;

@@ -73,24 +73,28 @@ type Story = StoryObj<StoryArgs>;
 /** A shape selected: its properties above the scene's layers. */
 export const Default: Story = {};
 
-/** Nothing selected: the properties section says so rather than going away. */
+/** Nothing selected: there is nothing to edit, so the properties section goes and the layers lead. */
 export const Empty: Story = { args: { select: undefined } };
 
 /** Each section's header collapses it. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. Both sections are open, the properties showing the selected shape's layer.
+    // 1. Only the properties start open, showing the selected shape's layer; the layers and about wait closed.
     const dock = await canvas.findByTestId('scene-view-dock');
-    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
+    await waitFor(() =>
+      expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open'),
+    );
+    await expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed');
     await expect(await within(dock).findByRole('combobox', { name: 'Layer' })).toHaveTextContent('Diagram');
     // 2. The properties header collapses its section.
     await userEvent.click(within(dock).getByRole('button', { name: 'Properties' }));
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 3. The about section follows the layers, its figures those of the scene.
-    await expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2');
+    // 3. Opened, the about section's figures are those of the scene.
+    await userEvent.click(within(dock).getByRole('button', { name: 'About' }));
+    await waitFor(() => expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2'));
     await expect(within(dock).getByTestId('about-layers')).toHaveTextContent('2');
   },
 };

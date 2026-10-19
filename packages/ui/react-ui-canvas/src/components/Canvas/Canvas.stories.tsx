@@ -347,25 +347,24 @@ export const Lattice: Story = {
 };
 
 /**
- * Docked inspectors: one accordion section each beside the canvas; a section collapses to its header, and the dock's
- * close button floats the same column over the canvas.
+ * Docked inspectors: one accordion section each beside the canvas, only the properties open to start; a header opens
+ * or closes its section, and the dock's close button floats the same column over the canvas.
  */
 export const Docked: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. The dock holds the properties and layers sections, both open.
+    // 1. With nothing selected the dock holds no properties; the layers section starts closed, and its header opens it.
     const dock = await canvas.findByTestId('scene-view-dock');
-    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
-    await expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open');
-    // 2. A section's header collapses it.
-    await userEvent.click(
-      within(within(dock).getByTestId('dock-section-properties')).getByRole('button', { name: 'Properties' }),
-    );
     await waitFor(() =>
-      expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
+      expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed'),
     );
-    // 3. Closing the dock floats the inspectors in the same column: the layers over the canvas while nothing is selected.
+    await expect(within(dock).queryByTestId('dock-section-properties')).not.toBeInTheDocument();
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-layers')).getByRole('button', { name: 'Layers' }),
+    );
+    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
+    // 2. Closing the dock floats the inspectors in the same column: the layers over the canvas while nothing is selected.
     await userEvent.click(within(dock).getByTestId('dock-close'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating'));
     await expect(within(canvas.getByTestId('scene-view-dock')).getByTestId('layers')).toBeVisible();

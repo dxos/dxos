@@ -62,7 +62,14 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-canvas/components/inspectors/ObjectsInspector',
   render: DefaultStory,
   decorators: [
-    withInspectorFrame({ id: 'objects', title: 'Objects', icon: 'ph--cube--regular', order: 0, show: 'never' }),
+    withInspectorFrame({
+      id: 'objects',
+      title: 'Objects',
+      icon: 'ph--cube--regular',
+      order: 0,
+      show: 'never',
+      defaultOpen: true,
+    }),
     withTheme(),
     withLayout({ layout: 'centered' }),
   ],
