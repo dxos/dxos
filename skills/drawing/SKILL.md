@@ -13,7 +13,8 @@ and never use Mermaid for a diagram this skill can draw.
 Nothing needs installing: when `drawing` is not on PATH,
 `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` runs the latest build of `main`.
 Installing from npm (`npm i -g @dxos/drawing`, or `npx -y @dxos/drawing`) is optional and makes repeat runs
-faster.
+faster. If the skill was installed with `npx skills add`, that left `skills-lock.json`, `.agents/` and `.claude/`
+untracked in the repo; tell the user once, so they can commit or ignore them.
 
 ## Workflow
 
@@ -22,30 +23,34 @@ faster.
 2. **Cut it to what a reader needs.** At most about 14 boxes and 3 groups. Drop helpers, tests,
    constants and leaf utilities; when you drop a box that relays an arrow (`A → helper → C`), keep the
    arrow as `A → C`. Split a bigger system into two diagrams.
-3. **Write a `.dx` file** (language below) with your file-editing tool, not a shell heredoc. Start with no
-   placement hints.
-4. **Render it**, as a command of its own (no pipes or chains, so it runs without extra approval):
+3. **Write the `.dx` in a scratch location outside the repo** (`$TMPDIR` or `/tmp`), with your file-editing
+   tool, not a shell heredoc. Start with no placement hints. The user keeps only the `.dx.svg`, which embeds
+   the source; never leave a `.dx` in their project.
+4. **Render it** to where the picture belongs, as a command of its own (no pipes or chains, so it runs
+   without extra approval):
 
    ```bash
-   drawing render diagram.dx
+   drawing render /tmp/arch.dx -o docs/arch.dx.svg
    ```
 
    If that reports `command not found`, run
-   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` instead. Don't probe for
+   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render /tmp/arch.dx -o docs/arch.dx.svg` instead. Don't probe for
    the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`), stop: tell
    the user the exact error and the commands under Install. Don't hand-draw an SVG, switch to Mermaid or
    guess other package names.
 
-   It prints a report and writes `diagram.dx.svg` beside the source. `--plain` writes a bare `.svg`;
-   `-o path` picks the output; `--json` prints the report as JSON. Exit code 1 means the source has an
-   error or the layout has an overlap; fix the source and render again.
+   It prints a report and writes the `.dx.svg` (without `-o`, beside the source). `--plain` writes a bare
+   `.svg`; `--json` prints the report as JSON; `-` as the input reads the `.dx` from stdin. Exit code 1
+   means the source has an error or the layout has an overlap; fix the source and render again.
 
 5. **Look at the result before you show it.** If you can view images, open the SVG. Otherwise read the
    report: `crossings` and `bends` should be low, and every warning names the boxes involved. Fix one
-   defect at a time with the smallest hint (below), render again, and stop after about four rounds.
-6. **Hand it over.** Reference the SVG by path (`![Architecture](docs/architecture.dx.svg)`), and keep
-   the `.dx` next to it so the next change is an edit to text, not a redraw. A `.dx.svg` carries its
-   source, so when only the picture is at hand, `drawing source diagram.dx.svg` prints the `.dx` to edit.
+   defect at a time with the smallest hint (below), render again, and stop after about four rounds. The
+   report is for you to fix the layout; don't repeat its numbers to the user.
+6. **Hand it over.** Reference the SVG by path (`![Architecture](docs/arch.dx.svg)`), and offer to open it
+   in app.drawing.sh (below).
+7. **To revise it**, recover the source into scratch, edit that, and render over the same file:
+   `drawing source docs/arch.dx.svg -o /tmp/arch.dx`.
 
 ## The language
 
@@ -136,9 +141,14 @@ edge Worker -> Db
 
 If a hint makes the report worse, remove it instead of adding a second one to fight it.
 
-## Opening it as a live drawing
+## Opening it in app.drawing.sh
 
-A `.dx.svg` is an ordinary image that GitHub, browsers and docs display. It also carries its source, so
-importing it into a [Composer](https://composer.space) space turns it into an editable drawing that people
-and agents keep working on together. With the DXOS CLI (`dx`) available, run `dx drawing import
-diagram.dx.svg`; `dx drawing list` shows the drawings in the space.
+When the user wants to see or edit the diagram on a canvas, run `drawing open docs/arch.dx.svg` (the same
+`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main open …` form when `drawing` is not on PATH). It
+uploads the source, prints a link and opens it in the browser. Give the user the link, and say that anyone
+with it can open the diagram and that it expires 30 days after it was last opened. Only `open` uploads;
+`render` never does.
+
+A `.dx.svg` is also an ordinary image that GitHub, browsers and docs display. With the DXOS CLI (`dx`),
+`dx drawing import docs/arch.dx.svg` adds it to a [Composer](https://composer.space) space as an editable
+drawing.
