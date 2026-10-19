@@ -21699,9 +21699,6 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -21720,9 +21717,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -21732,9 +21726,6 @@ importers:
       '@dxos/permission':
         specifier: workspace:*
         version: link:../../common/permission
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -21750,9 +21741,6 @@ importers:
       '@dxos/react-ui-trace':
         specifier: workspace:*
         version: link:../../ui/react-ui-trace
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
@@ -21772,18 +21760,30 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
