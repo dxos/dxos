@@ -21,6 +21,7 @@ import React, {
   useState,
 } from 'react';
 
+import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
@@ -43,6 +44,7 @@ import {
   type View,
   type ViewStore,
   frameTimeAttribute,
+  isDiagramNode,
   isGeneratorNode,
   isInstanceNode,
   isNoteNode,
@@ -66,6 +68,8 @@ import {
   classedNode,
   compositeBounds,
   contentBounds,
+  diagramLinkMarkup,
+  diagramNodeMarkup,
   elementLayer,
   frameClasses,
   instanceTransform,
@@ -83,6 +87,7 @@ import {
   visibleView,
 } from '../../utils/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
+import { renderMarkup } from './markup.ts';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
@@ -213,6 +218,9 @@ export const SceneLayer = memo(
     const lineHues = useMemo(() => [...new Set([...lines.values()].map((line) => line?.hue))], [lines]);
     const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: string | undefined) =>
       marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
+    // Diagram connectors draw the diagram renderer's own markers, defined once per layer.
+    const diagramMarkers = useMemo(() => SvgFile.markerIds(`${markerId}-dx`), [markerId]);
+    const hasDiagram = links.some(({ diagram }) => diagram !== undefined);
 
     return (
       <CellContext.Provider value={cell}>
@@ -230,12 +238,13 @@ export const SceneLayer = memo(
                     canvasFill={canvasFill}
                   />
                 ))}
+                {hasDiagram && SvgFile.markerDefs(diagramMarkers).map((marker, index) => renderMarkup(marker, index))}
               </defs>
             </svg>
             {groups.map((group) => (
               <Fragment key={group.layer.id}>
                 <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                  {group.links.map(({ link, path }) => (
+                  {group.links.map(({ link, path, diagram }) => (
                     <g key={link.id}>
                       {/* A wide transparent twin makes the thin stroke easy to press. */}
                       {handlers && (
@@ -251,24 +260,41 @@ export const SceneLayer = memo(
                           onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
                         />
                       )}
-                      <LinkStroke
-                        id={`${markerId}-${link.id}`}
-                        kind={look.styleSet.link.kind}
-                        path={path}
-                        stroke={
-                          plain
-                            ? lineClasses(lines.get(link.id)?.hue).stroke
-                            : selected?.has(link.id)
-                              ? 'stroke-focus'
-                              : hoveredLink === link.id
-                                ? 'stroke-focus/50'
-                                : lineClasses(lines.get(link.id)?.hue).stroke
-                        }
-                        width={linkWidth}
-                        lineStyle={lines.get(link.id)?.lineStyle}
-                        linkId={link.id}
-                      />
-                      {link.text && (
+                      {diagram && link.connector ? (
+                        <DiagramLink
+                          path={path}
+                          markup={diagramLinkMarkup(link, link.connector, diagram, diagramMarkers)}
+                          highlight={
+                            plain
+                              ? undefined
+                              : selected?.has(link.id)
+                                ? 'stroke-focus'
+                                : hoveredLink === link.id
+                                  ? 'stroke-focus/50'
+                                  : undefined
+                          }
+                          linkId={link.id}
+                        />
+                      ) : (
+                        <LinkStroke
+                          id={`${markerId}-${link.id}`}
+                          kind={look.styleSet.link.kind}
+                          path={path}
+                          stroke={
+                            plain
+                              ? lineClasses(lines.get(link.id)?.hue).stroke
+                              : selected?.has(link.id)
+                                ? 'stroke-focus'
+                                : hoveredLink === link.id
+                                  ? 'stroke-focus/50'
+                                  : lineClasses(lines.get(link.id)?.hue).stroke
+                          }
+                          width={linkWidth}
+                          lineStyle={lines.get(link.id)?.lineStyle}
+                          linkId={link.id}
+                        />
+                      )}
+                      {link.text && !diagram && (
                         <LinkText
                           path={path}
                           text={link.text}
@@ -317,15 +343,17 @@ export const SceneLayer = memo(
                 ))}
                 {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
                 <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                  {group.links.map(({ link, path }) => (
-                    <path
-                      key={link.id}
-                      d={path}
-                      className='fill-none stroke-none'
-                      markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-                      markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
-                    />
-                  ))}
+                  {group.links.map(({ link, path, diagram }) =>
+                    diagram ? null : (
+                      <path
+                        key={link.id}
+                        d={path}
+                        className='fill-none stroke-none'
+                        markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                        markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                      />
+                    ),
+                  )}
                 </svg>
               </Fragment>
             ))}
@@ -605,6 +633,22 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   );
 };
 
+type DiagramLinkProps = {
+  path: string;
+  markup: readonly SvgFile.Markup[];
+  /** The selection's or the hover's stroke, drawn under the connector as an outline. */
+  highlight?: string;
+  linkId: string;
+};
+
+/** A diagram connector as the diagram's SVG renderer draws it, over the selection's outline when it has one. */
+const DiagramLink = ({ path, markup, highlight, linkId }: DiagramLinkProps) => (
+  <g data-link-id={linkId}>
+    {highlight && <path d={path} className={mx('fill-none', highlight)} strokeWidth={6} strokeLinejoin='round' />}
+    <g className={SvgFile.ROOT_CLASS}>{markup.map((element, index) => renderMarkup(element, index))}</g>
+  </g>
+);
+
 type LinkStrokeProps = {
   /** Unique within the document, for a rails or glass link's mask. */
   id: string;
@@ -856,7 +900,8 @@ const NodeFrame = memo(
       <>
         <div
           className={mx(
-            'absolute box-border overflow-hidden',
+            'absolute box-border',
+            !def?.unclipped && 'overflow-hidden',
             // Fading, the border becomes padding of the same width so the contents stay put.
             ...(chromeFade
               ? [BORDER_CLASSES[nominal].padding, 'isolate']
@@ -1176,6 +1221,39 @@ export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth
         liveDepth={liveDepth}
       />
     </div>
+  );
+};
+
+/**
+ * A diagram shape as the diagram's SVG renderer draws it, in scene coordinates mapped onto the frame; while its label
+ * is edited the renderer leaves the text out and the in-place editor shows it instead.
+ */
+export const DiagramNodeView = ({ node, editing }: NodeViewProps) => {
+  const markup = useMemo(
+    () => (isDiagramNode(node) ? diagramNodeMarkup(node, { hideLabel: editing !== undefined }) : []),
+    [node, editing],
+  );
+  if (!isDiagramNode(node)) {
+    return null;
+  }
+  const { x, y, width, height } = nodeBounds(node);
+  return (
+    <>
+      <svg
+        className='absolute overflow-visible pointer-events-none'
+        style={{
+          top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+          left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+        }}
+        width={width}
+        height={height}
+        viewBox={`${x} ${y} ${width} ${height}`}
+        data-diagram-node={node.id}
+      >
+        <g className={SvgFile.ROOT_CLASS}>{markup.map((element, index) => renderMarkup(element, index))}</g>
+      </svg>
+      {editing && <LabelPart node={node} editing={editing} label={node.label ?? ''} />}
+    </>
   );
 };
 

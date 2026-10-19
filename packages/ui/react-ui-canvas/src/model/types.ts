@@ -11,6 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Scene as Dsl } from '@dxos/diagram';
 import { Annotation } from '@dxos/echo';
 import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
@@ -318,6 +319,36 @@ export const PathNode = Schema.Struct({
 });
 export type PathNode = Schema.Schema.Type<typeof PathNode>;
 
+/** Where a diagram shape's heading (a group's name) sits, from the frame's top-left corner, and how it is set. */
+export const DiagramHeading = Schema.Struct({
+  /** The DSL element the heading came from, so the drawing reads it back under its own id. */
+  id: Schema.String,
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.optional(Schema.Number),
+  color: Schema.optional(Dsl.Color),
+  weight: Schema.optional(Dsl.Weight),
+});
+export type DiagramHeading = Schema.Schema.Type<typeof DiagramHeading>;
+
+/** The DSL elements a diagram node can be. */
+export const DiagramShape = Schema.Union([Dsl.Box, Dsl.Circle, Dsl.Text, Dsl.Portal]);
+export type DiagramShape = Schema.Schema.Type<typeof DiagramShape>;
+
+/**
+ * A shape of a laid-out diagram (`@dxos/diagram`'s scene DSL), drawn by the renderer that writes the diagram's SVG file
+ * (`SvgFile.elementMarkup`) so it reads on the canvas as it does there. The element's geometry is the node's frame and
+ * its text the node's `label` (the heading's, when it has one), so a move, a resize or a relabel edits the element.
+ */
+export const DiagramNode = Schema.Struct({
+  type: Schema.Literal('diagram'),
+  ...nodeBase,
+  ...boxFields,
+  element: DiagramShape,
+  heading: Schema.optional(DiagramHeading),
+});
+export type DiagramNode = Schema.Schema.Type<typeof DiagramNode>;
+
 /**
  * A node whose content an agent-written generator computes from its parameters and the time (ANIMATION.md §6): the
  * generator is a `Generator` object the host resolves by `generator` (a reference string), and `params` are its
@@ -344,6 +375,7 @@ export const BuiltinNode = Schema.Union([
   InstanceNode,
   PathNode,
   GeneratorNode,
+  DiagramNode,
 ]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
@@ -357,6 +389,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'instance',
   'path',
   'generator',
+  'diagram',
 ];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
@@ -374,6 +407,7 @@ export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'v
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
 export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
 export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
+export const isDiagramNode = (node: NodeBase): node is DiagramNode => node.type === 'diagram';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
 export const isBoxNode = (node: NodeBase): node is RectNode | ViewNode => isRectNode(node) || isViewNode(node);
 /** Whether a view node draws its child View: as set, else while it has no label to show instead. */
@@ -438,6 +472,31 @@ export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
 /** A drawing's style classes by id. */
 export type StyleMap = Readonly<Record<string, StyleClass>>;
 
+/** Where a diagram connector's caption sits (scene coordinates, its top-left), and how it is set. */
+export const DiagramCaption = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.optional(Schema.Number),
+  color: Schema.optional(Dsl.Color),
+  weight: Schema.optional(Dsl.Weight),
+});
+export type DiagramCaption = Schema.Schema.Type<typeof DiagramCaption>;
+
+/**
+ * A connector of a laid-out diagram, drawn by the diagram's SVG renderer: its relation's markers and dash, and the
+ * route the layout gave it (scene coordinates, source end first) for as long as its ends are where the route meets them.
+ */
+export const DiagramConnector = Schema.Struct({
+  relation: Schema.optional(Dsl.Relation),
+  head: Schema.optional(Dsl.ArrowHead),
+  tail: Schema.optional(Dsl.ArrowTail),
+  stroke: Schema.optional(Dsl.Stroke),
+  color: Schema.optional(Dsl.Color),
+  route: Schema.optional(Schema.Array(Point)),
+  caption: Schema.optional(DiagramCaption),
+});
+export type DiagramConnector = Schema.Schema.Type<typeof DiagramConnector>;
+
 const linkBase = {
   id: Schema.String,
   z: Schema.String,
@@ -453,6 +512,8 @@ const linkBase = {
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(LineStyle),
+  /** Drawn as a diagram connector rather than in the canvas's own link style. */
+  connector: Schema.optional(DiagramConnector),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -586,6 +647,7 @@ export const View = createViewSchema([
   InstanceNode,
   PathNode,
   GeneratorNode,
+  DiagramNode,
 ]);
 
 /** The View schema over any node with the shared fields: what the engine itself can validate for a host. */

@@ -68,6 +68,11 @@ export const CanvasRecord = Schema.Struct({
   background: Schema.optional(Schema.String),
   /** Overrides the background's grid. */
   backgroundGrid: Schema.optional(BackgroundGrid),
+  /**
+   * The illustrator DSL's elements draw as the diagram's own SVG renderer draws them (diagram nodes and connectors)
+   * rather than as canvas shapes: a laid-out diagram brought onto the canvas keeps the look it had.
+   */
+  diagramShapes: Schema.optional(Schema.Boolean),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 

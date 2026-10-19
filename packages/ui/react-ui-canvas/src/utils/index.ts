@@ -8,6 +8,7 @@ export * from './clipboard.ts';
 export * from './silhouette.ts';
 export * from './compose.ts';
 export * from './diagram.ts';
+export * from './diagram-shape.ts';
 export * from './dnd.ts';
 export * from './frames.ts';
 export * from './hit.ts';

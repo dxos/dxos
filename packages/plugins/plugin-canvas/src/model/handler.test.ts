@@ -4,10 +4,22 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, applyCommands } from '@dxos/diagram';
-import { DEFAULT_LAYER, isEllipseNode, isRectNode, sortByZ } from '@dxos/react-ui-canvas/scene';
+import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import {
+  DEFAULT_LAYER,
+  type View,
+  defaultNodeRegistry,
+  diagramLinkMarkup,
+  diagramNodeMarkup,
+  isDiagramNode,
+  isEllipseNode,
+  isRectNode,
+  linkGeometry,
+  sortByZ,
+} from '@dxos/react-ui-canvas/scene';
 
-import { ROOT_VIEW_ID, readViews, rootOf, writeViews } from './content.ts';
+import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
 
 const face = {
@@ -176,5 +188,108 @@ describe('SceneHandler', () => {
     ]);
     const layers = sortByZ(Object.values(root.layers ?? {})).map((layer) => layer.id);
     expect(layers).toEqual([BACKDROP_LAYER.id, DEFAULT_LAYER.id]);
+  });
+});
+
+const ARCHITECTURE = `
+diagram flow=down
+node Browser "Browser SPA"
+node Api "API server"
+node Worker "Background worker"
+group data "Storage" {
+  node Db "Postgres"
+  node Cache "Redis"
+}
+group ext "External services" {
+  node Stripe "Stripe"
+  node Postmark "Postmark"
+}
+edge Browser -> Api "HTTPS"
+edge Api -> Db "reads, writes"
+edge Api -> Cache "sessions"
+edge Api -> Stripe "payments"
+edge Api -> Postmark "email"
+edge Worker -> Cache "consume jobs"
+edge Worker -> Db "writes"
+`;
+
+/** Every SVG element the canvas draws for a scene's diagram shapes and connectors, as text. */
+const drawn = (scene: View): string[] =>
+  [
+    ...Object.values(scene.nodes).flatMap((node) => (isDiagramNode(node) ? diagramNodeMarkup(node) : [])),
+    ...Object.values(scene.links).flatMap((link) => {
+      const geometry = linkGeometry(scene, defaultNodeRegistry, link);
+      return geometry?.diagram && link.connector
+        ? diagramLinkMarkup(link, link.connector, geometry.diagram, SvgFile.markerIds('dx'))
+        : [];
+    }),
+  ].map(SvgFile.serialize);
+
+describe('SceneHandler on a canvas of diagram shapes', () => {
+  test('the canvas draws a laid-out diagram element for element as its SVG file does', async ({ expect }) => {
+    const { commands, problems } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    expect(problems).toEqual([]);
+    const { objects } = Dsl.toScene(commands);
+    const content: ContentMap = {};
+    seedContent(content);
+    updateCanvasRecord(content, { diagramShapes: true });
+    applyCommands(
+      content,
+      objects.map((object) => ({ op: 'upsert-object' as const, object })),
+      SceneHandler,
+    );
+    const root = readViews(content)[ROOT_VIEW_ID];
+    expect(Object.values(root.nodes).every(isDiagramNode)).toBe(true);
+    expect(Object.keys(root.links)).toHaveLength(7);
+
+    const file = SvgFile.toSvgFile(objects);
+    const elements = drawn(root);
+    // Two groups (frame and title), seven boxes, and seven connectors with their bends and captions.
+    expect(elements.length).toBeGreaterThanOrEqual(2 * 2 + 7 + 7 * 2);
+    for (const element of elements) {
+      expect(file).toContain(element);
+    }
+  });
+
+  test('a moved box re-routes its connectors at right angles, in the same renderer', async ({ expect }) => {
+    const { commands } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    const content: ContentMap = {};
+    seedContent(content);
+    updateCanvasRecord(content, { diagramShapes: true });
+    applyCommands(
+      content,
+      Dsl.toScene(commands).objects.map((object) => ({ op: 'upsert-object' as const, object })),
+      SceneHandler,
+    );
+    const before = readViews(content);
+    const root = before[ROOT_VIEW_ID];
+    const cache = root.nodes[elementId('Cache', 'box')];
+    const moved: View = {
+      ...root,
+      nodes: { ...root.nodes, [cache.id]: { ...cache, center: { x: cache.center.x + 200, y: cache.center.y + 160 } } },
+    };
+    for (const link of Object.values(moved.links).filter(
+      (link) => 'node' in link.target && link.target.node === cache.id,
+    )) {
+      const route = linkGeometry(moved, defaultNodeRegistry, link)?.diagram;
+      expect(route?.laid).toBe(false);
+      const points = route?.points ?? [];
+      expect(points.slice(1).every((point, index) => point.x === points[index].x || point.y === points[index].y)).toBe(
+        true,
+      );
+      const markup = (
+        route && link.connector ? diagramLinkMarkup(link, link.connector, route, SvgFile.markerIds('dx')) : []
+      ).map(SvgFile.serialize);
+      expect(markup.join('')).toContain(`marker-end="url(#dx-arrow)"`);
+      expect(markup.join('')).toContain(link.text ?? '');
+    }
+
+    // The canvas reads back the DSL it was given, at the box's new place.
+    const { scene } = SceneHandler.read(content);
+    const group = scene.objects.find((object) => object.id === 'data');
+    expect(group?.elements.map((element) => [element.kind, element.id])).toEqual([
+      ['rect', 'frame'],
+      ['text', 'label'],
+    ]);
   });
 });

@@ -9,6 +9,7 @@
 
 import {
   CloudNode,
+  DiagramNode,
   EllipseNode,
   GeneratorNode,
   InstanceNode,
@@ -30,6 +31,7 @@ import { NOMINAL_SIZES, cloudPath, createNode, polygonPath } from '../../utils/i
 import {
   BoxNodeView,
   CloudNodeView,
+  DiagramNodeView,
   EllipseNodeView,
   GeneratorNodeView,
   InstanceNodeView,
@@ -170,6 +172,21 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     minSize: { width: 4, height: 4 },
     palette: false,
     bare: true,
+  },
+  diagram: {
+    name: 'Diagram shape',
+    icon: 'ph--flow-arrow--regular',
+    schema: DiagramNode,
+    component: DiagramNodeView,
+    // Made from a laid-out diagram (the illustrator's DSL), not drawn from the palette; a fresh one is an empty box.
+    create: (props) => createNode({ type: 'diagram', ...props }),
+    parts: [{ field: 'label' }],
+    defaultSize: NOMINAL_SIZES.rect,
+    resizable: true,
+    minSize: { width: 16, height: 16 },
+    palette: false,
+    bare: true,
+    unclipped: true,
   },
 };
 
