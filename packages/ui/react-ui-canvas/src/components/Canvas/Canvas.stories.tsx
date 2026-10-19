@@ -55,7 +55,7 @@ const Editor = ({
   liveDepth,
   readonly: initialReadonly = false,
   lattice,
-  inspectors: initialInspectors = 'docked',
+  inspectors: initialInspectors = 'floating',
 }: EditorProps) => {
   // The args are where the view starts; the palette's toggle and the inspectors' menus change it from there.
   const [readonly, setReadonly] = useState(initialReadonly);
@@ -383,7 +383,8 @@ export const Floating: Story = {
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
-    await expect(await canvas.findByTestId('about')).toBeVisible();
+    // Docked, the about section joins the column, closed until opened (only the properties start open).
+    await expect(await canvas.findByTestId('dock-section-about')).toHaveAttribute('data-state', 'closed');
   },
 };
 

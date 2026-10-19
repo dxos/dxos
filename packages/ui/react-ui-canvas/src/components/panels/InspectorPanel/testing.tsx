@@ -10,15 +10,18 @@ import { InspectorPanel, InspectorSection, type InspectorSectionDef } from './In
 export type InspectorFrameProps = PropsWithChildren<{ section: InspectorSectionDef }>;
 
 /**
- * One inspector as the canvas shows it: in its section of an inspector panel, docked to start with, whose toolbar
- * floats and docks it.
+ * One inspector as the canvas shows it: in its section of an inspector panel, floating (the canvas's default) over a box
+ * the size of a small canvas, unless the section never floats; the panel's toolbar docks and floats it.
  */
 export const InspectorFrame = ({ section, children }: InspectorFrameProps) => {
-  const [docked, setDocked] = useState(true);
+  const [docked, setDocked] = useState(section.show === 'never');
   return (
-    <InspectorPanel.Root docked={docked} onDockedChange={setDocked}>
+    // A section that floats only with a selection is shown as though something is selected.
+    <InspectorPanel.Root docked={docked} selected={section.show === 'selection'} onDockedChange={setDocked}>
       <InspectorSection section={section}>{children}</InspectorSection>
-      <InspectorPanel.Content />
+      <div className='relative flex justify-end w-[28rem] h-[32rem]'>
+        <InspectorPanel.Content />
+      </div>
     </InspectorPanel.Root>
   );
 };

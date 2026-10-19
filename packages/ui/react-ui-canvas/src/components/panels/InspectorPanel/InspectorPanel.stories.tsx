@@ -36,7 +36,7 @@ type StoryArgs = {
   select?: string;
 };
 
-/** The inspector panel alone: its toolbar, then the properties, layers and about sections, without the canvas beside it. */
+/** The inspector panel alone, floating to start: its toolbar, then the sections that show, without the canvas beside it. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const { store, root } = useMemo(() => {
@@ -48,7 +48,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
     registry.set(atoms.selection, new Set(select ? [select] : []));
   }, [registry, atoms, select]);
   // The panel's toolbar docks and floats the inspectors.
-  const [inspectors, setInspectors] = useState<InspectorMode>('docked');
+  const [inspectors, setInspectors] = useState<InspectorMode>('floating');
   return (
     <Canvas.Root store={store} root={root} atoms={atoms} inspectors={inspectors} onInspectorsChange={setInspectors}>
       <Canvas.Properties />
@@ -80,19 +80,22 @@ export const Empty: Story = { args: { select: undefined } };
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. Only the properties start open, showing the selected shape's layer; the layers and about wait closed.
+    // 1. Floating, only the properties show; docked (from the panel's toolbar), every inspector does.
+    await userEvent.click(await canvas.findByTestId('dock-open'));
     const dock = await canvas.findByTestId('scene-view-dock');
+    await waitFor(() => expect(dock).not.toHaveAttribute('data-floating'));
+    // 2. Only the properties start open, showing the selected shape's layer; the layers and about wait closed.
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open'),
     );
     await expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed');
     await expect(await within(dock).findByRole('combobox', { name: 'Layer' })).toHaveTextContent('Diagram');
-    // 2. The properties header collapses its section.
+    // 3. The properties header collapses its section.
     await userEvent.click(within(dock).getByRole('button', { name: 'Properties' }));
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 3. Opened, the about section's figures are those of the scene.
+    // 4. Opened, the about section's figures are those of the scene.
     await userEvent.click(within(dock).getByRole('button', { name: 'About' }));
     await waitFor(() => expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2'));
     await expect(within(dock).getByTestId('about-layers')).toHaveTextContent('2');

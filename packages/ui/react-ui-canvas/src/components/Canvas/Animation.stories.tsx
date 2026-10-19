@@ -42,6 +42,7 @@ const DefaultStory = () => {
     const tree = createTree();
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, []);
+  // Docked: the objects inspector, which the story uses, never floats.
   return (
     <Canvas.Root store={store} root={root} inspectors='docked'>
       <Canvas.Viewport />
