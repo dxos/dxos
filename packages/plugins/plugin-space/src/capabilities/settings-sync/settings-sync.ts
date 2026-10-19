@@ -3,23 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { Annotation, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { resolveAppSettings, resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
 import { type Store } from './reconciler.ts';
+import { SettingsTarget } from './settings-target.ts';
 import { Sync } from './sync.ts';
 
 /**
@@ -60,15 +58,14 @@ export default Capability.makeModule(
       return [];
     }
 
-    const space = yield* resolveSettingsSpace(client);
-    let settings = yield* resolveAppSettings(space);
+    const target = yield* SettingsTarget.open(client);
     // This device's pins. One per device, so the key names no device.
     const device = KvsStore.make({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(() => settings, device, registry);
+    const store = makeStore(() => target.current, device, registry);
     const sync = new Sync(store);
 
     //
@@ -105,40 +102,16 @@ export default Capability.makeModule(
       sync.pull();
     };
 
-    //
-    // Follow the annotation. Devices that each created an object settle on the one it names, so a
-    // device switches to it and reseeds, republishing what only it holds.
-    //
-
-    const follow = () => {
-      const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined);
-      void ref?.load().then(
-        (next) => {
-          const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-            Option.getOrUndefined,
-          );
-          if (next.id === settings.id || named?.uri !== ref.uri) {
-            return;
-          }
-
-          unsubscribeSettings();
-          settings = next;
-          unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
+    const unsubscribe = [
+      registry.subscribe(contributed, bindSettings),
+      registry.subscribe(device, refresh),
+      target.follow({
+        onChange: refresh,
+        onSwitch: () => {
           sync.seed();
           refresh();
         },
-        (error) => log.catch(error),
-      );
-    };
-
-    const onSettingsChange = () => (Obj.isDeleted(settings) ? follow() : refresh());
-    let unsubscribeSettings = Obj.subscribe(settings, onSettingsChange);
-
-    const unsubscribe = [
-      registry.subscribe(contributed, bindSettings),
-      Obj.subscribe(space.properties, follow),
-      registry.subscribe(device, refresh),
-      () => unsubscribeSettings(),
+      }),
     ];
 
     yield* Effect.addFinalizer(() =>

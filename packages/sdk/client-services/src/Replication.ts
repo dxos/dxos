@@ -50,6 +50,9 @@ export class EdgeFeedReplicator extends Resource {
   /** Every block below this is held or already requested on this connection. */
   private _requestedUpTo = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
+  /** Fires whenever {@link isSynced} may have changed. */
+  readonly syncStateChanged = new Event();
+
   constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
     super();
     this._messenger = messenger;
@@ -91,6 +94,25 @@ export class EdgeFeedReplicator extends Resource {
     );
   }
 
+  /**
+   * Whether every feed agrees with EDGE on this connection: each has had a metadata reply, holds
+   * every block EDGE reported, and has sent EDGE every block it holds (EDGE does not acknowledge).
+   */
+  isSynced(): boolean {
+    if (!this._connected) {
+      return false;
+    }
+
+    return Array.from(this._feeds.values()).every((feed) => {
+      const remoteLength = this._remoteLength.get(feed.key);
+      return remoteLength === feed.length && (remoteLength === 0 || feed.has(0, remoteLength));
+    });
+  }
+
+  async waitUntilSynced(): Promise<void> {
+    await this.syncStateChanged.waitForCondition(() => this.isSynced());
+  }
+
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
     if (this._messenger.status.state === EdgeStatus_ConnectionState.CONNECTED) {
@@ -108,6 +130,7 @@ export class EdgeFeedReplicator extends Resource {
     const connectionCtx = this._createConnectionContext();
     this._connectionCtx = connectionCtx;
     log('connection context created');
+    this.syncStateChanged.emit();
     scheduleMicroTask(connectionCtx, async () => {
       for (const feed of this._feeds.values()) {
         await this._replicateFeed(connectionCtx, feed);
@@ -122,11 +145,13 @@ export class EdgeFeedReplicator extends Resource {
     this._connectionCtx = undefined;
     this._remoteLength.clear();
     this._requestedUpTo.clear();
+    this.syncStateChanged.emit();
   }
 
   async addHypercore(feed: HypercoreWrapper<any>): Promise<void> {
     log('addHypercore', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
     this._feeds.set(feed.key, feed);
+    this.syncStateChanged.emit();
 
     if (this._connected && this._connectionCtx) {
       await this._replicateFeed(this._connectionCtx, feed);
@@ -145,6 +170,7 @@ export class EdgeFeedReplicator extends Resource {
     });
 
     Event.wrap(feed.core as any, 'append').on(ctx, async () => {
+      this.syncStateChanged.emit();
       await this._pushBlocksIfNeeded(feed);
     });
   }
@@ -219,6 +245,7 @@ export class EdgeFeedReplicator extends Resource {
             await this._pushBlocks(this._connectionCtx!, feed, remoteLength, feed.length);
           }
 
+          this.syncStateChanged.emit();
           break;
         }
 
@@ -237,6 +264,7 @@ export class EdgeFeedReplicator extends Resource {
           this._remoteLength.set(feedKey, Math.max(this._remoteLength.get(feedKey) ?? 0, blocksEnd));
           await this._integrateBlocks(feed, message.blocks);
           await this._requestGapBelow(feed, blocksEnd);
+          this.syncStateChanged.emit();
           break;
         }
 
@@ -272,6 +300,7 @@ export class EdgeFeedReplicator extends Resource {
     });
     // A push received during the send may have raised it past `to`.
     this._remoteLength.set(feed.key, Math.max(this._remoteLength.get(feed.key) ?? 0, to));
+    this.syncStateChanged.emit();
   }
 
   private async _integrateBlocks(feed: HypercoreWrapper<any>, blocks: FeedBlock[]): Promise<void> {

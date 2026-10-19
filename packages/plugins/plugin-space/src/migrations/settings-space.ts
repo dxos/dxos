@@ -136,6 +136,18 @@ export const mergeSpacesOrder = Effect.fnUntraced(function* (canonical: Space, d
   return true;
 });
 
+/** Remove `ids` from a space's cross-space ordering, once they are carried elsewhere. */
+export const removeFromSpacesOrder = Effect.fnUntraced(function* (space: Space, ids: readonly string[]) {
+  const ordering = yield* findSpacesOrder(space);
+  const order = yield* readSpacesOrder(space);
+  if (ordering && ids.length > 0) {
+    writeSpacesOrder(
+      ordering,
+      order.filter((id) => !ids.includes(id)),
+    );
+  }
+});
+
 /** A destroyed or closing space rejects writes; anything else is a real database failure. */
 const isSpaceClosingError = (err: unknown): boolean =>
   /clos|destroy/i.test(err instanceof Error ? err.message : String(err));

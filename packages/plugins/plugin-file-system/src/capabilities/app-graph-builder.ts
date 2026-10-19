@@ -189,8 +189,12 @@ export default Capability.makeModule(
           const state: FileSystemCapabilities.FileSystemState = get(stateAtom);
           const [client] = get(clientCapabilitiesAtom);
           // The space list fills incrementally, so subscribe to it rather than reading once: the
-          // settings space holding the ordering can land after the client capability does.
+          // settings space holding the ordering can land after the client capability does, and the
+          // HALO credential naming it can arrive later still.
           const spaces = client && get(CreateAtom.fromObservable(client.spaces));
+          if (client) {
+            get(CreateAtom.fromObservable(client.halo.credentials));
+          }
           const settingsSpace = spaces && AppSpace.getSettingsSpace(client);
 
           if (!state.workspaces.length || !settingsSpace) {

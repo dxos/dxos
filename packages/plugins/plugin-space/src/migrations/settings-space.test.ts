@@ -7,13 +7,12 @@ import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { TestLayer } from '@dxos/cli-util/testing';
-import { ClientService } from '@dxos/client';
+import { type Client, ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
 import { SpaceSchema } from '#types';
 
-import { ensureSettingsSpace } from '../util/settings-space.ts';
 import { migrateToSettingsSpace, readSpacesOrder } from './settings-space.ts';
 
 describe('settings space migration', () => {
@@ -33,7 +32,7 @@ describe('settings space migration', () => {
       const order = ['space-a', 'space-b'];
       legacySpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order }));
 
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* createSettingsSpace(client);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
 
       expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
@@ -57,7 +56,7 @@ describe('settings space migration', () => {
       const chosen = yield* Effect.promise(() => client.spaces.create({ name: 'Chosen' }));
       yield* Effect.promise(() => chosen.waitUntilReady());
 
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* createSettingsSpace(client);
       AppSpace.setDefaultSpaceId(settingsSpace, chosen.id);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
@@ -76,7 +75,7 @@ describe('settings space migration', () => {
 
       // First pass: the settings space exists but the legacy space has not resolved yet, so there
       // is nothing to designate and the ordering starts empty.
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* createSettingsSpace(client);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace: undefined });
       expect(AppSpace.getDefaultSpaceId(settingsSpace)).toBeUndefined();
 
@@ -102,10 +101,16 @@ describe('settings space migration', () => {
       // The ordering object is an Expando; the app registers it via its schema module.
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
 
-      const settingsSpace = yield* ensureSettingsSpace(client);
+      const settingsSpace = yield* createSettingsSpace(client);
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace: undefined });
 
       expect(yield* readSpacesOrder(settingsSpace)).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );
+});
+
+const createSettingsSpace = Effect.fnUntraced(function* (client: Client) {
+  const space = yield* Effect.promise(() => client.spaces.create({}, { tags: [AppSpace.SETTINGS_SPACE_TAG] }));
+  yield* Effect.promise(() => space.waitUntilReady());
+  return space;
 });

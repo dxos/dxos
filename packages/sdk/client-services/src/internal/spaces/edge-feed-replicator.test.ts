@@ -68,6 +68,22 @@ describe('EdgeFeedReplicator', () => {
     expect(messageSink[1].type).toEqual('data');
   });
 
+  test('is synced once every local block is sent to EDGE', async () => {
+    const { endpoint, admitConnection, feedLength } = await createEdge();
+    const { messenger } = await createClient(endpoint);
+    const { feed, replicator } = await attachReplicator(messenger);
+    await feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
+    expect(replicator.isSynced()).toBe(false);
+
+    admitConnection.wake();
+    await replicator.waitUntilSynced();
+    await expect.poll(() => feedLength()).toBe(1);
+
+    await feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
+    await replicator.waitUntilSynced();
+    await expect.poll(() => feedLength()).toBe(2);
+  });
+
   test('re-requests metadata on reconnect', async () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger, reconnectTrigger } = await createClient(endpoint);
@@ -275,6 +291,32 @@ describe('EdgeFeedReplicator', () => {
       admitConnection.wake();
       return { messenger };
     };
+
+    test('is not synced until it holds every block EDGE reported', async () => {
+      const { replica, feedKey, blocksIn, holds } = await setupFeeds(3);
+      const release = new Trigger();
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          await release.wait();
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
+        }
+      });
+      const { messenger } = await createClient(edge.endpoint);
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+      await replicator.addHypercore(replica);
+      await openAndClose(replicator);
+      edge.admitConnection.wake();
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      expect(replicator.isSynced()).toBe(false);
+
+      release.wake();
+      await replicator.waitUntilSynced();
+      await holds([0, 1, 2]);
+    });
 
     test('fetches the blocks below a block pushed ahead of the metadata reply', async () => {
       const { replica, feedKey, blockAt, blocksIn, holds } = await setupFeeds(3);
