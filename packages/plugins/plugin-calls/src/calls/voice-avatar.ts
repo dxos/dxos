@@ -391,6 +391,8 @@ const inkShape = (scene: THREE.Scene): Shape => {
   const ink = new THREE.Color('#151515');
   const radius = 1.05;
   const ring = new THREE.Group();
+  // The spectrum starts on the left (bands are laid out from the top, clockwise, before this turn).
+  ring.rotation.z = Math.PI / 2;
   scene.add(ring);
   const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
 
@@ -569,8 +571,8 @@ const MORPH_OUT = 0.08;
  * frequency sounds the stroke thickens and vibrates in place (faster toward the high end) and sheds blots that drift
  * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack `separation` apart, the
  * middle one thickest; the stroke tapers to a point at both ends. With `morph` it is instead a closed ring of fixed
- * width, flattened in silence, whose height follows the voice's loudness up to a circle; frequency still runs left to right, along both
- * its top and bottom halves, so the flattened ring reads as the line and has no seam.
+ * width, flattened in silence, whose height follows the voice's loudness up to a circle; its frequency runs from the
+ * bottom point (lowest) up both sides to the top point (highest), so it has no seam.
  */
 const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
   scene.background = new THREE.Color('#e9e7e2');
@@ -616,9 +618,9 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
   /** How open the morph's ring is, from 0 (flattened) to 1 (a circle), in proportion to loudness. */
   let open = 0;
   /**
-   * The stroke at `position` (0..1 along it): its point, unit normal, and where it sits in the spectrum (0..1, left to
-   * right). The line runs straight; the morph's ring starts at its left point and runs over the top and back
-   * underneath, its height following `open`.
+   * The stroke at `position` (0..1 along it): its point, unit normal, and where it sits in the spectrum (0..1). The
+   * line runs straight, left to right; the morph's ring runs from its left point over the top and back underneath, its
+   * height following `open`, with the spectrum rising from its bottom point to its top point.
    */
   const curve = (position: number) => {
     if (!morph) {
@@ -632,15 +634,16 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
     const nx = cos / MORPH_RADIUS;
     const ny = sin / height;
     const norm = Math.hypot(nx, ny);
-    return { x: MORPH_RADIUS * cos, y: height * sin, nx: nx / norm, ny: ny / norm, spectrum: (1 + cos) / 2 };
+    return { x: MORPH_RADIUS * cos, y: height * sin, nx: nx / norm, ny: ny / norm, spectrum: (1 + sin) / 2 };
   };
 
-  /** A point on the stroke at spectrum position `spectrum`: on the ring, on its top or bottom half at random. */
+  /** A point on the stroke at spectrum position `spectrum`: on the ring, on its left or right side at random. */
   const atSpectrum = (spectrum: number) => {
     if (!morph) {
       return curve(spectrum);
     }
-    const angle = Math.acos(2 * spectrum - 1) * (Math.random() < 0.5 ? 1 : -1);
+    const rise = Math.asin(2 * spectrum - 1);
+    const angle = Math.random() < 0.5 ? rise : Math.PI - rise;
     return curve(((((Math.PI - angle) / (Math.PI * 2)) % 1) + 1) % 1);
   };
 
@@ -673,7 +676,7 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
         const weight = (count > 1 ? share : 1) * taper;
         for (let sample = 0; sample <= LINE_SAMPLES; sample++) {
           const point = curve(sample / LINE_SAMPLES);
-          // Waves and energy follow the spectrum position, so they run left to right whatever the shape.
+          // Waves and energy follow the spectrum position, whatever the shape.
           const position = point.spectrum;
           const x = (position * 2 - 1) * LINE_HALF_WIDTH;
           const energy = energyAt(linear, position);
