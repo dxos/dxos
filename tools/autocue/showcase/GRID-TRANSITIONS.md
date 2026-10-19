@@ -5,6 +5,9 @@ Research notes and the prototype variants for the showcase grid. The prototypes 
 [`reveal.ts`](../src/components/Grid/reveal.ts), [`deck.ts`](../src/components/Grid/deck.ts) and
 [`border.ts`](../src/components/Grid/border.ts).
 
+Reference: [Grid Transitions (After Effects template)](https://www.youtube.com/watch?v=GYcYHWn3MpQ), the cut the
+shift loop is modelled on.
+
 ## Links
 
 Stories (storybook on :9009; the border style is the `border` control on any story):
@@ -24,6 +27,10 @@ Stories (storybook on :9009; the border style is the `border` control on any sto
 5. `zoom`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-numbers) ·
    [default](http://localhost:9009/?path=/story/tools-autocue-grid--default)
+6. [Showcase](http://localhost:9009/?path=/story/tools-autocue-showcase--default)
+   ([`Showcase.stories.tsx`](../src/components/Grid/Showcase.stories.tsx)): the Composer ident, the three tour clips
+   reached by shifts, a zoom out to the drifting wall, then the end card, looped. A drifting wall re-deals its clips
+   so no recording shows twice in a column, using the `layout.json` that `layout.mjs` writes.
 
 Renders (local only, under the gitignored `temp/grid-variants/`):
 

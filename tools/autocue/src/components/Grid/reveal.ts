@@ -335,7 +335,14 @@ export const REVEALS: Record<Exclude<Variant, 'shift' | 'console'>, (context: Re
 };
 
 /** A leg of the shift loop's timeline: `frame` takes the leg's raw progress (0–1); `focus` is the close-up cell. */
-export type ShiftShot = { ms: number; focus?: string; frame: (t: number) => Frame };
+export type ShiftShot = {
+  ms: number;
+  focus?: string;
+  frame: (t: number) => Frame;
+  live?: boolean;
+  /** A drift's columns, each its cells' ids top to bottom, so clips can be laid out without a repeat in one column. */
+  columns?: string[][];
+};
 
 export type ShiftOptions = {
   cells: Cell[];
@@ -363,6 +370,8 @@ export type ShiftOptions = {
    * its own multiple of this speed, for the whole timeline.
    */
   drift?: number;
+  /** After the last close-up, zooms out and drifts (at `drift`, or 0.2 cells per second) for this many ms. */
+  driftAfter?: number;
 };
 
 /** Strong ease-in-out for the zooms: quick to leave and quick to settle. */
@@ -403,6 +412,7 @@ export const shiftShots = ({
   distance,
   overview = false,
   drift = 0,
+  driftAfter = 0,
 }: ShiftOptions): ShiftShot[] => {
   const pitch = { x: TILE.width + gap, y: TILE.height + gap };
   const closeUps = Math.max(1, slots.length);
@@ -476,29 +486,39 @@ export const shiftShots = ({
     return point ? bounds(point) : hidden;
   };
 
-  if (drift > 0) {
-    const ms = slots.reduce((sum, slot) => sum + slot, 0);
-    const speed = (x: number) => DRIFT_SPEEDS[(x + Math.floor(cols / 2)) % DRIFT_SPEEDS.length];
-    return [
-      {
-        ms,
-        frame: (t) => ({
-          camera: far,
-          place: (cell) => {
-            const point = start.get(cell);
-            return point
-              ? bounds({
-                  x: point.x,
-                  y: wrapRow(point.y + speed(point.x) * drift * ((t * ms) / 1_000)),
-                })
-              : hidden;
-          },
-        }),
+  const speed = (x: number) => DRIFT_SPEEDS[(x + Math.floor(cols / 2)) % DRIFT_SPEEDS.length];
+  /** `ms` of the zoomed-out wall drifting down from `placed`; every clip plays, as there is no close-up. */
+  const drifting = (placed: Map<Cell, Point>, ms: number, rate: number): ShiftShot => ({
+    ms,
+    live: true,
+    columns: Object.values(
+      Object.groupBy(
+        [...placed].sort(([, a], [, b]) => a.y - b.y),
+        ([, point]) => point.x,
+      ),
+    ).map((column) => (column ?? []).map(([cell]) => cell.id)),
+    frame: (t) => ({
+      camera: far,
+      place: (cell) => {
+        const point = placed.get(cell);
+        return point
+          ? bounds({ x: point.x, y: wrapRow(point.y + speed(point.x) * rate * ((t * ms) / 1_000)) })
+          : hidden;
       },
+    }),
+  });
+
+  if (drift > 0 && driftAfter === 0) {
+    return [
+      drifting(
+        start,
+        slots.reduce((sum, slot) => sum + slot, 0),
+        drift,
+      ),
     ];
   }
 
-  return Array.from({ length: closeUps }, (_, step): ShiftShot[] => {
+  const loop = Array.from({ length: closeUps }, (_, step): ShiftShot[] => {
     const placed = positions[step];
     const last = step === closeUps - 1;
     const hold = Math.max(0, slots[step] - (last ? 0 : 2 * zoom + shift));
@@ -523,4 +543,13 @@ export const shiftShots = ({
     }
     return legs;
   }).flat();
+  if (driftAfter === 0) {
+    return loop;
+  }
+  const final = positions[closeUps - 1];
+  return [
+    ...loop,
+    { ms: zoom, frame: (t) => ({ camera: out(snap(t)), place: at(final) }) },
+    drifting(final, driftAfter, drift || 0.2),
+  ];
 };
