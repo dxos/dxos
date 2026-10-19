@@ -11,7 +11,9 @@ description: >-
   A cheaper first pass with TypeSafe System One (`scripts/system-one.ts`)
   judges most groups and routes only uncertain ones to subagents. A per-PR
   review — including one prompted by the advisory `Agentic Review` CI check —
-  is `scripts/fast.ts` alone: System One (Jev) only, never subagents.
+  is `scripts/fast.ts` alone: System One (Jev) only, never subagents. The
+  periodic full-repo review is the opposite: subagents only, never System One,
+  since subagents bill plan usage and System One bills per token (capped at $5 a run).
 ---
 
 # Agentic Review
@@ -30,7 +32,21 @@ over a bounded set of files, so the reviewer stays cheap and on-task.
 > carry — run `bun .agents/skills/agentic-review/scripts/fast.ts` and stop there (see
 > [PR mode](#pr-mode-fast-review--ci)). Do not run the subagent workflow below, do not spawn
 > subagents for the pairs System One left uncertain, and do not follow up on `system-one: off`
-> rules. The full workflow is only for when the user explicitly asks for a full or subagent review.
+> rules. The full workflow is only for when the user explicitly asks for a full or subagent review,
+> or when `fast.ts` refuses a PR whose predicted cost is over the ceiling below.
+
+> **Full-repo review = subagents only.** The periodic full-repo scan (the scheduled routine, or
+> any `prepare.ts` run without `--pr-only` whose base is `full`) skips step 2b: do not run
+> `system-one.ts` on it. Subagents come with plan usage; System One is billed per token, and a
+> full-repo pass costs far more than a PR. Prepare, spawn one Sonnet subagent per group (step 2),
+> finalize.
+
+> **System One spend ceiling: $5 a run.** `system-one.ts` (and `fast.ts`, which calls it) plans the
+> run without the API first and predicts its cost as twice round one — round two asks at most the
+> pairs round one did, each with one more context kind. A prediction over `--max-cost` (default
+> `5`, USD) is refused before any call (exit 2); a request that would take the estimated spend past
+> it mid-run is not sent, and its pairs are listed as unanswered. Never raise `--max-cost` on your
+> own — only when a human approved that spend. A refused PR review goes to subagents instead.
 
 The scripts are TypeScript run directly with Bun (`bun <script>.ts`, no build step), import
 nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
@@ -113,7 +129,10 @@ Give each subagent its group number and the store path. Prompt template:
 > write nothing for it. Do not edit any file other than your `groups/<NN>.md`
 > fragment. Do not run the finalize step.
 
-### 2b. Or: a System One pass first
+### 2b. Or: a System One pass first (diff reviews only)
+
+Only for a `--pr-only` / `--fast` store. Never for a full-project store: that review is the
+subagent workflow above (see the callout at the top).
 
 `scripts/system-one.ts` answers the same groups with TypeSafe System One, a
 decision model that returns calibrated probabilities for typed questions. It is
@@ -124,7 +143,7 @@ it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
-bun .agents/skills/agentic-review/scripts/system-one.ts --dry-run   # plan and price only
+bun .agents/skills/agentic-review/scripts/system-one.ts --dry-run   # plan and predict cost only
 bun .agents/skills/agentic-review/scripts/system-one.ts             # fill the newest prepared store
 ```
 
@@ -150,6 +169,8 @@ How it works:
 - **Scale.** A 202-file change against about a hundred rules took under four
   minutes and $2.73, reported 312 violations and routed 13% of pairs onward
   (`.agents/projects/architecture-rules/TRIAL.md`).
+- **Cost ceiling.** `--max-cost=<usd>` (default 5): predicted from the plan before any call, and
+  enforced per request while running. Over it, the run is refused with exit 2.
 - **Failures.** A request that fails leaves its pairs unanswered, and they are
   listed for follow-up like uncertain ones. An account failure (401, 402, 403:
   a bad key or no credits) stops the run at once, since every request would fail
@@ -266,6 +287,8 @@ review runs the subagent workflow above. Then fix or dismiss each issue, set its
   to run `fast.ts`; reproduce locally with `node .agents/skills/agentic-review/scripts/check-pr.ts`.
 - **Cost.** Jev bills input tokens only, $0.042 per million — about 2,800 tokens and
   $0.0001–0.00016 per file × rule pair in the trials (`TRIAL.md`), so a typical PR costs cents.
+  `fast.ts --dry-run` prints the predicted cost; past the $5 ceiling (`--max-cost`) the run is
+  refused, and the PR is reviewed with subagents instead.
 
 ## Authoring a rule
 
