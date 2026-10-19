@@ -138,7 +138,7 @@ export type CanvasTimelineProps = CanvasBarProps;
  * (the Objects panel's Animate action gives it one).
  */
 export const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: CanvasTimelineProps) => {
-  const { registry, atoms, readonly, capabilities, timeline, time, playing, fps, seek, selection, timelineKeys } =
+  const { controller, atoms, readonly, capabilities, timeline, time, playing, fps, seek, selection, timelineKeys } =
     useCanvasContext('Canvas.Timeline');
   const autoKey = useAtomValue(atoms.autoKey);
   const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
@@ -155,9 +155,9 @@ export const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1
         keys={keys}
         autoKey={autoKey}
         readonly={readonly || !capabilities.update}
-        onPlayingChange={(next) => registry.set(atoms.clock.playing, next)}
+        onPlayingChange={controller.time.setPlaying}
         onTimeChange={seek}
-        onAutoKeyChange={(next) => registry.set(atoms.autoKey, next)}
+        onAutoKeyChange={controller.time.setAutoKey}
         onAddKey={selection.size > 0 ? timelineKeys.addKey : undefined}
         onRemoveKey={selection.size > 0 ? timelineKeys.removeKey : undefined}
       />

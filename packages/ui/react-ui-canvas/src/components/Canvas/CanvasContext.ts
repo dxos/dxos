@@ -6,6 +6,7 @@ import { createContext } from '@dxos/react-hooks';
 
 import {
   type CanvasAtoms,
+  type CanvasController,
   type Drag,
   type EditingCommands,
   type EditingPart,
@@ -72,6 +73,8 @@ export type ObjectActions = {
 
 export type CanvasContextValue = {
   registry: ReturnType<typeof useRegistry>;
+  /** The canvas's commands by aspect, made once per canvas (DESIGN.md §13). */
+  controller: CanvasController;
   atoms: CanvasAtoms;
   store: SceneStore;
   projection: Projection;

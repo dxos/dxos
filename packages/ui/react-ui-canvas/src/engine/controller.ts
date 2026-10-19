@@ -8,13 +8,23 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import {
   type Capabilities,
   type ElementId,
+  type NodeRegistry,
+  OPACITY_PATH,
   type Point,
   type SceneId,
   type SceneStore,
   type StyleClass,
   type Tool,
+  clampTime,
+  createTimeline,
   getElement,
+  getPath,
   isLink,
+  keyTimes,
+  nodeAnimatable,
+  removeKey as removeTimelineKey,
+  setKey,
+  timelineFps,
 } from '../model/index.ts';
 import {
   activeLayer,
@@ -41,6 +51,10 @@ export type CanvasControllerOptions = {
   store: SceneStore;
   /** The open View's projection, read when a command runs: it changes as the View changes. */
   projection: () => Projection;
+  /** The projection under the animated one, which keys and timeline edits are written through. */
+  baseProjection: () => Projection;
+  /** What each node type animates, for keying the selection. */
+  nodeRegistry: () => NodeRegistry;
   /** Read when a command runs: the host may toggle it. */
   readonly: () => boolean;
   grid: () => ControllerGrid;
@@ -79,6 +93,24 @@ export type ToolsCommands = {
   toggleDebug: () => void;
 };
 
+/** The clock and keyframing (DESIGN.md §13.1, the Time aspect). */
+export type TimeCommands = {
+  /** Pauses and moves the playhead, kept within the timeline. */
+  seek: (t: number) => void;
+  /** Plays from the start when stopped at the end. */
+  togglePlay: () => void;
+  setPlaying: (playing: boolean) => void;
+  setAutoKey: (autoKey: boolean) => void;
+  /** Moves the playhead by whole frames. */
+  step: (frames: number) => void;
+  /** Moves the playhead to the selection's next (1) or previous (-1) key. */
+  jumpKey: (direction: 1 | -1) => void;
+  /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there. */
+  addKey: () => void;
+  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
+  removeKey: () => void;
+};
+
 /**
  * The canvas's commands, organised by aspect. Each reads the state it needs from the registry when it runs, so the
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
@@ -87,6 +119,7 @@ export type CanvasController = {
   selection: SelectionCommands;
   editing: EditingCommands;
   tools: ToolsCommands;
+  time: TimeCommands;
 };
 
 export const createCanvasController = ({
@@ -94,6 +127,8 @@ export const createCanvasController = ({
   atoms,
   store,
   projection,
+  baseProjection,
+  nodeRegistry,
   readonly,
   grid,
   createId: newId = createId,
@@ -226,5 +261,76 @@ export const createCanvasController = ({
     toggleDebug: toggle(atoms.debug),
   };
 
-  return { selection, editing, tools };
+  const timeline = () => registry.get(baseProjection().scene).timeline;
+  const seek = (t: number) => {
+    registry.set(atoms.clock.playing, false);
+    registry.set(atoms.clock.time, clampTime(timeline(), t));
+  };
+  const time: TimeCommands = {
+    seek,
+    togglePlay: () => {
+      const playing = registry.get(atoms.clock.playing);
+      if (!playing && registry.get(atoms.clock.time) >= (timeline()?.duration ?? 0)) {
+        registry.set(atoms.clock.time, 0);
+      }
+      registry.set(atoms.clock.playing, !playing);
+    },
+    setPlaying: (playing) => registry.set(atoms.clock.playing, playing),
+    setAutoKey: (autoKey) => registry.set(atoms.autoKey, autoKey),
+    step: (frames) => {
+      const fps = timelineFps(timeline());
+      seek(Math.round((registry.get(atoms.clock.time) + frames / fps) * fps) / fps);
+    },
+    jumpKey: (direction) => {
+      const now = registry.get(atoms.clock.time);
+      const times = keyTimes(timeline(), registry.get(atoms.selection));
+      const target = direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6);
+      if (target !== undefined) {
+        seek(target);
+      }
+    },
+    addKey: () => {
+      const shown = currentScene();
+      const t = registry.get(atoms.clock.time);
+      const styles = store.styles ? registry.get(store.styles) : undefined;
+      let next = timeline() ?? createTimeline();
+      for (const id of registry.get(atoms.selection)) {
+        const node = shown.nodes[id];
+        if (!node) {
+          continue;
+        }
+        // As drawn: a class's opacity is the node's until it sets its own.
+        const drawn = classedNode(node, styles);
+        for (const property of Object.keys(nodeAnimatable(nodeRegistry(), node))) {
+          const value = getPath(drawn, property) ?? (property === OPACITY_PATH ? 1 : undefined);
+          if (value !== undefined) {
+            next = setKey(next, id, property, { t, value });
+          }
+        }
+      }
+      baseProjection().apply({ kind: 'timeline', timeline: next });
+    },
+    removeKey: () => {
+      const current = timeline();
+      if (!current) {
+        return;
+      }
+      const t = registry.get(atoms.clock.time);
+      const ids = registry.get(atoms.selection);
+      const tolerance = 0.5 / timelineFps(current);
+      let next = current;
+      for (const track of Object.values(current.tracks)) {
+        if (ids.has(track.target)) {
+          for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
+            next = removeTimelineKey(next, track.target, track.property, key.t);
+          }
+        }
+      }
+      if (next !== current) {
+        baseProjection().apply({ kind: 'timeline', timeline: next });
+      }
+    },
+  };
+
+  return { selection, editing, tools, time };
 };

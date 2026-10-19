@@ -57,7 +57,6 @@ import {
   type NodeId,
   type NodeRegistry,
   type NodeType,
-  OPACITY_PATH,
   type Point,
   type Scene,
   type SceneId,
@@ -65,31 +64,24 @@ import {
   type ThemeRegistry,
   type Timeline,
   applyCameraKey,
-  clampTime,
-  createTimeline,
   defaultThemeRegistry,
   getElement,
-  getPath,
   isInstanceNode,
   isLink,
   isPointEndpoint,
   keyAction,
-  keyTimes,
   nodeAnimatable,
   nodeDef,
   exposeClock as publishClock,
-  removeKey,
   resolveBackground,
   resolveLook,
   sampleCamera,
-  setKey,
   timelineFps,
 } from '../../model/index.ts';
 import {
   NOMINAL_ZOOM,
   type PartKey,
   activeLayer,
-  classedNode,
   composeSelection,
   compositeBounds,
   compositeScenes,
@@ -303,6 +295,10 @@ export const CanvasRoot = ({
   projectionRef.current = projection;
   const readonlyRef = useRef(readonly);
   readonlyRef.current = readonly;
+  const baseProjectionRef = useRef(baseProjection);
+  baseProjectionRef.current = baseProjection;
+  const nodeRegistryRef = useRef(nodeRegistry);
+  nodeRegistryRef.current = nodeRegistry;
   const gridRef = useRef<ControllerGrid>({ major: 0, snap: (value) => value });
   const controller = useMemo(
     () =>
@@ -311,6 +307,8 @@ export const CanvasRoot = ({
         atoms,
         store,
         projection: () => projectionRef.current,
+        baseProjection: () => baseProjectionRef.current,
+        nodeRegistry: () => nodeRegistryRef.current,
         readonly: () => readonlyRef.current,
         grid: () => gridRef.current,
       }),
@@ -696,80 +694,17 @@ export const CanvasRoot = ({
   //
 
   const fps = timelineFps(timeline);
-  const seek = useCallback(
-    (t: number) => {
-      registry.set(atoms.clock.playing, false);
-      registry.set(atoms.clock.time, clampTime(registry.get(baseProjection.scene).timeline, t));
-    },
-    [registry, atoms.clock, baseProjection],
-  );
-  /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there (`K`). */
-  const addKey = useCallback(() => {
-    const ids = [...registry.get(atoms.selection)];
-    const shown = registry.get(projection.scene);
-    const t = registry.get(atoms.clock.time);
-    const styles = store.styles ? registry.get(store.styles) : undefined;
-    let next = registry.get(baseProjection.scene).timeline ?? createTimeline();
-    for (const id of ids) {
-      const node = shown.nodes[id];
-      if (!node) {
-        continue;
-      }
-      // As drawn: a class's opacity is the node's until it sets its own.
-      const drawn = classedNode(node, styles);
-      for (const property of Object.keys(nodeAnimatable(nodeRegistry, node))) {
-        const value = getPath(drawn, property) ?? (property === OPACITY_PATH ? 1 : undefined);
-        if (value !== undefined) {
-          next = setKey(next, id, property, { t, value });
-        }
-      }
-    }
-    baseProjection.apply({ kind: 'timeline', timeline: next });
-  }, [registry, atoms, projection, baseProjection, nodeRegistry, store.styles]);
-  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
-  const removeSelectedKeys = useCallback(() => {
-    const current = registry.get(baseProjection.scene).timeline;
-    if (!current) {
-      return;
-    }
-    const t = registry.get(atoms.clock.time);
-    const ids = registry.get(atoms.selection);
-    const tolerance = 0.5 / timelineFps(current);
-    let next = current;
-    for (const track of Object.values(current.tracks)) {
-      if (ids.has(track.target)) {
-        for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
-          next = removeKey(next, track.target, track.property, key.t);
-        }
-      }
-    }
-    if (next !== current) {
-      baseProjection.apply({ kind: 'timeline', timeline: next });
-    }
-  }, [registry, atoms, baseProjection]);
+  const { seek } = controller.time;
   const timelineKeys = useMemo(
     () => ({
       active: timeline !== undefined,
-      togglePlay: () => {
-        const playing = registry.get(atoms.clock.playing);
-        if (!playing && registry.get(atoms.clock.time) >= (timeline?.duration ?? 0)) {
-          registry.set(atoms.clock.time, 0);
-        }
-        registry.set(atoms.clock.playing, !playing);
-      },
-      step: (frames: number) => seek(Math.round((registry.get(atoms.clock.time) + frames / fps) * fps) / fps),
-      jumpKey: (direction: 1 | -1) => {
-        const now = registry.get(atoms.clock.time);
-        const times = keyTimes(timeline, registry.get(atoms.selection));
-        const target = direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6);
-        if (target !== undefined) {
-          seek(target);
-        }
-      },
-      addKey,
-      removeKey: removeSelectedKeys,
+      togglePlay: controller.time.togglePlay,
+      step: controller.time.step,
+      jumpKey: controller.time.jumpKey,
+      addKey: controller.time.addKey,
+      removeKey: controller.time.removeKey,
     }),
-    [timeline, registry, atoms, fps, seek, addKey, removeSelectedKeys],
+    [timeline, controller],
   );
 
   //
@@ -1423,6 +1358,7 @@ export const CanvasRoot = ({
   return (
     <CanvasProvider
       registry={registry}
+      controller={controller}
       atoms={atoms}
       store={store}
       projection={projection}

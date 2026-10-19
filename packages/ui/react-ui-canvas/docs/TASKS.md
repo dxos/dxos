@@ -22,7 +22,8 @@ Design: DESIGN.md §13.
   - [ ] The aspect hooks and providers — after 0.4, which supplies their commands (order swapped 2026-10-18: the hooks are plumbing until the controller exists).
 - [ ] 0.4 `createCanvasController` in `engine/`, organised by aspect, unit-tested per aspect; callers use it.
   - [x] Selection (select, clear, delete, group, classFrom) and Editing (copy, cut, paste); `useSceneClipboard` removed; `createId` moved to `utils/`.
-  - [ ] Navigation, Tools, Time, Look. Layers and Objects wait for Phases 3 and 2, which replace them.
+  - [x] Tools (setTool, grid toggles) and Time (seek, play, step, jump, add/remove key, auto-key); the controller is in the context.
+  - [ ] Navigation and Look. Layers and Objects wait for Phases 3 and 2, which replace them.
 - [ ] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.
   - [x] Parts into files: `Canvas.tsx` (namespace, 37 lines), `CanvasRoot.tsx`, `CanvasViewport.tsx`, `CanvasBars.tsx`, `CanvasInspectors.tsx`, `constants.ts`.
   - [ ] Viewport into Background, Scene and Overlay; `CanvasRoot.tsx` under ~600 lines (needs the rest of 0.4).

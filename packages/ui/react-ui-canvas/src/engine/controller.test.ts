@@ -6,7 +6,8 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { SceneBuilder } from '../builder/index.ts';
-import { createMemoryStore, isFrameNode } from '../model/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
+import { createMemoryStore, createTimeline, isFrameNode, keyTimes } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { createCanvasController } from './controller.ts';
 import { createFreehandProjection } from './projection.ts';
@@ -30,13 +31,15 @@ const setup = ({ readonly = false } = {}) => {
     atoms,
     store,
     projection: () => projection,
+    baseProjection: () => projection,
+    nodeRegistry: () => defaultNodeRegistry,
     readonly: () => readonly,
     grid: () => ({ major: 64, snap: (value) => Math.round(value / 16) * 16 }),
     createId: (prefix) => `${prefix}-${next++}`,
   });
   const scene = () => registry.get(projection.scene);
   const linkId = Object.keys(scene().links)[0];
-  return { registry, store, atoms, controller, scene, linkId };
+  return { registry, store, atoms, controller, scene, linkId, projection };
 };
 
 describe('CanvasController', () => {
@@ -142,6 +145,32 @@ describe('CanvasController', () => {
       const debug = registry.get(atoms.debug);
       controller.tools.toggleDebug();
       expect(registry.get(atoms.debug)).toBe(!debug);
+    });
+  });
+
+  describe('time', () => {
+    test('seek pauses and keeps the playhead within the timeline; play at the end starts again', ({ expect }) => {
+      const { registry, atoms, controller, projection } = setup();
+      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      registry.set(atoms.clock.playing, true);
+      controller.time.seek(10);
+      expect(registry.get(atoms.clock.playing)).toBe(false);
+      expect(registry.get(atoms.clock.time)).toBe(4);
+      controller.time.togglePlay();
+      expect(registry.get(atoms.clock.time)).toBe(0);
+      expect(registry.get(atoms.clock.playing)).toBe(true);
+    });
+
+    test('addKey keys the selection at the playhead, and removeKey takes those keys away', ({ expect }) => {
+      const { registry, atoms, controller, projection } = setup();
+      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      controller.selection.select(['a']);
+      controller.time.seek(1);
+      controller.time.addKey();
+      const keyed = () => keyTimes(registry.get(projection.scene).timeline, ['a']);
+      expect(keyed()).toEqual([1]);
+      controller.time.removeKey();
+      expect(keyed()).toEqual([]);
     });
   });
 });
