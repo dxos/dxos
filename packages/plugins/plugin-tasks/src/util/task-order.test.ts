@@ -87,6 +87,23 @@ describe('groupTasks', () => {
     expect(titles(nonEmpty[0].tasks)).to.deep.eq(['Unset']);
   });
 
+  test('status groups run in board order: review, failed, started, todo, blocked, backlog, done, cancelled, duplicate', ({
+    expect,
+  }) => {
+    const groups = groupTasks([], 'status', { ns }) ?? [];
+    expect(groups.map(({ id }) => id)).to.deep.eq([
+      'status-review',
+      'status-failed',
+      'status-started',
+      'status-todo',
+      'status-blocked',
+      'status-backlog',
+      'status-done',
+      'status-cancelled',
+      'status-duplicate',
+    ]);
+  });
+
   test('priority groups run urgent first, unset last', ({ expect }) => {
     const groups = groupTasks([make({ title: 'Low', priority: 'low' }), make({ title: 'Unset' })], 'priority', {
       ns,
