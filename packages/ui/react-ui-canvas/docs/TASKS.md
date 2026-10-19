@@ -24,6 +24,11 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 - [ ] Migrate `scene.layers` + `node.layer` to tags on load; fixture test comparing drawn output before and after.
 - [ ] LayersInspector becomes the Tags panel; tag chips in Properties.
 
+## Phase 3b — Orphans
+
+- [ ] Deleting the last node that points at a View or anonymous Object record deletes the record in the same intent; undo restores both.
+- [ ] Clean up records already orphaned on load (fixtures and saved documents).
+
 ## Phase 4 — Order
 
 - [ ] Drawing order is each container's child order; drop layer `z` from ordering.

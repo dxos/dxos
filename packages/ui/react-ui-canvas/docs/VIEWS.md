@@ -124,6 +124,7 @@ Gaps, and where each fix belongs:
    source can change.
 3. Merge a View's contents record into its node (one record per View)? It makes "a View is a node" literal but
    rewrites the store, navigation and persistence; deferred until the panels have settled the shape.
-4. Orphaned contents (a View or Object record nothing points to): show them in an "Unplaced" group, or delete them
-   with the last node that points at them?
+4. ~~Orphaned contents~~ Decided 2026-10-18: deleting the last node that points at a contents record (a View, or an
+   anonymous Object's last Instance) deletes the record in the same intent, so undo restores both. There is no
+   "Unplaced" group. A named Object with no Instances is a library entry, not an orphan.
 5. Can an Object contain a View? This design says no, so an Object stays a drawing rather than a navigable place.
