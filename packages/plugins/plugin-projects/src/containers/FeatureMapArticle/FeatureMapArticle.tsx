@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { EID, Filter, Obj } from '@dxos/echo';
@@ -46,15 +46,9 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
   const openObject = useOpenObject(db, attendableId);
   const editing = useFeatureEditing(db, subject);
   const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
-  const handleCreate = useCallback(
-    async (name: string) => {
-      const id = await editing.createFeature(name);
-      if (id) {
-        await openObject(id);
-      }
-    },
-    [editing, openObject],
-  );
+  // The card whose name field is open: a feature created from the toolbar is named in place on the map.
+  const [editingId, setEditingId] = useState<string>();
+  const handleNew = useCallback(() => void editing.createFeature('').then((id) => id && setEditingId(id)), [editing]);
 
   const menu = useMenuBuilder(
     (): ActionGraphProps =>
@@ -82,6 +76,15 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
         )
         .separator('gap')
         .action(
+          'new-feature',
+          {
+            label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            testId: 'feature-map.new-feature',
+          },
+          handleNew,
+        )
+        .action(
           'add-feature',
           {
             variant: 'custom',
@@ -92,10 +95,10 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
                 filter={Filter.type(Feature.Feature)}
                 exclude={ids}
                 onSelect={editing.addToMap}
-                onCreate={handleCreate}
+                onCreate={editing.createFeature}
                 trigger={
                   <Button.Root
-                    icon='ph--plus--regular'
+                    icon='ph--list-plus--regular'
                     iconOnly
                     label={t('feature-map.add-feature.label')}
                     data-testid='feature-map.add-feature'
@@ -107,7 +110,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
           () => {},
         )
         .build(),
-    [mode, updateView, db, ids, editing, handleCreate, t],
+    [mode, updateView, db, ids, editing, handleNew, t],
   );
 
   const handlePositionsChange = useCallback(
@@ -134,6 +137,10 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
               onRemove={editing.removeFromMap}
+              onRename={editing.rename}
+              onDescribe={editing.describe}
+              editingId={editingId}
+              onEditingChange={setEditingId}
             />
           </div>
         ) : (
@@ -144,6 +151,10 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
                 onOpen={handleOpen}
                 onSetStatus={editing.setStatus}
                 onRemove={editing.removeFromMap}
+                onRename={editing.rename}
+                onDescribe={editing.describe}
+                editingId={editingId}
+                onEditingChange={setEditingId}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

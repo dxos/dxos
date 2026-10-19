@@ -26,6 +26,12 @@ export type FeatureBoardProps = {
   onSetStatus?: (id: string, status: FeatureStatus) => void;
   /** Takes a feature off the map; the feature itself is kept. */
   onRemove?: (id: string) => void;
+  /** Make each card's name and description editable in place. */
+  onRename?: (id: string, name: string) => void;
+  onDescribe?: (id: string, description: string) => void;
+  /** The card whose name field is open, as for a feature just created; cleared when it closes. */
+  editingId?: string;
+  onEditingChange?: (id: string | undefined) => void;
 };
 
 /**
@@ -40,6 +46,10 @@ export const FeatureBoard = ({
   onOpen,
   onSetStatus,
   onRemove,
+  onRename,
+  onDescribe,
+  editingId,
+  onEditingChange,
 }: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string>();
@@ -85,6 +95,10 @@ export const FeatureBoard = ({
                 onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
                 onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
                 onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
+                onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
+                onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+                editingName={feature.id === editingId}
+                onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
               />
             </div>
           );

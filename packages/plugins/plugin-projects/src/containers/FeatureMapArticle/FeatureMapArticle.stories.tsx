@@ -181,3 +181,60 @@ export const CanvasRemove: Story = {
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(7), { timeout: 5_000 });
   },
 };
+
+/** The toolbar's New feature puts an unnamed card on the map with its name field open, so it is named in place. */
+export const NewFeature: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });
+    await userEvent.click(canvas.getByTestId('feature-map.new-feature'));
+    // Every card holds a hidden name field; the new card's is the one that takes focus.
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('feature-card.name.input'), {
+      timeout: 5_000,
+    });
+    await userEvent.keyboard('Offline mode{Enter}');
+    await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(9));
+    await expect(await canvas.findByText('Offline mode', undefined, { timeout: 5_000 })).toBeInTheDocument();
+  },
+};
+
+/** A card's name and description are edited in place with a double-click. */
+export const EditInline: Story = {
+  play: async ({ canvasElement }) => {
+    const card = within(await findCard(canvasElement, 'Smart triage'));
+    await userEvent.dblClick(card.getByTestId('feature-card.name.preview'));
+    const name = card.getByTestId('feature-card.name.input');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Smart inbox{Enter}');
+    await expect(await card.findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
+
+    await userEvent.dblClick(card.getByTestId('feature-card.description.preview'));
+    await userEvent.type(card.getByTestId('feature-card.description.input'), 'Sorts mail before you read it{Enter}');
+    await expect(
+      await card.findByText('Sorts mail before you read it', undefined, { timeout: 5_000 }),
+    ).toBeInTheDocument();
+  },
+};
+
+/** On the canvas a box's name opens from its pencil, since a double-click on the box opens the feature. */
+export const CanvasRename: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    );
+    await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
+    const node = canvas.getAllByTestId('feature-canvas-node').find((node) => within(node).queryByText('Smart triage'));
+    if (!node) {
+      throw new Error('No box for Smart triage');
+    }
+    const [pencil] = within(node).getAllByTestId('editable.edit');
+    await userEvent.click(pencil);
+    const name = within(node).getByTestId('feature-card.name.input');
+    await userEvent.clear(name);
+    // Backspace inside the field must edit the text, not delete the selected box.
+    await userEvent.type(name, 'Smart inbox{Backspace}x{Enter}');
+    await expect(await within(node).findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
+    await expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8);
+  },
+};

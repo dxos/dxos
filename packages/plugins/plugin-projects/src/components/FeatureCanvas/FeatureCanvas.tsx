@@ -37,16 +37,32 @@ const FeatureNode = Schema.Struct({ type: Schema.Literal(FEATURE_NODE_TYPE), ...
 
 const createFeatureNode = (props: CreateProps): Node => ({ type: FEATURE_NODE_TYPE, ...props });
 
-/** Node views get no host props, so the cards' data reaches them through context. */
-const FeatureLookupContext = createContext<FeatureLookup>(() => undefined);
+type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onRename' | 'onDescribe' | 'editingId' | 'onEditingChange'> & {
+  lookup: FeatureLookup;
+};
+
+/** Node views get no host props, so the cards' data and edits reach them through context. */
+const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () => undefined });
 
 const FeatureNodeView = ({ node }: NodeViewProps) => {
-  const lookup = useContext(FeatureLookupContext);
+  const { lookup, onRename, onDescribe, editingId, onEditingChange } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
-    // Inert, so a press anywhere on the card selects and drags the box rather than reaching the card.
+    // Inert but for its text fields, so a press anywhere else on the card selects and drags the box.
     <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
-      {feature && <FeatureCard feature={feature} lookup={lookup} showDependencies={false} />}
+      {feature && (
+        <FeatureCard
+          feature={feature}
+          lookup={lookup}
+          showDependencies={false}
+          // A double-click on a box opens the feature, so a field opens only from its pencil.
+          editActivation='none'
+          onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
+          onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+          editingName={feature.id === editingId}
+          onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+        />
+      )}
     </Layout.Grid>
   );
 };
@@ -114,6 +130,12 @@ export type FeatureCanvasProps = {
   onUnlink?: (featureId: string, dependsOnId: string) => void;
   /** A selected box deleted: the feature leaves the map and is kept. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
+  /** Make each box's name and description editable from their pencils. */
+  onRename?: (id: string, name: string) => void;
+  onDescribe?: (id: string, description: string) => void;
+  /** The box whose name field is open, as for a feature just created; cleared when it closes. */
+  editingId?: string;
+  onEditingChange?: (id: string | undefined) => void;
 };
 
 /**
@@ -129,9 +151,17 @@ export const FeatureCanvas = ({
   onLink,
   onUnlink,
   onRemove,
+  onRename,
+  onDescribe,
+  editingId,
+  onEditingChange,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
+  const nodeContext = useMemo(
+    () => ({ lookup, onRename, onDescribe, editingId, onEditingChange }),
+    [lookup, onRename, onDescribe, editingId, onEditingChange],
+  );
   // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
@@ -189,7 +219,7 @@ export const FeatureCanvas = ({
   );
 
   return (
-    <FeatureLookupContext.Provider value={lookup}>
+    <FeatureNodeContext.Provider value={nodeContext}>
       <Canvas.Root
         store={store}
         root={DYNAMIC_SCENE_ID}
@@ -200,6 +230,6 @@ export const FeatureCanvas = ({
         <Canvas.Viewport />
         <Canvas.Navigation />
       </Canvas.Root>
-    </FeatureLookupContext.Provider>
+    </FeatureNodeContext.Provider>
   );
 };

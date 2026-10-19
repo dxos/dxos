@@ -5,6 +5,7 @@
 import React, { type MouseEvent } from 'react';
 
 import * as Card from '@dxos/react-ui/Card';
+import * as Editable from '@dxos/react-ui/Editable';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -62,6 +63,10 @@ export type FeatureCardBodyProps = {
   onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
+  /** Makes the description editable in place, shown with a placeholder while empty. */
+  onDescribe?: (feature: FeatureModel, description: string) => void;
+  /** How a text field opens: a double-click, or only its pencil where a press must stay the host's (a canvas box). */
+  editActivation?: InlineTextProps['activation'];
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
@@ -71,7 +76,63 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   onSetStatus?: (feature: FeatureModel, status: FeatureStatus) => void;
   /** Takes the feature off the map it is shown on; the feature itself is kept. */
   onRemove?: (feature: FeatureModel) => void;
+  /** Makes the name editable in place. */
+  onRename?: (feature: FeatureModel, name: string) => void;
+  /** Opens the name field, as for a feature just created; reports when it closes. */
+  editingName?: boolean;
+  onEditingNameChange?: (editing: boolean) => void;
 };
+
+type InlineTextProps = {
+  value: string;
+  placeholder: string;
+  label: string;
+  testId: string;
+  activation?: 'dblclick' | 'none';
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  onCommit: (value: string) => void;
+};
+
+/** A text field edited in place on a card, which keeps its keys and presses from the card and the canvas around it. */
+const InlineText = ({
+  value,
+  placeholder,
+  label,
+  testId,
+  activation = 'dblclick',
+  editing,
+  onEditingChange,
+  onCommit,
+}: InlineTextProps) => (
+  <Editable.Root
+    // Inert boxes on a canvas still let the field and its pencil take the pointer.
+    classNames='min-w-0 pointer-events-auto'
+    value={value}
+    placeholder={placeholder}
+    activation={activation}
+    editing={editing}
+    onEditingChange={onEditingChange}
+    onValueChange={(next) => {
+      const trimmed = next.trim();
+      if (trimmed !== value) {
+        onCommit(trimmed);
+      }
+    }}
+    // The double-click's second press would otherwise toggle the card's selection back off.
+    onClick={(event) => event.detail > 1 && event.stopPropagation()}
+  >
+    <Editable.Preview classNames='px-0' data-testid={`${testId}.preview`} />
+    <Editable.Input
+      aria-label={label}
+      data-testid={`${testId}.input`}
+      // Typing must not reach the card or the canvas, whose Delete and Backspace remove the box.
+      onKeyDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    />
+  </Editable.Root>
+);
 
 const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
@@ -79,9 +140,18 @@ const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'opera
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
  * features it needs. Status and signals each carry an icon and a word, so colour is never the only cue.
  */
-export const FeatureCard = ({ onSelect, onOpen, onSetStatus, onRemove, ...props }: FeatureCardProps) => {
+export const FeatureCard = ({
+  onSelect,
+  onOpen,
+  onSetStatus,
+  onRemove,
+  onRename,
+  editingName,
+  onEditingNameChange,
+  ...props
+}: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, selected, relation } = props;
+  const { feature, selected, relation, editActivation } = props;
   const status = FEATURE_STATUS_STYLE[feature.status];
   return (
     <Card.Root
@@ -97,7 +167,22 @@ export const FeatureCard = ({ onSelect, onOpen, onSetStatus, onRemove, ...props 
         <Layout.Block rail='start'>
           <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
-        <Card.Title lines={2}>{feature.name}</Card.Title>
+        <Card.Title lines={2}>
+          {onRename ? (
+            <InlineText
+              value={feature.name}
+              placeholder={t('feature-card.name.placeholder')}
+              label={t('feature-card.name.label')}
+              testId='feature-card.name'
+              activation={editActivation}
+              editing={editingName}
+              onEditingChange={onEditingNameChange}
+              onCommit={(name) => onRename(feature, name)}
+            />
+          ) : (
+            feature.name
+          )}
+        </Card.Title>
         {(onOpen || onSetStatus || onRemove) && (
           <Layout.Block rail='end' data-testid='feature-card.menu'>
             <Card.Menu label={t('feature-card.menu.label')}>
@@ -167,6 +252,8 @@ export const FeatureCardBody = ({
   onSelectDependency,
   onRemoveDependency,
   onOpenObject,
+  onDescribe,
+  editActivation,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const status = FEATURE_STATUS_STYLE[feature.status];
@@ -210,7 +297,20 @@ export const FeatureCardBody = ({
         </Layout.Flex>
       </Card.Row>
 
-      {expanded && showFields && feature.description && (
+      {showFields && onDescribe && (
+        <Card.Row icon='ph--text-align-left--regular'>
+          <InlineText
+            value={feature.description ?? ''}
+            placeholder={t('feature-card.description.placeholder')}
+            label={t('feature-card.description.label')}
+            testId='feature-card.description'
+            activation={editActivation}
+            onCommit={(description) => onDescribe(feature, description)}
+          />
+        </Card.Row>
+      )}
+
+      {expanded && showFields && !onDescribe && feature.description && (
         <Card.Row span='full'>
           <Card.Text variant='muted' lines={3}>
             {feature.description}
