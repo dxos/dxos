@@ -15,8 +15,8 @@ Design: DESIGN.md §13.
 
 - [x] Inventory every `CanvasContextValue` field: kind, source, change rate, readers.
 - [x] Design: services context, parts read atoms, a React-free `CanvasController`, derived state with its reader.
-- [ ] 0.1 Prune: dead fields, `createAtCentre` camera read, unused memo deps, inventory inconsistencies.
-- [ ] 0.2 Viewport reads its own atom-state and computes its own derived values.
+- [x] 0.1 Prune: dead fields, `createAtCentre` camera read, unused memo deps, inventory inconsistencies. (`keyCamera` removed: no caller; returns with the Time aspect. Timeline's explicit `onPlayingChange`/`onAutoKeyChange` writes kept for 0.3.)
+- [x] 0.2 Viewport reads its own atom-state and computes its own derived values (hover, point, latticeBounds, focus, frameUnit; `viewport` added to the context). `createFrame`, `handlers` and `themeGrid` move with their aspects in 0.3.
 - [ ] 0.3 Aspects (DESIGN.md §13.1): services provider, aspect hooks, Time/Gesture/Editing providers, `displayScene` atom; story test that panels do not re-render on a pan.
 - [ ] 0.4 `createCanvasController` in `engine/`, organised by aspect, unit-tested per aspect; callers use it.
 - [ ] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.

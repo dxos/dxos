@@ -4,14 +4,7 @@
 
 import { createContext } from '@dxos/react-hooks';
 
-import {
-  type CanvasAtoms,
-  type ControlPointRef,
-  type Drag,
-  type EditingPart,
-  type Isolation,
-  type Projection,
-} from '../../engine/index.ts';
+import { type CanvasAtoms, type Drag, type EditingPart, type Isolation, type Projection } from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
@@ -29,6 +22,7 @@ import {
   type SceneId,
   type SceneLook,
   type SceneStore,
+  type Size,
   type ThemeRegistry,
   type Timeline,
   type Tool,
@@ -99,16 +93,12 @@ export type CanvasContextValue = {
   blocked: boolean;
   /** The current scene's frame. */
   bounds: Bounds;
-  /** The scene's frame and the visible viewport together, for the lattice cells. */
-  latticeBounds: Bounds;
   path: SceneId[];
   camera: Camera;
   /** Whether the viewport has been measured; the scene stays hidden until it has. */
   measured: boolean;
-  /** One screen pixel in scene units, for chrome that should not grow with the camera. */
-  frameUnit: number;
-  /** The portal filling most of the view and the opacity of the rest of the layer around it (`layerOpacity`). */
-  focus: { id: ElementId; opacity: number } | undefined;
+  /** The view's size in screen px. */
+  viewport: Size;
   /** Minor grid spacing in scene px. */
   grid: number;
   snapEnabled: boolean;
@@ -118,8 +108,6 @@ export type CanvasContextValue = {
   latticeOn: boolean;
 
   selection: ReadonlySet<ElementId>;
-  hover: ElementId | undefined;
-  selectedPoint: ControlPointRef | undefined;
   editing: EditingPart | undefined;
   /** The node whose embedded content takes input. */
   active: NodeId | undefined;

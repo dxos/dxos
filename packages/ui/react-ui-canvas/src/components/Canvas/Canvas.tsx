@@ -406,8 +406,6 @@ const CanvasRoot = ({
   const scenes = useAtomValue(store.scenes);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
-  const hover = useAtomValue(atoms.hover);
-  const selectedPoint = useAtomValue(atoms.point);
   const tool = useAtomValue(atoms.tool);
   const snapEnabled = useAtomValue(atoms.snap);
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
@@ -1385,17 +1383,6 @@ const CanvasRoot = ({
     });
   }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
 
-  // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
-  // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
-  const latticeBounds = useMemo(
-    () =>
-      boundsFromPoints(
-        screenToScene(camera, { x: 0, y: 0 }),
-        screenToScene(camera, { x: viewport.width, y: viewport.height }),
-      ),
-    [camera, viewport],
-  );
-
   const zoomTo = useCallback(
     (zoom: number) => {
       interactedRef.current = true;
@@ -1502,31 +1489,6 @@ const CanvasRoot = ({
     ],
   );
 
-  // The portal on screen that fills most of the view; the rest of the layer fades as it grows, so zooming into
-  // a scene (by wheel or drill-in) fades out what surrounds it and zooming out fades it back in.
-  const focus = useMemo(() => {
-    let best: { id: ElementId; opacity: number } | undefined;
-    for (const node of Object.values(displayScene.nodes)) {
-      // A frame the host opens itself (one showing an object) is no scene to zoom into, so it keeps its frame.
-      if (!isFrameNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
-        continue;
-      }
-      const bounds = nodeBounds(node);
-      const centre = sceneToScreen(camera, { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
-      if (centre.x < 0 || centre.y < 0 || centre.x > viewport.width || centre.y > viewport.height) {
-        continue;
-      }
-      const opacity = layerOpacity(camera, bounds, viewport);
-      if (!best || opacity < best.opacity) {
-        best = { id: node.id, opacity };
-      }
-    }
-    return best;
-  }, [displayScene.nodes, nodeRegistry, camera, viewport]);
-
-  /** One screen pixel in scene units, for chrome that should not grow with the camera. */
-  const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
-
   return (
     <CanvasProvider
       registry={registry}
@@ -1542,20 +1504,16 @@ const CanvasRoot = ({
       displayScene={displayScene}
       blocked={blocked}
       bounds={bounds}
-      latticeBounds={latticeBounds}
       path={path}
       camera={camera}
       measured={measured}
-      frameUnit={frameUnit}
-      focus={focus}
+      viewport={viewport}
       grid={grid}
       snapEnabled={snapEnabled}
       guides={guides}
       toggleGuides={toggleGuides}
       latticeOn={latticeOn}
       selection={selection}
-      hover={hover}
-      selectedPoint={selectedPoint}
       editing={editing}
       active={active}
       clipboard={clipboard}
@@ -1677,18 +1635,14 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     displayScene,
     blocked,
     bounds,
-    latticeBounds,
     camera,
     measured,
-    frameUnit,
-    focus,
+    viewport,
     grid,
     snapEnabled,
     guides,
     latticeOn,
     selection,
-    hover,
-    selectedPoint,
     editing,
     active,
     clipboard,
@@ -1723,6 +1677,42 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     generated,
     toolbarActions,
   } = useCanvasContext('Canvas.Viewport');
+  const hover = useAtomValue(atoms.hover);
+  const selectedPoint = useAtomValue(atoms.point);
+  // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
+  // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
+  const latticeBounds = useMemo(
+    () =>
+      boundsFromPoints(
+        screenToScene(camera, { x: 0, y: 0 }),
+        screenToScene(camera, { x: viewport.width, y: viewport.height }),
+      ),
+    [camera, viewport],
+  );
+  // The portal on screen that fills most of the view; the rest of the layer fades as it grows, so zooming into
+  // a scene (by wheel or drill-in) fades out what surrounds it and zooming out fades it back in.
+  const focus = useMemo(() => {
+    let best: { id: ElementId; opacity: number } | undefined;
+    for (const node of Object.values(displayScene.nodes)) {
+      // A frame the host opens itself (one showing an object) is no scene to zoom into, so it keeps its frame.
+      if (!isFrameNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
+        continue;
+      }
+      const bounds = nodeBounds(node);
+      const centre = sceneToScreen(camera, { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 });
+      if (centre.x < 0 || centre.y < 0 || centre.x > viewport.width || centre.y > viewport.height) {
+        continue;
+      }
+      const opacity = layerOpacity(camera, bounds, viewport);
+      if (!best || opacity < best.opacity) {
+        best = { id: node.id, opacity };
+      }
+    }
+    return best;
+  }, [displayScene.nodes, nodeRegistry, camera, viewport]);
+
+  /** One screen pixel in scene units, for chrome that should not grow with the camera. */
+  const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
   const selectedInstance = useMemo(() => {
     const [only] = selection.size === 1 ? [...selection] : [];
