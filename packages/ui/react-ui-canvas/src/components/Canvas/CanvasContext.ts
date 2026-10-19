@@ -10,7 +10,6 @@ import { type useRegistry } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Bounds,
-  type Camera,
   type Capabilities,
   type ElementId,
   type LinkId,

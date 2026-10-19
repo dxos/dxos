@@ -195,8 +195,6 @@ export type PropertiesInspectorProps = InspectorProps & {
   sceneOptions?: readonly SceneOption[];
   /** The drawing's style classes (`SceneStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
-  /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
-  onGroup?: () => void;
 };
 
 /** The selection's properties, as one form; read-only too where the projection cannot `update`. */
@@ -212,7 +210,6 @@ export const PropertiesInspector = ({
   overrides,
   sceneOptions,
   styles,
-  onGroup,
 }: PropertiesInspectorProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -288,20 +285,6 @@ export const PropertiesInspector = ({
     [projection, elements, nodes, styles, styleMap, layers, registry],
   );
 
-  // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
-  const single = elements.length === 1 ? elements[0] : undefined;
-  const onCreateClass = useCallback(() => {
-    if (!styles || !single) {
-      return;
-    }
-    const id = `class-${crypto.randomUUID()}`;
-    const name = `Class ${Object.keys(styleMap).length + 1}`;
-    const style = isLink(single) ? classedLink(single, styleMap).style : classedNode(single, styleMap).style;
-    const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
-    registry.set(styles, { ...styleMap, [id]: styleClass });
-    projection.apply({ kind: 'update', id: single.id, values: { class: id, style: undefined } });
-  }, [styles, single, styleMap, registry, projection]);
-
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
   const links = useMemo(() => elements.filter(isLink), [elements]);
   const onFlip = useCallback(() => {
@@ -337,30 +320,9 @@ export const PropertiesInspector = ({
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-      <Toolbar.Root data-testid='properties-toolbar'>
-        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--frame-corners--regular'
-            label='New scene from selection'
-            disabled={readonly}
-            data-testid='properties-group'
-            onClick={onGroup}
-          />
-        )}
-        {styles && single && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--swatches--regular'
-            label='New class from selection'
-            disabled={readonly}
-            data-testid='properties-new-class'
-            onClick={onCreateClass}
-          />
-        )}
-        {links.length > 0 && links.length === elements.length && (
+      {/* Its only command is on links, so it shows for a selection of links alone. */}
+      {links.length > 0 && links.length === elements.length && (
+        <Toolbar.Root data-testid='properties-toolbar'>
           <Button.Root
             variant='ghost'
             iconOnly
@@ -370,8 +332,8 @@ export const PropertiesInspector = ({
             data-testid='properties-flip'
             onClick={onFlip}
           />
-        )}
-      </Toolbar.Root>
+        </Toolbar.Root>
+      )}
       {schema && (
         <LayersContext.Provider value={layers}>
           <StyleClassesContext.Provider value={styles ? styleMap : undefined}>

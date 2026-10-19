@@ -10,6 +10,7 @@
 
 import React, {
   type PropsWithChildren,
+  type ReactNode,
   type SyntheticEvent,
   createContext,
   useCallback,
@@ -54,6 +55,7 @@ type InspectorPanelContextValue = {
   register: (section: InspectorSectionDef) => () => void;
   setSlot: (id: string, element: HTMLElement | null) => void;
   setClosed: (closed: ReadonlySet<string>) => void;
+  actions?: ReactNode;
   onDockedChange?: (docked: boolean) => void;
 };
 
@@ -66,6 +68,8 @@ export type InspectorPanelRootProps = PropsWithChildren<{
   readonly?: boolean;
   /** Whether anything is selected, for the sections that float only with (or without) a selection. */
   selected?: boolean;
+  /** Commands on the canvas as a whole (e.g. on the selection), drawn at the start of the panel's toolbar. */
+  actions?: ReactNode;
   /** Offered, the panel's toolbar docks a floating panel, or floats a docked one. */
   onDockedChange?: (docked: boolean) => void;
 }>;
@@ -75,6 +79,7 @@ const InspectorPanelRoot = ({
   docked = false,
   readonly = false,
   selected = false,
+  actions,
   onDockedChange,
   children,
 }: InspectorPanelRootProps) => {
@@ -106,8 +111,8 @@ const InspectorPanelRoot = ({
     [],
   );
   const value = useMemo(
-    () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, onDockedChange }),
-    [docked, readonly, sections, slots, closed, shows, register, setSlot, onDockedChange],
+    () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, actions, onDockedChange }),
+    [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, onDockedChange],
   );
   return <InspectorPanelContext.Provider value={value}>{children}</InspectorPanelContext.Provider>;
 };
@@ -145,7 +150,7 @@ const InspectorPanelContent = () => {
   if (!context || visible.length === 0) {
     return null;
   }
-  const { docked, closed, setSlot, setClosed, onDockedChange } = context;
+  const { docked, closed, setSlot, setClosed, actions, onDockedChange } = context;
   return (
     <Panel.Root
       classNames={
@@ -161,11 +166,12 @@ const InspectorPanelContent = () => {
       data-testid='scene-view-dock'
       data-floating={!docked || undefined}
     >
-      {onDockedChange && (
+      {(actions || onDockedChange) && (
         <Panel.Header asChild>
           <Toolbar.Root data-testid='dock-toolbar'>
+            {actions}
             <Toolbar.Separator variant='gap' />
-            {docked ? (
+            {!onDockedChange ? null : docked ? (
               <Button.Root
                 variant='ghost'
                 iconOnly

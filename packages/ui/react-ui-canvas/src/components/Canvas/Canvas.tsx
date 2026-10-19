@@ -22,6 +22,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
 import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -76,6 +77,7 @@ import {
   type Scene,
   type SceneId,
   type SceneStore,
+  type StyleClass,
   type ThemeRegistry,
   type Timeline,
   applyCameraKey,
@@ -83,9 +85,11 @@ import {
   createTimeline,
   defaultThemeRegistry,
   frameTimeAttribute,
+  getElement,
   getPath,
   isFrameNode,
   isInstanceNode,
+  isLink,
   isPointEndpoint,
   keyAction,
   keyTimes,
@@ -107,6 +111,7 @@ import {
   activeLayer,
   boundsFromPoints,
   cameraTransform,
+  classedLink,
   classedNode,
   composeSelection,
   compositeBounds,
@@ -1489,6 +1494,82 @@ const CanvasRoot = ({
     ],
   );
 
+  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
+  const groupSelection = useCallback(() => {
+    const id = createId('scene');
+    const current = registry.get(projection.scene);
+    const selected = registry.get(atoms.selection);
+    const group = groupIntoScene(current, selected, id, activeLayer(current, registry.get(atoms.layer)));
+    if (!group) {
+      return;
+    }
+    const before = registry.get(store.scenes);
+    registry.set(store.scenes, { ...before, [id]: group.child });
+    projection.apply({ kind: 'batch', intents: group.intents });
+    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
+    // it the new scene would be an orphan, so it goes and the selection stays.
+    if (!registry.get(projection.scene).nodes[id]) {
+      const { [id]: _, ...scenes } = registry.get(store.scenes);
+      registry.set(store.scenes, scenes);
+      return;
+    }
+    // One undo step takes the new scene away with the shape that opens it.
+    recordScenes(registry, atoms.undo, registry.get(atoms.path).at(-1) ?? root, before);
+    registry.set(atoms.selection, new Set([id]));
+    registry.set(atoms.point, undefined);
+  }, [registry, projection, store.scenes, atoms, root]);
+
+  // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
+  const classFromSelection = useCallback(() => {
+    const [only, ...rest] = registry.get(atoms.selection);
+    const element =
+      only !== undefined && rest.length === 0 ? getElement(registry.get(projection.scene), only) : undefined;
+    if (!store.styles || !element) {
+      return;
+    }
+    const styleMap = registry.get(store.styles);
+    const id = `class-${crypto.randomUUID()}`;
+    const name = `Class ${Object.keys(styleMap).length + 1}`;
+    const style = isLink(element) ? classedLink(element, styleMap).style : classedNode(element, styleMap).style;
+    const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
+    registry.set(store.styles, { ...styleMap, [id]: styleClass });
+    projection.apply({ kind: 'update', id: element.id, values: { class: id, style: undefined } });
+  }, [registry, atoms.selection, projection, store.styles]);
+
+  // Commands on the selection, at the start of the inspector panel's toolbar.
+  const selectedElements = [...selection].flatMap((id) => getElement(scene, id) ?? []);
+  const canGroup =
+    capabilities.create &&
+    capabilities.delete &&
+    selectedElements.length > 1 &&
+    selectedElements.some((element) => !isLink(element));
+  const canClass = store.styles !== undefined && capabilities.update && selectedElements.length === 1;
+  const inspectorActions =
+    readonly || (!canGroup && !canClass) ? undefined : (
+      <>
+        {canGroup && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--frame-corners--regular'
+            label='New scene from selection'
+            data-testid='inspector-group'
+            onClick={groupSelection}
+          />
+        )}
+        {canClass && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--swatches--regular'
+            label='New class from selection'
+            data-testid='inspector-new-class'
+            onClick={classFromSelection}
+          />
+        )}
+      </>
+    );
+
   return (
     <CanvasProvider
       registry={registry}
@@ -1567,6 +1648,7 @@ const CanvasRoot = ({
           docked={!readonly && inspectors === 'docked'}
           readonly={readonly}
           selected={selection.size > 0}
+          actions={inspectorActions}
           onDockedChange={onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))}
         >
           {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
@@ -2119,34 +2201,10 @@ export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'd
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
 const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
-  const { registry, projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useCanvasContext('Canvas.Properties');
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
-
-  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
-  const onGroup = useCallback(() => {
-    const id = createId('scene');
-    const current = registry.get(projection.scene);
-    const group = groupIntoScene(current, selection, id, activeLayer(current, registry.get(atoms.layer)));
-    if (!group) {
-      return;
-    }
-    const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, [id]: group.child });
-    projection.apply({ kind: 'batch', intents: group.intents });
-    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
-    // it the new scene would be an orphan, so it goes and the selection stays.
-    if (!registry.get(projection.scene).nodes[id]) {
-      const { [id]: _, ...scenes } = registry.get(store.scenes);
-      registry.set(store.scenes, scenes);
-      return;
-    }
-    // One undo step takes the new scene away with the shape that opens it.
-    recordScenes(registry, atoms.undo, path[path.length - 1], before);
-    registry.set(atoms.selection, new Set([id]));
-    registry.set(atoms.point, undefined);
-  }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
   // With nothing selected there is nothing to edit, so the section goes, docked or floating.
   if (selection.size === 0) {
@@ -2164,7 +2222,6 @@ const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: Ca
         overrides={overrides}
         sceneOptions={options}
         styles={store.styles}
-        onGroup={capabilities.create && capabilities.delete ? onGroup : undefined}
         readonly={!capabilities.update}
       />
     </InspectorSection>
