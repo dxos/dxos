@@ -50,6 +50,14 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden.
 - [ ] Delete AboutInspector, its story and its Canvas part.
 
+## Phase 6 — Undo (VIEWS.md §8)
+
+- [ ] app-framework \`HistoryTracker\`: redo (future stack), scoped \`undo/redo/canUndo(scope)\`, transactions, merge keys, entry context.
+- [ ] \`CanvasOperation.Apply\` (intents → inverse patch) and \`CanvasOperation.Patch\`, with their \`UndoMapping\`.
+- [ ] Route canvas gestures and panel edits through \`Apply\`; projections emit patches, not snapshots.
+- [ ] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
+- [ ] Remove \`utils/undo.ts\` and the \`undo\` atom.
+
 ## Follow-ups
 
 - [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
