@@ -95,7 +95,7 @@ if (dryRun) {
   process.exit(0);
 }
 run('finalize.ts', [`--slug=${slug}`]);
-// Per-verdict dump for tuning the checker; too large to commit on every PR.
+// Per-verdict dump for tuning the checker; gitignored, so only the local copy is dropped.
 rmSync(join(store, 'system-one.json'), { force: true });
 
 if (priors.length > 0) {
