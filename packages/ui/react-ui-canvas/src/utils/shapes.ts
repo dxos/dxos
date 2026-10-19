@@ -22,7 +22,7 @@ import {
   type Node,
   type Point,
   type Size,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { type PartField } from './parts.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */

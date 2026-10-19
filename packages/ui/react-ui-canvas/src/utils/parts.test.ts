@@ -5,10 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type NodeRegistry, defaultNodeRegistry } from '../model/registry.ts';
-import { CLASSIC_LOOK } from '../model/style-set.ts';
-import { nodeBase } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
 import { frameClasses, hueClasses, resolveStyle } from './style.ts';
 

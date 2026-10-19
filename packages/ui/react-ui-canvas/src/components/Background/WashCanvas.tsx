@@ -6,9 +6,8 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type Background } from '../../model/style-set.ts';
-import { type Bounds, type Camera } from '../../model/types.ts';
-import { BACKGROUND_FILLS, WASH_TEXT } from '../../utils/surfaces.ts';
+import { type Background, type Bounds, type Camera } from '../../model/index.ts';
+import { BACKGROUND_FILLS, WASH_TEXT } from '../../utils/index.ts';
 
 /** The most washes the shader blends; the built-in backgrounds use two. */
 const MAX_WASHES = 4;

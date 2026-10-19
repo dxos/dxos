@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../model/projection.ts';
-import { type Layer } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { type Layer } from '../model/index.ts';
 import { groupIntoScene } from './group.ts';
 import { DEFAULT_LAYER } from './layers.ts';
 import { between } from './order.ts';
