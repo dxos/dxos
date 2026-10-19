@@ -32,6 +32,13 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 
 ## Phase 5 — Panels
 
+Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
+
+- [ ] react-ui-list: `filterTreeModel(model, predicate)` (matches plus ancestors, ancestors open while filtering).
+- [ ] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
+- [ ] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
+- [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents).
+
 - [ ] Views panel: the hierarchy under the root (Views → nodes and links → Instances → their Object's contents), with counts on rows.
 - [ ] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag.
 - [ ] Views panel: drag rows to restack within a container.

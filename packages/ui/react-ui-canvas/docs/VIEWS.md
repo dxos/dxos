@@ -86,6 +86,37 @@ Tag     ─ labels ─▶ Node | Link | Instance | Object (many to many)
   keep today's rule (`composeSelection` exposes a port on the instance where the link meets it).
 - **Tags that lock or hide an Object** apply to every placement of it; per-instance hiding is an override, not a tag.
 
+## 6b. The tree: reuse `@dxos/react-ui-list` Tree
+
+Reviewed 2026-10-18 (`packages/ui/react-ui-list/src/components/Tree`). **Verdict: reuse it.** It runs on Ark's
+tree-view machine (zag), so keyboard navigation, `aria-level`/`aria-expanded`, typeahead and the roving tabindex come
+for free; it windows large trees, drags rows with pragmatic-dnd, and is already used by navtree, debug, github and
+sandbox. Building a canvas-specific tree would re-derive all of that.
+
+How the Views panel maps onto it:
+
+| Need                               | Tree provides                                                                                       | Fit                                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Hierarchy over live store atoms    | `TreeModel`: five atom families (`item`, `childIds`, `itemProps`, `itemOpen`, `itemCurrent`)        | Good: the store is already Effect atoms, so a `ViewTreeModel` derives from `store.scenes` without copying. |
+| One Object under several Instances | State keyed by path, not id, so the same contents under two Instances open and select independently | Good                                                                                                       |
+| Canvas selection ↔ rows            | `selectionMode='multiple'`, `onSelect` with modifiers, `itemCurrent(path)`                          | Good: `itemCurrent` reads the canvas selection for rows in the open View.                                  |
+| Restack by dragging                | `onDrop` (`TreeDropEvent`), `canDrop`, `getDropKind` (`move`/`link`/`reject`)                       | Good: `canDrop` keeps a drop inside its container; read-only Instance contents reject.                     |
+| Counts, icons, row controls        | `itemProps.count`, `icon`/`iconHue`, `Tree.ItemActions` (hover-revealed trailing cells)             | Good: tag hide/lock toggles go in `ItemActions`.                                                           |
+| Filter                             | Nothing                                                                                             | Gap                                                                                                        |
+| Reveal a row from outside          | Internal only (`pendingFocusRef`, `scrollToNode` serve drops and keys)                              | Gap                                                                                                        |
+| Shift-click range selection        | Passes `shift` through; computes no range                                                           | Gap                                                                                                        |
+| Inline rename                      | Nothing (a consumer can render `Editable` in the row)                                               | Minor                                                                                                      |
+
+Gaps, and where each fix belongs:
+
+1. **Filter belongs in the model**, not the Tree: `childIds` returns only matches and their ancestors, and `itemOpen`
+   reports matched ancestors open while a query is set. A shared `filterTreeModel(model, predicate)` wrapper in
+   react-ui-list would serve navtree too.
+2. **Reveal** needs a public API on `Tree.Root` (`reveal(path)`: open ancestors through the model, then focus and
+   scroll the row, windowed or not). The machinery exists; it is not exposed. Add it in react-ui-list, not around it.
+3. **Range selection** needs the visible row order, which only the Tree's walk has. Either the Tree computes the
+   range and reports it in `TreeSelectEvent`, or it exposes the visible order. The first is simpler for every consumer.
+
 ## 7. Open questions
 
 1. Tag effects beyond hide and lock: opacity, or a colour shown on the chip?
