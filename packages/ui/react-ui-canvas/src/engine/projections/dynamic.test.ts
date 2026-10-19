@@ -82,6 +82,13 @@ describe('dynamic projection', () => {
     expect(linked).toEqual([{ from: 'right', to: 'leaf' }]);
     expect(deleted).toEqual([['e1']]);
     expect(registry.get(model)).toBe(graph);
+
+    // Undo restores the overrides but leaves the host's graph as its model last set it.
+    const before = projection.snapshot?.();
+    const hostGraph = { ...graph, edges: graph.edges.filter(({ id }) => id !== 'e1') };
+    registry.set(model, hostGraph);
+    projection.restore?.(before);
+    expect(registry.get(model)).toBe(hostGraph);
   });
 
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {

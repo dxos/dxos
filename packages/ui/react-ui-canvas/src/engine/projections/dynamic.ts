@@ -242,7 +242,10 @@ export const createDynamicProjection = ({
     snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
     restore: (snapshot) => {
       if (isDynamicSnapshot(snapshot)) {
-        registry.set(graph, snapshot.graph);
+        // A host that takes link and delete owns the graph, so an undo here must not revive what its model removed.
+        if (!onLink && !onDelete) {
+          registry.set(graph, snapshot.graph);
+        }
         registry.set(overlay, snapshot.overlay);
       }
     },
