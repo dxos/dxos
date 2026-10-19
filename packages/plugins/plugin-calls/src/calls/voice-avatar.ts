@@ -52,6 +52,16 @@ export const TUNING_PRESETS = {
     separation: 0.04,
     thickness: 2.2,
   },
+  /** Frozen strands, like an etched ring, that tremble and spatter only while speaking. */
+  etching: {
+    waveAmplitude: 0.3,
+    jitter: 3.1,
+    waveSpeed: 0,
+    particles: 49,
+    strands: 5,
+    separation: 0.04,
+    thickness: 1.5,
+  },
 } satisfies Record<string, VoiceAvatarTuning>;
 
 /**
