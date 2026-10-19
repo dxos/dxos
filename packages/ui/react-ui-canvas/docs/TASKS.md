@@ -53,7 +53,8 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 ## Phase 6 — Undo (VIEWS.md §8)
 
 - [ ] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
-- [ ] `CanvasOperation.Apply` (intents → inverse patch) and `CanvasOperation.Patch`, with their `UndoMapping`.
+- [ ] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
+- [ ] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
 - [ ] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
 - [ ] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
 - [ ] Remove `utils/undo.ts` and the `undo` atom.

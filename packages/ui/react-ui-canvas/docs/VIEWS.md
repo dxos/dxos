@@ -155,6 +155,32 @@ emit their changes as the same patches instead of model snapshots.
 2. ~~Entry shape~~ Decided: patches computed by the change, on the evolved `HistoryTracker`.
 3. ~~How gestures reach the tracker~~ Decided: every committed intent (pointer-up, panel edit, key command) invokes
    `CanvasOperation.Apply`; gestures, agents and MCP share one path, one log and one permission check.
+4. ~~Conflicts with later edits~~ Decided: field-level and best effort. Undo writes back only the fields the entry
+   wrote and nobody has changed since; a field changed by someone else, or an element deleted since, is skipped and
+   the toast says the undo was partial.
+
+### 8.4 Lessons from Automerge
+
+Automerge has no undo of its own, but its history makes one computable, and ECHO exposes it (`Obj.getVersion(obj,
+heads)`, `Obj.getChanges(obj, { property })` with each change's actor).
+
+1. **Entries hold heads, not values.** A transaction records each touched document's heads before and after, and the
+   paths it wrote. Entries stay small and nothing is copied up front.
+2. **Conflicts are read from history.** At undo, a path whose current value equals its value at the after-heads is
+   untouched since: write its value at the before-heads. Otherwise someone changed it: skip it. This is §8.3 Q4
+   with no stored values.
+3. **Undoing a delete restores identity**: read the object at the before-heads and put it back under its key, so links
+   and references to it hold.
+4. **Only local changes are recorded**, by change actor (and the user's own agent, if attributed to them).
+5. **Order stays in registers.** Automerge has no list move (a move is delete plus insert), which undoes badly; the
+   fractional `z` keys are register values, so a restack undoes by restoring one value. Phase 4 keeps that.
+6. **Text undoes by splice**, the plugin-markdown precedent, not by restoring the field.
+
+Yjs's `UndoManager` (tracked origins, a capture timeout, per-item metadata for cursor restore) and Loro's built-in
+undo (local only, merge interval, push/pop hooks) match §8.2's scope, merge and context. Stewen and Kleppmann (PaPoC 2024) define register undo and redo as writing the prior value as a new operation, which is point 2.
+
+react-ui-canvas's in-memory store has no heads; immutable snapshot references stand in for them, behind one
+versioned-store interface (`heads()`, `read(path, heads)`, `write(path, value)`) that the ECHO store also implements.
 
 ## 7. Open questions
 
