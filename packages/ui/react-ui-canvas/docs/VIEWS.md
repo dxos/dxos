@@ -153,6 +153,8 @@ emit their changes as the same patches instead of model snapshots.
 
 1. ~~Scope~~ Decided: one document-wide log per canvas; undo returns to the View it changed.
 2. ~~Entry shape~~ Decided: patches computed by the change, on the evolved `HistoryTracker`.
+3. ~~How gestures reach the tracker~~ Decided: every committed intent (pointer-up, panel edit, key command) invokes
+   `CanvasOperation.Apply`; gestures, agents and MCP share one path, one log and one permission check.
 
 ## 7. Open questions
 
