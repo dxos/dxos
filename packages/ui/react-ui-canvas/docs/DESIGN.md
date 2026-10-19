@@ -124,6 +124,9 @@ planned in §9; the `projections/*` modules become thin dialect wrappers. Decisi
 
 ## 4. Data model
 
+> The container terms below (scene, frame, composite, layer) are being reconciled into Views, Objects and Tags:
+> see [VIEWS.md](./VIEWS.md).
+
 ```ts
 Point  = { x, y }            Size = { width, height }
 Camera = { x, y, zoom }      // screen = (scene + {x, y}) * zoom

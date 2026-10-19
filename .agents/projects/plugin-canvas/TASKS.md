@@ -214,6 +214,14 @@ before), not reasoned about from the source.
 
 ## Backlog
 
+- [ ] **Import a tldraw diagram as a canvas** (tracked 2026-10-18). An operation in plugin-canvas transforms a
+      plugin-tldraw diagram into a new canvas document (shapes → nodes, arrows → links, frames → Views, groups →
+      Objects per `packages/ui/react-ui-canvas/docs/VIEWS.md`), creates the Canvas object in the same space and opens
+      it. plugin-canvas contributes a menu action to plugin-tldraw's diagram (object menu / toolbar) that invokes the
+      operation, so plugin-tldraw takes no dependency on plugin-canvas. Needs: a tldraw-store → `Scene` mapper with
+      unit tests over representative tldraw fixtures; the operation's schema and handler; the menu contribution;
+      a story or e2e step that converts a sample drawing.
+
 - [ ] **Default test drawing.** A canvas drawing seeded in the personal space by default, next to the DXOS
       README, exercising the engine (shapes, links, nested scene, layers, style classes).
 - [ ] **Slide decks laid out on a canvas.** Extend the slide deck so its slides are placed and arranged on a

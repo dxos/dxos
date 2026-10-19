@@ -1,0 +1,97 @@
+# Views, objects and tags — Design
+
+Status: designed 2026-10-18, not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
+layer terms of [DESIGN.md](./DESIGN.md) §4 and [ANIMATION.md](./ANIMATION.md) §4.1 where they conflict.
+
+## 1. Goal
+
+The canvas has grown four overlapping containers: a scene, the frame node that opens onto one, a composite object
+and the instance that places it, and a layer. Users meet all of them in different panels under different names. This
+design reduces them to three concepts, **View**, **Object** and **Tag**, with one rule for drawing order (the tree)
+and two panels that show the whole hierarchy (Views and Objects). It frees the word _scene_ for animation.
+
+## 2. Ontology
+
+| Term          | Definition                                                                                                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Canvas**    | The surface. It shows exactly one **root View** and navigates down from it; the navigation path always starts at the root.                                                                                                            |
+| **Node**      | A positioned element: a centre, a size, a type (rect, ellipse, note, path, …) and style. Every node lives in exactly one container.                                                                                                   |
+| **Link**      | A connection between two endpoints, each a node (and optional port) or a free point. A link lives in the container of its endpoints.                                                                                                  |
+| **Container** | Anything that holds an ordered list of nodes and links: a View or an Object definition.                                                                                                                                               |
+| **View**      | A node that contains other nodes and links with a **layout** (free, lattice, constrained, dynamic). A View can be zoomed into: drilling in makes it the canvas's current View. The root View is the one View no node contains.        |
+| **Object**    | A reusable container definition: its nodes and links, drawn wherever it is placed. An Object is not zoomed into; it is opened in **isolation** to edit its definition, and every placement redraws.                                   |
+| **Instance**  | A node that places an Object: the Object's contents scaled into the instance's box (`fit`), with per-instance `overrides`.                                                                                                            |
+| **Group**     | What the Group command makes: an **anonymous Object** and one Instance of it in place of the selection. It is an Object in every respect but one: it is not in the Objects library until it is **named** or **placed a second time**. |
+| **Tag**       | A label applied to any node, link, group or Object, many per element. A tag hides or locks everything it labels. It has no effect on drawing order. (Formerly _layer_.)                                                               |
+| **Order**     | A container's children are an ordered list; the canvas draws them in that order, first at the back. Moving an element in the Views tree restacks it.                                                                                  |
+| **Scene**     | Reserved for animation (a timeline over a View). Not used for containers.                                                                                                                                                             |
+
+```
+Canvas ─ shows ─▶ root View
+View    ─ contains (ordered) ─▶ Node | Link | View | Instance
+Object  ─ contains (ordered) ─▶ Node | Link | Instance          (no View inside an Object)
+Instance ─ places ─▶ Object
+Tag     ─ labels ─▶ Node | Link | Instance | Object (many to many)
+```
+
+## 3. From the current model
+
+| Today                                                   | Becomes                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `Scene` with `kind: 'scene'`, opened by a `frame` node  | A **View**: the frame node and the record it points at, presented as one thing.       |
+| `frame` node type, the Frame tool                       | `view` node type, the View tool. Stored `type: 'frame'` reads as `view`.              |
+| The canvas `root: SceneId`                              | The root View (`root: ViewId`).                                                       |
+| `Scene` with `kind: 'composite'`                        | An **Object** definition.                                                             |
+| `instance` node                                         | Unchanged: an **Instance**.                                                           |
+| Group (`groupIntoScene`: selection → new frame)         | Removed. Group makes an anonymous Object (below).                                     |
+| Compose (`composeSelection`: selection → composite)     | Folded into Group.                                                                    |
+| `Layer { id, name, z, hidden }` per scene; `node.layer` | A **Tag** `{ id, name, hidden?, locked? }`; `element.tags: TagId[]`. No `z`.          |
+| Drawing order: layer `z`, then node `z`                 | The container's child order. `z` keys stay as the order's storage (fractional index). |
+| ObjectsInspector (flat list of composites)              | The **Objects** panel: the library.                                                   |
+| LayersInspector                                         | The **Tags** panel.                                                                   |
+| AboutInspector (counts)                                 | Deleted. Counts move onto tree rows.                                                  |
+
+## 4. Decisions
+
+1. **Two panels.** _Views_ shows the hierarchy under the root; _Objects_ is the library. An Object appears once in
+   the library however many times it is placed.
+2. **Rename to View in the UI and the public API**, not the stored shape: `SceneId` → `ViewId`, `Canvas.Scenes` →
+   `Canvas.Views`, `frame` → `view`, `SceneKind` → `ViewKind`. A View stays a node pointing at a separate contents
+   record, so persistence does not change; merging the record into the node is a later option (§7).
+3. **The Views panel shows the full hierarchy**: Views, their nodes and links, and inside each Instance its Object's
+   contents (read-only there; edit by opening the Object). Rows select on the canvas; a filter narrows the tree by
+   name, type or tag. Selecting a View row opens it in the viewport by the drill path, so Up and Back still work.
+4. **Group makes an anonymous Object**, promoted to the library when named or placed a second time. Compose is
+   removed.
+5. **Layers become Tags.** A tag hides or locks; drawing order belongs to the tree. The Tags panel manages them and
+   the Views tree shows each element's tags as chips. The About counts move onto tree rows.
+
+## 5. Model changes by phase
+
+| Phase                 | Model                                                                                                                                                                                                               | UI                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1. View               | Rename the public types and the `frame` node type; read `frame` as `view` on load.                                                                                                                                  | "View" everywhere; the View tool.                                                         |
+| 2. Groups are Objects | Group writes an Object definition (`kind: 'composite'`) with `anonymous: true` and an Instance; naming or a second placement clears `anonymous`. Remove `groupIntoScene` and the Compose command.                   | Group and Ungroup on the selection; the library hides anonymous Objects.                  |
+| 3. Tags               | `Tag { id, name, hidden?, locked? }` on the document; `tags?: TagId[]` on nodes, links and Object definitions; migrate `scene.layers` + `node.layer` to tags. Hidden or locked is the union over an element's tags. | The Tags panel (from LayersInspector); tag chips in Properties and the tree.              |
+| 4. Order              | Drawing order is the container's child order (`z` within the container); drop layer `z`. Migrate by sorting each container on (layer `z`, node `z`) once.                                                           | Drag rows in the Views tree to restack; Bring forward / Send back act on the order.       |
+| 5. Panels             | None.                                                                                                                                                                                                               | Views panel (tree, filter, select, open); Objects panel (library); delete AboutInspector. |
+
+## 6. Risks
+
+- **Phases 3 and 4 change saved documents.** Both need a load-time migration and a test over the existing fixtures
+  and plugin-canvas samples (Flow, Template, Styles) that compares the drawn result before and after.
+- **plugin-canvas consumes the renamed API** (`SceneId`, the `frame` type, `Canvas.*` parts, the layer field). Phase 1
+  updates every call site in the same change; no compatibility re-exports.
+- **Links across containers.** A link lives in its endpoints' container. Grouping a selection that cuts a link must
+  keep today's rule (`composeSelection` exposes a port on the instance where the link meets it).
+- **Tags that lock or hide an Object** apply to every placement of it; per-instance hiding is an override, not a tag.
+
+## 7. Open questions
+
+1. Tag effects beyond hide and lock: opacity, or a colour shown on the chip?
+2. Should the tree list links under their container, or under their source node?
+3. Merge a View's contents record into its node (one record per View)? It makes "a View is a node" literal but
+   rewrites the store, navigation and persistence; deferred until the panels have settled the shape.
+4. Orphaned contents (a View or Object record nothing points to): show them in an "Unplaced" group, or delete them
+   with the last node that points at them?
+5. Can an Object contain a View? This design says no, so an Object stays a drawing rather than a navigable place.
