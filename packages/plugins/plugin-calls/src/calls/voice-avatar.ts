@@ -26,6 +26,8 @@ export type VoiceAvatarTuning = {
   strands: number;
   /** Radial distance between neighbouring strands. */
   separation: number;
+  /** How much the ink strands thicken while speaking; 0 keeps their passive width. */
+  thickness: number;
 };
 
 export const DEFAULT_TUNING: VoiceAvatarTuning = {
@@ -35,6 +37,7 @@ export const DEFAULT_TUNING: VoiceAvatarTuning = {
   particles: 6,
   strands: 1,
   separation: 0.03,
+  thickness: 1,
 };
 
 /**
@@ -359,7 +362,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
   return {
     update: (
       { time, delta, level, bands },
-      { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount, separation },
+      { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount, separation, thickness },
     ) => {
       // Accumulated, so changing the speed changes the pace without jumping the wave.
       phase += delta * waveSpeed;
@@ -397,7 +400,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
           // A slow, uneven wobble in the width keeps the stroke hand-drawn rather than machined.
           const width =
             (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * weight +
-            voice(angle, slice) * 0.22 * weight;
+            voice(angle, slice) * 0.22 * weight * thickness;
           // Standing waves, so the strands shake in place on fixed nodes rather than seeming to turn; the vibration
           // follows the sound in real time, whatever the passive wave's speed.
           const centre =
