@@ -115,13 +115,16 @@ or use the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-pub
 
 ## Troubleshooting
 
-| Symptom                                                  | Cause / fix                                                                                                                                                                            |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EOTP` / "requires a one-time password"                  | Expected on `trust` and some publishes; complete the browser confirmation at the printed URL.                                                                                          |
-| `trust` reports `permissions: publish, stage publish`    | npm adds stage publish even when only `--allow-publish` is passed (seen with npm 11.15.0). Harmless for `publish-all.yml`; to match the guide, untick it on the package's access page. |
-| `Unknown command: "trust"`                               | npm < 11.15 called directly; the script uses `npx npm@11.15.0` — run it through the script.                                                                                            |
-| `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`             | Missing `node_modules`; run `pnpm install`.                                                                                                                                            |
-| `publish-all.yml` fails with 404/ENEEDAUTH for a package | No trusted publisher for it yet; run the script with `--trust`.                                                                                                                        |
+| Symptom                                                   | Cause / fix                                                                                                                                                                                                     |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EOTP` / "requires a one-time password"                   | Expected on `trust` and some publishes; complete the browser confirmation at the printed URL.                                                                                                                   |
+| `trust` reports `permissions: publish, stage publish`     | npm adds stage publish even when only `--allow-publish` is passed (seen with npm 11.15.0). Harmless for `publish-all.yml`; to match the guide, untick it on the package's access page.                          |
+| `Unknown command: "trust"`                                | npm < 11.15 called directly; the script uses `npx npm@11.15.0` — run it through the script.                                                                                                                     |
+| `ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL`              | Missing `node_modules`; run `pnpm install`.                                                                                                                                                                     |
+| `publish-all.yml` fails with 404/ENEEDAUTH for a package  | No trusted publisher for it yet; run the script with `--trust`. The `preflight` job (`scripts/check-packages-published.ts`) now catches this before the build, for every package at once.                       |
+| `E401 … token is invalid` on one package mid-publish      | Transient: preflight's OIDC exchange had passed for the same package. Re-run the failed job; `changeset publish` skips versions already on npm, so a re-run resumes the release.                                |
+| `E409 … Cannot publish over previously staged version`    | npm is holding that version in **Validating** (automated review, shown on the package's Versions tab); nobody staged it and nothing needs approving. Wait until it shows Published, then re-run the failed job. |
+| Release stops partway (`Some packages failed to publish`) | `changeset publish` stops at the first failure, so `latest` is left mixed across versions. Fix the named package, then re-run; tags and the CLI publish run only once every package succeeds.                   |
 
 ## Rules
 
