@@ -4,10 +4,12 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
+
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 
 import { FeedOperation } from '#types';
 
@@ -15,17 +17,21 @@ import { Partial, type Provides } from './partial.ts';
 
 const partials = { aiBriefing: Partial };
 
-export const make = (): SampleSpace.Definition<typeof partials, Provides> =>
+export const make = (): SampleSpace.Definition<typeof partials, Provides, SampleSpace.Services | Operation.Service> =>
   SampleSpace.make({
     space: { name: 'AI Briefing', icon: 'atom', hue: 'sky' },
     partials,
-    build: (partials) => partials.aiBriefing(),
-    followups: ({ magazine }) =>
-      Operation.schedule(
-        FeedOperation.CurateMagazine,
-        { magazine: Ref.make(magazine) },
-        { spaceId: Obj.getDatabase(magazine)?.spaceId },
-      ),
+    build: (partials) =>
+      Effect.gen(function* () {
+        const provides = yield* partials.aiBriefing();
+        yield* Database.flush();
+        yield* Operation.schedule(
+          FeedOperation.CurateMagazine,
+          { magazine: Ref.make(provides.magazine) },
+          { spaceId: Obj.getDatabase(provides.magazine)?.spaceId },
+        );
+        return provides;
+      }),
   });
 
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>

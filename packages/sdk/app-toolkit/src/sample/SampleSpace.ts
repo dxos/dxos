@@ -9,9 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import * as Operation from '@dxos/compute/Operation';
+import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
 import { iconValues } from '@dxos/ui-types';
@@ -367,15 +366,17 @@ export type SpaceOptions = {
  */
 export const BASE_SCHEMAS: ReadonlyArray<Type.AnyEntity> = [Collection.Collection];
 
-export interface Definition<Partials extends PartialMap, A> {
+/**
+ * `R` is what `build` needs beyond {@link Services}: a template applied by `SpaceOperation.ApplyTemplate`
+ * gets `Operation.Service` from the process it runs in.
+ */
+export interface Definition<Partials extends PartialMap, A, R = Services> {
   readonly space: SpaceOptions;
   readonly reference: Date | string;
   readonly partials: Partials;
   /** Every schema declared by the definition's partials, deduplicated. */
   readonly schemas: ReadonlyArray<Type.AnyEntity>;
-  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, Services>;
-  /** Operations to schedule once the content is written, given what `build` returned. Only a live space runs them. */
-  readonly followups?: (result: A) => Effect.Effect<void, never, Operation.Service>;
+  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, R>;
 }
 
 /**
@@ -385,19 +386,17 @@ export interface Definition<Partials extends PartialMap, A> {
  * The partial map is the single source of truth: `schemas` is derived from it, and `build` receives
  * the same partials as runners, so a partial cannot contribute content without its types registered.
  */
-export const make = <Partials extends PartialMap, A>(definition: {
+export const make = <Partials extends PartialMap, A, R = Services>(definition: {
   readonly space: SpaceOptions;
   readonly reference?: Date | string;
   readonly partials: Partials;
-  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, Services>;
-  readonly followups?: (result: A) => Effect.Effect<void, never, Operation.Service>;
-}): Definition<Partials, A> => ({
+  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, R>;
+}): Definition<Partials, A, R> => ({
   space: definition.space,
   reference: definition.reference ?? new Date(),
   partials: definition.partials,
   schemas: [...new Set([...BASE_SCHEMAS, ...Object.values(definition.partials).flatMap((part) => part.schemas)])],
   build: definition.build,
-  followups: definition.followups,
 });
 
 //
@@ -421,10 +420,10 @@ export const layer = (options: {
  * flushes. The same definition runs headless (into an exported archive) or against a live space,
  * which is what lets one sample space serve both a test and the app.
  */
-export const applyTo = <Partials extends PartialMap, A>(
-  definition: Definition<Partials, A>,
+export const applyTo = <Partials extends PartialMap, A, R>(
+  definition: Definition<Partials, A, R>,
   space: { readonly db: Database.Database; readonly properties: Obj.Any },
-): Effect.Effect<A, SampleSpaceError> =>
+): Effect.Effect<A, SampleSpaceError, Exclude<R, Services>> =>
   Effect.gen(function* () {
     const result = yield* definition.build(runnersOf(definition.partials));
     yield* Effect.flatMap(Feeds, ({ drain }) => drain);
@@ -450,7 +449,11 @@ export const applyTo = <Partials extends PartialMap, A>(
 const asIconValue = (icon: string | undefined): string | undefined =>
   icon && iconValues.includes(icon) ? icon : undefined;
 
-export const makeTemplate = <Partials extends PartialMap, A>(options: {
+export const makeTemplate = <
+  Partials extends PartialMap,
+  A,
+  R extends Services | Operation.Service = Services,
+>(options: {
   readonly id: string;
   /** Defaults to the definition's space name, which is what the created space is called. */
   readonly label?: string;
@@ -459,7 +462,7 @@ export const makeTemplate = <Partials extends PartialMap, A>(options: {
   readonly hue?: string;
   /** Omit from the create picker; reachable only by id. */
   readonly hidden?: boolean;
-  readonly definition: Definition<Partials, A>;
+  readonly definition: Definition<Partials, A, R>;
 }): {
   readonly id: string;
   readonly label: string;
@@ -470,8 +473,7 @@ export const makeTemplate = <Partials extends PartialMap, A>(options: {
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
-    readonly operations?: Operation.OperationService;
-  }) => Promise<void>;
+  }) => Effect.Effect<void, SampleSpaceError, Operation.Service>;
 } => ({
   id: options.id,
   label: options.label ?? options.definition.space.name,
@@ -481,12 +483,12 @@ export const makeTemplate = <Partials extends PartialMap, A>(options: {
   icon: asIconValue(options.icon ?? options.definition.space.icon),
   hue: options.hue ?? options.definition.space.hue,
   hidden: options.hidden,
-  apply: async ({ client, space, operations }) => {
-    await client.addTypes([...options.definition.schemas]);
-    const result = await EffectEx.runPromise(applyTo(options.definition, space));
-    const { followups } = options.definition;
-    if (followups && operations) {
-      await EffectEx.runPromise(followups(result).pipe(Effect.provideService(Operation.Service, operations)));
-    }
-  },
+  apply: ({ client, space }) =>
+    Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        try: () => client.addTypes([...options.definition.schemas]),
+        catch: (cause) => new SampleSpaceError({ context: { reason: 'add-types' }, cause }),
+      });
+      yield* applyTo(options.definition, space);
+    }),
 });

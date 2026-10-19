@@ -202,7 +202,7 @@ describe('applyTo', () => {
     expect(root.objects.map((ref) => ref.target?.id)).toContain(result.collection.id);
   });
 
-  test("schedules a template's follow-ups only when given operations", async ({ expect }) => {
+  test("leaves the build's other services to the caller", async ({ expect }) => {
     const Touch = Operation.make({
       input: Schema.Struct({ id: Schema.String }),
       output: Schema.Void,
@@ -214,19 +214,19 @@ describe('applyTo', () => {
       schedule: (_op, ...args) => Effect.sync(() => void scheduled.push(args[0])),
       invokePromise: () => Promise.resolve({}),
     } satisfies Operation.OperationService;
-    const template = SampleSpace.makeTemplate({
-      id: 'com.example.template',
-      definition: {
-        ...definition,
-        followups: ({ taskSet }: { taskSet: TaskSet.TaskSet }) => Operation.schedule(Touch, { id: taskSet.id }),
-      },
+    const touching = SampleSpace.make({
+      space: definition.space,
+      partials: { work: Work },
+      build: (partials) =>
+        Effect.gen(function* () {
+          const { taskSet } = yield* partials.work();
+          yield* Operation.schedule(Touch, { id: taskSet.id });
+        }),
     });
-    const client = { addTypes: async () => {} };
 
-    await template.apply({ client, space: await createSpace() });
-    expect(scheduled).toEqual([]);
-
-    await template.apply({ client, space: await createSpace(), operations });
+    await EffectEx.runPromise(
+      SampleSpace.applyTo(touching, await createSpace()).pipe(Effect.provideService(Operation.Service, operations)),
+    );
     expect(scheduled).toEqual([{ id: expect.any(String) }]);
   });
 

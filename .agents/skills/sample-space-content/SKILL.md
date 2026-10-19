@@ -84,9 +84,9 @@ schemas, run })`. When another directory applies it, re-export it with `Provides
    pass each partial's `Provides` into the next one's `Requires`. A new template gets `make`,
    `makeTemplate`, a test, and an entry in the plugin's `capabilities/space-templates.ts`. Keep the
    content lazy: `composer-app:check-boot-budget` must not move. Work that needs an operation once
-   the space exists (a first sync or curation) goes in the definition's `followups`, never in a
-   partial: `SpaceTemplate.apply` runs it only when the caller passes `operations`, and archives skip
-   it.
+   the space exists (a first sync or curation) goes in the template's `build`, never in a partial:
+   `SpaceOperation.ApplyTemplate` runs `build` in the space's process, which provides
+   `Operation.Service`, and the template's test provides a stub.
 6. **The flows.** Walk every `## Flows` entry in the running app with the `composer-qa` or
    `composer-debug` skill. Report each flow you could not walk as not verified.
 7. **The header.** Update `Code` and `Used by` to name the files and templates that now exist, and

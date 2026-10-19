@@ -36,9 +36,9 @@ sources is fixed.
   `magazine` → AI Briefing, `enabled: false`.
 - No `Collection`. The magazine and subscriptions have no parent, so the navtree lists AI Briefing
   in the Content group's Magazines section, with the 5 subscriptions as its children in table order.
-- After creation: the template's `followups` schedule one `CurateMagazine` run on the magazine
-  (`SampleSpace.Definition.followups`, run by `SpaceTemplate.apply` when the caller passes
-  `operations`). Space creation does not wait for it. Archives built with `buildArchive` skip it.
+- Curation: the template's `build` schedules one `CurateMagazine` run on the magazine once the
+  partial is written. `SpaceOperation.ApplyTemplate` runs `build` in the new space's process, which
+  provides `Operation.Service`. Space creation does not wait for the run.
   - `CurateMagazine` syncs all 5 feeds, then runs the agent through EDGE inference. No API key is
     needed when the identity has an EDGE credential.
   - If the agent call fails, the feeds keep their posts and the magazine stays empty; pressing Curate
@@ -65,3 +65,4 @@ sources is fixed.
 - 1 routine whose action is `CurateMagazine`, with 1 timer trigger `0 9 * * *` that is disabled and
   whose input is the magazine.
 - No collection, and the magazine and the 5 subscriptions have no parent.
+- The build schedules exactly one `CurateMagazine` run, on the magazine.

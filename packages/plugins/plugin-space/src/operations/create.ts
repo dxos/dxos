@@ -1,5 +1,6 @@
 // Copyright 2025 DXOS.org
 
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
@@ -97,14 +98,20 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       // After the root collection exists, so a template writes into a space the navtree can reach.
       // A failure here is held rather than thrown: the space is already created and still needs its
       // callbacks to run, so it is reported once initialization below is complete.
-      const operations = yield* Operation.Service;
       const applyError = match
-        ? yield* Effect.tryPromise({
-            try: () => match.apply({ client, space, operations }),
-            catch: (cause) => new TemplateApplyError({ context: { template, spaceId: space.id }, cause }),
-          }).pipe(
+        ? yield* Operation.invoke(
+            SpaceOperation.ApplyTemplate,
+            { template: match.id, space },
+            { spaceId: space.id },
+          ).pipe(
             Effect.as(undefined),
-            Effect.catch((error) => Effect.succeed(error)),
+            Effect.catchCause((cause) =>
+              Cause.hasInterruptsOnly(cause)
+                ? Effect.interrupt
+                : Effect.succeed(
+                    new TemplateApplyError({ context: { template, spaceId: space.id }, cause: Cause.squash(cause) }),
+                  ),
+            ),
           )
         : undefined;
 

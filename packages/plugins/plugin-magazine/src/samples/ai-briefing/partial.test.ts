@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
+import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Type } from '@dxos/echo';
@@ -44,7 +46,15 @@ describe('AI Briefing', () => {
     'seeds five live feeds, an empty unparented magazine and its disabled routine',
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json } = await EffectEx.runPromise(buildArchive(AiBriefingSpace.make()));
+      const scheduled: Array<{ key: string; input: unknown }> = [];
+      const operations = {
+        invoke: () => Effect.die('unused'),
+        schedule: (op, ...args) => Effect.sync(() => void scheduled.push({ key: String(op.meta.key), input: args[0] })),
+        invokePromise: () => Promise.resolve({}),
+      } satisfies Operation.OperationService;
+      const { json } = await EffectEx.runPromise(
+        buildArchive(AiBriefingSpace.make()).pipe(Effect.provideService(Operation.Service, operations)),
+      );
       const counts = histogram(json);
       const count = (schema: Type.AnyEntity) =>
         Object.entries(counts).find(([type]) => type.startsWith(typename(schema)))?.[1] ?? 0;
@@ -68,6 +78,13 @@ describe('AI Briefing', () => {
       expect((magazine.feeds ?? []).map((ref) => get(ref)?.name)).toEqual(FEEDS.map(({ name }) => name));
       expect(magazine.posts).toEqual([]);
       expect(get(get(magazine.instructions)?.text)?.content).toContain(MAGAZINE.topic);
+
+      expect(scheduled.map(({ key, input }) => ({ key, input: JSON.parse(JSON.stringify(input)) }))).toEqual([
+        {
+          key: String(FeedOperation.CurateMagazine.meta.key),
+          input: { magazine: expect.objectContaining({ '/': expect.stringContaining(magazine.id) }) },
+        },
+      ]);
 
       const [routine] = ofType(Routine.Routine);
       expect(routine.spec?.runnable?.['/']).toBe(FeedOperation.CurateMagazine.meta.key.toString());

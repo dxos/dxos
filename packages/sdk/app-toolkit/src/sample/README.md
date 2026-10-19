@@ -45,8 +45,9 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
    sections from an existing spec. To build on another partial, list it under `Requires`.
 2. Ask an agent to generate the partial and a template that applies it.
 
-A template whose content needs an operation once the space exists, such as a first feed sync, sets
-`followups` on its definition. Creating a space from the template runs them; test archives do not.
+A template's `build` runs in the new space's process (`SpaceOperation.ApplyTemplate`), so it can
+schedule operations, such as a first feed sync. A test that builds such a template provides
+`Operation.Service` itself.
 
 A template may apply partials from other packages. The package that owns the partial exports it
 through a `samples` subpath and must be public.
