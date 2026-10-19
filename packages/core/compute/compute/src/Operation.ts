@@ -1117,6 +1117,23 @@ export const isVisible = (op: PersistentOperation): boolean =>
 export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
+ * What an operation requires of the process that invokes it, in the vocabulary of the permission
+ * system that interprets it (`@dxos/permission` requirements). Present ⇒ the runtime refuses the
+ * call unless the invoking process holds a guard that admits it; absent ⇒ the operation is never
+ * checked, which is what keeps permissions opt-in.
+ */
+export const RequiresAnnotation = Annotation.make({
+  id: 'org.dxos.operation.requires',
+  schema: Schema$.Array(Schema$.Unknown),
+});
+
+/** The operation's declared requirements; empty when it declares none. */
+export const getRequirements = (op: Definition.Any): readonly unknown[] =>
+  op.meta.annotations
+    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, RequiresAnnotation), (): readonly unknown[] => [])
+    : [];
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */
@@ -1292,4 +1309,5 @@ export {
   InvalidOperationOutputError,
   InvokerNotInitializedError,
   NoHandlerError,
+  OperationDeniedError,
 } from './errors.ts';
