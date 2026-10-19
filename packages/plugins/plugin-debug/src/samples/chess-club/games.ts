@@ -163,7 +163,9 @@ export const Games: SampleSpace.Partial<GamesResult> = SampleSpace.partial('game
     Effect.gen(function* () {
       const games: Game.Game[] = [];
       for (const seed of GAMES) {
-        const state = yield* Database.add(Chess.make({ pgn: seed.pgn, fen: seed.fen }));
+        // The board replays `pgn` only, so a study carries its position as a PGN set-up header as well.
+        const pgn = seed.pgn ?? (seed.fen ? `[SetUp "1"]\n[FEN "${seed.fen}"]\n\n*` : undefined);
+        const state = yield* Database.add(Chess.make({ pgn, fen: seed.fen }));
         games.push(
           yield* Database.add(
             Game.make({
