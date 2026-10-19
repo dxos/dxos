@@ -177,7 +177,10 @@ const meta = {
     },
   },
   argTypes: {
-    variant: { control: 'select', options: ['torus', 'spectrum', 'ink', 'ink-line'] satisfies VoiceAvatarVariant[] },
+    variant: {
+      control: 'select',
+      options: ['torus', 'spectrum', 'ink', 'ink-line', 'ink-morph'] satisfies VoiceAvatarVariant[],
+    },
     ...Object.fromEntries(
       Object.entries(RANGES).map(([key, range]) => [key, { control: { type: 'range', ...range } }]),
     ),

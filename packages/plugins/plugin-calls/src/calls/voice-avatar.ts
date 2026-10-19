@@ -87,9 +87,10 @@ export const TUNING_PRESETS = {
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
  * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival; `ink-line`: the
- * same ink as a horizontal stroke with frequency running linearly along it.
+ * same ink as a horizontal stroke with frequency running linearly along it; `ink-morph`: that stroke, which curls
+ * into a ring while speaking.
  */
-export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink' | 'ink-line';
+export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink' | 'ink-line' | 'ink-morph';
 
 export type VoiceAvatarOptions = {
   variant?: VoiceAvatarVariant;
@@ -185,8 +186,10 @@ export const createVoiceAvatar = (
       : variant === 'ink'
         ? inkShape(scene)
         : variant === 'ink-line'
-          ? inkLineShape(scene)
-          : torusShape(scene, palette);
+          ? inkLineShape(scene, false)
+          : variant === 'ink-morph'
+            ? inkLineShape(scene, true)
+            : torusShape(scene, palette);
 
   const hearing: Hearing = {
     time: 0,
@@ -552,21 +555,27 @@ const inkShape = (scene: THREE.Scene): Shape => {
 /** Samples along the ink line. */
 const LINE_SAMPLES = 320;
 const LINE_HALF_WIDTH = 2.4;
+/** The morph's ring radius, matching the ink ring's. */
+const MORPH_RADIUS = 1.05;
+/** Seconds to curl into the ring and to relax back; slower back, so a pause between words keeps the ring. */
+const MORPH_IN = 0.35;
+const MORPH_OUT = 1.2;
 
 /**
  * The ink aesthetic as a horizontal stroke, frequency running linearly from left (low) to right (high). Where a
  * frequency sounds the stroke thickens and vibrates in place (faster toward the high end) and sheds blots that drift
- * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack vertically, `separation`
- * apart, the middle one thickest; the stroke tapers to a point at both ends.
+ * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack `separation` apart, the
+ * middle one thickest; the stroke tapers to a point at both ends. With `morph`, speaking curls the stroke about its
+ * midpoint into a ring (constant curvature, so it bows and then closes), and silence relaxes it back.
  */
-const inkLineShape = (scene: THREE.Scene): Shape => {
+const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
   scene.background = new THREE.Color('#e9e7e2');
   const ink = new THREE.Color('#151515');
   const group = new THREE.Group();
   scene.add(group);
   const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
 
-  // Each strand is a strip of quads, top and bottom edge per sample, rewritten every frame.
+  // Each strand is a strip of quads, one edge either side of the curve per sample, rewritten every frame.
   const indices: number[] = [];
   for (let segment = 0; segment < LINE_SAMPLES; segment++) {
     const top = segment * 2;
@@ -589,7 +598,7 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
     const mesh = new THREE.Mesh(blotGeometry, blotMaterial);
     mesh.visible = false;
     group.add(mesh);
-    return { mesh, material: blotMaterial, x: 0, y: 0, direction: 1, size: 0, age: 0, life: 0 };
+    return { mesh, material: blotMaterial, x: 0, y: 0, dx: 0, dy: 1, size: 0, age: 0, life: 0 };
   });
 
   /** Energy at `position` (0..1 along the line), interpolated between the linear points. */
@@ -598,6 +607,32 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
     const below = Math.floor(point);
     const above = Math.min(linear.length - 1, below + 1);
     return linear[below] + (linear[above] - linear[below]) * (point - below);
+  };
+
+  /** Bend from 0 (straight) to 1 (closed ring). */
+  let curl = 0;
+  /**
+   * The curve at `position` (0..1): its point and unit normal. A constant-curvature arc about the bottom midpoint,
+   * its length easing from the line's to the ring's circumference, centred vertically on the origin.
+   */
+  const curve = (position: number) => {
+    const eased = curl * curl * (3 - 2 * curl);
+    const span = Math.PI * 2 * eased;
+    const length = 2 * LINE_HALF_WIDTH + (Math.PI * 2 * MORPH_RADIUS - 2 * LINE_HALF_WIDTH) * eased;
+    const along = position - 0.5;
+    if (span < 1e-4) {
+      return { x: along * length, y: 0, nx: 0, ny: 1 };
+    }
+    const radius = length / span;
+    const angle = span * along;
+    // Halfway between the arc's lowest and highest points, so the shape stays centred as it closes.
+    const lift = (radius * (1 - Math.cos(span / 2))) / 2;
+    return {
+      x: radius * Math.sin(angle),
+      y: radius * (1 - Math.cos(angle)) - lift,
+      nx: -Math.sin(angle),
+      ny: Math.cos(angle),
+    };
   };
 
   let phase = 0;
@@ -609,6 +644,10 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
     ) => {
       // Accumulated, so changing the speed changes the pace without jumping the wave.
       phase += delta * waveSpeed;
+      if (morph) {
+        const target = level > 0.05 ? 1 : 0;
+        curl += (target - curl) * Math.min(1, delta / (target > curl ? MORPH_IN : MORPH_OUT));
+      }
       const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
       const idle = Math.max(0, 1 - level * 4);
       const middle = (count - 1) / 2;
@@ -624,10 +663,11 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
         const weight = (count > 1 ? share : 1) * taper;
         for (let sample = 0; sample <= LINE_SAMPLES; sample++) {
           const position = sample / LINE_SAMPLES;
+          // The waves are laid out along the stroke, so they bend with it.
           const x = (position * 2 - 1) * LINE_HALF_WIDTH;
           const energy = energyAt(linear, position);
-          // A brush stroke: full width in the middle, tapering to a point at both ends.
-          const brush = Math.sin(Math.PI * position) ** 0.6;
+          // A brush stroke tapers to a point at both ends; closing into a ring, the ends meet and fill out.
+          const brush = Math.sin(Math.PI * position) ** 0.6 * (1 - curl) + curl;
           const width =
             ((0.035 + Math.sin(x * 2.1 + own * 0.7) * 0.006 + Math.sin(x * 4.7 - own * 0.4) * 0.004) * weight +
               energy * 0.22 * weight * thickness) *
@@ -636,7 +676,7 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
           const rate = 8 + position * 40;
           const vibration =
             energy * 0.06 * (Math.sin(x * (6 + position * 18)) * Math.sin(time * rate) * (1 - position * 0.4));
-          const centre =
+          const offset =
             base +
             vibration +
             idle *
@@ -648,13 +688,26 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
                   (Math.sin(x * 9 + own * 7.3) * 0.008 +
                     Math.sin(x * 15 - own * 11.9 + 3) * 0.005 +
                     Math.sin(x * 24 + own * 17.1 + 1) * 0.004));
-          strand.positions.set([x, centre + width / 2, 0, x, centre - width / 2, 0], sample * 6);
+          const point = curve(position);
+          const above = offset + width / 2;
+          const below = offset - width / 2;
+          strand.positions.set(
+            [
+              point.x + point.nx * above,
+              point.y + point.ny * above,
+              0,
+              point.x + point.nx * below,
+              point.y + point.ny * below,
+              0,
+            ],
+            sample * 6,
+          );
         }
         strand.geometry.attributes.position.needsUpdate = true;
         strand.geometry.computeBoundingSphere();
       });
 
-      // Loud points shed blots that drift up or down off the line; the total rate matches the ring's.
+      // Loud points shed blots that drift off either side of the stroke; the total rate matches the ring's.
       linear.forEach((energy, index) => {
         if (energy <= 0.35) {
           return;
@@ -663,10 +716,12 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
         const due = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
         for (let spawn = 0; spawn < due; spawn++) {
           const blot = blots[spawned++ % blots.length];
-          const position = (index + Math.random()) / linear.length;
-          blot.x = (position * 2 - 1) * LINE_HALF_WIDTH;
-          blot.direction = Math.random() < 0.5 ? -1 : 1;
-          blot.y = blot.direction * 0.05;
+          const point = curve((index + Math.random()) / linear.length);
+          const side = Math.random() < 0.5 ? -1 : 1;
+          blot.dx = point.nx * side;
+          blot.dy = point.ny * side;
+          blot.x = point.x + blot.dx * 0.05;
+          blot.y = point.y + blot.dy * 0.05;
           blot.size = 0.02 + energy * 0.05 * Math.random();
           blot.age = 0;
           blot.life = 1.2 + Math.random() * 1.5;
@@ -683,7 +738,9 @@ const inkLineShape = (scene: THREE.Scene): Shape => {
           blot.mesh.visible = false;
           continue;
         }
-        blot.y += blot.direction * delta * 0.18 * (1 - progress);
+        const step = delta * 0.18 * (1 - progress);
+        blot.x += blot.dx * step;
+        blot.y += blot.dy * step;
         blot.mesh.position.set(blot.x, blot.y, 0.01);
         blot.mesh.scale.setScalar(blot.size * (1 + progress * 1.5));
         blot.material.opacity = 0.85 * (1 - progress) ** 1.5;
