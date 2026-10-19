@@ -27,6 +27,7 @@ import * as Accordion from '@dxos/react-ui/Accordion';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -39,6 +40,8 @@ export type InspectorSectionDef = {
   icon: string;
   /** Sections stack by it, lowest first. */
   order: number;
+  /** The half of the panel the section sits in, the two split by a draggable seam; `lower` by default. */
+  pane?: 'upper' | 'lower';
   /** Open when it first shows; otherwise it starts closed, so only the inspectors that matter first take room. */
   defaultOpen?: boolean;
 };
@@ -166,16 +169,84 @@ const stop = (event: SyntheticEvent) => event.stopPropagation();
  * sections that show, each a bordered frame as tall as its inspector, any number open. Nothing (and no space) while
  * none shows.
  */
+/** The upper half's share of the height until the seam is dragged; the least either half may be dragged to, in rem. */
+const UPPER_PANE_SHARE = 0.6;
+const MIN_PANE_SIZE = 6;
+
+/** The seam in the docked panel's own edge colour, brightening as the splitter's does. */
+const SEAM = 'before:bg-separator-subtle hover:before:bg-focus focus-visible:before:bg-focus active:before:bg-focus';
+
 const InspectorPanelContent = () => {
   const context = usePanelState(useContext(InspectorPanelContext));
   const visible = useMemo(
     () => context?.sections.filter((section) => context.shows(section)) ?? [],
     [context?.sections, context?.shows],
   );
+  // Kept here, not in the splitter, so the upper half keeps its height while a selection comes and goes; unset until
+  // the panel is measured, when it starts at its share of the height.
+  const [size, setSize] = useState<number>();
+  const splitterRef = useRef<HTMLDivElement>(null);
+  const measured = size !== undefined;
+  useLayoutEffect(() => {
+    const height = splitterRef.current?.getBoundingClientRect().height ?? 0;
+    if (!measured && height > 0) {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setSize((height * UPPER_PANE_SHARE) / rem);
+    }
+  });
   if (!context || visible.length === 0) {
     return null;
   }
   const { docked, closed, setSlot, setClosed, actions, onDockedChange } = context;
+  const upper = visible.filter((section) => section.pane === 'upper');
+  const lower = visible.filter((section) => section.pane !== 'upper');
+  const split = upper.length > 0 && lower.length > 0;
+
+  // One half's sections: a scroll area of bordered frames, each as tall as its inspector, any number open.
+  const list = (sections: readonly InspectorSectionDef[]) => (
+    <ScrollArea.Root>
+      <ScrollArea.Viewport>
+        <Accordion.Root
+          border={false}
+          classNames='gap-2 p-2'
+          onPointerDown={stop}
+          onPointerMove={stop}
+          onPointerUp={stop}
+          onDoubleClick={stop}
+          onContextMenu={stop}
+          onKeyDown={stop}
+          value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
+          onValueChange={(open) =>
+            setClosed(
+              new Set([
+                ...[...closed].filter((id) => !sections.some((section) => section.id === id)),
+                ...sections.filter((section) => !open.includes(section.id)).map((section) => section.id),
+              ]),
+            )
+          }
+        >
+          {sections.map((section) => (
+            // Each section is its own bordered frame, clipped so its rows' fills stay inside the rounded border; its
+            // header holds only the label and disclosure.
+            <Accordion.Item
+              key={section.id}
+              value={section.id}
+              classNames='rounded-sm border border-separator overflow-clip'
+              data-testid={`dock-section-${section.id}`}
+            >
+              <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
+                {section.title}
+              </Accordion.ItemTrigger>
+              <Accordion.ItemContent>
+                <Slot id={section.id} setSlot={setSlot} />
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+
   return (
     <Panel.Root
       classNames={
@@ -184,7 +255,8 @@ const InspectorPanelContent = () => {
           : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
             // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
-              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-clip',
+              // The full height, as docked: the splitter divides a height, so it cannot size itself to its sections.
+              'absolute top-2 right-2 z-10 w-80 h-[calc(100%-1rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
@@ -219,44 +291,23 @@ const InspectorPanelContent = () => {
           </Toolbar.Root>
         </Panel.Header>
       )}
-      {/* The body is the scroll area itself: each section is as tall as its inspector, and it scrolls them together. */}
+      {/* Always the splitter, collapsed to one half while the other is empty: a section changing halves would remount. */}
       <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
-            <Accordion.Root
-              border={false}
-              classNames='gap-2 p-2'
-              onPointerDown={stop}
-              onPointerMove={stop}
-              onPointerUp={stop}
-              onDoubleClick={stop}
-              onContextMenu={stop}
-              onKeyDown={stop}
-              value={visible.filter((section) => !closed.has(section.id)).map((section) => section.id)}
-              onValueChange={(open) =>
-                setClosed(new Set(visible.filter((section) => !open.includes(section.id)).map((section) => section.id)))
-              }
-            >
-              {visible.map((section) => (
-                // Each section is its own bordered frame, clipped so its rows' fills stay inside the rounded border; its
-                // header holds only the label and disclosure.
-                <Accordion.Item
-                  key={section.id}
-                  value={section.id}
-                  classNames='rounded-sm border border-separator overflow-clip'
-                  data-testid={`dock-section-${section.id}`}
-                >
-                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>
-                    {section.title}
-                  </Accordion.ItemTrigger>
-                  <Accordion.ItemContent>
-                    <Slot id={section.id} setSlot={setSlot} />
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-              ))}
-            </Accordion.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <Splitter.Root
+          ref={splitterRef}
+          orientation='vertical'
+          resizable={split}
+          minSize={MIN_PANE_SIZE}
+          mode={split ? 'split' : upper.length > 0 ? 'start' : 'end'}
+          size={size}
+          onSizeChange={setSize}
+        >
+          <Splitter.Panel position='start'>{list(upper)}</Splitter.Panel>
+          {split && (
+            <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
+          )}
+          <Splitter.Panel position='end'>{list(lower)}</Splitter.Panel>
+        </Splitter.Root>
       </Panel.Body>
     </Panel.Root>
   );
@@ -282,7 +333,7 @@ export type InspectorSectionProps = PropsWithChildren<{ section: InspectorSectio
  */
 export const InspectorSection = ({ section, children }: InspectorSectionProps) => {
   const panel = useContext(InspectorPanelContext);
-  const { id, title, icon, order, defaultOpen } = section;
+  const { id, title, icon, order, pane, defaultOpen } = section;
   const subscribe = useCallback((listener: () => void) => panel?.subscribe(listener) ?? (() => {}), [panel]);
   const slot = useSyncExternalStore(subscribe, () => {
     const state = panel?.get();
@@ -292,10 +343,10 @@ export const InspectorSection = ({ section, children }: InspectorSectionProps) =
     if (!panel) {
       return;
     }
-    return panel.register({ id, title, icon, order, defaultOpen });
+    return panel.register({ id, title, icon, order, pane, defaultOpen });
     // `register` is stable; the section re-registers only when it changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [panel?.register, id, title, icon, order, defaultOpen]);
+  }, [panel?.register, id, title, icon, order, pane, defaultOpen]);
   if (!panel) {
     return <>{children}</>;
   }

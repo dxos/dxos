@@ -170,6 +170,7 @@ const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
+  pane: 'upper',
   defaultOpen: true,
 };
 
