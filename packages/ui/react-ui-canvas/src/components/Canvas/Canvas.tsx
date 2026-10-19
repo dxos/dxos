@@ -30,12 +30,14 @@ import { mx } from '@dxos/ui-theme';
 
 import {
   type CanvasAtoms,
+  type ControllerGrid,
   type Drag,
   type FreehandProjectionOptions,
   type InspectorMode,
   type Projection,
   animate,
   createCanvasAtoms,
+  createCanvasController,
   isMoving,
   readonlyCapabilities,
   reduceIntent,
@@ -77,7 +79,6 @@ import {
   type Scene,
   type SceneId,
   type SceneStore,
-  type StyleClass,
   type ThemeRegistry,
   type Timeline,
   applyCameraKey,
@@ -111,18 +112,17 @@ import {
   activeLayer,
   boundsFromPoints,
   cameraTransform,
-  classedLink,
   classedNode,
   composeSelection,
   compositeBounds,
   compositeScenes,
   copyComposite,
+  createId,
   createLayer,
   createLink,
   duplicateSelection,
   enterPortal,
   fitBounds,
-  groupIntoScene,
   hitTest,
   instanceCounts,
   instancePorts,
@@ -180,9 +180,8 @@ import {
 } from '../SceneLayer/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/index.ts';
 import { CanvasProvider, useCanvasContext } from './CanvasContext.ts';
-import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
+import { PREVIEW_NODE_ID, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
-import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
@@ -394,6 +393,24 @@ const CanvasRoot = ({
     [baseProjection, registry, atoms, nodeRegistry],
   );
   const scene = useAtomValue(projection.scene);
+  // The commands read the latest projection, mode and grid when they run, so the controller is made once per canvas.
+  const projectionRef = useRef(projection);
+  projectionRef.current = projection;
+  const readonlyRef = useRef(readonly);
+  readonlyRef.current = readonly;
+  const gridRef = useRef<ControllerGrid>({ major: 0, snap: (value) => value });
+  const controller = useMemo(
+    () =>
+      createCanvasController({
+        registry,
+        atoms,
+        store,
+        projection: () => projectionRef.current,
+        readonly: () => readonlyRef.current,
+        grid: () => gridRef.current,
+      }),
+    [registry, atoms, store],
+  );
   const baseScene = useAtomValue(baseProjection.scene);
   const timeline = baseScene.timeline;
   const time = useAtomValue(atoms.clock.time);
@@ -492,13 +509,7 @@ const CanvasRoot = ({
   const interactedRef = useRef(initialCamera !== undefined);
 
   // Read-only, nothing is selected: a selection only exists to be edited.
-  const select = useCallback(
-    (ids: Iterable<ElementId>) => {
-      registry.set(atoms.selection, new Set(readonly ? [] : ids));
-      registry.set(atoms.point, undefined);
-    },
-    [registry, atoms.selection, atoms.point, readonly],
-  );
+  const select = controller.selection.select;
   useEffect(() => {
     if (readonly) {
       select([]);
@@ -1018,6 +1029,7 @@ const CanvasRoot = ({
   //
 
   const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  gridRef.current = { major, snap };
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleGuides = useCallback(
     () => registry.set(atoms.guides, !registry.get(atoms.guides)),
@@ -1092,17 +1104,7 @@ const CanvasRoot = ({
   // Clipboard.
   //
 
-  const { copy, cut, paste } = useSceneClipboard({
-    registry,
-    atoms,
-    scene,
-    projection,
-    capabilities,
-    select,
-    createId,
-    major,
-    snap,
-  });
+  const { copy, cut, paste } = controller.editing;
 
   const onSceneKey = useSceneKeys({
     registry,
@@ -1401,13 +1403,7 @@ const CanvasRoot = ({
   // Steps from the in-flight target: clicks in quick succession compound into one move instead of several jumps.
   const zoomBy = useCallback((factor: number) => zoomTo(cameraTarget().zoom * factor), [zoomTo, cameraTarget]);
 
-  const deleteSelection = useCallback(() => {
-    const ids = [...registry.get(atoms.selection)];
-    if (ids.length > 0 && capabilities.delete) {
-      projection.apply({ kind: 'delete', ids });
-      select([]);
-    }
-  }, [registry, atoms.selection, capabilities.delete, projection, select]);
+  const deleteSelection = controller.selection.delete;
 
   /** A default-sized node of `type` centred in the view, its top-left on the grid. */
   const createAtCentre = useCallback(
@@ -1494,48 +1490,6 @@ const CanvasRoot = ({
     ],
   );
 
-  // The selection moves into a new scene, opened by a shape where it was; the shape is then the selection.
-  const groupSelection = useCallback(() => {
-    const id = createId('scene');
-    const current = registry.get(projection.scene);
-    const selected = registry.get(atoms.selection);
-    const group = groupIntoScene(current, selected, id, activeLayer(current, registry.get(atoms.layer)));
-    if (!group) {
-      return;
-    }
-    const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, [id]: group.child });
-    projection.apply({ kind: 'batch', intents: group.intents });
-    // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
-    // it the new scene would be an orphan, so it goes and the selection stays.
-    if (!registry.get(projection.scene).nodes[id]) {
-      const { [id]: _, ...scenes } = registry.get(store.scenes);
-      registry.set(store.scenes, scenes);
-      return;
-    }
-    // One undo step takes the new scene away with the shape that opens it.
-    recordScenes(registry, atoms.undo, registry.get(atoms.path).at(-1) ?? root, before);
-    registry.set(atoms.selection, new Set([id]));
-    registry.set(atoms.point, undefined);
-  }, [registry, projection, store.scenes, atoms, root]);
-
-  // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
-  const classFromSelection = useCallback(() => {
-    const [only, ...rest] = registry.get(atoms.selection);
-    const element =
-      only !== undefined && rest.length === 0 ? getElement(registry.get(projection.scene), only) : undefined;
-    if (!store.styles || !element) {
-      return;
-    }
-    const styleMap = registry.get(store.styles);
-    const id = `class-${crypto.randomUUID()}`;
-    const name = `Class ${Object.keys(styleMap).length + 1}`;
-    const style = isLink(element) ? classedLink(element, styleMap).style : classedNode(element, styleMap).style;
-    const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
-    registry.set(store.styles, { ...styleMap, [id]: styleClass });
-    projection.apply({ kind: 'update', id: element.id, values: { class: id, style: undefined } });
-  }, [registry, atoms.selection, projection, store.styles]);
-
   // Commands on the selection, at the start of the inspector panel's toolbar.
   const selectedElements = [...selection].flatMap((id) => getElement(scene, id) ?? []);
   const canGroup =
@@ -1554,7 +1508,7 @@ const CanvasRoot = ({
             icon='ph--frame-corners--regular'
             label='New scene from selection'
             data-testid='inspector-group'
-            onClick={groupSelection}
+            onClick={controller.selection.group}
           />
         )}
         {canClass && (
@@ -1564,7 +1518,7 @@ const CanvasRoot = ({
             icon='ph--swatches--regular'
             label='New class from selection'
             data-testid='inspector-new-class'
-            onClick={classFromSelection}
+            onClick={controller.selection.classFrom}
           />
         )}
       </>

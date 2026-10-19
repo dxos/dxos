@@ -175,3 +175,6 @@ export const flipLink = (link: Link): LinkValues => ({
   target: link.source,
   ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
 });
+
+/** A fresh element or scene id: `prefix` and a random suffix. */
+export const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;

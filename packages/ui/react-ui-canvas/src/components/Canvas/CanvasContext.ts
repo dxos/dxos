@@ -4,7 +4,14 @@
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type CanvasAtoms, type Drag, type EditingPart, type Isolation, type Projection } from '../../engine/index.ts';
+import {
+  type CanvasAtoms,
+  type Drag,
+  type EditingCommands,
+  type EditingPart,
+  type Isolation,
+  type Projection,
+} from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
@@ -31,7 +38,6 @@ import { type ElementHandlers } from '../SceneLayer/index.ts';
 import { type ToolbarActions } from '../Toolbar/index.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
-import { type SceneClipboard } from './useSceneClipboard.ts';
 import { type SceneNavigation } from './useSceneNavigation.ts';
 
 /**
@@ -144,7 +150,7 @@ export type CanvasContextValue = {
   generated: GeneratorFrames | undefined;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
   Pick<SceneNavigation, 'childFrame'> &
-  Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
+  Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<
     PointerMachine,
     | 'onHandlePointerDown'

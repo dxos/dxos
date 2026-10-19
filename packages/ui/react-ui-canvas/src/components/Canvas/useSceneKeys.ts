@@ -4,7 +4,7 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
-import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
+import { type CanvasAtoms, type EditingCommands, type Projection } from '../../engine/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
   type Capabilities,
@@ -22,7 +22,6 @@ import { toolForKey } from '../panels/ToolsPanel/index.ts';
 import { type TimelineKeys } from './CanvasContext.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
-import { type SceneClipboard } from './useSceneClipboard.ts';
 import { type SceneNavigation } from './useSceneNavigation.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -54,7 +53,7 @@ export type UseSceneKeysOptions = {
 } & Pick<SceneCamera, 'animateTo'> &
   Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
   Pick<SceneSnap, 'major'> &
-  Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
+  Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'setTool'>;
 
 /**

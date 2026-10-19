@@ -43,6 +43,7 @@ import {
   boundsCenter,
   boundsFromPoints,
   cloneShape,
+  createId,
   createLink,
   createNode,
   duplicateSelection,
@@ -70,8 +71,6 @@ const PORT_SNAP_PX = 16;
 
 /** The node drawn as a preview during a create drag; it never reaches the model. */
 export const PREVIEW_NODE_ID = 'preview-node';
-
-export const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
 const distance = (left: Point, right: Point): [number, number] => [left.x - right.x, left.y - right.y];
 
