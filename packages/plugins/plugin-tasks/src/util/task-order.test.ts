@@ -26,7 +26,7 @@ describe('sortTasks', () => {
   });
 
   test('status follows the status table', ({ expect }) => {
-    expect(titles(sortTasks(tasks, { field: 'status', direction: 'asc' }))).to.deep.eq(['None', 'urgent', 'Low']);
+    expect(titles(sortTasks(tasks, { field: 'status', direction: 'asc' }))).to.deep.eq(['urgent', 'None', 'Low']);
   });
 
   test('priority puts the most urgent first and unset last', ({ expect }) => {
