@@ -1,7 +1,7 @@
 # Canvas architecture
 
 The Composer and EDGE architectures as nested canvas drawings, with three reading guides that embed
-and link them, and a sheet of plugin metrics with a bar chart.
+and link them, and a sheet of plugin metrics with a bar chart and a pie chart.
 
 - Code: `partial.ts`, exported as `Architecture.Partial` from `@dxos/plugin-canvas/Architecture`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
   precompiled to `compiled.json`.
@@ -46,9 +46,9 @@ and link them, and a sheet of plugin metrics with a bar chart.
   - **EDGE**: embeds the `edge` drawing; a mermaid sequence diagram "A device connecting".
   - Each has a `## Reading the code` section. Links use space-relative `echo:///<id>` URIs.
 - 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, PRs, Tests, Closed issues, Open issues; 20 rows, one per real
-  `packages/plugins` package, with made-up figures. One chart on the sheet: `bar` over `A1:E21`, `header`,
-  `horizontal` and `stacked`, so plugins run down the y axis and the four measures stack into one bar along the x axis. The chart
-  shows in the sheet's Charts companion.
+  `packages/plugins` package, with made-up figures. Two charts on the sheet, both in its Charts companion: `bar` over
+  `A1:E21`, `header`, `horizontal` and `stacked`, so plugins run down the y axis and the four measures stack into one bar
+  along the x axis; and `pie` over `A1:B9`, `header`, the eight busiest plugins' share of merged PRs.
 - 1 `Collection` "Architecture" on the space root, in order: Composer, DXOS, EDGE (docs), Overview,
   CF Workers (drawings), Plugin metrics (sheet).
 
@@ -56,7 +56,7 @@ and link them, and a sheet of plugin metrics with a bar chart.
 
 - 12 drawings, every canvas `readonly`.
 - The Architecture collection's labels are `Composer, DXOS, EDGE, Overview, CF Workers, Plugin metrics`.
-- The metrics sheet is 21 rows by 4 columns with one horizontal bar chart over `A1:D21`.
+- The metrics sheet is 21 rows by 5 columns with a horizontal bar chart over `A1:E21` and a pie chart over `A1:B9`.
 - Every drill-down box in `composer` and `edge` is a frame linked to the right child drawing.
 - Boxes sit on the lattice.
 - `compiled.json` matches the `.dx` sources (`DX_UPDATE_DIAGRAMS=1` regenerates it).
