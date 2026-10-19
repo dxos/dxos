@@ -558,9 +558,9 @@ const LINE_HALF_WIDTH = 2.4;
 /** The morph's ring radius, matching the ink ring's, and its height when flattened, as a share of it. */
 const MORPH_RADIUS = 1.05;
 const MORPH_FLAT = 0.04;
-/** Seconds to open into the circle and to flatten back; slower back, so a pause between words keeps it open. */
-const MORPH_IN = 0.35;
-const MORPH_OUT = 1.2;
+/** Seconds to open into the circle and to flatten back: near instant, so the ring tracks the voice. */
+const MORPH_IN = 0.04;
+const MORPH_OUT = 0.08;
 
 /**
  * The ink aesthetic as a horizontal stroke, frequency running linearly from left (low) to right (high). Where a
