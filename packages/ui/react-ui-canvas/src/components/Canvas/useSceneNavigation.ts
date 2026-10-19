@@ -35,6 +35,17 @@ import { type SceneCamera } from './useSceneCamera.ts';
 /** An empty root has nothing to frame: fitting it centres the origin at true size. */
 const EMPTY_FRAME: Bounds = { x: 0, y: 0, width: 0, height: 0 };
 
+/**
+ * What an empty scene is framed as through a portal: the viewport, centred on its origin, so drilling into a blank frame
+ * zooms until the frame fills the view rather than staying put on a zero-size box.
+ */
+const emptyBounds = (viewport: Size): Bounds => ({
+  x: -viewport.width / 2,
+  y: -viewport.height / 2,
+  width: viewport.width,
+  height: viewport.height,
+});
+
 /** The shapes of a scene, unpadded: what Fit frames, with its inset as the only margin. */
 const fitFrame = (scene: Scene): Bounds => contentBounds(scene, 0, 1) ?? EMPTY_FRAME;
 
@@ -101,6 +112,12 @@ export const useSceneNavigation = ({
   setOpening,
   isAnimating,
 }: UseSceneNavigationOptions): SceneNavigation => {
+  /** A child scene's frame inside its portal; an empty one stands in as the viewport. */
+  const childFrame = useCallback(
+    (portal: Node, child: Scene): Bounds => portalFrame(portal, contentBounds(child) ?? emptyBounds(viewport)),
+    [viewport],
+  );
+
   const nameOf = useCallback((id: SceneId) => scenes[id]?.name ?? id, [scenes]);
 
   const portalTo = useCallback(
@@ -116,9 +133,9 @@ export const useSceneNavigation = ({
   const frameOf = useCallback(
     (scenePath: SceneId[], current: Scene): Bounds => {
       const portal = portalTo(scenePath[scenePath.length - 2], current.id);
-      return portal ? portalFrame(portal, contentBounds(current)) : (contentBounds(current) ?? EMPTY_FRAME);
+      return portal ? childFrame(portal, current) : (contentBounds(current) ?? EMPTY_FRAME);
     },
-    [portalTo],
+    [portalTo, childFrame],
   );
 
   // A scene entered through a portal keeps the frame it arrived with. Deriving it from the content on
@@ -166,7 +183,7 @@ export const useSceneNavigation = ({
       select([]);
       registry.set(atoms.hover, undefined);
       registry.set(atoms.editing, undefined);
-      const childBounds = portalFrame(portal, contentBounds(child));
+      const childBounds = childFrame(portal, child);
       const swap = (next: Camera) => {
         const entered = enterPortal(next, portal, childBounds);
         registry.set(atoms.path, [...registry.get(atoms.path), child.id]);
@@ -178,7 +195,8 @@ export const useSceneNavigation = ({
         // Land the child where fitting it would, margin and all, but never past 1:1, so its text lands at
         // its natural size rather than magnified to fill the view. Expressed in the child's own space and
         // mapped back out, so the zoom ends exactly where the swap puts the camera.
-        const target = exitPortal(fitBounds(fitFrame(child), viewport, inset, NOMINAL_ZOOM), portal, childBounds);
+        const fit = contentBounds(child, 0, 1) ?? emptyBounds(viewport);
+        const target = exitPortal(fitBounds(fit, viewport, inset, NOMINAL_ZOOM), portal, childBounds);
         animateTo(target, () => swap(target), DRILL_ANIMATION_MS);
         setOpening(portal.id);
       } else {
@@ -201,6 +219,7 @@ export const useSceneNavigation = ({
       setOpening,
       select,
       pushHistory,
+      childFrame,
     ],
   );
 
@@ -223,7 +242,7 @@ export const useSceneNavigation = ({
         }
         // The level being left exits through the frame it was entered with, so the camera lands where
         // the drill-in took it from however the child was edited in between.
-        exited = exitPortal(exited, portal, level === 0 ? bounds : portalFrame(portal, contentBounds(child)));
+        exited = exitPortal(exited, portal, level === 0 ? bounds : childFrame(portal, child));
         next = next.slice(0, -1);
       }
       registry.set(atoms.path, next);
@@ -248,6 +267,7 @@ export const useSceneNavigation = ({
       pushHistory,
       frameOf,
       bounds,
+      childFrame,
     ],
   );
 
