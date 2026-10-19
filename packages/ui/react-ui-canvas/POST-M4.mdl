@@ -51,7 +51,7 @@ test PM4-1: A create covers the same screen area at any zoom
   covers: [F-3.7]
   status: automated
   given:
-    - the `SceneView` Default story (an empty canvas), at 1400x900
+    - the `Canvas` Default story (an empty canvas), at 1400x900
   steps:
     - name: Create at the fitted zoom
       do: Open the toolbar's create menu and pick the first type. Note the node's width in screen px.
@@ -76,7 +76,7 @@ test PM4-2: A drawn box is what the pointer swept, and an empty gesture creates 
   covers: [F-3.6]
   status: automated
   given:
-    - the `SceneView` Default story
+    - the `Canvas` Default story
   steps:
     - name: Draw a wide box
       do: Press R, drag a box about 240x160 on empty canvas.
@@ -100,7 +100,7 @@ test PM4-3: Snapping lands on the lines that are drawn
   covers: [F-2.1, F-2.2, F-2.6]
   status: partially-automated
   given:
-    - the `SceneView` Default story with a node on it
+    - the `Canvas` Default story with a node on it
   steps:
     - name: Zoom out hard, then nudge
       do: Press the toolbar's zoom-out six times, then drag the node a few pixels.
@@ -127,7 +127,7 @@ test PM4-4: The zoom readout is against the level's own 1:1
   covers: [F-1.4]
   status: manual
   given:
-    - the `SceneView` Nested story
+    - the `Canvas` Nested story
   steps:
     - name: Note the zoom, then drill in
       do: Read the toolbar's percentage, double-click a portal, and read it again.
@@ -146,7 +146,7 @@ test PM4-5: Links join shapes, not just ports
   covers: [F-8.1, F-8.2, F-8.3]
   status: partially-automated
   given:
-    - the `SceneView` Freehand story
+    - the `Canvas` Freehand story
   steps:
     - name: Ports appear on hover only
       do: Press L, then move the pointer across the canvas.
@@ -171,7 +171,7 @@ test PM4-6: A smart link is routed, not drawn
   covers: [F-8.4]
   status: partially-automated
   given:
-    - the `SceneView` Freehand story
+    - the `Canvas` Freehand story
   steps:
     - name: Draw one
       do: Press O, drag from one node's body to another's.
@@ -193,7 +193,7 @@ test PM4-7: Text reads at the level it was drawn in
   covers: [F-3.10]
   status: manual
   given:
-    - the `SceneView` Default story
+    - the `Canvas` Default story
   steps:
     - name: Create and read
       do: Create a node from the toolbar at any zoom and type a label into it.

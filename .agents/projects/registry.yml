@@ -66,6 +66,16 @@ projects:
     design: .agents/projects/composer-e2e/DESIGN.md
     prs: [13247]
     resume: 'PR #13247 GREEN and mergeable (2026-09-20, head 51b95495): package extraction, 28 live tests bound two-sided to mdl QA flows (+QA-5..QA-9), BEST-PRACTICES.md, ci.e2e-test published from main/composer shard, PostHog dashboard 963444. Four CI-fix commits followed the first — vitest project, two orphaned deps, and (three rounds) knip: this package has NO production code, so its deps belong in devDependencies, which is what react-ui-table/mosaic/lit-grid/testbench-app all do. table:QA-1 and inbox:QA-1 lost their automated claims (whole-suite skips). NEXT: awaiting review; then the TASKS.md follow-ups.'
+  - name: canvas-views
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-18
+    summary: 'Reconcile the canvas containers: scenes and frames become Views (the root included), groups become (anonymous) Objects, layers become Tags with drawing order taken from the tree; a Views panel shows the full hierarchy and an Objects panel the library, replacing AboutInspector.'
+    tasks: packages/ui/react-ui-canvas/docs/TASKS.md
+    design: packages/ui/react-ui-canvas/docs/VIEWS.md
+    prs: [14030]
+    resume: 'Designed (VIEWS.md, ontology §2, decisions §4). NEXT: phase 1, the View rename across react-ui-canvas and plugin-canvas.'
   - name: plugin-canvas
     status: active
     user: burdon

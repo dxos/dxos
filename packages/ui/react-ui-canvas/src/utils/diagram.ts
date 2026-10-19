@@ -9,8 +9,7 @@
 
 import { type Scene as Diagram } from '@dxos/diagram';
 
-import { type NodeRegistry } from '../model/registry.ts';
-import { type ElementId, type Link, type Point, type Scene, isEllipseNode } from '../model/types.ts';
+import { type ElementId, type Link, type NodeRegistry, type Point, type Scene, isEllipseNode } from '../model/index.ts';
 import { nodeTitle } from './parts.ts';
 import { curvePoint, linkGeometry, smartPoints } from './route.ts';
 import { nodeBounds } from './shapes.ts';

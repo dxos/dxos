@@ -11,8 +11,8 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { type Projection } from '../model/projection.ts';
-import { type SceneMap, type SceneStore } from '../model/store.ts';
+import { type Projection } from '../engine/index.ts';
+import { type SceneMap, type SceneStore } from '../model/index.ts';
 
 /** Entries older than this are dropped rather than growing without bound. */
 export const UNDO_LIMIT = 100;

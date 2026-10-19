@@ -141,7 +141,11 @@ export const styleFields = {
   tone: Schema.optional(NodeTone),
   /** How opaque the whole node draws, 0 to 1; unset is 1. */
   opacity: Schema.optional(
-    Schema.Number.annotate({ title: 'Opacity', [StepAnnotationId]: 0.1, [AnimatableAnnotationId]: 'number' }),
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
+      title: 'Opacity',
+      [StepAnnotationId]: 0.1,
+      [AnimatableAnnotationId]: 'number',
+    }),
   ),
   lineStyle: lineStyleFields.lineStyle,
   rounded: Schema.optional(Schema.Boolean),

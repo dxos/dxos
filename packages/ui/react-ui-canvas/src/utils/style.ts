@@ -9,26 +9,24 @@
 
 import {
   DEFAULT_LOOK,
-  type LookTone,
-  type NodeSurface,
-  type SceneLook,
-  type StyleVariant,
-  styleVariant,
-} from '../model/style-set.ts';
-import {
   type HorizontalAlign,
   type Link,
+  type LookTone,
   type Node,
   type NodeStyle,
+  type NodeSurface,
   type NodeTone,
+  type SceneLook,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
+  type StyleVariant,
   type VerticalAlign,
   isEllipseNode,
   isFrameNode,
   showsContents,
-} from '../model/types.ts';
+  styleVariant,
+} from '../model/index.ts';
 import { DEFAULT_TEXT, FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };

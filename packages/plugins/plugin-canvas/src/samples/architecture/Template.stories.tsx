@@ -109,6 +109,12 @@ const documentArgs: Pick<Story, 'decorators' | 'argTypes'> = {
 export const Default: Story = {
   ...documentArgs,
   args: { document: 'Composer' },
+};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
+  ...documentArgs,
+  args: { document: 'Composer' },
   // The editor draws headings as lines rather than heading elements, so the document is recognised by its text.
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 })).toBeVisible();

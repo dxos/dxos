@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../model/projection.ts';
-import { MAJOR_GRID, type Node, type Scene } from '../model/types.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { MAJOR_GRID, type Node, type Scene } from '../model/index.ts';
 import { layoutScene } from './layout.ts';
 
 const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 64 }): Node => ({
