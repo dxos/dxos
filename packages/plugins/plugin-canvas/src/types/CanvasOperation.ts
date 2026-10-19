@@ -150,3 +150,29 @@ export const SetTimelineKey = Operation.make({
   }),
   services: [Database.Service],
 });
+
+export const ImportTldraw = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.importTldraw'),
+    name: 'Import tldraw drawing',
+    description:
+      'Creates a canvas drawing in the same space from a tldraw drawing: shapes become nodes, arrows links (bound ends attach to their nodes), frames View nodes over Views of their own, groups anonymous Objects. The tldraw drawing is left as it is.',
+    icon: 'ph--graph--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'A tldraw drawing.' }),
+    name: Schema.optional(Schema.String.annotate({ description: "The new drawing's name; the source's by default." })),
+  }),
+  output: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing),
+    nodes: Schema.Number,
+    links: Schema.Number,
+    skipped: Schema.Record(Schema.String, Schema.Number).annotate({
+      description: 'Shapes left out, by tldraw shape type (`page` for shapes on any page after the first).',
+    }),
+    approximated: Schema.Record(Schema.String, Schema.Number).annotate({
+      description: 'Shapes carried over with a loss, by reason (`rotation`, `group`, `geo:<kind>`).',
+    }),
+  }),
+  services: [Database.Service],
+});

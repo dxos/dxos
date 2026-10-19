@@ -21,3 +21,6 @@ export const loadScene = Effect.fn(function* (ref: Ref.Ref<Drawing.Drawing>, sce
 
 /** The drawing has no scene or node of the id an operation named. */
 export class CanvasElementNotFoundError extends Data.TaggedError('CanvasElementNotFoundError')<{ message: string }> {}
+
+/** The drawing an operation was given is not of the dialect it reads. */
+export class DrawingDialectError extends Data.TaggedError('DrawingDialectError')<{ message: string }> {}

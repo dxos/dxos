@@ -9454,6 +9454,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/plugin-tldraw':
+        specifier: workspace:*
+        version: link:../plugin-tldraw
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10877,6 +10880,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-geo':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-geo
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -24616,12 +24622,21 @@ importers:
 
   packages/ui/react-ui-plot:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui-geo':
+        specifier: workspace:*
+        version: link:../react-ui-geo
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
+      '@types/geojson':
+        specifier: 'catalog:'
+        version: 7946.0.14
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -24631,6 +24646,9 @@ importers:
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      topojson-client:
+        specifier: 'catalog:'
+        version: 3.1.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -24650,6 +24668,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/topojson-client':
+        specifier: 'catalog:'
+        version: 3.1.4
       react:
         specifier: ~19.2.7
         version: 19.2.7
