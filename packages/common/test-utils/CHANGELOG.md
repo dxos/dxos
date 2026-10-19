@@ -1,5 +1,12 @@
 # @dxos/test-utils
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/node-std@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

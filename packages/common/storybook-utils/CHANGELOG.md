@@ -1,5 +1,14 @@
 # @dxos/storybook-utils
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

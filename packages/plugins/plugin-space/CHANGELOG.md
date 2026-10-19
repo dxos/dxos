@@ -1,5 +1,65 @@
 # @dxos/plugin-space
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/migrations@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-settings@0.16.0
+  - @dxos/plugin-status-bar@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/shell@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-dashboard@0.16.0
+  - @dxos/react-ui-dnd@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-masonry@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-mosaic@0.16.0
+  - @dxos/react-ui-pickers@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/react-ui-table@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/halo@0.16.0
+  - @dxos/halo-react@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/display-name@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/progress@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

@@ -1,5 +1,35 @@
 # @dxos/plugin-thread
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-calls@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-thread@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/halo@0.16.0
+  - @dxos/halo-react@0.16.0
+  - @dxos/display-name@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes
