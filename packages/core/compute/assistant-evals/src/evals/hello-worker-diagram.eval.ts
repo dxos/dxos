@@ -11,7 +11,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { Diagnostics, SVG_SCHEMA } from '@dxos/diagram';
-import { DXN, Database, Ref } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 import * as WorkerSpace from '@dxos/plugin-debug/WorkerSpace';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
