@@ -574,113 +574,120 @@ const DefaultStory = ({
   const camera = frame?.camera;
 
   return (
-    // The light ground is a mid neutral rather than the near-white group surface, so the gutters read as lines between tiles.
-    <div
-      ref={ref}
-      className={`relative dx-fill overflow-hidden ${(border && BORDER_GROUND[border]) ?? 'bg-neutral-250 dark:bg-group-surface'}`}
-    >
-      {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
-      {frame?.decor?.map(({ bounds: scene, className, icon, radius }, index) => {
-        const bounds = screenBounds(frame.camera, scene);
-        const style = {
-          left: bounds.x,
-          top: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-          borderRadius: (radius ?? 0) * frame.camera.zoom,
-        };
-        return icon ? (
-          <Icon.Icon key={index} icon={icon} classNames={`absolute ${className}`} style={style} />
-        ) : (
-          <div key={index} className={`absolute ${className}`} style={style} />
-        );
-      })}
-      {frame &&
-        cells.map((cell, index) => {
-          const scene = frame.place?.(cell) ?? cell.bounds;
-          const region = frame.clip?.(cell);
-          const area = region && screenBounds(frame.camera, region);
-          const box = screenBounds(frame.camera, scene);
-          // A cell clipped to its region is placed inside the region's box, so it slides out of view at its edge.
-          const bounds = area ? { ...box, x: box.x - area.x, y: box.y - area.y } : box;
-          const tile = (
-            <Tile
-              key={cell.id}
-              clip={cell.clip}
-              label={cell.label}
-              index={index}
-              bounds={bounds}
-              border={border}
-              meta={frame.meta?.(cell)}
-              strength={borderFade ? Math.min(1, Math.max(0, 1.5 * (1 - bounds.width / viewport.width))) : 1}
-              playing={!stepped && autoplay}
-              onLoad={(video) => {
-                if (video) {
-                  videos.current.set(cell.id, video);
-                }
-                if (cell.id === `${tour[0][0]},${tour[0][1]}`) {
-                  setReady(true);
-                }
-              }}
-            />
-          );
-          return area ? (
-            <div
-              key={cell.id}
-              className='absolute overflow-hidden'
-              style={{ left: area.x, top: area.y, width: area.width, height: area.height }}
-            >
-              {tile}
-            </div>
+    // The stage keeps the video's 16:9 frame, letterboxed in any pane, so the preview frames what the render will.
+    <div className='grid dx-fill place-items-center overflow-hidden bg-black' style={{ containerType: 'size' }}>
+      {/* The light ground is a mid neutral rather than the near-white group surface, so the gutters read as lines between tiles. */}
+      <div
+        ref={ref}
+        className={`relative overflow-hidden ${(border && BORDER_GROUND[border]) ?? 'bg-neutral-250 dark:bg-group-surface'}`}
+        style={{
+          width: `min(100cqw, 100cqh * ${TILE.width / TILE.height})`,
+          aspectRatio: `${TILE.width} / ${TILE.height}`,
+        }}
+      >
+        {/* Placed in screen space rather than under one scaled container: Chrome stops painting videos in a layer scaled far down. */}
+        {frame?.decor?.map(({ bounds: scene, className, icon, radius }, index) => {
+          const bounds = screenBounds(frame.camera, scene);
+          const style = {
+            left: bounds.x,
+            top: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            borderRadius: (radius ?? 0) * frame.camera.zoom,
+          };
+          return icon ? (
+            <Icon.Icon key={index} icon={icon} classNames={`absolute ${className}`} style={style} />
           ) : (
-            tile
+            <div key={index} className={`absolute ${className}`} style={style} />
           );
         })}
-      <div className={controls ? 'absolute bottom-4 left-1/2 -translate-x-1/2 w-fit' : 'hidden'}>
-        <Toolbar.Root
-          size='sm'
-          classNames='gap-1 px-2 py-1 rounded-md bg-modal-surface border border-separator shadow-md'
-          data-testid='grid-toolbar'
-        >
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--arrow-counter-clockwise--regular'
-            label='Replay'
-            onClick={() => {
-              seekTo(0);
-              setRun((run) => run + 1);
-            }}
-          />
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--caret-left--regular'
-            label='Previous close-up'
-            disabled={backward === undefined || step !== undefined}
-            onClick={() => setStep(backward)}
-          />
-          <Input.Switch
-            label='Autoplay'
-            checked={autoplay}
-            onCheckedChange={({ checked }) => {
-              setOffset(elapsed);
-              setAutoplay(checked);
-            }}
-          />
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--caret-right--regular'
-            label='Next close-up'
-            disabled={forward === undefined || step !== undefined}
-            onClick={() => setStep(forward)}
-          />
-          <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
-            {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
-            {camera ? `${camera.zoom.toFixed(2)}×` : '—'}
-          </Toolbar.Text>
-        </Toolbar.Root>
+        {frame &&
+          cells.map((cell, index) => {
+            const scene = frame.place?.(cell) ?? cell.bounds;
+            const region = frame.clip?.(cell);
+            const area = region && screenBounds(frame.camera, region);
+            const box = screenBounds(frame.camera, scene);
+            // A cell clipped to its region is placed inside the region's box, so it slides out of view at its edge.
+            const bounds = area ? { ...box, x: box.x - area.x, y: box.y - area.y } : box;
+            const tile = (
+              <Tile
+                key={cell.id}
+                clip={cell.clip}
+                label={cell.label}
+                index={index}
+                bounds={bounds}
+                border={border}
+                meta={frame.meta?.(cell)}
+                strength={borderFade ? Math.min(1, Math.max(0, 1.5 * (1 - bounds.width / viewport.width))) : 1}
+                playing={!stepped && autoplay}
+                onLoad={(video) => {
+                  if (video) {
+                    videos.current.set(cell.id, video);
+                  }
+                  if (cell.id === `${tour[0][0]},${tour[0][1]}`) {
+                    setReady(true);
+                  }
+                }}
+              />
+            );
+            return area ? (
+              <div
+                key={cell.id}
+                className='absolute overflow-hidden'
+                style={{ left: area.x, top: area.y, width: area.width, height: area.height }}
+              >
+                {tile}
+              </div>
+            ) : (
+              tile
+            );
+          })}
+        <div className={controls ? 'absolute bottom-4 left-1/2 -translate-x-1/2 w-fit' : 'hidden'}>
+          <Toolbar.Root
+            size='sm'
+            classNames='gap-1 px-2 py-1 rounded-md bg-modal-surface border border-separator shadow-md'
+            data-testid='grid-toolbar'
+          >
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--arrow-counter-clockwise--regular'
+              label='Replay'
+              onClick={() => {
+                seekTo(0);
+                setRun((run) => run + 1);
+              }}
+            />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--caret-left--regular'
+              label='Previous close-up'
+              disabled={backward === undefined || step !== undefined}
+              onClick={() => setStep(backward)}
+            />
+            <Input.Switch
+              label='Autoplay'
+              checked={autoplay}
+              onCheckedChange={({ checked }) => {
+                setOffset(elapsed);
+                setAutoplay(checked);
+              }}
+            />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--caret-right--regular'
+              label='Next close-up'
+              disabled={forward === undefined || step !== undefined}
+              onClick={() => setStep(forward)}
+            />
+            <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
+              {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
+              {camera ? `${camera.zoom.toFixed(2)}×` : '—'}
+            </Toolbar.Text>
+          </Toolbar.Root>
+        </div>
       </div>
     </div>
   );
