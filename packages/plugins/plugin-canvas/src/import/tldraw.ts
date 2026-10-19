@@ -176,12 +176,24 @@ export const tldrawToViews = (
 ): TldrawImport => {
   const records = Object.values(content);
   const shapes = records.filter(isShapeRecord);
-  const bindings = records.filter(isArrowBinding);
+  /** `<arrow id> <terminal>` → the shape that end is bound to; the first binding wins, as a lookup per end. */
+  const boundTo = new Map<string, string>();
+  for (const binding of records.filter(isArrowBinding)) {
+    const key = `${binding.fromId} ${binding.props.terminal}`;
+    if (!boundTo.has(key)) {
+      boundTo.set(key, binding.toId);
+    }
+  }
   const pages = records.filter(isPageRecord).sort(byIndex);
 
   const children = new Map<string, ShapeRecord[]>();
   for (const shape of shapes) {
-    children.set(shape.parentId, [...(children.get(shape.parentId) ?? []), shape]);
+    const siblings = children.get(shape.parentId);
+    if (siblings) {
+      siblings.push(shape);
+    } else {
+      children.set(shape.parentId, [shape]);
+    }
   }
   for (const list of children.values()) {
     list.sort(byIndex);
@@ -324,9 +336,7 @@ export const tldrawToViews = (
         const terminal =
           (name: 'start' | 'end') =>
           (resolve: Resolver): Endpoint => {
-            const bound =
-              bindings.find((binding) => binding.fromId === shape.id && binding.props.terminal === name)?.toId ??
-              legacyBound(shape.props[name]);
+            const bound = boundTo.get(`${shape.id} ${name}`) ?? legacyBound(shape.props[name]);
             const node = bound ? resolve(bound, view) : undefined;
             return node ? { node } : { point: apply(local, vec(shape.props[name])) };
           };
