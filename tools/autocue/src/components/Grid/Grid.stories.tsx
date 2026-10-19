@@ -413,25 +413,61 @@ const DefaultStory = ({
     shiftDistance,
   ]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
-  /** When each close-up lands: the steps the toolbar moves between. */
-  const landings = useMemo(
+  /** Each close-up's hold: the toolbar steps between them by playing the transition that joins them. */
+  const closeUps = useMemo(
     () =>
-      shots.reduce<{ start: number; times: number[] }>(
-        ({ start, times }, shot) => ({ start: start + shot.ms, times: shot.focus ? [...times, start] : times }),
-        { start: 0, times: [] },
-      ).times,
+      shots.reduce<{ start: number; spans: { start: number; end: number }[] }>(
+        ({ start, spans }, shot) => ({
+          start: start + shot.ms,
+          spans: shot.focus ? [...spans, { start, end: start + shot.ms }] : spans,
+        }),
+        { start: 0, spans: [] },
+      ).spans,
     [shots],
   );
-  // Back within the first half second of a close-up goes to the one before, as a media player's previous does.
-  const previous = landings.findLast((time) => time < elapsed - 500);
-  const next = landings.find((time) => time > elapsed + 1);
+  const landings = useMemo(() => closeUps.map((hold) => hold.start), [closeUps]);
+  // A step plays the timeline from `from` to `to` at real speed (backwards when `to` is earlier), then rests on `land`.
+  const [step, setStep] = useState<{ from: number; to: number; land: number }>();
+  const current = closeUps.findLastIndex((hold) => hold.start <= elapsed);
+  const following = closeUps[current + 1];
+  const forward = following
+    ? { from: Math.max(elapsed, closeUps[current]?.end ?? 0), to: following.start, land: following.start }
+    : undefined;
+  // Back from inside a transition reverses it into the close-up it left; from a hold, into the close-up before.
+  const backward =
+    current >= 0 && elapsed >= closeUps[current].end
+      ? { from: elapsed, to: closeUps[current].end, land: closeUps[current].start }
+      : current > 0
+        ? { from: closeUps[current].start, to: closeUps[current - 1].end, land: closeUps[current - 1].start }
+        : undefined;
   const seekTo = (time: number) => {
     setOffset(time);
     setElapsed(time);
   };
 
   useEffect(() => {
-    if (!ready || shots.length === 0 || stepped || !autoplay) {
+    if (!step) {
+      return;
+    }
+    let frame = 0;
+    const begin = performance.now();
+    const span = Math.abs(step.to - step.from);
+    const tick = (now: number) => {
+      const t = span === 0 ? 1 : Math.min(1, (now - begin) / span);
+      setElapsed(step.from + (step.to - step.from) * t);
+      if (t < 1) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        seekTo(step.land);
+        setStep(undefined);
+      }
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [step]);
+
+  useEffect(() => {
+    if (!ready || shots.length === 0 || stepped || !autoplay || step) {
       return;
     }
     let frame = 0;
@@ -457,7 +493,7 @@ const DefaultStory = ({
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, ready, shots, total, stepped, autoplay, offset, landings]);
+  }, [run, ready, shots, total, stepped, autoplay, offset, landings, step]);
 
   // A paused step lands its close-up's clip at its opening frame, as playing into it would.
   useEffect(() => {
@@ -621,8 +657,8 @@ const DefaultStory = ({
             iconOnly
             icon='ph--caret-left--regular'
             label='Previous close-up'
-            disabled={previous === undefined}
-            onClick={() => previous !== undefined && seekTo(previous)}
+            disabled={backward === undefined || step !== undefined}
+            onClick={() => setStep(backward)}
           />
           <Input.Switch
             label='Autoplay'
@@ -637,8 +673,8 @@ const DefaultStory = ({
             iconOnly
             icon='ph--caret-right--regular'
             label='Next close-up'
-            disabled={next === undefined}
-            onClick={() => next !== undefined && seekTo(next)}
+            disabled={forward === undefined || step !== undefined}
+            onClick={() => setStep(forward)}
           />
           <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
             {(elapsed / 1_000).toFixed(1)}s / {(total / 1_000).toFixed(0)}s ·{' '}
