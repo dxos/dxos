@@ -69,7 +69,8 @@
     [data-scope='splitter'],
     [data-scope='slider'],
     [data-scope='angle-slider'],
-    [data-scope='floating-panel']
+    [data-scope='floating-panel'],
+    [data-floating-panel-trigger]
   ) {
     opacity: 0.5;
   }
