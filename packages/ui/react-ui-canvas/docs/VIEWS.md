@@ -1,6 +1,6 @@
 # Views, objects and tags — Design
 
-Status: designed 2026-10-18; Phase 1 (the View rename) built 2026-10-19, the rest not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
+Status: designed 2026-10-18; Phase 1 (the View rename), Phase 2 (groups are Objects) and the orphans rule (§7.4) built 2026-10-19, the rest not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
 layer terms of [DESIGN.md](./DESIGN.md) §4 and [ANIMATION.md](./ANIMATION.md) §4.1 where they conflict.
 
 ## 1. Goal

@@ -14,8 +14,8 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 1. Finish Phase 0: Navigation and Look in the controller; aspect hooks and the Time/Gesture/Editing providers; Viewport split (Background, Scene, Overlay); Canvas hooks to `hooks/canvas/`; `CanvasRoot.tsx` under ~600 lines; re-render test extended to selection.
 2. ~~`Canvas.Views`~~ Done 2026-10-19: the Views inspector in the canvas — rows select, Open drills in, drag restacks through the projection, the canvas selection reveals its row.
 3. ~~Phase 1 (View rename) across react-ui-canvas and plugin-canvas.~~ Done 2026-10-19.
-4. Phase 2 (groups are Objects).
-5. Phase 3b (orphans).
+4. ~~Phase 2 (groups are Objects).~~ Done 2026-10-19.
+5. ~~Phase 3b (orphans).~~ Done 2026-10-19.
    In parallel, as chips: react-ui-list Tree filter/reveal/range selection; tldraw import (plugin-canvas backlog).
    Not attempted: Phases 3 and 4 (saved-data changes), Phase 6 (needs #14047 reviewed).
 
@@ -57,10 +57,15 @@ Design: DESIGN.md §13.
 
 ## Phase 2 — Groups are objects
 
-- [ ] Group writes an anonymous Object definition and one Instance in place of the selection (from `composeSelection`).
-- [ ] Naming an anonymous Object, or placing it a second time, adds it to the library.
-- [ ] Ungroup replaces an Instance of an anonymous Object with its contents and deletes the definition.
-- [ ] Remove `groupIntoScene` and the Compose command.
+- [x] Group writes an anonymous Object definition and one Instance in place of the selection (from `composeSelection`).
+  - `controller.selection.group` (⌘G, the inspector's Group button, the element menu's Group): `View.anonymous` (and `SceneRecord.anonymous` in plugin-canvas) marks the definition, named `Group N`; one undo step via `recordViews`.
+- [x] Naming an anonymous Object, or placing it a second time, adds it to the library.
+  - `promoted` clears the mark on rename (`objectActions.rename`), on place from the library, on paste of a copied Instance while its Object exists, and on ⌘-drag duplicate (`controller.document.duplicate`). `libraryViews` leaves anonymous Objects out.
+  - Decisions: the Objects panel lists the library plus the selected (or isolated) anonymous Object, in italics, so it can be named there; there is no Properties field for an Object's name, so naming happens in the Objects panel only. A copy (Duplicate object) is named. Make unique is disabled for an anonymous Object, which has one Instance already.
+- [x] Ungroup replaces an Instance of an anonymous Object with its contents and deletes the definition.
+  - `controller.selection.ungroup` (⇧⌘G, the inspector's Ungroup button, the element menu) explodes every selected Instance where it drew its contents, under fresh ids; a named Object's definition stays. The anonymous definition goes through the orphan rule below, in the same undo step. Keyed tracks moved into the Object by Group do not come back out (as before).
+- [x] Remove `groupIntoScene` and the Compose command.
+  - `groupIntoView` (`utils/group.ts`), `objectActions.compose`/`ungroup`, the Objects panel's `objects-compose` button and `onCompose`, and the element menu's "Group as object" are gone; "New view from selection" is now Group. `Animation` › Test groups with ⌘G; `Canvas` › Group is the Group/Ungroup play test.
 
 ## Phase 3 — Tags
 
@@ -71,8 +76,11 @@ Design: DESIGN.md §13.
 
 ## Phase 3b — Orphans
 
-- [ ] Deleting the last node that points at a View or anonymous Object record deletes the record in the same intent; undo restores both.
-- [ ] Clean up records already orphaned on load (fixtures and saved documents).
+- [x] Deleting the last node that points at a View or anonymous Object record deletes the record in the same intent; undo restores both.
+  - `model/orphans.ts`: a record is kept when reachable from the root, a store-declared root (`ViewStore.isRoot`, plugin-canvas's linked drawings' roots) or a named Object; `pruneOrphaned` deletes only what an edit orphaned. The controller's delete, cut, paste, group, ungroup and duplicate apply through one helper that prunes and records the store change with the intent.
+  - Decisions: a cut deletes the records with the nodes, and the clipboard keeps a copy of the records its nodes open (`Clipboard.views`), so the paste after a cut restores them (an anonymous Object stays anonymous: it is a move); a second paste is a second placement. Deletes outside the controller (Objects panel "Delete object and its instances", host operations) are not pruned at once; the load clean-up catches them.
+- [x] Clean up records already orphaned on load (fixtures and saved documents).
+  - `createMemoryStore(views, styles, { root })` drops them when given the root (the Canvas and Animation stories pass it); plugin-canvas's `bindCanvasStore` prunes the drawing's content on bind (`orphanedViews`/`pruneOrphanedViews`). Tests: `model/store.test.ts`, plugin-canvas `content.test.ts` and `store.test.ts`.
 
 ## Phase 4 — Order
 
@@ -95,7 +103,7 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [x] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag. Rows select through `navigation.openView(path, { select })` (meta toggles, shift takes the range in the row's View); the canvas selection marks its rows and reveals the first without taking focus; Open, Enter or a double-click opens a View row; the filter matches label or type (tags wait for Phase 3).
 - [x] Views panel: drag rows to restack within a container. `controller.document.restack` → one `reorder` intent through the open View's projection; `canRestack`/`viewReorder` unit-tested.
   - Decisions (2026-10-19): the restack is the existing `reorder` intent rather than `update` with a `z`, as `reorder` is exactly that edit; a drop is accepted only among siblings in the open View, since the projection is the open View's (restacking another View would need its own projection or navigating there mid-drag); a View row's click selects its frame in the parent View, and only Open/Enter/double-click drill in; row selection navigates without animation so the selection lands in the View it names; `restackZ` now reports a move that changes nothing as undefined.
-- [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden.
+- [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden. (Hidden since Phase 2, but for the selected one.)
 - [ ] Delete AboutInspector, its story and its Canvas part.
 
 ## Phase 6 — Undo (VIEWS.md §8)
