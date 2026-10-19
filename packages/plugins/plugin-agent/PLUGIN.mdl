@@ -167,8 +167,10 @@ op ensureIdentity
     `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
     default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
     caller to that space as ADMIN. The members who may write to the default space are the agent's admins (a reader
-    is not one); the caller, its creator, is an ADMIN, while the agent's identity owns the space. Admins come and go
-    through the space's Members panel like any space's members. The caller must be able to write to `homeSpaceId`.
+    is not one); the caller, its creator, is an ADMIN, while the agent's identity owns the space, and EDGE lists the
+    creator as the agent's first admin (`AgentAdmins`). Admins come and go through the space's Members panel like any
+    space's members, and their clients keep EDGE's list in step (F-7.9). The caller must be able to write to
+    `homeSpaceId`.
     The agent takes the DID as soon as EDGE answers, since the DID names its brain and must exist before its first
     turn, and records its creator's DID and its own space (`Obj.Meta` keys `org.dxos.agent/creator` and
     `org.dxos.agent/space`). Then, in the background and retried for about two minutes, the caller's `SpaceMember`
@@ -665,7 +667,7 @@ feat F-6: One brain per agent
 ```mdl
 feat F-7: An agent's own space
 
-  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins, as EDGE decides it.
+  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins. EDGE checks the admin role against the list the agent's identity signs (`AgentAdmins`), not against the space, and the admins' clients keep that list in step with the space (F-7.9).
   req F-7.2: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, as an editor named after the agent, and the members panel admits it to the spaces it is added to, as any contact (F-8.1). Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and no one can add one to such a space.
   req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
@@ -673,6 +675,7 @@ feat F-7: An agent's own space
   req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as its DID on a presence, takes it from EDGE instead (op:inviteAgent).
   req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and a chip per space it is a member of that the viewer is too, its own space first, each switching to that space. It stays current as spaces and their members change.
   req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-8.1).
+  req F-7.9: An admin's client keeps EDGE's list of each agent's admins in step with the agent's space (`AgentAdminSync`): it lists the space's admins and editors (`POST /compute/brain/:did/admins`) and delists the members the space records as readers or removed (`DELETE /compute/brain/:did/admins/:identityKey`). A member the space does not show stays listed, since a view that has not caught up is no evidence of a removal. It acts only on a space EDGE names as the agent's own and only while EDGE counts the identity as the agent's admin, so a space that merely claims to be an agent's lists no one. Each change is sent once a session, and again after a failure; EDGE's 404 (an EDGE without the list, or a caller who is not an admin there) and its 409 (the last admin) settle it.
 ```
 
 ```mdl
@@ -803,10 +806,11 @@ scenario T-11: Agent identities follow the setting   # create-agent.test.ts
 
 ```mdl
 scenario T-12: Agent spaces list their admins   # AgentSpace.test.ts
-  # covers [F-7.5, F-7.6, F-7.8]
-  given: an agent space owned by the agent, with an admin, an editor and a reader; an agent space the identity was removed from; an untagged space
+  # covers [F-7.5, F-7.6, F-7.8, F-7.9]
+  given: an agent space owned by the agent, with an admin, an editor and a reader; one with a member removed; an agent space the identity was removed from; an untagged space
   then:
     - agentOf is the owner, and the admins are the admin and the editor, not the reader
+    - the former admins are the members removed from it and its readers
     - the identity administers only the first space, and a reader of it none
     - administeredAgents reads the name, DID, identity key and home URI an open agent space records, and only the DID and identity key of one still opening
 ```
@@ -823,6 +827,19 @@ scenario T-13: An invited agent keeps one brain   # invite-agent.test.ts
     - a fact the presence reads lands in the home brain, and the Brain companion lists both
     - only an admitted agent the member administers is put to work, by the home its own space records, and never in that space
     - an admin who cannot reach Kai's home invites it from what Kai's space records: a presence keyed to Kai's URI with its name, its DID and the base instructions; inviting again returns it
+```
+
+```mdl
+scenario T-14: An admin's client keeps EDGE's list of the agent's admins   # agent-admin-sync.test.ts
+  # covers [F-7.9]
+  given: Kai's space with Kai as its owner, the identity as an admin, an editor and a reader; an EDGE that minted Kai
+  when: the sync runs, again unchanged, then after the editor is removed and another member joins as an editor
+  then:
+    - the first run lists the admin and the editor and delists the reader, after EDGE names the space as Kai's
+    - an unchanged space sends nothing; the second change lists the newcomer and delists the removed editor
+    - a member the space does not show is never delisted
+    - a space EDGE names as another, or where EDGE counts the identity a contact, sends nothing but the check
+    - a change EDGE answered with 409 is not sent again; one that failed with 503 is
 ```
 
 ## Not built

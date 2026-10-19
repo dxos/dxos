@@ -42,6 +42,17 @@ export const AgentAdmission = Capability.lazyModule(
   },
   () => import('./agent-admission.ts'),
 );
+// Keeps EDGE's lists of the admins of the agents this identity administers in step with their spaces, which only the
+// app shows; a headless host administers no agent.
+export const AgentAdminSync = Capability.lazyModule(
+  'AgentAdminSync',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./agent-admin-sync.ts'),
+);
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

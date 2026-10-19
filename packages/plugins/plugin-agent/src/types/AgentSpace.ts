@@ -15,7 +15,8 @@ import * as AgentPresence from './AgentPresence.ts';
 
 /**
  * An agent's default space: the space its own identity owns, minted with that identity on EDGE and tagged
- * `AppSpace.AGENT_SPACE_TAG`. Its members who may write to it are the agent's admins, as EDGE decides it. Every
+ * `AppSpace.AGENT_SPACE_TAG`. Its members who may write to it are the agent's admins: EDGE checks them against the list
+ * the agent signs (`AgentAdmins`), which its admins' clients keep in step with the space (`AgentAdminSync`). Every
  * membership carries the tag, and a client opens every space its HALO holds a membership of, so the agents an
  * identity administers are among its own spaces and finding them needs nothing from EDGE.
  */
@@ -44,6 +45,15 @@ export const admins = (space: Space): SpaceMember[] =>
   space.members
     .get()
     .filter((member) => member.role === SpaceMember_Role.ADMIN || member.role === SpaceMember_Role.EDITOR);
+
+/**
+ * The members the agent's space records as no longer admins: made readers, or removed. A member the space does not show
+ * is not among them, since a view that has not caught up is no evidence of a removal.
+ */
+export const formerAdmins = (space: Space): SpaceMember[] =>
+  space.members
+    .get()
+    .filter((member) => member.role === SpaceMember_Role.READER || member.role === SpaceMember_Role.REMOVED);
 
 /** The agent spaces among `spaces` that `identityKey` is an admin of: the agents it administers. */
 export const administeredBy = <S extends Space>(spaces: readonly S[], identityKey: PublicKey): S[] =>
