@@ -11,5 +11,6 @@ export * from './model/store.ts';
 export * from './model/style-set.ts';
 export * from './model/timeline.ts';
 export * from './model/types.ts';
+export * from './utils/compose.ts';
 export * from './utils/layers.ts';
 export * from './utils/order.ts';
