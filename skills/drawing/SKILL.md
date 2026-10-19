@@ -10,13 +10,9 @@ and never use Mermaid for a diagram this skill can draw.
 
 ## Install
 
-```bash
-npm i -g @dxos/drawing@next        # puts `drawing` on PATH
-```
-
-Without a global install, `npx -y @dxos/drawing@next render diagram.dx` runs the same command. Use the
-`@next` tag for now; once a stable release is on `@latest`, `npm i -g @dxos/drawing` and
-`npx -y @dxos/drawing` work without it.
+Nothing needs installing: when `drawing` is not on PATH, `npx -y @dxos/drawing render diagram.dx` runs it.
+`npm i -g @dxos/drawing` is optional and makes repeat runs faster. For a pre-release build, add the `@next`
+tag (`npx -y @dxos/drawing@next …`).
 
 ## Workflow
 
@@ -33,7 +29,7 @@ Without a global install, `npx -y @dxos/drawing@next render diagram.dx` runs the
    drawing render diagram.dx
    ```
 
-   If that reports `command not found`, run `npx -y @dxos/drawing@next render diagram.dx` instead. Don't
+   If that reports `command not found`, run `npx -y @dxos/drawing render diagram.dx` instead. Don't
    probe for the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`),
    stop: tell the user the exact error and the install command above. Don't hand-draw an SVG, switch to
    Mermaid or try other package names.

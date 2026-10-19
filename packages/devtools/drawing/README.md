@@ -19,14 +19,14 @@ package ships it too.
 ## Use the CLI
 
 ```bash
-npm i -g @dxos/drawing@next                       # puts `drawing` on PATH
-npx -y @dxos/drawing@next render arch.dx          # writes arch.dx.svg and prints the layout report
-npx -y @dxos/drawing@next render arch.dx --plain  # a bare arch.svg
-npx -y @dxos/drawing@next check arch.dx --json    # the report only
-npx -y @dxos/drawing@next source arch.dx.svg      # the .dx the SVG carries
+npx -y @dxos/drawing render arch.dx          # writes arch.dx.svg and prints the layout report
+npx -y @dxos/drawing render arch.dx --plain  # a bare arch.svg
+npx -y @dxos/drawing check arch.dx --json    # the report only
+npx -y @dxos/drawing source arch.dx.svg      # the .dx the SVG carries
 ```
 
-Use the `@next` tag until a stable release is on `@latest`.
+`npm i -g @dxos/drawing` puts `drawing` on PATH for faster repeat runs; `@dxos/drawing@next` is the pre-release
+build.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.
 
