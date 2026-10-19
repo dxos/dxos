@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../utils/builder.ts';
-import { reduceIntent } from './projection.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
 import {
   BASE_ANIMATABLE,
   animatableProperties,
@@ -34,8 +34,8 @@ const animated = (): Scene => {
   let timeline = createTimeline(4);
   timeline = setKey(timeline, 'a', 'center', { t: 0, value: { x: 50, y: 25 } });
   timeline = setKey(timeline, 'a', 'center', { t: 2, value: { x: 150, y: 25 }, easing: 'ease-out' });
-  timeline = setKey(timeline, 'a', 'opacity', { t: 0, value: 0 });
-  timeline = setKey(timeline, 'a', 'opacity', { t: 1, value: 1 });
+  timeline = setKey(timeline, 'a', 'style.opacity', { t: 0, value: 0 });
+  timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 1 });
   return { ...base, timeline };
 };
 
@@ -70,7 +70,7 @@ describe('sampleScene', () => {
     expect(at(2).center).toEqual({ x: 150, y: 25 });
     // Ease-out covers more than half the distance by half the time.
     expect(at(1).center.x).toBeCloseTo(50 + 100 * (1 - 0.5 ** 3));
-    expect(at(0.5).opacity).toBeCloseTo(0.5);
+    expect(at(0.5).style?.opacity).toBeCloseTo(0.5);
     // Past the last key a track holds its end value.
     expect(at(3.5).center).toEqual({ x: 150, y: 25 });
     expect(sampleScene(scene, 1).nodes.b).toBe(scene.nodes.b);
@@ -95,10 +95,10 @@ describe('sampleScene', () => {
 
 describe('keys', () => {
   test('a key at an existing time replaces it; removing the last key removes the track', ({ expect }) => {
-    let timeline = setKey(createTimeline(), 'a', 'opacity', { t: 1, value: 0 });
-    timeline = setKey(timeline, 'a', 'opacity', { t: 1, value: 0.5 });
-    expect(timeline.tracks['a:opacity'].keys).toEqual([{ t: 1, value: 0.5 }]);
-    expect(removeKey(timeline, 'a', 'opacity', 1).tracks).toEqual({});
+    let timeline = setKey(createTimeline(), 'a', 'style.opacity', { t: 1, value: 0 });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 0.5 });
+    expect(timeline.tracks['a:style.opacity'].keys).toEqual([{ t: 1, value: 0.5 }]);
+    expect(removeKey(timeline, 'a', 'style.opacity', 1).tracks).toEqual({});
   });
 
   test('key times of the selection are sorted without repeats', ({ expect }) => {
@@ -116,6 +116,11 @@ describe('animatable properties', () => {
   test('read from the schema annotations of the shared fields', ({ expect }) => {
     expect(animatableProperties(RectNode)).toEqual(BASE_ANIMATABLE);
     expect(animatableProperties(InstanceNode)).toEqual(BASE_ANIMATABLE);
+  });
+
+  test('a struct property is searched for animatable fields, reported by dot path', ({ expect }) => {
+    expect(animatableProperties(RectNode)['style.opacity']).toBe('number');
+    expect(animatableProperties(RectNode).style).toBeUndefined();
   });
 });
 

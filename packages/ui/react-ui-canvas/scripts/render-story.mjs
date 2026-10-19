@@ -6,7 +6,7 @@
 /**
  * Renders a storybook story to video frame by frame, not in real time, however long the page takes to draw.
  *
- * Seek mode (react-ui-canvas ANIMATION.md §7.2): a story whose scene view exposes its clock (`SceneView.Root
+ * Seek mode (react-ui-canvas ANIMATION.md §7.2): a story whose scene view exposes its clock (`Canvas.Root
  * exportable`, published on `window.__DX_SCENE_CLOCK__`) is told the time of each frame, t = n / fps, and captured once
  * every element marked `data-frame-time` shows that time. The page computes frame n from t alone, so there is no fake
  * clock and no 16 ms grid. The length is the timeline's unless `--seconds` is given.
@@ -224,7 +224,7 @@ if (options.mode !== 'clock') {
     seek = true;
     seconds ??= duration;
   } else if (options.mode === 'seek') {
-    console.error('The story exposes no scene clock (SceneView.Root exportable).');
+    console.error('The story exposes no scene clock (Canvas.Root exportable).');
     process.exit(1);
   } else {
     await page.close();

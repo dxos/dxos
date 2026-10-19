@@ -7,7 +7,7 @@
 // it: it holds the loaded modules, the scene, and one runner per generator node, and answers frame requests.
 //
 
-import { type NodeId, type Scene, isGeneratorNode } from '../model/types.ts';
+import { type NodeId, type Scene, isGeneratorNode } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
 import { hashSeed } from './motion.ts';
 import { GeneratorRunner, type RunnerOptions } from './runner.ts';

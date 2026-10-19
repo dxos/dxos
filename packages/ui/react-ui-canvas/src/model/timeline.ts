@@ -186,6 +186,16 @@ export const setPath = (value: unknown, path: string, next: unknown): Record<str
   return record;
 };
 
+/** A copy of `value` without the field at a dot path, copying each record on the way down. */
+export const removePath = (value: unknown, path: string): unknown => {
+  if (!isRecord(value)) {
+    return value;
+  }
+  const [head, ...rest] = path.split('.');
+  const { [head]: child, ...others } = value;
+  return rest.length === 0 ? others : { ...others, [head]: removePath(child, rest.join('.')) };
+};
+
 /** The node with `next` at a dot path; its id and type never change. */
 export const setNodePath = (node: Node, path: string, next: unknown): Node => {
   const [head, ...rest] = path.split('.');
@@ -252,20 +262,43 @@ export const keyTimes = (timeline: Timeline | undefined, targets: Iterable<strin
 // Animatable properties.
 //
 
-/** The animatable properties of a node schema's top level, by name, with their kinds (`AnimatableAnnotationId`). */
-export const animatableProperties = (schema: Schema.Top): Record<string, AnimatableKind> => {
-  const ast = SchemaAST.isObjects(schema.ast) ? schema.ast : undefined;
-  if (!ast) {
+/** The track property of a node's opacity, which lives in its style. */
+export const OPACITY_PATH = 'style.opacity';
+
+/**
+ * The animatable properties of a node schema, by dot path, with their kinds (`AnimatableAnnotationId`). A struct
+ * property that is not itself animatable is searched for animatable fields (`style.opacity`).
+ */
+export const animatableProperties = (schema: Schema.Top): Record<string, AnimatableKind> =>
+  animatableFields(schema.ast, '');
+
+const animatableFields = (ast: SchemaAST.AST, prefix: string): Record<string, AnimatableKind> => {
+  const struct = structOf(ast);
+  if (!struct) {
     return {};
   }
   const result: Record<string, AnimatableKind> = {};
-  for (const signature of ast.propertySignatures) {
+  for (const signature of struct.propertySignatures) {
+    if (typeof signature.name !== 'string') {
+      continue;
+    }
+    const path = `${prefix}${signature.name}`;
     const kind = animatableKind(signature.type);
-    if (kind && typeof signature.name === 'string') {
-      result[signature.name] = kind;
+    if (kind) {
+      result[path] = kind;
+    } else {
+      Object.assign(result, animatableFields(signature.type, `${path}.`));
     }
   }
   return result;
+};
+
+/** The struct a property holds; an optional struct is a union with undefined. */
+const structOf = (ast: SchemaAST.AST): SchemaAST.Objects | undefined => {
+  if (SchemaAST.isObjects(ast)) {
+    return ast;
+  }
+  return SchemaAST.isUnion(ast) ? ast.types.find(SchemaAST.isObjects) : undefined;
 };
 
 const ANIMATABLE_KINDS: readonly AnimatableKind[] = ['number', 'point', 'size', 'discrete'];
@@ -292,7 +325,7 @@ const animatableKind = (ast: SchemaAST.AST): AnimatableKind | undefined => {
 export const BASE_ANIMATABLE: Readonly<Record<string, AnimatableKind>> = {
   center: 'point',
   size: 'size',
-  opacity: 'number',
+  [OPACITY_PATH]: 'number',
 };
 
 //

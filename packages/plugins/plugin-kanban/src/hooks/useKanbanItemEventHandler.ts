@@ -114,11 +114,14 @@ export function useKanbanItemEventHandler<T extends KanbanLayout.BaseKanbanItem>
 
         // 6. Persist arrangement to kanban.
         change.kanban((kanban) => {
+          // Hidden columns are absent from the model, so their entries are carried over rather than dropped.
+          const hiddenColumns = Object.entries(kanban.arrangement.columns).filter(([, entry]) => entry.hidden === true);
           kanban.arrangement = {
             order: workingArrangement.map(({ columnValue }) => columnValue),
-            columns: Object.fromEntries(
-              workingArrangement.map(({ columnValue, cards }) => [columnValue, { ids: cards.map((c) => c.id) }]),
-            ),
+            columns: Object.fromEntries([
+              ...hiddenColumns.map(([columnValue, entry]) => [columnValue, { ids: [...entry.ids], hidden: true }]),
+              ...workingArrangement.map(({ columnValue, cards }) => [columnValue, { ids: cards.map((c) => c.id) }]),
+            ]),
           };
         });
       },

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
 import { sceneOptions } from './scenes.ts';
 
 describe('sceneOptions', () => {

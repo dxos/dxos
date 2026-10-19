@@ -7,8 +7,7 @@
 // so every class is spelled out; the `theme` variant pairs the light classes with `dark:` ones so it follows the app.
 //
 
-import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/style-set.ts';
-import { type StyleHue } from '../model/types.ts';
+import { type LookTone, type NodeSurface, type Opacity, type Radius, type StyleHue } from '../model/index.ts';
 
 export type SurfaceClasses = { surface: string; text: string; border: string };
 
@@ -18,99 +17,126 @@ type ByTone<T> = Record<LookTone, T>;
 export type SetSurface = Exclude<NodeSurface, 'hue-clear' | 'hue-strong' | 'hue-role' | 'hue-light'>;
 
 /** Each surface's classes for a node with no hue (`default`) and for each picker hue. */
-export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<SurfaceClasses>>> = {
-  'muted-subtle': {
-    default: {
-      theme: {
-        surface: 'bg-neutral-50 dark:bg-neutral-900',
-        text: '',
-        border: 'border-neutral-200 dark:border-neutral-800',
-      },
-      light: { surface: 'bg-neutral-50', text: 'text-neutral-900', border: 'border-neutral-200' },
-      dark: { surface: 'bg-neutral-900', text: 'text-neutral-100', border: 'border-neutral-800' },
+/** The softest muted fill; `muted-clear` takes its border and text with no fill. */
+const MUTED_SUBTLE: Record<StyleHue | 'default', ByTone<SurfaceClasses>> = {
+  default: {
+    theme: {
+      surface: 'bg-neutral-50 dark:bg-neutral-900',
+      text: '',
+      border: 'border-neutral-200 dark:border-neutral-800',
     },
-    neutral: {
-      theme: {
-        surface: 'bg-neutral-50 dark:bg-neutral-900',
-        text: 'text-neutral-900 dark:text-neutral-100',
-        border: 'border-neutral-200 dark:border-neutral-800',
-      },
-      light: { surface: 'bg-neutral-50', text: 'text-neutral-900', border: 'border-neutral-200' },
-      dark: { surface: 'bg-neutral-900', text: 'text-neutral-100', border: 'border-neutral-800' },
-    },
-    red: {
-      theme: {
-        surface: 'bg-red-50 dark:bg-red-950/50',
-        text: 'text-red-900 dark:text-red-100',
-        border: 'border-red-100 dark:border-red-900',
-      },
-      light: { surface: 'bg-red-50', text: 'text-red-900', border: 'border-red-100' },
-      dark: { surface: 'bg-red-950/50', text: 'text-red-100', border: 'border-red-900' },
-    },
-    orange: {
-      theme: {
-        surface: 'bg-orange-50 dark:bg-orange-950/50',
-        text: 'text-orange-900 dark:text-orange-100',
-        border: 'border-orange-100 dark:border-orange-900',
-      },
-      light: { surface: 'bg-orange-50', text: 'text-orange-900', border: 'border-orange-100' },
-      dark: { surface: 'bg-orange-950/50', text: 'text-orange-100', border: 'border-orange-900' },
-    },
-    amber: {
-      theme: {
-        surface: 'bg-amber-50 dark:bg-amber-950/50',
-        text: 'text-amber-900 dark:text-amber-100',
-        border: 'border-amber-100 dark:border-amber-900',
-      },
-      light: { surface: 'bg-amber-50', text: 'text-amber-900', border: 'border-amber-100' },
-      dark: { surface: 'bg-amber-950/50', text: 'text-amber-100', border: 'border-amber-900' },
-    },
-    green: {
-      theme: {
-        surface: 'bg-green-50 dark:bg-green-950/50',
-        text: 'text-green-900 dark:text-green-100',
-        border: 'border-green-100 dark:border-green-900',
-      },
-      light: { surface: 'bg-green-50', text: 'text-green-900', border: 'border-green-100' },
-      dark: { surface: 'bg-green-950/50', text: 'text-green-100', border: 'border-green-900' },
-    },
-    teal: {
-      theme: {
-        surface: 'bg-teal-50 dark:bg-teal-950/50',
-        text: 'text-teal-900 dark:text-teal-100',
-        border: 'border-teal-100 dark:border-teal-900',
-      },
-      light: { surface: 'bg-teal-50', text: 'text-teal-900', border: 'border-teal-100' },
-      dark: { surface: 'bg-teal-950/50', text: 'text-teal-100', border: 'border-teal-900' },
-    },
-    sky: {
-      theme: {
-        surface: 'bg-sky-50 dark:bg-sky-950/50',
-        text: 'text-sky-900 dark:text-sky-100',
-        border: 'border-sky-100 dark:border-sky-900',
-      },
-      light: { surface: 'bg-sky-50', text: 'text-sky-900', border: 'border-sky-100' },
-      dark: { surface: 'bg-sky-950/50', text: 'text-sky-100', border: 'border-sky-900' },
-    },
-    blue: {
-      theme: {
-        surface: 'bg-blue-50 dark:bg-blue-950/50',
-        text: 'text-blue-900 dark:text-blue-100',
-        border: 'border-blue-100 dark:border-blue-900',
-      },
-      light: { surface: 'bg-blue-50', text: 'text-blue-900', border: 'border-blue-100' },
-      dark: { surface: 'bg-blue-950/50', text: 'text-blue-100', border: 'border-blue-900' },
-    },
-    violet: {
-      theme: {
-        surface: 'bg-violet-50 dark:bg-violet-950/50',
-        text: 'text-violet-900 dark:text-violet-100',
-        border: 'border-violet-100 dark:border-violet-900',
-      },
-      light: { surface: 'bg-violet-50', text: 'text-violet-900', border: 'border-violet-100' },
-      dark: { surface: 'bg-violet-950/50', text: 'text-violet-100', border: 'border-violet-900' },
-    },
+    light: { surface: 'bg-neutral-50', text: 'text-neutral-900', border: 'border-neutral-200' },
+    dark: { surface: 'bg-neutral-900', text: 'text-neutral-100', border: 'border-neutral-800' },
   },
+  neutral: {
+    theme: {
+      surface: 'bg-neutral-50 dark:bg-neutral-900',
+      text: 'text-neutral-900 dark:text-neutral-100',
+      border: 'border-neutral-200 dark:border-neutral-800',
+    },
+    light: { surface: 'bg-neutral-50', text: 'text-neutral-900', border: 'border-neutral-200' },
+    dark: { surface: 'bg-neutral-900', text: 'text-neutral-100', border: 'border-neutral-800' },
+  },
+  red: {
+    theme: {
+      surface: 'bg-red-50 dark:bg-red-950/50',
+      text: 'text-red-900 dark:text-red-100',
+      border: 'border-red-100 dark:border-red-900',
+    },
+    light: { surface: 'bg-red-50', text: 'text-red-900', border: 'border-red-100' },
+    dark: { surface: 'bg-red-950/50', text: 'text-red-100', border: 'border-red-900' },
+  },
+  orange: {
+    theme: {
+      surface: 'bg-orange-50 dark:bg-orange-950/50',
+      text: 'text-orange-900 dark:text-orange-100',
+      border: 'border-orange-100 dark:border-orange-900',
+    },
+    light: { surface: 'bg-orange-50', text: 'text-orange-900', border: 'border-orange-100' },
+    dark: { surface: 'bg-orange-950/50', text: 'text-orange-100', border: 'border-orange-900' },
+  },
+  amber: {
+    theme: {
+      surface: 'bg-amber-50 dark:bg-amber-950/50',
+      text: 'text-amber-900 dark:text-amber-100',
+      border: 'border-amber-100 dark:border-amber-900',
+    },
+    light: { surface: 'bg-amber-50', text: 'text-amber-900', border: 'border-amber-100' },
+    dark: { surface: 'bg-amber-950/50', text: 'text-amber-100', border: 'border-amber-900' },
+  },
+  green: {
+    theme: {
+      surface: 'bg-green-50 dark:bg-green-950/50',
+      text: 'text-green-900 dark:text-green-100',
+      border: 'border-green-100 dark:border-green-900',
+    },
+    light: { surface: 'bg-green-50', text: 'text-green-900', border: 'border-green-100' },
+    dark: { surface: 'bg-green-950/50', text: 'text-green-100', border: 'border-green-900' },
+  },
+  teal: {
+    theme: {
+      surface: 'bg-teal-50 dark:bg-teal-950/50',
+      text: 'text-teal-900 dark:text-teal-100',
+      border: 'border-teal-100 dark:border-teal-900',
+    },
+    light: { surface: 'bg-teal-50', text: 'text-teal-900', border: 'border-teal-100' },
+    dark: { surface: 'bg-teal-950/50', text: 'text-teal-100', border: 'border-teal-900' },
+  },
+  sky: {
+    theme: {
+      surface: 'bg-sky-50 dark:bg-sky-950/50',
+      text: 'text-sky-900 dark:text-sky-100',
+      border: 'border-sky-100 dark:border-sky-900',
+    },
+    light: { surface: 'bg-sky-50', text: 'text-sky-900', border: 'border-sky-100' },
+    dark: { surface: 'bg-sky-950/50', text: 'text-sky-100', border: 'border-sky-900' },
+  },
+  blue: {
+    theme: {
+      surface: 'bg-blue-50 dark:bg-blue-950/50',
+      text: 'text-blue-900 dark:text-blue-100',
+      border: 'border-blue-100 dark:border-blue-900',
+    },
+    light: { surface: 'bg-blue-50', text: 'text-blue-900', border: 'border-blue-100' },
+    dark: { surface: 'bg-blue-950/50', text: 'text-blue-100', border: 'border-blue-900' },
+  },
+  violet: {
+    theme: {
+      surface: 'bg-violet-50 dark:bg-violet-950/50',
+      text: 'text-violet-900 dark:text-violet-100',
+      border: 'border-violet-100 dark:border-violet-900',
+    },
+    light: { surface: 'bg-violet-50', text: 'text-violet-900', border: 'border-violet-100' },
+    dark: { surface: 'bg-violet-950/50', text: 'text-violet-100', border: 'border-violet-900' },
+  },
+};
+
+/** A surface's border and text with no fill, so an unfilled tone keeps the edge of the tone above it. */
+const withoutFill = (
+  table: Record<StyleHue | 'default', ByTone<SurfaceClasses>>,
+): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
+  const clear = (tones: ByTone<SurfaceClasses>): ByTone<SurfaceClasses> => ({
+    theme: { ...tones.theme, surface: 'bg-transparent' },
+    light: { ...tones.light, surface: 'bg-transparent' },
+    dark: { ...tones.dark, surface: 'bg-transparent' },
+  });
+  return {
+    default: clear(table.default),
+    neutral: clear(table.neutral),
+    red: clear(table.red),
+    orange: clear(table.orange),
+    amber: clear(table.amber),
+    green: clear(table.green),
+    teal: clear(table.teal),
+    sky: clear(table.sky),
+    blue: clear(table.blue),
+    violet: clear(table.violet),
+  };
+};
+
+export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<SurfaceClasses>>> = {
+  'muted-subtle': MUTED_SUBTLE,
+  'muted-clear': withoutFill(MUTED_SUBTLE),
   'muted': {
     default: {
       theme: {
@@ -214,49 +240,85 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
       dark: { surface: 'bg-neutral-600', text: 'text-neutral-50', border: 'border-neutral-500' },
     },
     neutral: {
-      theme: { surface: 'bg-neutral-500 dark:bg-neutral-700', text: 'text-neutral-50', border: 'border-neutral-600' },
-      light: { surface: 'bg-neutral-500', text: 'text-neutral-50', border: 'border-neutral-600' },
-      dark: { surface: 'bg-neutral-700', text: 'text-neutral-50', border: 'border-neutral-600' },
+      theme: {
+        surface: 'bg-neutral-300 dark:bg-neutral-800',
+        text: 'text-neutral-900 dark:text-neutral-100',
+        border: 'border-neutral-400 dark:border-neutral-700',
+      },
+      light: { surface: 'bg-neutral-300', text: 'text-neutral-900', border: 'border-neutral-400' },
+      dark: { surface: 'bg-neutral-800', text: 'text-neutral-100', border: 'border-neutral-700' },
     },
     red: {
-      theme: { surface: 'bg-red-500 dark:bg-red-700', text: 'text-neutral-50', border: 'border-red-600' },
-      light: { surface: 'bg-red-500', text: 'text-neutral-50', border: 'border-red-600' },
-      dark: { surface: 'bg-red-700', text: 'text-neutral-50', border: 'border-red-600' },
+      theme: {
+        surface: 'bg-red-300 dark:bg-red-800',
+        text: 'text-red-900 dark:text-red-100',
+        border: 'border-red-400 dark:border-red-700',
+      },
+      light: { surface: 'bg-red-300', text: 'text-red-900', border: 'border-red-400' },
+      dark: { surface: 'bg-red-800', text: 'text-red-100', border: 'border-red-700' },
     },
     orange: {
-      theme: { surface: 'bg-orange-500 dark:bg-orange-700', text: 'text-neutral-50', border: 'border-orange-600' },
-      light: { surface: 'bg-orange-500', text: 'text-neutral-50', border: 'border-orange-600' },
-      dark: { surface: 'bg-orange-700', text: 'text-neutral-50', border: 'border-orange-600' },
+      theme: {
+        surface: 'bg-orange-300 dark:bg-orange-800',
+        text: 'text-orange-900 dark:text-orange-100',
+        border: 'border-orange-400 dark:border-orange-700',
+      },
+      light: { surface: 'bg-orange-300', text: 'text-orange-900', border: 'border-orange-400' },
+      dark: { surface: 'bg-orange-800', text: 'text-orange-100', border: 'border-orange-700' },
     },
     amber: {
-      theme: { surface: 'bg-amber-500 dark:bg-amber-700', text: 'text-neutral-50', border: 'border-amber-600' },
-      light: { surface: 'bg-amber-500', text: 'text-neutral-50', border: 'border-amber-600' },
-      dark: { surface: 'bg-amber-700', text: 'text-neutral-50', border: 'border-amber-600' },
+      theme: {
+        surface: 'bg-amber-300 dark:bg-amber-800',
+        text: 'text-amber-900 dark:text-amber-100',
+        border: 'border-amber-400 dark:border-amber-700',
+      },
+      light: { surface: 'bg-amber-300', text: 'text-amber-900', border: 'border-amber-400' },
+      dark: { surface: 'bg-amber-800', text: 'text-amber-100', border: 'border-amber-700' },
     },
     green: {
-      theme: { surface: 'bg-green-500 dark:bg-green-700', text: 'text-neutral-50', border: 'border-green-600' },
-      light: { surface: 'bg-green-500', text: 'text-neutral-50', border: 'border-green-600' },
-      dark: { surface: 'bg-green-700', text: 'text-neutral-50', border: 'border-green-600' },
+      theme: {
+        surface: 'bg-green-300 dark:bg-green-800',
+        text: 'text-green-900 dark:text-green-100',
+        border: 'border-green-400 dark:border-green-700',
+      },
+      light: { surface: 'bg-green-300', text: 'text-green-900', border: 'border-green-400' },
+      dark: { surface: 'bg-green-800', text: 'text-green-100', border: 'border-green-700' },
     },
     teal: {
-      theme: { surface: 'bg-teal-500 dark:bg-teal-700', text: 'text-neutral-50', border: 'border-teal-600' },
-      light: { surface: 'bg-teal-500', text: 'text-neutral-50', border: 'border-teal-600' },
-      dark: { surface: 'bg-teal-700', text: 'text-neutral-50', border: 'border-teal-600' },
+      theme: {
+        surface: 'bg-teal-300 dark:bg-teal-800',
+        text: 'text-teal-900 dark:text-teal-100',
+        border: 'border-teal-400 dark:border-teal-700',
+      },
+      light: { surface: 'bg-teal-300', text: 'text-teal-900', border: 'border-teal-400' },
+      dark: { surface: 'bg-teal-800', text: 'text-teal-100', border: 'border-teal-700' },
     },
     sky: {
-      theme: { surface: 'bg-sky-500 dark:bg-sky-700', text: 'text-neutral-50', border: 'border-sky-600' },
-      light: { surface: 'bg-sky-500', text: 'text-neutral-50', border: 'border-sky-600' },
-      dark: { surface: 'bg-sky-700', text: 'text-neutral-50', border: 'border-sky-600' },
+      theme: {
+        surface: 'bg-sky-300 dark:bg-sky-800',
+        text: 'text-sky-900 dark:text-sky-100',
+        border: 'border-sky-400 dark:border-sky-700',
+      },
+      light: { surface: 'bg-sky-300', text: 'text-sky-900', border: 'border-sky-400' },
+      dark: { surface: 'bg-sky-800', text: 'text-sky-100', border: 'border-sky-700' },
     },
     blue: {
-      theme: { surface: 'bg-blue-500 dark:bg-blue-700', text: 'text-neutral-50', border: 'border-blue-600' },
-      light: { surface: 'bg-blue-500', text: 'text-neutral-50', border: 'border-blue-600' },
-      dark: { surface: 'bg-blue-700', text: 'text-neutral-50', border: 'border-blue-600' },
+      theme: {
+        surface: 'bg-blue-300 dark:bg-blue-800',
+        text: 'text-blue-900 dark:text-blue-100',
+        border: 'border-blue-400 dark:border-blue-700',
+      },
+      light: { surface: 'bg-blue-300', text: 'text-blue-900', border: 'border-blue-400' },
+      dark: { surface: 'bg-blue-800', text: 'text-blue-100', border: 'border-blue-700' },
     },
     violet: {
-      theme: { surface: 'bg-violet-500 dark:bg-violet-700', text: 'text-neutral-50', border: 'border-violet-600' },
-      light: { surface: 'bg-violet-500', text: 'text-neutral-50', border: 'border-violet-600' },
-      dark: { surface: 'bg-violet-700', text: 'text-neutral-50', border: 'border-violet-600' },
+      theme: {
+        surface: 'bg-violet-300 dark:bg-violet-800',
+        text: 'text-violet-900 dark:text-violet-100',
+        border: 'border-violet-400 dark:border-violet-700',
+      },
+      light: { surface: 'bg-violet-300', text: 'text-violet-900', border: 'border-violet-400' },
+      dark: { surface: 'bg-violet-800', text: 'text-violet-100', border: 'border-violet-700' },
     },
   },
   'outline': {
@@ -734,9 +796,10 @@ export const RADIUS_CLASSES: Record<Radius, string> = {
 };
 
 /** A node's border width as a class, and as padding of the same width for a fading frame. */
-export const BORDER_CLASSES: Record<1 | 2, { border: string; padding: string }> = {
+export const BORDER_CLASSES: Record<1 | 2 | 4, { border: string; padding: string }> = {
   1: { border: 'border', padding: 'p-px' },
   2: { border: 'border-2', padding: 'p-0.5' },
+  4: { border: 'border-4', padding: 'p-1' },
 };
 
 /** The fill of a frame showing its child scene. */

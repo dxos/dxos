@@ -7,7 +7,7 @@
 // canvas drop target (DESIGN.md §8 "external drag-in"); internal gestures stay pointer-driven.
 //
 
-import { type NodeType } from '../model/types.ts';
+import { type NodeType } from '../model/index.ts';
 
 const NODE_DRAG_TYPE = 'dx-canvas/node';
 

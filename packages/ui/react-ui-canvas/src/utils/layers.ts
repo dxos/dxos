@@ -16,7 +16,7 @@ import {
   type Node,
   type Scene,
   endpointNode,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { between, sortByZ } from './order.ts';
 
 /** The layer of a scene that names none: every element is on it. */

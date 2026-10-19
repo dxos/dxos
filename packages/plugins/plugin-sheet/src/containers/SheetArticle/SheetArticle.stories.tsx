@@ -9,6 +9,7 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
 import * as Operation from '@dxos/compute/Operation';
@@ -76,7 +77,7 @@ export const Default = () => {
 
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
-      <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+      <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
     </AttendableContainer>
   );
 };
@@ -92,7 +93,7 @@ export const Spec = () => {
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
-        <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+        <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
         <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>

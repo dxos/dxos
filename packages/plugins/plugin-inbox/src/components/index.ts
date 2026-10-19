@@ -12,6 +12,7 @@ export * from './Initialize/index.ts';
 export * from './MarkdownViewer/index.ts';
 export * from './InboxStack/index.ts';
 export * from './ObjectArticle/index.ts';
+export * from './QueryFilter/index.ts';
 export * from './RelatedContacts/index.ts';
 export * from './RelatedEvents/index.ts';
 export * from './Attachment/index.ts';

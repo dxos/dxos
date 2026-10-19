@@ -105,7 +105,7 @@ const RecentTile = ({ data, index }: { data: RecentItem; index: number }) =>
 RecentTile.displayName = 'RecentTile';
 
 const PlaceholderTile = () => (
-  <Card.Root>
+  <Card.Root classNames='rounded-sm'>
     <Card.Header>
       <Layout.Block>
         <Status.Skeleton variant='circle' />
@@ -137,7 +137,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   }, [invokePromise, data]);
 
   return (
-    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' classNames='cursor-pointer rounded-sm' onClick={handleClick}>
       <Card.Header>
         <Layout.Block>
           <Icon.Icon icon={icon} classNames={iconStyles?.text} />

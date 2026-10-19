@@ -12,7 +12,7 @@ import {
   type Link,
   type Scene,
   endpointNode,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, sceneLayers } from './layers.ts';
 import { topZ } from './order.ts';

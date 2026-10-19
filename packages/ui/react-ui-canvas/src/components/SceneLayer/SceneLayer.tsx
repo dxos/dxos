@@ -24,45 +24,65 @@ import React, {
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeneratorFrames } from '../../generator/host.ts';
-import { type GeneratorStatus, type Shape } from '../../generator/types.ts';
-import { useSceneLook } from '../../hooks/useSceneLook.ts';
-import { frameTimeAttribute } from '../../model/clock.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type NodeRegistry, type NodeViewProps } from '../../model/registry.ts';
-import { NO_STYLES, type SceneStore } from '../../model/store.ts';
-import { type LinkKind, styleVariant } from '../../model/style-set.ts';
+import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
+import { useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
   type Link,
   type LinkId,
+  type LinkKind,
   MAJOR_GRID_RATIO,
   type Marker,
+  NO_STYLES,
   type Node,
   type NodeId,
+  type NodeRegistry,
+  type NodeViewProps,
   type Scene,
+  type SceneStore,
   type StyleMap,
+  frameTimeAttribute,
   isFrameNode,
   isGeneratorNode,
   isInstanceNode,
   isNoteNode,
   isPathNode,
   linkMarkers,
+  nodeDef,
   showsContents,
-} from '../../model/types.ts';
-import { portalFrame, portalScale, portalTransform } from '../../utils/camera.ts';
-import { compositeBounds, instanceScene, instanceTransform } from '../../utils/compose.ts';
-import { contentBounds } from '../../utils/hit.ts';
-import { type LatticeSpec } from '../../utils/lattice.ts';
-import { elementLayer, sceneLayers, visibleScene } from '../../utils/layers.ts';
-import { sortByZ } from '../../utils/order.ts';
-import { type PartEditing, type PartKey, isMultiline, nodeParts } from '../../utils/parts.ts';
-import { sceneLinkGeometry } from '../../utils/route.ts';
-import { DEFAULT_CELL, nodeBounds } from '../../utils/shapes.ts';
-import { alignClasses, classedLink, classedNode, frameClasses, lineClasses } from '../../utils/style.ts';
-import { BORDER_CLASSES, CANVAS_FILLS, CAPTION_TEXT } from '../../utils/surfaces.ts';
-import { TextPart } from '../PartEditor/PartEditor.tsx';
+  styleVariant,
+} from '../../model/index.ts';
+import {
+  BORDER_CLASSES,
+  CANVAS_FILLS,
+  CAPTION_TEXT,
+  DEFAULT_CELL,
+  type LatticeSpec,
+  type PartEditing,
+  type PartKey,
+  alignClasses,
+  classedLink,
+  classedNode,
+  compositeBounds,
+  contentBounds,
+  elementLayer,
+  frameClasses,
+  instanceScene,
+  instanceTransform,
+  isMultiline,
+  lineClasses,
+  nodeBounds,
+  nodeParts,
+  portalFrame,
+  portalScale,
+  portalTransform,
+  sceneLayers,
+  sceneLinkGeometry,
+  sortByZ,
+  visibleScene,
+} from '../../utils/index.ts';
+import { TextPart } from '../PartEditor/index.ts';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
@@ -495,14 +515,21 @@ const MINOR_GRID = '--dx-minor-grid';
  */
 // Spelled out, not built from `FRAME_BORDER`: Tailwind only emits classes it can read verbatim.
 // The text's own box is flush with the frame's edge and pads its text a grid unit either side; its lines need no
-// padding above or below, being on the grid already.
-const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>span]:px-(--dx-minor-grid)';
+// padding above or below, being on the grid already. The child is the static text's span or the editor's root alike,
+// so the text does not move when editing starts.
+const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-(--dx-minor-grid)';
 
 /** A line is a whole number of minor grid units tall, the text centred in it, so lines of text sit on the grid. */
 const LINE_ON_GRID = mx(
   // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
   '[--dx-line:round(up,1.25em,var(--dx-minor-grid))] leading-(--dx-line)!',
 );
+
+/**
+ * A text node's lines are 1.5em, tighter than the grid's, and its block is padded so the text sits a minor grid unit
+ * from the top and bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
+ */
+const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-minor-grid)-0.25em))]');
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
 const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
@@ -826,7 +853,7 @@ const NodeFrame = memo(
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       ...fade,
-      ...nodeOpacity(node, fade),
+      ...nodeOpacity(drawn, fade),
     };
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
@@ -893,7 +920,7 @@ const NodeFrame = memo(
               transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
               transformOrigin: 'bottom right',
               ...fade,
-              ...nodeOpacity(node, fade),
+              ...nodeOpacity(drawn, fade),
             }}
             data-testid='node-toolbar'
             onPointerDown={(event) => event.stopPropagation()}
@@ -909,13 +936,14 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-/** The node's own opacity under any fade the layer applies, or nothing when it is fully opaque. */
+/** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
-  if (node.opacity === undefined || node.opacity >= 1) {
+  const opacity = node.style?.opacity;
+  if (opacity === undefined || opacity >= 1) {
     return undefined;
   }
   const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
-  return { opacity: Math.max(0, node.opacity) * faded };
+  return { opacity: Math.max(0, opacity) * faded };
 };
 
 /** A node of a `bare` type: no fill or border unless its style sets them. */
@@ -941,7 +969,8 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       'whitespace-pre-wrap',
       LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
-      sizeClass(node, 'text-lg'),
+      // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
+      sizeClass(node, 'text-[24px]'),
     )}
   >
     {label}
@@ -978,7 +1007,7 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
       classNames={mx(
         TEXT_BOX,
         'whitespace-pre-wrap',
-        LINE_ON_GRID,
+        TEXT_LINES,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
       )}
     >
@@ -998,7 +1027,8 @@ export const FrameNodeView = (props: NodeViewProps) => {
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
-  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
+  // A scene named by no one shows no title, rather than its id.
+  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? '';
   // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
   if (!contents || tier === 'dot') {
     return (

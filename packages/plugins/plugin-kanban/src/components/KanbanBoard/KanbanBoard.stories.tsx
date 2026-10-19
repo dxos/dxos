@@ -157,8 +157,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * Every column header, the uncategorized one included, has the same height and underline, and the cards sit a gutter in
- * from their column's edges.
+ * Every column header, the uncategorized one included, has the same height and no underline, and the cards sit a gutter
+ * in from their column's edges.
  */
 export const TestLayout: Story = {
   play: async ({ canvasElement }) => {
@@ -175,7 +175,7 @@ export const TestLayout: Story = {
     const heights = new Set(headers.map((header) => Math.round(header.getBoundingClientRect().height)));
     await expect(heights.size).toBe(1);
     for (const header of headers) {
-      await expect(Number.parseFloat(getComputedStyle(header).borderBottomWidth)).toBeGreaterThan(0);
+      await expect(Number.parseFloat(getComputedStyle(header).borderBottomWidth)).toBe(0);
     }
 
     const cards = await waitFor(() => {

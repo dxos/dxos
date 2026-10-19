@@ -14,6 +14,7 @@ export * as AgentSpace from './AgentSpace.ts';
 export * as BrainService from './BrainService.ts';
 export * as EmailOperation from './EmailOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
+export * as FactFeed from './FactFeed.ts';
 export * as Goal from './Goal.ts';
 export * as MemoryOperation from './MemoryOperation.ts';
 export * as Mode from './Mode.ts';

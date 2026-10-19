@@ -19,7 +19,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type PartEditing, type PartKey } from '../../utils/parts.ts';
+import { type PartEditing, type PartKey } from '../../utils/index.ts';
 
 export type TextPartProps = Util.ThemedClassName<
   PropsWithChildren<{

@@ -19,7 +19,7 @@ import {
   type Point,
   type Scene,
   isPointEndpoint,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { between, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';

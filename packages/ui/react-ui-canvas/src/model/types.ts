@@ -128,14 +128,26 @@ export const lineStyleFields = {
 export const LineStyle = Schema.Struct(lineStyleFields);
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
+/** A shape's text size in scene units when its style sets none. */
+export const DEFAULT_FONT_SIZE = 24;
+
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
  * (`Schema.Struct({ ...styleFields, … })`).
  */
 export const styleFields = {
-  ...lineStyleFields,
+  hue: lineStyleFields.hue,
   /** The hue's fill; unset is 2, the look a hue had before tones. */
   tone: Schema.optional(NodeTone),
+  /** How opaque the whole node draws, 0 to 1; unset is 1. */
+  opacity: Schema.optional(
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
+      title: 'Opacity',
+      [StepAnnotationId]: 0.1,
+      [AnimatableAnnotationId]: 'number',
+    }),
+  ),
+  lineStyle: lineStyleFields.lineStyle,
   rounded: Schema.optional(Schema.Boolean),
   fill: Schema.optional(Schema.Boolean),
   border: Schema.optional(Schema.Boolean),
@@ -143,7 +155,7 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** The face of the shape's text; unset is the theme's body face. */
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
-  /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
+  /** Text size in scene units; unset is `DEFAULT_FONT_SIZE` (stored values outside the editor's range are kept). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
@@ -173,10 +185,6 @@ export const nodeBase = {
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(NodeStyle),
-  /** How opaque the whole node draws, 0 to 1; unset is 1. */
-  opacity: Schema.optional(
-    Schema.Number.annotate({ title: 'Opacity', [StepAnnotationId]: 0.1, [AnimatableAnnotationId]: 'number' }),
-  ),
   /**
    * Inside a composite, the node offers a port on every instance's frame where it meets it, so links from outside the
    * instance attach to it (ANIMATION.md §4.1).
@@ -224,14 +232,25 @@ export const NoteNode = Schema.Struct({
 });
 export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 
+/**
+ * What a frame links to and how it shows it. A host extends the struct with its own target (an object reference)
+ * ahead of these fields, so the panel's Link section lists the target before how it is shown.
+ */
+export const frameLinkFields = {
+  /** Draw the linked scene inside the frame rather than the label; unset, it does so while there is no label. */
+  contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
+};
+
+export const FrameLink = Schema.Struct(frameLinkFields).annotate({ title: 'Link' });
+export type FrameLink = Schema.Schema.Type<typeof FrameLink>;
+
 /** A frame onto the next depth: renders its child scene scaled into this node's bounds. */
 export const FrameNode = Schema.Struct({
   type: Schema.Literal('frame'),
   ...nodeBase,
   ...boxFields,
   scene: Schema.String,
-  /** Draw the child scene inside the frame rather than the label; unset, it does so while there is no label. */
-  contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
+  link: Schema.optional(FrameLink),
 });
 export type FrameNode = Schema.Schema.Type<typeof FrameNode>;
 
@@ -320,7 +339,7 @@ export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.t
 /** A node built on the `box` prototype, carrying a centred, editable label. */
 export const isBoxNode = (node: NodeBase): node is RectNode | FrameNode => isRectNode(node) || isFrameNode(node);
 /** Whether a frame draws its child scene: as set, else while it has no label to show instead. */
-export const showsContents = (node: FrameNode): boolean => node.contents ?? node.label === undefined;
+export const showsContents = (node: FrameNode): boolean => node.link?.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
 //

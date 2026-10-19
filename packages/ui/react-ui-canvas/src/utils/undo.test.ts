@@ -6,11 +6,11 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createFreehandProjection } from '../model/projection.ts';
-import { type ConstrainedModel, createConstrainedProjection } from '../model/projections/constrained.ts';
-import { createMemoryStore } from '../model/store.ts';
+import { createSceneTree } from '../builder/testing.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { type ConstrainedModel, createConstrainedProjection, createFreehandProjection } from '../engine/index.ts';
+import { createMemoryStore } from '../model/index.ts';
 import { groupIntoScene } from './group.ts';
-import { createSceneTree } from './testing.ts';
 import { type UndoState, emptyUndo, recordScenes, redo, undo, withUndo } from './undo.ts';
 
 const setup = () => {
@@ -87,7 +87,12 @@ describe('undo', () => {
       }),
     );
     const atom = Atom.keepAlive(Atom.make<UndoState>(emptyUndo()));
-    const projection = withUndo(createConstrainedProjection({ registry, model }), registry, atom, 'c');
+    const projection = withUndo(
+      createConstrainedProjection({ registry, model, options: { nodes: defaultNodeRegistry } }),
+      registry,
+      atom,
+      'c',
+    );
     const before = registry.get(model);
     projection.apply({ kind: 'delete', ids: ['B'] });
     expect(registry.get(model).nodes.length).toBe(1);

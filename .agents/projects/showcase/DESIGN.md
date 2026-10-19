@@ -2,11 +2,13 @@
 
 A short video that sells Composer by showing many plugins at once: it opens on one demo, tours a few at full frame,
 then pulls back to a grid of every plugin running. The recording rules live in
-`packages/ui/react-ui-canvas/src/components/GridZoom/SHOWCASE.md`; this file records why it is built the way it is.
+`tools/autocue/showcase/SHOWCASE.md`; this file records why it is built the way it is.
 
 ## Decisions
 
-- **The montage is a storybook story, not a video editor.** `GridZoom` lays clips out as tiles and drives one camera
+- **The montage is a storybook story, not a video editor.** It lives in `tools/autocue` with the rest of the
+  showcase tooling, since it reads the tooling's `temp/grid-zoom`; react-ui-canvas only supplies the camera maths.
+  `Grid` lays clips out as tiles and drives one camera
   with `react-ui-canvas`'s camera math, so the motion is code we can iterate on.
 - **The camera path is a pure function.** `interpolateCamera` returns the camera at any `t`, so the same frame always
   renders the same view. Pans between tour cells are straight slides at constant zoom; only the final pull-back uses

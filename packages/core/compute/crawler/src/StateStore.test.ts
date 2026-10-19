@@ -6,8 +6,12 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { expect } from 'vitest';
+import { afterEach, beforeEach, expect } from 'vitest';
 
+import { Filter, Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+
+import * as CrawlState from './CrawlState.ts';
 import * as StateStore from './StateStore.ts';
 import type * as Type from './types.ts';
 
@@ -67,6 +71,37 @@ const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
     );
 
     it.effect(
+      'resetTargets rewinds the named targets, or all of them',
+      Effect.fnUntraced(function* () {
+        const store = yield* StateStore.StateStore;
+        yield* store.pushTargets([target('chan-1'), target('chan-2'), target('chan-3')]);
+        for (const id of ['chan-1', 'chan-2', 'chan-3']) {
+          yield* store.setCursor(id, '1000');
+          yield* store.setStatus(id, 'error', 'boom');
+        }
+        yield* store.resetTargets(['chan-1']);
+        const reset = (yield* store.listTargets()).find((entry) => entry.id === 'chan-1');
+        expect(reset).toEqual(target('chan-1'));
+        expect((yield* store.listTargets()).find((entry) => entry.id === 'chan-2')?.cursor).toBe('1000');
+        yield* store.resetTargets();
+        expect(yield* store.listTargets()).toEqual([target('chan-1'), target('chan-2'), target('chan-3')]);
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
+      'removeTargets drops targets, and a later push adds them afresh',
+      Effect.fnUntraced(function* () {
+        const store = yield* StateStore.StateStore;
+        yield* store.pushTargets([target('chan-1'), target('chan-2')]);
+        yield* store.setCursor('chan-1', '1000');
+        yield* store.removeTargets(['chan-1']);
+        expect((yield* store.listTargets()).map((entry) => entry.id)).toEqual(['chan-2']);
+        yield* store.pushTargets([target('chan-1')]);
+        expect((yield* store.listTargets()).find((entry) => entry.id === 'chan-1')).toEqual(target('chan-1'));
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
       'hasActionable reflects pending/active only',
       Effect.fnUntraced(function* () {
         const store = yield* StateStore.StateStore;
@@ -91,6 +126,8 @@ const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
 
 describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
+  // A fresh object per test, as the other suites get a fresh store.
+  suite('echo', Layer.unwrap(Effect.sync(() => StateStore.layerEcho(CrawlState.make()))));
   suite(
     'sql',
     StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
@@ -123,4 +160,76 @@ describe('StateStore', () => {
       );
     }),
   );
+
+  describe('echo database', () => {
+    let builder: EchoTestBuilder;
+
+    beforeEach(async () => {
+      builder = await new EchoTestBuilder().open();
+    });
+
+    afterEach(async () => {
+      await builder.close();
+    });
+
+    it.effect(
+      'a stored crawl state is the frontier of a later store over the same object',
+      Effect.fnUntraced(function* () {
+        const peer = yield* Effect.promise(() => builder.createPeer({ types: [CrawlState.CrawlState] }));
+        const db = yield* Effect.promise(() => peer.createDatabase());
+        const state = db.add(CrawlState.make({ name: 'crawl' }));
+
+        yield* Effect.gen(function* () {
+          const store = yield* StateStore.StateStore;
+          yield* store.pushTargets([target('chan-1'), target('chan-2'), target('chan-3')]);
+          yield* store.setCursor('chan-1', '42');
+          yield* store.setStatus('chan-2', 'error', 'boom');
+          yield* store.removeTargets(['chan-3']);
+          yield* store.resetTargets(['chan-2']);
+        }).pipe(Effect.provide(StateStore.layerEcho(state)));
+        yield* Effect.promise(() => db.flush());
+
+        const [loaded] = yield* Effect.promise(() => db.query(Filter.type(CrawlState.CrawlState)).run());
+        const targets = yield* StateStore.listTargets().pipe(Effect.provide(StateStore.layerEcho(loaded)));
+        expect(targets.map(({ id }) => id)).toEqual(['chan-1', 'chan-2']);
+        expect(targets[0].cursor).toBe('42');
+        expect(targets[1]).toEqual(target('chan-2'));
+      }),
+    );
+
+    it('reconcileChannels drops removed channels with their threads, adds new ones and reopens finished ones', ({
+      expect,
+    }) => {
+      const state = CrawlState.make();
+      Obj.update(state, (state) => {
+        CrawlState.pushTargets(state, [
+          target('chan-1'),
+          target('chan-2'),
+          target('thread-1', { depth: 1, rootId: 'chan-1' }),
+          target('thread-2', { depth: 1, rootId: 'chan-2' }),
+        ]);
+        CrawlState.setStatus(state, 'chan-1', 'done');
+        CrawlState.setCursor(state, 'chan-1', '7', '2026-01-01T00:00:00.000Z');
+        CrawlState.setStatus(state, 'thread-1', 'done');
+      });
+      Obj.update(state, (state) => CrawlState.reconcileChannels(state, ['chan-1', 'chan-3']));
+      expect(CrawlState.listTargets(state)).toEqual([
+        { ...target('chan-1'), cursor: '7', lastRunAt: '2026-01-01T00:00:00.000Z' },
+        target('thread-1', { depth: 1, rootId: 'chan-1', status: 'done' }),
+        target('chan-3'),
+      ]);
+    });
+
+    it('keeps source hashes across a reset', ({ expect }) => {
+      const state = CrawlState.make();
+      Obj.update(state, (state) => {
+        CrawlState.pushTargets(state, [target('chan-1')]);
+        CrawlState.setSourceHash(state, 'discord:1', 'abc');
+      });
+      Obj.update(state, (state) => CrawlState.resetTargets(state));
+      expect(CrawlState.sourceHash(state, 'discord:1')).toBe('abc');
+      Obj.update(state, (state) => CrawlState.clearSourceHashes(state));
+      expect(CrawlState.sourceHash(state, 'discord:1')).toBeUndefined();
+    });
+  });
 });

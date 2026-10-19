@@ -22,7 +22,7 @@ const data = toPlotData(
   { header: true },
 );
 
-type StoryArgs = Pick<PlotOptions, 'type' | 'grid'>;
+type StoryArgs = Pick<PlotOptions, 'type' | 'grid' | 'horizontal' | 'stacked'>;
 
 const DefaultStory = (options: StoryArgs) => <Plot classNames='h-[24rem]' data={data} options={options} />;
 
@@ -41,6 +41,27 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Pie: Story = { args: { type: 'pie' } };
+export const Horizontal: Story = {
+  args: {
+    horizontal: true,
+  },
+};
 
-export const XY: Story = { args: { type: 'xy' } };
+export const Stacked: Story = {
+  args: {
+    horizontal: true,
+    stacked: true,
+  },
+};
+
+export const Pie: Story = {
+  args: {
+    type: 'pie',
+  },
+};
+
+export const XY: Story = {
+  args: {
+    type: 'xy',
+  },
+};

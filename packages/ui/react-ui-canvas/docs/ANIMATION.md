@@ -41,7 +41,7 @@ each piece to the general mechanism that replaces it.
 | `Crystal` hex lattice                                                                | Pack bodies into a container                                        | Packing inside the flow generator (§6.3)              |
 | `morph.ts`: `planSplit`, `planMove`, `planArrivals`                                  | Change the layout while bodies are in flight                        | Generator transitions between keyed parameters (§6.5) |
 | `simulation.focus`, `#inFocus`                                                       | Spend work only on what is on screen                                | Viewport culling in the generator context (§6.4)      |
-| `MoleculeOverlay` SVG over `SceneView`, `data-frame-time`                            | Draw many small bodies cheaply; tell the recorder a frame is drawn  | A generator layer and a clock frame marker (§7)       |
+| `MoleculeOverlay` SVG over `Canvas`, `data-frame-time`                               | Draw many small bodies cheaply; tell the recorder a frame is drawn  | A generator layer and a clock frame marker (§7)       |
 | `render-story.mjs` on Playwright's fake clock                                        | Deterministic video export                                          | Export by seeking the scene clock (§7.2)              |
 
 ### 2.1 Pitfalls the design must prevent
@@ -134,14 +134,14 @@ and an `OrderedList` of rows.
 - **Selecting an instance** on the canvas highlights its row; selecting a row while instances are selected offers
   "swap to this object".
 
-Because the isolated view is a normal `SceneView` on the composite scene, everything else works there: editing,
+Because the isolated view is a normal `Canvas` on the composite scene, everything else works there: editing,
 layers, and the composite's own timeline (§5.7).
 
 ## 5. Timeline
 
 ### 5.1 Clock
 
-Each view owns a clock in its `SceneViewAtoms`:
+Each view owns a clock in its `CanvasAtoms`:
 
 ```ts
 Clock = {
@@ -171,15 +171,16 @@ Easing = 'linear' | 'step' | 'ease-in' | 'ease-out' | 'ease-in-out' | { bezier: 
 ```
 
 A property is animatable when its node type's schema marks it so (`Schema.annotations({ animatable: 'number' })`).
-The engine supplies one interpolator per value kind:
+A struct-valued property that is not itself marked is searched for marked fields, keyed by dot path
+(`style.opacity`). The engine supplies one interpolator per value kind:
 
-| Kind       | Properties (built-in types)                         | Interpolation                                     |
-| ---------- | --------------------------------------------------- | ------------------------------------------------- |
-| `number`   | `opacity`, `rotation`, a generator's numeric params | linear, then eased                                |
-| `point`    | `center`, spline `points[i]`                        | per axis                                          |
-| `size`     | `size`                                              | per axis                                          |
-| `color`    | `style.hue` is discrete; a raw fill colour          | in OKLCH, so mid-points keep their lightness      |
-| `discrete` | `label`, `style.*`, `hidden`, `layer`               | holds the earlier key until the next one (`step`) |
+| Kind       | Properties (built-in types)                               | Interpolation                                     |
+| ---------- | --------------------------------------------------------- | ------------------------------------------------- |
+| `number`   | `style.opacity`, `rotation`, a generator's numeric params | linear, then eased                                |
+| `point`    | `center`, spline `points[i]`                              | per axis                                          |
+| `size`     | `size`                                                    | per axis                                          |
+| `color`    | `style.hue` is discrete; a raw fill colour                | in OKLCH, so mid-points keep their lightness      |
+| `discrete` | `label`, `style.*`, `hidden`, `layer`                     | holds the earlier key until the next one (`step`) |
 
 Before the first key and after the last, a track holds the end value. A property with no track keeps the value
 stored on the node, which is the **base value**.
@@ -229,7 +230,7 @@ physics if needed.
 `Marker = { t, label, caption? }` names a point on the timeline. Markers replace the sample's chapters:
 
 - The timeline bar draws them as ticks; prev and next jump between them.
-- An optional caption overlay (`SceneView.Caption`, built on `FrameHeader`, the sample's `SequenceHeader` now in the engine) shows the
+- An optional caption overlay (`Canvas.Caption`, built on `FrameHeader`, the sample's `SequenceHeader` now in the engine) shows the
   current marker's label and caption, and its counter (`2 / 5`).
 - Playback can pause at each marker ("presentation mode"), which is how the sample's sequence stepped chapter by
   chapter.
@@ -243,7 +244,7 @@ card is a composite with a one-second looping timeline.
 
 ### 5.8 Timeline bar
 
-`SceneView.Timeline` is a bar across the bottom of the canvas, beside the theme bar, shown when the scene has a
+`Canvas.Timeline` is a bar across the bottom of the canvas, beside the theme bar, shown when the scene has a
 timeline or the user adds one ("Animate" in the scene menu).
 
 - **Collapsed** (default): play/pause, the playhead slider over the duration, current time, marker ticks, and key
@@ -442,12 +443,12 @@ Generator state, checkpoints and the clock are never stored. Older readers ignor
 Phase 1 is the user-facing tool with no code: build composite objects in a scene and tween them. Programmatic
 generators follow in phase 2.
 
-| Phase | Delivers                                                                                                                                                                                                                                                                                                                                  | Proves                                                                                                                              |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1 ✓   | Composite objects (§4): composite scenes, `instance` node, group, ungroup, duplicate, make unique, `ObjectsPanel` with isolation view. Timeline (§5.1 to §5.5, §5.8 collapsed): clock, `Timeline` model, `sampleScene`, animated projection, keys on `center`, `size`, `opacity` of nodes and instances, camera. Export by seeking (§7.2) | A user groups three nodes into an object, clones it twice, keys each copy along a different path and fade, plays it, and exports it |
-| 2 ✓   | Generators (§6): `Generator` object, worker runtime with budgets, bindings, checkpoints, `Shape` layer, motion library, generator operations and the `canvas-generators` skill                                                                                                                                                            | An agent writes a looping orbit generator from a prompt; it scrubs both ways and exports identically                                |
-| 3     | The flow generator (ported from `simulation.ts` and `morph.ts`), markers and caption overlay (§5.6), nested time (§5.7)                                                                                                                                                                                                                   | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code                                       |
-| 4     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                                                                                                                                                                                                                            | A host plugin keys its own node type's properties                                                                                   |
+| Phase | Delivers                                                                                                                                                                                                                                                                                                                                        | Proves                                                                                                                              |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1 ✓   | Composite objects (§4): composite scenes, `instance` node, group, ungroup, duplicate, make unique, `ObjectsPanel` with isolation view. Timeline (§5.1 to §5.5, §5.8 collapsed): clock, `Timeline` model, `sampleScene`, animated projection, keys on `center`, `size`, `style.opacity` of nodes and instances, camera. Export by seeking (§7.2) | A user groups three nodes into an object, clones it twice, keys each copy along a different path and fade, plays it, and exports it |
+| 2 ✓   | Generators (§6): `Generator` object, worker runtime with budgets, bindings, checkpoints, `Shape` layer, motion library, generator operations and the `canvas-generators` skill                                                                                                                                                                  | An agent writes a looping orbit generator from a prompt; it scrubs both ways and exports identically                                |
+| 3     | The flow generator (ported from `simulation.ts` and `morph.ts`), markers and caption overlay (§5.6), nested time (§5.7)                                                                                                                                                                                                                         | Rebuild chapters 1 to 5 of the data-flow film as a document; retire the sample's bespoke code                                       |
+| 4     | Expanded timeline, easing editor, `animatable` annotations for host node types                                                                                                                                                                                                                                                                  | A host plugin keys its own node type's properties                                                                                   |
 
 ## 10. Testing
 
@@ -477,16 +478,16 @@ generators follow in phase 2.
 
 | Piece                                                                                              | Code                                                                                                                        |
 | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `opacity`, `exposed`        | `src/model/types.ts`                                                                                                        |
+| `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `style.opacity`, `exposed`  | `src/model/types.ts`                                                                                                        |
 | Easing, keys, `sampleScene`, camera keys                                                           | `src/model/timeline.ts` (+ `timeline.test.ts`)                                                                              |
 | `animate(projection, clock)` and the intent rewrite                                                | `src/model/animate.ts` (+ `animate.test.ts`)                                                                                |
-| Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `SceneViewAtoms.clock`, `autoKey`, `isolation`                               |
+| Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `CanvasAtoms.clock`, `autoKey`, `isolation`                                  |
 | Compose, ungroup, make unique (`copyComposite` + `retargetInstance`), instance ports and transform | `src/utils/compose.ts` (+ `compose.test.ts`)                                                                                |
-| `ObjectsPanel`, `SceneView.Objects`, isolation (`Objects › name`)                                  | `src/components/Objects/`, `SceneView.tsx`                                                                                  |
-| `SceneView.Timeline` (collapsed bar) and the space , . [ ] K keys                                  | `src/components/Timeline/`, `src/model/keys.ts`, `useSceneKeys.ts`                                                          |
+| `ObjectsPanel`, `Canvas.Objects`, isolation (`Objects › name`)                                     | `src/components/inspectors/ObjectsInspector/`, `Canvas.tsx`                                                                 |
+| `Canvas.Timeline` (collapsed bar) and the space , . [ ] K keys                                     | `src/components/panels/TimelinePanel/`, `src/model/keys.ts`, `useSceneKeys.ts`                                              |
 | Generator contract, motion library, runner, compile, worker, host, check                           | `src/generator/` (+ `generator.test.ts`); subpaths `@dxos/react-ui-canvas/motion`, `@dxos/react-ui-canvas/generator-worker` |
 | Generator layer per scene layer, `data-frame-time`                                                 | `SceneLayer.tsx` (`GeneratedShapes`), `src/hooks/useGeneratorFrames.ts`                                                     |
-| Export by seeking                                                                                  | `scripts/render-story.mjs` (`--mode auto` finds an exposed clock; `SceneView.Root exportable`)                              |
+| Export by seeking                                                                                  | `scripts/render-story.mjs` (`--mode auto` finds an exposed clock; `Canvas.Root exportable`)                                 |
 | `Generator` ECHO type, operations, `canvas-generators` skill                                       | plugin-canvas `src/types/Generator.ts`, `src/types/CanvasOperation.ts`, `src/operations/`, `src/skills/`                    |
 | Demo: the DXOS end card as a document                                                              | plugin-canvas `src/samples/endcard/` (story `plugins/plugin-canvas/samples/EndCard`)                                        |
 
@@ -499,7 +500,7 @@ generators follow in phase 2.
    and never resolved.
 3. **A generator node stores a reference string, not a `Ref`.** The engine stays ECHO-free and the canvas content is
    plain records, so the node holds the `Generator`'s fully qualified EID (`Generator.referenceOf`); the host resolves
-   references to `GeneratorSource`s and passes them to `SceneView.Root generators`.
+   references to `GeneratorSource`s and passes them to `Canvas.Root generators`.
 4. **Bindings are declared in the JSON schema** (`"x-binding": "node" | "link"` on a property), since the parameter
    schema is stored data. A bound link is routed without the node registry (each node's own ports, else the defaults).
 5. **Compile errors only.** esbuild-wasm transforms without type checking, as the script plugin does today.

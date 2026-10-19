@@ -51,7 +51,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
   );
 };
 
-const registry = createNodeRegistry(
+const nodes = createNodeRegistry(
   {
     ...defaultNodeTypes,
     [FEATURE_NODE_TYPE]: {
@@ -71,6 +71,7 @@ const registry = createNodeRegistry(
 );
 
 const LAYOUT: DynamicOptions = {
+  nodes,
   size: { width: 288, height: 192 },
   pitch: { width: 336, height: 272 },
   createNode: (_node, props) => createFeatureNode(props),
@@ -146,7 +147,7 @@ export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: F
         store={store}
         root={DYNAMIC_SCENE_ID}
         atoms={atoms}
-        nodes={registry}
+        nodes={nodes}
         createProjection={createProjection}
       >
         <SceneView.Canvas />

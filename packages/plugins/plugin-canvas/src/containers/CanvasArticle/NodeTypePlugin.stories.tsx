@@ -128,6 +128,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The tasks drawn with the plugin, to look at. */
+export const Default: Story = { decorators: decorators([TaskPlugin()]) };
+
 /** With the plugin: the tasks draw with their own view (a checkbox and the title). */
 export const WithPlugin: Story = {
   decorators: decorators([TaskPlugin()]),

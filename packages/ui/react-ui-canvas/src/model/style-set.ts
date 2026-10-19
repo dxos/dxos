@@ -16,7 +16,7 @@ import { LINE_STYLES, StyleHue } from './types.ts';
 
 /**
  * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,
- * strong, medium, light); `muted-subtle`, `muted` and `muted-solid` are soft to firm solid fills; `outline` draws no
+ * strong, medium, light); `muted-subtle`, `muted` and `muted-solid` are soft to firm solid fills, `muted-clear` the subtle edge with no fill; `outline` draws no
  * fill and a hue border; `glass-clear`, `glass-frost`, `glass-tint` and `glass-solid` run from an edge alone to an
  * opaque glass colour.
  */
@@ -25,6 +25,7 @@ export const NodeSurface = Schema.Literals([
   'hue-strong',
   'hue-role',
   'hue-light',
+  'muted-clear',
   'muted-subtle',
   'muted',
   'muted-solid',
@@ -60,7 +61,7 @@ export const StyleVariant = Schema.Struct({
   name: Schema.String,
   surface: NodeSurface,
   /** Border width in scene px. */
-  borderWidth: Schema.Literals([1, 2]),
+  borderWidth: Schema.Literals([1, 2, 4]),
   /** The border of a node that sets no line style of its own. */
   borderStyle: Schema.Literals(LINE_STYLES),
   /** Corners of a node, and of one whose style asks to be rounded. */
@@ -168,22 +169,24 @@ export const CLASSIC_STYLE_SET: StyleSet = {
 };
 
 const FLAT_SHAPE = {
-  borderWidth: 1,
+  borderWidth: 4,
   borderStyle: 'solid',
   radius: 'md',
   roundedRadius: 'xl',
   label: 'surface',
 } as const;
 
+/** Unfilled first, like every set's tone 0, so a tone reads the same whichever set draws it. */
 export const FLAT_STYLE_SET: StyleSet = {
   id: 'flat',
   name: 'Flat',
   variants: [
+    { id: 'clear', name: 'Clear', surface: 'muted-clear', ...FLAT_SHAPE },
     { id: 'subtle', name: 'Subtle', surface: 'muted-subtle', ...FLAT_SHAPE },
     { id: 'muted', name: 'Muted', surface: 'muted', ...FLAT_SHAPE },
     { id: 'solid', name: 'Solid', surface: 'muted-solid', ...FLAT_SHAPE },
   ],
-  defaultVariant: 1,
+  defaultVariant: 2,
   link: { kind: 'line', width: 3, caption: 'opaque' },
   frame: { contents: 'opaque' },
 };

@@ -153,6 +153,10 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 /** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
 export type FinalizedUpload = { key: string; size: number; contentType?: string };
 
+/** What EDGE answers every brain fact feed route with: the EIDs of the fact feeds the brain indexes. */
+export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
+export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -687,6 +691,18 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
+   * Rewinds a feed trigger on the EDGE dispatcher to the start of its feed, so every item is delivered
+   * again. EDGE answers 409 for a trigger that is not a feed trigger.
+   */
+  public async resetTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call<{ reset: boolean }>(
+      ctx,
+      new URL(`/compute/functions/${spaceId}/triggers/${triggerId}/reset`, this.baseUrl),
+      { method: 'POST', auth: true },
+    );
+  }
+
+  /**
    * Returns the full list of triggers registered on a space's EDGE dispatcher, with per-trigger
    * runtime status. Polled by the remote trigger monitor to surface edge trigger state.
    *
@@ -702,6 +718,60 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Brain fact feeds
+  //
+
+  /**
+   * Has an agent's brain index a fact feed (its EID) from now on; answers the feeds it indexes. `agent` names the
+   * brain (see plugin-agent's `AgentPresence.brainId`); the caller must be a member of `spaceId`, a space it serves.
+   */
+  public async addBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'POST', body: { feed } });
+  }
+
+  /** Stops an agent's brain indexing a fact feed; the facts it read stay. Answers the feeds it still indexes. */
+  public async removeBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'DELETE' }, { feed });
+  }
+
+  /** The fact feeds an agent's brain indexes. */
+  public async listBrainFactFeeds(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'GET' });
+  }
+
+  async #factFeedsCall(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args: EdgeHttpCallArgs & { method: string; body?: unknown },
+    query: Record<string, string> = {},
+  ): Promise<BrainFactFeeds> {
+    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agent)}/fact-feeds`, this.baseUrl);
+    for (const [key, value] of Object.entries(query)) {
+      url.searchParams.set(key, value);
+    }
+    const response = await this._call(ctx, url, { ...args, auth: true });
+    return Schema.decodeUnknownSync(BrainFactFeeds)(response);
   }
 
   //

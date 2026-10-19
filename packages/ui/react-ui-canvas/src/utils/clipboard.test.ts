@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../model/projection.ts';
-import { type Link, type Scene, endpointNode } from '../model/types.ts';
+import { createSceneTree } from '../builder/testing.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { type Link, type Scene, endpointNode } from '../model/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
-import { createSceneTree } from './testing.ts';
 
 const fixture = (): Scene => {
   const { scenes, root } = createSceneTree(1, 'r');
