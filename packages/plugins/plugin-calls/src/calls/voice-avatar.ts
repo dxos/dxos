@@ -40,6 +40,20 @@ export const DEFAULT_TUNING: VoiceAvatarTuning = {
   thickness: 1,
 };
 
+/** Named tuning combinations found by hand in the VoiceAvatar story. */
+export const TUNING_PRESETS = {
+  /** Still strands that shake hard and shed dense ink while speaking. */
+  heptapod: {
+    waveAmplitude: 0,
+    jitter: 3.6,
+    waveSpeed: 5,
+    particles: 55,
+    strands: 7,
+    separation: 0.04,
+    thickness: 2.2,
+  },
+} satisfies Record<string, VoiceAvatarTuning>;
+
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
  * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival; `ink-line`: the

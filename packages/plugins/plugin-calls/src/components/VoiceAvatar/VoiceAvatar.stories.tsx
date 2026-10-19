@@ -14,6 +14,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import {
   DEFAULT_TUNING,
+  TUNING_PRESETS,
   type VoiceAvatar,
   type VoiceAvatarTuning,
   type VoiceAvatarVariant,
@@ -189,3 +190,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Heptapod: Story = {
+  args: { variant: 'ink', ...TUNING_PRESETS.heptapod },
+};
