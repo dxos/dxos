@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type InstanceNode, type Node, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
@@ -33,6 +33,8 @@ const {
   ViewBuilder.link('line', 'a', 'b').id('ab'),
   ViewBuilder.link('line', 'b', 'c').id('bc'),
 ]).build();
+
+const nodeCenter = (node: Node | undefined) => node?.center ?? { x: 0, y: 0 };
 
 const counter = () => {
   let next = 0;
@@ -139,6 +141,31 @@ describe('compose and ungroup', () => {
           link.target.node === second.id,
       ),
     ).toBe(true);
+  });
+
+  test("ungrouping brings the Object's animation back out, on the new nodes and where the Instance drew them", ({
+    expect,
+  }) => {
+    // `a` slides from where it stands to 100 right of it; Group carries the track into the Object.
+    const centre = nodeCenter(scene.nodes.a);
+    const keyed = setKey(setKey(createTimeline(2), 'a', 'center', { t: 0, value: centre }), 'a', 'center', {
+      t: 1,
+      value: { x: centre.x + 100, y: centre.y },
+    });
+    const animated = { ...scene, timeline: keyed };
+    const composition = composeSelection(animated, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
+    if (!composition) {
+      throw new Error('no composition');
+    }
+    expect(Object.keys(composition.composite.timeline?.tracks ?? {})).toEqual(['a:center']);
+    const parent = reduceIntent(animated, { kind: 'batch', intents: composition.intents });
+    const restored = reduceIntent(parent, {
+      kind: 'batch',
+      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
+    });
+    const first = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x)[0];
+    const track = restored.timeline?.tracks[`${first.id}:center`];
+    expect(track?.keys.map((key) => key.value)).toEqual([centre, { x: centre.x + 100, y: centre.y }]);
   });
 
   test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {

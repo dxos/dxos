@@ -389,8 +389,52 @@ export const ungroupInstance = (
       id: link.id,
       values: { source: onInstance(link.source), target: onInstance(link.target) },
     }));
-  return [...created, ...linked, ...reattached, { kind: 'delete', ids: [instance.id] }];
+  // The Object's animation comes back out with its nodes: renamed to them, and placed and sized as the Instance drew it.
+  const mapValue = (property: string, value: unknown): unknown =>
+    property === 'center' && isPointValue(value)
+      ? map(value)
+      : property === 'size' && isSizeValue(value)
+        ? { width: value.width * transform.scale, height: value.height * transform.scale }
+        : value;
+  const tracks = Object.values(composite.timeline?.tracks ?? {}).map((track): [string, Track] => {
+    const target = ids.get(track.target) ?? track.target;
+    return [
+      `${target}:${track.property}`,
+      { ...track, target, keys: track.keys.map((key) => ({ ...key, value: mapValue(track.property, key.value) })) },
+    ];
+  });
+  const timed: Intent[] =
+    tracks.length === 0 || !composite.timeline
+      ? []
+      : [
+          {
+            kind: 'timeline',
+            timeline: {
+              ...(scene.timeline ?? { duration: composite.timeline.duration }),
+              tracks: {
+                // The Instance's own tracks go with it.
+                ...Object.fromEntries(
+                  Object.entries(scene.timeline?.tracks ?? {}).filter(([, track]) => track.target !== instance.id),
+                ),
+                ...Object.fromEntries(tracks),
+              },
+            },
+          },
+        ];
+  return [...created, ...linked, ...reattached, ...timed, { kind: 'delete', ids: [instance.id] }];
 };
+
+const isPointValue = (value: unknown): value is Point =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'x') === 'number' &&
+  typeof Reflect.get(value, 'y') === 'number';
+
+const isSizeValue = (value: unknown): value is { width: number; height: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'width') === 'number' &&
+  typeof Reflect.get(value, 'height') === 'number';
 
 /**
  * A copy of `composite` under `compositeId` with fresh node and link ids (a drawing keys nodes by id across scenes), and
