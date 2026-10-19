@@ -15,11 +15,13 @@ import { Feature, FeatureMap, Showcase } from '#types';
 
 import addDependency from './add-dependency.ts';
 import addToMap from './add-to-map.ts';
+import createMap from './create-map.ts';
 import createShowcase from './create-showcase.ts';
 import create from './create.ts';
 import getMap from './get-map.ts';
 import linkTask from './link-task.ts';
 import removeDependency from './remove-dependency.ts';
+import removeFromMap from './remove-from-map.ts';
 import update from './update.ts';
 
 const testLayer = () =>
@@ -86,7 +88,9 @@ describe('FeatureOperation.AddDependency', () => {
 
       const exit = yield* Effect.exit(addDependency.handler({ feature: ref(accounts), dependsOn: ref(sync) }));
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(String(Exit.isFailure(exit) && exit.cause)).toContain('Sync → Tokens → Accounts');
+      expect(String(Exit.isFailure(exit) && exit.cause)).toContain(
+        'Accounts → Sync → Tokens → Accounts would close a cycle',
+      );
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -121,6 +125,17 @@ describe('FeatureOperation.LinkTask', () => {
 });
 
 describe('FeatureOperation.CreateShowcase', () => {
+  it.effect('writes nothing when a target does not resolve', () =>
+    Effect.gen(function* () {
+      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
+      yield* Database.remove(gone);
+      yield* Database.flush();
+      const exit = yield* Effect.exit(createShowcase.handler({ name: 'Orphan', content: '', targets: [ref(gone)] }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(yield* Database.query(Filter.type(Showcase.Showcase)).run).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('demonstrates every target and keeps its artifacts as refs', () =>
     Effect.gen(function* () {
       const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'operational' }));
@@ -156,6 +171,32 @@ describe('FeatureOperation.AddToMap', () => {
   );
 });
 
+describe('FeatureOperation.CreateMap', () => {
+  it.effect('creates a map holding the features given', () =>
+    Effect.gen(function* () {
+      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
+      const { map } = yield* createMap.handler({ name: 'Inbox', features: [ref(compose)] });
+      expect(map.name).toBe('Inbox');
+      expect(map.features).toHaveLength(1);
+      expect(yield* Database.query(Filter.type(FeatureMap.FeatureMap)).run).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.RemoveFromMap', () => {
+  it.effect('takes a feature off the map and keeps the feature', () =>
+    Effect.gen(function* () {
+      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
+      const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'planned' }));
+      const { map } = yield* createMap.handler({ name: 'Inbox', features: [ref(compose), ref(sync)] });
+      yield* removeFromMap.handler({ map: ref(map), feature: ref(compose) });
+      yield* removeFromMap.handler({ map: ref(map), feature: ref(compose) });
+      expect(map.features).toHaveLength(1);
+      expect(yield* Database.query(Filter.type(Feature.Feature)).run).toHaveLength(2);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('FeatureOperation.GetMap', () => {
   it.effect('reads each member with its dependencies, tasks, showcases and subfeatures', () =>
     Effect.gen(function* () {
@@ -174,6 +215,11 @@ describe('FeatureOperation.GetMap', () => {
         content: 'Reply from the inbox.',
         targets: [ref(compose)],
       });
+
+      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
+      yield* addToMap.handler({ map: ref(map), feature: ref(gone) });
+      yield* Database.remove(gone);
+      yield* Database.flush();
 
       const result = yield* getMap.handler({ map: ref(map) });
       expect(result.features.map(({ name }) => name)).toEqual(['Compose', 'Sync']);

@@ -1,12 +1,19 @@
 ---
 name: drawing
-description: Draw architecture, data-flow, class and dependency diagrams as SVG with drawing.sh. You write a short text file saying which boxes exist and how they relate; the `drawing` CLI places the boxes on a grid, routes every arrow, reports crossings and bends, and writes an SVG. Use when asked to draw, diagram, sketch or visualise a system, a codebase, a request flow, a data model or a pipeline, or to add a diagram to a README, design doc or pull request.
+description: Draw architecture, data-flow, class and dependency diagrams as SVG with the `drawing` CLI (drawing.sh, npm package `@dxos/drawing`). You write a short text file saying which boxes exist and how they relate; the CLI places the boxes on a grid, routes every arrow, reports crossings and bends, and writes an SVG. Use when asked to draw, diagram, sketch or visualise a system, a codebase, a request flow, a data model or a pipeline, or to add a diagram to a README, design doc or pull request.
 ---
 
 # drawing
 
 You describe the diagram; the layout engine draws it. Never compute coordinates, never write SVG by hand,
 and never use Mermaid for a diagram this skill can draw.
+
+## Install
+
+Nothing needs installing: when `drawing` is not on PATH,
+`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` runs the latest build of `main`.
+Installing from npm (`npm i -g @dxos/drawing`, or `npx -y @dxos/drawing`) is optional and makes repeat runs
+faster.
 
 ## Workflow
 
@@ -23,8 +30,11 @@ and never use Mermaid for a diagram this skill can draw.
    drawing render diagram.dx
    ```
 
-   If that reports `command not found`, run `npx -y @dxos/drawing render diagram.dx` instead. Don't probe
-   for the command first; just run it.
+   If that reports `command not found`, run
+   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` instead. Don't probe for
+   the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`), stop: tell
+   the user the exact error and the commands under Install. Don't hand-draw an SVG, switch to Mermaid or
+   guess other package names.
 
    It prints a report and writes `diagram.dx.svg` beside the source. `--plain` writes a bare `.svg`;
    `-o path` picks the output; `--json` prints the report as JSON. Exit code 1 means the source has an
@@ -66,6 +76,34 @@ edge Worker -> Db
   against the code.
 - `group <id> ["label"] [right-of|left-of|below|above <group>] [compact] [max-width=N] { … }`: a dashed
   frame around its members. Groups do not nest; use three or fewer.
+- **A node is in a group only if its `node` line is inside that group's braces.** There is no `group=`
+  attribute, and each id and each group is declared once. To move an existing box into a group, cut its
+  `node` line and paste it inside the braces; edges refer to ids, so they stay where they are. Writing
+  `node Db` again inside the group is a second declaration (`"Db" is already declared`), and a second
+  `group data { … }` block is too; add members to the one block. A group needs at least one member.
+
+  Before:
+
+  ```
+  node Api "API server"
+  node Db "Postgres"
+  node Cache "Redis"
+  edge Api -> Db
+  edge Api -> Cache
+  ```
+
+  After, with `Db` and `Cache` moved into a new group:
+
+  ```
+  node Api "API server"
+  group data "Storage" {
+    node Db "Postgres"
+    node Cache "Redis"
+  }
+  edge Api -> Db
+  edge Api -> Cache
+  ```
+
 - `edge A -> B ["label"]`: an arrow. `<->` draws two arrowheads, `--` none. `edge A -> B, C` fans out.
   Label only the edges that say something, in a few words.
 - **Say what an edge means and the arrowhead follows.** Put a word in place of `->`; the left end is

@@ -255,7 +255,7 @@ export type CanvasRootProps = Util.ThemedClassName<{
   initialDisplay?: Partial<SceneDisplay>;
   /** Called when a display toggle changes, so a host can persist it. */
   onDisplayChange?: (display: SceneDisplay) => void;
-  /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
+  /** Minor grid spacing in scene px; moves, resizes and creation snap to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
   margin?: number;
@@ -1025,7 +1025,7 @@ const CanvasRoot = ({
   // Pointer state machine.
   //
 
-  const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
   const toggleGuides = useCallback(
     () => registry.set(atoms.guides, !registry.get(atoms.guides)),
@@ -1083,6 +1083,8 @@ const CanvasRoot = ({
     major,
     snap,
     snapMinor,
+    isClick,
+    moveDelta,
   });
 
   // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
@@ -1360,8 +1362,8 @@ const CanvasRoot = ({
     if (!element) {
       return;
     }
-    // The pointer is the shape's centre; its top-left snaps to the minor grid, as a move does, so the shape
-    // lands where it was dropped rather than up to half a major cell away.
+    // The pointer is the shape's centre; its top-left snaps to the minor grid, so the shape lands where it
+    // was dropped rather than up to half a major cell away.
     const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
       const def = nodeRegistry[type];

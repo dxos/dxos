@@ -33,6 +33,8 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, subject.id);
   const db = Obj.getDatabase(subject);
   const [refs = []] = useObject(subject, 'features');
+  // Subscribed, not read off the subject, so a drag by another peer or an agent re-lays out an open canvas.
+  const [positions] = useObject(subject, 'positions');
   // The map's refs are the scope: only these features and their relations are queried.
   const ids = useMemo(() => refs.flatMap((ref) => EID.getEntityId(EID.parse(ref.uri)) ?? []), [refs]);
   const graph = useFeatureGraph(db, ids);
@@ -82,15 +84,11 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
       </Panel.Header>
       <Panel.Body asChild>
         {mode === 'canvas' ? (
-          <div className='dx-cover relative' data-testid='feature-map.canvas'>
-            <FeatureCanvas
-              features={features}
-              positions={subject.positions}
-              onPositionsChange={handlePositionsChange}
-            />
+          <div className='relative' data-testid='feature-map.canvas'>
+            <FeatureCanvas features={features} positions={positions} onPositionsChange={handlePositionsChange} />
           </div>
         ) : (
-          <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <FeatureBoard features={features} onOpen={(id) => void openObject(id)} />
             </ScrollArea.Viewport>

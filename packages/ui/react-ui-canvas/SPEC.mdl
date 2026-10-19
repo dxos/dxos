@@ -491,8 +491,9 @@ feat F-2: Grid and snapping
     diverges as soon as the zoom moves: far enough in the drawn lines are finer than the snap, and in a
     nested scene — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
     nothing visible.
-  req F-2.3: A created node arrives on the major level; a move, a resize or a dragged control point
-    snaps to the minor one, so placement is not coarse while a node's size and ports stay aligned.
+  req F-2.3: A node drawn on the canvas, moved or resized lands on the major level, so its edges and ports
+    stay on major lines; a palette drop, a dragged control point and a press that moves less than half a
+    minor cell (a click) snap to the minor one or not at all.
   req F-2.4: An arrow nudges by the minor grid, Shift+arrow by a major cell.
   req F-2.5: A link band follows the pointer exactly and snaps once, as it lands.
   req F-2.6: Snapping off means every gesture is free and the grid is hidden; nothing else changes.
@@ -738,7 +739,7 @@ test QA-1: The editor surface end to end
       expect: the first drag selects both; the Alt drag removes them from the selection
     - name: Move and snap
       do: Drag a node with snap on (G toggles it).
-      expect: the node's edges land on minor grid lines; the readout follows the pointer
+      expect: the node's edges land on major grid lines; the readout follows the pointer
     - name: Draw a link
       do: Hover a node, drag from one of its ports onto another node.
       expect: a band follows the pointer, the target's ports show, and a link is created on release

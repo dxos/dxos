@@ -55,7 +55,7 @@ export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticle
   return (
     <Panel.Root role={role}>
       <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
+        <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4'>
             <Layout.Flex column gap='lg'>
               <Form.Root db={db} schema={Values} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
