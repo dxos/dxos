@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { MermaidEngine, type Scene, SVG_SCHEMA, SvgFile } from '@dxos/diagram';
 import { Database, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 
 import { Drawing } from '#types';
 
-import { toSvgFile } from '../components/SceneSvgFile.tsx';
 import { SvgBuilder } from './builder.ts';
 import { fromDxSvg, importDxSvg, makeDrawing, toDxSvg, toPayload } from './drawing-file.ts';
 
@@ -39,7 +38,7 @@ describe('.dx.svg', () => {
     SvgBuilder.apply(canvas, commands);
     const drawing = Drawing.make({ name: 'Request path', canvas });
     const svg = toDxSvg(
-      toSvgFile(objectsOf(commands)),
+      SvgFile.toSvgFile(objectsOf(commands)),
       toPayload({ drawing, canvas, source: { language: 'mermaid', text: SOURCE } }),
     );
 
@@ -58,6 +57,8 @@ describe('.dx.svg', () => {
     expect(first.id).not.toBe(drawing.id);
     expect(second.id).not.toBe(first.id);
     expect(await db.query(Filter.type(Drawing.Drawing)).run()).toHaveLength(2);
+    // The drawing returned is the database's own, so an edit to it (a conversion re-pointing its canvas) persists.
+    expect(await db.query(Filter.id(first.id)).first()).toBe(first);
     expect(first.name).toBe('Request path');
     const imported = await first.canvas.load();
     invariant(imported, 'The imported drawing resolves its canvas.');
@@ -79,7 +80,7 @@ describe('.dx.svg', () => {
       const commands = await MermaidEngine.compile(SOURCE);
       const source = { language: 'mermaid' as const, text: SOURCE };
       const { drawing, canvas } = makeDrawing({ name: 'Request path', commands, source });
-      return toDxSvg(toSvgFile(objectsOf(commands)), toPayload({ drawing, canvas, source }));
+      return toDxSvg(SvgFile.toSvgFile(objectsOf(commands)), toPayload({ drawing, canvas, source }));
     };
     const [first, second] = [await render(), await render()];
     expect(second).toBe(first);
@@ -99,7 +100,7 @@ describe('.dx.svg', () => {
     const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
     SvgBuilder.apply(canvas, commands);
     const drawing = Drawing.make({ name: 'Request path', canvas });
-    const svg = toDxSvg(toSvgFile(objectsOf(commands)), { ...toPayload({ drawing, canvas }), root: canvas.id });
+    const svg = toDxSvg(SvgFile.toSvgFile(objectsOf(commands)), { ...toPayload({ drawing, canvas }), root: canvas.id });
 
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);

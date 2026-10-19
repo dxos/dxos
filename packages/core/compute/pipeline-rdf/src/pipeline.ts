@@ -9,26 +9,27 @@ import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from './errors.ts';
-import { indexFactsStage } from './stages/index.ts';
+import { type IndexBatchOptions, indexFactsBatchStage, indexFactsStage } from './stages/index.ts';
 import { FactStore } from './store/index.ts';
-import { type ExtractDocument, type ExtractOptions } from './types/index.ts';
+import { type ExtractDocument } from './types/index.ts';
 import { type Fact } from './types/index.ts';
 
 export const FactPipeline = {
   /**
    * Batch convenience over {@link indexFactsStage}: streams the documents through the indexing
    * stage and collects every persisted fact. Documents are processed in order with back pressure.
+   * With `batchSize` set, documents go through {@link indexFactsBatchStage} instead: one model request
+   * per batch transcript rather than per document.
    */
-  run: (
+  run: Effect.fnUntraced(function* (
     docs: readonly ExtractDocument[],
-    options?: ExtractOptions,
-  ): Effect.Effect<Fact[], SemanticIndexError, FactStore | AiService.AiService> =>
-    Effect.gen(function* () {
-      const allFacts: Fact[] = [];
-      yield* Stream.fromIterable(docs).pipe(
-        indexFactsStage(options),
-        Pipeline.run({ sink: ({ facts }) => Effect.sync(() => allFacts.push(...facts)) }),
-      );
-      return allFacts;
-    }),
+    options?: IndexBatchOptions,
+  ): Effect.fn.Return<Fact[], SemanticIndexError, FactStore | AiService.AiService> {
+    const allFacts: Fact[] = [];
+    yield* Stream.fromIterable(docs).pipe(
+      options?.batchSize === undefined ? indexFactsStage(options) : indexFactsBatchStage(options),
+      Pipeline.run({ sink: ({ facts }) => Effect.sync(() => allFacts.push(...facts)) }),
+    );
+    return allFacts;
+  }),
 };

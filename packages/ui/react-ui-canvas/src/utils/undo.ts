@@ -11,8 +11,8 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { type Projection } from '../model/projection.ts';
-import { type SceneMap, type SceneStore } from '../model/store.ts';
+import { type Projection } from '../engine/index.ts';
+import { type SceneMap, type SceneStore } from '../model/index.ts';
 
 /** Entries older than this are dropped rather than growing without bound. */
 export const UNDO_LIMIT = 100;
@@ -58,6 +58,21 @@ export const withUndo = (
     registry.set(atom, { key, past: [...state.past.slice(-(UNDO_LIMIT - 1)), { model: before }], future: [] });
   },
 });
+
+/**
+ * Records a step that changed the store's scenes without an intent (a renamed or removed composite): `model` is the
+ * projection's snapshot and `scenes` the store's scenes from before it.
+ */
+export const recordStoreStep = (
+  registry: Registry.AtomRegistry,
+  atom: Atom.Writable<UndoState>,
+  key: string,
+  model: unknown,
+  scenes: SceneMap,
+): void => {
+  const state = stateFor(registry, atom, key);
+  registry.set(atom, { key, past: [...state.past.slice(-(UNDO_LIMIT - 1)), { model, scenes }], future: [] });
+};
 
 /** Marks the step just recorded as one that also changed the store's scenes, which were `scenes` before it. */
 export const recordScenes = (

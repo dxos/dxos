@@ -24,7 +24,8 @@ type HeaderRootProps = Util.ThemedClassName<
  * one header structure.
  */
 const HeaderRoot = ({ classNames, children, ...props }: HeaderRootProps) => (
-  <Card.Root border={false} classNames={mx('p-1 border-b border-separator-subtle', classNames)} {...props}>
+  // No shadow either: in light mode a card's shadow draws its edge, and the article frames this header itself.
+  <Card.Root border={false} classNames={mx('p-1 border-b border-separator-subtle shadow-none', classNames)} {...props}>
     <Card.Body>{children}</Card.Body>
   </Card.Root>
 );

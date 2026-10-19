@@ -828,6 +828,22 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
+  /** The ids among `documentIds` that have rows in any space other than `spaceId`. */
+  queryDocumentsIndexedElsewhere = Effect.fn('EntityMetaIndex.queryDocumentsIndexedElsewhere')(
+    (query: { spaceId: SpaceId; documentIds: readonly string[] }): Effect.Effect<Set<string>, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const found = new Set<string>();
+        for (const chunk of chunkArray(query.documentIds)) {
+          const rows = yield* sql<{
+            documentId: string;
+          }>`SELECT DISTINCT documentId FROM objectMeta WHERE spaceId != ${query.spaceId} AND ${sql.in('documentId', chunk)}`;
+          rows.forEach((row) => found.add(row.documentId));
+        }
+        return found;
+      }),
+  );
+
   /** Delete metadata rows by record id. */
   deleteByRecordIds = Effect.fn('EntityMetaIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>

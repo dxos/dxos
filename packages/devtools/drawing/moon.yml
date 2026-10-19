@@ -1,0 +1,17 @@
+layer: library
+language: typescript
+tags:
+  - ts-compile
+  - ts-test
+tasks:
+  build:
+    deps:
+      - ~:stage-skill
+  # The skill lives at the repo root, where `npx skills add dxos/dxos` finds it; a copy (not a symlink, which
+  # npm pack drops) puts it in the package for `files`.
+  stage-skill:
+    command: bash -c 'rm -rf skills && mkdir -p skills && cp -R ../../../skills/drawing skills/drawing'
+    inputs:
+      - /skills/drawing/**/*
+    outputs:
+      - skills/

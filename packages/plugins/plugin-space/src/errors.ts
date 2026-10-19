@@ -29,6 +29,8 @@ export class TemplateNotFoundError extends BaseError.extend(
 ) {}
 
 /** The space was created and initialized, but the template failed to write its content into it. */
+export class InvalidSpaceIdError extends BaseError.extend('InvalidSpaceIdError', 'Invalid space ID.') {}
+
 export class TemplateApplyError extends BaseError.extend('TemplateApplyError', 'Failed to apply the space template.') {}
 
 /** A `?spaceKey=` deep link timed out or was rejected while joining, distinct from an invitation-code failure. */

@@ -13,6 +13,7 @@ import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 import * as Tracer from 'effect/Tracer';
 
 import { AiService } from '@dxos/ai';
@@ -33,7 +34,7 @@ import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
 import { credentialsLayerConfig } from '../services/credentials.ts';
-import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher.ts';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher, resetFeedCursor } from './trigger-dispatcher.ts';
 import { TriggerStateStore } from './trigger-state-store.ts';
 
 /**
@@ -110,6 +111,24 @@ const UnhandledOp = Operation.make({
 /** Shape of the uris seen in production, referencing an object that no longer exists. */
 const DANGLING_URI = URI.make('echo:///01KYMGPJCXG398JQYERR2BJ80W');
 
+/** A uri no resolver supports, so loading it throws rather than reporting the object missing. */
+const UNREADABLE_URI = URI.make('urn:example:unreadable');
+
+/** Takes the optional `priority` a connector's sync trigger templates from its event. */
+const PriorityOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.priority'), name: 'Priority' },
+  input: Schema.Struct({ priority: Schema.optional(Schema.String) }),
+  output: Schema.Void,
+});
+
+/** Rewinds every feed trigger in the space when invoked, so a test can land a reset while a batch runs. */
+const ResetFeedTriggersOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.resetFeedTriggers'), name: 'Reset feed triggers' },
+  input: Schema.Any,
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
 /** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
 const TracedOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
@@ -130,6 +149,15 @@ const TracedHandlers = OperationHandlerSet.make(
 const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
+  PriorityOp.pipe(Operation.withHandler(() => Effect.void)),
+  ResetFeedTriggersOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run;
+        triggers.filter((trigger) => trigger.spec?.kind === 'feed').forEach(resetFeedCursor);
+      }),
+    ),
+  ),
   SubjectProbeOp.pipe(
     Operation.withHandler(
       Effect.fn(function* (event: TriggerEvent.SubscriptionEvent) {
@@ -367,6 +395,31 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Timer Triggers', () => {
+    // Regression: a connector's sync trigger passes `priority: '{{event.data.priority}}'`, which a cron
+    // tick leaves unset. The key was still written as `undefined`, which the operation's serialized
+    // schema rejects, so every scheduled local sync failed with `Expected string, got undefined`.
+    it.effect(
+      'a template that resolves to nothing leaves an optional input out',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(PriorityOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('* * * * *'),
+          input: { priority: '{{event.data.priority}}' },
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+        yield* dispatcher.advanceTime(Duration.minutes(1));
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+
+        expect(results).toHaveLength(1);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
+
     // A schedule finer than the poll cannot be honoured: the tick finds it due, fires it once and
     // skips to the next occurrence after now, dropping the ones in between. It is refused rather
     // than run at the poll rate under a faster name.
@@ -901,6 +954,84 @@ describe('TriggerDispatcher', () => {
         expect(resumed.length).toBe(1);
         expect(resumed[0].feedCursor).not.toBe(cursor);
         expect(Obj.getKeys(trigger, LEGACY_KEY_FEED_CURSOR)).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    const decodeBatch = Schema.decodeUnknownSync(
+      Schema.Struct({ names: Schema.Array(Schema.Struct({ fullName: Schema.String })) }),
+    );
+
+    it.effect(
+      'delivers batchSize items per invocation, in feed order',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed, { batchSize: 2 }),
+          input: { names: '{{event.items}}' },
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(
+          feed,
+          ['Alice', 'Bob', 'Charlie'].map((fullName) => Obj.make(Person.Person, { fullName })),
+        );
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
+        const batches = results.map(({ result }) => {
+          invariant(Exit.isSuccess(result));
+          return decodeBatch(result.value).names.map(({ fullName }) => fullName);
+        });
+        expect(batches).toEqual([['Alice', 'Bob'], ['Charlie']]);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset cursor reads the feed again from its first item',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [
+          Obj.make(Person.Person, { fullName: 'Alice' }),
+          Obj.make(Person.Person, { fullName: 'Bob' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+
+        resetFeedCursor(trigger);
+        yield* Database.flush();
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset during the first batch is not overwritten by that batch',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(ResetFeedTriggersOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Alice' })]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const [result] = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+        expect(Exit.isSuccess(result.result)).toBe(true);
+        expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
       }, Effect.provide(TestLayer())),
     );
 
@@ -1633,6 +1764,98 @@ describe('TriggerDispatcher', () => {
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
       ),
+    );
+
+    // Regression: a source that failed to load with anything but not-found (a storage error, in the
+    // field) failed every refresh, so no trigger ran again until the app restarted.
+    it.effect(
+      'a feed that cannot be read parks its trigger without failing the refresh',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(Reply);
+          const unreadable = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: { kind: 'feed', feed: Ref.fromURI(UNREADABLE_URI) },
+          });
+          yield* Database.add(unreadable);
+          const healthy = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('*/5 * * * *'),
+          });
+          yield* Database.add(healthy);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+          yield* dispatcher.refreshTriggers();
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          expect(status.enabled).toBe(true);
+          expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+          expect(status.triggers.find((t) => t.triggerId === unreadable.id)?.staleReference).toBeDefined();
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    // Regression: `repeat` ended at the first failed tick and nothing restarted the dispatcher, so one
+    // storage error in the field (`RangeError: Bad value`) stopped every schedule until a reload.
+    it.effect(
+      'a failed tick leaves the dispatcher running',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          const invokeScheduledTriggers = dispatcher.invokeScheduledTriggers;
+          let ticks = 0;
+          dispatcher.invokeScheduledTriggers = (opts) => {
+            ticks += 1;
+            return ticks === 1 ? Effect.die(new RangeError('Bad value')) : invokeScheduledTriggers(opts);
+          };
+
+          yield* dispatcher.start();
+          yield* TestClock.adjust(Duration.minutes(2));
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          expect(ticks).toBeGreaterThan(1);
+          expect(status.enabled).toBe(true);
+          expect(status.errors.map((error) => error.message)).toEqual(['Bad value']);
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    it.effect(
+      'a schedule with no next occurrence does not fail the refresh',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const never = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('0 0 30 2 *'), // February 30th.
+        });
+        yield* Database.add(never);
+        const healthy = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(healthy);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const registry = yield* Registry.AtomRegistry;
+        const status = registry.get(dispatcher.state);
+        expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+        expect(status.triggers.find((t) => t.triggerId === never.id)?.nextExecution).toBeUndefined();
+      }, Effect.provide(TestLayer())),
     );
 
     it.effect(

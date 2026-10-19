@@ -16,6 +16,7 @@ import { EditorState, EditorView } from '@dxos/ui-editor';
 
 import { Markdown } from '#types';
 
+import { useDocumentContent } from './useDocumentContent.ts';
 import { useExtensions } from './useExtensions.tsx';
 
 describe('useExtensions content binding guard', () => {
@@ -46,7 +47,9 @@ describe('useExtensions content binding guard', () => {
       }),
     );
 
-    const { result } = renderHook(() => useExtensions({ id: 'test-surface', object: doc }));
+    const { result } = renderHook(() =>
+      useExtensions({ id: 'test-surface', object: doc, content: useDocumentContent(doc) }),
+    );
     const state = EditorState.create({ extensions: result.current });
 
     expect(state.readOnly).toBe(true);
@@ -58,7 +61,9 @@ describe('useExtensions content binding guard', () => {
     await space.db.flush({ indexes: true });
     await doc.content.load();
 
-    const { result } = renderHook(() => useExtensions({ id: 'test-surface', object: doc }));
+    const { result } = renderHook(() =>
+      useExtensions({ id: 'test-surface', object: doc, content: useDocumentContent(doc) }),
+    );
     const state = EditorState.create({ extensions: result.current });
 
     expect(state.readOnly).toBe(false);

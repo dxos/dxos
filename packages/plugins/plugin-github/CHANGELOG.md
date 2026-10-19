@@ -1,5 +1,127 @@
 # @dxos/plugin-github
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-crx@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-preview@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-markdown@0.16.0
+  - @dxos/react-ui-masonry@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/lit-ui@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 1b33a84: `Listbox.Content` and `OrderedList.Content` no longer scroll themselves: wrap them in the new `Listbox.Viewport` / `OrderedList.Viewport` for a list that owns its scrolling, and leave them bare inside a host that scrolls. Breaking: the `scroll` prop is removed (drop `scroll={false}`; wrap lists that relied on the default in a `Viewport`). `Listbox.Root` gains `onHighlightChange`, rows laid out with Root `columns` centre their parts, card icons default one size step larger, and the GitHub pull request's checks list is compact, navigable with the arrow keys, and scrolls with its tab.
+- Updated dependencies [3b03db7]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [5162e12]
+- Updated dependencies [55bdf55]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-query@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-markdown@0.15.0
+  - @dxos/react-ui-query@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-crx@0.15.0
+  - @dxos/plugin-preview@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-masonry@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/lit-ui@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

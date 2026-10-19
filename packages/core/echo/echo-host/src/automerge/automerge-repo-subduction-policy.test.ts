@@ -4,7 +4,8 @@
 
 import { type DocHandle, type SubductionPolicy, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { MemorySigner } from '@automerge/automerge-subduction';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { Subduction } from '@automerge/automerge-subduction/slim';
+import { beforeAll, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
@@ -1154,6 +1155,48 @@ describe('SubductionPolicy', () => {
       // Wait for the refusal itself, not for a span in which it might have happened.
       await gate.waitForDenial();
       expect(progress.peek().state).to.not.equal('ready');
+    });
+  });
+
+  describe('round peer selection', () => {
+    test('a round never asks a peer the policy would refuse the document', async () => {
+      const server1Signer = MemorySigner.generate();
+      const refused = server1Signer.peerId().toString();
+      const { policy } = createCountingPolicy({
+        authorizeFetch: async (peerId) => {
+          if (peerId.toString() === refused) {
+            throw new Error('refused');
+          }
+        },
+        filterAuthorizedFetch: async (peerId, ids) => (peerId.toString() === refused ? [] : ids),
+      });
+      const asked: string[] = [];
+      const syncWithPeer = Subduction.prototype.syncWithPeer;
+      const spy = vi.spyOn(Subduction.prototype, 'syncWithPeer').mockImplementation(function (
+        this: Subduction,
+        ...args
+      ) {
+        asked.push(args[0].toString());
+        return syncWithPeer.apply(this, args);
+      });
+      onTestFinished(() => spy.mockRestore());
+      const { repos, adapters, repoPairs } = await createStarTopology({
+        signers: { client: MemorySigner.generate(), server1: server1Signer, server2: MemorySigner.generate() },
+        subductionPolicies: { client: policy },
+      });
+      const [client, , server2] = repos;
+
+      const handle = client.create<{ text?: string }>({ text: 'from-client' });
+      await waitForSubductionSave(repos);
+      await connectAdapters([adapters[1]], { repoPairs: [repoPairs[1]] });
+      await expect
+        .poll(async () => (await server2.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: SYNC_WINDOW_MS })
+        .toEqual('from-client');
+      const askedBefore = asked.length;
+      await connectAdapters([adapters[0]], { repoPairs: [repoPairs[0]] });
+
+      await expect.poll(() => asked.length, { timeout: SYNC_WINDOW_MS }).toBeGreaterThan(askedBefore);
+      expect(asked).not.toContain(refused);
     });
   });
 });

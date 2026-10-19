@@ -39,15 +39,21 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   const channels = values?.channels ?? [];
   const conversations = useAgentConversations(agent);
 
+  // The list owns its channels, so a channel taken off it is deleted rather than left hidden.
   const handleRemoveChannel = useCallback(
     (uri: string) => {
-      if (list) {
-        Obj.update(list, (list) => {
-          list.channels = list.channels.filter((ref) => ref.uri !== uri);
-        });
+      if (!list || !db) {
+        return;
+      }
+      const channel = list.channels.find((ref) => ref.uri === uri)?.peek();
+      Obj.update(list, (list) => {
+        list.channels = list.channels.filter((ref) => ref.uri !== uri);
+      });
+      if (channel) {
+        db.remove(channel);
       }
     },
-    [list],
+    [list, db],
   );
 
   const handleSelect = useCallback(
@@ -149,10 +155,12 @@ type ChannelTileProps = {
   onRemove: (uri: string) => void;
 };
 
-/** One channel row, named by the channel its ref resolves to, with its connection's state. */
+/** One channel row, named by the channel its ref resolves to, with its connection's state and its backend's summary. */
 const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
-  const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
+  // The backend's summary names what the channel is (an email channel's address), which its name alone does not.
+  const summary = [status?.status?.state, status?.status?.detail].filter(Boolean).join(' · ');
+  const detail = status?.error ?? status?.status?.error ?? (summary || undefined);
   return (
     <AgentActivityComponent.Channel
       id={ref.uri}

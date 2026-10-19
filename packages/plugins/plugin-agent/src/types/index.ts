@@ -2,13 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as AgentCapabilities from './AgentCapabilities.ts';
 export * as AgentChannels from './AgentChannels.ts';
 export * as AgentCompanion from './AgentCompanion.ts';
+export * as AgentEmail from './AgentEmail.ts';
+export * as AgentMailbox from './AgentMailbox.ts';
 export * as AgentOperation from './AgentOperation.ts';
+export * as AgentPresence from './AgentPresence.ts';
+export * as AgentSettings from './AgentSettings.ts';
+export * as AgentSpace from './AgentSpace.ts';
 export * as BrainService from './BrainService.ts';
+export * as EmailOperation from './EmailOperation.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
+export * as FactFeed from './FactFeed.ts';
 export * as Goal from './Goal.ts';
-export * as Memory from './Memory.ts';
 export * as MemoryOperation from './MemoryOperation.ts';
 export * as Mode from './Mode.ts';
 export * as ModeOperation from './ModeOperation.ts';

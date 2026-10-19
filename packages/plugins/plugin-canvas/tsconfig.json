@@ -37,6 +37,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -55,7 +61,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../stories/storybook-testing"
+    },
+    {
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-ui"
@@ -86,6 +98,12 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-mermaid"
+    },
+    {
+      "path": "../plugin-sheet"
     },
     {
       "path": "../plugin-testing"

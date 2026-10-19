@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { beginCommit } from './commit-scope.ts';
 import { batchEvents } from './event-batch.ts';
 import { getMutableProxy } from './proxy-utils.ts';
 import { ChangeKeyId, EventId } from './symbols.ts';
@@ -120,24 +121,30 @@ export const executeChange = (
   proxy: any,
   callback: (proxy: any) => void,
 ): void => {
-  const exitContext = enterChangeContext(contextKey);
+  // One commit for the whole callback: a subscriber must never observe the state between two of its writes.
+  const endCommit = beginCommit();
   try {
-    // The callback is handed the mutable view, not `proxy`: writability travels with the reference, so
-    // the object named outside stays read-only even while this runs. The context is still entered —
-    // it is what batches notifications and what the array and text gates read.
-    batchEvents(() => callback(getMutableProxy(proxy)));
+    const exitContext = enterChangeContext(contextKey);
+    try {
+      // The callback is handed the mutable view, not `proxy`: writability travels with the reference, so
+      // the object named outside stays read-only even while this runs. The context is still entered —
+      // it is what batches notifications and what the array and text gates read.
+      batchEvents(() => callback(getMutableProxy(proxy)));
+    } finally {
+      exitContext();
+      // Fire the primary notification (a real change).
+      if (hasPendingNotifications(contextKey)) {
+        clearPendingNotifications(contextKey);
+        (eventTarget as any)[EventId]?.emit();
+      }
+      // Fire owner chain notifications.
+      for (const ownerTarget of pendingOwnerNotifications) {
+        (ownerTarget as any)[EventId]?.emit();
+      }
+      pendingOwnerNotifications.clear();
+    }
   } finally {
-    exitContext();
-    // Fire the primary notification (a real change).
-    if (hasPendingNotifications(contextKey)) {
-      clearPendingNotifications(contextKey);
-      (eventTarget as any)[EventId]?.emit();
-    }
-    // Fire owner chain notifications.
-    for (const ownerTarget of pendingOwnerNotifications) {
-      (ownerTarget as any)[EventId]?.emit();
-    }
-    pendingOwnerNotifications.clear();
+    endCommit();
   }
 };
 

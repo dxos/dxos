@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EDGE_URLS } from '@dxos/config';
+
 /** Stable id used by `plugin-connector` to look up the Discord Bot provider entry. */
 export const DISCORD_PROVIDER_ID = 'discord';
 
@@ -32,30 +34,6 @@ const BOT_PERMISSIONS = String((1 << 10) | (1 << 11) | (1 << 16));
 /** OAuth scopes used by the invite URL — Discord requires `bot` + `applications.commands`. */
 const BOT_SCOPES = ['bot', 'applications.commands'];
 
-/**
- * Discord snowflake epoch — 2015-01-01 00:00:00 UTC in milliseconds. All
- * Discord snowflakes (message ids, channel ids, ...) encode the time of
- * creation as `(unix_ms - DISCORD_EPOCH_MS) << 22`. We use this to construct
- * an "after" snowflake from a wall-clock cutoff so we can ask Discord for
- * "messages since N days ago" without first knowing any message id.
- */
-export const DISCORD_EPOCH_MS = 1_420_070_400_000;
-
-/**
- * Construct a Discord snowflake that sorts equal to the given wall-clock
- * timestamp. Used as the `after` parameter on `/channels/{id}/messages` to
- * start the initial sync at a bounded lookback rather than walking the full
- * channel history (which would generate hundreds of requests and burn through
- * the bot's rate limit on busy channels).
- *
- * BigInt because the result exceeds `Number.MAX_SAFE_INTEGER` for any
- * timestamp in the post-2015 epoch.
- */
-export const snowflakeForTimestamp = (timestampMs: number): string => {
-  const adjusted = Math.max(0, timestampMs - DISCORD_EPOCH_MS);
-  return (BigInt(Math.floor(adjusted)) << 22n).toString();
-};
-
 /** Default lookback window for the first sync of a channel when the user hasn't set `maxDays`. */
 export const DEFAULT_DAYS = 30;
 
@@ -78,3 +56,42 @@ export const generateInviteUrl = (applicationId: string): string => {
 
 /** Companion variant (and surface literal) of an agent's Discord setup: account, servers and routed channels. */
 export const DISCORD_AGENT_COMPANION = 'discord';
+
+/** The EDGE environments of `EDGE_URLS`, which the Kai apps and the hub console are per. */
+const EDGE_ENVIRONMENTS = ['local', 'dev', 'preview', 'production'] as const satisfies (keyof typeof EDGE_URLS)[];
+
+type EdgeEnvironment = (typeof EDGE_ENVIRONMENTS)[number];
+
+/** The known EDGE environment `edgeUrl` belongs to, matched by origin; undefined for a custom EDGE. */
+const edgeEnvironment = (edgeUrl: string | undefined): EdgeEnvironment | undefined => {
+  const origin = edgeUrl && URL.parse(edgeUrl)?.origin;
+  return origin
+    ? EDGE_ENVIRONMENTS.find((environment) => new URL(EDGE_URLS[environment]).origin === origin)
+    : undefined;
+};
+
+/** Hub console page listing the Discord bots EDGE hosts; one hub serves every environment, picked by `env`. */
+const EDGE_CONSOLE_URL = 'https://hub.dev.dxos.network/console/edge/discord';
+
+/** The hub console's Discord page for the EDGE environment `edgeUrl` belongs to; undefined for a custom EDGE. */
+export const edgeConsoleUrl = (edgeUrl: string | undefined): string | undefined => {
+  const environment = edgeEnvironment(edgeUrl);
+  return environment && `${EDGE_CONSOLE_URL}?${new URLSearchParams({ env: environment })}`;
+};
+
+/**
+ * DXOS's Kai Discord app in each EDGE environment. EDGE holds each app's token (discord-service's
+ * `DISCORD_KAI_APPLICATION_ID` / `DISCORD_KAI_BOT_TOKEN`), so a space records neither.
+ */
+export const KAI_APPLICATION_IDS: Readonly<Record<EdgeEnvironment, string>> = Object.freeze({
+  local: '1559967387972009984',
+  dev: '1559736753990926390',
+  preview: '1559967457274372126',
+  production: '1555777706459660288',
+});
+
+/** The Kai app of the EDGE at `edgeUrl`; undefined for a custom EDGE, which has none. */
+export const kaiApplicationId = (edgeUrl: string | undefined): string | undefined => {
+  const environment = edgeEnvironment(edgeUrl);
+  return environment && KAI_APPLICATION_IDS[environment];
+};

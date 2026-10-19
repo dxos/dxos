@@ -339,6 +339,11 @@ export class IndexEngine {
     return this.#objectSnapshotIndex.querySnapshotsJSON(recordIds);
   }
 
+  /** Each document object's JSON text with the heads it was read at, and stored bytes; see {@link ObjectSnapshotIndex.queryBackings}. */
+  queryBackings(recordIds: readonly number[]) {
+    return this.#objectSnapshotIndex.queryBackings(recordIds);
+  }
+
   /**
    * Indexes one batch into every secondary index — those sourced from the index itself rather than
    * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
@@ -459,6 +464,17 @@ export class IndexEngine {
     objectIds: readonly EntityMeta['objectId'][];
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError> {
     return this.#objectMetaIndex.queryObjectIds(query);
+  }
+
+  /**
+   * The ids among `documentIds` the index holds under a space other than `spaceId`: the indexer attributes a document
+   * to the spaces whose directories link it, so these belong to another space too.
+   */
+  queryDocumentsIndexedElsewhere(query: {
+    spaceId: SpaceId;
+    documentIds: readonly string[];
+  }): Effect.Effect<Set<string>, SqlError.SqlError> {
+    return this.#objectMetaIndex.queryDocumentsIndexedElsewhere(query);
   }
 
   /**

@@ -7,7 +7,7 @@
 // records and every store write goes back as record-level changes inside one `Obj.update`, so the
 // view stays the memory store's client and ECHO merges edits element by element.
 //
-// A frame whose `object` is a canvas drawing shows that drawing: that drawing's canvas is bound alongside,
+// A frame whose `link.object` is a canvas drawing shows that drawing: that drawing's canvas is bound alongside,
 // its scenes join the store under ids prefixed with the drawing's URI, the frame opens its root, and edits
 // inside it are written to that drawing. A linked drawing's own links are followed the same way, so a drawing
 // opens drawings to any depth; each is bound once by its URI, so a reference cycle shows a scene already bound
@@ -108,7 +108,10 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
         // The form and the frame's view read the reference as a live `Ref`; writes store it encoded again.
         const object = db?.makeRef(uri);
         const link = linked.get(uri);
-        return { ...(link ? withScene(node, linkedSceneId(uri, link.root)) : node), ...(object ? { object } : {}) };
+        return {
+          ...(link ? withScene(node, linkedSceneId(uri, link.root)) : node),
+          ...(object ? { link: { ...node.link, object } } : {}),
+        };
       });
     }
     for (const [uri, link] of linked) {

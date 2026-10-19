@@ -14,6 +14,7 @@ import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { useQuery } from '@dxos/react-client/echo';
 import { LogBuffer, Logger } from '@dxos/react-ui-debug';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Channel } from '@dxos/types';
 
@@ -119,7 +120,7 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
             {channel ? (
               <Logger.List checkable={false} />
             ) : (
-              <p className='p-2 text-description'>No Discord channel in this space.</p>
+              <Status.Empty>No Discord channel in this space.</Status.Empty>
             )}
           </Logger.Content>
         </Panel.Body>

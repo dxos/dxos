@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
-import { ProjectOperation } from '#types';
+import { Feature, FeatureMap, FeatureOperation, ProjectOperation, Showcase } from '#types';
 
 import * as ProjectsPlugin from './ProjectsPlugin.ts';
 
@@ -25,5 +25,11 @@ describe('ProjectsPlugin in workerd', () => {
     expect(failures).toEqual([]);
     expect(operationKeys).toContain(String(ProjectOperation.Create.meta.key));
     expect(typenames).toContain(Type.getTypename(Project.Project));
+    // Feature maps are driven over MCP, whose hosts activate the plugin headless like this.
+    for (const type of [Feature.Feature, FeatureMap.FeatureMap, Showcase.Showcase]) {
+      expect(typenames).toContain(Type.getTypename(type));
+    }
+    expect(operationKeys).toContain(String(FeatureOperation.CreateMap.meta.key));
+    expect(operationKeys).toContain(String(FeatureOperation.GetMap.meta.key));
   });
 });

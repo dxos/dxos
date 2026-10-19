@@ -104,6 +104,24 @@ test QA-1: Draw a class and an inheritance link on the canvas
     - name: Delete the drawing
       do: Right-click "QA UML Canvas" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Draw class shapes on a canvas. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: uml` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-canvas, plugin-uml enabled
+  steps:
+    - name: Create a canvas
+      do: Create a Drawing with the Canvas variant.
+      expect: an empty canvas opens
+    - name: Draw classes
+      do: Pick the class shape and drag out two classes.
+      expect: two class shapes appear
 ```
 
 ## Appendix: Extension Definitions

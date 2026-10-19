@@ -47,6 +47,12 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    */
   hasPendingSources(): boolean;
 
+  /** How much of the answer {@link getResults} holds; see {@link QueryResult.Completeness}. */
+  getCompleteness(): QueryResult.Completeness;
+
+  /** Per-source progress on the current query. */
+  getSourceStates(): QueryResult.SourceState[];
+
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
 

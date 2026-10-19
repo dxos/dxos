@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import {
   type AnyDocumentId,
   type AutomergeUrl,
   type DocumentId,
   interpretAsDocumentId,
   isValidAutomergeUrl,
+  isValidDocumentId,
+  stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -20,6 +23,7 @@ import { todo } from '@dxos/debug';
 import {
   DatabaseDirectory,
   EntityStructure,
+  type RetirementReason,
   SPACE_ROOT_TYPE,
   SpaceDocVersion,
   type SpaceRoot,
@@ -36,7 +40,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { countWork } from '@dxos/util';
+import { countWork, defaultMap } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -61,6 +65,16 @@ import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
+import {
+  HISTORY_BLOAT_MIN_OPS,
+  type IndexedObject,
+  type Retirement,
+  buildReplacementDocument,
+  isHistoryBloated,
+  isRetirableForHistory,
+  makeReplacementDirectory,
+  replacementDocumentId,
+} from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -194,6 +208,18 @@ export class EchoHost extends Resource {
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
 
+  /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
+  readonly #retirements = new Map<SpaceId, Promise<void>>();
+
+  /** Retired documents wiped this session, since every later directory change still lists them. */
+  readonly #wipedDocuments = new Set<DocumentId>();
+
+  /** Retirements this host wrote or saw this session, to write back an entry a concurrent change dropped. */
+  readonly #knownRetirements = new Map<DocumentId, Retirement & { spaceId: SpaceId }>();
+
+  /** Op counts of loaded documents big enough to be retired for their history. */
+  readonly #historyCandidates = new Map<DocumentId, number>();
+
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
@@ -270,6 +296,7 @@ export class EchoHost extends Resource {
         return this._sql;
       },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
     });
 
     this._dataService = new DataServiceImpl({
@@ -425,6 +452,26 @@ export class EchoHost extends Resource {
         const departed = previous ? this.#departedDocuments(previous, e) : [];
         if (departed.length > 0 || e.previousRootId) {
           this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
+      }
+
+      // A directory change can carry another peer's retirement, and a newly opened space can link a document
+      // quarantined on an earlier start.
+      this.#scheduleRetirement(e.spaceId);
+    });
+    this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
+      if (reason === 'load-failed') {
+        for (const spaceId of this._spaceStateManager.spaceIds) {
+          this.#scheduleRetirement(spaceId);
+        }
+      }
+    });
+    this._automergeHost.documentLoaded.on(this._ctx, ({ documentId, ops }) => {
+      if (ops >= HISTORY_BLOAT_MIN_OPS) {
+        this.#historyCandidates.set(documentId, ops);
+        // The index may already be current, in which case no index pass will bring the document up again.
+        for (const spaceId of this._spaceStateManager.spaceIds) {
+          this.#scheduleRetirement(spaceId);
         }
       }
     });
@@ -845,6 +892,295 @@ export class EchoHost extends Resource {
       removedIndexEntries,
       purgedFeedBlocks: 0,
     };
+  }
+
+  /** Queues a retirement pass for a space behind the one already running. Failures are logged, not propagated. */
+  #scheduleRetirement(spaceId: SpaceId): void {
+    const previous = this.#retirements.get(spaceId) ?? Promise.resolve();
+    const next = previous
+      .then(() => this.#retireDocuments(spaceId))
+      .catch((err) => {
+        if (!this._ctx.disposed) {
+          log.warn('document retirement failed', { spaceId, err });
+        }
+      });
+    this.#retirements.set(spaceId, next);
+  }
+
+  /**
+   * Retirement, in every direction. Documents the space directory has retired are wiped without being read —
+   * the share of every peer. Linked documents this host could not load, or whose history outgrew their state,
+   * are rebuilt from the index and retired in the directory — the share of the peer that found them.
+   */
+  async #retireDocuments(spaceId: SpaceId): Promise<void> {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    const directory = root?.doc();
+    if (!root || !directory) {
+      return;
+    }
+
+    await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocuments(directory));
+    this.#restoreLostRetirements(spaceId, root);
+
+    const unloadable = new Map<DocumentId, string[]>();
+    const bloated = new Map<DocumentId, string[]>();
+    for (const [objectId, link] of Object.entries(directory.links ?? {})) {
+      const url = link.toString();
+      if (!isValidAutomergeUrl(url)) {
+        continue;
+      }
+      const documentId = interpretAsDocumentId(url);
+      if (directory.retired?.[documentId] !== undefined) {
+        continue;
+      }
+      if (this._automergeHost.quarantinedDocuments.get(documentId)?.reason === 'load-failed') {
+        defaultMap(unloadable, documentId, () => []).push(objectId);
+      } else if (this.#historyCandidates.has(documentId)) {
+        defaultMap(bloated, documentId, () => []).push(objectId);
+      }
+    }
+    for (const [documentId, objectIds] of unloadable) {
+      await this.#retireUnloadableDocument(spaceId, root, documentId, objectIds);
+    }
+    for (const [documentId, objectIds] of bloated) {
+      await this.#retireBloatedDocument(spaceId, root, documentId, objectIds);
+    }
+  }
+
+  /**
+   * Writes back `retired` entries this host knows of but the directory lacks. Two peers that each create the
+   * map concurrently leave only one of them in the merge, so an entry can vanish after it was written.
+   */
+  #restoreLostRetirements(spaceId: SpaceId, root: DatabaseRoot): void {
+    const directory = root.doc();
+    const lost = [...this.#knownRetirements.values()].filter(
+      (retirement) => retirement.spaceId === spaceId && directory?.retired?.[retirement.documentId] === undefined,
+    );
+    if (lost.length === 0) {
+      return;
+    }
+    root.change((draft) => {
+      draft.retired ??= {};
+      for (const { documentId, replacedBy, reason } of lost) {
+        draft.retired[documentId] = { replacedBy: new A.RawString(replacedBy), reason: new A.RawString(reason) };
+      }
+    });
+    log.info('restored retirements lost to a concurrent change', { spaceId, documents: lost.length });
+  }
+
+  /**
+   * Retires a document that cannot be loaded, rebuilt from the state the index last saw. Left quarantined, and
+   * not retired, while the index lacks any of the document's objects.
+   */
+  async #retireUnloadableDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+  ): Promise<void> {
+    const indexed = await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen({ self: this }, function* () {
+        const metas = (yield* this.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds })).filter(
+          (meta) => meta.documentId === documentId,
+        );
+        const snapshots = new Map(
+          (yield* this.indexEngine.querySnapshotsJSON(metas.map((meta) => meta.recordId))).map(
+            ({ recordId, snapshot }) => [recordId, snapshot],
+          ),
+        );
+        return metas.flatMap((meta): IndexedObject[] => {
+          const json = snapshots.get(meta.recordId);
+          return json ? [{ objectId: meta.objectId, json, createdAt: meta.createdAt }] : [];
+        });
+      }),
+    );
+    const missing = objectIds.filter((objectId) => !indexed.some((object) => object.objectId === objectId));
+    if (missing.length > 0) {
+      log.warn('unloadable document kept quarantined: the index has no state for some of its objects', {
+        spaceId,
+        documentId,
+        missing,
+      });
+      return;
+    }
+
+    await this.#replaceDocument(
+      spaceId,
+      root,
+      documentId,
+      objectIds,
+      makeReplacementDirectory({ spaceId, spaceKey: root.getSpaceKey(), objects: indexed }),
+      'load-failed',
+    );
+    log.info('retired a document that could not be loaded', { spaceId, documentId, objects: objectIds.length });
+  }
+
+  /**
+   * Retires a loaded document whose history has outgrown its state, if it holds only the objects linked to it and
+   * all are of a type that may be rebuilt (see `HISTORY_RETIREMENT_TYPES`). Rebuilt from the document's own current
+   * state, so it keeps every change, including any the index has not caught up with.
+   */
+  async #retireBloatedDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+  ): Promise<void> {
+    const ops = this.#historyCandidates.get(documentId) ?? 0;
+    this.#historyCandidates.delete(documentId);
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId);
+    const state = lease ? A.toJS(lease.doc()) : undefined;
+    const objects = state?.objects ?? {};
+    if (
+      !state ||
+      Object.keys(objects).length !== objectIds.length ||
+      !isRetirableForHistory(objectIds.map((objectId) => objects[objectId]?.system?.type?.['/']))
+    ) {
+      return;
+    }
+    const stateBytes = JSON.stringify(objects).length;
+    if (!isHistoryBloated({ ops, stateBytes })) {
+      return;
+    }
+
+    await this.#replaceDocument(
+      spaceId,
+      root,
+      documentId,
+      objectIds,
+      { version: state.version, access: state.access, objects },
+      'history',
+    );
+    log.info('retired a document whose history outgrew its state', {
+      spaceId,
+      documentId,
+      ops,
+      stateBytes,
+      objects: objectIds.length,
+    });
+  }
+
+  /**
+   * Replaces a document with `directory`, which carries no history, then records the retirement in the space
+   * directory, which every peer acts on, and wipes the original here.
+   */
+  async #replaceDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+    directory: DatabaseDirectory,
+    reason: RetirementReason,
+  ): Promise<void> {
+    const replacementId = await replacementDocumentId(documentId);
+    const replacementUrl = stringifyAutomergeUrl(replacementId);
+    // Another peer's retirement may have delivered the replacement already; importing over it would start a
+    // second history for the same objects.
+    const [existingHeads] = await this._automergeHost.getHeads([replacementId]);
+    const lease =
+      existingHeads && existingHeads.length > 0
+        ? undefined
+        : await this._automergeHost.createDoc<DatabaseDirectory>(
+            await buildReplacementDocument(documentId, directory),
+            { preserveHistory: true, documentId: replacementId },
+          );
+    try {
+      root.change((draft) => {
+        draft.links ??= {};
+        for (const objectId of objectIds) {
+          draft.links[objectId] = new A.RawString(replacementUrl);
+        }
+        draft.retired ??= {};
+        draft.retired[documentId] = { replacedBy: new A.RawString(replacementUrl), reason: new A.RawString(reason) };
+      });
+      await this._automergeHost.flush(this._ctx, { documentIds: [root.documentId, replacementId] });
+    } finally {
+      lease?.[Symbol.dispose]();
+    }
+
+    await this.#wipeRetiredDocuments(spaceId, [{ documentId, replacedBy: replacementUrl, reason }]);
+  }
+
+  /**
+   * Wipes documents the space directory retired, without reading them: the directory naming them is the
+   * attribution, since loading one is what retirement exists to avoid. Idempotent, and run on every open, since the
+   * directory is the only durable record of a retirement.
+   */
+  async #wipeRetiredDocuments(spaceId: SpaceId, entries: readonly Retirement[]): Promise<void> {
+    const candidates = entries.filter(
+      (entry): entry is Retirement & { documentId: DocumentId } =>
+        isValidDocumentId(entry.documentId) && !this.#wipedDocuments.has(entry.documentId),
+    );
+    if (candidates.length === 0) {
+      return;
+    }
+    const referenced = this.#referencedDocuments();
+    const indexedElsewhere = await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.queryDocumentsIndexedElsewhere({
+        spaceId,
+        documentIds: candidates.map((entry) => entry.documentId),
+      }),
+    );
+    const isProtected = (documentId: DocumentId) => referenced.has(documentId) || indexedElsewhere.has(documentId);
+    const retired = candidates.filter((entry) => !isProtected(entry.documentId));
+    if (retired.length < candidates.length) {
+      log.warn('ignored retirements naming documents another space or a live link still uses', {
+        spaceId,
+        documentIds: candidates.filter((entry) => isProtected(entry.documentId)).map((entry) => entry.documentId),
+      });
+    }
+    if (retired.length === 0) {
+      return;
+    }
+    for (const retirement of retired) {
+      this.#knownRetirements.set(retirement.documentId, { ...retirement, spaceId });
+      await this._automergeHost.quarantineDocument(retirement.documentId, { reason: 'retired' });
+    }
+    const documentIds = retired.map(({ documentId }) => documentId);
+    // Index rows first: the indexer finds documents through them, so one outliving its bytes would be read again.
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.deleteObjects({ spaceId, documentIds, objects: [] }),
+    );
+    for (const documentId of documentIds) {
+      await this._automergeHost.removeDocument(documentId);
+      this.#wipedDocuments.add(documentId);
+      this.#historyCandidates.delete(documentId);
+    }
+    log('wiped retired documents', { spaceId, documents: documentIds.length });
+  }
+
+  /**
+   * Documents a space on this host still references: the directory, space root and credentials of every persisted
+   * space, opened or not, and every link and branch of an open directory. A `retired` entry naming one is never acted
+   * on, since any member can write a directory and a document id may belong to another space; a genuine retirement
+   * re-points the links in the same change. Links of an unopened directory are covered by the index instead.
+   */
+  #referencedDocuments(): Set<DocumentId> {
+    const urls: string[] = [];
+    const referenced = new Set<DocumentId>();
+    for (const spaceId of this._spaceStateManager.spaceIds) {
+      const directoryId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+      if (directoryId) {
+        referenced.add(directoryId);
+      }
+      const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+      urls.push(...[refs?.spaceRootDocUrl, refs?.credentialsDocUrl].filter((url) => url !== undefined));
+    }
+    for (const [documentId, root] of this._spaceStateManager.roots) {
+      referenced.add(documentId);
+      if (root.doc()) {
+        urls.push(...root.getAllLinkedDocuments().map((url) => url.toString()));
+      }
+    }
+    for (const url of urls) {
+      if (isValidAutomergeUrl(url)) {
+        referenced.add(interpretAsDocumentId(url));
+      }
+    }
+    return referenced;
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */
@@ -1315,6 +1651,12 @@ export class EchoHost extends Resource {
 
       countWork('echo.indexPasses');
       countWork('echo.indexedObjects', combinedResult.updated);
+      // A document is only rebuilt for its history from index state that has caught up with it.
+      if (this.#historyCandidates.size > 0) {
+        for (const spaceId of combinedResult.spaces) {
+          this.#scheduleRetirement(spaceId);
+        }
+      }
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }

@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState, PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Gossip } from './gossip.ts';
 
@@ -58,6 +58,8 @@ export class Presence extends Resource {
   private readonly _peerStates = new ComplexMap<PublicKey, PresenceRecord>(PublicKey.hash);
   private readonly _peersByIdentityKey = new ComplexMap<PublicKey, PresenceRecord[]>(PublicKey.hash);
 
+  private readonly _reportedOnline = new ComplexSet<PublicKey>(PublicKey.hash);
+
   // remotePeerId -> PresenceExtension
 
   constructor(private readonly _params: PresenceProps) {
@@ -82,11 +84,20 @@ export class Presence extends Resource {
       this._params.announceInterval,
     );
 
-    // Emit updated event in case some peers went offline.
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        this.updated.emit();
+        let wentOffline = false;
+        for (const peerId of [...this._reportedOnline]) {
+          const record = this._peerStates.get(peerId);
+          if (!record || !this._isOnline(record)) {
+            this._reportedOnline.delete(peerId);
+            wentOffline = true;
+          }
+        }
+        if (wentOffline) {
+          this.updated.emit();
+        }
       },
       this._params.offlineTimeout,
     );
@@ -96,6 +107,7 @@ export class Presence extends Resource {
       const record = this._peerStates.get(peerId);
       if (record != null) {
         this._peerStates.delete(peerId);
+        this._reportedOnline.delete(peerId);
         this._removePeerFromIdentityKeyIndex(record);
         this.updated.emit();
       }
@@ -166,6 +178,7 @@ export class Presence extends Resource {
     };
 
     this._peerStates.set(peerId, record);
+    this._reportedOnline.add(peerId);
     // A peer that announces a new identity key would otherwise stay indexed under the previous one
     // until its record ages out, and be reported for an identity it no longer claims.
     const previousIdentityKey = previous && toPublicKey(previous.state.identityKey);

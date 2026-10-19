@@ -19,6 +19,7 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 | `dxos-subpath-imports` | Namespace subpath imports for designated `@dxos` packages | warn | yes |
 | `dxos-package-imports` | A package's own `imports` aliases over relative paths to the same file | warn | yes |
 | `effect-subpath-imports` | Subpath imports for Effect packages | warn | yes |
+| `folder-barrel-imports` | A relative import into another folder goes through that folder's barrel (`index` or `testing`) | **off**; packages opt in via `overrides` | no |
 | `import-as-namespace` | `import * as X` for modules marked `@import-as-namespace`, with `X` matching the filename | warn | yes |
 | `no-bare-dot-imports` | No bare `.` or `..` specifiers | error | yes |
 | `no-effect-run-promise` | `EffectEx.runPromise` from `@dxos/effect` over `Effect.runPromise` | error | no |
@@ -56,6 +57,40 @@ checked and passed:
   condition (`#plugin` → `plugin.node.ts` under node, `plugin.tsx` by default), it and a relative
   path to one branch are *different modules*, so substituting one for the other would change which
   module loads. Naming a branch deliberately is not a bypass and is not reported.
+
+### `folder-barrel-imports`
+
+Every folder is private. From a file in folder `F`:
+
+- a file in `F` is fine;
+- a direct child folder is entered only by its barrel (`./child/index.ts`), never a file inside it or deeper;
+- a sibling or cousin folder is entered only by the barrel of the first folder below the common
+  ancestor (`../panels/index.ts`, not `../panels/ToolsPanel/index.ts` or
+  `../panels/ToolsPanel/ToolsPanel.tsx`);
+- an ancestor folder's own files are in scope (`../types.ts`), but not its barrel, which re-exports
+  `F` and so forms a cycle.
+
+Tests, stories and testing helpers follow the same rule. Type-only imports, re-exports and dynamic
+`import()` are checked; package imports and imports that leave the file's `src` tree are not.
+
+Options:
+
+- `barrels` (default `['index', 'testing']`) — file stems that count as a folder's barrel, so a
+  folder can expose test helpers from `testing.ts` without shipping them in `index.ts`. Every listed
+  stem is also an ancestor barrel.
+- `allow` — importer paths, matched as a path suffix, exempt from the rule; e.g. a React-free
+  subpath entry (`src/headless.ts`) that imports single files to keep React out of its bundle.
+
+It is `off` in the root `.oxlintrc.json`. A package opts in with an `overrides` entry:
+
+```json
+{
+  "files": ["packages/ui/react-ui-canvas/src/**"],
+  "rules": {
+    "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }]
+  }
+}
+```
 
 ### `dxos-subpath-exports` findings
 

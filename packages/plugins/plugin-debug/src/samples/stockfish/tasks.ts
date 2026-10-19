@@ -268,7 +268,7 @@ const buildTasks = (
 };
 
 /** The plan: one root task, five stages under it, and the steps under those. */
-export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', {
+export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>
     Effect.gen(function* () {

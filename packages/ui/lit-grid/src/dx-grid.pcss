@@ -61,7 +61,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
+      border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-ring);
     }
   }
 
@@ -158,8 +158,46 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          --grid-cell-surface: var(--color-grid-selection-surface);
+          /* The selection tint is translucent, so it is layered over the grid surface rather than the host behind it. */
+          --grid-cell-surface:
+            linear-gradient(var(--color-grid-selection-surface), var(--color-grid-selection-surface)),
+            var(--color-grid-surface);
           --grid-cell-fg: var(--color-grid-selection-fg);
+
+          /*
+           * Outline the selected range: each edge cell draws its outer sides. Like the focus ring it reaches
+           * back over the neighbours' right/bottom lines, so the outline sits on grid lines on all four sides.
+           */
+          &[data-selection-edge]::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-block-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-inline-end: 0;
+            inset-block-end: 0;
+            z-index: 1;
+            pointer-events: none;
+            border: 0 solid var(--color-grid-focus-ring);
+          }
+          &[data-selection-edge~='top']::before {
+            border-block-start-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='bottom']::before {
+            border-block-end-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='start']::before {
+            border-inline-start-width: var(--dx-grid-focus-indicator-width);
+          }
+          &[data-selection-edge~='end']::before {
+            border-inline-end-width: var(--dx-grid-focus-indicator-width);
+          }
+          /* The plane clips at its first column and row, where there is no neighbour line to reach over. */
+          &[aria-colindex='0']::before {
+            inset-inline-start: 0;
+          }
+          &[aria-rowindex='0']::before {
+            inset-block-start: 0;
+          }
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -203,9 +241,22 @@
              * border) exceeds the cell track size by even a fraction of a
              * pixel, pushing the focus ring's bottom edge below the grid line.
              */
-            min-inline-size: 100%;
+            min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
             inline-size: min-content;
             max-inline-size: min(60ch, 90vw);
+
+            /*
+             * A cell draws only its right/bottom lines; its left/top lines belong to its neighbours.
+             * Reaching back over them puts all four ring edges on grid lines; the extra start padding
+             * keeps the text where it sits unfocused.
+             */
+            inset-inline-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            inset-block-start: calc(-1 * var(--dx-grid-focus-indicator-width));
+            block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            padding-inline-start: calc(
+              var(--dx-grid-cell-content-padding-inline) + var(--dx-grid-focus-indicator-width)
+            );
+            padding-block-start: calc(var(--dx-grid-cell-content-padding-block) + var(--dx-grid-focus-indicator-width));
 
             overflow: auto;
             scrollbar-width: thin;
@@ -217,14 +268,27 @@
             color: var(--grid-cell-fg);
           }
 
+          /* The plane clips at its first column and row, where there is no neighbour line to reach over. */
+          &[aria-colindex='0'] > .dx-grid__cell__content {
+            inset-inline-start: 0;
+            min-inline-size: 100%;
+            padding-inline-start: var(--dx-grid-cell-content-padding-inline);
+          }
+
+          &[aria-rowindex='0'] > .dx-grid__cell__content {
+            inset-block-start: 0;
+            block-size: 100%;
+            padding-block-start: var(--dx-grid-cell-content-padding-block);
+          }
+
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
-            border-color: var(--color-focus-ring);
+            border-color: var(--color-grid-focus-ring);
           }
         }
       }
 
       &:focus-visible > .dx-grid__cell__content {
-        border-color: var(--color-focus-ring);
+        border-color: var(--color-grid-focus-ring);
       }
     }
   }
@@ -236,8 +300,11 @@
     overflow-wrap: break-word;
 
     background: var(--dx-grid-base, var(--color-base-surface));
-    border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
+    border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-ring);
     border-radius: 2px;
+    /* Matches the focused cell: the box reaches over the neighbours' lines, the text stays put. */
+    padding-inline-start: var(--dx-grid-focus-indicator-width);
+    padding-block-start: var(--dx-grid-focus-indicator-width);
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
     --dx-grid-cell-editor-max-inline-size: min(60ch, 90vw);
@@ -262,7 +329,7 @@
     [role='columnheader'],
     [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
-        border-color: var(--color-focus-ring);
+        border-color: var(--color-grid-focus-ring);
       }
     }
   }

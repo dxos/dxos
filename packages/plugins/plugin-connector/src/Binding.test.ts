@@ -270,6 +270,7 @@ describe('Binding.sync', () => {
       trigger.enabled
         ? Effect.sync(() => void fired.push(trigger.id))
         : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
+    resetTrigger: () => Effect.void,
   };
 
   const toastHandler = LayoutOperation.AddToast.pipe(
@@ -771,6 +772,7 @@ describe('Binding.syncAll', () => {
         fired.push(trigger.id);
         recorded.wake();
       }),
+    resetTrigger: () => Effect.void,
   };
 
   test('fans out to each binding', async ({ expect }) => {
@@ -810,6 +812,29 @@ describe('Binding.syncAll', () => {
     // The capped binding never starves its siblings: both were attempted before the re-raise.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
+  });
+
+  // Regression: deleting a mailbox left its binding behind, and every account sync then failed loading
+  // the deleted target until EDGE switched the routine off.
+  test('skips a binding whose target was deleted and syncs the rest', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const orphaned = await addCursor(db, token);
+    const target = orphaned.spec.target.target;
+    invariant(target);
+    db.remove(target);
+    await db.flush({ indexes: true });
+
+    // Loads the target first, as every connector's per-binding sync does.
+    const outcome = await EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        sync: (binding) => Database.load(binding.spec.target).pipe(Effect.andThen(recordingSync(binding))),
+      }).pipe(Effect.result),
+    );
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
   });
 
   test('collects every binding before surfacing a failure', async ({ expect }) => {

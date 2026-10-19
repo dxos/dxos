@@ -1,5 +1,67 @@
 # @dxos/compute
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/vendor-kbn-handlebars@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 94ec06d: A Discord back-index runs as a trigger-driven operation that extracts facts a page of messages per model request and appends them to a fact feed, with its progress kept in ECHO; an agent's brain on EDGE indexes the fact feeds registered with it.
+
+  - `@dxos/compute` / `@dxos/compute-runtime`: `FeedSpec.batchSize` (`Trigger.specFeed(feed, { batchSize })`) delivers that many consecutive feed items per invocation as `event.items`; `event.item` stays the first. `Trigger.Manager.resetTrigger` rewinds a feed trigger to the start of its feed and fails with `TriggerNotResettableError` for any other kind. Breaking: every `Trigger.Manager` and `RemoteTriggerManager.Manager` must provide `resetTrigger`.
+  - `@dxos/edge-compute` / `@dxos/edge-client`: a remote feed trigger is reset on EDGE (`EdgeHttpClient.resetTrigger`), and `EdgeHttpClient.addBrainFactFeed`, `removeBrainFactFeed` and `listBrainFactFeeds` manage a brain's fact feeds.
+  - `@dxos/pipeline` / `@dxos/pipeline-rdf`: `Stage.batch` groups consecutive items (optionally weighted) and runs one effect per group. `indexFactsBatch` and `indexFactsBatchStage` extract several documents as one tagged transcript per model request and attribute each fact to its message; `FactPipeline.run(docs, { batchSize })` does the same, and without `batchSize` keeps one request per document.
+  - `@dxos/crawler`: `CrawlState` is an ECHO type holding a crawl's frontier, per-target cursors, run status and the content hash of each message already extracted, and `StateStore.layerEcho(state)` keeps the crawler's state in it. Its setters mutate a draft, so a caller batches several writes in one `Obj.update`. `extractFactsStage` extracts 25 messages per request by default (`batchSize: 1` keeps one per message). Breaking: every `StateStore.Service` must provide `resetTargets` and `removeTargets`.
+  - `@dxos/client` / `@dxos/protocols`: `space.internal.export({ feedIds })` writes a JSON archive holding only those feeds and their items, and `client.spaces.import(archive, { into })` merges a JSON archive into an existing space, skipping objects and feed items it already holds.
+  - `@dxos/plugin-discord`: `DiscordOperation.CrawlDiscordChannels` takes `state` (a `CrawlState`) and `facts` (a fact feed) and runs at most `maxSteps` pages per invocation with the space's Discord token; it no longer keeps a session SQLite runtime. `DiscordOperation.ConfigureBackIndex` creates or updates the crawl state, fact feed and the remote timer trigger that runs it. `DiscordSource.Endpoint` points the Discord REST client at another base and fetches it directly rather than through the CORS proxy, and `DiscordChannel.kaiApplicationId` and `KAI_APPLICATION_IDS` name the EDGE-hosted Kai bot outside the plugin.
+  - `@dxos/plugin-agent`: `FactFeed.FactItem` stores one extracted fact as a feed item, and `AgentOperation.AddFactFeed`, `RemoveFactFeed` and `ListFactFeeds` register fact feeds with the agent's brain on EDGE.
+  - `@dxos/plugin-space`: `dx space export --feed <id>` and `dx space import --into <space>`.
+
+### Patch Changes
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [45ab961]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/vendor-kbn-handlebars@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

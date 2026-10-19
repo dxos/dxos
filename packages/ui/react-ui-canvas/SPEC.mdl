@@ -230,7 +230,7 @@ barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link 
 (decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8).
 
 ```mdl
-component SceneView
+component Canvas
   desc: >
     The surface: one scene under a camera, with the palette, toolbar, breadcrumbs and control frame
     around it. Owns the pointer state machine, the key table, navigation between depths and the undo
@@ -242,7 +242,7 @@ component SceneView
     links?: LinkRegistry
     createProjection?: (options) => Projection     # per scene; freehand by default
     projection?: Projection           # a host-owned one instead, shared with its panels
-    atoms?: SceneViewAtoms            # externally owned view state (two views, a persisted camera)
+    atoms?: CanvasAtoms            # externally owned view state (two views, a persisted camera)
     grid?: number                     # minor spacing in scene px (16)
     liveDepth?: number                # nested levels that may mount live (decision 10)
     showPalette?: boolean
@@ -491,8 +491,9 @@ feat F-2: Grid and snapping
     diverges as soon as the zoom moves: far enough in the drawn lines are finer than the snap, and in a
     nested scene — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
     nothing visible.
-  req F-2.3: A created node arrives on the major level; a move, a resize or a dragged control point
-    snaps to the minor one, so placement is not coarse while a node's size and ports stay aligned.
+  req F-2.3: A node drawn on the canvas, moved or resized lands on the major level, so its edges and ports
+    stay on major lines; a palette drop, a dragged control point and a press that moves less than half a
+    minor cell (a click) snap to the minor one or not at all.
   req F-2.4: An arrow nudges by the minor grid, Shift+arrow by a major cell.
   req F-2.5: A link band follows the pointer exactly and snaps once, as it lands.
   req F-2.6: Snapping off means every gesture is free and the grid is hidden; nothing else changes.
@@ -532,7 +533,7 @@ feat F-3: Selection and editing
     restyles nodes and links alike, a link taking its common base.
   req F-3.15: A scene has ordered layers (`Scene.layers`, one implicit when it names none) and every node and link
     is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
-    layer is neither drawn nor hit. The layers panel (`SceneView.Layers`) adds, deletes, merges down, shows or
+    layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
     hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
     properties panel picks an element's layer.
   req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
@@ -573,9 +574,9 @@ feat F-7: Persistence (M4)
   req F-7.1: `createEchoStore(board)` maps nodes to `CanvasBoard.layout.nodes` and links to
     `layout.edges`, deriving `z` from array order on first read, so every board written by the old
     editor opens unchanged.
-  req F-7.2: The store is the only seam that changes: `SceneView` takes the ECHO store exactly as it
+  req F-7.2: The store is the only seam that changes: `Canvas` takes the ECHO store exactly as it
     takes the memory one.
-  req F-7.3: `plugin-conductor`'s `CanvasArticle` renders `SceneView` with the compute projection over
+  req F-7.3: `plugin-conductor`'s `CanvasArticle` renders `Canvas` with the compute projection over
     that store.
 ```
 
@@ -721,14 +722,14 @@ storybook (9006); `moon run react-ui-canvas:e2e` runs the automated subset.
 ```mdl
 test QA-1: The editor surface end to end
   desc: |
-    The gestures a host inherits by rendering `SceneView`. Ten of these steps are automated in
+    The gestures a host inherits by rendering `Canvas`. Ten of these steps are automated in
     `src/playwright/scene.spec.ts` over the Freehand and Readonly stories; the rest are human because
     they judge motion (the drill-in animation, grid continuity) rather than a DOM state.
   actors: human, agent
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-5.1, T-1, T-3, T-4]
   status: partially-automated
   given:
-    - a storybook serving `ui/react-ui-canvas/SceneView`
+    - a storybook serving `ui/react-ui-canvas/Canvas`
   steps:
     - name: Open Freehand
       do: Open the Freehand story at 1400×800.
@@ -738,7 +739,7 @@ test QA-1: The editor surface end to end
       expect: the first drag selects both; the Alt drag removes them from the selection
     - name: Move and snap
       do: Drag a node with snap on (G toggles it).
-      expect: the node's edges land on minor grid lines; the readout follows the pointer
+      expect: the node's edges land on major grid lines; the readout follows the pointer
     - name: Draw a link
       do: Hover a node, drag from one of its ports onto another node.
       expect: a band follows the pointer, the target's ports show, and a link is created on release

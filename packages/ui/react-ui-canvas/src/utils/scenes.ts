@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SceneMap } from '../model/store.ts';
-import { type Scene, type SceneId, isFrameNode } from '../model/types.ts';
+import { type Scene, type SceneId, type SceneMap, isFrameNode } from '../model/index.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
 export type SceneOption = { value: SceneId; label: string };

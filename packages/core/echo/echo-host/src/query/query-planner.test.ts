@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Annotation, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Annotation, DXN, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -2330,6 +2330,16 @@ describe('QueryPlanner', () => {
     test('the typename re-check beside a TypeSelector does not block the scan', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).limit(5).from(feedScope);
       expect(selectStep(query.ast)).toMatchObject({ limit: 5, feedScan: { direction: 'asc' } });
+    });
+
+    // `Cursor.seedDedupSet` pages a feed this way: by bare typename, so every schema version matches.
+    test('a page of a bare-typename select scans only up to the page', () => {
+      const query = Query.select(Filter.type(DXN.make('com.example.type.task')))
+        .orderBy(Order.natural('desc'))
+        .skip(50)
+        .limit(50)
+        .from(feedScope);
+      expect(selectStep(query.ast)).toMatchObject({ limit: 100, feedScan: { direction: 'desc' } });
     });
 
     test('a `deleted: only` read scans the deleted rows, so the cap counts them', () => {

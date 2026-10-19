@@ -113,7 +113,7 @@ export const PEOPLE_SEEDS: Array<{
 ];
 
 /** The roastery team plus the supplier and customer contacts the mail and calendar reference. */
-export const People: SampleSpace.Phase<PersonMap, OrgMap> = SampleSpace.phase('people', {
+export const People: SampleSpace.Partial<PersonMap, OrgMap> = SampleSpace.partial('people', {
   schemas: [Person.Person],
   run: (organizations: OrgMap) =>
     SampleSpace.seed(PEOPLE_SEEDS, (seed) =>

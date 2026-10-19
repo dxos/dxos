@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
@@ -55,6 +56,9 @@ export type QueryServiceProps = {
 
   /** Overrides {@link DEFAULT_QUERY_DEBOUNCE}. */
   debounce?: Partial<QueryDebounceOptions>;
+
+  /** Whether any of a client's data subscriptions holds a document. */
+  holdsDocument?: (subscriptionIds: readonly string[], documentId: DocumentId) => boolean;
 };
 
 /**
@@ -105,6 +109,8 @@ type ActiveQuery = {
   debouncedUntil: number;
 
   sendResults: (results: QueryService.QueryResult[]) => void;
+  /** Reports a re-run whose result matched the last one sent. */
+  sendUnchanged: () => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -251,6 +257,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
+        if (!this._queries.has(queryEntry)) {
+          return;
+        }
+        if (queryEntry.oneShot && queryEntry.executor.selectsById) {
+          await this.#runQuery(queryEntry);
+          return;
+        }
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
@@ -306,6 +319,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     onClose: () => void,
   ): ActiveQuery {
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
+    const subscriptionIds = request.subscriptionIds ?? [];
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
         indexEngine: this._params.indexEngine(),
@@ -317,6 +331,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         executor: this._params.executor,
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
+        holds: (documentId) => this._params.holdsDocument?.(subscriptionIds, documentId) ?? false,
       }),
       dirty: true,
       open: false,
@@ -330,6 +345,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
           return;
         }
         onResults({ queryId: request.queryId, results });
+      },
+      sendUnchanged: () => {
+        if (ctx.disposed) {
+          return;
+        }
+        onResults({ queryId: request.queryId, unchanged: true });
       },
       onError,
       close: async () => {
@@ -438,10 +459,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       query.dirty = false;
       if (changed || query.firstResult) {
         query.firstResult = false;
-        const results = query.executor.getResults();
+        const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
         query.sendResults(results);
+      } else if (!query.oneShot) {
+        // A client that holds local writes against this query waits for a re-run to know its answer is current.
+        query.sendUnchanged();
       }
     } catch (err) {
       log.catch(err, {

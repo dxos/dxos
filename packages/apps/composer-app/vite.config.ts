@@ -4,7 +4,7 @@
 
 import react from '@vitejs/plugin-react';
 import { execFileSync } from 'node:child_process';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -33,6 +33,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
@@ -172,21 +173,6 @@ const REACT_EXCLUDE = [
 ];
 
 /**
- * React Compiler options; `sources` covers every workspace root except `react-ui`, whose primitives
- * ship whole in the boot graph (an import-map shared package) where compiled caches cost ~75 KB
- * and rarely hit. Scoped here rather than by `exclude` so those primitives keep Fast Refresh.
- */
-const reactCompilerOptions = {
-  sources: readdirSync(path.join(rootDir, 'packages')).flatMap((group) =>
-    group === 'ui'
-      ? readdirSync(path.join(rootDir, 'packages/ui'))
-          .filter((name) => name !== 'react-ui')
-          .map((name) => `/packages/ui/${name}/`)
-      : [`/packages/${group}/`],
-  ),
-};
-
-/**
  * Transpile targets for oxc (dev) and Rolldown (build).
  */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
@@ -296,6 +282,26 @@ const pluginToolchain = (): string => {
 };
 
 /**
+ * Re-arms the watch on a file after every change it reports. Under `useFsEvents: false` each file is watched by a
+ * descriptor bound to its inode, and chokidar re-attaches after a rename-over save only on Linux, so on macOS every
+ * save after the first would be lost (same as storybook's `dxos:rearm-watch`).
+ */
+const rearmWatchPlugin = (): PluginOption => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (file) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (file.includes('\0') || !file.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(file);
+      server.watcher.add(file);
+    });
+  },
+});
+
+/**
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
@@ -330,6 +336,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
@@ -550,10 +559,14 @@ export default defineConfig((env) => ({
     format: 'es' as const,
 
     plugins: () => [...sharedPlugins(env)],
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
+    rearmWatchPlugin(),
     ...sharedPlugins(env),
 
     // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
@@ -828,7 +841,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**

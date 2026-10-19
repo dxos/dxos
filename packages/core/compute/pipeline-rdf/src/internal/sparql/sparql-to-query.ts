@@ -8,11 +8,9 @@ import { SemanticIndexError } from '../../errors.ts';
 import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
-// Reified-fact predicates (see DESIGN.md "Reification").
-const PRED_SUBJECT = Vocab.SX + 'subject';
-const PRED_OBJECT = Vocab.SX + 'object';
-const PRED_PREDICATE = Vocab.SX + 'predicate';
 const PRED_SOURCE = Vocab.PROV + 'wasDerivedFrom';
+/** Provenance and description predicates, which never name a statement's predicate. */
+const META = new Set([PRED_SOURCE, Vocab.RDF_TYPE, Vocab.RDFS_LABEL, `${Vocab.SX}confidence`]);
 
 const isIri = (term: { readonly termType: string }): term is IriTerm => term.termType === 'NamedNode';
 const isLiteral = (term: { readonly termType: string }): term is LiteralTerm => term.termType === 'Literal';
@@ -27,6 +25,7 @@ const collect = (patterns: readonly Pattern[], triples: Triple[], filters: Expre
       case 'filter':
         filters.push(pattern.expression);
         break;
+      case 'graph':
       case 'group':
       case 'union':
       case 'optional':
@@ -34,7 +33,7 @@ const collect = (patterns: readonly Pattern[], triples: Triple[], filters: Expre
         collect(pattern.patterns, triples, filters);
         break;
       default:
-        // Sub-SELECT (buildSparql wraps the constraints in `{ SELECT DISTINCT ?fact WHERE { … } }`).
+        // Sub-SELECT.
         if ('where' in pattern && pattern.where) {
           collect(pattern.where, triples, filters);
         }
@@ -65,7 +64,7 @@ const numericLowerBound = (filters: readonly Expression[]): number | undefined =
 };
 
 /**
- * Parse a SPARQL SELECT into a structured {@link SemanticQuery} over the reified-fact shape — the
+ * Parse a SPARQL SELECT into a structured {@link SemanticQuery} over named-graph statements — the
  * browser/Workers-safe alternative to executing SPARQL (Comunica does not bundle for either). It
  * recognizes the bounded family of fact-retrieval patterns (entity / predicate / source /
  * confidence), the inverse of {@link buildSparql}; unsupported constructs are ignored.
@@ -92,33 +91,25 @@ export const parseSparqlToQuery = (sparql: string): SemanticQuery => {
 
   for (const triple of triples) {
     const p = triple.predicate;
-    if (!('termType' in p) || !isIri(p)) {
-      continue; // Property paths / variable predicates are unsupported.
+    const { subject, object } = triple;
+    if ('termType' in p && isIri(p) && p.value === PRED_SOURCE) {
+      if (isLiteral(object)) {
+        source = object.value;
+      }
+      continue;
     }
-    const object = triple.object;
-    switch (p.value) {
-      case PRED_SUBJECT:
-        if (isIri(object) && object.value.startsWith(Vocab.ENTITY)) {
-          subjectEntities.add(Vocab.entityIdFromIri(object.value));
-        }
-        break;
-      case PRED_OBJECT:
-        if (isIri(object) && object.value.startsWith(Vocab.ENTITY)) {
-          objectEntities.add(Vocab.entityIdFromIri(object.value));
-        }
-        break;
-      case PRED_PREDICATE:
-        if (isLiteral(object)) {
-          predicate = object.value;
-        }
-        break;
-      case PRED_SOURCE:
-        if (isLiteral(object)) {
-          source = object.value;
-        }
-        break;
-      default:
-        break;
+    if ('termType' in p && isIri(p) && META.has(p.value)) {
+      continue;
+    }
+    // A statement pattern: an IRI in subject or object position names an entity, an IRI predicate the relation.
+    if ('termType' in subject && isIri(subject)) {
+      subjectEntities.add(Vocab.entityKey(subject.value));
+    }
+    if ('termType' in object && isIri(object)) {
+      objectEntities.add(Vocab.entityKey(object.value));
+    }
+    if ('termType' in p && isIri(p)) {
+      predicate = p.value;
     }
   }
 

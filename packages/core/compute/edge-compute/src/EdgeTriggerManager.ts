@@ -64,7 +64,8 @@ const isDisabledRefusal = (error: unknown): boolean => isRefusal(error) && error
  * view (edge entries here supersede the bare database ones).
  *
  * `invokeTrigger` force-runs the trigger's cron on the EDGE dispatcher via
- * {@link EdgeHttpClient.forceRunCronTrigger}.
+ * {@link EdgeHttpClient.forceRunCronTrigger}; `resetTrigger` rewinds a feed trigger's EDGE-held
+ * cursor via {@link EdgeHttpClient.resetTrigger}.
  */
 const toState = (status: EdgeTriggerStatus): Trigger.State => ({
   // Space-relative echo ref (same shape as `Ref.make(trigger)` for an in-space object), resolvable
@@ -129,6 +130,23 @@ const make = (
               : Effect.die(error),
           ),
           Effect.tap(() => refresh),
+        ),
+      resetTrigger: (options: Trigger.ResetOptions) =>
+        Effect.tryPromise({
+          try: () => getEdgeClient().resetTrigger(DxosContext.default(), spaceId, options.trigger.id),
+          catch: (error) => (error instanceof EdgeCallFailedError ? error : new Cause.UnknownError(error)),
+        }).pipe(
+          Effect.tapError((error) =>
+            Effect.sync(() => log.warn('edge trigger reset failed', { triggerId: options.trigger.id, error })),
+          ),
+          // A trigger created just now may not have replicated to EDGE yet; a 409 is EDGE refusing it.
+          Effect.retry({ schedule: REPLICATION_BACKOFF, while: (error) => !isRefusal(error) }),
+          Effect.asVoid,
+          Effect.catch((error) =>
+            isRefusal(error)
+              ? Effect.fail(new Trigger.TriggerNotResettableError(options.trigger.id))
+              : Effect.die(error),
+          ),
         ),
     } satisfies RemoteTriggerManager.Manager;
   });

@@ -14,6 +14,13 @@ export const translations = [
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Restart to update',
         'update.alt': 'Relaunch the app to update',
+        'unsaved-changes.label': 'Changes not saved',
+        'unsaved-changes.description':
+          'Some changes have not reached disk yet and would be lost. Keep Composer open until they are saved.',
+        'quit-anyway.label': 'Quit anyway',
+        'quit-anyway.alt': 'Quit and lose the unsaved changes',
+        'restart-anyway.label': 'Restart anyway',
+        'restart-anyway.alt': 'Restart and lose the unsaved changes',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',

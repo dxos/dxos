@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import {
+  Canvas,
   LinesField,
   SceneBuilder,
-  SceneView,
   createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
@@ -67,12 +67,12 @@ const DefaultStory = () => {
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, []);
   return (
-    <SceneView.Root store={store} root={root} nodes={nodes}>
-      <SceneView.Canvas />
-      <SceneView.Actions />
-      <SceneView.Palette />
-      <SceneView.Properties />
-    </SceneView.Root>
+    <Canvas.Root store={store} root={root} nodes={nodes}>
+      <Canvas.Viewport />
+      <Canvas.Actions />
+      <Canvas.Tools />
+      <Canvas.Properties />
+    </Canvas.Root>
   );
 };
 

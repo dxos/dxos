@@ -18,21 +18,15 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/SceneLayer.tsx';
-import { type PartEditing, type PartField } from '../utils/parts.ts';
-import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
+import { type PartEditing, type PartField } from '../utils/index.ts';
 import { type SceneStore } from './store.ts';
 import {
-  EllipseNode,
-  FrameNode,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeType,
-  NoteNode,
   type Point,
   type Port,
-  RectNode,
   type Scene,
   type Size,
 } from './types.ts';
@@ -53,7 +47,7 @@ export type NodeViewProps = {
   opening?: boolean;
   /** The text part of this node being edited in place, with the editor's callbacks. */
   editing?: PartEditing;
-  /** The node's embedded content takes input (`SceneViewAtoms.active`); otherwise it should be inert. */
+  /** The node's embedded content takes input (`CanvasAtoms.active`); otherwise it should be inert. */
   active?: boolean;
   /** Opens the node (drills into a portal); absent where the layer is read-only. */
   onOpen?: () => void;
@@ -65,9 +59,9 @@ export type NodeDef = {
   type: NodeType;
   name: string;
   icon: string;
-  /** Palette shortcut; a registry of many types leaves most without one. */
+  /** Tools panel shortcut; a registry of many types leaves most without one. */
   key?: string;
-  /** Palette group; types without one share the default group. */
+  /** Tools panel group; types without one share the default group. */
   group?: string;
   /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */
   schema: Schema.Codec<NodeBase, unknown>;
@@ -85,6 +79,8 @@ export type NodeDef = {
   maxSize?: Size;
   /** Double-click opens the node (a frame drills in; a text node edits, later). */
   openable?: boolean;
+  /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
+  ellipse?: boolean;
   /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.
@@ -99,6 +95,10 @@ export type NodeDef = {
   parts?: readonly PartField[];
   /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
   fields?: FormFieldMap;
+  /** The palette and the create menu offer the type; false for a type placed some other way (an instance). */
+  palette?: boolean;
+  /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
+  bare?: boolean;
 };
 
 /**
@@ -155,78 +155,3 @@ export type LinkDef = {
 
 export type NodeRegistry = Readonly<Record<NodeType, NodeDef>>;
 export type LinkRegistry = Readonly<Record<LinkType, LinkDef>>;
-
-const MIN_SIZE: Size = { width: 64, height: 32 };
-
-/**
- * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
- * built-in rectangle and frame are both boxes; a host type can extend it too.
- */
-export const boxPrototype: NodeDefSpec = {
-  component: BoxNodeView,
-  parts: [{ field: 'label' }],
-  defaultSize: NOMINAL_SIZES.rect,
-  resizable: true,
-  minSize: MIN_SIZE,
-};
-
-export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = { box: boxPrototype };
-
-export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
-  rect: {
-    extends: 'box',
-    name: 'Rectangle',
-    icon: 'ph--rectangle--regular',
-    key: 'R',
-    schema: RectNode,
-    create: (props) => createNode({ type: 'rect', ...props }),
-  },
-  ellipse: {
-    name: 'Ellipse',
-    icon: 'ph--circle--regular',
-    key: 'E',
-    schema: EllipseNode,
-    component: EllipseNodeView,
-    create: (props) => createNode({ type: 'ellipse', ...props }),
-    defaultSize: NOMINAL_SIZES.ellipse,
-    // Only the side centres of the frame lie on the curve.
-    portsPerSide: 1,
-    parts: [{ field: 'label' }],
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-
-  note: {
-    name: 'Note',
-    icon: 'ph--text-t--regular',
-    key: 'T',
-    schema: NoteNode,
-    component: NoteNodeView,
-    parts: [{ field: 'text', multiline: true }],
-    create: (props) => createNode({ type: 'note', ...props }),
-    defaultSize: NOMINAL_SIZES.note,
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-  frame: {
-    extends: 'box',
-    name: 'Frame',
-    icon: 'ph--frame-corners--regular',
-    key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
-    minSize: { width: 96, height: 60 },
-    openable: true,
-  },
-};
-
-export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
-
-export const defaultLinkRegistry: LinkRegistry = {
-  line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
-  curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
-  spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
-};

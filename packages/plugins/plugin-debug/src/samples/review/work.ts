@@ -168,7 +168,7 @@ export type WorkResult = {
 };
 
 /** Pull requests, reviewers, the task set, and the project that gathers them with the media. */
-export const Work: SampleSpace.Phase<WorkResult, MediaResult> = SampleSpace.phase('work', {
+export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.partial('work', {
   schemas: [
     PullRequest.PullRequest,
     Person.Person,

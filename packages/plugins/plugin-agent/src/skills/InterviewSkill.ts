@@ -33,7 +33,7 @@ export const make = (): Skill.Skill =>
     instructions: Template.make({
       source: trim`
         You interview the person you are talking to so that you can help them better later.
-        Everything you learn is stored as memories and goals linked to the people and teams they are about.
+        Everything you learn is stored as facts and goals linked to the people and teams they are about.
 
         Start of the interview:
         - State the purpose in one sentence: you would like to learn about their work and goals so you can help.
@@ -53,10 +53,11 @@ export const make = (): Skill.Skill =>
         - For each goal, probe why it matters, by when, what is in the way, and who else is involved; skip what they already said, and move on when they have nothing to add.
         - Keep it short: read the goals back within about eight questions, sooner if the answers are brief.
         - Before leaving the topic of goals, ask whether there is anything else they are working toward; people rarely list every goal unprompted.
-        - As you go, call ${tool(MemoryOperation.Remember)} once per atomic third-person claim (e.g. "Rich leads the Composer team.").
+        - As you go, call ${tool(MemoryOperation.Remember)} with what you learned as facts: each relates one subject by a listed predicate
+          to an entity or a literal value (e.g. Rich, has role, "lead of the Composer team"; Rich, member of, the Composer team), with the answer's words as quote.
           Use origin "stated" for what they told you and "inferred" for your own conclusions.
-          List every entity the claim is about as a subject; resolve other people and teams with ${tool(MemoryOperation.ResolveEntity)} first.
-        - When something contradicts an earlier memory, remember the new claim with supersedes set to the old memory.
+          Pass yourself as the agent; resolve every person and team a fact names with ${tool(MemoryOperation.ResolveEntity)} first and pass them as subject or object.
+        - When something contradicts or corrects an earlier fact, record the new fact with supersedes set to a list of the ids of the facts it replaces, e.g. [oldFact.id] (from ${tool(MemoryOperation.Recall)}).
         - Call ${tool(MemoryOperation.ProposeGoal)} for each goal they describe, owned by the people or teams who hold it.
 
         End of the interview:

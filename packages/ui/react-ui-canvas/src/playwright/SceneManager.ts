@@ -6,7 +6,7 @@ import { type Locator, type Page } from '@playwright/test';
 
 type Box = { x: number; y: number; width: number; height: number };
 
-/** Drives a `SceneView` story through the DOM: pointer gestures in screen space, state read from test ids. */
+/** Drives a `Canvas` story through the DOM: pointer gestures in screen space, state read from test ids. */
 export class SceneManager {
   readonly root: Locator;
 

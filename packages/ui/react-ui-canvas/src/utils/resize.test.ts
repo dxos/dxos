@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Bounds } from '../model/types.ts';
+import { type Bounds } from '../model/index.ts';
 import { resizeBounds } from './resize.ts';
 
 const start: Bounds = { x: 100, y: 100, width: 200, height: 100 };

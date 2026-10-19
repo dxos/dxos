@@ -1,0 +1,292 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import { act, renderHook } from '@testing-library/react';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren } from 'react';
+import { beforeEach, describe, test } from 'vitest';
+
+import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { Format, FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { EntityId } from '@dxos/keys';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
+
+import { Kanban } from '#types';
+
+import { useItemsProjection } from './useItemsProjection.ts';
+import { useKanbanBoardModel } from './useKanbanBoardModel.ts';
+
+// TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
+const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.optional(Schema.String),
+    status: Schema.Literals(['__uncategorized__', 'a', 'b']).pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      Schema.annotate({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: '__uncategorized__', title: 'Uncategorized', color: 'neutral' },
+              { id: 'a', title: 'A', color: 'blue' },
+              { id: 'b', title: 'B', color: 'green' },
+            ],
+          },
+        },
+      }),
+      Schema.optional,
+    ),
+  }),
+);
+
+type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
+
+describe('useKanbanBoardModel', () => {
+  let registry: Registry.AtomRegistry;
+  let view: View.View;
+  let kanban: Kanban.Kanban;
+  let projection: ProjectionModel;
+
+  beforeEach(() => {
+    registry = Registry.make();
+    const jsonSchema = JsonSchema.toJsonSchema(KanbanTaskSchema) as Parameters<typeof createDirectChangeCallback>[1];
+    view = ViewModel.make({
+      query: Query.select(Filter.type(KanbanTaskSchema)),
+      jsonSchema,
+      pivotFieldName: 'status',
+    });
+    kanban = Kanban.make({
+      view: view,
+      arrangement: {
+        order: ['a', 'b'],
+        columns: { a: { ids: [] }, b: { ids: [] } },
+      },
+    });
+    projection = new ProjectionModel({
+      registry,
+      view,
+      baseSchema: jsonSchema,
+      change: createDirectChangeCallback(view.projection, jsonSchema),
+    });
+  });
+
+  test('returns model with getColumns and getItems', ({ expect }) => {
+    const itemA = Obj.make(KanbanTaskSchema, { status: 'a' });
+    const itemB = Obj.make(KanbanTaskSchema, { status: 'b' });
+    const initialItems: KanbanTask[] = [itemA, itemB];
+    const itemsAtom = Atom.make<KanbanTask[]>(() => initialItems);
+
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+
+    const model = result.current;
+    expect(model.getColumnId).toBeDefined();
+    expect(model.getItemId).toBeDefined();
+    expect(model.isColumn).toBeDefined();
+    expect(model.isItem).toBeDefined();
+
+    const columns = model.getColumns();
+    expect(columns.length).toBeGreaterThanOrEqual(1);
+    const columnValues = columns.map((col) => col.columnValue);
+    expect(columnValues).toContain('a');
+    expect(columnValues).toContain('b');
+
+    const colA = columns.find((c) => c.columnValue === 'a');
+    const colB = columns.find((c) => c.columnValue === 'b');
+    expect(colA).toBeDefined();
+    expect(colB).toBeDefined();
+
+    const itemsA = model.getItems(colA!);
+    const itemsB = model.getItems(colB!);
+    expect(itemsA.map((i) => i.id)).toContain(itemA.id);
+    expect(itemsB.map((i) => i.id)).toContain(itemB.id);
+  });
+
+  test('getItems updates when itemsAtom source changes', ({ expect }) => {
+    const initialItem = Obj.make(KanbanTaskSchema, { status: 'a' });
+    const initialItems: KanbanTask[] = [initialItem];
+    const initialItemsAtom = Atom.make<KanbanTask[]>(() => initialItems);
+
+    const { result, rerender } = renderHook(
+      ({ itemsAtom }) => useKanbanBoardModel(kanban, projection, itemsAtom, registry),
+      { initialProps: { itemsAtom: initialItemsAtom } },
+    );
+
+    const columns = result.current.getColumns();
+    const colA = columns.find((c) => c.columnValue === 'a');
+    expect(colA).toBeDefined();
+    expect(result.current.getItems(colA!).length).toBe(1);
+    expect(result.current.getItems(colA!).map((i) => i.id)).toEqual([initialItem.id]);
+
+    const secondItem = Obj.make(KanbanTaskSchema, { status: 'a' });
+    const newItems: KanbanTask[] = [initialItem, secondItem];
+    const newItemsAtom = Atom.make<KanbanTask[]>(() => newItems);
+    act(() => {
+      rerender({ itemsAtom: newItemsAtom });
+    });
+
+    expect(result.current.getItems(colA!).length).toBe(2);
+    expect(result.current.getItems(colA!).map((i) => i.id)).toEqual([initialItem.id, secondItem.id]);
+  });
+
+  test('a card moves column when its pivot changes, and other edits leave the column as is', ({ expect }) => {
+    const item = Obj.make(KanbanTaskSchema, { title: 'Card', status: 'a' });
+    const itemsAtom = Atom.make<KanbanTask[]>(() => [item]);
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+    const column = (value: string) => result.current.getColumns().find((c) => c.columnValue === value)!;
+    const columnA = result.current.items(column('a'));
+    const columnB = result.current.items(column('b'));
+    registry.subscribe(columnA, () => {});
+    registry.subscribe(columnB, () => {});
+    expect(registry.get(columnA).map((i) => i.id)).toEqual([item.id]);
+
+    const before = registry.get(columnA);
+    Obj.update(item, (item) => {
+      item.title = 'Renamed';
+    });
+    expect(registry.get(columnA)).toBe(before);
+
+    Obj.update(item, (item) => {
+      item.status = 'b';
+    });
+    expect(registry.get(columnA)).toEqual([]);
+    expect(registry.get(columnB).map((i) => i.id)).toEqual([item.id]);
+  });
+
+  test('columns atom updates when kanban arrangement changes', ({ expect }) => {
+    const itemsAtom = Atom.make<KanbanTask[]>(() => []);
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+
+    let columnsUpdateCount = 0;
+    registry.subscribe(result.current.columns, () => {
+      columnsUpdateCount++;
+    });
+
+    const columnsBefore = result.current.getColumns();
+    const orderBefore = columnsBefore.map((c) => c.columnValue);
+    expect(orderBefore).toEqual(['__uncategorized__', 'a', 'b']);
+
+    act(() => {
+      Obj.update(kanban, (kanban) => {
+        kanban.arrangement.order = ['b', 'a'];
+      });
+    });
+
+    const columnsAfter = registry.get(result.current.columns) ?? [];
+    const orderAfter = columnsAfter.map((c) => c.columnValue);
+    expect(orderAfter).toEqual(['__uncategorized__', 'b', 'a']);
+    // TODO(wittjosiah): Try to reduce to 1.
+    expect(columnsUpdateCount).toBe(2);
+  });
+
+  test('getItems returns items in column ordered by arrangement ids', ({ expect }) => {
+    const item1 = Obj.make(KanbanTaskSchema, {
+      id: EntityId.random(),
+      status: 'a',
+    });
+    const item2 = Obj.make(KanbanTaskSchema, {
+      id: EntityId.random(),
+      status: 'a',
+    });
+    const item3 = Obj.make(KanbanTaskSchema, {
+      id: EntityId.random(),
+      status: 'a',
+    });
+    const items: KanbanTask[] = [item1, item2, item3];
+    const itemsAtom = Atom.make<KanbanTask[]>(() => items);
+
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+
+    const columns = result.current.getColumns();
+    const colA = columns.find((c) => c.columnValue === 'a');
+    expect(colA).toBeDefined();
+    expect(result.current.getItems(colA!).length).toBe(3);
+
+    let itemsColAUpdateCount = 0;
+    registry.subscribe(result.current.items(colA!), () => {
+      itemsColAUpdateCount++;
+    });
+
+    act(() => {
+      Obj.update(kanban, (kanban) => {
+        kanban.arrangement.columns['a'] = {
+          ids: [item3.id, item1.id, item2.id],
+        };
+      });
+    });
+
+    const itemsAfter = result.current.getItems(colA!);
+    expect(itemsAfter.map((i) => i.id)).toEqual([item3.id, item1.id, item2.id]);
+    expect(itemsColAUpdateCount).toBe(1);
+  });
+
+  test('subscribing to one column items atom does not fire when another column changes', ({ expect }) => {
+    const itemA = Obj.make(KanbanTaskSchema, {
+      id: EntityId.random(),
+      status: 'a',
+    });
+    const itemB = Obj.make(KanbanTaskSchema, {
+      id: EntityId.random(),
+      status: 'b',
+    });
+    const items: KanbanTask[] = [itemA, itemB];
+    const itemsAtom = Atom.make<KanbanTask[]>(() => items);
+
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+
+    const columns = result.current.getColumns();
+    const colA = columns.find((c) => c.columnValue === 'a');
+    const colB = columns.find((c) => c.columnValue === 'b');
+    expect(colA).toBeDefined();
+    expect(colB).toBeDefined();
+
+    let itemsColAUpdateCount = 0;
+    registry.subscribe(result.current.items(colA!), () => {
+      itemsColAUpdateCount++;
+    });
+
+    act(() => {
+      Obj.update(kanban, (kanban) => {
+        kanban.arrangement.columns['b'] = { ids: [itemB.id] };
+      });
+    });
+
+    expect(itemsColAUpdateCount).toBe(0);
+  });
+
+  test('an items kanban with no pivot field places cards by the arrangement alone', ({ expect }) => {
+    const lead = Obj.make(KanbanTaskSchema, { title: 'Lead' });
+    const won = Obj.make(KanbanTaskSchema, { title: 'Won' });
+    const loose = Obj.make(KanbanTaskSchema, { title: 'Loose' });
+    const itemsAtom = Atom.make<KanbanTask[]>(() => [lead, won, loose]);
+    const itemsKanban = Kanban.makeItems({
+      pivotField: '',
+      arrangement: { order: ['Lead', 'Won'], columns: { Lead: { ids: [lead.id] }, Won: { ids: [won.id] } } },
+    });
+    if (!Kanban.isKanbanItems(itemsKanban)) {
+      throw new Error('Expected an items kanban.');
+    }
+
+    const wrapper = ({ children }: PropsWithChildren) => (
+      <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
+    );
+    const { result } = renderHook(
+      () => useKanbanBoardModel(itemsKanban, useItemsProjection(itemsKanban), itemsAtom, registry),
+      { wrapper },
+    );
+
+    const columns = result.current.getColumns();
+    const itemIds = (columnValue: string) => {
+      const column = columns.find((column) => column.columnValue === columnValue);
+      return column && result.current.getItems(column).map((item) => item.id);
+    };
+    expect(columns.map((column) => column.columnValue)).toEqual(['__uncategorized__', 'Lead', 'Won']);
+    expect(itemIds('Lead')).toEqual([lead.id]);
+    expect(itemIds('Won')).toEqual([won.id]);
+    expect(itemIds('__uncategorized__')).toEqual([loose.id]);
+  });
+});

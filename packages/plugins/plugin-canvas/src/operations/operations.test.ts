@@ -1,0 +1,94 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import { describe } from 'vitest';
+
+import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect/testing';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { isGeneratorNode } from '@dxos/react-ui-canvas/headless';
+
+import { createCanvas, readScenes, rootOf } from '#model';
+import { CanvasOperationHandlerSet } from '#operations';
+import { CanvasOperation, Generator } from '#types';
+
+const TestLayer = AssistantTestLayer({
+  operationHandlers: CanvasOperationHandlerSet.handlers,
+  types: [Drawing.Drawing, Drawing.Canvas, Generator.Generator],
+  disableLlmMemoization: true,
+});
+
+const SOURCE = `
+  import { defineGenerator, orbit } from '@dxos/react-ui-canvas/motion';
+  export default defineGenerator<{ count: number }>({
+    sample: (ctx) =>
+      Array.from({ length: ctx.params.count }, (_, index) => ({
+        kind: 'circle',
+        center: orbit({ x: 0, y: 0 }, { radius: 50, period: 2, phase: index })(ctx.t).position,
+        radius: 2,
+      })),
+  });
+`;
+
+describe('canvas generator operations', () => {
+  it.effect(
+    'create, place, key and check a generator',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* Database.add(createCanvas());
+        const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        yield* Database.flush();
+
+        const created = yield* Operation.invoke(CanvasOperation.CreateGenerator, { name: 'Orbit', source: SOURCE });
+        expect(created.errors).toBeUndefined();
+        expect(created.version).toBe(1);
+
+        const { node } = yield* Operation.invoke(CanvasOperation.AddGenerator, {
+          drawing: Ref.make(drawing),
+          generator: created.generator,
+          bounds: { x: -100, y: -100, width: 200, height: 200 },
+          params: { count: 3 },
+        });
+        const { keys } = yield* Operation.invoke(CanvasOperation.SetTimelineKey, {
+          drawing: Ref.make(drawing),
+          target: node,
+          property: 'params.count',
+          t: 2,
+          value: 6,
+          duration: 4,
+        });
+        expect(keys).toBe(1);
+
+        const root = rootOf(canvas.content) ?? '';
+        const scene = readScenes(canvas.content)[root];
+        expect(scene.timeline?.duration).toBe(4);
+        expect(Object.values(scene.nodes).filter(isGeneratorNode)).toHaveLength(1);
+
+        const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
+          generator: created.generator,
+          drawing: Ref.make(drawing),
+          node,
+          times: [0, 1, 2],
+        });
+        expect(report.deterministic).toBe(true);
+        // The keyed count holds its only key's value at every time.
+        expect(report.frames).toEqual([0, 1, 2].map((t) => ({ t, shapes: 6 })));
+
+        const updated = yield* Operation.invoke(CanvasOperation.UpdateGenerator, {
+          generator: created.generator,
+          source: 'export default {',
+        });
+        expect(updated.version).toBe(2);
+        expect(updated.errors?.length).toBeGreaterThan(0);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
+});
