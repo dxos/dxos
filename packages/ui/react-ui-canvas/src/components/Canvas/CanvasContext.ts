@@ -94,7 +94,6 @@ export type CanvasContextValue = {
   /** The current scene's frame. */
   bounds: Bounds;
   path: SceneId[];
-  camera: Camera;
   /** Whether the viewport has been measured; the scene stays hidden until it has. */
   measured: boolean;
   /** The view's size in screen px. */

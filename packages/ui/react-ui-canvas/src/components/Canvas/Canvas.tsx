@@ -1505,7 +1505,6 @@ const CanvasRoot = ({
       blocked={blocked}
       bounds={bounds}
       path={path}
-      camera={camera}
       measured={measured}
       viewport={viewport}
       grid={grid}
@@ -1635,7 +1634,6 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     displayScene,
     blocked,
     bounds,
-    camera,
     measured,
     viewport,
     grid,
@@ -1677,6 +1675,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     generated,
     toolbarActions,
   } = useCanvasContext('Canvas.Viewport');
+  const camera = useAtomValue(atoms.camera);
   const hover = useAtomValue(atoms.hover);
   const selectedPoint = useAtomValue(atoms.point);
   // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
@@ -2045,7 +2044,8 @@ CanvasActions.displayName = 'Canvas.Actions';
 
 /** The camera's controls and numbers; nothing here changes the scene. */
 const CanvasDebug = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) => {
-  const { toolbarActions, camera } = useCanvasContext('Canvas.Debug');
+  const { toolbarActions, atoms } = useCanvasContext('Canvas.Debug');
+  const camera = useAtomValue(atoms.camera);
   return (
     <div className={mx(barFrame, classNames)}>
       <CameraToolbar actions={toolbarActions}>{Math.round(camera.zoom * 100)}%</CameraToolbar>
