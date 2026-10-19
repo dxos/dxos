@@ -351,6 +351,7 @@ const animatableKind = (ast: SchemaAST.AST): AnimatableKind | undefined => {
 export const BASE_ANIMATABLE: Readonly<Record<string, AnimatableKind>> = {
   center: 'point',
   size: 'size',
+  rotation: 'number',
   [OPACITY_PATH]: 'number',
 };
 

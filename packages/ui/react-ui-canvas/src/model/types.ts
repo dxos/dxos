@@ -176,6 +176,14 @@ export const nodeBase = {
   center: NodeCenter,
   /** The frame is `size` centred on `center`, whatever the type draws inside it. */
   size: NodeSize,
+  /** Degrees clockwise about `center`; unset is 0. */
+  rotation: Schema.optional(
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: -360, maximum: 360 }))).annotate({
+      title: 'Rotation',
+      [StepAnnotationId]: 15,
+      [AnimatableAnnotationId]: 'number',
+    }),
+  ),
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
   /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */

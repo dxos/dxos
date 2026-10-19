@@ -100,3 +100,4 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 ## Follow-ups
 
 - [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
+- [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.

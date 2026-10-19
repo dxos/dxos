@@ -854,6 +854,7 @@ const NodeFrame = memo(
       width: bounds.width,
       height: bounds.height,
       fontSize: drawn.style?.fontSize,
+      ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
       [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),

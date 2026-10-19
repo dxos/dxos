@@ -79,11 +79,26 @@ export const contentBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJ
   return content ? alignBounds(padBounds(content, padding), unit) : undefined;
 };
 
+/** `point` turned back by the node's rotation about its centre, into the frame's own axes. */
+export const unrotatePoint = (node: Node, point: Point): Point => {
+  const rotation = node.rotation ?? 0;
+  if (rotation === 0) {
+    return point;
+  }
+  const angle = (-rotation * Math.PI) / 180;
+  const dx = point.x - node.center.x;
+  const dy = point.y - node.center.y;
+  return {
+    x: node.center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+    y: node.center.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+  };
+};
+
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */
 export const hitTest = (scene: Scene, point: Point, margin = 0): Node | undefined => {
   const nodes = sortByZ(nodeList(scene));
   for (let index = nodes.length - 1; index >= 0; index--) {
-    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), point)) {
+    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), unrotatePoint(nodes[index], point))) {
       return nodes[index];
     }
   }

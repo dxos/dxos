@@ -34,6 +34,23 @@ describe('hit', () => {
     expect(hitTest(scene, { x: 205, y: 100 }, 8)?.id).toBe('b');
   });
 
+  test('hitTest reads a rotated node in its own axes', ({ expect }) => {
+    // A 200 × 20 bar about (0, 0): flat it spans x, turned 90° it spans y.
+    const bar: BuiltinNode = {
+      type: 'rect',
+      id: 'bar',
+      z: 'A',
+      center: { x: 0, y: 0 },
+      size: { width: 200, height: 20 },
+    };
+    const flat: Scene = { id: 'flat', nodes: { bar }, links: {} };
+    const turned: Scene = { id: 'turned', nodes: { bar: { ...bar, rotation: 90 } }, links: {} };
+    expect(hitTest(flat, { x: 90, y: 0 })?.id).toBe('bar');
+    expect(hitTest(flat, { x: 0, y: 90 })).toBeUndefined();
+    expect(hitTest(turned, { x: 90, y: 0 })).toBeUndefined();
+    expect(hitTest(turned, { x: 0, y: 90 })?.id).toBe('bar');
+  });
+
   test('nodesIntersecting uses intersection, not containment', ({ expect }) => {
     const ids = nodesIntersecting(scene, boundsFromPoints({ x: 190, y: 90 }, { x: 210, y: 110 })).map(({ id }) => id);
     expect(ids).toEqual(['b']);
