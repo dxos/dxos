@@ -21,17 +21,12 @@ const Input = Schema.Struct({
   magazine: Ref.Ref(Magazine.Magazine).annotate({ title: 'Magazine' }),
 });
 
-/**
- * A routine that invokes {@link FeedOperation.CurateMagazine} for the magazine on the default daily
- * schedule. Its trigger carries the magazine as input, so the binding survives the routine's save flow.
- */
 export const makeCurationRoutine = (
   magazine: Magazine.Magazine,
   { name, enabled = true }: { name?: string; enabled?: boolean } = {},
 ) =>
   Wire.makeRoutine({
     name: name ?? magazine.name ?? 'Curate Magazine',
-    // An operation action, not instructions-based.
     spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
     trigger: Trigger.make({
       enabled,

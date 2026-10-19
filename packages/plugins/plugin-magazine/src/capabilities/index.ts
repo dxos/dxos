@@ -33,7 +33,6 @@ export const TextContent = AppCapability.textContent(() => import('./text-conten
 });
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-// Activated by the space create operation, after a template has written its content.
 export const CurateOnCreate = Capability.lazyModule(
   'CurateOnCreate',
   { provides: [SpaceCapabilities.OnCreateSpace], activatesOn: SpaceEvents.SpaceCreated },

@@ -22,7 +22,6 @@ export type Provides = {
   readonly routine: Routine.Routine;
 };
 
-/** Five real AI news feeds, an empty magazine over them, and its curation routine (off). Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('ai-briefing', {
   schemas: [
     Subscription.Subscription,

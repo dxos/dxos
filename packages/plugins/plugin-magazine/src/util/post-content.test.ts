@@ -27,7 +27,8 @@ describe('post content', () => {
     expect(getSnippet(post)).toBe('A short summary.');
   });
 
-  test('keeps underscores that join words', ({ expect }) => {
+  test('strips underscore emphasis but keeps underscores that join words', ({ expect }) => {
+    expect(getSnippet({ description: 'An _important_ and __bold__ note.' })).toBe('An important and bold note.');
     expect(getSnippet({ description: 'Set snake_case_names in the config.' })).toBe(
       'Set snake_case_names in the config.',
     );

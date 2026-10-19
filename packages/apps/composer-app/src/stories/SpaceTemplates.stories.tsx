@@ -190,27 +190,17 @@ const withIframePath: Decorator = (Story) => {
 
 type StoryArgs = { template: string };
 
-/** Story parameters the decorator reads. */
 type StoryParameters = {
-  /** Replaces the app's AI service; without one, operations that need a model fail (the client has no EDGE). */
   aiServiceMiddleware?: (aiService: AiService.Service) => AiService.Service;
 };
 
-/**
- * Resolves every model through the preview EDGE's provider proxy, which needs no signed-in identity,
- * unlike the app's `/ai/generate` route.
- */
-const previewEdgeAiService = (): AiService.Service => {
+const anonymousEdgeAiService = (): AiService.Service => {
   const remote = Layer.orDie(AiServiceTestingPreset('edge-remote'));
+  const resolveRemote = <A, E>(resolve: (service: AiService.Service) => Layer.Layer<A, E>) =>
+    Layer.unwrap(Effect.map(AiService.tag, resolve)).pipe(Layer.provide(remote));
   return AiService.make({
-    languageModel: (model, options) =>
-      Layer.unwrap(Effect.map(AiService.tag, (service) => service.languageModel(model, options))).pipe(
-        Layer.provide(remote),
-      ),
-    decisionModel: (model, options) =>
-      Layer.unwrap(Effect.map(AiService.tag, (service) => service.decisionModel(model, options))).pipe(
-        Layer.provide(remote),
-      ),
+    languageModel: (model, options) => resolveRemote((service) => service.languageModel(model, options)),
+    decisionModel: (model, options) => resolveRemote((service) => service.decisionModel(model, options)),
   });
 };
 
@@ -317,14 +307,9 @@ const play: Story['play'] = async ({ canvasElement }) => {
   );
 };
 
-/**
- * Seeds five live AI news feeds and an empty magazine, then schedules one curation run that syncs the
- * feeds and curates the magazine through the preview EDGE's model proxy. The play test checks only the
- * seeded content.
- */
 export const AiBriefing: Story = {
   args: { template: TEMPLATES.aiBriefing },
-  parameters: { aiServiceMiddleware: previewEdgeAiService } satisfies StoryParameters,
+  parameters: { aiServiceMiddleware: anonymousEdgeAiService } satisfies StoryParameters,
   play,
 };
 

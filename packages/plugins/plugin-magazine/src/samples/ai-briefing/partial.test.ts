@@ -78,7 +78,6 @@ describe('AI Briefing', () => {
       expect(trigger?.spec).toEqual({ kind: 'timer', cron: '0 9 * * *' });
       expect(idOf(trigger?.input?.magazine)).toBe(magazine.id);
 
-      // Unparented, so the navtree lists the magazine in its type section with the feeds beneath it.
       expect(count(Collection.Collection)).toBe(0);
       expect([magazine, ...subscriptions].map((entry) => entry['@parent'])).toEqual(Array(6).fill(undefined));
     },

@@ -14,10 +14,8 @@ import { FeedOperation, Magazine } from '#types';
 
 import * as AiBriefingSpace from '../samples/ai-briefing/AiBriefingSpace.ts';
 
-/** Templates whose magazines start empty and are filled by one curation run once the space exists. */
 const CURATED_TEMPLATES = new Set([AiBriefingSpace.TEMPLATE_ID]);
 
-/** Schedules {@link FeedOperation.CurateMagazine}, which syncs the feeds first, for each magazine. */
 const onCreateSpace: SpaceCapabilities.OnCreateSpace = ({ space }) =>
   Effect.gen(function* () {
     const templateId = AppSpace.getSpaceTemplateId(space);

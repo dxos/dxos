@@ -15,7 +15,6 @@ export const TEMPLATE_ID = 'org.dxos.plugin.magazine.template.ai-briefing';
 
 const partials = { aiBriefing: Partial };
 
-/** Five AI news feeds and a magazine that curates them once the space exists. */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'AI Briefing', icon: 'atom', hue: 'sky' },

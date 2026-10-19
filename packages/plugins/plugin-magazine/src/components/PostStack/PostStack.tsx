@@ -102,7 +102,6 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
     return null;
   }
 
-  // Synced descriptions are Markdown with the hero image inline; the card shows it as a poster and the text as a snippet.
   const imageUrl = getImageUrl(post);
   const snippet = getSnippet({ description: post.description ?? post.content }) || undefined;
   const published = formatDate(post.published);

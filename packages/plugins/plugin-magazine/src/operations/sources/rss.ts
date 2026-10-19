@@ -154,7 +154,6 @@ const mediaUrls = (value: MediaElement | MediaElement[] | undefined, isImage = (
     .filter(isImage)
     .flatMap((media) => (typeof media === 'object' && media['@_url'] ? [media['@_url']] : []));
 
-/** The item's Media RSS image: the first image `<media:content>`, else the first `<media:thumbnail>`. */
 const mediaImageUrl = (item: MediaItem): string | undefined => {
   const isImage = (media: MediaElement) =>
     typeof media === 'object' &&
@@ -162,7 +161,6 @@ const mediaImageUrl = (item: MediaItem): string | undefined => {
   return mediaUrls(item['media:content'], isImage)[0] ?? mediaUrls(item['media:thumbnail'])[0];
 };
 
-/** Appends the Media RSS image to a description that carries none, so it reaches the post body and the curator. */
 const withMediaImage = (description: string | undefined, imageUrl: string | undefined): string | undefined => {
   if (!imageUrl || (description && /!\[[^\]]*\]\(|<img\s/i.test(description))) {
     return description;

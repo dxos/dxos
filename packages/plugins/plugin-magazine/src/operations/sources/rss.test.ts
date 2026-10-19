@@ -227,7 +227,6 @@ describe('fetchRss', () => {
     );
     expect(post.guid).toBe('https://www.theregister.com/a/5250322');
 
-    // CDATA-wrapped <description> summary is unwrapped (and trimmed), then gets the item's Media RSS image.
     expect(post.description).toBe(
       "Government gets a say in 'trusted partner' access, and that worries policy experts\n\n![](https://image.theregister.com/?imageId=261924&width=800)",
     );

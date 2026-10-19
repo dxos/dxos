@@ -14,7 +14,6 @@ export type FeedSeed = SampleSpace.Seed<
   }
 >;
 
-/** Real feeds, in collection order; their posts arrive when curation syncs them. */
 export const FEEDS: readonly FeedSeed[] = [
   {
     key: 'verge',

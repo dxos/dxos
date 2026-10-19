@@ -74,7 +74,6 @@ export const makeSnippet = (text: string, length: number = DEFAULT_SNIPPET_LENGT
   return `${base.trimEnd()}…`;
 };
 
-/** Extract image URLs from HTML or Markdown: og:image (meta property) first, then `<img src="...">` and `![](...)`. */
 export const extractImageUrls = (html: string): string[] => {
   if (!html) {
     return [];
@@ -87,7 +86,6 @@ export const extractImageUrls = (html: string): string[] => {
   if (ogMatch?.[1]) {
     urls.push(ogMatch[1]);
   }
-  // Synced descriptions are Markdown (`fetchRss` normalizes them), so match both image forms in document order.
   const imgRegex = /<img[^>]+src=["']([^"']+)["']|!\[[^\]]*\]\(\s*<?([^)\s>]+)>?[^)]*\)/gi;
   let match: RegExpExecArray | null;
   while ((match = imgRegex.exec(html)) != null) {
@@ -99,15 +97,12 @@ export const extractImageUrls = (html: string): string[] => {
   return urls;
 };
 
-/**
- * Reduce Markdown to its plain text: images dropped, links to their text, and heading, quote, `*` emphasis and code
- * marks removed. Underscores stay, since they also join words.
- */
 export const stripMarkdown = (markdown: string): string =>
   markdown
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/^\s{0,3}(?:#{1,6}|>)\s*/gm, '')
     .replace(/(\*\*|\*|`)(\S(?:.*?\S)?)\1/g, '$2')
+    .replace(/(^|[^\w])(__|_)(\S(?:.*?\S)?)\2(?![\w])/g, '$1$3')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
