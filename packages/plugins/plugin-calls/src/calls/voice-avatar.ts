@@ -188,37 +188,60 @@ const torusShape = (scene: THREE.Scene, palette: Palette): Shape => {
   };
 };
 
-/** A row of blobs, lowest band on the left, each stretched upward and narrowed (keeping its volume) by its band. */
+/**
+ * A row of blobs, lowest band on the left. Passive, they ride a slow wave along the row; speaking, each stretches
+ * upward with its band and pinches at its waist, keeping its volume.
+ */
 const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
-  const geometry = new THREE.SphereGeometry(0.12, 24, 12);
+  const radius = 0.12;
   const spacing = 0.27;
   const blobs = Array.from({ length: BANDS }, (_, index) => {
+    // Each blob has its own geometry, since the waist pinch reshapes its vertices.
+    const geometry = new THREE.SphereGeometry(radius, 24, 16);
+    const base = Float32Array.from(geometry.attributes.position.array);
     const material = new THREE.MeshStandardMaterial({ color: palette.silent, roughness: 0.35, metalness: 0.1 });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.x = (index - (BANDS - 1) / 2) * spacing;
     scene.add(mesh);
-    return { mesh, material };
+    return { mesh, geometry, base, material, pinch: 0 };
   });
 
   return {
     update: ({ time, level, bands }) => {
-      // Silent, the blobs jitter so the row reads as alive; the jitter fades as the voice takes over.
+      // The wave fades as the voice takes over, so speech reads as the bands and not the swell.
       const idle = Math.max(0, 1 - level * 4);
-      blobs.forEach(({ mesh, material }, index) => {
+      blobs.forEach((blob, index) => {
+        const { mesh, geometry, base, material } = blob;
         const energy = bands[index];
-        const jitter =
-          (Math.sin(time * 11 + index * 2.3) * Math.sin(time * 7.3 + index * 5.1) + Math.sin(time * 17 + index)) * 0.5;
-        const stretch = 1 + energy * 2.2 + jitter * idle * 0.12;
+        const stretch = 1 + energy * 2.2;
         const squeeze = 1 / Math.sqrt(stretch);
         mesh.scale.set(squeeze, stretch, squeeze);
-        mesh.position.y = Math.sin(time * 9 + index * 3.7) * Math.sin(time * 5.3 + index) * idle * 0.03;
+        mesh.position.y = Math.sin(time * 1.4 - index * 0.45) * idle * 0.08;
+
+        // An hourglass: the equator narrows most, the poles not at all.
+        const pinch = Math.min(0.55, energy * 0.8);
+        if (Math.abs(pinch - blob.pinch) > 0.005) {
+          blob.pinch = pinch;
+          const positions = geometry.attributes.position.array;
+          for (let vertex = 0; vertex < positions.length; vertex += 3) {
+            const height = base[vertex + 1] / radius;
+            const waist = 1 - pinch * (1 - height * height);
+            positions[vertex] = base[vertex] * waist;
+            positions[vertex + 2] = base[vertex + 2] * waist;
+          }
+          geometry.attributes.position.needsUpdate = true;
+          geometry.computeVertexNormals();
+        }
+
         material.color.copy(palette.silent).lerp(palette.loud, Math.min(1, energy * 1.2));
         material.emissive.copy(material.color).multiplyScalar(energy * 0.25);
       });
     },
     dispose: () => {
-      geometry.dispose();
-      blobs.forEach(({ material }) => material.dispose());
+      blobs.forEach(({ geometry, material }) => {
+        geometry.dispose();
+        material.dispose();
+      });
     },
   };
 };

@@ -102,7 +102,10 @@ const meta = {
       },
     },
   },
-  args: { src: '/simulated-call/agent-voice.webm' },
+  argTypes: {
+    variant: { control: 'select', options: ['torus', 'spectrum'] satisfies VoiceAvatarVariant[] },
+  },
+  args: { src: '/simulated-call/agent-voice.webm', variant: 'spectrum' },
 } satisfies Meta<typeof VoiceAvatarStory>;
 
 export default meta;
@@ -110,7 +113,3 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const Spectrum: Story = {
-  args: { variant: 'spectrum' },
-};
