@@ -2333,13 +2333,13 @@ describe('QueryPlanner', () => {
     });
 
     // `Cursor.seedDedupSet` pages a feed this way: by bare typename, so every schema version matches.
-    test('a page of a bare-typename select scans only up to the page', () => {
+    test('a page of a bare-typename select scans only the page', () => {
       const query = Query.select(Filter.type(DXN.make('com.example.type.task')))
         .orderBy(Order.natural('desc'))
         .skip(50)
         .limit(50)
         .from(feedScope);
-      expect(selectStep(query.ast)).toMatchObject({ limit: 100, feedScan: { direction: 'desc' } });
+      expect(selectStep(query.ast)).toMatchObject({ limit: 50, feedScan: { direction: 'desc', skip: 50 } });
     });
 
     test('a `deleted: only` read scans the deleted rows, so the cap counts them', () => {

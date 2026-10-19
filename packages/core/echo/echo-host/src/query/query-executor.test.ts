@@ -42,7 +42,7 @@ describe('QueryExecutor', () => {
 
     await executor.execQuery();
 
-    expect(executor.getResults().map((result) => result.id)).toEqual([objectIds[4], objectIds[3]]);
+    expect((await executor.getResults()).map((result) => result.id)).toEqual([objectIds[4], objectIds[3]]);
     const select = executor.trace.children.find((child) => child.name === 'Select');
     expect(select?.documentsLoaded).toBe(2);
   });

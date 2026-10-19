@@ -247,7 +247,7 @@ export interface CursorQueueWindow {
 }
 
 /**
- * Read a page of a feed in natural order — `limit` rows after the first `skip` — so a bounded query
+ * Read a page of a feed in natural order, `limit` rows after the first `skip`, so a bounded query
  * costs what it asks for rather than the whole feed. Ordered by `objectId` because that is the key
  * the query executor's natural comparator uses: the page is then exactly the page a full scan
  * followed by an in-memory sort would have produced.
