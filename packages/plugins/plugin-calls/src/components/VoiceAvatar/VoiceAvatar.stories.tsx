@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
 
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
@@ -28,10 +29,33 @@ type StoryProps = {
   variant?: VoiceAvatarVariant;
 } & Partial<VoiceAvatarTuning>;
 
+/** Slider range of each tuning value; Randomize draws from the same ranges. */
+const RANGES: Record<keyof VoiceAvatarTuning, { min: number; max: number; step: number }> = {
+  waveAmplitude: { min: 0, max: 4, step: 0.1 },
+  jitter: { min: 0, max: 4, step: 0.1 },
+  waveSpeed: { min: 0, max: 5, step: 0.1 },
+  particles: { min: 0, max: 60, step: 1 },
+  strands: { min: 1, max: 8, step: 1 },
+  separation: { min: 0, max: 0.2, step: 0.005 },
+  thickness: { min: 0, max: 3, step: 0.1 },
+};
+
+/** A value on the range's step grid, rounded so the slider and the log show it cleanly. */
+const randomIn = ({ min, max, step }: { min: number; max: number; step: number }) =>
+  Number((min + Math.round((Math.random() * (max - min)) / step) * step).toFixed(3));
+
 type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioContext };
 
 /** The abstract avatar on its own, moving with a voice file that plays through the speakers. */
-const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
+const VoiceAvatarStory = ({
+  src,
+  variant,
+  onTune,
+  ...tuning
+}: StoryProps & {
+  /** Writes tuning back to the story's args, so the sliders follow. */
+  onTune?: (tuning: VoiceAvatarTuning) => void;
+}) => {
   const [voice, setVoice] = useState<Voice>();
   const [playing, setPlaying] = useState(false);
 
@@ -85,6 +109,21 @@ const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
     setPlaying(true);
   };
 
+  // Sets the sliders to random values, so a good combination can be read back from the console and kept.
+  const handleRandomize = () => {
+    const values: VoiceAvatarTuning = {
+      waveAmplitude: randomIn(RANGES.waveAmplitude),
+      jitter: randomIn(RANGES.jitter),
+      waveSpeed: randomIn(RANGES.waveSpeed),
+      particles: randomIn(RANGES.particles),
+      strands: randomIn(RANGES.strands),
+      separation: randomIn(RANGES.separation),
+      thickness: randomIn(RANGES.thickness),
+    };
+    log.info('voice avatar tuning', values);
+    onTune?.(values);
+  };
+
   const handleStop = () => {
     voice?.audio.pause();
     setPlaying(false);
@@ -111,6 +150,7 @@ const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
                 onClick={() => void handlePlay().catch((err) => log.catch(err))}
               />
             )}
+            <Button.Root icon='ph--shuffle--regular' label='Randomize' onClick={handleRandomize} />
           </Toolbar.Root>
         </Layout.Flex>
       </Layout.Flex>
@@ -120,7 +160,11 @@ const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
 
 const meta = {
   title: 'plugins/plugin-calls/components/VoiceAvatar',
-  render: VoiceAvatarStory,
+  // Storybook's hooks run only in the story function, not in the component it renders, so the args are wired here.
+  render: (args) => {
+    const [, updateArgs] = useArgs<StoryProps>();
+    return <VoiceAvatarStory {...args} onTune={updateArgs} />;
+  },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -132,14 +176,10 @@ const meta = {
     },
   },
   argTypes: {
-    variant: { control: 'select', options: ['torus', 'spectrum', 'ink'] satisfies VoiceAvatarVariant[] },
-    waveAmplitude: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
-    jitter: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
-    waveSpeed: { control: { type: 'range', min: 0, max: 5, step: 0.1 } },
-    particles: { control: { type: 'range', min: 0, max: 60, step: 1 } },
-    strands: { control: { type: 'range', min: 1, max: 8, step: 1 } },
-    separation: { control: { type: 'range', min: 0, max: 0.2, step: 0.005 } },
-    thickness: { control: { type: 'range', min: 0, max: 3, step: 0.1 } },
+    variant: { control: 'select', options: ['torus', 'spectrum', 'ink', 'ink-line'] satisfies VoiceAvatarVariant[] },
+    ...Object.fromEntries(
+      Object.entries(RANGES).map(([key, range]) => [key, { control: { type: 'range', ...range } }]),
+    ),
   },
   args: { src: '/simulated-call/agent-voice.webm', variant: 'ink', ...DEFAULT_TUNING },
 } satisfies Meta<typeof VoiceAvatarStory>;

@@ -42,9 +42,10 @@ export const DEFAULT_TUNING: VoiceAvatarTuning = {
 
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
- * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival.
+ * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival; `ink-line`: the
+ * same ink as a horizontal stroke with frequency running linearly along it.
  */
-export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink';
+export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink' | 'ink-line';
 
 export type VoiceAvatarOptions = {
   variant?: VoiceAvatarVariant;
@@ -66,8 +67,22 @@ const BANDS = 16;
 const LOWEST_HZ = 80;
 const HIGHEST_HZ = 8_000;
 
+/** The ink-line variant's resolution: linearly spaced points across the voice's range. */
+const LINEAR_POINTS = 64;
+const LINEAR_HIGHEST_HZ = 5_000;
+
 /** What the analyser hears on one frame, every value smoothed and in 0..1. */
-type Hearing = { time: number; delta: number; level: number; low: number; high: number; bands: number[] };
+type Hearing = {
+  time: number;
+  delta: number;
+  level: number;
+  low: number;
+  high: number;
+  /** Log-spaced bands. */
+  bands: number[];
+  /** Linearly spaced points from `LOWEST_HZ` to `LINEAR_HIGHEST_HZ`. */
+  linear: number[];
+};
 
 type Shape = { update: (hearing: Hearing, tuning: VoiceAvatarTuning) => void; dispose: () => void };
 
@@ -125,9 +140,22 @@ export const createVoiceAvatar = (
       ? spectrumShape(scene, palette)
       : variant === 'ink'
         ? inkShape(scene)
-        : torusShape(scene, palette);
+        : variant === 'ink-line'
+          ? inkLineShape(scene)
+          : torusShape(scene, palette);
 
-  const hearing: Hearing = { time: 0, delta: 0, level: 0, low: 0, high: 0, bands: new Array(BANDS).fill(0) };
+  const hearing: Hearing = {
+    time: 0,
+    delta: 0,
+    level: 0,
+    low: 0,
+    high: 0,
+    bands: new Array(BANDS).fill(0),
+    linear: new Array(LINEAR_POINTS).fill(0),
+  };
+  const linearEdges = Array.from({ length: LINEAR_POINTS + 1 }, (_, index) =>
+    binOf(LOWEST_HZ + ((LINEAR_HIGHEST_HZ - LOWEST_HZ) * index) / LINEAR_POINTS),
+  );
   const smooth = (current: number, target: number, delta: number) =>
     current + (target - current) * Math.min(1, delta / (target > current ? ATTACK : RELEASE));
   const band = (from: number, to: number) => {
@@ -155,6 +183,10 @@ export const createVoiceAvatar = (
     hearing.bands.forEach((value, index) => {
       const energy = Math.max(0, Math.min(1, (band(edges[index], edges[index + 1]) - 0.25) / 0.5));
       hearing.bands[index] = smooth(value, energy, delta);
+    });
+    hearing.linear.forEach((value, index) => {
+      const energy = Math.max(0, Math.min(1, (band(linearEdges[index], linearEdges[index + 1]) - 0.25) / 0.5));
+      hearing.linear[index] = smooth(value, energy, delta);
     });
     shape.update(hearing, tuning);
     renderer.render(scene, camera);
@@ -460,6 +492,155 @@ const inkShape = (scene: THREE.Scene): Shape => {
         }
         blot.distance += delta * 0.18 * (1 - progress);
         blot.mesh.position.set(Math.sin(blot.angle) * blot.distance, Math.cos(blot.angle) * blot.distance, 0.01);
+        blot.mesh.scale.setScalar(blot.size * (1 + progress * 1.5));
+        blot.material.opacity = 0.85 * (1 - progress) ** 1.5;
+      }
+    },
+    dispose: () => {
+      strands.forEach(({ geometry }) => geometry.dispose());
+      material.dispose();
+      blotGeometry.dispose();
+      blots.forEach(({ material: blotMaterial }) => blotMaterial.dispose());
+    },
+  };
+};
+
+/** Samples along the ink line. */
+const LINE_SAMPLES = 320;
+const LINE_HALF_WIDTH = 2.4;
+
+/**
+ * The ink aesthetic as a horizontal stroke, frequency running linearly from left (low) to right (high). Where a
+ * frequency sounds the stroke thickens and vibrates in place (faster toward the high end) and sheds blots that drift
+ * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack vertically, `separation`
+ * apart, the middle one thickest; the stroke tapers to a point at both ends.
+ */
+const inkLineShape = (scene: THREE.Scene): Shape => {
+  scene.background = new THREE.Color('#e9e7e2');
+  const ink = new THREE.Color('#151515');
+  const group = new THREE.Group();
+  scene.add(group);
+  const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
+
+  // Each strand is a strip of quads, top and bottom edge per sample, rewritten every frame.
+  const indices: number[] = [];
+  for (let segment = 0; segment < LINE_SAMPLES; segment++) {
+    const top = segment * 2;
+    indices.push(top, top + 1, top + 2, top + 1, top + 3, top + 2);
+  }
+  const strands = Array.from({ length: MAX_STRANDS }, (_, index) => {
+    const positions = new Float32Array((LINE_SAMPLES + 1) * 2 * 3);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = index === 0;
+    group.add(mesh);
+    return { positions, geometry, mesh, phase: index * 1.9 };
+  });
+
+  const blotGeometry = new THREE.CircleGeometry(1, 24);
+  const blots = Array.from({ length: INK_BLOTS }, () => {
+    const blotMaterial = new THREE.MeshBasicMaterial({ color: ink, transparent: true, opacity: 0 });
+    const mesh = new THREE.Mesh(blotGeometry, blotMaterial);
+    mesh.visible = false;
+    group.add(mesh);
+    return { mesh, material: blotMaterial, x: 0, y: 0, direction: 1, size: 0, age: 0, life: 0 };
+  });
+
+  /** Energy at `position` (0..1 along the line), interpolated between the linear points. */
+  const energyAt = (linear: number[], position: number) => {
+    const point = position * (linear.length - 1);
+    const below = Math.floor(point);
+    const above = Math.min(linear.length - 1, below + 1);
+    return linear[below] + (linear[above] - linear[below]) * (point - below);
+  };
+
+  let phase = 0;
+  let spawned = 0;
+  return {
+    update: (
+      { time, delta, level, linear },
+      { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount, separation, thickness },
+    ) => {
+      // Accumulated, so changing the speed changes the pace without jumping the wave.
+      phase += delta * waveSpeed;
+      const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
+      const idle = Math.max(0, 1 - level * 4);
+      const middle = (count - 1) / 2;
+      const share = 1.4 / Math.sqrt(count);
+      strands.forEach((strand, index) => {
+        strand.mesh.visible = index < count;
+        if (!strand.mesh.visible) {
+          return;
+        }
+        const own = phase + strand.phase;
+        const base = (index - middle) * separation * 2;
+        const taper = count > 1 ? 1 - 0.7 * (Math.abs(index - middle) / middle) ** 1.2 : 1;
+        const weight = (count > 1 ? share : 1) * taper;
+        for (let sample = 0; sample <= LINE_SAMPLES; sample++) {
+          const position = sample / LINE_SAMPLES;
+          const x = (position * 2 - 1) * LINE_HALF_WIDTH;
+          const energy = energyAt(linear, position);
+          // A brush stroke: full width in the middle, tapering to a point at both ends.
+          const brush = Math.sin(Math.PI * position) ** 0.6;
+          const width =
+            ((0.035 + Math.sin(x * 2.1 + own * 0.7) * 0.006 + Math.sin(x * 4.7 - own * 0.4) * 0.004) * weight +
+              energy * 0.22 * weight * thickness) *
+            brush;
+          // Standing waves, faster toward the high end, so the line shakes in place where it sounds.
+          const rate = 8 + position * 40;
+          const vibration =
+            energy * 0.06 * (Math.sin(x * (6 + position * 18)) * Math.sin(time * rate) * (1 - position * 0.4));
+          const centre =
+            base +
+            vibration +
+            idle *
+              (waveAmplitude *
+                (Math.sin(x * 1.3 + own * 0.9) * 0.05 +
+                  Math.sin(x * 2.2 - own * 1.37 + 1) * 0.03 +
+                  Math.sin(x * 3.7 + own * 2.11 + 2) * 0.015) +
+                jitter *
+                  (Math.sin(x * 9 + own * 7.3) * 0.008 +
+                    Math.sin(x * 15 - own * 11.9 + 3) * 0.005 +
+                    Math.sin(x * 24 + own * 17.1 + 1) * 0.004));
+          strand.positions.set([x, centre + width / 2, 0, x, centre - width / 2, 0], sample * 6);
+        }
+        strand.geometry.attributes.position.needsUpdate = true;
+        strand.geometry.computeBoundingSphere();
+      });
+
+      // Loud points shed blots that drift up or down off the line; the total rate matches the ring's.
+      linear.forEach((energy, index) => {
+        if (energy <= 0.35) {
+          return;
+        }
+        const owed = energy * delta * particles * (BANDS / linear.length);
+        const due = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
+        for (let spawn = 0; spawn < due; spawn++) {
+          const blot = blots[spawned++ % blots.length];
+          const position = (index + Math.random()) / linear.length;
+          blot.x = (position * 2 - 1) * LINE_HALF_WIDTH;
+          blot.direction = Math.random() < 0.5 ? -1 : 1;
+          blot.y = blot.direction * 0.05;
+          blot.size = 0.02 + energy * 0.05 * Math.random();
+          blot.age = 0;
+          blot.life = 1.2 + Math.random() * 1.5;
+          blot.mesh.visible = true;
+        }
+      });
+      for (const blot of blots) {
+        if (!blot.mesh.visible) {
+          continue;
+        }
+        blot.age += delta;
+        const progress = blot.age / blot.life;
+        if (progress >= 1) {
+          blot.mesh.visible = false;
+          continue;
+        }
+        blot.y += blot.direction * delta * 0.18 * (1 - progress);
+        blot.mesh.position.set(blot.x, blot.y, 0.01);
         blot.mesh.scale.setScalar(blot.size * (1 + progress * 1.5));
         blot.material.opacity = 0.85 * (1 - progress) ** 1.5;
       }

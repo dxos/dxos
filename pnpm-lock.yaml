@@ -9305,6 +9305,9 @@ importers:
         specifier: 'catalog:'
         version: 0.178.0
     devDependencies:
+      storybook:
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7)
       '@types/three':
         specifier: 'catalog:'
         version: 0.165.0
