@@ -11,12 +11,12 @@ import {
   type Projection,
   createFreehandProjection,
 } from '../engine/index.ts';
-import { type SceneStore } from '../model/index.ts';
+import { type ViewStore } from '../model/index.ts';
 import { withUndo } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
-export type UseSceneProjectionOptions = {
-  store: SceneStore;
+export type UseViewProjectionOptions = {
+  store: ViewStore;
   atoms: CanvasAtoms;
   createProjection?: (options: FreehandProjectionOptions) => Projection;
   /**
@@ -30,12 +30,12 @@ export type UseSceneProjectionOptions = {
  * The projection of the scene at the head of the view's path, recording into the view's undo log;
  * shared by the view and its panels so every edit is undoable.
  */
-export const useSceneProjection = ({
+export const useViewProjection = ({
   store,
   atoms,
   createProjection = createFreehandProjection,
   projection,
-}: UseSceneProjectionOptions): Projection => {
+}: UseViewProjectionOptions): Projection => {
   const registry = useRegistry();
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];

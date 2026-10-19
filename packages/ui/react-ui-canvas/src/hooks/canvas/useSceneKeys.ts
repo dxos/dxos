@@ -4,39 +4,51 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
-import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
-import { type useRegistry } from '../../hooks/index.ts';
+import {
+  type CanvasAtoms,
+  type EditingCommands,
+  type NavigationCommands,
+  type Projection,
+  type SelectionCommands,
+  type ToolsCommands,
+} from '../../engine/index.ts';
 import {
   type Capabilities,
   type ElementId,
   type LinkRegistry,
   type NodeRegistry,
-  type Scene,
-  type Size,
+  type View,
   isToolKey,
   keyAction,
   nodeDef,
 } from '../../model/index.ts';
-import { NOMINAL_ZOOM, fitBounds, nodeBounds, unionBounds, zoomAt } from '../../utils/index.ts';
-import { toolForKey } from '../panels/ToolsPanel/index.ts';
-import { type TimelineKeys } from './CanvasContext.ts';
+import { toolForKey } from '../../utils/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
-import { type SceneCamera } from './useSceneCamera.ts';
-import { type SceneClipboard } from './useSceneClipboard.ts';
-import { type SceneNavigation } from './useSceneNavigation.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
+
+/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
+export type TimelineKeys = {
+  active: boolean;
+  togglePlay: () => void;
+  /** Moves the playhead by whole frames. */
+  step: (frames: number) => void;
+  /** Moves the playhead to the selection's next or previous key. */
+  jumpKey: (direction: 1 | -1) => void;
+  addKey: () => void;
+  /** Removes the selection's keys at the playhead. */
+  removeKey: () => void;
+};
 
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  scene: Scene;
+  scene: View;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
   projection: Projection;
   capabilities: Capabilities;
-  viewport: Size;
-  /** Least gap between that frame and a viewport edge when fitting, in scene units. */
-  inset: number;
+  navigation: NavigationCommands;
   /** Minor grid spacing in scene px; an arrow nudges by it. */
   grid: number;
   select: (ids: Iterable<ElementId>) => void;
@@ -46,16 +58,12 @@ export type UseSceneKeysOptions = {
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  /** Frames the scene and enters fit mode. */
-  onFit: () => void;
-  /** The user moved the camera, which ends fit mode. */
-  onExitFit: () => void;
   timeline?: TimelineKeys;
-} & Pick<SceneCamera, 'animateTo'> &
-  Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
-  Pick<SceneSnap, 'major'> &
-  Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
-  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'setTool'>;
+} & Pick<SceneSnap, 'major'> &
+  Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
+  Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
+  Pick<ToolsCommands, 'setTool'>;
 
 /**
  * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this
@@ -70,8 +78,7 @@ export const useSceneKeys = ({
   linkRegistry,
   projection,
   capabilities,
-  viewport,
-  inset,
+  navigation,
   grid,
   select,
   toggleSnap,
@@ -80,16 +87,13 @@ export const useSceneKeys = ({
   toggleDebug,
   onUndo,
   onRedo,
-  onFit,
-  onExitFit,
-  animateTo,
-  drillIn,
-  drillOut,
-  goHistory,
   major,
   copy,
   cut,
   paste,
+  delete: deleteSelection,
+  group,
+  ungroup,
   cancelDrag,
   removePoint,
   setTool,
@@ -139,47 +143,38 @@ export const useSceneKeys = ({
           } else if (selected.length > 0) {
             select([]);
           } else {
-            drillOut();
+            navigation.back();
           }
           break;
         case 'delete':
           if (point) {
             removePoint(point);
-          } else if (selected.length > 0 && capabilities.delete) {
-            projection.apply({ kind: 'delete', ids: selected });
-            select([]);
+          } else {
+            deleteSelection();
           }
           break;
         case 'open': {
           const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
           if (node && nodeDef(nodeRegistry, node)?.openable) {
-            drillIn(node);
+            navigation.drillIn(node);
           }
           break;
         }
         case 'fit':
-          onFit();
+          navigation.fit();
           event.preventDefault();
           break;
-        case 'fitSelection': {
-          const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
-          if (union) {
-            onExitFit();
-            animateTo(fitBounds(union, viewport, inset, NOMINAL_ZOOM));
-          }
+        case 'fitSelection':
+          navigation.fitSelection();
           break;
-        }
         case 'zoomReset':
-          onExitFit();
-          animateTo(
-            zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, NOMINAL_ZOOM),
-          );
+          navigation.resetZoom();
           break;
         case 'back':
-          goHistory(-1);
+          navigation.goHistory(-1);
           break;
         case 'forward':
-          goHistory(1);
+          navigation.goHistory(1);
           break;
         case 'nudge': {
           if (selectedNodes.length === 0 || !capabilities.move) {
@@ -213,6 +208,15 @@ export const useSceneKeys = ({
           break;
         case 'redo':
           onRedo();
+          event.preventDefault();
+          break;
+        // ⌘G is the browser's find-next, which a canvas with the focus takes for itself.
+        case 'group':
+          group();
+          event.preventDefault();
+          break;
+        case 'ungroup':
+          ungroup();
           event.preventDefault();
           break;
         case 'selectAll':
@@ -251,22 +255,16 @@ export const useSceneKeys = ({
       registry,
       atoms.selection,
       atoms.drag,
-      atoms.camera,
       atoms.point,
       removePoint,
       cancelDrag,
       select,
-      drillOut,
-      drillIn,
+      navigation,
       capabilities,
       projection,
       scene,
       nodeRegistry,
       linkRegistry,
-      animateTo,
-      viewport,
-      inset,
-      goHistory,
       grid,
       major,
       setTool,
@@ -276,11 +274,12 @@ export const useSceneKeys = ({
       toggleDebug,
       onUndo,
       onRedo,
-      onFit,
-      onExitFit,
       copy,
       cut,
       paste,
+      deleteSelection,
+      group,
+      ungroup,
       timeline,
     ],
   );

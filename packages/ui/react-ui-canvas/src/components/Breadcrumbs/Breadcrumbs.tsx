@@ -6,11 +6,11 @@ import React, { Fragment } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 
-import { type SceneId } from '../../model/index.ts';
+import { type ViewId } from '../../model/index.ts';
 
 export type BreadcrumbsProps = {
-  path: SceneId[];
-  nameOf: (id: SceneId) => string;
+  path: ViewId[];
+  nameOf: (id: ViewId) => string;
   /** Jump to the scene at `index` of the path (drill-out by several levels at once). */
   onSelect: (index: number) => void;
 };

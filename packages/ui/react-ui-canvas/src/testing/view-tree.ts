@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Box, type BuilderElement, ViewBuilder, type ViewElement, type ViewTree } from '../builder/index.ts';
 import { DEFAULT_SIZES, portId } from '../utils/index.ts';
-import { type Box, type BuilderElement, SceneBuilder, type SceneElement, type SceneTree } from './builder.ts';
 
 //
 // A three-level model diagram, one box per class: the fixture for anything that needs a scene tree to look
@@ -16,7 +16,7 @@ import { type Box, type BuilderElement, SceneBuilder, type SceneElement, type Sc
 const cell = (units: number) => units * 64;
 
 const CLASS_SIZE = { width: cell(4), height: cell(3) };
-const PORTAL_SIZE = DEFAULT_SIZES.frame;
+const PORTAL_SIZE = DEFAULT_SIZES.view;
 
 type ClassDef = { key: string; name: string; attributes: string[]; methods: string[] };
 type LevelDef = { key: string; title: string; classes: ClassDef[]; children?: LevelDef[] };
@@ -77,25 +77,25 @@ const MODEL: LevelDef = {
  * in a row joined by an association, with a portal per child subsystem below them. Ids are
  * deterministic (`scene:app/editor`, `scene:app/editor/view`) so tests and stories can name elements.
  */
-export const createModelSceneTree = (prefix = 'app'): SceneTree => classLevel(MODEL, prefix).build();
+export const createModelViewTree = (prefix = 'app'): ViewTree => classLevel(MODEL, prefix).build();
 
-const classLevel = (level: LevelDef, path: string): SceneElement => {
+const classLevel = (level: LevelDef, path: string): ViewElement => {
   const id = `scene:${path}`;
   // Classes sit in a row; each child subsystem gets a portal in the row below, under its own column.
   const classes = level.classes.map(({ key, name }, index) =>
-    SceneBuilder.rect(`${id}/${key}`, { x: cell(2) + index * cell(6), y: cell(2), ...CLASS_SIZE }).properties({
+    ViewBuilder.rect(`${id}/${key}`, { x: cell(2) + index * cell(6), y: cell(2), ...CLASS_SIZE }).properties({
       label: name,
     }),
   );
   const associations = level.classes.slice(1).map((current, index) =>
-    SceneBuilder.link('line', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
+    ViewBuilder.link('line', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
       .id(`${id}/assoc${index + 1}`)
       .properties({ ends: { end: 'arrow' } }),
   );
   const children = (level.children ?? []).map((child, index) =>
     classLevel(child, `${path}/${child.key}`).at({ x: cell(2) + index * cell(10), y: cell(7), ...PORTAL_SIZE }),
   );
-  return SceneBuilder.scene(id, [...classes, ...associations, ...children]).name(level.title);
+  return ViewBuilder.view(id, [...classes, ...associations, ...children]).name(level.title);
 };
 
 /**
@@ -107,12 +107,12 @@ const classLevel = (level: LevelDef, path: string): SceneElement => {
  * every coordinate is a whole number of `scale` steps and each scene is laid out symmetrically about
  * the origin, so the untouched layout is already snapped and already centred.
  */
-export const createSceneTree = (depth: number, prefix = 'root'): SceneTree => treeScene(depth, prefix, 0).build();
+export const createViewTree = (depth: number, prefix = 'root'): ViewTree => treeScene(depth, prefix, 0).build();
 
 /** The fixture's unit: every point and size is written as a count of these, never as raw pixels. */
 const scale = (units: number) => units * 32;
 
-const PORTAL = DEFAULT_SIZES.frame;
+const PORTAL = DEFAULT_SIZES.view;
 
 /** Child scene variants, chosen by nesting level and side so siblings differ. */
 const VARIANTS = ['flow', 'model', 'cycle', 'note'] as const;
@@ -127,7 +127,7 @@ const units = (x: number, y: number, width: number, height: number): Box => ({
 });
 
 /** The scene `name` at `depth`; above the leaves it holds two portals, each the scene shape of a child. */
-const treeScene = (depth: number, name: string, variant: number, frame?: Box): SceneElement => {
+const treeScene = (depth: number, name: string, variant: number, frame?: Box): ViewElement => {
   const id = `scene:${name}`;
   const elementId = (suffix: string) => `${id}/${suffix}`;
   const elements =
@@ -144,28 +144,28 @@ const treeScene = (depth: number, name: string, variant: number, frame?: Box): S
           treeScene(depth - 1, `${name}/R`, variant * 2 + 2, { x: scale(8), y: scale(2), ...PORTAL }),
         ]
       : [];
-  const scene = SceneBuilder.scene(id, [...elements, ...portals]).name(
+  const scene = ViewBuilder.view(id, [...elements, ...portals]).name(
     variant === 0 || depth < 1 ? name : `${name} (${VARIANTS[variant % VARIANTS.length]})`,
   );
   return frame ? scene.at(frame) : scene;
 };
 
-const labelled = (factory: typeof SceneBuilder.rect, id: string, box: Box, label: string) =>
+const labelled = (factory: typeof ViewBuilder.rect, id: string, box: Box, label: string) =>
   factory(id, box).properties({ label });
 
 const rootElements = (name: string, elementId: (suffix: string) => string): BuilderElement[] => [
-  labelled(SceneBuilder.rect, elementId('a'), units(-22, -12, 8, 4), `${name} · A`),
-  labelled(SceneBuilder.ellipse, elementId('b'), units(-10, -12, 8, 4), `${name} · B`),
-  SceneBuilder.note(elementId('t'), units(-10, 8, 12, 4)).properties({
-    text: `Scene "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
+  labelled(ViewBuilder.rect, elementId('a'), units(-22, -12, 8, 4), `${name} · A`),
+  labelled(ViewBuilder.ellipse, elementId('b'), units(-10, -12, 8, 4), `${name} · B`),
+  ViewBuilder.note(elementId('t'), units(-10, 8, 12, 4)).properties({
+    text: `View "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
   }),
-  labelled(SceneBuilder.rect, elementId('c'), units(-22, 6, 8, 6), `${name} · C`),
-  SceneBuilder.link('curve', elementId('a'), elementId('b')).id(elementId('ab')),
-  SceneBuilder.link('line', elementId('a'), elementId('c'))
+  labelled(ViewBuilder.rect, elementId('c'), units(-22, 6, 8, 6), `${name} · C`),
+  ViewBuilder.link('curve', elementId('a'), elementId('b')).id(elementId('ab')),
+  ViewBuilder.link('line', elementId('a'), elementId('c'))
     .id(elementId('ac'))
     .properties({ ends: { end: 'arrow' } }),
   // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
-  SceneBuilder.link('spline', `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`)
+  ViewBuilder.link('spline', `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`)
     .id(elementId('bc'))
     .properties({
       points: [
@@ -177,42 +177,42 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
 
 const childElements = (name: string, elementId: (suffix: string) => string, variant: Variant): BuilderElement[] => {
   const directed = (id: string, from: string, to: string) =>
-    SceneBuilder.link('line', from, to)
+    ViewBuilder.link('line', from, to)
       .id(elementId(id))
       .properties({ ends: { end: 'arrow' } });
   switch (variant) {
     case 'flow':
       return [
-        labelled(SceneBuilder.rect, elementId('start'), units(-18, -2, 8, 4), 'Start'),
-        labelled(SceneBuilder.rect, elementId('work'), units(-4, -2, 8, 4), 'Work'),
-        labelled(SceneBuilder.ellipse, elementId('done'), units(10, -2, 8, 4), 'Done'),
+        labelled(ViewBuilder.rect, elementId('start'), units(-18, -2, 8, 4), 'Start'),
+        labelled(ViewBuilder.rect, elementId('work'), units(-4, -2, 8, 4), 'Work'),
+        labelled(ViewBuilder.ellipse, elementId('done'), units(10, -2, 8, 4), 'Done'),
         directed('l1', `${elementId('start')}#e2`, `${elementId('work')}#w2`),
         directed('l2', `${elementId('work')}#e2`, `${elementId('done')}#w2`),
       ];
     case 'model':
       return [
-        labelled(SceneBuilder.rect, elementId('person'), units(-20, -4, 8, 8), 'Person'),
-        labelled(SceneBuilder.rect, elementId('org'), units(-4, -4, 8, 8), 'Organization'),
-        SceneBuilder.link('curve', `${elementId('person')}#e2`, `${elementId('org')}#w2`).id(elementId('works')),
+        labelled(ViewBuilder.rect, elementId('person'), units(-20, -4, 8, 8), 'Person'),
+        labelled(ViewBuilder.rect, elementId('org'), units(-4, -4, 8, 8), 'Organization'),
+        ViewBuilder.link('curve', `${elementId('person')}#e2`, `${elementId('org')}#w2`).id(elementId('works')),
       ];
     case 'cycle':
       return [
-        labelled(SceneBuilder.ellipse, elementId('n1'), units(-2, -10, 4, 4), '1'),
-        labelled(SceneBuilder.ellipse, elementId('n2'), units(-2, 6, 4, 4), '2'),
-        labelled(SceneBuilder.ellipse, elementId('n3'), units(-14, -2, 4, 4), '3'),
+        labelled(ViewBuilder.ellipse, elementId('n1'), units(-2, -10, 4, 4), '1'),
+        labelled(ViewBuilder.ellipse, elementId('n2'), units(-2, 6, 4, 4), '2'),
+        labelled(ViewBuilder.ellipse, elementId('n3'), units(-14, -2, 4, 4), '3'),
         // Routed rather than drawn: the ring is the one arrangement where a stored control point has to be
         // re-placed every time a node moves.
-        SceneBuilder.link('smart', elementId('n1'), elementId('n2')).id(elementId('e12')),
-        SceneBuilder.link('smart', elementId('n2'), elementId('n3')).id(elementId('e23')),
-        SceneBuilder.link('smart', elementId('n3'), elementId('n1')).id(elementId('e31')),
+        ViewBuilder.link('smart', elementId('n1'), elementId('n2')).id(elementId('e12')),
+        ViewBuilder.link('smart', elementId('n2'), elementId('n3')).id(elementId('e23')),
+        ViewBuilder.link('smart', elementId('n3'), elementId('n1')).id(elementId('e31')),
       ];
     case 'note':
       return [
-        SceneBuilder.note(elementId('note'), units(-14, -4, 16, 8)).properties({
+        ViewBuilder.note(elementId('note'), units(-14, -4, 16, 8)).properties({
           text: `A note in "${name}". Portals below.`,
         }),
-        labelled(SceneBuilder.rect, elementId('box'), units(6, -4, 8, 8), 'Box'),
-        SceneBuilder.link('curve', elementId('note'), elementId('box')).id(elementId('nb')),
+        labelled(ViewBuilder.rect, elementId('box'), units(6, -4, 8, 8), 'Box'),
+        ViewBuilder.link('curve', elementId('note'), elementId('box')).id(elementId('nb')),
       ];
   }
 };

@@ -47,15 +47,15 @@ import {
   type StyleClass,
   type StyleMap,
   getElement,
-  isFrameNode,
   isLink,
   isNoteNode,
+  isViewNode,
   nodeDef,
   showsContents,
 } from '../../../model/index.ts';
 import {
   MAX_PORTS_PER_SIDE,
-  type SceneOption,
+  type ViewOption,
   classedLink,
   classedNode,
   commonSchema,
@@ -65,8 +65,8 @@ import {
   patchValues,
   portsPerSideOf,
   resolveStyle,
-  sceneLayers,
   splitClassEdit,
+  viewLayers,
 } from '../../../utils/index.ts';
 import { defaultNodeRegistry } from '../../SceneLayer/index.ts';
 import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
@@ -76,10 +76,25 @@ import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
-import { SceneField, SceneOptionsContext } from './SceneField.tsx';
+import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'element', 'heading', 'connector'];
+// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached;
+// an instance's `overrides` have no editor until the canvas can set them.
+const HIDDEN = [
+  'id',
+  'type',
+  'z',
+  'ports',
+  'points',
+  'source',
+  'target',
+  'element',
+  'heading',
+  'connector',
+  'exposed',
+  'overrides',
+];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -114,7 +129,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
-  'scene': SceneField,
+  'scene': ViewField,
   'layer': LayerClassField,
 };
 
@@ -152,7 +167,7 @@ const formValues = (
         layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
-        ...(isFrameNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
+        ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
 
 /**
@@ -167,7 +182,7 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
-  'scene': { label: 'Scene' },
+  'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };
 
@@ -191,12 +206,10 @@ export type PropertiesInspectorProps = InspectorProps & {
   getOptions?: RefFieldDataProps['getOptions'];
   /** A host's per-selection field overrides (e.g. a field it allows only in some states), over the panel's own. */
   overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
-  /** The scenes a scene shape may open (`sceneOptions`); without them its scene is not editable here. */
-  sceneOptions?: readonly SceneOption[];
-  /** The drawing's style classes (`SceneStore.styles`); without them elements take no class. */
+  /** The scenes a scene shape may open (`viewOptions`); without them its scene is not editable here. */
+  viewOptions?: readonly ViewOption[];
+  /** The drawing's style classes (`ViewStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
-  /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
-  onGroup?: () => void;
 };
 
 /** The selection's properties, as one form; read-only too where the projection cannot `update`. */
@@ -210,9 +223,8 @@ export const PropertiesInspector = ({
   db,
   getOptions,
   overrides,
-  sceneOptions,
+  viewOptions,
   styles,
-  onGroup,
 }: PropertiesInspectorProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -220,7 +232,7 @@ export const PropertiesInspector = ({
   const elements = useMemo(() => [...selection].flatMap((id) => getElement(scene, id) ?? []), [scene, selection]);
   const readonly = readonlyProp || !projection.capabilities.update;
   const styleMap = useAtomValue(styles ?? NO_STYLES);
-  const layers = useMemo(() => sceneLayers(scene), [scene]);
+  const layers = useMemo(() => viewLayers(scene), [scene]);
 
   // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
   const typesKey = [...new Set(elements.map((element) => element.type))].sort().join();
@@ -245,7 +257,7 @@ export const PropertiesInspector = ({
     // A value the elements disagree on shows as indeterminate until it is edited, then applies to all of them.
     const fieldOverrides: Record<string, FormFieldOverride> = {
       ...FIELD_OVERRIDES,
-      ...(sceneOptions ? {} : { scene: { hidden: true } }),
+      ...(viewOptions ? {} : { scene: { hidden: true } }),
       // The class is edited in the layer's row (`LayerClassField`).
       class: { hidden: true },
       ...overrides?.(elements),
@@ -254,7 +266,7 @@ export const PropertiesInspector = ({
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, sceneOptions, styles, styleMap, layers]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -287,20 +299,6 @@ export const PropertiesInspector = ({
     },
     [projection, elements, nodes, styles, styleMap, layers, registry],
   );
-
-  // A new class takes the selected element's look, and the element then follows it rather than carrying its own.
-  const single = elements.length === 1 ? elements[0] : undefined;
-  const onCreateClass = useCallback(() => {
-    if (!styles || !single) {
-      return;
-    }
-    const id = `class-${crypto.randomUUID()}`;
-    const name = `Class ${Object.keys(styleMap).length + 1}`;
-    const style = isLink(single) ? classedLink(single, styleMap).style : classedNode(single, styleMap).style;
-    const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
-    registry.set(styles, { ...styleMap, [id]: styleClass });
-    projection.apply({ kind: 'update', id: single.id, values: { class: id, style: undefined } });
-  }, [styles, single, styleMap, registry, projection]);
 
   // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
   const links = useMemo(() => elements.filter(isLink), [elements]);
@@ -337,30 +335,9 @@ export const PropertiesInspector = ({
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-      <Toolbar.Root data-testid='properties-toolbar'>
-        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--frame-corners--regular'
-            label='New scene from selection'
-            disabled={readonly}
-            data-testid='properties-group'
-            onClick={onGroup}
-          />
-        )}
-        {styles && single && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--swatches--regular'
-            label='New class from selection'
-            disabled={readonly}
-            data-testid='properties-new-class'
-            onClick={onCreateClass}
-          />
-        )}
-        {links.length > 0 && links.length === elements.length && (
+      {/* Its only command is on links, so it shows for a selection of links alone. */}
+      {links.length > 0 && links.length === elements.length && (
+        <Toolbar.Root data-testid='properties-toolbar'>
           <Button.Root
             variant='ghost'
             iconOnly
@@ -370,12 +347,12 @@ export const PropertiesInspector = ({
             data-testid='properties-flip'
             onClick={onFlip}
           />
-        )}
-      </Toolbar.Root>
+        </Toolbar.Root>
+      )}
       {schema && (
         <LayersContext.Provider value={layers}>
           <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-            <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+            <ViewOptionsContext.Provider value={viewOptions ?? []}>
               <Form.Root
                 key={[...selection].join()}
                 schema={schema}
@@ -395,13 +372,15 @@ export const PropertiesInspector = ({
                   </Form.Content>
                 </Form.Viewport>
               </Form.Root>
-            </SceneOptionsContext.Provider>
+            </ViewOptionsContext.Provider>
           </StyleClassesContext.Provider>
         </LayersContext.Provider>
       )}
-      <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
-        {summary}
-      </p>
+      {summary && (
+        <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
+          {summary}
+        </p>
+      )}
     </div>
   );
 };

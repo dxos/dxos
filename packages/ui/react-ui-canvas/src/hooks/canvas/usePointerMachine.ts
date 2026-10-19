@@ -12,8 +12,16 @@ import {
   useState,
 } from 'react';
 
-import { type CanvasAtoms, type ControlPointRef, type Drag, type Handle, type Projection } from '../../engine/index.ts';
-import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
+import {
+  type CanvasAtoms,
+  type ControlPointRef,
+  type DocumentIntentCommands,
+  type Drag,
+  type Handle,
+  type LinkEnd,
+  type Projection,
+  type ToolsCommands,
+} from '../../engine/index.ts';
 import {
   type Camera,
   type Capabilities,
@@ -27,13 +35,12 @@ import {
   type NodeType,
   type Point,
   type Port,
-  type Scene,
-  type SceneStore,
   type SplineLink,
-  type Tool,
+  type View,
+  type ViewStore,
   endpointNode,
-  isFrameNode,
   isPointEndpoint,
+  isViewNode,
   nodeDef,
 } from '../../model/index.ts';
 import {
@@ -43,9 +50,10 @@ import {
   boundsCenter,
   boundsFromPoints,
   cloneShape,
+  createId,
   createLink,
   createNode,
-  duplicateSelection,
+  handlePoint,
   hitTest,
   insertIndex,
   linkGeometry,
@@ -61,7 +69,8 @@ import {
   sideToward,
   topZ,
 } from '../../utils/index.ts';
-import { type LinkEnd, handlePoint } from '../ControlFrame/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
+import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -70,8 +79,6 @@ const PORT_SNAP_PX = 16;
 
 /** The node drawn as a preview during a create drag; it never reaches the model. */
 export const PREVIEW_NODE_ID = 'preview-node';
-
-export const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
 const distance = (left: Point, right: Point): [number, number] => [left.x - right.x, left.y - right.y];
 
@@ -95,7 +102,7 @@ const overCanvas = (target: EventTarget | null, root: HTMLElement | null): boole
 };
 
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
-const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
+const isDirected = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
     if (isPointEndpoint(end)) {
       return false;
@@ -110,8 +117,12 @@ export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' |
 export type UsePointerMachineOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: SceneStore;
-  scene: Scene;
+  /** Returns to Select once a creation gesture lands. */
+  setTool: ToolsCommands['setTool'];
+  /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
+  duplicate: DocumentIntentCommands['duplicate'];
+  store: ViewStore;
+  scene: View;
   nodeRegistry: NodeRegistry;
   projection: Projection;
   capabilities: Capabilities;
@@ -148,7 +159,6 @@ export type PointerMachine = {
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
 
-  setTool: (next: Tool) => void;
   setDrag: (next: Drag | undefined) => void;
   /** A pointer event's position in scene coordinates. */
   toScene: (event: { clientX: number; clientY: number }) => Point;
@@ -172,6 +182,8 @@ export type PointerMachine = {
 export const usePointerMachine = ({
   registry,
   atoms,
+  setTool,
+  duplicate,
   store,
   scene,
   nodeRegistry,
@@ -202,22 +214,6 @@ export const usePointerMachine = ({
   );
 
   const setDrag = useCallback((next: Drag | undefined) => registry.set(atoms.drag, next), [registry, atoms.drag]);
-
-  const setTool = useCallback(
-    (next: Tool) => {
-      registry.set(atoms.tool, next);
-      if (next.kind === 'link') {
-        registry.set(atoms.linkType, next.type);
-      }
-      // A creation tool is about what comes next, so the outgoing selection's outline and handles would
-      // only sit over the drawing; the node the gesture makes becomes the selection.
-      if (next.kind === 'node' || next.kind === 'link') {
-        registry.set(atoms.selection, new Set<ElementId>());
-        registry.set(atoms.point, undefined);
-      }
-    },
-    [registry, atoms.tool, atoms.linkType, atoms.selection, atoms.point],
-  );
 
   const startDrag = useCallback(
     (next: Drag, event: PointerEvent) => {
@@ -731,7 +727,7 @@ export const usePointerMachine = ({
       // drawn would open onto the ghost's one scene.
       const node: Node = !reused
         ? def.create(props)
-        : isFrameNode(reused) && pending && isFrameNode(pending.node) && pending.node.scene === pending.node.id
+        : isViewNode(reused) && pending && isViewNode(pending.node) && pending.node.scene === pending.node.id
           ? { ...reused, scene: id }
           : reused;
       pendingRef.current = { type: drag.type, node };
@@ -743,9 +739,9 @@ export const usePointerMachine = ({
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
   const addNode = useCallback(
     (node: Node) => {
-      if (isFrameNode(node)) {
-        registry.set(store.scenes, {
-          ...registry.get(store.scenes),
+      if (isViewNode(node)) {
+        registry.set(store.views, {
+          ...registry.get(store.views),
           [node.scene]: {
             id: node.scene,
             nodes: {},
@@ -809,11 +805,7 @@ export const usePointerMachine = ({
             break;
           }
           // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
-          const copy = current.copy ? duplicateSelection(scene, current.ids, current.delta, createId) : undefined;
-          if (copy) {
-            projection.apply(copy.intent);
-            select(copy.ids);
-          } else {
+          if (!current.copy || !duplicate(current.ids, current.delta)) {
             projection.apply({ kind: 'move', ids: current.ids, delta: current.delta });
           }
           break;
@@ -923,6 +915,7 @@ export const usePointerMachine = ({
       settle,
       nodeRegistry,
       setTool,
+      duplicate,
       createdNode,
       commitCreated,
       addNode,
@@ -953,7 +946,6 @@ export const usePointerMachine = ({
     onMidpointPointerDown,
     onPointContextMenu,
 
-    setTool,
     setDrag,
     toScene,
     removePoint,

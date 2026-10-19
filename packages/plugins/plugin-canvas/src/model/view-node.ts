@@ -14,30 +14,30 @@ import * as Schema from 'effect/Schema';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { FrameNode, type NodeBase, type SceneId, frameLinkFields } from '@dxos/react-ui-canvas/scene';
+import { type NodeBase, type ViewId, ViewNode, viewLinkFields } from '@dxos/react-ui-canvas/scene';
 
 import { Canvas } from '#types';
 
 /** How a frame shows an object that is not a canvas drawing: the object's surface of that role. */
-export const FRAME_ROLES = ['card', 'section', 'article'] as const;
-export const FrameRole = Schema.Literals(FRAME_ROLES);
-export type FrameRole = Schema.Schema.Type<typeof FrameRole>;
+export const VIEW_ROLES = ['card', 'section', 'article'] as const;
+export const ViewRole = Schema.Literals(VIEW_ROLES);
+export type ViewRole = Schema.Schema.Type<typeof ViewRole>;
 
 /** The engine's frame link with the object it links to first, so the Link section reads Object, then Show contents. */
-export const CanvasFrameLink = Schema.Struct({
+export const CanvasViewLink = Schema.Struct({
   /** An object the frame shows instead of its own child scene. */
   object: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ title: 'Object' })),
-  ...frameLinkFields,
+  ...viewLinkFields,
 }).annotate({ title: 'Link' });
-export type CanvasFrameLink = Schema.Schema.Type<typeof CanvasFrameLink>;
+export type CanvasViewLink = Schema.Schema.Type<typeof CanvasViewLink>;
 
-export const CanvasFrameNode = Schema.Struct({
-  ...FrameNode.fields,
-  link: Schema.optional(CanvasFrameLink),
+export const CanvasViewNode = Schema.Struct({
+  ...ViewNode.fields,
+  link: Schema.optional(CanvasViewLink),
   /** The surface a non-drawing object is shown as; unset is a card. */
-  role: Schema.optional(FrameRole.annotate({ title: 'Role' })),
+  role: Schema.optional(ViewRole.annotate({ title: 'Role' })),
 });
-export type CanvasFrameNode = Schema.Schema.Type<typeof CanvasFrameNode>;
+export type CanvasViewNode = Schema.Schema.Type<typeof CanvasViewNode>;
 
 /** What an unnamed drawing is called where its id would otherwise show (a linked scene's title, the picker). */
 export const UNTITLED_DRAWING = 'Untitled drawing';
@@ -46,10 +46,10 @@ export const UNTITLED_DRAWING = 'Untitled drawing';
 const LINK_SEPARATOR = '|';
 
 /** The id a linked drawing's scene takes in this drawing's store, so it never collides with a local one. */
-export const linkedSceneId = (uri: string, scene: SceneId): SceneId => `${uri}${LINK_SEPARATOR}${scene}`;
+export const linkedViewId = (uri: string, scene: ViewId): ViewId => `${uri}${LINK_SEPARATOR}${scene}`;
 
 /** The drawing and scene a linked scene id names, or none for a local scene. */
-export const parseLinkedSceneId = (id: SceneId): { uri: string; scene: SceneId } | undefined => {
+export const parseLinkedViewId = (id: ViewId): { uri: string; scene: ViewId } | undefined => {
   const index = id.lastIndexOf(LINK_SEPARATOR);
   return index < 0 ? undefined : { uri: id.slice(0, index), scene: id.slice(index + 1) };
 };
@@ -87,9 +87,9 @@ export const objectRef = (node: NodeBase, db?: Database.Database): Ref.Ref<Obj.U
 };
 
 /** The role a frame shows its object in. */
-export const frameRole = (node: NodeBase): FrameRole => {
+export const viewRole = (node: NodeBase): ViewRole => {
   const role: unknown = Reflect.get(node, 'role');
-  return Schema.is(FrameRole)(role) ? role : 'card';
+  return Schema.is(ViewRole)(role) ? role : 'card';
 };
 
 /** Whether a canvas belongs to this variant, so a drawing over it embeds as a scene rather than a surface. */

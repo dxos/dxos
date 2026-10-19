@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Scene, type SceneId, type SceneMap, isFrameNode } from '../model/index.ts';
+import { type View, type ViewId, type ViewMap, isViewNode } from '../model/index.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
-export type SceneOption = { value: SceneId; label: string };
+export type ViewOption = { value: ViewId; label: string };
 
 /** The scenes the shapes of `scene` open. */
-const childScenes = (scene: Scene | undefined): SceneId[] =>
-  scene ? Object.values(scene.nodes).flatMap((node) => (isFrameNode(node) ? [node.scene] : [])) : [];
+const childScenes = (scene: View | undefined): ViewId[] =>
+  scene ? Object.values(scene.nodes).flatMap((node) => (isViewNode(node) ? [node.scene] : [])) : [];
 
 /** Whether `from`, or any scene it opens however deep, is one of `targets`. */
-const reaches = (scenes: SceneMap, from: SceneId, targets: ReadonlySet<SceneId>): boolean => {
-  const seen = new Set<SceneId>();
+const reaches = (scenes: ViewMap, from: ViewId, targets: ReadonlySet<ViewId>): boolean => {
+  const seen = new Set<ViewId>();
   const pending = [from];
   for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
     if (targets.has(id)) {
@@ -32,16 +32,16 @@ const reaches = (scenes: SceneMap, from: SceneId, targets: ReadonlySet<SceneId>)
  * as open it, except one that would open the path again, which would nest the scene in itself without end. An
  * unnamed scene reads as the label of a shape that opens it.
  */
-export const sceneOptions = (
-  scenes: SceneMap,
-  path: readonly SceneId[],
-  filter: (id: SceneId) => boolean = () => true,
-): SceneOption[] => {
+export const viewOptions = (
+  scenes: ViewMap,
+  path: readonly ViewId[],
+  filter: (id: ViewId) => boolean = () => true,
+): ViewOption[] => {
   const ancestors = new Set(path);
-  const labels = new Map<SceneId, string>();
+  const labels = new Map<ViewId, string>();
   for (const scene of Object.values(scenes)) {
     for (const node of Object.values(scene.nodes)) {
-      if (isFrameNode(node) && node.label && !labels.has(node.scene)) {
+      if (isViewNode(node) && node.label && !labels.has(node.scene)) {
         labels.set(node.scene, node.label);
       }
     }

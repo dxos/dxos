@@ -11,13 +11,13 @@ import { useResolveRef } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAttentionAttributes, useAttentionContext } from '@dxos/react-ui-attention';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { FrameNodeView, type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, isFrameNode } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, ViewNodeView, isViewNode } from '@dxos/react-ui-canvas/scene';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { type FrameRole, frameRole, isSceneCanvas, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import { type ViewRole, isSceneCanvas, objectRef, objectUri, parseLinkedViewId, viewRole } from '#model';
 
 /** The canvas's database, which resolves a frame's `object` (node views get no host props of their own). */
 export const CanvasDatabaseContext = createContext<Database.Database | undefined>(undefined);
@@ -33,21 +33,21 @@ const useSurfaceObject = (node: NodeViewProps['node']): Obj.Unknown | undefined 
   const canvas = useResolveRef(Obj.instanceOf(Drawing.Drawing, object) ? object.canvas : undefined);
   // A canvas drawing is a scene, and so is a drawing whose canvas has not loaded yet; the store links it.
   const drawing = Obj.instanceOf(Drawing.Drawing, object) && (canvas === undefined || isSceneCanvas(canvas));
-  return !object || drawing || !isFrameNode(node) || parseLinkedSceneId(node.scene) ? undefined : object;
+  return !object || drawing || !isViewNode(node) || parseLinkedViewId(node.scene) ? undefined : object;
 };
 
 /** The canvas's frame: its scene (its own or a linked canvas drawing's), or any other object as a surface. */
-export const CanvasFrameNodeView = (props: NodeViewProps) => {
+export const CanvasViewNodeView = (props: NodeViewProps) => {
   const { node } = props;
   const object = useSurfaceObject(node);
-  if (!object || !isFrameNode(node)) {
-    return <FrameNodeView {...props} />;
+  if (!object || !isViewNode(node)) {
+    return <ViewNodeView {...props} />;
   }
-  return <FrameSurface object={object} role={frameRole(node)} selected={props.selected} active={props.active} />;
+  return <FrameSurface object={object} role={viewRole(node)} selected={props.selected} active={props.active} />;
 };
 
 /** Above a frame showing an object, the control that opens it in the app; a scene frame keeps its own inside. */
-export const CanvasFrameToolbar = ({ node, onOpen }: NodeViewProps) => {
+export const CanvasViewToolbar = ({ node, onOpen }: NodeViewProps) => {
   const object = useSurfaceObject(node);
   if (!object || !onOpen) {
     return null;
@@ -66,7 +66,7 @@ export const CanvasFrameToolbar = ({ node, onOpen }: NodeViewProps) => {
   );
 };
 
-type FrameSurfaceProps = { object: Obj.Unknown; role: FrameRole; selected?: boolean; active?: boolean };
+type FrameSurfaceProps = { object: Obj.Unknown; role: ViewRole; selected?: boolean; active?: boolean };
 
 // The object's own scrolling content takes the wheel, rather than the canvas panning under it.
 const overlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };

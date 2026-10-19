@@ -21,8 +21,8 @@ import {
   type Point,
   type Port,
   type PortEndpoint,
-  type Scene,
   type Side,
+  type View,
   isPointEndpoint,
 } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
@@ -177,7 +177,7 @@ const polylinePath = (points: readonly Point[]): string =>
   points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
 
 /** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
-const diagramGeometry = (scene: Scene, link: Link): LinkGeometry | undefined => {
+const diagramGeometry = (scene: View, link: Link): LinkGeometry | undefined => {
   if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
     return undefined;
   }
@@ -211,7 +211,7 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: Scene, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (scene: View, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
   return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
 };
@@ -254,7 +254,7 @@ const leastBends = (from: RouteEnd, to: RouteEnd): number => {
  * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
  */
 const latticeEnds = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   link: Link,
   route: LatticeRoute,
@@ -310,7 +310,7 @@ const latticeEnds = (
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
 export const linkGeometry = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
@@ -333,7 +333,7 @@ export const linkGeometry = (
 };
 
 const resolveEnds = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
@@ -377,8 +377,8 @@ const resolveEnds = (
  * gutter run side by side in their own lanes, ordered so their turn-offs do not cross (DESIGN §8b).
  * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
  */
-export const sceneLinkGeometry = (
-  scene: Scene,
+export const viewLinkGeometry = (
+  scene: View,
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,

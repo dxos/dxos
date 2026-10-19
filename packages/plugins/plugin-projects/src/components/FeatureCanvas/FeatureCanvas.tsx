@@ -10,7 +10,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo } fro
 import {
   Canvas,
   type CreateProps,
-  DYNAMIC_SCENE_ID,
+  DYNAMIC_VIEW_ID,
   type DynamicOptions,
   type FreehandProjectionOptions,
   type GraphModel,
@@ -112,7 +112,7 @@ export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: F
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
   const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_SCENE_ID), []);
+  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
 
   useEffect(() => {
     atomRegistry.set(graph, toGraph(features));
@@ -143,13 +143,7 @@ export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: F
 
   return (
     <FeatureLookupContext.Provider value={lookup}>
-      <Canvas.Root
-        store={store}
-        root={DYNAMIC_SCENE_ID}
-        atoms={atoms}
-        nodes={nodes}
-        createProjection={createProjection}
-      >
+      <Canvas.Root store={store} root={DYNAMIC_VIEW_ID} atoms={atoms} nodes={nodes} createProjection={createProjection}>
         <Canvas.Viewport />
         <Canvas.Navigation />
       </Canvas.Root>

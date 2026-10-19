@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { layoutGraph, solve } from '../engine/index.ts';
-import { MAJOR_GRID, type Point, type Scene } from '../model/index.ts';
+import { MAJOR_GRID, type Point, type View } from '../model/index.ts';
 import { nodeBounds } from '../utils/index.ts';
-import { createModelSceneTree, createSceneTree } from './testing.ts';
+import { createModelViewTree, createViewTree } from './view-tree.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
-const offGrid = (scene: Scene): string[] =>
+const offGrid = (scene: View): string[] =>
   Object.values(scene.nodes)
     .filter((node) => {
       const { x, y, width, height } = nodeBounds(node);
@@ -20,7 +20,7 @@ const offGrid = (scene: Scene): string[] =>
     .map(({ id }) => id);
 
 /** How far the middle of the scene's content sits from the origin. */
-const offCenter = (scene: Scene): Point => {
+const offCenter = (scene: View): Point => {
   const bounds = Object.values(scene.nodes).map(nodeBounds);
   const spread = (low: number[], high: number[]) => (Math.min(...low) + Math.max(...high)) / 2;
   return {
@@ -37,17 +37,17 @@ const offCenter = (scene: Scene): Point => {
 
 describe('initial layouts conform to the major grid', () => {
   test('scene tree fixture', ({ expect }) => {
-    for (const scene of createSceneTree(3).scenes) {
+    for (const scene of createViewTree(3).views) {
       expect(offGrid(scene)).toEqual([]);
     }
   });
 
   test('model scene tree fixture', ({ expect }) => {
-    const { scenes, root } = createModelSceneTree();
-    expect(scenes.map(({ id }) => id)).toContain(root);
+    const { views, root } = createModelViewTree();
+    expect(views.map(({ id }) => id)).toContain(root);
     // Three levels: the root, its two subsystems, and one leaf under each.
-    expect(scenes).toHaveLength(5);
-    for (const scene of scenes) {
+    expect(views).toHaveLength(5);
+    for (const scene of views) {
       expect(offGrid(scene)).toEqual([]);
     }
   });
@@ -79,7 +79,7 @@ describe('generated layouts straddle the origin', () => {
   });
 });
 
-const constrained = (): Scene =>
+const constrained = (): View =>
   solve(
     {
       nodes: [{ id: 'A' }, { id: 'B' }, { id: 'C' }],
@@ -91,7 +91,7 @@ const constrained = (): Scene =>
     { nodes: defaultNodeRegistry },
   );
 
-const dynamic = (): Scene =>
+const dynamic = (): View =>
   layoutGraph(
     {
       nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
