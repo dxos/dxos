@@ -9301,7 +9301,13 @@ importers:
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      three:
+        specifier: 'catalog:'
+        version: 0.178.0
     devDependencies:
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.165.0
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

@@ -9,6 +9,7 @@ import { Resource } from '@dxos/context';
 import { type CallState } from './call-swarm-synchronizer.ts';
 import { type MediaState } from './media-manager.ts';
 import { type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
+import { type VoiceAvatar, type VoiceAvatarOptions } from './voice-avatar.ts';
 
 export type SimulatedParticipantProps = {
   /** Display name on the participant's tile. */
@@ -17,6 +18,11 @@ export type SimulatedParticipantProps = {
   src: string;
   /** A screen recording the participant shares from `start` seconds on the conversation clock. */
   screenshare?: { src: string; start: number };
+  /**
+   * Shows an abstract shape that moves with the file's sound instead of its picture, so `src` can be audio only
+   * (an agent's synthesized voice).
+   */
+  avatar?: boolean | VoiceAvatarOptions;
 };
 
 /** One spoken line of a scripted conversation, timed in seconds from the top of the participants' files. */
@@ -35,6 +41,7 @@ type SimulatedParticipant = {
   stream: MediaStream;
   audioTrack: MediaStreamTrack;
   monitor: SpeakingMonitor;
+  avatar?: VoiceAvatar;
   screenshare?: {
     start: number;
     trackName: EncodedTrackName;
@@ -92,8 +99,9 @@ export class CallSimulation extends Resource {
 
   async #release(): Promise<void> {
     this.#stopClock();
-    for (const { video, stream, audioTrack, monitor, screenshare } of this.#participants) {
+    for (const { video, stream, audioTrack, monitor, avatar, screenshare } of this.#participants) {
       await monitor.close();
+      avatar?.close();
       audioTrack.stop();
       for (const { stream: tracks, video: player } of [{ stream, video }, ...(screenshare ? [screenshare] : [])]) {
         tracks.getTracks().forEach((track) => track.stop());
@@ -218,11 +226,19 @@ export class CallSimulation extends Resource {
 
   async #load(
     index: number,
-    { name, src, screenshare: share }: SimulatedParticipantProps,
+    { name, src, screenshare: share, avatar: avatarOptions }: SimulatedParticipantProps,
   ): Promise<SimulatedParticipant> {
     const { video, videoTrack, audioTrack } = await loadMediaFile(this.#audioContext, src);
     holdLastFrame(video);
-    const stream = new MediaStream([videoTrack]);
+    // Loaded on demand so three.js stays out of the app's boot bundle.
+    const avatar = avatarOptions
+      ? (await import('./voice-avatar.ts')).createVoiceAvatar(
+          this.#audioContext,
+          audioTrack,
+          avatarOptions === true ? {} : avatarOptions,
+        )
+      : undefined;
+    const stream = avatar?.stream ?? new MediaStream([videoTrack]);
 
     const monitor = new SpeakingMonitor(audioTrack);
     monitor.speakingChanged.on(this._ctx, () => this.changed.emit());
@@ -254,7 +270,8 @@ export class CallSimulation extends Resource {
         async (err) => {
           // This participant is not in the list yet, so the open's rollback would miss its camera and monitor.
           await monitor.close();
-          videoTrack.stop();
+          avatar?.close();
+          stream.getTracks().forEach((track) => track.stop());
           audioTrack.stop();
           video.pause();
           video.remove();
@@ -264,7 +281,7 @@ export class CallSimulation extends Resource {
     };
     const user: UserState = { id, name, joined: true, raisedHand: false, speaking: false, tracks, activities: {} };
 
-    return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor, screenshare };
+    return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor, avatar, screenshare };
   }
 }
 

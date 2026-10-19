@@ -474,7 +474,7 @@ op SetSimulatedParticipants
     in; `transcript` lines are emitted as `CallManager.simulatedUtterance` when their `start` is
     reached, timed by the participants' files.
   input:
-    participants: { name: string, src: string, screenshare?: { src: string, start: number } }[]   # src is a video URL (WebM in Chromium)
+    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean }[]   # src is a video URL (WebM in Chromium); with avatar, an abstract shape that moves with src's sound replaces its picture, so src may be audio only
     transcript?: { speaker: string, start: number, text: string }[]   # speaker is a display name; start in seconds
   requires: [CallsCapabilities.Manager]
   effects: [device]

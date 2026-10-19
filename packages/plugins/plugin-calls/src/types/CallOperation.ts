@@ -29,6 +29,8 @@ export const SetSimulatedParticipants = Operation.make({
         src: Schema.String,
         /** A screen recording the participant shares from `start` seconds into the conversation. */
         screenshare: Schema.optional(Schema.Struct({ src: Schema.String, start: Schema.Number })),
+        /** Shows an abstract shape that moves with the file's sound instead of its picture; `src` may be audio only. */
+        avatar: Schema.optional(Schema.Boolean),
       }),
     ),
     /** The conversation's lines, local user's included, timed in seconds from the top of the files. */

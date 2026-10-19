@@ -158,7 +158,8 @@
     "@effect/atom-react": "catalog:",
     "@peermetrics/webrtc-stats": "catalog:",
     "md5-hex": "catalog:",
-    "react-resize-detector": "catalog:"
+    "react-resize-detector": "catalog:",
+    "three": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
@@ -167,6 +168,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/three": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

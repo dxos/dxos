@@ -16,11 +16,15 @@ import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Call } from './Call.tsx';
 
 const LOCAL = 'Astrid Holm';
-const COLLEAGUES = [
+type Participant = { name: string; track: string; avatar?: boolean };
+
+const COLLEAGUES: Participant[] = [
   { name: 'Lucía Ferreira', track: 'lucia' },
   { name: 'Ben Achterberg', track: 'ben' },
   { name: 'Tomás Vidal', track: 'tomas' },
 ];
+/** An agent with no camera: its tile is an abstract shape that moves with its synthesized voice. */
+const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
 
 const JOIN_TIMEOUT = 10_000;
 
@@ -31,13 +35,15 @@ type StoryProps = {
   /** Base URL of the conversation's tracks: `astrid.webm`, `lucia.webm`, `ben.webm`, `tomas.webm`, and `timeline.json`, whose
    * `screenshares` name the screen recordings participants share. */
   media: string;
+  /** Adds the agent, whose voice is `agent.webm` (audio only). */
+  agent?: boolean;
 };
 
 /**
  * A four-person call with no network: three simulated participants and a local camera, each played from a track of
  * one scripted conversation, so the call starts in step and the speaking outline follows whoever is talking.
  */
-const SimulatedStory = ({ media }: StoryProps) => {
+const SimulatedStory = ({ media, agent }: StoryProps) => {
   const callManager = Hooks.useCapability(CallsCapabilities.Manager);
   // Each attempt rejoins from the top; a click starts the next one where the browser refused to autoplay the last.
   const [attempt, setAttempt] = useState(0);
@@ -68,11 +74,12 @@ const SimulatedStory = ({ media }: StoryProps) => {
         .catch(() => undefined);
       live();
       await callManager.simulate(
-        COLLEAGUES.map(({ name, track }) => {
+        [...COLLEAGUES, ...(agent ? [AGENT] : [])].map(({ name, track, avatar }) => {
           const share = timeline?.screenshares?.find(({ speaker }) => speaker === track);
           return {
             name,
             src: `${media}/${track}.webm`,
+            ...(avatar ? { avatar } : {}),
             ...(share ? { screenshare: { src: `${media}/${share.file}`, start: share.start } } : {}),
           };
         }),
@@ -120,7 +127,7 @@ const SimulatedStory = ({ media }: StoryProps) => {
       clearTimeout(timer);
       teardown();
     };
-  }, [callManager, media, attempt]);
+  }, [callManager, media, agent, attempt]);
 
   if (blocked) {
     return (
@@ -161,3 +168,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const WithAgent: Story = {
+  args: { agent: true },
+};
