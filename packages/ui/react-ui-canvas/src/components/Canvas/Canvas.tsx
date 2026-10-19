@@ -1781,9 +1781,11 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
   // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
   // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
   const snapLines = !readonly && look.background.grid === 'lines';
-  const snapGridDrawn = snapEnabled && snapLines && !(latticeOn && projection.lattice);
+  const latticeShown = latticeOn && !!projection.lattice;
+  const snapGridDrawn = snapEnabled && snapLines && !latticeShown;
   // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
-  const dotsDrawn = look.background.grid === 'dots';
+  // A lattice scene's cells are its grid, so there the field draws the dots, as it draws the lines.
+  const dotsDrawn = look.background.grid === 'dots' && !latticeShown;
   // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
   // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
   const focusNode = focus && focus.opacity < 1 ? displayScene.nodes[focus.id] : undefined;
