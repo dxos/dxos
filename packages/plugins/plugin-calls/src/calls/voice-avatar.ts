@@ -307,12 +307,21 @@ const inkShape = (scene: THREE.Scene): Shape => {
   let spawned = 0;
   return {
     update: ({ time, delta, level, bands }) => {
+      // Passive, the circle drifts in an irregular wave: undulations whose speeds share no common period, fading out
+      // as the voice takes over.
+      const idle = Math.max(0, 1 - level * 4);
       for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
         const angle = (sample / INK_SEGMENTS) * Math.PI * 2;
         const width = thickness(angle, bands, time);
+        const centre =
+          radius +
+          idle *
+            (Math.sin(angle * 2 + time * 0.9) * 0.03 +
+              Math.sin(angle * 3 - time * 1.37 + 1) * 0.02 +
+              Math.sin(angle * 5 + time * 2.11 + 2) * 0.012);
         // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
-        const inner = radius - width * 0.35;
-        const outer = radius + width * 0.65;
+        const inner = centre - width * 0.35;
+        const outer = centre + width * 0.65;
         const x = Math.sin(angle);
         const y = Math.cos(angle);
         positions.set([x * inner, y * inner, 0, x * outer, y * outer, 0], sample * 6);
