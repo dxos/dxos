@@ -121,7 +121,25 @@ export const Test: Story = {
       ),
     );
 
-    // 6. Play, then pause.
+    // 6. From the play button: Right and Left jump to the ends, Space keys the playhead once, Delete removes that key.
+    const play = canvas.getByTestId('timeline-play');
+    play.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('4.00 / 4.00'));
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('0.00 / 4.00'));
+    await userEvent.keyboard('{ArrowRight}');
+    const count = canvas.getAllByTestId('timeline-key').length;
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1));
+    // Already on a key: Space adds nothing, and it never presses the button (still paused).
+    await userEvent.keyboard(' ');
+    await expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1);
+    await expect(play).toHaveAccessibleName('Play');
+    await userEvent.keyboard('{Delete}');
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count));
+
+    // 7. Play, then pause.
     await userEvent.click(canvas.getByTestId('timeline-play'));
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).not.toHaveTextContent(/^2\.00/), {
       timeout: 5_000,

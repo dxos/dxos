@@ -46,7 +46,8 @@ export const formatTime = (t: number, fps: number): string => {
  * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
- * previous or next key, and Delete removes the key under the playhead.
+ * previous or next key, and Delete removes the key under the playhead. On the play button, Left and Right jump to the
+ * start and end, Space keys the playhead and Delete removes the key there.
  */
 export const TimelinePanel = ({
   classNames,
@@ -131,6 +132,28 @@ export const TimelinePanel = ({
         icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
         label={playing ? 'Pause' : 'Play'}
         data-testid='timeline-play'
+        // Focused, the button drives the playhead and keys: Left and Right jump to the ends, Space keys the playhead
+        // (when it is not on a key already) and Delete removes the key there; Enter still plays and pauses.
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            event.stopPropagation();
+            onPlayingChange?.(false);
+            onTimeChange?.(event.key === 'ArrowLeft' ? 0 : duration);
+          } else if (event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            if (current === undefined && onAddKey && !readonly) {
+              onAddKey();
+            }
+          } else if ((event.key === 'Delete' || event.key === 'Backspace') && current !== undefined && onRemoveKey) {
+            event.preventDefault();
+            event.stopPropagation();
+            onRemoveKey();
+          }
+        }}
+        // A space keys rather than presses: the keydown above takes it, so the keyup must not click the button.
+        onKeyUp={(event) => event.key === ' ' && event.preventDefault()}
         onClick={() => {
           // Played from the end, the timeline starts over.
           if (!playing && time >= duration) {
