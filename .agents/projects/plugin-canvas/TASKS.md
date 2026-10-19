@@ -214,7 +214,11 @@ before), not reasoned about from the source.
 
 ## Backlog
 
-- [ ] **Import a tldraw diagram as a canvas** (tracked 2026-10-18). An operation in plugin-canvas transforms a
+- [x] **Import a tldraw diagram as a canvas** (tracked 2026-10-18; built 2026-10-19). `src/import/tldraw.ts`
+      (`tldrawToScenes`, pure, fixtures in `src/import/testing.ts`), `CanvasOperation.ImportTldraw` and the
+      "Copy as canvas" action keyed by `Canvas.TLDRAW_SCHEMA`; stories `plugins/plugin-canvas/import/ImportTldraw`.
+      Groups are flattened (VIEWS.md Objects are not built), rotation dropped, frames map to `frame` nodes, only the
+      first page is read, and freehand / image / embed shapes are skipped (counted in the result). The original plan: An operation in plugin-canvas transforms a
       plugin-tldraw diagram into a new canvas document (shapes → nodes, arrows → links, frames → Views, groups →
       Objects per `packages/ui/react-ui-canvas/docs/VIEWS.md`), creates the Canvas object in the same space and opens
       it. plugin-canvas contributes a menu action to plugin-tldraw's diagram (object menu / toolbar) that invokes the

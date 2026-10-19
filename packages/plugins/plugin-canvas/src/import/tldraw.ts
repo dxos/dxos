@@ -1,0 +1,578 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+//
+// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas scenes. Pure and
+// React-free so it runs in an operation on any host. The canvas has no rotation and no groups: a rotated shape keeps
+// its rotated centre and unrotated size, and a group's children are placed in the group's container.
+//
+
+import * as Schema from 'effect/Schema';
+
+import {
+  type BuiltinNode,
+  type EllipseNode,
+  type Endpoint,
+  type FrameNode,
+  type HorizontalAlign,
+  type LineStyle,
+  type Link,
+  type LinkEnds,
+  type Marker,
+  type Node,
+  type NodeStyle,
+  type NodeTone,
+  type NoteNode,
+  type Point,
+  type RectNode,
+  type Scene,
+  type SceneId,
+  type SceneMap,
+  STYLE_HUES,
+  type StyleHue,
+  initialKeys,
+} from '@dxos/react-ui-canvas/headless';
+
+import { ROOT_SCENE_ID } from '../model/content.ts';
+
+//
+// tldraw records (v3), read loosely: only the fields the mapper uses are checked.
+//
+
+const Props = Schema.Record(Schema.String, Schema.Unknown);
+type Props = Schema.Schema.Type<typeof Props>;
+
+const ShapeRecord = Schema.Struct({
+  typeName: Schema.Literal('shape'),
+  id: Schema.String,
+  type: Schema.String,
+  parentId: Schema.String,
+  index: Schema.String,
+  x: Schema.Number,
+  y: Schema.Number,
+  rotation: Schema.optional(Schema.Number),
+  props: Props,
+});
+type ShapeRecord = Schema.Schema.Type<typeof ShapeRecord>;
+
+const PageRecord = Schema.Struct({ typeName: Schema.Literal('page'), id: Schema.String, index: Schema.String });
+
+const ArrowBinding = Schema.Struct({
+  typeName: Schema.Literal('binding'),
+  fromId: Schema.String,
+  toId: Schema.String,
+  props: Schema.Struct({ terminal: Schema.Literals(['start', 'end']) }),
+});
+
+const Vec = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+const LinePoint = Schema.Struct({ index: Schema.String, x: Schema.Number, y: Schema.Number });
+
+/** A pre-3.0 arrow terminal that names the shape it is bound to inline. */
+const LegacyBoundTerminal = Schema.Struct({ type: Schema.Literal('binding'), boundShapeId: Schema.String });
+
+const isShapeRecord = Schema.is(ShapeRecord);
+const isPageRecord = Schema.is(PageRecord);
+const isArrowBinding = Schema.is(ArrowBinding);
+const isVec = Schema.is(Vec);
+const isLinePoint = Schema.is(LinePoint);
+const isLegacyBoundTerminal = Schema.is(LegacyBoundTerminal);
+
+//
+// Result.
+//
+
+/** The canvas scenes a tldraw document maps to, with what the mapping could not carry over. */
+export type TldrawImport = {
+  root: SceneId;
+  scenes: SceneMap;
+  /** Shapes left out, by tldraw shape type (and `page` for shapes on any page after the first). */
+  skipped: Record<string, number>;
+  /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, …). */
+  approximated: Record<string, number>;
+};
+
+export type TldrawImportOptions = {
+  /** The root scene's id; the canvas's default root by default. */
+  root?: SceneId;
+};
+
+//
+// tldraw style tables (light theme, tldraw 3.0).
+//
+
+/** tldraw's `DefaultColorThemePalette` solid colours. */
+const TLDRAW_COLORS: Record<string, string> = {
+  'black': '#1d1d1d',
+  'grey': '#9fa8b2',
+  'light-violet': '#e085f4',
+  'violet': '#ae3ec9',
+  'blue': '#4465e9',
+  'light-blue': '#4ba1f1',
+  'yellow': '#f1ac4b',
+  'orange': '#e16919',
+  'green': '#099268',
+  'light-green': '#4cb05e',
+  'light-red': '#f87777',
+  'red': '#e03131',
+  'white': '#ffffff',
+};
+
+/** The theme hues' 500 shades, which the nearest tldraw colour is matched against. */
+const HUE_COLORS: Record<StyleHue, string> = {
+  neutral: '#737373',
+  red: '#ef4444',
+  orange: '#f97316',
+  amber: '#f59e0b',
+  green: '#22c55e',
+  teal: '#14b8a6',
+  sky: '#0ea5e9',
+  blue: '#3b82f6',
+  violet: '#8b5cf6',
+};
+
+/** Text shape font sizes by tldraw `size`. */
+const FONT_SIZES: Record<string, number> = { s: 18, m: 24, l: 36, xl: 44 };
+
+/** Label font sizes (geo, note, arrow) by tldraw `size`. */
+const LABEL_FONT_SIZES: Record<string, number> = { s: 18, m: 22, l: 26, xl: 32 };
+
+/** tldraw's sticky note side. */
+const NOTE_SIZE = 200;
+
+/** Line height of tldraw's text, as a multiple of the font size. */
+const LINE_HEIGHT = 1.35;
+
+//
+// Mapper.
+//
+
+/** A scene under construction: its id and its elements in paint order (bottom first). */
+type Draft = { id: SceneId; name?: string; elements: Array<Node | PendingLink> };
+
+/** An element built once every node is known, since an arrow binds to shapes anywhere in the document. */
+type PendingLink = { pending: true; build: (resolve: Resolver) => Link[] };
+
+/** Where a shape landed: its scene and node id, if it became a node. */
+type Resolver = (shapeId: string, scene: SceneId) => string | undefined;
+
+/** A rigid transform from a shape's parent space into its scene's space. */
+type Transform = { x: number; y: number; rotation: number };
+
+const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
+
+/** Maps a tldraw document's records to canvas scenes: the first page becomes the root scene, each frame a scene. */
+export const tldrawToScenes = (
+  content: Readonly<Record<string, unknown>>,
+  { root = ROOT_SCENE_ID }: TldrawImportOptions = {},
+): TldrawImport => {
+  const records = Object.values(content);
+  const shapes = records.filter(isShapeRecord);
+  const bindings = records.filter(isArrowBinding);
+  const pages = records.filter(isPageRecord).sort(byIndex);
+
+  const children = new Map<string, ShapeRecord[]>();
+  for (const shape of shapes) {
+    children.set(shape.parentId, [...(children.get(shape.parentId) ?? []), shape]);
+  }
+  for (const list of children.values()) {
+    list.sort(byIndex);
+  }
+
+  const skipped: Record<string, number> = {};
+  const approximated: Record<string, number> = {};
+  const count = (target: Record<string, number>, key: string, by = 1) => {
+    target[key] = (target[key] ?? 0) + by;
+  };
+
+  const drafts: Draft[] = [];
+  /** Shape id → the scene and node it became. */
+  const placed = new Map<string, { scene: SceneId; node: string }>();
+
+  const visit = (shape: ShapeRecord, draft: Draft, transform: Transform) => {
+    const local = toScene(transform, shape);
+    if (local.rotation !== 0 && shape.type !== 'group' && shape.type !== 'arrow' && shape.type !== 'line') {
+      count(approximated, 'rotation');
+    }
+    const id = nodeId(shape.id);
+    const add = (node: BuiltinNode) => {
+      draft.elements.push(node);
+      placed.set(shape.id, { scene: draft.id, node: node.id });
+    };
+
+    switch (shape.type) {
+      case 'geo': {
+        const geo = str(shape.props, 'geo', 'rectangle');
+        if (geo !== 'rectangle' && geo !== 'ellipse' && geo !== 'oval') {
+          count(approximated, `geo:${geo}`);
+        }
+        const size = {
+          width: num(shape.props, 'w', 0),
+          height: num(shape.props, 'h', 0) + num(shape.props, 'growY', 0),
+        };
+        const base = {
+          id,
+          z: '',
+          center: centerOf(local, size),
+          size,
+          ...withStyle(shapeStyle(shape.props, LABEL_FONT_SIZES)),
+          ...withLabel(shape.props),
+        };
+        add(
+          geo === 'ellipse' || geo === 'oval'
+            ? ({ ...base, type: 'ellipse' } satisfies EllipseNode)
+            : ({ ...base, type: 'rect' } satisfies RectNode),
+        );
+        break;
+      }
+
+      case 'note': {
+        const scale = num(shape.props, 'scale', 1);
+        const size = { width: NOTE_SIZE * scale, height: (NOTE_SIZE + num(shape.props, 'growY', 0)) * scale };
+        // A sticky is filled by default, so its fill style is not read.
+        const { tone: _tone, ...style } = shapeStyle(shape.props, LABEL_FONT_SIZES);
+        add({
+          type: 'rect',
+          id,
+          z: '',
+          center: centerOf(local, size),
+          size,
+          ...withStyle(style),
+          ...withLabel(shape.props),
+        } satisfies RectNode);
+        break;
+      }
+
+      case 'text': {
+        const scale = num(shape.props, 'scale', 1);
+        const text = str(shape.props, 'text', '');
+        const fontSize = (FONT_SIZES[str(shape.props, 'size', 'm')] ?? FONT_SIZES.m) * scale;
+        const lines = Math.max(1, text.split('\n').length);
+        const size = { width: num(shape.props, 'w', 0) * scale, height: Math.round(lines * fontSize * LINE_HEIGHT) };
+        const { tone: _tone, ...style } = shapeStyle(shape.props, FONT_SIZES, scale);
+        const align = str(shape.props, 'textAlign', str(shape.props, 'align', 'start'));
+        add({
+          type: 'note',
+          id,
+          z: '',
+          center: centerOf(local, size),
+          size,
+          text,
+          ...withStyle({ ...style, ...(align === 'start' ? {} : { alignHorizontal: horizontal(align) }) }),
+        } satisfies NoteNode);
+        break;
+      }
+
+      case 'frame': {
+        const size = { width: num(shape.props, 'w', 0), height: num(shape.props, 'h', 0) };
+        const name = str(shape.props, 'name', '');
+        const child: Draft = { id: `${id}-scene`, ...(name ? { name } : {}), elements: [] };
+        drafts.push(child);
+        add({
+          type: 'frame',
+          id,
+          z: '',
+          center: centerOf(local, size),
+          size,
+          scene: child.id,
+          // A named frame shows its name as a label, so it asks for its contents explicitly.
+          ...(name ? { label: name, link: { contents: true } } : {}),
+        } satisfies FrameNode);
+        // A frame's children are in its own space; the child scene is centred on the frame.
+        const inner: Transform = { x: -size.width / 2, y: -size.height / 2, rotation: 0 };
+        for (const grandchild of children.get(shape.id) ?? []) {
+          visit(grandchild, child, inner);
+        }
+        break;
+      }
+
+      case 'group': {
+        count(approximated, 'group');
+        for (const member of children.get(shape.id) ?? []) {
+          visit(member, draft, local);
+        }
+        break;
+      }
+
+      case 'arrow': {
+        const scene = draft.id;
+        const terminal =
+          (name: 'start' | 'end') =>
+          (resolve: Resolver): Endpoint => {
+            const bound =
+              bindings.find((binding) => binding.fromId === shape.id && binding.props.terminal === name)?.toId ??
+              legacyBound(shape.props[name]);
+            const node = bound ? resolve(bound, scene) : undefined;
+            return node ? { node } : { point: apply(local, vec(shape.props[name])) };
+          };
+        const start = terminal('start');
+        const end = terminal('end');
+        draft.elements.push({
+          pending: true,
+          build: (resolve) => [
+            {
+              type: num(shape.props, 'bend', 0) === 0 ? 'line' : 'curve',
+              id,
+              z: '',
+              source: start(resolve),
+              target: end(resolve),
+              ...withEnds(shape.props),
+              ...withText(shape.props),
+              ...withStyle(lineStyle(shape.props)),
+            },
+          ],
+        });
+        break;
+      }
+
+      case 'line': {
+        const points = Object.values(asRecord(shape.props.points))
+          .filter(isLinePoint)
+          .sort(byIndex)
+          .map((point) => apply(local, point));
+        if (points.length < 2) {
+          count(skipped, 'line');
+          break;
+        }
+        const style = withStyle(lineStyle(shape.props));
+        const ends = (index: number) => ({ source: { point: points[index] }, target: { point: points[index + 1] } });
+        // A straight polyline becomes a chain of line links; a cubic one, a single spline through its points.
+        const links: Link[] =
+          str(shape.props, 'spline', 'line') === 'cubic' && points.length > 2
+            ? [
+                {
+                  type: 'spline',
+                  id,
+                  z: '',
+                  source: { point: points[0] },
+                  target: { point: points[points.length - 1] },
+                  points: points.slice(1, -1),
+                  ...style,
+                },
+              ]
+            : points.slice(1).map((_, index) => ({
+                type: 'line' as const,
+                id: index === 0 ? id : `${id}-${index}`,
+                z: '',
+                ...ends(index),
+                ...style,
+              }));
+        draft.elements.push({ pending: true, build: () => links });
+        break;
+      }
+
+      default:
+        count(skipped, shape.type);
+    }
+  };
+
+  const [page, ...otherPages] = pages;
+  const rootDraft: Draft = { id: root, elements: [] };
+  drafts.unshift(rootDraft);
+  if (page) {
+    for (const shape of children.get(page.id) ?? []) {
+      visit(shape, rootDraft, IDENTITY);
+    }
+  }
+  for (const other of otherPages) {
+    const dropped = descendants(children, other.id);
+    if (dropped > 0) {
+      count(skipped, 'page', dropped);
+    }
+  }
+
+  const resolve: Resolver = (shapeId, scene) => {
+    const target = placed.get(shapeId);
+    return target && target.scene === scene ? target.node : undefined;
+  };
+
+  const scenes: Record<SceneId, Scene> = {};
+  for (const draft of drafts) {
+    const elements = draft.elements.flatMap((element): Array<Node | Link> =>
+      'pending' in element ? element.build(resolve) : [element],
+    );
+    const keys = initialKeys(elements.length);
+    const nodes: Record<string, Node> = {};
+    const links: Record<string, Link> = {};
+    elements.forEach((element, index) => {
+      const z = keys[index];
+      if ('source' in element) {
+        links[element.id] = { ...element, z };
+      } else {
+        nodes[element.id] = { ...element, z };
+      }
+    });
+    scenes[draft.id] = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
+  }
+
+  return { root, scenes, skipped, approximated };
+};
+
+//
+// Geometry.
+//
+
+/** The shape's own transform in scene space: its parent's transform applied to its position and rotation. */
+const toScene = (parent: Transform, shape: ShapeRecord): Transform => {
+  const origin = apply(parent, { x: shape.x, y: shape.y });
+  return { ...origin, rotation: parent.rotation + (shape.rotation ?? 0) };
+};
+
+const apply = (transform: Transform, point: Point): Point => {
+  const cos = Math.cos(transform.rotation);
+  const sin = Math.sin(transform.rotation);
+  return {
+    x: round(transform.x + point.x * cos - point.y * sin),
+    y: round(transform.y + point.x * sin + point.y * cos),
+  };
+};
+
+/** tldraw rotates a shape about its top-left corner; the centre follows that rotation. */
+const centerOf = (transform: Transform, size: { width: number; height: number }): Point =>
+  apply(transform, { x: size.width / 2, y: size.height / 2 });
+
+// `|| 0` folds a negative zero, which a rotation by a multiple of a quarter turn leaves behind.
+const round = (value: number) => Math.round(value * 100) / 100 || 0;
+
+//
+// Style.
+//
+
+/**
+ * The theme hue nearest a tldraw colour: neutral for a grey (black and white included), else the chromatic hue nearest
+ * it around the colour wheel, since lightness is the tone's business, not the hue's.
+ */
+export const nearestHue = (color: string): StyleHue => {
+  const hsl = toHsl(TLDRAW_COLORS[color] ?? color);
+  if (!hsl || hsl.saturation < GREY_SATURATION) {
+    return 'neutral';
+  }
+  let best: StyleHue = 'neutral';
+  let distance = Infinity;
+  for (const hue of STYLE_HUES) {
+    const candidate = toHsl(HUE_COLORS[hue]);
+    if (hue !== 'neutral' && candidate) {
+      const turn = Math.abs(hsl.hue - candidate.hue);
+      const next = Math.min(turn, 360 - turn);
+      if (next < distance) {
+        distance = next;
+        best = hue;
+      }
+    }
+  }
+  return best;
+};
+
+/** Below this HSL saturation a colour reads as grey. */
+const GREY_SATURATION = 0.2;
+
+const toHsl = (value: string): { hue: number; saturation: number } | undefined => {
+  const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(value);
+  if (!match) {
+    return undefined;
+  }
+  const [red, green, blue] = [match[1], match[2], match[3]].map((hex) => parseInt(hex, 16) / 255);
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const delta = max - min;
+  const lightness = (max + min) / 2;
+  if (delta === 0) {
+    return { hue: 0, saturation: 0 };
+  }
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  const sector =
+    max === red
+      ? ((green - blue) / delta + 6) % 6
+      : max === green
+        ? (blue - red) / delta + 2
+        : (red - green) / delta + 4;
+  return { hue: sector * 60, saturation };
+};
+
+/** tldraw fill → the canvas tone: none is an outline, solid the strongest fill, semi the lightest. */
+const TONES: Readonly<Record<string, NodeTone>> = { none: 0, solid: 1, fill: 1, pattern: 2, semi: 3 };
+
+const shapeStyle = (props: Props, fontSizes: Record<string, number>, scale = 1): NodeStyle => {
+  const hue = nearestHue(str(props, 'color', 'black'));
+  const tone: NodeTone | undefined = TONES[str(props, 'fill', 'none')];
+  const dash = str(props, 'dash', 'draw');
+  const size = str(props, 'size', 'm');
+  const fontSize = (fontSizes[size] ?? fontSizes.m) * scale;
+  const vertical = str(props, 'verticalAlign', 'middle');
+  return {
+    ...(hue === 'neutral' ? {} : { hue }),
+    ...(tone === undefined ? {} : { tone }),
+    ...(dash === 'dashed' || dash === 'dotted' ? { lineStyle: dash } : {}),
+    ...(size === 'm' && scale === 1 ? {} : { fontSize }),
+    ...(str(props, 'font', 'draw') === 'mono' ? { fontFamily: 'monospace' as const } : {}),
+    ...(str(props, 'align', 'middle') === 'middle'
+      ? {}
+      : { alignHorizontal: horizontal(str(props, 'align', 'middle')) }),
+    ...(vertical === 'middle' ? {} : { alignVertical: vertical === 'start' ? 'top' : 'bottom' }),
+  };
+};
+
+const lineStyle = (props: Props): LineStyle => {
+  const hue = nearestHue(str(props, 'color', 'black'));
+  const dash = str(props, 'dash', 'draw');
+  return {
+    ...(hue === 'neutral' ? {} : { hue }),
+    ...(dash === 'dashed' || dash === 'dotted' ? { lineStyle: dash } : {}),
+  };
+};
+
+const horizontal = (align: string): HorizontalAlign =>
+  align.startsWith('start') ? 'left' : align.startsWith('end') ? 'right' : 'center';
+
+const withStyle = <Style extends LineStyle>(style: Style) => (Object.keys(style).length > 0 ? { style } : {});
+
+const withLabel = (props: Props) => {
+  const text = str(props, 'text', '');
+  return text ? { label: text } : {};
+};
+
+const withText = (props: Props) => {
+  const text = str(props, 'text', '');
+  return text ? { text } : {};
+};
+
+/** tldraw arrowheads the canvas draws; any other head reads as an arrow. */
+const marker = (head: string): Marker | undefined =>
+  head === 'none' ? undefined : head === 'triangle' ? 'triangle' : head === 'dot' ? 'circle' : 'arrow';
+
+const withEnds = (props: Props): { ends?: LinkEnds } => {
+  const start = marker(str(props, 'arrowheadStart', 'none'));
+  const end = marker(str(props, 'arrowheadEnd', 'arrow'));
+  return start || end ? { ends: { ...(start ? { start } : {}), ...(end ? { end } : {}) } } : {};
+};
+
+//
+// Records.
+//
+
+const nodeId = (shapeId: string) => shapeId.replace(/^shape:/, '');
+
+const byIndex = (left: { index: string }, right: { index: string }) =>
+  left.index < right.index ? -1 : left.index > right.index ? 1 : 0;
+
+const num = (props: Props, key: string, fallback: number): number => {
+  const value = props[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+};
+
+const str = (props: Props, key: string, fallback: string): string => {
+  const value = props[key];
+  return typeof value === 'string' ? value : fallback;
+};
+
+const vec = (value: unknown): Point => (isVec(value) ? { x: value.x, y: value.y } : { x: 0, y: 0 });
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === 'object' && value !== null ? Object.fromEntries(Object.entries(value)) : {};
+
+const legacyBound = (terminal: unknown): string | undefined =>
+  isLegacyBoundTerminal(terminal) ? terminal.boundShapeId : undefined;
+
+/** How many shapes a container holds, at any depth. */
+const descendants = (children: Map<string, ShapeRecord[]>, parent: string): number =>
+  (children.get(parent) ?? []).reduce((sum, shape) => sum + 1 + descendants(children, shape.id), 0);
