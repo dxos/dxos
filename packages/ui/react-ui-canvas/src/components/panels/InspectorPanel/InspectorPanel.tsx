@@ -122,8 +122,9 @@ const Slot = ({
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 /**
- * The panel itself, wherever the host places it: a toolbar above an accordion of the sections that show, any number
- * open, each as tall as its inspector, the column scrolling them together. Nothing (and no space) while none shows.
+ * The panel itself, wherever the host places it: a toolbar with the dock toggle above a padded scroll area of the
+ * sections that show, each a bordered frame as tall as its inspector, any number open. Nothing (and no space) while
+ * none shows.
  */
 const InspectorPanelContent = () => {
   const context = useContext(InspectorPanelContext);
@@ -177,6 +178,7 @@ const InspectorPanelContent = () => {
           <ScrollArea.Viewport>
             <Accordion.Root
               border={false}
+              classNames='gap-2 p-2'
               onPointerDown={stop}
               onPointerMove={stop}
               onPointerUp={stop}
@@ -189,11 +191,12 @@ const InspectorPanelContent = () => {
               }
             >
               {visible.map((section) => (
-                // Edge to edge, one divider between sections; the frame's header holds only the label and disclosure.
+                // Each section is its own bordered frame, clipped so its rows' fills stay inside the rounded border; its
+                // header holds only the label and disclosure.
                 <Accordion.Item
                   key={section.id}
                   value={section.id}
-                  classNames='border-b border-separator last:border-b-0'
+                  classNames='rounded-sm border border-separator overflow-hidden'
                   data-testid={`dock-section-${section.id}`}
                 >
                   <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>

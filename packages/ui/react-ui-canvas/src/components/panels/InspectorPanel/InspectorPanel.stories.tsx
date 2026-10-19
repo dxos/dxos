@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect, useMemo } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { SceneBuilder } from '../../../builder/index.ts';
-import { createCanvasAtoms } from '../../../engine/index.ts';
+import { type InspectorMode, createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry } from '../../../hooks/index.ts';
 import { type Layer, createMemoryStore } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
@@ -36,7 +36,7 @@ type StoryArgs = {
   select?: string;
 };
 
-/** The docked panels alone: the properties, layers and about sections, without the canvas they sit beside. */
+/** The inspector panel alone: its toolbar, then the properties, layers and about sections, without the canvas beside it. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const { store, root } = useMemo(() => {
@@ -47,8 +47,10 @@ const DefaultStory = ({ select }: StoryArgs) => {
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select ? [select] : []));
   }, [registry, atoms, select]);
+  // The panel's toolbar docks and floats the inspectors.
+  const [inspectors, setInspectors] = useState<InspectorMode>('docked');
   return (
-    <Canvas.Root store={store} root={root} atoms={atoms} inspectors='docked'>
+    <Canvas.Root store={store} root={root} atoms={atoms} inspectors={inspectors} onInspectorsChange={setInspectors}>
       <Canvas.Properties />
       <Canvas.Layers />
       <Canvas.About />
