@@ -134,14 +134,16 @@ export class FeedDataSource implements IndexDataSource {
           continue;
         }
 
-        // Empty string cursor means "start from beginning".
         const currentCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
             ? FeedProtocol.FeedCursor.make(cursor.cursor)
-            : undefined;
+            : FeedProtocol.encodeFeedCursor(
+                yield* this._feedStore.getServerToken(cursor.spaceId),
+                FeedProtocol.FEED_START,
+              );
 
         try {
-          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);
+          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor, remainingLimit]);
           const result =
             this.#passReads?.get(readKey) ??
             (yield* this._feedStore.query({
