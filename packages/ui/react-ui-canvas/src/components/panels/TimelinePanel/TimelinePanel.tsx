@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef } from 'react';
+import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -27,6 +27,8 @@ export type TimelinePanelProps = PanelProps & {
   onAddKey?: () => void;
   /** Removes the selection's keys at the playhead; offered while the playhead is on one. */
   onRemoveKey?: () => void;
+  /** Moves the selection's keys at `from` to `to`; offered, a diamond drags along the track. */
+  onMoveKey?: (from: number, to: number) => void;
 };
 
 /** The key at time `t`, if one is within half a frame of it. */
@@ -60,8 +62,11 @@ export const TimelinePanel = ({
   onAutoKeyChange,
   onAddKey,
   onRemoveKey,
+  onMoveKey,
 }: TimelinePanelProps) => {
   const current = keyAt(keys, time, fps);
+  // The key being dragged and where it would land; a press that never moves stays a click that seeks.
+  const [dragging, setDragging] = useState<{ from: number; to: number }>();
   const trackRef = useRef<HTMLDivElement>(null);
   const timeAt = useCallback(
     (clientX: number) => {
@@ -154,24 +159,46 @@ export const TimelinePanel = ({
           className='absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-bg rounded-full'
           style={{ width: at(time) }}
         />
-        {keys.map((key) => (
-          <button
-            key={key}
-            type='button'
-            aria-label={`Key at ${formatTime(key, fps)} s`}
-            className={mx(
-              'absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-separator',
-              key === current ? 'bg-amber-300 ring-1 ring-amber-300' : 'bg-amber-500',
-            )}
-            style={{ left: at(key) }}
-            data-testid='timeline-key'
-            onPointerDown={(event) => {
-              event.stopPropagation();
-              onPlayingChange?.(false);
-              onTimeChange?.(key);
-            }}
-          />
-        ))}
+        {keys.map((key) => {
+          const shown = dragging?.from === key ? dragging.to : key;
+          return (
+            <button
+              key={key}
+              type='button'
+              aria-label={`Key at ${formatTime(key, fps)} s`}
+              className={mx(
+                'absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-separator',
+                onMoveKey && !readonly && 'cursor-ew-resize',
+                key === current || dragging?.from === key ? 'bg-amber-300 ring-1 ring-amber-300' : 'bg-amber-500',
+              )}
+              style={{ left: at(shown) }}
+              data-testid='timeline-key'
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                onPlayingChange?.(false);
+                onTimeChange?.(key);
+                if (onMoveKey && !readonly) {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  setDragging({ from: key, to: key });
+                }
+              }}
+              onPointerMove={(event) => {
+                if (dragging?.from === key) {
+                  const to = timeAt(event.clientX);
+                  setDragging({ from: key, to });
+                  onTimeChange?.(to);
+                }
+              }}
+              onPointerUp={() => {
+                if (dragging?.from === key && dragging.to !== key) {
+                  onMoveKey?.(key, dragging.to);
+                }
+                setDragging(undefined);
+              }}
+              onPointerCancel={() => setDragging(undefined)}
+            />
+          );
+        })}
         <div
           className='absolute top-0 bottom-0 w-0.5 -translate-x-1/2 bg-accent-bg pointer-events-none'
           style={{ left: at(time) }}

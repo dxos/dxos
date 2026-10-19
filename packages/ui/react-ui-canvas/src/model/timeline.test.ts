@@ -14,6 +14,7 @@ import {
   createTimeline,
   ease,
   keyTimes,
+  moveKeys,
   removeKey,
   sampleCamera,
   sampleScene,
@@ -99,6 +100,22 @@ describe('keys', () => {
     timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 0.5 });
     expect(timeline.tracks['a:style.opacity'].keys).toEqual([{ t: 1, value: 0.5 }]);
     expect(removeKey(timeline, 'a', 'style.opacity', 1).tracks).toEqual({});
+  });
+
+  test('moving keys moves the selection keys at one time, keeping value and easing, and replaces a key there', ({
+    expect,
+  }) => {
+    let timeline = setKey(createTimeline(4), 'a', 'size', { t: 1, value: 'big', easing: 'ease-in' });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 0.5 });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 2, value: 1 });
+    timeline = setKey(timeline, 'b', 'size', { t: 1, value: 'small' });
+    const moved = moveKeys(timeline, new Set(['a']), 1, 2);
+    expect(moved.tracks['a:size'].keys).toEqual([{ t: 2, value: 'big', easing: 'ease-in' }]);
+    // The key already at 2 is replaced by the one moved onto it.
+    expect(moved.tracks['a:style.opacity'].keys).toEqual([{ t: 2, value: 0.5 }]);
+    // Another node's keys stay.
+    expect(moved.tracks['b:size'].keys).toEqual([{ t: 1, value: 'small' }]);
+    expect(moveKeys(timeline, new Set(['a']), 3, 2)).toBe(timeline);
   });
 
   test('key times of the selection are sorted without repeats', ({ expect }) => {

@@ -234,6 +234,32 @@ export const removeKey = (timeline: Timeline, target: string, property: string, 
   return { ...timeline, tracks: keys.length > 0 ? { ...tracks, [id]: { ...track, keys } } : tracks };
 };
 
+/**
+ * The timeline with the keys of `targets` within `tolerance` of `from` moved to `to`, each keeping its value and easing
+ * and replacing a key already at `to`; the same timeline when nothing moves.
+ */
+export const moveKeys = (
+  timeline: Timeline,
+  targets: ReadonlySet<string>,
+  from: number,
+  to: number,
+  tolerance = KEY_EPSILON,
+): Timeline => {
+  let next = timeline;
+  for (const track of Object.values(timeline.tracks)) {
+    if (!targets.has(track.target)) {
+      continue;
+    }
+    for (const key of track.keys.filter((key) => Math.abs(key.t - from) <= tolerance)) {
+      next = setKey(removeKey(next, track.target, track.property, key.t), track.target, track.property, {
+        ...key,
+        t: to,
+      });
+    }
+  }
+  return next;
+};
+
 /** The timeline without the tracks of `targets` (deleted nodes), or the same timeline when it has none. */
 export const removeTargets = (timeline: Timeline, targets: ReadonlySet<string>): Timeline => {
   const entries = Object.entries(timeline.tracks);

@@ -158,6 +158,7 @@ export const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1
         onPlayingChange={controller.time.setPlaying}
         onTimeChange={seek}
         onAutoKeyChange={controller.time.setAutoKey}
+        onMoveKey={readonly || !capabilities.update ? undefined : controller.time.moveKey}
         onAddKey={selection.size > 0 ? timelineKeys.addKey : undefined}
         onRemoveKey={selection.size > 0 ? timelineKeys.removeKey : undefined}
       />

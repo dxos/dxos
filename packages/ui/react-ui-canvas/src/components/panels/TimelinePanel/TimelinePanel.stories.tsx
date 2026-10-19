@@ -39,6 +39,11 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
       onAutoKeyChange={setAutoKey}
       onAddKey={() => setKeys((keys) => [...new Set([...keys, time])].sort((left, right) => left - right))}
       onRemoveKey={() => setKeys((keys) => keys.filter((key) => key !== keyAt(keys, time, fps)))}
+      onMoveKey={(from, to) =>
+        setKeys((keys) =>
+          [...new Set(keys.map((key) => (key === from ? to : key)))].sort((left, right) => left - right),
+        )
+      }
     />
   );
 };
@@ -102,7 +107,21 @@ export const Test: Story = {
     await userEvent.keyboard('{Delete}');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
 
-    // 5. Play, then pause.
+    // 5. A diamond drags along the track: the key moves where it is dropped, and the playhead with it.
+    const [first] = canvas.getAllByTestId('timeline-key');
+    const from = first.getBoundingClientRect();
+    const quarter = rect.left + rect.width / 4;
+    await fireEvent.pointerDown(first, { clientX: from.left, clientY: from.top, pointerId: 1 });
+    await fireEvent.pointerMove(first, { clientX: quarter, clientY: from.top, pointerId: 1 });
+    await fireEvent.pointerUp(first, { clientX: quarter, clientY: from.top, pointerId: 1 });
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('1.00 / 4.00'));
+    await waitFor(() =>
+      expect(canvas.getAllByTestId('timeline-key').map((key) => key.getAttribute('aria-label'))).toContain(
+        'Key at 1.00 s',
+      ),
+    );
+
+    // 6. Play, then pause.
     await userEvent.click(canvas.getByTestId('timeline-play'));
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).not.toHaveTextContent(/^2\.00/), {
       timeout: 5_000,

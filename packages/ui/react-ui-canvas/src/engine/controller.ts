@@ -21,6 +21,7 @@ import {
   getPath,
   isLink,
   keyTimes,
+  moveKeys,
   nodeAnimatable,
   removeKey as removeTimelineKey,
   setKey,
@@ -109,6 +110,8 @@ export type TimeCommands = {
   addKey: () => void;
   /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
   removeKey: () => void;
+  /** Moves the selected nodes' keys at `from` to `to`, and the playhead with them. */
+  moveKey: (from: number, to: number) => void;
 };
 
 /**
@@ -309,6 +312,18 @@ export const createCanvasController = ({
         }
       }
       baseProjection().apply({ kind: 'timeline', timeline: next });
+    },
+    moveKey: (from, to) => {
+      const current = timeline();
+      const target = clampTime(current, to);
+      if (!current || Math.abs(target - from) < 1e-6) {
+        return;
+      }
+      const next = moveKeys(current, registry.get(atoms.selection), from, target, 0.5 / timelineFps(current));
+      if (next !== current) {
+        baseProjection().apply({ kind: 'timeline', timeline: next });
+      }
+      seek(target);
     },
     removeKey: () => {
       const current = timeline();

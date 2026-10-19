@@ -172,5 +172,16 @@ describe('CanvasController', () => {
       controller.time.removeKey();
       expect(keyed()).toEqual([]);
     });
+
+    test('moveKey moves the selection keys at one time to another, with the playhead', ({ expect }) => {
+      const { registry, atoms, controller, projection } = setup();
+      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      controller.selection.select(['a']);
+      controller.time.seek(1);
+      controller.time.addKey();
+      controller.time.moveKey(1, 3);
+      expect(keyTimes(registry.get(projection.scene).timeline, ['a'])).toEqual([3]);
+      expect(registry.get(atoms.clock.time)).toBe(3);
+    });
   });
 });
