@@ -189,9 +189,10 @@ const InspectorPanelContent = () => {
       classNames={
         docked
           ? 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
-          : // The docked panel's surface, so the inspectors look the same wherever the panel sits.
+          : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
+            // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
-              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-hidden',
+              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-1rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
@@ -250,7 +251,7 @@ const InspectorPanelContent = () => {
                 <Accordion.Item
                   key={section.id}
                   value={section.id}
-                  classNames='rounded-sm border border-separator overflow-hidden'
+                  classNames='rounded-sm border border-separator overflow-clip'
                   data-testid={`dock-section-${section.id}`}
                 >
                   <Accordion.ItemTrigger icon={section.icon} classNames='bg-toolbar-surface'>

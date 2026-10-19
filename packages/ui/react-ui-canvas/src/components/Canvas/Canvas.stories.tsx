@@ -240,6 +240,13 @@ export const Floating: Story = {
     await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
     // About shows only while docked.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+    // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
+    const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
+    node && (await userEvent.click(node));
+    const exposed = await canvas.findByText('Exposed');
+    exposed.scrollIntoView();
+    await userEvent.click(exposed);
+    await expect(canvas.getByTestId('scene-view-dock').scrollTop).toBe(0);
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
