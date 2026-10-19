@@ -575,6 +575,13 @@ export const Grid = ({
         }
         return start + shot.ms;
       }, 0) - shots[shots.length - 1].ms;
+    let liveStart: number | undefined;
+    shots.reduce((start, shot) => {
+      if (shot.live && liveStart === undefined) {
+        liveStart = start;
+      }
+      return start + shot.ms;
+    }, 0);
     window.grid = {
       total,
       seek: async (ms) => {
@@ -593,7 +600,12 @@ export const Grid = ({
               return undefined;
             }
             if (stills) {
-              return seekVideo(video, (stillTime(cell.id, ms) / 1_000) % video.duration);
+              // From a drift's start every clip plays on from where it rested, as it does in real time.
+              const still =
+                liveStart !== undefined && ms >= liveStart
+                  ? stillTime(cell.id, liveStart) + (ms - liveStart)
+                  : stillTime(cell.id, ms);
+              return seekVideo(video, (still / 1_000) % video.duration);
             }
             const start = holdStart.get(cell.id);
             const local = Math.max(0, start === undefined ? ms : ms - start) / 1_000;
