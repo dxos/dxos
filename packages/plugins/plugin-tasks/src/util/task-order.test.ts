@@ -26,7 +26,7 @@ describe('sortTasks', () => {
   });
 
   test('status follows the status table', ({ expect }) => {
-    expect(titles(sortTasks(tasks, { field: 'status', direction: 'asc' }))).to.deep.eq(['urgent', 'None', 'Low']);
+    expect(titles(sortTasks(tasks, { field: 'status', direction: 'asc' }))).to.deep.eq(['None', 'urgent', 'Low']);
   });
 
   test('priority puts the most urgent first and unset last', ({ expect }) => {
@@ -78,7 +78,7 @@ describe('groupTasks', () => {
     expect(groupTasks([make({ title: 'One' })], 'none', { ns })).to.be.undefined;
   });
 
-  test('status groups follow the status table, a task with none reading as todo', ({ expect }) => {
+  test('status groups follow the board order, a task with none reading as todo', ({ expect }) => {
     const unset = Task.make({ title: 'Unset' });
     const done = make({ title: 'Done', status: 'done' });
     const groups = groupTasks([done, unset], 'status', { ns }) ?? [];

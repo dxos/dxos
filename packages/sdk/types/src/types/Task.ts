@@ -58,15 +58,15 @@ export const EstimateOptions: Option<Estimate | 'none'>[] = [
 //
 
 export const Status = Schema.Literals([
-  'review',
-  'failed',
-  'started',
   'todo',
-  'blocked',
   'backlog',
+  'started',
+  'review',
   'done',
-  'cancelled',
   'duplicate',
+  'blocked',
+  'cancelled',
+  'failed',
 ]);
 export type Status = Schema.Schema.Type<typeof Status>;
 
@@ -76,15 +76,32 @@ export type Status = Schema.Schema.Type<typeof Status>;
  * painted in.
  */
 export const StatusOptions: Option<Status>[] = [
-  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
-  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
-  { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
   { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--check-square-offset--regular' },
-  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
   { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
+  { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
+  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
   { id: 'done', title: 'Done', color: 'green', icon: 'ph--check--regular' },
-  { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
   { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
+  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
+];
+
+/**
+ * The order status GROUPS appear in on a board (and nowhere else): deliberately not
+ * {@link StatusOptions}'s order, since a picker lists statuses by workflow stage while a board
+ * wants the ones needing attention first.
+ */
+export const StatusGroupOrder: readonly Status[] = [
+  'review',
+  'failed',
+  'started',
+  'todo',
+  'blocked',
+  'backlog',
+  'done',
+  'cancelled',
+  'duplicate',
 ];
 
 /**
