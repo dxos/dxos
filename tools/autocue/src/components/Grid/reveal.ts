@@ -358,6 +358,11 @@ export type ShiftOptions = {
   distance: number;
   /** Holds the camera on the zoomed-out 3x3 throughout, so only the shifts move. */
   overview?: boolean;
+  /**
+   * Cells per second: in place of the stepped loop, the zoomed-out 3x3's columns scroll continuously at this speed,
+   * alternating up and down, for the whole timeline.
+   */
+  drift?: number;
 };
 
 /** Strong ease-in-out for the zooms: quick to leave and quick to settle. */
@@ -394,6 +399,7 @@ export const shiftShots = ({
   shift,
   distance,
   overview = false,
+  drift = 0,
 }: ShiftOptions): ShiftShot[] => {
   const pitch = { x: TILE.width + gap, y: TILE.height + gap };
   const closeUps = Math.max(1, slots.length);
@@ -466,6 +472,24 @@ export const shiftShots = ({
     const point = placed.get(cell);
     return point ? bounds(point) : hidden;
   };
+
+  if (drift > 0) {
+    const ms = slots.reduce((sum, slot) => sum + slot, 0);
+    return [
+      {
+        ms,
+        frame: (t) => ({
+          camera: far,
+          place: (cell) => {
+            const point = start.get(cell);
+            return point
+              ? bounds({ x: point.x, y: wrapRow(point.y + direction(point.x) * drift * ((t * ms) / 1_000)) })
+              : hidden;
+          },
+        }),
+      },
+    ];
+  }
 
   return Array.from({ length: closeUps }, (_, step): ShiftShot[] => {
     const placed = positions[step];

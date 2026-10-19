@@ -94,6 +94,8 @@ type GridProps = {
   shiftDistance?: number;
   /** Shift loop: stays on the zoomed-out 3x3, so the shifts can be watched without the zooms. */
   overview?: boolean;
+  /** Shift loop: zoomed out, the columns scroll continuously at this many cells per second instead of stepping. */
+  drift?: number;
   /** How each cell is framed; see `border.ts`. Unset is the original tile. */
   border?: Border;
   /** Fades the frame out as a cell grows to fill the view, so a close-up shows the clip edge to edge. */
@@ -272,6 +274,7 @@ const DefaultStory = ({
   shiftMs = 600,
   shiftDistance = 0,
   overview = false,
+  drift = 0,
   border,
   borderFade = false,
 }: GridProps) => {
@@ -366,7 +369,9 @@ const DefaultStory = ({
         shift: Number(shiftMs),
         distance: Number(shiftDistance),
       };
-      return variant === 'console' ? deckShots(options) : shiftShots({ ...options, overview: Boolean(overview) });
+      return variant === 'console'
+        ? deckShots(options)
+        : shiftShots({ ...options, overview: Boolean(overview), drift: Number(drift) });
     }
     const cameras = tour.map(([col, row]) =>
       fitBounds({ x: col * (TILE.width + gap), y: row * (TILE.height + gap), ...TILE }, viewport),
@@ -416,6 +421,7 @@ const DefaultStory = ({
     shiftMs,
     shiftDistance,
     overview,
+    drift,
   ]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
   /** Each close-up's hold: the toolbar steps between them by playing the transition that joins them. */
@@ -760,6 +766,7 @@ const meta: Meta<GridProps> = {
     shiftMs: { type: { name: 'number' }, control: 'number' },
     shiftDistance: { type: { name: 'number' }, control: { type: 'select' }, options: [0, 1, 2] },
     overview: { type: { name: 'boolean' }, control: 'boolean' },
+    drift: { type: { name: 'number' }, control: { type: 'number', step: 0.05 } },
     border: { type: { name: 'enum', value: [...BORDERS] }, control: 'select', options: BORDERS },
     borderFade: { type: { name: 'boolean' }, control: 'boolean' },
     content: {
@@ -839,3 +846,6 @@ export const ShiftClips: Story = { args: shiftArgs('clips') };
 /** The shift loop seen from the zoomed-out 3x3 throughout: only the rows and columns move. */
 export const ShiftOverviewNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true } };
 export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overview: true } };
+
+/** The zoomed-out 3x3 with its columns scrolling slowly and continuously, alternating up and down. */
+export const ShiftDriftNumbers: Story = { args: { ...shiftArgs('numbers'), overview: true, drift: 0.2 } };

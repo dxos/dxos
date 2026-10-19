@@ -13,7 +13,8 @@ Stories (storybook on :9009; the border style is the `border` control on any sto
    [tours](http://localhost:9009/?path=/story/tools-autocue-grid--shift-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-numbers) ·
    overview [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-overview-numbers) ·
-   [clips](http://localhost:9009/?path=/story/tools-autocue-grid--shift-overview-clips)
+   [clips](http://localhost:9009/?path=/story/tools-autocue-grid--shift-overview-clips) · drift
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-drift-numbers)
 2. `columns`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--columns-tours) ·
    [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--columns-numbers)
 3. `steps`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--steps-tours) ·
