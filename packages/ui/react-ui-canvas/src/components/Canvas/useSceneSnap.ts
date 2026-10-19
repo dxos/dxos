@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { MAJOR_GRID_RATIO } from '../../model/index.ts';
+import { MAJOR_GRID_RATIO, type Point } from '../../model/index.ts';
 
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
@@ -17,12 +17,14 @@ export const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRI
 export const GRID_RANGE: [number, number] = [6, 2048];
 
 export type SceneSnap = {
-  /** The finest level drawn, in scene units; moves and control points land on it. */
+  /** The finest level drawn, in scene units; control points land on it. */
   minor: number;
-  /** `MAJOR_GRID_RATIO` of those; creation and resizing land on it. */
+  /** `MAJOR_GRID_RATIO` of those; moves, resizes and creation land on it. */
   major: number;
   snap: (value: number) => number;
   snapMinor: (value: number) => number;
+  /** The offset a move applies, so the pressed node's top-left (`anchor`) lands on the major grid. */
+  moveDelta: (anchor: Point, offset: Point) => Point;
 };
 
 /**
@@ -33,20 +35,29 @@ export type SceneSnap = {
  * stops landing on anything visible. Reading the level back from the same rule keeps the two the same by
  * construction.
  */
-export const useSceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap => {
-  const minor = useMemo(() => {
-    const levels = GRID_LEVELS.map((ratio) => ratio * grid);
-    return levels.find((size) => size * zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
-  }, [grid, zoom]);
+const minorLevel = (grid: number, zoom: number): number => {
+  const levels = GRID_LEVELS.map((ratio) => ratio * grid);
+  return levels.find((size) => size * zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
+};
+
+const snapOn = (minor: number, enabled: boolean): SceneSnap => {
   const major = minor * MAJOR_GRID_RATIO;
+  const snap = (value: number) => (enabled ? Math.round(value / major) * major : value);
+  // A link's control point is finer than a node: a bend need not sit on a major line.
+  const snapMinor = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
+  const moveDelta = (anchor: Point, offset: Point): Point => ({
+    x: snap(anchor.x + offset.x) - anchor.x,
+    y: snap(anchor.y + offset.y) - anchor.y,
+  });
+  return { minor, major, snap, snapMinor, moveDelta };
+};
 
-  const snap = useCallback((value: number) => (enabled ? Math.round(value / major) * major : value), [enabled, major]);
-  // Moving is finer than creating or resizing: a placed node keeps its major-grid size and edges land on
-  // minor lines, so ports (drawn at the nearest major line) stay aligned while placement is not coarse.
-  const snapMinor = useCallback(
-    (value: number) => (enabled ? Math.round(value / minor) * minor : value),
-    [enabled, minor],
-  );
+/** The snap for a view's grid, zoom and snap toggle. */
+export const sceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap =>
+  snapOn(minorLevel(grid, zoom), enabled);
 
-  return { minor, major, snap, snapMinor };
+/** `sceneSnap`, stable while the drawn level and the toggle hold, however the zoom moves within the level. */
+export const useSceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap => {
+  const minor = minorLevel(grid, zoom);
+  return useMemo(() => snapOn(minor, enabled), [minor, enabled]);
 };

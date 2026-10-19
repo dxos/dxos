@@ -123,7 +123,7 @@ export type UsePointerMachineOptions = {
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
-  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor'>;
+  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'moveDelta'>;
 
 export type PointerMachine = {
   /** Root element handlers. */
@@ -189,6 +189,7 @@ export const usePointerMachine = ({
   major,
   snap,
   snapMinor,
+  moveDelta,
 }: UsePointerMachineOptions): PointerMachine => {
   const toScene = useCallback(
     (event: { clientX: number; clientY: number }): Point => {
@@ -587,16 +588,13 @@ export const usePointerMachine = ({
           break;
         }
         case 'move': {
-          // Snap the pressed node's top-left to the minor grid; the selection moves by the same offset.
+          // Snap the pressed node's top-left to the major grid; the selection moves by the same offset.
           const point = toScene(event);
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
             ...current,
             raw,
-            delta: {
-              x: snapMinor(current.anchor.x + raw.x) - current.anchor.x,
-              y: snapMinor(current.anchor.y + raw.y) - current.anchor.y,
-            },
+            delta: moveDelta(current.anchor, raw),
             // Read on every move, so pressing or releasing ⌘ mid-drag switches between moving and copying.
             copy: event.metaKey && capabilities.create === true,
           });
@@ -612,9 +610,8 @@ export const usePointerMachine = ({
             minSize: def?.minSize ?? { width: major, height: major },
             maxSize: def?.maxSize,
             symmetric: event.shiftKey,
-            // The moving edge lands on the minor grid, as a move does: a node's size is no coarser than
-            // its position, while a new node still arrives on the major one.
-            snap: snapMinor,
+            // The moving edge lands on the major grid, as a move does, so a node's edges stay on major lines.
+            snap,
           });
           setDrag({ ...current, bounds });
           break;
@@ -629,7 +626,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'point': {
-          // A control point moves on the minor grid, as a node does; the double-click that adds one is a
+          // A control point moves on the minor grid, finer than a node; the double-click that adds one is a
           // creation and stays on the major grid.
           const point = toScene(event);
           const points = [...current.points];
@@ -656,6 +653,7 @@ export const usePointerMachine = ({
       toScene,
       snap,
       snapMinor,
+      moveDelta,
       scene.nodes,
       scene.links,
       nodeRegistry,

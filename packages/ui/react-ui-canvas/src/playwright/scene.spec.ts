@@ -118,6 +118,41 @@ test.describe('Canvas', () => {
     expect(selected[0]).not.toBe(id);
   });
 
+  test('with snap on, a move and a resize land the node on the major grid', async () => {
+    const id = 'scene:root/a';
+    const snap = page.getByTestId('toolbar-snap');
+    if ((await snap.getAttribute('aria-pressed')) !== 'true') {
+      await snap.click();
+    }
+    await scene.clickNode(id);
+    // The properties form edits the centre and the size; the edges follow from them.
+    const fields = page.locator('[data-testid="properties"] [role="spinbutton"]');
+    const edges = async () => {
+      const [x, y, width, height] = await Promise.all(
+        [0, 1, 2, 3].map(async (index) => Number(await fields.nth(index).inputValue())),
+      );
+      return [x - width / 2, y - height / 2, x + width / 2, y + height / 2];
+    };
+    const onMajor = (values: number[]) => values.every((value) => Math.abs(value % 64) === 0);
+    const before = await edges();
+
+    // Well under a major cell on screen: on the minor grid this lands a 16px step away, on the major one a whole cell.
+    const box = await scene.box(scene.node(id));
+    const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await scene.drag(center, { x: center.x + 37, y: center.y + 23 });
+    await expect.poll(edges).not.toEqual(before);
+    expect(onMajor(await edges())).toBe(true);
+
+    const moved = await edges();
+    const east = await scene.handle(id, 'e');
+    await scene.drag(
+      { x: east.x + east.width / 2, y: east.y + east.height / 2 },
+      { x: east.x + east.width / 2 + 45, y: east.y + east.height / 2 },
+    );
+    await expect.poll(edges).not.toEqual(moved);
+    expect(onMajor(await edges())).toBe(true);
+  });
+
   test('shift-resize keeps the centre; a plain resize keeps the opposite edge', async () => {
     const id = 'scene:root/a';
     await scene.clickNode(id);
