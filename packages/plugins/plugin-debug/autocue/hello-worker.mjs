@@ -143,7 +143,8 @@ const delegate = async (demo, page, titles) => {
   await page.getByTestId('projectsPlugin.pipeline.chart').first().waitFor({ state: 'visible', timeout: 30_000 });
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Hello Worker template' });
+// One line, as a Final Cut Pro caption reads; the take's title already names the template.
+const caption = (demo, value) => demo.caption({ value });
 
 export const steps = [
   {
