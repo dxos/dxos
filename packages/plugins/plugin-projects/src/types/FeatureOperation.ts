@@ -58,9 +58,6 @@ export const Create = Operation.make({
     description: Schema.optional(Schema.String),
     status: Schema.optional(Feature.Status.annotate({ description: 'Defaults to planned.' })),
     specs: Schema.optional(Schema.Array(Schema.String)),
-    parent: Schema.optional(
-      Ref.Ref(Feature.Feature).annotate({ description: 'Makes the new feature its subfeature.' }),
-    ),
     map: Schema.optional(Ref.Ref(FeatureMap.FeatureMap).annotate({ description: 'Adds the new feature to this map.' })),
   }),
   output: Schema.Struct({ feature: Type.getSchema(Feature.Feature) }),

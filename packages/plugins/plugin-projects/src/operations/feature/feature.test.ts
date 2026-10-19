@@ -88,7 +88,9 @@ describe('FeatureOperation.AddDependency', () => {
 
       const exit = yield* Effect.exit(addDependency.handler({ feature: ref(accounts), dependsOn: ref(sync) }));
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(String(Exit.isFailure(exit) && exit.cause)).toContain('Sync → Tokens → Accounts');
+      expect(String(Exit.isFailure(exit) && exit.cause)).toContain(
+        'Accounts → Sync → Tokens → Accounts would close a cycle',
+      );
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -123,6 +125,17 @@ describe('FeatureOperation.LinkTask', () => {
 });
 
 describe('FeatureOperation.CreateShowcase', () => {
+  it.effect('writes nothing when a target does not resolve', () =>
+    Effect.gen(function* () {
+      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
+      yield* Database.remove(gone);
+      yield* Database.flush();
+      const exit = yield* Effect.exit(createShowcase.handler({ name: 'Orphan', content: '', targets: [ref(gone)] }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(yield* Database.query(Filter.type(Showcase.Showcase)).run).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('demonstrates every target and keeps its artifacts as refs', () =>
     Effect.gen(function* () {
       const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'operational' }));
@@ -202,6 +215,11 @@ describe('FeatureOperation.GetMap', () => {
         content: 'Reply from the inbox.',
         targets: [ref(compose)],
       });
+
+      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
+      yield* addToMap.handler({ map: ref(map), feature: ref(gone) });
+      yield* Database.remove(gone);
+      yield* Database.flush();
 
       const result = yield* getMap.handler({ map: ref(map) });
       expect(result.features.map(({ name }) => name)).toEqual(['Compose', 'Sync']);

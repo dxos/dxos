@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
@@ -18,7 +19,12 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetMap> = FeatureOp
       const map = yield* Database.load(mapRef);
       const features: FeatureOperation.FeatureSummary[] = [];
       for (const ref of map.features) {
-        const feature = yield* Database.load(ref);
+        // A member deleted since it was added is left out rather than failing the whole read.
+        const loaded = yield* Effect.option(Database.load(ref));
+        if (Option.isNone(loaded)) {
+          continue;
+        }
+        const feature = loaded.value;
         const selected = Query.select(Filter.id(feature.id));
         const dependsOn = yield* Database.query(selected.sourceOf(Feature.DependsOn)).run;
         const tasks = yield* Database.query(selected.targetOf(Feature.Implements).source()).run;

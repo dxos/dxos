@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.AddDependency> = Fe
         }
         return yield* Effect.fail(
           new FeatureOperation.DependencyCycleError({
-            message: `"${feature.name}" cannot depend on "${dependency.name}": ${[...cycle, feature.id]
+            message: `"${feature.name}" cannot depend on "${dependency.name}": ${[feature.id, ...cycle]
               .map((id) => names.get(id))
               .join(' → ')} would close a cycle.`,
           }),

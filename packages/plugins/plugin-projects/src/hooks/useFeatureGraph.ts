@@ -20,6 +20,15 @@ import {
 
 const entityId = (uri: string) => EID.getEntityId(EID.parse(uri)) ?? uri;
 
+/** The relation's source, or undefined while it is not loaded: `Relation.getSource` throws then, and a render must not. */
+const sourceOf = <R extends Relation.Unknown>(relation: R): Relation.SourceOf<R> | undefined => {
+  try {
+    return Relation.getSource(relation);
+  } catch {
+    return undefined;
+  }
+};
+
 const DONE: ReadonlySet<Task.Status> = new Set(['done', 'duplicate', 'cancelled']);
 
 export type FeatureGraph = {
@@ -82,7 +91,7 @@ export const useFeatureGraph = (
       })),
       dependsOn: edges,
       implementedBy: implementsTasks.flatMap((relation) => {
-        const task = Relation.getSource(relation);
+        const task = sourceOf(relation);
         return task
           ? [
               [
@@ -98,7 +107,7 @@ export const useFeatureGraph = (
           : [];
       }),
       showcasedBy: demonstrates.flatMap((relation) => {
-        const showcase = Relation.getSource(relation);
+        const showcase = sourceOf(relation);
         return showcase
           ? [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const]
           : [];
