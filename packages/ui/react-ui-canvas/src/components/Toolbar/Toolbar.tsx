@@ -101,14 +101,14 @@ export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions;
 export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {
   return (
     <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
         label={`Fit (${shortcutFor('fit')}): keep the scene framed until you pan or zoom`}
-        classNames={mx(actions.fitting && 'bg-primary-500/20')}
+        pressed={actions.fitting}
         data-testid='toolbar-fit'
-        onClick={actions.fit}
+        onPressedChange={actions.fit}
       />
       <Button.Root
         variant='ghost'
@@ -150,24 +150,24 @@ export type ActionToolbarProps = Util.ThemedClassName<{
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
     <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
         label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
-        classNames={mx(actions.snap && 'bg-primary-500/20')}
+        pressed={actions.snap}
         data-testid='toolbar-snap'
-        onClick={actions.toggleSnap}
+        onPressedChange={actions.toggleSnap}
       />
       {actions.toggleLattice && (
-        <Button.Root
+        <Button.Toggle
           variant='ghost'
           iconOnly
           icon='ph--squares-four--regular'
           label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
-          classNames={mx(actions.lattice && 'bg-primary-500/20')}
+          pressed={actions.lattice}
           data-testid='toolbar-lattice'
-          onClick={actions.toggleLattice}
+          onPressedChange={actions.toggleLattice}
         />
       )}
       <Toolbar.Separator variant='line' />
@@ -261,14 +261,14 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-layout'
         onClick={actions.layout}
       />
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'
         label={`Debug (${shortcutFor('debug')}): label every frame with its id, type and geometry`}
-        classNames={mx(actions.debug && 'bg-primary-500/20')}
+        pressed={actions.debug}
         data-testid='toolbar-debug'
-        onClick={actions.toggleDebug}
+        onPressedChange={actions.toggleDebug}
       />
     </Toolbar.Root>
   );

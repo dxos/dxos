@@ -7,7 +7,6 @@ import React, { type CSSProperties } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -169,37 +168,35 @@ export const ThemePanel = ({
     <Toolbar.Separator variant='line' />
     {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
     {onGuidesToggle && (
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--frame-corners--regular'
         label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
         disabled={readonly}
-        classNames={mx(guides && 'bg-primary-500/20')}
+        pressed={guides === true}
         data-testid='toolbar-guides'
-        onClick={onGuidesToggle}
+        onPressedChange={onGuidesToggle}
       />
     )}
-    <Toolbar.ToggleGroup
-      type='single'
-      aria-label='Grid'
-      disabled={readonly || !onGridChange}
-      value={grid === 'none' ? '' : grid}
-      onValueChange={(value) => {
-        const next: BackgroundGrid = value === 'dots' || value === 'lines' ? value : 'none';
-        onGridChange?.(next === themeGrid ? undefined : next);
-      }}
-    >
+    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off. */}
+    <Button.Group compact role='group' aria-label='Grid'>
       {GRID_OPTIONS.map((option) => (
-        <ToggleGroup.Item
+        <Button.Toggle
           key={option.grid}
-          value={option.grid}
+          variant='ghost'
+          iconOnly
           icon={option.icon}
           label={option.label}
-          iconOnly
+          disabled={readonly || !onGridChange}
+          pressed={grid === option.grid}
           data-testid={`theme-grid-${option.grid}`}
+          onPressedChange={(pressed) => {
+            const next: BackgroundGrid = pressed ? option.grid : 'none';
+            onGridChange?.(next === themeGrid ? undefined : next);
+          }}
         />
       ))}
-    </Toolbar.ToggleGroup>
+    </Button.Group>
   </Toolbar.Root>
 );

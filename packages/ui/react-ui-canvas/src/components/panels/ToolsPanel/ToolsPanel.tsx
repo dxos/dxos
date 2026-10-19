@@ -179,15 +179,14 @@ export const ToolsPanel = ({
             ))}
             {/* Read-only leaves only select and pan, so the toggle sits with them. */}
             {group.name === TOOLS_GROUP && onReadonlyChange && (
-              <Button.Root
+              <Button.Toggle
                 variant='ghost'
                 iconOnly
                 icon={readonly ? 'ph--lock-simple--regular' : 'ph--lock-simple-open--regular'}
                 label={readonly ? 'Read-only: click to edit' : 'Editing: click to make read-only'}
-                classNames={mx(readonly && 'bg-primary-500/20')}
-                aria-pressed={readonly}
+                pressed={readonly}
                 data-testid='palette-readonly'
-                onClick={() => onReadonlyChange(!readonly)}
+                onPressedChange={() => onReadonlyChange(!readonly)}
               />
             )}
           </div>
@@ -340,26 +339,27 @@ const ToolButton = ({
   }, [nodeType]);
   const testId = `palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`;
   return labelled ? (
-    <Button.Root
+    <Button.Toggle
       ref={ref}
       variant='ghost'
       icon={entry.icon}
       label={entry.label}
-      classNames={mx('w-full justify-start', active && 'bg-primary-500/20')}
+      classNames='w-full justify-start'
+      pressed={active}
       data-testid={testId}
-      onClick={() => onToolChange(entry.tool)}
+      onPressedChange={() => onToolChange(entry.tool)}
     />
   ) : (
-    <Button.Root
+    <Button.Toggle
       ref={ref}
       variant='ghost'
       iconOnly
       showTooltip={tooltip}
       icon={entry.icon}
       label={entry.key ? `${entry.label} (${entry.key})` : entry.label}
-      classNames={mx(active && 'bg-primary-500/20')}
+      pressed={active}
       data-testid={testId}
-      onClick={() => onToolChange(entry.tool)}
+      onPressedChange={() => onToolChange(entry.tool)}
     />
   );
 };
