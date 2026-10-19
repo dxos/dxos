@@ -1,0 +1,6 @@
+---
+'@dxos/plugin-projects': minor
+'@dxos/react-ui-canvas': minor
+---
+
+Feature maps are editable in Composer: add or create features from the map toolbar, set status or remove a feature from its card menu, draw and delete dependency arrows and remove boxes on the canvas, and add dependencies and link tasks from the feature article. Every edit runs the same operation an agent uses, and a refused edit (a dependency that would close a cycle) shows its message as a toast. The canvas dynamic projection accepts `onLink` and `onDelete` hooks, so a host can apply those edits to its own model instead of the projection's graph.

@@ -21,8 +21,11 @@ export type FeatureBoardProps = {
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
   onSelect?: (id: string | undefined) => void;
-  /** Adds an open button to each card. */
+  /** Each given action is offered in every card's menu. */
   onOpen?: (id: string) => void;
+  onSetStatus?: (id: string, status: FeatureStatus) => void;
+  /** Takes a feature off the map; the feature itself is kept. */
+  onRemove?: (id: string) => void;
 };
 
 /**
@@ -30,7 +33,14 @@ export type FeatureBoardProps = {
  * Selecting a card labels the features it needs and the features that need it, and fades the rest,
  * so a dependency chain reads without drawing edges.
  */
-export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, onOpen }: FeatureBoardProps) => {
+export const FeatureBoard = ({
+  features,
+  selectedId: selectedIdProp,
+  onSelect,
+  onOpen,
+  onSetStatus,
+  onRemove,
+}: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string>();
   const selectedId = selectedIdProp ?? selectedIdState;
@@ -73,6 +83,8 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, o
                 onSelect={(feature) => handleSelect(feature.id)}
                 onSelectDependency={handleSelect}
                 onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
+                onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
+                onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
               />
             </div>
           );

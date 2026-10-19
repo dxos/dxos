@@ -5,20 +5,23 @@
 import React, { useCallback, useMemo } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { EID, Obj } from '@dxos/echo';
+import { EID, Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { FeatureBoard } from '#components';
 import { meta } from '#meta';
-import { type FeatureMap, FeatureMapView } from '#types';
+import { Feature, type FeatureMap, FeatureMapView } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
-import { useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
+import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
 
 export type FeatureMapArticleProps = AppSurface.ObjectArticleProps<FeatureMap.FeatureMap>;
 
@@ -29,6 +32,7 @@ const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
 
 /** Article surface for a {@link FeatureMap.FeatureMap}: its features as cards (the default) or on a canvas. */
 export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArticleProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { mode } = useViewState(FeatureMapView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, subject.id);
   const db = Obj.getDatabase(subject);
@@ -40,6 +44,17 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
   const graph = useFeatureGraph(db, ids);
   const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
   const openObject = useOpenObject(db, attendableId);
+  const editing = useFeatureEditing(db, subject);
+  const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
+  const handleCreate = useCallback(
+    async (name: string) => {
+      const id = await editing.createFeature(name);
+      if (id) {
+        await openObject(id);
+      }
+    },
+    [editing, openObject],
+  );
 
   const menu = useMenuBuilder(
     (): ActionGraphProps =>
@@ -65,8 +80,34 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
               ),
             ),
         )
+        .separator('gap')
+        .action(
+          'add-feature',
+          {
+            variant: 'custom',
+            label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
+            render: () => (
+              <ObjectAddPicker
+                db={db}
+                filter={Filter.type(Feature.Feature)}
+                exclude={ids}
+                onSelect={editing.addToMap}
+                onCreate={handleCreate}
+                trigger={
+                  <Button.Root
+                    icon='ph--plus--regular'
+                    iconOnly
+                    label={t('feature-map.add-feature.label')}
+                    data-testid='feature-map.add-feature'
+                  />
+                }
+              />
+            ),
+          },
+          () => {},
+        )
         .build(),
-    [mode, updateView],
+    [mode, updateView, db, ids, editing, handleCreate, t],
   );
 
   const handlePositionsChange = useCallback(
@@ -85,12 +126,25 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
       <Panel.Body asChild>
         {mode === 'canvas' ? (
           <div className='relative' data-testid='feature-map.canvas'>
-            <FeatureCanvas features={features} positions={positions} onPositionsChange={handlePositionsChange} />
+            <FeatureCanvas
+              features={features}
+              positions={positions}
+              onPositionsChange={handlePositionsChange}
+              onOpen={handleOpen}
+              onLink={editing.addDependency}
+              onUnlink={editing.removeDependency}
+              onRemove={editing.removeFromMap}
+            />
           </div>
         ) : (
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
-              <FeatureBoard features={features} onOpen={(id) => void openObject(id)} />
+              <FeatureBoard
+                features={features}
+                onOpen={handleOpen}
+                onSetStatus={editing.setStatus}
+                onRemove={editing.removeFromMap}
+              />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}

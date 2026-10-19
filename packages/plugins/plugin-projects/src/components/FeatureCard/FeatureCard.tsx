@@ -8,6 +8,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -57,21 +58,28 @@ export type FeatureCardBodyProps = {
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
+  /** Adds a remove action to each dependency row of a detailed card. */
+  onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
   onSelect?: (feature: FeatureModel) => void;
-  /** Adds an open button to the header. */
+  /** The header menu offers each of these that is given. */
   onOpen?: (feature: FeatureModel) => void;
+  onSetStatus?: (feature: FeatureModel, status: FeatureStatus) => void;
+  /** Takes the feature off the map it is shown on; the feature itself is kept. */
+  onRemove?: (feature: FeatureModel) => void;
 };
+
+const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
  * features it needs. Status and signals each carry an icon and a word, so colour is never the only cue.
  */
-export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) => {
+export const FeatureCard = ({ onSelect, onOpen, onSetStatus, onRemove, ...props }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature, selected, relation } = props;
   const status = FEATURE_STATUS_STYLE[feature.status];
@@ -82,6 +90,7 @@ export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) =>
       onClick={onSelect ? () => onSelect(feature) : undefined}
       data-testid='feature-card'
       data-feature={feature.id}
+      data-status={feature.status}
       data-relation={relation}
     >
       <Card.Header>
@@ -89,14 +98,50 @@ export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) =>
           <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
         <Card.Title lines={2}>{feature.name}</Card.Title>
-        {onOpen && (
-          <Layout.Block rail='end'>
-            <Card.Action
-              icon='ph--arrow-square-out--regular'
-              label={t('feature-card.open.label')}
-              data-testid='feature-card.open'
-              onClick={() => onOpen(feature)}
-            />
+        {(onOpen || onSetStatus || onRemove) && (
+          <Layout.Block rail='end' data-testid='feature-card.menu'>
+            <Card.Menu label={t('feature-card.menu.label')}>
+              {onOpen && (
+                <Menu.Item
+                  item={{ value: 'open', label: t('feature-card.open.label'), icon: 'ph--arrow-square-out--regular' }}
+                  data-testid='feature-card.open'
+                  onClick={() => onOpen(feature)}
+                />
+              )}
+              {onOpen && onSetStatus && <Menu.Separator />}
+              {onSetStatus && (
+                <Menu.RadioItemGroup
+                  value={feature.status}
+                  onValueChange={({ value }) => {
+                    const next = STATUSES.find((candidate) => candidate === value);
+                    if (next && next !== feature.status) {
+                      onSetStatus(feature, next);
+                    }
+                  }}
+                >
+                  <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
+                  {STATUSES.map((candidate) => (
+                    <Menu.RadioItem
+                      key={candidate}
+                      item={{
+                        value: candidate,
+                        label: t(`feature-status.${candidate}.label`),
+                        icon: FEATURE_STATUS_STYLE[candidate].icon,
+                      }}
+                      data-testid={`feature-card.status.${candidate}`}
+                    />
+                  ))}
+                </Menu.RadioItemGroup>
+              )}
+              {(onOpen || onSetStatus) && onRemove && <Menu.Separator />}
+              {onRemove && (
+                <Menu.Item
+                  item={{ value: 'remove', label: t('feature-card.remove.label'), icon: 'ph--minus-circle--regular' }}
+                  data-testid='feature-card.remove'
+                  onClick={() => onRemove(feature)}
+                />
+              )}
+            </Card.Menu>
           </Layout.Block>
         )}
       </Card.Header>
@@ -120,6 +165,7 @@ export const FeatureCardBody = ({
   showFields = true,
   dependents = [],
   onSelectDependency,
+  onRemoveDependency,
   onOpenObject,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -202,6 +248,16 @@ export const FeatureCardBody = ({
             <Card.Row
               key={dependency.id}
               icon={FEATURE_STATUS_STYLE[dependency.status].icon}
+              trailing={
+                onRemoveDependency && (
+                  <Card.Action
+                    icon='ph--x--regular'
+                    label={t('feature-card.remove-dependency.label', { name: dependency.name })}
+                    data-testid='feature-card.remove-dependency'
+                    onClick={() => onRemoveDependency(dependency.id)}
+                  />
+                )
+              }
               onClick={
                 onSelectDependency
                   ? (event: MouseEvent) => {
