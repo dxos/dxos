@@ -39,9 +39,6 @@ const DefaultStory = () => {
       selected={selected}
       onSelect={setSelected}
       onRename={(id, name) => update(id, { name })}
-      onCompose={() =>
-        setObjects((objects) => [...objects, { id: `object-${objects.length + 1}`, name: 'Object', instances: 1 }])
-      }
       onPlace={(id) => update(id, { instances: (objects.find((entry) => entry.id === id)?.instances ?? 0) + 1 })}
       onDuplicate={(id) => {
         const source = objects.find((entry) => entry.id === id);
@@ -63,7 +60,7 @@ const DefaultStory = () => {
 /**
  * Test:
  * 1. Clicking a row selects it; double-clicking its name renames it in place (Enter commits, Escape keeps the old name).
- * 2. The toolbar groups a new object, and its menu places, duplicates and deletes the selected one.
+ * 2. The toolbar places the selected object, and its menu duplicates and deletes it.
  */
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-canvas/components/inspectors/ObjectsInspector',

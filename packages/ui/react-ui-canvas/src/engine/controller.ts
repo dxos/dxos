@@ -11,6 +11,7 @@ import {
   type Camera,
   type Capabilities,
   type ElementId,
+  type Intent,
   type Node,
   type NodeRegistry,
   OPACITY_PATH,
@@ -20,6 +21,7 @@ import {
   type Tool,
   type View,
   type ViewId,
+  type ViewMap,
   type ViewStore,
   clampTime,
   createTimeline,
@@ -32,6 +34,7 @@ import {
   moveKeys,
   nodeAnimatable,
   nodeDef,
+  pruneOrphaned,
   removeKey as removeTimelineKey,
   setKey,
   timelineFps,
@@ -46,25 +49,30 @@ import {
   classedLink,
   classedNode,
   clipboardBounds,
+  composeSelection,
   compositeBounds,
+  compositeViews,
   contentBounds,
   copySelection,
   createId,
+  duplicateSelection,
   enterPortal,
   exitPortal,
   fitBounds,
   fitFrame,
-  groupIntoView,
   nodeBounds,
+  pastedRecords,
   pasteFragment,
+  promotedBy,
   recordViews,
   restackZ,
   topZ,
+  ungroupInstance,
   unionBounds,
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
-import { type Projection, readonlyCapabilities } from './projection.ts';
+import { type Projection, readonlyCapabilities, reduceIntent } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
 export type ControllerGrid = { major: number; snap: (value: number) => number };
@@ -165,10 +173,18 @@ export type LookCommands = {
 export type SelectionCommands = {
   select: (ids: Iterable<ElementId>) => void;
   clear: () => void;
-  /** Deletes the selection; false when there was nothing to delete or deleting is not allowed. */
+  /**
+   * Deletes the selection, and the records it leaves nothing pointing at (a View, an anonymous Object), in one undo
+   * step; false when there was nothing to delete or deleting is not allowed.
+   */
   delete: () => boolean;
-  /** Moves the selection into a new scene opened by a frame where it was; returns the frame's id. */
+  /** Groups the selection as an anonymous Object, replaced by one Instance of it; returns the Instance's id. */
   group: () => ElementId | undefined;
+  /**
+   * Replaces each selected Instance with its Object's contents, drawn where it drew them, and selects them; an
+   * anonymous Object's definition goes with its Instance. Returns the new nodes' ids.
+   */
+  ungroup: () => ElementId[];
   /** A new style class with the one selected element's look, which the element then follows. */
   classFrom: () => string | undefined;
 };
@@ -180,6 +196,11 @@ export type DocumentIntentCommands = {
    * open View, as one intent (one undo step); false when nothing moved.
    */
   restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
+  /**
+   * Drops a copy of the nodes `ids` and the links between them `delta` away, as one undo step, and selects it; an
+   * anonymous Object placed again this way joins the library. False when nothing was copied.
+   */
+  duplicate: (ids: Iterable<ElementId>, delta: Point) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -262,6 +283,41 @@ export const createCanvasController = ({
     registry.set(atoms.point, undefined);
   };
 
+  /** The Views kept with no node opening them: the drawing's root, and any root of its own the store declares. */
+  const roots = (views: ViewMap): ViewId[] => {
+    const path = registry.get(atoms.isolation)?.back.path ?? registry.get(atoms.path);
+    return [...path.slice(0, 1), ...Object.keys(views).filter((id) => store.isRoot?.(id))];
+  };
+
+  /**
+   * Applies `intent` through `target` with `edit`'s change to the store's records, then deletes the records it leaves
+   * nothing pointing at (VIEWS.md §7.4), all as one undo step; false when the projection refused the intent, which
+   * leaves the records as they were.
+   */
+  const applyWithRecords = (
+    target: Projection,
+    intent: Intent,
+    edit: (views: ViewMap) => ViewMap = (views) => views,
+  ): boolean => {
+    const before = registry.get(store.views);
+    const model = target.snapshot();
+    target.apply(intent);
+    if (target.snapshot() === model) {
+      return false;
+    }
+    const after = registry.get(store.views);
+    const edited = edit(after);
+    const next = pruneOrphaned(before, edited, roots(edited));
+    if (next !== after) {
+      registry.set(store.views, next);
+      const view = currentView();
+      if (view) {
+        recordViews(registry, atoms.undo, view, before);
+      }
+    }
+    return true;
+  };
+
   const selection: SelectionCommands = {
     select,
     clear: () => select([]),
@@ -270,39 +326,60 @@ export const createCanvasController = ({
       if (ids.length === 0 || !capabilities().delete) {
         return false;
       }
-      projection().apply({ kind: 'delete', ids });
+      applyWithRecords(projection(), { kind: 'delete', ids });
       select([]);
       return true;
     },
     group: () => {
-      const id = newId('view');
-      const current = currentScene();
-      const group = groupIntoView(
-        current,
-        registry.get(atoms.selection),
-        id,
-        activeLayer(current, registry.get(atoms.layer)),
-      );
-      if (!group) {
+      if (!capabilities().create || !capabilities().delete) {
         return undefined;
       }
-      const before = registry.get(store.views);
-      registry.set(store.views, { ...before, [id]: group.child });
-      projection().apply({ kind: 'batch', intents: group.intents });
-      // A projection may refuse the batch (`apply` reports nothing), so the frame's presence is the result: without
-      // it the new scene would be an orphan, so it goes and the selection stays.
-      if (!currentScene().nodes[id]) {
-        const { [id]: _, ...scenes } = registry.get(store.views);
-        registry.set(store.views, scenes);
+      const base = baseProjection();
+      const current = registry.get(base.scene);
+      const instanceId = newId('instance');
+      const composition = composeSelection(current, registry.get(atoms.selection), {
+        compositeId: newId('object'),
+        instanceId,
+        name: `Group ${compositeViews(registry.get(store.views)).length + 1}`,
+        layer: activeLayer(current, registry.get(atoms.layer)),
+        anonymous: true,
+      });
+      if (!composition) {
         return undefined;
       }
-      // One undo step takes the new scene away with the frame that opens it.
-      const view = currentView();
-      if (view) {
-        recordViews(registry, atoms.undo, view, before);
+      const { composite, intents } = composition;
+      applyWithRecords(base, { kind: 'batch', intents }, (views) => ({ ...views, [composite.id]: composite }));
+      // A projection may refuse the batch or drop the Instance, which leaves the definition an orphan, already gone.
+      if (!registry.get(base.scene).nodes[instanceId]) {
+        return undefined;
       }
-      select([id]);
-      return id;
+      select([instanceId]);
+      return instanceId;
+    },
+    ungroup: () => {
+      if (!capabilities().create || !capabilities().delete) {
+        return [];
+      }
+      const base = baseProjection();
+      const views = registry.get(store.views);
+      // Each Instance is exploded into the scene the ones before it left, so their new nodes stack in order.
+      let scene = registry.get(base.scene);
+      const intents: Intent[] = [];
+      for (const id of registry.get(atoms.selection)) {
+        const instance = scene.nodes[id];
+        const composite = instance && isInstanceNode(instance) ? views[instance.composite] : undefined;
+        if (instance && isInstanceNode(instance) && composite) {
+          const exploded = ungroupInstance(scene, instance, composite, newId);
+          intents.push(...exploded);
+          scene = reduceIntent(scene, { kind: 'batch', intents: exploded });
+        }
+      }
+      if (intents.length === 0 || !applyWithRecords(base, { kind: 'batch', intents })) {
+        return [];
+      }
+      const created = intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : []));
+      select(created);
+      return created;
     },
     classFrom: () => {
       const [only, ...rest] = registry.get(atoms.selection);
@@ -322,7 +399,7 @@ export const createCanvasController = ({
   };
 
   const copy = () => {
-    const fragment = copySelection(currentScene(), registry.get(atoms.selection));
+    const fragment = copySelection(currentScene(), registry.get(atoms.selection), registry.get(store.views));
     if (fragment) {
       registry.set(atoms.clipboard, fragment);
     }
@@ -335,7 +412,7 @@ export const createCanvasController = ({
       if (!capabilities().delete || !copy()) {
         return;
       }
-      projection().apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
+      applyWithRecords(projection(), { kind: 'delete', ids: [...registry.get(atoms.selection)] });
       select([]);
     },
     paste: (at) => {
@@ -358,7 +435,10 @@ export const createCanvasController = ({
         linkZ: () => (linkZ = between(linkZ, undefined)),
         layer: activeLayer(scene, registry.get(atoms.layer)),
       });
-      projection().apply(intent);
+      const records = pastedRecords(registry.get(store.views), fragment);
+      applyWithRecords(projection(), intent, (views) =>
+        Object.keys(records).length > 0 ? { ...views, ...records } : views,
+      );
       registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
       select(ids);
     },
@@ -709,6 +789,23 @@ export const createCanvasController = ({
         return false;
       }
       projection().apply({ kind: 'reorder', id: element, z });
+      return true;
+    },
+    duplicate: (ids, delta) => {
+      const scene = currentScene();
+      const selected = [...ids];
+      const copy = capabilities().create ? duplicateSelection(scene, selected, delta, newId) : undefined;
+      if (!copy) {
+        return false;
+      }
+      const records = promotedBy(
+        registry.get(store.views),
+        selected.flatMap((id) => scene.nodes[id] ?? []),
+      );
+      applyWithRecords(projection(), copy.intent, (views) =>
+        Object.keys(records).length > 0 ? { ...views, ...records } : views,
+      );
+      select(copy.ids);
       return true;
     },
   };

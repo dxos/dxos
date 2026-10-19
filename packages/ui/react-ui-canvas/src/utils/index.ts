@@ -10,7 +10,6 @@ export * from './compose.ts';
 export * from './diagram.ts';
 export * from './dnd.ts';
 export * from './frames.ts';
-export * from './group.ts';
 export * from './hit.ts';
 export * from './lattice.ts';
 export * from './layers.ts';

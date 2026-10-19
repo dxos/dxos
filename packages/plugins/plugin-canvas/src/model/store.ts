@@ -41,6 +41,8 @@ import {
   migrateContent,
   migrateLayers,
   nodeKey,
+  orphanedViews,
+  pruneOrphanedViews,
   readStyles,
   readViews,
   rootOf,
@@ -75,6 +77,11 @@ const prepare = (canvas: Drawing.Canvas): ViewId => {
   if (hasUnplacedLayers(canvas.content)) {
     Obj.update(canvas, (canvas) => {
       migrateLayers(canvas.content);
+    });
+  }
+  if (orphanedViews(canvas.content).length > 0) {
+    Obj.update(canvas, (canvas) => {
+      pruneOrphanedViews(canvas.content);
     });
   }
   return root ?? seedContent({});
@@ -198,8 +205,16 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   };
 
   // A linked drawing's classes stay its own: its shapes show here without them.
-  const store = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
-  const { styles } = store;
+  const memory = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
+  const { styles } = memory;
+  // A linked drawing's root is kept with no frame opening it: deleting the frame here must not delete that drawing.
+  const store: ViewStore = {
+    ...memory,
+    isRoot: (id) => {
+      const parsed = parseLinkedViewId(id);
+      return parsed !== undefined && linked.get(parsed.uri)?.root === parsed.scene;
+    },
+  };
 
   // Our own writes notify ECHO synchronously; the flag keeps them from bouncing back into the atom.
   let writing = false;

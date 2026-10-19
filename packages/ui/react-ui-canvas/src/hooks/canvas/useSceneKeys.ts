@@ -9,6 +9,7 @@ import {
   type EditingCommands,
   type NavigationCommands,
   type Projection,
+  type SelectionCommands,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import {
@@ -60,6 +61,7 @@ export type UseSceneKeysOptions = {
   timeline?: TimelineKeys;
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
+  Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
   Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
   Pick<ToolsCommands, 'setTool'>;
 
@@ -89,6 +91,9 @@ export const useSceneKeys = ({
   copy,
   cut,
   paste,
+  delete: deleteSelection,
+  group,
+  ungroup,
   cancelDrag,
   removePoint,
   setTool,
@@ -144,9 +149,8 @@ export const useSceneKeys = ({
         case 'delete':
           if (point) {
             removePoint(point);
-          } else if (selected.length > 0 && capabilities.delete) {
-            projection.apply({ kind: 'delete', ids: selected });
-            select([]);
+          } else {
+            deleteSelection();
           }
           break;
         case 'open': {
@@ -204,6 +208,15 @@ export const useSceneKeys = ({
           break;
         case 'redo':
           onRedo();
+          event.preventDefault();
+          break;
+        // ⌘G is the browser's find-next, which a canvas with the focus takes for itself.
+        case 'group':
+          group();
+          event.preventDefault();
+          break;
+        case 'ungroup':
+          ungroup();
           event.preventDefault();
           break;
         case 'selectAll':
@@ -264,6 +277,9 @@ export const useSceneKeys = ({
       copy,
       cut,
       paste,
+      deleteSelection,
+      group,
+      ungroup,
       timeline,
     ],
   );

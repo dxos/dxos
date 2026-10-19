@@ -9,6 +9,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { type Camera, type SceneLook, isInstanceNode } from '../../model/index.ts';
+import { isAnonymous } from '../../utils/index.ts';
 import { GrainOverlay } from '../Background/index.ts';
 import {
   useCanvasEditing,
@@ -25,7 +26,7 @@ export type ViewportOverlayProps = {
 
 /** Over the scene: the grain, the shield that takes the pointer while the camera moves, and the menu a gesture opens. */
 export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
-  const { registry, atoms, capabilities, objectActions } = useCanvasServices('Canvas.Viewport');
+  const { registry, atoms, store, capabilities, objectActions } = useCanvasServices('Canvas.Viewport');
   const { displayScene, navigating, removePoint, menu, closeMenu, menuAnchorRef } = useCanvasGesture('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
@@ -33,6 +34,7 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
   const selection = useAtomValue(selectionAspect.atoms.selection);
   const clipboard = useAtomValue(editingAspect.atoms.clipboard);
   const { copy, cut, paste } = editingAspect.commands;
+  const views = useAtomValue(store.views);
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
   const selectedInstance = useMemo(() => {
     const [only] = selection.size === 1 ? [...selection] : [];
@@ -90,10 +92,10 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
               />
               <Menu.Separator />
               <Menu.Item
-                data-testid='menu-compose'
+                data-testid='menu-group'
                 disabled={!capabilities.create || !capabilities.delete}
-                onSelect={objectActions.compose}
-                item={{ value: 'Group as object', label: 'Group as object' }}
+                onSelect={selectionAspect.commands.group}
+                item={{ value: 'Group', label: 'Group' }}
               />
               {selectedInstance && (
                 <>
@@ -105,12 +107,13 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
                   <Menu.Item
                     data-testid='menu-ungroup'
                     disabled={!capabilities.create || !capabilities.delete}
-                    onSelect={() => objectActions.ungroup(selectedInstance.id)}
+                    onSelect={selectionAspect.commands.ungroup}
                     item={{ value: 'Ungroup', label: 'Ungroup' }}
                   />
                   <Menu.Item
                     data-testid='menu-make-unique'
-                    disabled={!capabilities.update}
+                    // An anonymous Object has the one Instance, so it is already unique.
+                    disabled={!capabilities.update || isAnonymous(views[selectedInstance.composite])}
                     onSelect={() => objectActions.makeUnique(selectedInstance.id)}
                     item={{ value: 'Make unique', label: 'Make unique' }}
                   />

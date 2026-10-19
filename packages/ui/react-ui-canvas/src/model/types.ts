@@ -570,6 +570,8 @@ export const createViewSchema = <const Nodes extends readonly Schema.Codec<NodeB
     links: Schema.Record(Schema.String, Link),
     layers: Schema.optional(Schema.Record(Schema.String, Layer)),
     kind: Schema.optional(ViewKind),
+    /** An Object the Group command made: kept out of the library until it is named or placed again. */
+    anonymous: Schema.optional(Schema.Boolean),
     timeline: Schema.optional(Timeline),
   });
 
@@ -595,6 +597,7 @@ export type View = {
   readonly links: Readonly<Record<LinkId, Link>>;
   readonly layers?: Readonly<Record<LayerId, Layer>>;
   readonly kind?: ViewKind;
+  readonly anonymous?: boolean;
   readonly timeline?: Timeline;
 };
 

@@ -55,7 +55,7 @@ type StoryArgs = {
 const DefaultStory = ({ keyed = true }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     const tree = createTree(keyed);
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+    return { store: createMemoryStore(tree.scenes, {}, { root: tree.root }), root: tree.root };
   }, [keyed]);
   // Docked: the objects inspector, which the story uses, never floats.
   return (
@@ -86,10 +86,10 @@ type Story = StoryObj<StoryArgs>;
 
 /**
  * Test:
- * 1. Select all and group as an object: one instance replaces the shapes and the Objects panel lists it.
+ * 1. Select all and Group (⌘G): one instance replaces the shapes and the Objects panel lists its group while selected.
  * 2. Scrub to the middle of the timeline and nudge the instance: the move becomes a key (a diamond on the track).
  * 3. Space plays from the start; the time advances.
- * 4. Selecting the object's row opens it in isolation (`Objects › Object 1`); Escape returns to the scene.
+ * 4. Selecting the group's row opens it in isolation (`Objects › Group 1`); Escape returns to the scene.
  */
 export const Default: Story = {};
 
@@ -101,10 +101,10 @@ export const Test: Story = {
     const view = await canvas.findByTestId('scene-view');
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="a"]')).not.toBeNull());
 
-    // 1. Group the selection as an object.
+    // 1. Group the selection as an anonymous object.
     view.focus();
     await userEvent.keyboard('{Meta>}a{/Meta}');
-    await userEvent.click(await canvas.findByTestId('objects-compose'));
+    await userEvent.keyboard('{Meta>}g{/Meta}');
     await waitFor(() => expect(topLevel(canvasElement, 'a')).toBeUndefined());
     const instance = await waitFor(() => {
       const element = canvasElement.querySelector('[data-node-id^="instance-"]');
@@ -113,7 +113,7 @@ export const Test: Story = {
       }
       return element;
     });
-    await expect(within(await canvas.findByTestId('objects')).getByText('Object 1')).toBeInTheDocument();
+    await expect(within(await canvas.findByTestId('objects')).getByText('Group 1')).toBeInTheDocument();
 
     // 2. Scrub to 2 s and nudge: a key at the playhead.
     const track = await canvas.findByTestId('timeline-track');
@@ -135,7 +135,7 @@ export const Test: Story = {
     await userEvent.keyboard(' ');
 
     // 4. Isolation and back.
-    await userEvent.click(within(await canvas.findByTestId('objects')).getByText('Object 1'));
+    await userEvent.click(within(await canvas.findByTestId('objects')).getByText('Group 1'));
     await waitFor(() => expect(topLevel(canvasElement, 'a')).toBeDefined());
     await expect(canvas.getByText('Objects')).toBeInTheDocument();
     view.focus();

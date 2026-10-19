@@ -36,6 +36,7 @@ import {
   createId,
   createLayer,
   instanceCounts,
+  isAnonymous,
   mergeLayersIntent,
   moveLayer,
   viewLayers,
@@ -118,22 +119,32 @@ export const useSelectionActions = ({
   controller,
 }: UseSelectionActionsOptions): ReactNode => {
   const selectedElements = [...selection].flatMap((id) => getElement(scene, id) ?? []);
-  const canGroup =
-    capabilities.create &&
-    capabilities.delete &&
-    selectedElements.length > 1 &&
-    selectedElements.some((element) => !isLink(element));
+  const editable = capabilities.create === true && capabilities.delete === true;
+  const selectedNodes = selectedElements.flatMap((element) => (isLink(element) ? [] : [element]));
+  // A locked node may not leave its View, so a selection holding one is not grouped.
+  const canGroup = editable && selectedNodes.length > 0 && selectedNodes.every((node) => !node.locked);
+  const canUngroup = editable && selectedNodes.some(isInstanceNode);
   const canClass = store.styles !== undefined && capabilities.update && selectedElements.length === 1;
-  return readonly || (!canGroup && !canClass) ? undefined : (
+  return readonly || (!canGroup && !canUngroup && !canClass) ? undefined : (
     <>
       {canGroup && (
         <Button.Root
           variant='ghost'
           iconOnly
-          icon='ph--frame-corners--regular'
-          label='New view from selection'
+          icon='ph--selection-plus--regular'
+          label='Group'
           data-testid='inspector-group'
           onClick={controller.selection.group}
+        />
+      )}
+      {canUngroup && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--selection-slash--regular'
+          label='Ungroup'
+          data-testid='inspector-ungroup'
+          onClick={controller.selection.ungroup}
         />
       )}
       {canClass && (
@@ -360,14 +371,6 @@ export const CanvasObjects = () => {
   // The scene as stored rather than as a gesture draws it: a gesture never changes which object an instance shows.
   const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.views);
-  const objects = useMemo(() => {
-    const counts = instanceCounts(scenes);
-    return compositeViews(scenes).map((scene) => ({
-      id: scene.id,
-      name: scene.name ?? scene.id,
-      instances: counts[scene.id] ?? 0,
-    }));
-  }, [scenes]);
   // The open composite, else the one an instance on the canvas draws.
   const selected = useMemo(() => {
     if (isolation) {
@@ -377,6 +380,18 @@ export const CanvasObjects = () => {
     const node = only === undefined ? undefined : scene.nodes[only];
     return node && isInstanceNode(node) ? node.composite : undefined;
   }, [isolation, selection, scene]);
+  // The library, and the selected anonymous Object too, so it can be named there and so join the library.
+  const objects = useMemo(() => {
+    const counts = instanceCounts(scenes);
+    return compositeViews(scenes)
+      .filter((scene) => !isAnonymous(scene) || scene.id === selected)
+      .map((scene) => ({
+        id: scene.id,
+        name: scene.name ?? scene.id,
+        instances: counts[scene.id] ?? 0,
+        ...(isAnonymous(scene) ? { anonymous: true } : {}),
+      }));
+  }, [scenes, selected]);
   const editable = capabilities.create === true && capabilities.delete === true;
   return (
     <InspectorSection section={OBJECTS_INSPECTOR}>
@@ -386,7 +401,6 @@ export const CanvasObjects = () => {
         readonly={!editable}
         onSelect={navigation.commands.isolate}
         onRename={objectActions.rename}
-        onCompose={selection.size > 0 && !isolation ? objectActions.compose : undefined}
         onPlace={isolation ? undefined : objectActions.place}
         onDuplicate={objectActions.duplicate}
         onDelete={objectActions.remove}

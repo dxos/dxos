@@ -307,6 +307,7 @@ export const CanvasRoot = ({
     registry,
     atoms,
     setTool: controller.tools.setTool,
+    duplicate: controller.document.duplicate,
     store,
     // A hidden layer's elements are not hit: gestures see the scene as drawn.
     scene: visible,
@@ -377,6 +378,9 @@ export const CanvasRoot = ({
     copy,
     cut,
     paste,
+    delete: controller.selection.delete,
+    group: controller.selection.group,
+    ungroup: controller.selection.ungroup,
     cancelDrag,
     removePoint,
     setTool,

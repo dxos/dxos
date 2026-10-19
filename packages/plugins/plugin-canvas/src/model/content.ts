@@ -31,6 +31,7 @@ import {
   type ViewNode,
   elementLayer,
   isViewNode,
+  orphanViews,
   sortByZ,
   trackId,
   withLegacyNodeType,
@@ -79,6 +80,8 @@ export const SceneRecord = Schema.Struct({
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
   sceneKind: Schema.optional(ViewKind),
+  /** An Object the Group command made, kept out of the library until it is named or placed again (`View.anonymous`). */
+  anonymous: Schema.optional(Schema.Boolean),
   /** The scene's animation, kept whole with it: keys are edited as a set and few. */
   timeline: Schema.optional(Timeline),
 });
@@ -246,6 +249,30 @@ export const migrateLayers = (content: ContentMap): boolean => {
       if (next) {
         content[key] = next;
       }
+    }
+  }
+  return true;
+};
+
+/**
+ * The scenes nothing reaches from the root (VIEWS.md §7.4): Views no view node opens and anonymous Objects with no
+ * Instance, which edits made before deleting the last of those nodes deleted the record left behind.
+ */
+export const orphanedViews = (content: ContentMap): ViewId[] => {
+  const root = rootOf(content);
+  return root === undefined ? [] : [...orphanViews(readViews(content), [root])];
+};
+
+/** Removes the scenes `orphanedViews` names, with their nodes and links, in place; returns whether it removed any. */
+export const pruneOrphanedViews = (content: ContentMap): boolean => {
+  const orphans = new Set(orphanedViews(content));
+  if (orphans.size === 0) {
+    return false;
+  }
+  for (const [key, value] of Object.entries(content)) {
+    const record: unknown = value;
+    if ((isSceneRecord(record) && orphans.has(record.id)) || (isElementRecord(record) && orphans.has(record.scene))) {
+      delete content[key];
     }
   }
   return true;
@@ -498,6 +525,7 @@ export const readViews = (content: ContentMap): ViewMap => {
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
+      ...(header.anonymous ? { anonymous: true } : {}),
       ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
     };
   }
@@ -521,6 +549,7 @@ export const writeViews = (content: ContentMap, scenes: ViewMap): boolean => {
       ...(scene.name ? { name: scene.name } : {}),
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
       ...(scene.kind && scene.kind !== 'view' ? { sceneKind: scene.kind } : {}),
+      ...(scene.anonymous ? { anonymous: true } : {}),
       ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {

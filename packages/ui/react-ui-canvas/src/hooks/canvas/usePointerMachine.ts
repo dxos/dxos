@@ -15,6 +15,7 @@ import {
 import {
   type CanvasAtoms,
   type ControlPointRef,
+  type DocumentIntentCommands,
   type Drag,
   type Handle,
   type LinkEnd,
@@ -52,7 +53,6 @@ import {
   createId,
   createLink,
   createNode,
-  duplicateSelection,
   handlePoint,
   hitTest,
   insertIndex,
@@ -119,6 +119,8 @@ export type UsePointerMachineOptions = {
   atoms: CanvasAtoms;
   /** Returns to Select once a creation gesture lands. */
   setTool: ToolsCommands['setTool'];
+  /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
+  duplicate: DocumentIntentCommands['duplicate'];
   store: ViewStore;
   scene: View;
   nodeRegistry: NodeRegistry;
@@ -181,6 +183,7 @@ export const usePointerMachine = ({
   registry,
   atoms,
   setTool,
+  duplicate,
   store,
   scene,
   nodeRegistry,
@@ -800,11 +803,7 @@ export const usePointerMachine = ({
             break;
           }
           // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
-          const copy = current.copy ? duplicateSelection(scene, current.ids, current.delta, createId) : undefined;
-          if (copy) {
-            projection.apply(copy.intent);
-            select(copy.ids);
-          } else {
+          if (!current.copy || !duplicate(current.ids, current.delta)) {
             projection.apply({ kind: 'move', ids: current.ids, delta: current.delta });
           }
           break;
@@ -914,6 +913,7 @@ export const usePointerMachine = ({
       settle,
       nodeRegistry,
       setTool,
+      duplicate,
       createdNode,
       commitCreated,
       addNode,

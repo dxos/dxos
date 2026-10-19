@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap } from '@dxos/diagram';
-import { DEFAULT_LAYER } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LAYER, type InstanceNode, type ViewNode } from '@dxos/react-ui-canvas/scene';
 
 import {
   ROOT_VIEW_ID,
@@ -16,6 +16,9 @@ import {
   isNodeRecord,
   migrateContent,
   migrateLayers,
+  nodeKey,
+  orphanedViews,
+  pruneOrphanedViews,
   readViews,
   resolveDrawingLook,
   rootOf,
@@ -308,5 +311,42 @@ describe('content', () => {
     const layers = { top: { id: 'top', name: 'Top', z: 'V' } };
     writeViews(content, { ...scenes, [ROOT_VIEW_ID]: { ...scenes[ROOT_VIEW_ID], layers } });
     expect(readViews(content)[ROOT_VIEW_ID].layers).toEqual(layers);
+  });
+
+  test("an anonymous Object's mark survives a write and a read", ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const group = { id: 'g', name: 'Group 1', kind: 'composite' as const, anonymous: true, nodes: {}, links: {} };
+    writeViews(content, { ...readViews(content), g: group });
+    expect(readViews(content).g).toMatchObject({ kind: 'composite', anonymous: true });
+  });
+
+  test('scenes nothing reaches from the root are removed on load, with their elements; named Objects stay', ({
+    expect,
+  }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const rect = (id: string) => ({ id, type: 'rect', ...box });
+    const portal: ViewNode = { id: 'v', type: 'view', scene: 'kept', ...box };
+    const instance: InstanceNode = { id: 'i', type: 'instance', composite: 'group', ...box };
+    writeViews(content, {
+      ...readViews(content),
+      [ROOT_VIEW_ID]: {
+        id: ROOT_VIEW_ID,
+        nodes: { v: portal },
+        links: {},
+      },
+      kept: { id: 'kept', nodes: { i: instance }, links: {} },
+      group: { id: 'group', kind: 'composite', anonymous: true, nodes: { a: rect('a') }, links: {} },
+      stray: { id: 'stray', nodes: { s: rect('s') }, links: {} },
+      lost: { id: 'lost', kind: 'composite', anonymous: true, nodes: { l: rect('l') }, links: {} },
+      named: { id: 'named', kind: 'composite', name: 'Named', nodes: { n: rect('n') }, links: {} },
+    });
+    expect(orphanedViews(content).sort()).toEqual(['lost', 'stray']);
+    expect(pruneOrphanedViews(content)).toBe(true);
+    expect(Object.keys(readViews(content)).sort()).toEqual(['group', 'kept', 'named', ROOT_VIEW_ID]);
+    expect(content[nodeKey('s')]).toBeUndefined();
+    expect(content[nodeKey('l')]).toBeUndefined();
+    expect(pruneOrphanedViews(content)).toBe(false);
   });
 });

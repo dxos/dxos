@@ -535,9 +535,12 @@ feat F-3: Selection and editing
     layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
     hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
     properties panel picks an element's layer.
-  req F-3.13: "New view from selection" moves the selected nodes, and the links between them, into a new
-    scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
-    the shape. It is one undo step (`groupIntoView`).
+  req F-3.13: Group (⌘G) moves the selected nodes, and the links between them, into an anonymous Object
+    (`View.anonymous`) and places one Instance of it over their bounds; a link crossing out of the group stays,
+    re-attached to a port of the Instance. Ungroup (⇧⌘G) puts an Instance's contents back where it drew them and,
+    for an anonymous Object, deletes the definition. Naming an anonymous Object or placing it again adds it to the
+    library. Deleting the last node that opens a View, or an anonymous Object's last Instance, deletes the record
+    with it. Each is one undo step (`controller.selection.group`/`ungroup`, `pruneOrphaned`).
 ```
 
 ```mdl

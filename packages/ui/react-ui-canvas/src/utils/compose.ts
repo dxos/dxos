@@ -43,6 +43,36 @@ export const compositeViews = (scenes: ViewMap): View[] =>
     .filter(isComposite)
     .sort((left, right) => (left.name ?? left.id).localeCompare(right.name ?? right.id));
 
+/** Whether a scene is an anonymous Object: one the Group command made, not yet named or placed again. */
+export const isAnonymous = (scene: View | undefined): boolean => isComposite(scene) && scene?.anonymous === true;
+
+/** The Objects library: the composites by name, without the anonymous ones (VIEWS.md §4.4). */
+export const libraryViews = (scenes: ViewMap): View[] => compositeViews(scenes).filter((scene) => !isAnonymous(scene));
+
+/** `scene` named or placed again, so it joins the library; the same scene when it was not anonymous. */
+export const promoted = (scene: View): View => {
+  if (scene.anonymous === undefined) {
+    return scene;
+  }
+  const { anonymous: _, ...rest } = scene;
+  return rest;
+};
+
+/**
+ * The anonymous Objects that `nodes` place again, promoted (VIEWS.md §4.4): what a paste or a duplicate writes into
+ * the store with its intent. Empty when none of them is an Instance of an anonymous Object in `scenes`.
+ */
+export const promotedBy = (scenes: ViewMap, nodes: Iterable<Node>): Record<ViewId, View> => {
+  const result: Record<ViewId, View> = {};
+  for (const node of nodes) {
+    const definition = isInstanceNode(node) ? scenes[node.composite] : undefined;
+    if (definition && isAnonymous(definition)) {
+      result[definition.id] = promoted(definition);
+    }
+  }
+  return result;
+};
+
 /** How many instances of each composite the drawing holds, in any scene. */
 export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
   const counts: Record<ViewId, number> = {};
@@ -169,6 +199,8 @@ export type ComposeOptions = {
   name?: string;
   /** The layer the instance goes on. */
   layer?: LayerId;
+  /** Marks the composite anonymous, as the Group command makes it. */
+  anonymous?: boolean;
 };
 
 /** What grouping a selection as an object makes: the composite, and the intents that put an instance in its place. */
@@ -183,7 +215,7 @@ export type Composition = { composite: View; intents: Intent[] };
 export const composeSelection = (
   scene: View,
   ids: Iterable<string>,
-  { compositeId, instanceId, name, layer }: ComposeOptions,
+  { compositeId, instanceId, name, layer, anonymous }: ComposeOptions,
 ): Composition | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
@@ -228,6 +260,7 @@ export const composeSelection = (
     id: compositeId,
     name: name ?? 'Object',
     kind: 'composite',
+    ...(anonymous ? { anonymous: true } : {}),
     nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
     links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
     layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
@@ -344,7 +377,7 @@ export const copyComposite = (
   return {
     rename,
     composite: {
-      ...composite,
+      ...promoted(composite),
       id: compositeId,
       name: `${composite.name ?? 'Object'} copy`,
       nodes: Object.fromEntries(

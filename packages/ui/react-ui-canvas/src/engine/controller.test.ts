@@ -7,7 +7,15 @@ import { describe, test } from 'vitest';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type BackgroundGrid, createMemoryStore, createTimeline, isViewNode, keyTimes } from '../model/index.ts';
+import {
+  type BackgroundGrid,
+  createMemoryStore,
+  createTimeline,
+  isInstanceNode,
+  isViewNode,
+  keyTimes,
+} from '../model/index.ts';
+import { redo, undo, withUndo } from '../utils/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
 import { createFreehandProjection } from './projection.ts';
@@ -51,7 +59,12 @@ const setup = ({
   const registry = Registry.make();
   const store = createMemoryStore(tree.views);
   const atoms = createCanvasAtoms(tree.root);
-  const projection = createFreehandProjection({ registry, store, sceneId: tree.root });
+  const projection = withUndo(
+    createFreehandProjection({ registry, store, sceneId: tree.root }),
+    registry,
+    atoms.undo,
+    tree.root,
+  );
   let next = 0;
   const controller = createCanvasController({
     registry,
@@ -69,8 +82,15 @@ const setup = ({
   });
   const scene = () => registry.get(projection.scene);
   const linkId = Object.keys(scene().links)[0];
-  return { registry, store, atoms, controller, scene, linkId, projection };
+  const views = () => registry.get(store.views);
+  const undoStep = () => undo(projection, registry, atoms.undo, tree.root, store);
+  const redoStep = () => redo(projection, registry, atoms.undo, tree.root, store);
+  return { registry, store, atoms, controller, scene, views, linkId, projection, undoStep, redoStep };
 };
+
+/** The Object the one Instance in the open View draws. */
+const groupedObject = ({ scene }: ReturnType<typeof setup>) =>
+  Object.values(scene().nodes).flatMap((node) => (isInstanceNode(node) ? [node.composite] : []))[0];
 
 describe('CanvasController', () => {
   describe('navigation', () => {
@@ -243,18 +263,126 @@ describe('CanvasController', () => {
       expect(registry.get(atoms.selection).size).toBe(0);
     });
 
-    test('group moves the selection into a new View opened by a view node, which becomes the selection', ({
+    test('group writes an anonymous Object and one Instance in place of the selection, as one undo step', ({
       expect,
     }) => {
-      const { registry, store, atoms, controller, scene } = setup();
+      const view = setup();
+      const { registry, atoms, controller, scene, views, undoStep, redoStep } = view;
       controller.selection.select(['a', 'b']);
       const id = controller.selection.group();
-      expect(id).toBe('view-0');
+      expect(id).toBe('instance-0');
       const node = id === undefined ? undefined : scene().nodes[id];
-      expect(node && isViewNode(node) ? node.scene : undefined).toBe(id);
+      expect(node && isInstanceNode(node) ? node.composite : undefined).toBe('object-1');
+      expect(views()['object-1']).toMatchObject({ kind: 'composite', anonymous: true, name: 'Group 1' });
+      expect(Object.keys(views()['object-1'].nodes).sort()).toEqual(['a', 'b']);
       expect(scene().nodes.a).toBeUndefined();
-      expect(id && registry.get(store.views)[id]?.nodes.a).toBeDefined();
       expect([...registry.get(atoms.selection)]).toEqual([id]);
+
+      expect(undoStep()).toBe(true);
+      expect(scene().nodes.a).toBeDefined();
+      expect(views()['object-1']).toBeUndefined();
+      expect(redoStep()).toBe(true);
+      expect(groupedObject(view)).toBe('object-1');
+      expect(views()['object-1']).toBeDefined();
+    });
+
+    test('group refuses a read-only canvas and a selection with no node', ({ expect }) => {
+      const view = setup({ readonly: true });
+      view.registry.set(view.atoms.selection, new Set(['a']));
+      expect(view.controller.selection.group()).toBeUndefined();
+      const { controller, linkId, views } = setup();
+      controller.selection.select([linkId]);
+      expect(controller.selection.group()).toBeUndefined();
+      expect(Object.keys(views())).toEqual(['root']);
+    });
+
+    test("ungroup puts an anonymous Object's contents back where they were and deletes its definition", ({
+      expect,
+    }) => {
+      const view = setup();
+      const { registry, atoms, controller, scene, views, undoStep } = view;
+      const centres = { a: scene().nodes.a.center, b: scene().nodes.b.center };
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      const created = controller.selection.ungroup();
+      expect(created).toHaveLength(2);
+      expect(created.map((id) => scene().nodes[id].center)).toEqual([centres.a, centres.b]);
+      expect(Object.values(scene().nodes).some(isInstanceNode)).toBe(false);
+      expect(Object.keys(views())).toEqual(['root']);
+      expect([...registry.get(atoms.selection)]).toEqual(created);
+
+      // One step: the Instance and its definition come back together.
+      expect(undoStep()).toBe(true);
+      expect(groupedObject(view)).toBe('object-1');
+      expect(views()['object-1']).toMatchObject({ anonymous: true });
+    });
+
+    test("ungroup on a named Object's Instance explodes that Instance only and keeps the definition", ({ expect }) => {
+      const view = setup();
+      const { registry, store, controller, scene, views, undoStep } = view;
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      const { anonymous: _, ...named } = views()['object-1'];
+      registry.set(store.views, { ...views(), 'object-1': { ...named, name: 'Pair' } });
+      expect(controller.selection.ungroup()).toHaveLength(2);
+      expect(Object.values(scene().nodes).some(isInstanceNode)).toBe(false);
+      expect(views()['object-1']).toMatchObject({ name: 'Pair' });
+      expect(undoStep()).toBe(true);
+      expect(groupedObject(view)).toBe('object-1');
+    });
+
+    test('ungroup with no Instance selected does nothing', ({ expect }) => {
+      const { controller, scene } = setup();
+      const before = scene();
+      controller.selection.select(['a']);
+      expect(controller.selection.ungroup()).toEqual([]);
+      expect(scene()).toBe(before);
+    });
+
+    test("deleting an anonymous Object's last Instance deletes the definition; undo restores both", ({ expect }) => {
+      const view = setup();
+      const { controller, views, undoStep } = view;
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      controller.editing.paste();
+      expect(controller.selection.delete()).toBe(true);
+      expect(views()['object-1']).toBeUndefined();
+      expect(undoStep()).toBe(true);
+      expect(groupedObject(view)).toBe('object-1');
+      expect(views()['object-1']).toMatchObject({ anonymous: true });
+    });
+
+    test('a named Object with no Instances stays, as a library entry', ({ expect }) => {
+      const { registry, store, controller, views } = setup();
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      const { anonymous: _, ...named } = views()['object-1'];
+      registry.set(store.views, { ...views(), 'object-1': named });
+      controller.selection.delete();
+      expect(views()['object-1']).toBeDefined();
+    });
+
+    test('deleting the view node that opens a View deletes the View and the Views inside it; undo restores them', ({
+      expect,
+    }) => {
+      const { controller, scene, views, undoStep } = setup({ tree: deep() });
+      controller.selection.select(['child']);
+      expect(controller.selection.delete()).toBe(true);
+      expect(Object.keys(views())).toEqual(['root']);
+      expect(undoStep()).toBe(true);
+      expect(Object.keys(views()).sort()).toEqual(['child', 'grand', 'root']);
+      const node = scene().nodes.child;
+      expect(node && isViewNode(node) ? node.scene : undefined).toBe('child');
+    });
+
+    test('deleting one of two view nodes onto a View keeps the View', ({ expect }) => {
+      const { controller, views } = setup({ tree: nested() });
+      controller.selection.select(['child']);
+      controller.editing.copy();
+      controller.editing.paste();
+      controller.selection.select(['child']);
+      controller.selection.delete();
+      expect(views().child).toBeDefined();
     });
 
     test('classFrom makes a class from the one selected element, which then follows it', ({ expect }) => {
@@ -307,6 +435,43 @@ describe('CanvasController', () => {
         x: 1008,
         y: 992,
       });
+    });
+
+    test('pasting an Instance of an anonymous Object places it again, so it joins the library; one undo step', ({
+      expect,
+    }) => {
+      const { controller, views, undoStep } = setup();
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      controller.editing.copy();
+      controller.editing.paste();
+      expect(views()['object-1'].anonymous).toBeUndefined();
+      expect(undoStep()).toBe(true);
+      expect(views()['object-1'].anonymous).toBe(true);
+    });
+
+    test('duplicating an Instance of an anonymous Object places it again, so it joins the library', ({ expect }) => {
+      const { controller, scene, views } = setup();
+      controller.selection.select(['a', 'b']);
+      const id = controller.selection.group();
+      expect(id && controller.document.duplicate([id], { x: 512, y: 0 })).toBe(true);
+      expect(Object.values(scene().nodes).filter(isInstanceNode)).toHaveLength(2);
+      expect(views()['object-1'].anonymous).toBeUndefined();
+    });
+
+    test('cut then paste of an Instance moves it: its anonymous Object comes back, still anonymous', ({ expect }) => {
+      const view = setup();
+      const { controller, views } = view;
+      controller.selection.select(['a', 'b']);
+      controller.selection.group();
+      controller.editing.cut();
+      expect(views()['object-1']).toBeUndefined();
+      controller.editing.paste();
+      expect(groupedObject(view)).toBe('object-1');
+      expect(views()['object-1']).toMatchObject({ anonymous: true });
+      // A second paste is a second placement.
+      controller.editing.paste();
+      expect(views()['object-1'].anonymous).toBeUndefined();
     });
 
     test('cut copies and deletes; copy with nothing selected copies nothing', ({ expect }) => {

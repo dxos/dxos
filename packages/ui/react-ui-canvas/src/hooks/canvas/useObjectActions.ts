@@ -18,27 +18,24 @@ import {
 } from '../../model/index.ts';
 import {
   activeLayer,
-  composeSelection,
   compositeBounds,
-  compositeViews,
   copyComposite,
   createId,
   instanceCounts,
   instancePorts,
+  isAnonymous,
+  promoted,
   recordStoreStep,
   recordViews,
   renamePortLinks,
   retargetInstance,
   screenToScene,
   topZ,
-  ungroupInstance,
 } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
-/** The composite-object actions (ANIMATION.md §4.2); each is one undo step. */
+/** The composite-object actions (ANIMATION.md §4.2); each is one undo step. Group and Ungroup are the controller's. */
 export type ObjectActions = {
-  compose: () => void;
-  ungroup: (id: NodeId) => void;
   makeUnique: (id: NodeId) => void;
   duplicate: (composite: ViewId) => void;
   place: (composite: ViewId) => void;
@@ -90,43 +87,14 @@ export const useObjectActions = ({
       }
     };
     return {
-      /** Groups the selection as a new object, replaced by one instance of it. */
-      compose: () => {
-        const current = registry.get(baseProjection.scene);
-        const count = compositeViews(registry.get(store.views)).length;
-        const instanceId = createId('instance');
-        const composition = composeSelection(current, registry.get(atoms.selection), {
-          compositeId: createId('object'),
-          instanceId,
-          name: `Object ${count + 1}`,
-          layer: activeLayer(current, registry.get(atoms.layer)),
-        });
-        if (!composition) {
-          return;
-        }
-        commit({ [composition.composite.id]: composition.composite }, composition.intents);
-        select([instanceId]);
-      },
-      /** Replaces an instance with its composite's nodes. */
-      ungroup: (id: NodeId) => {
-        const current = registry.get(baseProjection.scene);
-        const instance = current.nodes[id];
-        const composite =
-          instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
-        if (!instance || !isInstanceNode(instance) || !composite) {
-          return;
-        }
-        const intents = ungroupInstance(current, instance, composite, createId);
-        baseProjection.apply({ kind: 'batch', intents });
-        select(intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : [])));
-      },
       /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
       makeUnique: (id: NodeId) => {
         const current = registry.get(baseProjection.scene);
         const instance = current.nodes[id];
         const composite =
           instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
-        if (!instance || !isInstanceNode(instance) || !composite) {
+        // An anonymous Object has the one Instance, so it is already unique.
+        if (!instance || !isInstanceNode(instance) || !composite || isAnonymous(composite)) {
           return;
         }
         const copy = copyComposite(composite, createId('object'), createId);
@@ -149,7 +117,7 @@ export const useObjectActions = ({
         const copy = copyComposite(definition, createId('object'), createId);
         commit({ [copy.composite.id]: copy.composite }, []);
       },
-      /** Places an instance of a composite at the centre of the view, at its own size. */
+      /** Places an instance of a composite at the centre of the view, at its own size; an anonymous one joins the library. */
       place: (composite: ViewId) => {
         const definition = registry.get(store.views)[composite];
         const content = definition && compositeBounds(definition);
@@ -176,13 +144,18 @@ export const useObjectActions = ({
           ports: instancePorts(frame, definition),
           layer: activeLayer(current, registry.get(atoms.layer)),
         };
-        baseProjection.apply({ kind: 'create', node: instance });
+        if (isAnonymous(definition)) {
+          commit({ [composite]: promoted(definition) }, [{ kind: 'create', node: instance }]);
+        } else {
+          baseProjection.apply({ kind: 'create', node: instance });
+        }
         select([instance.id]);
       },
+      /** Names a composite; an anonymous one joins the library. */
       rename: (composite: ViewId, name: string) => {
         const definition = registry.get(store.views)[composite];
         if (definition) {
-          commit({ [composite]: { ...definition, name } }, []);
+          commit({ [composite]: { ...promoted(definition), name } }, []);
         }
       },
       /** Removes a composite; with `instances`, every instance of it in the drawing too, else only an unused one. */

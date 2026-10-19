@@ -113,7 +113,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
                 : fixture === 'nested'
                   ? createNestedSimpleTree()
                   : createViewTree(depth);
-    return { store: createMemoryStore(tree.views), root: tree.root };
+    return { store: createMemoryStore(tree.views, {}, { root: tree.root }), root: tree.root };
   }, [depth, fixture]);
 
   // Keyed on the root so a new tree remounts the editor, whose atoms are created on mount.
@@ -316,5 +316,53 @@ export const Views: Story = {
     await userEvent.click(viewRow(views, 'a'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
     await waitFor(() => expect(rowSelected(views, 'a')).toBe(true));
+  },
+};
+
+/** The node `id` as the View draws it, not inside an Instance's drawing of its Object. */
+const topLevelNode = (root: HTMLElement, selector: string) =>
+  [...root.querySelectorAll(`[data-testid="scene-view"] ${selector}`)].find(
+    (element) => !element.closest('[data-instance]'),
+  );
+
+/**
+ * Group and Ungroup over a nested scene: ⌘G makes an anonymous Object and one Instance in place of the selection,
+ * ⇧⌘G puts its contents back and deletes the definition, and each is one undo step.
+ */
+export const Group: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'nested', inspectors: 'docked' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeDefined());
+    const instance = () => topLevelNode(canvasElement, '[data-node-id^="instance-"]');
+
+    // 1. Select all and group: one Instance replaces the shapes, drawing them inside it.
+    view.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await userEvent.keyboard('{Meta>}g{/Meta}');
+    await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeUndefined());
+    await waitFor(() => expect(instance()).toBeDefined());
+    await expect(instance()?.querySelector('[data-node-id="a"]')).not.toBeNull();
+
+    // 2. Undo takes the group back in one step; redo makes it again.
+    view.focus();
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+    await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeDefined());
+    await expect(instance()).toBeUndefined();
+    await userEvent.keyboard('{Meta>}{Shift>}z{/Shift}{/Meta}');
+    await waitFor(() => expect(instance()).toBeDefined());
+
+    // 3. Ungroup puts the contents back where the Instance drew them, under new ids.
+    view.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await userEvent.keyboard('{Meta>}{Shift>}g{/Shift}{/Meta}');
+    await waitFor(() => expect(instance()).toBeUndefined());
+    await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id^="node-"]')).toBeDefined());
+
+    // 4. Undo brings the Instance back, and with it the definition it draws.
+    view.focus();
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+    await waitFor(() => expect(instance()?.querySelector('[data-node-id="a"]')).not.toBeNull());
   },
 };

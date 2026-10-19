@@ -10,7 +10,7 @@ import { defaultNodeRegistry } from '../components/index.ts';
 import { type ConstrainedModel, createConstrainedProjection, createFreehandProjection } from '../engine/index.ts';
 import { createMemoryStore } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
-import { groupIntoView } from './group.ts';
+import { composeSelection } from './compose.ts';
 import { type UndoState, emptyUndo, recordViews, redo, undo, withUndo } from './undo.ts';
 
 const setup = () => {
@@ -56,26 +56,30 @@ describe('undo', () => {
     expect(undo(projection, registry, atom, root)).toBe(true);
   });
 
-  test('grouping into a new scene is one step: undo takes the scene away, redo returns it', ({ expect }) => {
+  test('grouping into a new Object is one step: undo takes the record away, redo returns it', ({ expect }) => {
     const { registry, root, store, atom, projection } = setup();
-    const group = groupIntoView(registry.get(projection.scene), ['scene:r/a'], 'g');
+    const group = composeSelection(registry.get(projection.scene), ['scene:r/a'], {
+      compositeId: 'g',
+      instanceId: 'i',
+      anonymous: true,
+    });
     expect(group).toBeDefined();
     if (!group) {
       return;
     }
     const before = registry.get(store.views);
-    registry.set(store.views, { ...before, g: group.child });
+    registry.set(store.views, { ...before, g: group.composite });
     projection.apply({ kind: 'batch', intents: group.intents });
     recordViews(registry, atom, root, before);
-    expect(registry.get(projection.scene).nodes.g).toBeDefined();
+    expect(registry.get(projection.scene).nodes.i).toBeDefined();
 
     expect(undo(projection, registry, atom, root, store)).toBe(true);
     expect(registry.get(store.views).g).toBeUndefined();
     expect(registry.get(projection.scene).nodes['scene:r/a']).toBeDefined();
 
     expect(redo(projection, registry, atom, root, store)).toBe(true);
-    expect(registry.get(store.views).g).toEqual(group.child);
-    expect(registry.get(projection.scene).nodes.g).toBeDefined();
+    expect(registry.get(store.views).g).toEqual(group.composite);
+    expect(registry.get(projection.scene).nodes.i).toBeDefined();
   });
 
   test('a constrained projection restores its constraint model', ({ expect }) => {

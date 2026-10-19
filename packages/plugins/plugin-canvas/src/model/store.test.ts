@@ -250,4 +250,51 @@ describe('bindCanvasStore', () => {
     await expect.poll(() => styles && registry.get(styles).warn?.name).toBe('Alert');
     bound.dispose();
   });
+
+  test('binding a drawing removes the scenes nothing reaches from its root', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      canvas.content['scene:stray'] = { kind: 'scene', id: 'stray' };
+      canvas.content[nodeKey('s')] = {
+        kind: 'node',
+        scene: 'stray',
+        node: { id: 's', type: 'rect', z: 'a0', ...frame },
+      };
+    });
+    await db.flush();
+
+    const bound = bindCanvasStore(Registry.make(), canvas);
+    expect(Object.keys(readViews(clone(canvas.content)))).toEqual(['root']);
+    expect(canvas.content[nodeKey('s')]).toBeUndefined();
+    bound.dispose();
+  });
+
+  test("a linked drawing's root is one of the store's roots, kept with no frame opening it", async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      canvas.content['scene:f'] = { kind: 'scene', id: 'f' };
+      canvas.content[nodeKey('f')] = {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'f', type: 'view', z: 'a0', ...frame, scene: 'f', link: { object: Ref.make(other) } },
+      };
+    });
+    await db.flush();
+
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    const linkedRoot = () =>
+      Object.keys(registry.get(bound.store.views)).find((id) => parseLinkedViewId(id)?.scene === 'root');
+    await expect.poll(linkedRoot).toBeDefined();
+    expect(bound.store.isRoot?.(linkedRoot() ?? '')).toBe(true);
+    expect(bound.store.isRoot?.('root')).toBe(false);
+    bound.dispose();
+  });
 });
