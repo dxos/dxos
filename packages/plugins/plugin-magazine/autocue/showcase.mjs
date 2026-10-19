@@ -13,9 +13,7 @@
 
 import {
   SHORT_MS,
-  branch,
   fromTemplate,
-  open,
   reveal,
   scroll,
   showcase,
@@ -33,15 +31,9 @@ export const steps = showcase({
   ms: CLIP_MS,
   setup: async ({ page }) => {
     await fromTemplate(page, 'Reading Room', { waitFor: 'Collections' });
-    // A fresh space's tree can swallow the first expand while it is still loading, so retry until the collection shows.
-    for (let attempt = 0; !(await visible(page.locator(branch('Reading Room')), 2_000)); attempt++) {
-      if (attempt === 5) {
-        throw new Error('the Reading Room collection never appeared under Collections');
-      }
-      await reveal(page, ['Collections']);
-    }
-    await reveal(page, ['Reading Room']);
-    await open(page, 'Weekend Reading');
+    // Home's Recent card, rather than the navtree: a fresh space's tree sometimes ignores the first expands.
+    await page.locator('[data-testid="deck.plank"] :text-is("Weekend Reading")').first().click({ timeout: 15_000 });
+    await page.locator(tiles).first().waitFor({ timeout: 30_000 });
     const close = page.locator('role=button[name="Close companion"]');
     if (await visible(close, 1_000)) {
       await close.first().click();
