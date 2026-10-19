@@ -39,7 +39,7 @@ const SIGNAL_STYLE: Record<FeatureSignal, { icon: string; hue: Tag.TagHue }> = {
 
 const RELATION_HUE: Record<FeatureRelation, Tag.TagHue> = { dependency: 'sky', dependent: 'violet' };
 
-export type FeatureCardProps = {
+export type FeatureCardBodyProps = {
   feature: FeatureModel;
   /** Resolves `dependsOn` ids to features, for their labels, statuses and the derived signals. */
   lookup: FeatureLookup;
@@ -49,36 +49,31 @@ export type FeatureCardProps = {
   selected?: boolean;
   /** How this card relates to the selected feature; dims nothing by itself. */
   relation?: FeatureRelation;
-  onSelect?: (feature: FeatureModel) => void;
+  /** False where dependencies are drawn some other way, such as arrows on a canvas. */
+  showDependencies?: boolean;
+  /** False where the description and specs are edited beside the card, as in the feature's article. */
+  showFields?: boolean;
+  /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
+  dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
+  /** Opens a listed subfeature, task or showcase by id; rows are plain text without it. */
+  onOpenObject?: (id: string) => void;
+};
+
+export type FeatureCardProps = FeatureCardBodyProps & {
+  onSelect?: (feature: FeatureModel) => void;
+  /** Adds an open button to the header. */
+  onOpen?: (feature: FeatureModel) => void;
 };
 
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
  * features it needs. Status and signals each carry an icon and a word, so colour is never the only cue.
- * A compact card shows only the most serious signal and counts, so the tag row stays on one line and
- * the lists do not outweigh the feature.
  */
-export const FeatureCard = ({
-  feature,
-  lookup,
-  expanded,
-  selected,
-  relation,
-  onSelect,
-  onSelectDependency,
-}: FeatureCardProps) => {
+export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature, selected, relation } = props;
   const status = FEATURE_STATUS_STYLE[feature.status];
-  const statusLabel = t(`feature-status.${feature.status}.label`);
-  const detailed = expanded || selected;
-  const signals = getFeatureSignals(feature, lookup);
-  const shownSignals = detailed ? signals : signals.slice(0, 1);
-  const hiddenSignals = signals.slice(shownSignals.length);
-  const openTasks = feature.tasks.filter((task) => !task.done);
-  const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
-  const dependencies = feature.dependsOn.flatMap((id) => lookup(id) ?? []);
-
   return (
     <Card.Root
       grid
@@ -90,131 +85,200 @@ export const FeatureCard = ({
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={status.icon} hue={status.hue} label={statusLabel} />
+          <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
         <Card.Title lines={2}>{feature.name}</Card.Title>
+        {onOpen && (
+          <Layout.Block rail='end'>
+            <Card.Action
+              icon='ph--arrow-square-out--regular'
+              label={t('feature-card.open.label')}
+              data-testid='feature-card.open'
+              onClick={() => onOpen(feature)}
+            />
+          </Layout.Block>
+        )}
       </Card.Header>
-
-      <Card.Body>
-        <Card.Row>
-          <div className='flex flex-wrap gap-1'>
-            <Tag.Tag hue={status.hue}>{statusLabel}</Tag.Tag>
-            {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
-            {shownSignals.map((signal) => (
-              <Tag.Tag key={signal} hue={SIGNAL_STYLE[signal].hue} data-testid={`feature-signal.${signal}`}>
-                <Icon.Icon icon={SIGNAL_STYLE[signal].icon} size='xs' />
-                {t(`feature-signal.${signal}.label`)}
-              </Tag.Tag>
-            ))}
-            {hiddenSignals.length > 0 && (
-              <Tag.Tag
-                title={hiddenSignals.map((signal) => t(`feature-signal.${signal}.label`)).join(', ')}
-                data-testid='feature-signal.more'
-              >
-                {t('feature-card.more-signals.label', { count: hiddenSignals.length })}
-              </Tag.Tag>
-            )}
-          </div>
-        </Card.Row>
-
-        {expanded && feature.description && (
-          <Card.Row span='full'>
-            <Card.Text variant='muted' lines={3}>
-              {feature.description}
-            </Card.Text>
-          </Card.Row>
-        )}
-
-        {!expanded && feature.subfeatures.length > 0 && (
-          <Card.Row icon='ph--tree-view--regular'>
-            <Card.Text truncate>{t('feature-card.subfeatures.label', { count: feature.subfeatures.length })}</Card.Text>
-          </Card.Row>
-        )}
-        {openTasks.length > 0 && (
-          <Card.Row
-            icon='ph--list-checks--regular'
-            trailing={milestones.length > 0 && <Tag.Tag>{milestones.join(', ')}</Tag.Tag>}
-          >
-            <Card.Text truncate>{t('feature-card.open-tasks.label', { count: openTasks.length })}</Card.Text>
-          </Card.Row>
-        )}
-        {!expanded && feature.showcases.length > 0 && (
-          <Card.Row icon='ph--presentation-chart--regular'>
-            <Card.Text truncate>{feature.showcases[0].name}</Card.Text>
-          </Card.Row>
-        )}
-        {!detailed && dependencies.length > 0 && (
-          <Card.Row icon='ph--tree-structure--regular'>
-            <Card.Text truncate>{t('feature-card.depends-on.label', { count: dependencies.length })}</Card.Text>
-          </Card.Row>
-        )}
-
-        {detailed && dependencies.length > 0 && (
-          <Card.Section title={t('feature-card.depends-on.title')}>
-            {dependencies.map((dependency) => (
-              <Card.Row
-                key={dependency.id}
-                icon={FEATURE_STATUS_STYLE[dependency.status].icon}
-                onClick={
-                  onSelectDependency
-                    ? (event: MouseEvent) => {
-                        // The row sits inside a clickable card; selecting the dependency must not also select this card.
-                        event.stopPropagation();
-                        onSelectDependency(dependency.id);
-                      }
-                    : undefined
-                }
-              >
-                <Card.Text truncate>{dependency.name}</Card.Text>
-              </Card.Row>
-            ))}
-          </Card.Section>
-        )}
-
-        {expanded && feature.subfeatures.length > 0 && (
-          <Card.Section title={t('feature-card.subfeatures.title')}>
-            {feature.subfeatures.map((subfeature) => (
-              <Card.Row key={subfeature.id} icon={FEATURE_STATUS_STYLE[subfeature.status].icon}>
-                <Card.Text truncate>{subfeature.name}</Card.Text>
-              </Card.Row>
-            ))}
-          </Card.Section>
-        )}
-
-        {expanded && feature.tasks.length > 0 && (
-          <Card.Section title={t('feature-card.tasks.title')}>
-            {feature.tasks.map((task) => (
-              <Card.Row
-                key={task.id}
-                icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'}
-                trailing={task.milestone && <Tag.Tag>{task.milestone}</Tag.Tag>}
-              >
-                <Card.Text truncate>{task.title}</Card.Text>
-              </Card.Row>
-            ))}
-          </Card.Section>
-        )}
-
-        {expanded && feature.showcases.length > 0 && (
-          <Card.Section title={t('feature-card.showcases.title')}>
-            {feature.showcases.map((showcase) => (
-              <Card.Row key={showcase.id} icon='ph--presentation-chart--regular'>
-                <Card.Text truncate>{showcase.name}</Card.Text>
-              </Card.Row>
-            ))}
-          </Card.Section>
-        )}
-
-        {expanded && feature.specs.length > 0 && (
-          <Card.Section title={t('feature-card.specs.title')}>
-            {feature.specs.map((spec) => (
-              <Card.Row key={spec} icon='ph--file-code--regular' title={spec}>
-                <Card.Text truncate>{spec}</Card.Text>
-              </Card.Row>
-            ))}
-          </Card.Section>
-        )}
-      </Card.Body>
+      <FeatureCardBody {...props} />
     </Card.Root>
+  );
+};
+
+/**
+ * The card's body without its frame and header, for hosts that draw those themselves (the app's card
+ * surface). A compact body shows only the most serious signal and counts, so the tag row stays on one line
+ * and the lists do not outweigh the feature.
+ */
+export const FeatureCardBody = ({
+  feature,
+  lookup,
+  expanded,
+  selected,
+  relation,
+  showDependencies = true,
+  showFields = true,
+  dependents = [],
+  onSelectDependency,
+  onOpenObject,
+}: FeatureCardBodyProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const status = FEATURE_STATUS_STYLE[feature.status];
+  const statusLabel = t(`feature-status.${feature.status}.label`);
+  const detailed = expanded || selected;
+  const signals = getFeatureSignals(feature, lookup);
+  const shownSignals = detailed ? signals : signals.slice(0, 1);
+  const hiddenSignals = signals.slice(shownSignals.length);
+  const openTasks = feature.tasks.filter((task) => !task.done);
+  const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
+  const dependencies = showDependencies ? feature.dependsOn.flatMap((id) => lookup(id) ?? []) : [];
+  const open = (id: string) =>
+    onOpenObject
+      ? (event: MouseEvent) => {
+          // The row sits inside a clickable card; opening the object must not also select the card.
+          event.stopPropagation();
+          onOpenObject(id);
+        }
+      : undefined;
+
+  return (
+    <Card.Body>
+      <Card.Row>
+        <div className='flex flex-wrap gap-1'>
+          <Tag.Tag hue={status.hue}>{statusLabel}</Tag.Tag>
+          {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
+          {shownSignals.map((signal) => (
+            <Tag.Tag key={signal} hue={SIGNAL_STYLE[signal].hue} data-testid={`feature-signal.${signal}`}>
+              <Icon.Icon icon={SIGNAL_STYLE[signal].icon} size='xs' />
+              {t(`feature-signal.${signal}.label`)}
+            </Tag.Tag>
+          ))}
+          {hiddenSignals.length > 0 && (
+            <Tag.Tag
+              title={hiddenSignals.map((signal) => t(`feature-signal.${signal}.label`)).join(', ')}
+              data-testid='feature-signal.more'
+            >
+              {t('feature-card.more-signals.label', { count: hiddenSignals.length })}
+            </Tag.Tag>
+          )}
+        </div>
+      </Card.Row>
+
+      {expanded && showFields && feature.description && (
+        <Card.Row span='full'>
+          <Card.Text variant='muted' lines={3}>
+            {feature.description}
+          </Card.Text>
+        </Card.Row>
+      )}
+
+      {!expanded && feature.subfeatures.length > 0 && (
+        <Card.Row icon='ph--tree-view--regular'>
+          <Card.Text truncate>{t('feature-card.subfeatures.label', { count: feature.subfeatures.length })}</Card.Text>
+        </Card.Row>
+      )}
+      {openTasks.length > 0 && (
+        <Card.Row
+          icon='ph--list-checks--regular'
+          trailing={milestones.length > 0 && <Tag.Tag>{milestones.join(', ')}</Tag.Tag>}
+        >
+          <Card.Text truncate>{t('feature-card.open-tasks.label', { count: openTasks.length })}</Card.Text>
+        </Card.Row>
+      )}
+      {!expanded && feature.showcases.length > 0 && (
+        <Card.Row icon='ph--presentation-chart--regular'>
+          <Card.Text truncate>{feature.showcases[0].name}</Card.Text>
+        </Card.Row>
+      )}
+      {!detailed && dependencies.length > 0 && (
+        <Card.Row icon='ph--tree-structure--regular'>
+          <Card.Text truncate>{t('feature-card.depends-on.label', { count: dependencies.length })}</Card.Text>
+        </Card.Row>
+      )}
+
+      {detailed && dependencies.length > 0 && (
+        <Card.Section title={t('feature-card.depends-on.title')}>
+          {dependencies.map((dependency) => (
+            <Card.Row
+              key={dependency.id}
+              icon={FEATURE_STATUS_STYLE[dependency.status].icon}
+              onClick={
+                onSelectDependency
+                  ? (event: MouseEvent) => {
+                      // The row sits inside a clickable card; selecting the dependency must not also select this card.
+                      event.stopPropagation();
+                      onSelectDependency(dependency.id);
+                    }
+                  : undefined
+              }
+            >
+              <Card.Text truncate>{dependency.name}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+
+      {expanded && dependents.length > 0 && (
+        <Card.Section title={t('feature-card.dependents.title')}>
+          {dependents.map((dependent) => (
+            <Card.Row
+              key={dependent.id}
+              icon={FEATURE_STATUS_STYLE[dependent.status].icon}
+              onClick={onSelectDependency ? () => onSelectDependency(dependent.id) : undefined}
+            >
+              <Card.Text truncate>{dependent.name}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+
+      {expanded && feature.subfeatures.length > 0 && (
+        <Card.Section title={t('feature-card.subfeatures.title')}>
+          {feature.subfeatures.map((subfeature) => (
+            <Card.Row
+              key={subfeature.id}
+              icon={FEATURE_STATUS_STYLE[subfeature.status].icon}
+              onClick={open(subfeature.id)}
+            >
+              <Card.Text truncate>{subfeature.name}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+
+      {expanded && feature.tasks.length > 0 && (
+        <Card.Section title={t('feature-card.tasks.title')}>
+          {feature.tasks.map((task) => (
+            <Card.Row
+              key={task.id}
+              icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'}
+              trailing={task.milestone && <Tag.Tag>{task.milestone}</Tag.Tag>}
+              onClick={open(task.id)}
+            >
+              <Card.Text truncate>{task.title}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+
+      {expanded && feature.showcases.length > 0 && (
+        <Card.Section title={t('feature-card.showcases.title')}>
+          {feature.showcases.map((showcase) => (
+            <Card.Row key={showcase.id} icon='ph--presentation-chart--regular' onClick={open(showcase.id)}>
+              <Card.Text truncate>{showcase.name}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+
+      {expanded && showFields && feature.specs.length > 0 && (
+        <Card.Section title={t('feature-card.specs.title')}>
+          {feature.specs.map((spec) => (
+            <Card.Row key={spec} icon='ph--file-code--regular' title={spec}>
+              <Card.Text truncate>{spec}</Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
+      )}
+    </Card.Body>
   );
 };

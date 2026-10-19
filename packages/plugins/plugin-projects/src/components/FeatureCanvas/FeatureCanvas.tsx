@@ -45,7 +45,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
   return (
     // Inert, so a press anywhere on the card selects and drags the box rather than reaching the card.
     <div className='dx-cover grid overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
-      {feature && <FeatureCard feature={feature} lookup={lookup} />}
+      {feature && <FeatureCard feature={feature} lookup={lookup} showDependencies={false} />}
     </div>
   );
 };
@@ -70,8 +70,8 @@ const registry = createNodeRegistry(
 );
 
 const LAYOUT: DynamicOptions = {
-  size: { width: 288, height: 176 },
-  pitch: { width: 336, height: 256 },
+  size: { width: 288, height: 192 },
+  pitch: { width: 336, height: 272 },
   createNode: (_node, props) => createFeatureNode(props),
   link: { type: 'line', ends: { end: 'arrow' } },
 };

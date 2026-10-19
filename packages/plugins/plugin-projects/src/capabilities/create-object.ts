@@ -13,7 +13,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Repo } from '@dxos/types';
 
 import { CreateProjectPanel } from '#components';
-import { Feature, FeatureMap, ProjectOperation } from '#types';
+import { Feature, FeatureMap, ProjectOperation, Showcase } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -27,8 +27,8 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
  * field offers inline create only for a typename some plugin can create — without this the
  * project's repository picker had no `+`.
  *
- * Features and feature maps are created empty from the nav menu; showcases are made by agents through
- * operations, since a showcase without its write-up and media shows nothing.
+ * Features, feature maps and showcases are created empty from the nav menu; agents make showcases whole
+ * through `FeatureOperation.CreateShowcase`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -70,6 +70,15 @@ export default Capability.makeModule(
           Operation.invoke(
             SpaceOperation.AddObject,
             { object: FeatureMap.make({ name: props.name }), target: options.target },
+            { spaceId: options.db.spaceId },
+          ),
+      },
+      {
+        id: Type.getTypename(Showcase.Showcase),
+        createObject: (props: { name?: string }, options: CreateOptions) =>
+          Operation.invoke(
+            SpaceOperation.AddObject,
+            { object: Showcase.make({ name: props.name ?? '' }), target: options.target },
             { spaceId: options.db.spaceId },
           ),
       },

@@ -18,11 +18,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Text } from '@dxos/schema';
-import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Feature, FeatureMap, Showcase } from '#types';
+import { FeatureMap } from '#types';
 
 import { FeatureMapArticle } from './FeatureMapArticle.tsx';
 
@@ -52,19 +50,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [
-            Feature.Feature,
-            Feature.DependsOn,
-            Feature.Implements,
-            FeatureMap.FeatureMap,
-            Showcase.Showcase,
-            Showcase.Showcases,
-            Task.Task,
-            Milestone.Milestone,
-            Text.Text,
-            File.File,
-            PullRequest.PullRequest,
-          ],
+          types: FeatureSeed.types,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);

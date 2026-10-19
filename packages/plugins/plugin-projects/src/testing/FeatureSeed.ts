@@ -5,12 +5,28 @@
 // @import-as-namespace
 
 import { type Database, Obj, Ref, Relation } from '@dxos/echo';
-import { Milestone, Task } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
 import { Feature, FeatureMap, Showcase } from '#types';
 
 import { type FeatureModel } from '../components/FeatureCard/feature.ts';
 import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
+
+/** The types a database needs to hold a seeded map. */
+export const types = [
+  Feature.Feature,
+  Feature.DependsOn,
+  Feature.Implements,
+  FeatureMap.FeatureMap,
+  Showcase.Showcase,
+  Showcase.Showcases,
+  Task.Task,
+  Milestone.Milestone,
+  Text.Text,
+  File.File,
+  PullRequest.PullRequest,
+];
 
 /**
  * Writes card models into a database as the objects and relations they are derived from — features with
@@ -68,7 +84,12 @@ export const seed = (
       db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: feature }));
     }
     for (const { name: showcaseName } of model.showcases) {
-      const showcase = db.add(Showcase.make({ name: showcaseName, content: `# ${showcaseName}` }));
+      const showcase = db.add(
+        Showcase.make({
+          name: showcaseName,
+          content: `# ${showcaseName}\n\nWhat was shown, and how to reproduce it:\n\n1. Open the feature.\n2. Follow the steps.\n`,
+        }),
+      );
       db.add(Showcase.makeShowcases({ [Relation.Source]: showcase, [Relation.Target]: feature }));
     }
   }

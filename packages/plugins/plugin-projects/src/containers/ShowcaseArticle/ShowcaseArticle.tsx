@@ -1,0 +1,139 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import React, { useCallback, useMemo } from 'react';
+
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import { Form } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+
+import { meta } from '#meta';
+import { Showcase } from '#types';
+
+import { useOpenObject } from '../../hooks/index.ts';
+
+type Values = Pick<Showcase.Showcase, 'name'>;
+
+const Values = Schema.make<Schema.Codec<Values, any>>(SchemaAST.pick(Type.getSchema(Showcase.Showcase).ast, ['name']));
+
+export type ShowcaseArticleProps = AppSurface.ObjectArticleProps<Showcase.Showcase>;
+
+/**
+ * Article surface for a {@link Showcase.Showcase}: its name, the markdown write-up (edited through the app's
+ * text section), its screenshots and videos, the pull requests the work landed in, and what it demonstrates.
+ */
+export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticleProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [showcase, updateShowcase] = useObject(subject);
+  const db = Obj.getDatabase(subject);
+  const content = useResolveRef(showcase.content);
+  const targets = useQuery(db, Query.select(Filter.id(subject.id)).sourceOf(Showcase.Showcases).target());
+  const openObject = useOpenObject(db, attendableId);
+
+  // Read once per showcase; the uncontrolled form owns edits after mount.
+  const defaultValues = useMemo<Partial<Values>>(() => ({ name: subject.name }), [subject]);
+  const handleValuesChanged = useCallback(
+    (values: Partial<Values>) =>
+      updateShowcase((showcase) => {
+        if (values.name !== undefined) {
+          showcase.name = values.name;
+        }
+      }),
+    [updateShowcase],
+  );
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+            <Form.Root db={db} schema={Values} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+              <Form.Content>
+                <Form.Fields />
+              </Form.Content>
+            </Form.Root>
+
+            {targets.length > 0 && (
+              <section className='flex flex-wrap gap-2' aria-label={t('showcase-article.targets.label')}>
+                {targets.map((target) => (
+                  <Card.Root
+                    key={target.id}
+                    onClick={() => void openObject(target.id)}
+                    data-testid='showcase-article.target'
+                  >
+                    <Card.Header>
+                      <Card.Title>{Obj.getLabel(target) ?? target.id}</Card.Title>
+                    </Card.Header>
+                  </Card.Root>
+                ))}
+              </section>
+            )}
+
+            {content && (
+              <Surface.Surface type={AppSurface.Section} data={{ subject: content, attendableId }} limit={1} />
+            )}
+
+            <ObjectCards
+              label={t('showcase-article.media.label')}
+              refs={showcase.media}
+              onOpen={(id) => void openObject(id)}
+            />
+            <ObjectCards
+              label={t('showcase-article.pull-requests.label')}
+              refs={showcase.pullRequests}
+              onOpen={(id) => void openObject(id)}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+type ObjectCardsProps = {
+  label: string;
+  refs: readonly Ref.Ref<Obj.Unknown>[];
+  onOpen: (id: string) => void;
+};
+
+/** Each object as the app's card for its type: a file shows its image or video, a pull request its state. */
+const ObjectCards = ({ label, refs, onOpen }: ObjectCardsProps) => {
+  const items = useMemo(() => [...refs], [refs]);
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <section className='flex flex-col gap-2' aria-label={label}>
+      <h2 className='text-sm text-description'>{label}</h2>
+      <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3 items-start'>
+        {items.map((ref) => (
+          <ObjectCard key={ref.uri} objectRef={ref} onOpen={onOpen} />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const ObjectCard = ({ objectRef, onOpen }: { objectRef: Ref.Ref<Obj.Unknown>; onOpen: (id: string) => void }) => {
+  const object = useResolveRef(objectRef);
+  if (!object) {
+    return null;
+  }
+  return (
+    <Card.Root onClick={() => onOpen(object.id)}>
+      <Card.Header>
+        <Card.Title>{Obj.getLabel(object) ?? object.id}</Card.Title>
+      </Card.Header>
+      <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+    </Card.Root>
+  );
+};

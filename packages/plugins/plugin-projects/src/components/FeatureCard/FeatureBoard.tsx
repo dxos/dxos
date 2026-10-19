@@ -20,6 +20,8 @@ export type FeatureBoardProps = {
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
   onSelect?: (id: string | undefined) => void;
+  /** Adds an open button to each card. */
+  onOpen?: (id: string) => void;
 };
 
 /**
@@ -27,7 +29,7 @@ export type FeatureBoardProps = {
  * Selecting a card labels the features it needs and the features that need it, and fades the rest,
  * so a dependency chain reads without drawing edges.
  */
-export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect }: FeatureBoardProps) => {
+export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, onOpen }: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string>();
   const selectedId = selectedIdProp ?? selectedIdState;
@@ -41,7 +43,7 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect }:
   };
 
   return (
-    <div className='flex flex-col gap-3 p-3' data-testid='feature-board'>
+    <div className='flex flex-col gap-3 p-3 w-full' data-testid='feature-board'>
       <div className='flex flex-wrap gap-1'>
         {STATUSES.map((status) => {
           const count = features.filter((feature) => feature.status === status).length;
@@ -68,6 +70,7 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect }:
                 relation={relation}
                 onSelect={(feature) => handleSelect(feature.id)}
                 onSelectDependency={handleSelect}
+                onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
               />
             </div>
           );

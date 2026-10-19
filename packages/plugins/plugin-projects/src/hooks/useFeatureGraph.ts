@@ -4,36 +4,44 @@
 
 import { useMemo } from 'react';
 
-import { EID, Filter, Obj, Relation } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { type Database, EID, Filter, Relation } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { Task } from '@dxos/types';
 
-import { Feature, type FeatureMap, Showcase } from '#types';
+import { Feature, Showcase } from '#types';
 
-import { type FeatureGraphInput, type FeatureModel, buildFeatureModels } from '../../components/FeatureCard/index.ts';
+import {
+  type FeatureGraphInput,
+  type FeatureLookup,
+  type FeatureModel,
+  buildFeatureModels,
+  makeFeatureLookup,
+} from '../components/FeatureCard/index.ts';
 
 const entityId = (uri: string) => EID.getEntityId(EID.parse(uri));
 
 const DONE: ReadonlySet<Task.Status> = new Set(['done', 'duplicate', 'cancelled']);
 
+export type FeatureGraph = {
+  /** Every feature in the space, joined with its relations. */
+  features: readonly FeatureModel[];
+  lookup: FeatureLookup;
+};
+
 /**
- * Card models for a map's features, in map order, joined with their `DependsOn`, `Implements` and
- * `Showcases` relations. Queries the space for each relation type once rather than per feature, so the
- * cost is one subscription per type however many cards the map has.
+ * Card models for every feature in the space, joined with their `DependsOn`, `Implements` and `Showcases`
+ * relations. One subscription per type however many cards render, and signals see dependencies that are
+ * not on the map being shown.
  */
-export const useFeatureModels = (map: FeatureMap.FeatureMap): FeatureModel[] => {
-  const [refs = []] = useObject(map, 'features');
-  const db = Obj.getDatabase(map);
+export const useFeatureGraph = (db: Database.Database | undefined): FeatureGraph => {
   const features = useQuery(db, Filter.type(Feature.Feature));
   const dependsOn = useQuery(db, Filter.type(Feature.DependsOn));
   const implementsTasks = useQuery(db, Filter.type(Feature.Implements));
   const showcases = useQuery(db, Filter.type(Showcase.Showcases));
 
   return useMemo(() => {
-    const byId = new Map(features.map((feature) => [feature.id, feature]));
-    const members = refs.flatMap((ref) => byId.get(entityId(ref.uri) ?? '') ?? []);
     const input: FeatureGraphInput = {
-      features: members.map((feature) => ({
+      features: features.map((feature) => ({
         id: feature.id,
         name: feature.name,
         description: feature.description,
@@ -72,6 +80,7 @@ export const useFeatureModels = (map: FeatureMap.FeatureMap): FeatureModel[] => 
         return showcase && target ? [[{ id: showcase.id, name: showcase.name }, target] as const] : [];
       }),
     };
-    return buildFeatureModels(input);
-  }, [refs, features, dependsOn, implementsTasks, showcases]);
+    const models = buildFeatureModels(input);
+    return { features: models, lookup: makeFeatureLookup(models) };
+  }, [features, dependsOn, implementsTasks, showcases]);
 };

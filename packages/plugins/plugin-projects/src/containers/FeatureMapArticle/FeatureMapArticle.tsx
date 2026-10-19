@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj } from '@dxos/echo';
+import { EID, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -17,7 +18,7 @@ import { type FeatureMap, FeatureMapView } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
-import { useFeatureModels } from './useFeatureModels.ts';
+import { useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
 
 export type FeatureMapArticleProps = AppSurface.ObjectArticleProps<FeatureMap.FeatureMap>;
 
@@ -30,7 +31,14 @@ const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
 export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArticleProps) => {
   const { mode } = useViewState(FeatureMapView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, subject.id);
-  const features = useFeatureModels(subject);
+  const db = Obj.getDatabase(subject);
+  const [refs = []] = useObject(subject, 'features');
+  const graph = useFeatureGraph(db);
+  const features = useMemo(
+    () => refs.flatMap((ref) => graph.lookup(EID.getEntityId(EID.parse(ref.uri)) ?? '') ?? []),
+    [refs, graph],
+  );
+  const openObject = useOpenObject(db, attendableId);
 
   const menu = useMenuBuilder(
     (): ActionGraphProps =>
@@ -85,7 +93,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
         ) : (
           <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
             <ScrollArea.Viewport>
-              <FeatureBoard features={features} />
+              <FeatureBoard features={features} onOpen={(id) => void openObject(id)} />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
