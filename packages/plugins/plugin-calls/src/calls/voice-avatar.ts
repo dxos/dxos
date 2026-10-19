@@ -62,6 +62,16 @@ export const TUNING_PRESETS = {
     separation: 0.04,
     thickness: 1.5,
   },
+  /** Eight strands packed into one fibrous brush stroke that swells while speaking. */
+  brush: {
+    waveAmplitude: 0.3,
+    jitter: 0.3,
+    waveSpeed: 3.3,
+    particles: 7,
+    strands: 8,
+    separation: 0.005,
+    thickness: 2.3,
+  },
 } satisfies Record<string, VoiceAvatarTuning>;
 
 /**

@@ -198,3 +198,7 @@ export const Heptapod: Story = {
 export const Etching: Story = {
   args: { variant: 'ink', ...TUNING_PRESETS.etching },
 };
+
+export const Brush: Story = {
+  args: { variant: 'ink', ...TUNING_PRESETS.brush },
+};
