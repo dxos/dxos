@@ -74,6 +74,16 @@
       "import": "./dist/lib/index.mjs"
     },
     "./package.json": "./package.json",
+    "./Feature": {
+      "source": "./src/types/Feature.ts",
+      "types": "./dist/types/src/types/Feature.d.ts",
+      "import": "./dist/lib/Feature.mjs"
+    },
+    "./FeatureMap": {
+      "source": "./src/types/FeatureMap.ts",
+      "types": "./dist/types/src/types/FeatureMap.d.ts",
+      "import": "./dist/lib/FeatureMap.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -118,6 +128,11 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./Showcase": {
+      "source": "./src/types/Showcase.ts",
+      "types": "./dist/types/src/types/Showcase.d.ts",
+      "import": "./dist/lib/Showcase.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",

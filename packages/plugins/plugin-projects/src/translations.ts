@@ -8,6 +8,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
+import { Feature, FeatureMap, Showcase } from '#types';
 
 export const translations = [
   {
@@ -31,6 +32,36 @@ export const translations = [
         'rename-object.label': 'Rename repository',
         'delete-object.label': 'Delete repository',
         'object-deleted.label': 'Repository deleted',
+      },
+      [Type.getTypename(Feature.Feature)]: {
+        'typename.label': 'Feature',
+        'typename.label_zero': 'Features',
+        'typename.label_one': 'Feature',
+        'typename.label_other': 'Features',
+        'object-name.placeholder': 'New feature',
+        'rename-object.label': 'Rename feature',
+        'delete-object.label': 'Delete feature',
+        'object-deleted.label': 'Feature deleted',
+      },
+      [Type.getTypename(FeatureMap.FeatureMap)]: {
+        'typename.label': 'Feature map',
+        'typename.label_zero': 'Feature maps',
+        'typename.label_one': 'Feature map',
+        'typename.label_other': 'Feature maps',
+        'object-name.placeholder': 'New feature map',
+        'rename-object.label': 'Rename feature map',
+        'delete-object.label': 'Delete feature map',
+        'object-deleted.label': 'Feature map deleted',
+      },
+      [Type.getTypename(Showcase.Showcase)]: {
+        'typename.label': 'Showcase',
+        'typename.label_zero': 'Showcases',
+        'typename.label_one': 'Showcase',
+        'typename.label_other': 'Showcases',
+        'object-name.placeholder': 'New showcase',
+        'rename-object.label': 'Rename showcase',
+        'delete-object.label': 'Delete showcase',
+        'object-deleted.label': 'Showcase deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
