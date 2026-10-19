@@ -91,6 +91,21 @@ describe('IndexScheduler', () => {
     expect(runPass.mock.calls[1][1]).toEqual({ retry: 1 });
   });
 
+  // Closing cancels the pending timers, and a flag only the timer cleared kept the reopened scheduler from starting one.
+  test('a scheduler reopened while a trace run was pending still runs trace passes', async () => {
+    const { scheduler, runPass, emitBlocks } = await setup();
+    emitBlocks(FeedProtocol.WellKnownNamespaces.trace);
+    await scheduler.close();
+    await scheduler.open(Context.default());
+    await vi.advanceTimersByTimeAsync(0);
+    runPass.mockClear();
+
+    emitBlocks(FeedProtocol.WellKnownNamespaces.trace);
+    await vi.advanceTimersByTimeAsync(TRACE_INDEX_DELAY_MS + 1);
+    expect(runPass).toHaveBeenCalledTimes(1);
+    expect(runPass.mock.calls[0][1]).toEqual({ 'trace-blocks': 1 });
+  });
+
   test('continues a pass that left a backlog', async () => {
     const { runPass, documentsSaved } = await setup();
     runPass.mockResolvedValueOnce({ done: false, drained: false });

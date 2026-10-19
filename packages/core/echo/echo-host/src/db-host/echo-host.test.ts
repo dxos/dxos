@@ -340,12 +340,13 @@ describe('EchoHost storage wipe', () => {
         FROM indexCursor LEFT JOIN cursor_tokens ON cursor_tokens.spaceId = indexCursor.spaceId
         WHERE indexCursor.sourceName = 'queue'
       `).then((rows) => rows.filter(({ cursor, token }) => token === null || !cursor.startsWith(`${token}|`)));
+    const queueCursors = () => run(sql`SELECT cursor FROM indexCursor WHERE sourceName = 'queue'`);
 
     // The space's feed, indexed once.
     vi.spyOn(host['_spaceStateManager'], 'spaceIds', 'get').mockReturnValue([spaceId]);
     await append();
     await host.updateIndexes();
-    return { host, append, wipe, orphanedCursors };
+    return { host, append, wipe, orphanedCursors, queueCursors };
   };
 
   test('a pass under way when the wipe starts does not write its cursors back after it', async () => {
@@ -380,12 +381,14 @@ describe('EchoHost storage wipe', () => {
 
   // An identity deleted in place and then recovered brings back the same space ids.
   test('a space indexed again after the wipe stores its cursor under a stored token', async () => {
-    const { host, append, wipe, orphanedCursors } = await setupWipe();
+    const { host, append, wipe, orphanedCursors, queueCursors } = await setupWipe();
     await wipe();
 
     await append();
     await host.updateIndexes();
 
+    // A cursor only a pass writes, so indexing resumed after the wipe.
+    expect(await queueCursors()).not.toHaveLength(0);
     expect(await orphanedCursors()).toEqual([]);
   });
 });

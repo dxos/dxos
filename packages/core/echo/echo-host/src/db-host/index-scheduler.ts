@@ -122,6 +122,10 @@ export class IndexScheduler extends Resource {
     await this.#task?.join();
     this.#releaseWaiters();
     this.#task = undefined;
+    // The disposed context cancelled the timers that would clear these, and a reopened scheduler reuses them.
+    this.#traceRunPending = false;
+    this.#retryPending = false;
+    this.#retryDelay = INDEX_RETRY_DELAY_MS;
   }
 
   /** Starts a pass soon, coalesced with any other request made before it starts. */
