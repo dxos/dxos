@@ -270,6 +270,30 @@ have something new to report: the hook cannot write the summary.
 - Chores with no single home — keep those in session scratch.
 - Duplicating a session todo list — pick one; don't mirror the same list in both.
 
+## Features and showcases
+
+A **feature** is a goal state the product should reach ("Compose & send works against Gmail"), with a
+status: `planned`, `in-progress`, `prototype`, `operational` or `failing`. Features break down into
+subfeatures and depend on each other; a **feature map** is a board of them. Specs stay in the repo, so a
+feature lists spec paths rather than holding the text.
+
+- Read a map with `projects-feature-map-get { map }` before changing it: it returns each feature's status,
+  dependencies, linked tasks and showcases.
+- Create a feature with `projects-feature-create { name, map? , parent? }`; pass `parent` for a subfeature.
+  Record that one feature needs another with `projects-feature-add-dependency { feature, dependsOn }` — a
+  dependency that would close a cycle is refused, and the error names the cycle.
+  `projects-feature-remove-dependency` undoes one; `projects-feature-map-add { map, feature }` puts an
+  existing feature on a map.
+- **When you pick up a task that moves a feature**, link it with `projects-feature-link-task { task, feature }`.
+- **Set the status when you observe it**, with `projects-feature-update { feature, status }`: `in-progress`
+  when work starts, `prototype` when it works in a demo, `operational` when people can rely on it, and
+  `failing` when it worked before and does not now.
+- **When you finish work that shows a feature working**, make a showcase with
+  `projects-showcase-create { name, content, targets, media?, pullRequests? }`: markdown saying what you
+  showed and how to reproduce it, the screenshots and videos you uploaded as files, the PRs it landed in,
+  and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
+  is flagged on the map.
+
 ## Verbs
 
 - **`/project setup [space]`** — bind this repo to a space; see "`/project setup`" above. The one

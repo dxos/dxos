@@ -95,36 +95,6 @@ export const getFeatureRelation = (
   return undefined;
 };
 
-/**
- * Whether adding `source → target` to the `DependsOn` edges would close a cycle, i.e. `source` is already
- * reachable from `target`. Returns the path `target … source` when it would, so the caller can name it.
- */
-export const findDependencyCycle = (
-  edges: readonly (readonly [source: string, target: string])[],
-  source: string,
-  target: string,
-): string[] | undefined => {
-  const next = new Map<string, string[]>();
-  for (const [from, to] of edges) {
-    next.set(from, [...(next.get(from) ?? []), to]);
-  }
-  const visit = (id: string, path: string[]): string[] | undefined => {
-    if (id === source) {
-      return path;
-    }
-    for (const to of next.get(id) ?? []) {
-      if (!path.includes(to)) {
-        const found = visit(to, [...path, to]);
-        if (found) {
-          return found;
-        }
-      }
-    }
-    return undefined;
-  };
-  return visit(target, [target]);
-};
-
 //
 // From ECHO.
 //

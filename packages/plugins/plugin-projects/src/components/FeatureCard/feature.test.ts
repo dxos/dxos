@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import {
   type FeatureModel,
   buildFeatureModels,
-  findDependencyCycle,
   getDependents,
   getFeatureRelation,
   getFeatureSignals,
@@ -58,16 +57,6 @@ describe('relations', () => {
     expect(getFeatureRelation(top, middle)).toBe('dependent');
     expect(getFeatureRelation(middle, middle)).toBeUndefined();
     expect(getFeatureRelation(top, base)).toBeUndefined();
-  });
-
-  test('an edge that would close a cycle is found with its path', ({ expect }) => {
-    const edges = [
-      ['a', 'b'],
-      ['b', 'c'],
-    ] as const;
-    expect(findDependencyCycle(edges, 'c', 'a')).toEqual(['a', 'b', 'c']);
-    expect(findDependencyCycle(edges, 'a', 'c')).toBeUndefined();
-    expect(findDependencyCycle(edges, 'a', 'a')).toEqual(['a']);
   });
 });
 

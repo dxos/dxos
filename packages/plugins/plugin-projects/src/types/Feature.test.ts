@@ -78,4 +78,14 @@ describe('Feature', () => {
     expect(showcases.map((showcase) => showcase.id)).toEqual([showcase.id]);
     expect((await showcase.content.load()).content).toBe('Reply from the inbox.');
   });
+
+  test('an edge that would close a cycle is found with its path', async ({ expect }) => {
+    const edges = [
+      ['a', 'b'],
+      ['b', 'c'],
+    ] as const;
+    expect(Feature.findDependencyCycle(edges, 'c', 'a')).toEqual(['a', 'b', 'c']);
+    expect(Feature.findDependencyCycle(edges, 'a', 'c')).toBeUndefined();
+    expect(Feature.findDependencyCycle(edges, 'a', 'a')).toEqual(['a']);
+  });
 });

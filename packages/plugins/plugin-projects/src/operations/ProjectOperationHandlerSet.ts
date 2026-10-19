@@ -7,7 +7,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ProjectMailboxOperation, ProjectOperation } from '#types';
+import { FeatureOperation, ProjectMailboxOperation, ProjectOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
   ProjectOperation.Create.pipe(Operation.lazyHandler(() => import('./create-project.ts'))),
@@ -26,4 +26,12 @@ export const handlers = OperationHandlerSet.lazy([
   ProjectOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project.ts'))),
   ProjectOperation.ArtifactAdd.pipe(Operation.lazyHandler(() => import('./artifact-add.ts'))),
   ProjectOperation.ArtifactList.pipe(Operation.lazyHandler(() => import('./artifact-list.ts'))),
+  FeatureOperation.Create.pipe(Operation.lazyHandler(() => import('./feature/create.ts'))),
+  FeatureOperation.Update.pipe(Operation.lazyHandler(() => import('./feature/update.ts'))),
+  FeatureOperation.AddDependency.pipe(Operation.lazyHandler(() => import('./feature/add-dependency.ts'))),
+  FeatureOperation.RemoveDependency.pipe(Operation.lazyHandler(() => import('./feature/remove-dependency.ts'))),
+  FeatureOperation.LinkTask.pipe(Operation.lazyHandler(() => import('./feature/link-task.ts'))),
+  FeatureOperation.CreateShowcase.pipe(Operation.lazyHandler(() => import('./feature/create-showcase.ts'))),
+  FeatureOperation.AddToMap.pipe(Operation.lazyHandler(() => import('./feature/add-to-map.ts'))),
+  FeatureOperation.GetMap.pipe(Operation.lazyHandler(() => import('./feature/get-map.ts'))),
 ]);
