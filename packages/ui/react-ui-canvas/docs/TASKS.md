@@ -12,7 +12,7 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 ## Overnight plan (agreed 2026-10-19; all in PR #14050, unlanded)
 
 1. Finish Phase 0: Navigation and Look in the controller; aspect hooks and the Time/Gesture/Editing providers; Viewport split (Background, Scene, Overlay); Canvas hooks to `hooks/canvas/`; `CanvasRoot.tsx` under ~600 lines; re-render test extended to selection.
-2. `Canvas.Views`: the Views inspector in the canvas — rows select, Open drills in, drag restacks through the projection, the canvas selection reveals its row.
+2. ~~`Canvas.Views`~~ Done 2026-10-19: the Views inspector in the canvas — rows select, Open drills in, drag restacks through the projection, the canvas selection reveals its row.
 3. Phase 1 (View rename) across react-ui-canvas and plugin-canvas.
 4. Phase 2 (groups are Objects).
 5. Phase 3b (orphans).
@@ -81,11 +81,13 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [x] react-ui-list: `Tree.Root` `reveal(path)` (open ancestors, focus and scroll the row, windowed or not).
 - [x] react-ui-list: shift-click range selection reported in `TreeSelectEvent`.
 - [ ] `ViewTreeModel`: a `TreeModel` derived from the store atoms (Views → nodes and links → Instances → Object contents); links listed under their container.
-  - [x] First cut (2026-10-18): `utils/view-tree.ts` `buildViewTree` (tested) behind a static tree model in `ViewsInspector`, with stories over the shared fixtures (`src/testing/`); select reports the row, View rows open by path. Not yet wired into `Canvas`, no filter or reveal.
+  - [x] First cut (2026-10-18): `utils/view-tree.ts` `buildViewTree` (tested) behind a static tree model in `ViewsInspector`, with stories over the shared fixtures (`src/testing/`); select reports the row, View rows open by path.
+  - [x] Wired into `Canvas` as `Canvas.Views` (2026-10-19); still a static model rebuilt from `store.scenes`, not per-node atoms.
 
-- [ ] Views panel: the hierarchy under the root (Views → nodes and links → Instances → their Object's contents), with counts on rows.
-- [ ] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag.
-- [ ] Views panel: drag rows to restack within a container.
+- [x] Views panel: the hierarchy under the root (Views → nodes and links → Instances → their Object's contents), with counts on rows. `Canvas.Views` (a dock-only section) over `store.scenes`; the tree model is rebuilt per edit, its open state kept by row path.
+- [x] Views panel: selecting a row selects on the canvas; a View row opens it by the drill path; a filter by name, type or tag. Rows select through `navigation.openView(path, { select })` (meta toggles, shift takes the range in the row's View); the canvas selection marks its rows and reveals the first without taking focus; Open, Enter or a double-click opens a View row; the filter matches label or type (tags wait for Phase 3).
+- [x] Views panel: drag rows to restack within a container. `controller.document.restack` → one `reorder` intent through the open View's projection; `canRestack`/`viewReorder` unit-tested.
+  - Decisions (2026-10-19): the restack is the existing `reorder` intent rather than `update` with a `z`, as `reorder` is exactly that edit; a drop is accepted only among siblings in the open View, since the projection is the open View's (restacking another View would need its own projection or navigating there mid-drag); a View row's click selects its frame in the parent View, and only Open/Enter/double-click drill in; row selection navigates without animation so the selection lands in the View it names; `restackZ` now reports a move that changes nothing as undefined.
 - [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden.
 - [ ] Delete AboutInspector, its story and its Canvas part.
 
