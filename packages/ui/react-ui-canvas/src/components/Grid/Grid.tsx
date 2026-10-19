@@ -127,6 +127,8 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
               key={id}
               opacity={variant === 'dots' ? dotOpacity(size, min) : levelOpacity(size, min)}
               fill={`url(#${createId(instanceId, id)})`}
+              // The svg's stroke is for the pattern's lines; on the level's rect it would outline the whole view.
+              stroke='none'
               width='100%'
               height='100%'
             />
