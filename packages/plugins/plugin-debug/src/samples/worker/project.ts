@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
@@ -17,13 +18,17 @@ export type ProjectInput = { tasks: TasksResult };
 
 export type ProjectResult = { project: Project.Project; instructions: Instructions.Instructions };
 
+/** Bound to every chat the project delegates, so the diagram task never depends on the agent enabling it. */
+const SKILL_KEYS = ['org.dxos.skill.drawing'] as const;
+
 const INSTRUCTIONS = `Deploy the Worker described by the task list, working the tasks in order and \
 setting each one's status as you finish it: the task list is how I follow this run.
 
 What the Worker does is the whole specification — one fetch handler, JSON out, a greeting and the \
 current UTC time. The first task draws that plan as a diagram on the canvas, through the Drawing \
-skill (\`org.dxos.skill.drawing\`), and files it on this project; past that there is nothing to \
-choose. If a later step starts to look like architecture, it is the wrong step.
+skill (\`org.dxos.skill.drawing\`): state the boxes, arrows and groups in its semantic diagram \
+language and let the layout engine place them, then file the drawing on this project. Past that \
+there is nothing to choose. If a later step starts to look like architecture, it is the wrong step.
 
 Write the code yourself in one sandbox, driving it through the Sandbox skill \
 (\`org.dxos.skill.sandbox\`). The sandbox image ships a coding agent of its own; do not delegate to \
@@ -53,6 +58,7 @@ export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = 
         Instructions.make({
           name: 'Hello Worker',
           text: INSTRUCTIONS,
+          skills: SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
           objects: [Ref.make(tasks.taskSet)],
         }),
       );
