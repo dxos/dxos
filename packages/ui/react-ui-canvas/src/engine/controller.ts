@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
@@ -11,6 +12,7 @@ import {
   type SceneId,
   type SceneStore,
   type StyleClass,
+  type Tool,
   getElement,
   isLink,
 } from '../model/index.ts';
@@ -67,6 +69,16 @@ export type EditingCommands = {
   paste: (at?: Point) => void;
 };
 
+/** The active tool and the grid aids (DESIGN.md §13.1, the Tools aspect). */
+export type ToolsCommands = {
+  /** A creation tool clears the selection, whose outline would only sit over the drawing; a link tool sets the type. */
+  setTool: (tool: Tool) => void;
+  toggleSnap: () => void;
+  toggleGuides: () => void;
+  toggleLattice: () => void;
+  toggleDebug: () => void;
+};
+
 /**
  * The canvas's commands, organised by aspect. Each reads the state it needs from the registry when it runs, so the
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
@@ -74,6 +86,7 @@ export type EditingCommands = {
 export type CanvasController = {
   selection: SelectionCommands;
   editing: EditingCommands;
+  tools: ToolsCommands;
 };
 
 export const createCanvasController = ({
@@ -196,5 +209,22 @@ export const createCanvasController = ({
     },
   };
 
-  return { selection, editing };
+  const toggle = (atom: Atom.Writable<boolean>) => () => registry.set(atom, !registry.get(atom));
+  const tools: ToolsCommands = {
+    setTool: (tool) => {
+      registry.set(atoms.tool, tool);
+      if (tool.kind === 'link') {
+        registry.set(atoms.linkType, tool.type);
+      }
+      if (tool.kind === 'node' || tool.kind === 'link') {
+        select([]);
+      }
+    },
+    toggleSnap: toggle(atoms.snap),
+    toggleGuides: toggle(atoms.guides),
+    toggleLattice: toggle(atoms.lattice),
+    toggleDebug: toggle(atoms.debug),
+  };
+
+  return { selection, editing, tools };
 };

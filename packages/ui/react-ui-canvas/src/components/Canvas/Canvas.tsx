@@ -1030,16 +1030,7 @@ const CanvasRoot = ({
 
   const { minor, major, snap, snapMinor } = useSceneSnap(grid, camera.zoom, snapEnabled);
   gridRef.current = { major, snap };
-  const toggleSnap = useCallback(() => registry.set(atoms.snap, !registry.get(atoms.snap)), [registry, atoms.snap]);
-  const toggleGuides = useCallback(
-    () => registry.set(atoms.guides, !registry.get(atoms.guides)),
-    [registry, atoms.guides],
-  );
-  const toggleLattice = useCallback(
-    () => registry.set(atoms.lattice, !registry.get(atoms.lattice)),
-    [registry, atoms.lattice],
-  );
-  const toggleDebug = useCallback(() => registry.set(atoms.debug, !registry.get(atoms.debug)), [registry, atoms.debug]);
+  const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
   const {
     onBackgroundPointerDown,
     onPointerMove,
@@ -1057,7 +1048,6 @@ const CanvasRoot = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
-    setTool,
     setDrag,
     toScene,
     removePoint,
@@ -1069,6 +1059,7 @@ const CanvasRoot = ({
   } = usePointerMachine({
     registry,
     atoms,
+    setTool: controller.tools.setTool,
     store,
     // A hidden layer's elements are not hit: gestures see the scene as drawn.
     scene: visible,

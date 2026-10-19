@@ -122,4 +122,26 @@ describe('CanvasController', () => {
       expect(registry.get(atoms.clipboard)).toBeDefined();
     });
   });
+
+  describe('tools', () => {
+    test('a creation tool clears the selection and a link tool sets the link type', ({ expect }) => {
+      const { registry, atoms, controller } = setup();
+      controller.selection.select(['a']);
+      controller.tools.setTool({ kind: 'select' });
+      expect(registry.get(atoms.selection).size).toBe(1);
+      controller.tools.setTool({ kind: 'link', type: 'curve' });
+      expect(registry.get(atoms.selection).size).toBe(0);
+      expect(registry.get(atoms.linkType)).toBe('curve');
+    });
+
+    test('the toggles flip their atoms', ({ expect }) => {
+      const { registry, atoms, controller } = setup();
+      const snap = registry.get(atoms.snap);
+      controller.tools.toggleSnap();
+      expect(registry.get(atoms.snap)).toBe(!snap);
+      const debug = registry.get(atoms.debug);
+      controller.tools.toggleDebug();
+      expect(registry.get(atoms.debug)).toBe(!debug);
+    });
+  });
 });

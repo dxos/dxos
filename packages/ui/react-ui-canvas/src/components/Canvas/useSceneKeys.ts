@@ -4,7 +4,7 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
-import { type CanvasAtoms, type EditingCommands, type Projection } from '../../engine/index.ts';
+import { type CanvasAtoms, type EditingCommands, type Projection, type ToolsCommands } from '../../engine/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
 import {
   type Capabilities,
@@ -54,7 +54,8 @@ export type UseSceneKeysOptions = {
   Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
   Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
-  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'setTool'>;
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
+  Pick<ToolsCommands, 'setTool'>;
 
 /**
  * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this

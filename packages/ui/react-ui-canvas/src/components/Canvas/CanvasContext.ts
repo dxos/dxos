@@ -11,6 +11,7 @@ import {
   type EditingPart,
   type Isolation,
   type Projection,
+  type ToolsCommands,
 } from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
 import { type useRegistry } from '../../hooks/index.ts';
@@ -159,11 +160,11 @@ export type CanvasContextValue = {
     | 'onPointPointerDown'
     | 'onMidpointPointerDown'
     | 'onPointContextMenu'
-    | 'setTool'
     | 'removePoint'
     | 'menu'
     | 'closeMenu'
     | 'menuAnchorRef'
-  >;
+  > &
+  Pick<ToolsCommands, 'setTool'>;
 
 export const [CanvasProvider, useCanvasContext] = createContext<CanvasContextValue>('Canvas.Root');

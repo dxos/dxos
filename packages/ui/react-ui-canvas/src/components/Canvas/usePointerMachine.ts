@@ -12,7 +12,14 @@ import {
   useState,
 } from 'react';
 
-import { type CanvasAtoms, type ControlPointRef, type Drag, type Handle, type Projection } from '../../engine/index.ts';
+import {
+  type CanvasAtoms,
+  type ControlPointRef,
+  type Drag,
+  type Handle,
+  type Projection,
+  type ToolsCommands,
+} from '../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
 import {
   type Camera,
@@ -30,7 +37,6 @@ import {
   type Scene,
   type SceneStore,
   type SplineLink,
-  type Tool,
   endpointNode,
   isFrameNode,
   isPointEndpoint,
@@ -109,6 +115,8 @@ export type ContextMenu = { at: Point; scene: Point; kind: 'point' | 'element' |
 export type UsePointerMachineOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
+  /** Returns to Select once a creation gesture lands. */
+  setTool: ToolsCommands['setTool'];
   store: SceneStore;
   scene: Scene;
   nodeRegistry: NodeRegistry;
@@ -147,7 +155,6 @@ export type PointerMachine = {
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
 
-  setTool: (next: Tool) => void;
   setDrag: (next: Drag | undefined) => void;
   /** A pointer event's position in scene coordinates. */
   toScene: (event: { clientX: number; clientY: number }) => Point;
@@ -171,6 +178,7 @@ export type PointerMachine = {
 export const usePointerMachine = ({
   registry,
   atoms,
+  setTool,
   store,
   scene,
   nodeRegistry,
@@ -199,22 +207,6 @@ export const usePointerMachine = ({
   );
 
   const setDrag = useCallback((next: Drag | undefined) => registry.set(atoms.drag, next), [registry, atoms.drag]);
-
-  const setTool = useCallback(
-    (next: Tool) => {
-      registry.set(atoms.tool, next);
-      if (next.kind === 'link') {
-        registry.set(atoms.linkType, next.type);
-      }
-      // A creation tool is about what comes next, so the outgoing selection's outline and handles would
-      // only sit over the drawing; the node the gesture makes becomes the selection.
-      if (next.kind === 'node' || next.kind === 'link') {
-        registry.set(atoms.selection, new Set<ElementId>());
-        registry.set(atoms.point, undefined);
-      }
-    },
-    [registry, atoms.tool, atoms.linkType, atoms.selection, atoms.point],
-  );
 
   const startDrag = useCallback(
     (next: Drag, event: PointerEvent) => {
@@ -950,7 +942,6 @@ export const usePointerMachine = ({
     onMidpointPointerDown,
     onPointContextMenu,
 
-    setTool,
     setDrag,
     toScene,
     removePoint,
