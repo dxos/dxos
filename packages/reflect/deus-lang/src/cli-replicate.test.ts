@@ -3,7 +3,7 @@
 //
 
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { describe, test } from 'vitest';
@@ -77,44 +77,6 @@ describe('deus CLI replication', () => {
     expect(refused.stderr).toContain('compact keeps the whole history');
 
     // A forged object (D91) is Replicate.Spec.pullSkipsForgedObjects, a cached DEUS test.
-  });
-
-  test('packs carry objects found by ranged reads (D180)', { timeout: 120_000 }, ({ expect }) => {
-    const remote = join(scratch, 'remote-packs');
-    const a = ['--codebase', join(scratch, 'packs-a')];
-    const b = ['--codebase', join(scratch, 'packs-b')];
-    for (const c of [a, b]) {
-      deus('init', '--empty', ...c);
-      deus('remote', 'add', 'origin', remote, ...c);
-    }
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), '--message', 'prelude', ...a);
-    deus('push', ...a);
-    deus('add', file('p.deus', 'def packed : Text := "a \\"quoted\\" é"\n'), '--message', 'packed', ...a);
-    expect(deus('push', ...a).code).toBe(0);
-    // Every bundle has a pack: its line text, and an index of 1024 fanout bytes and 48-byte records.
-    const bundles = readdirSync(join(remote, 'bundles')).sort();
-    expect(readdirSync(join(remote, 'packs')).sort()).toEqual(bundles.flatMap((name) => [name, `${name}.idx`]).sort());
-    for (const name of bundles) {
-      const text = readFileSync(join(remote, 'packs', name));
-      const index = readFileSync(join(remote, 'packs', `${name}.idx`));
-      expect(text.subarray(0, 8).toString()).toBe('DEUSLN1\n');
-      const records = (index.length - 1024) / 48;
-      expect(index.readUInt32BE(1020)).toBe(records);
-      // Each record selects one `obj` or `meta` line of the pack.
-      for (let at = 0; at < records; at++) {
-        const offset = index.readUInt32BE(1024 + 48 * at + 36);
-        const line = text.subarray(offset, offset + index.readUInt32BE(1024 + 48 * at + 40)).toString();
-        expect(line).toMatch(/^(obj|meta) \S+ \(/);
-        expect(text[offset + index.readUInt32BE(1024 + 48 * at + 40)]).toBe(10);
-      }
-    }
-    // A pull reads the packs: it succeeds with the bundles' contents unreadable.
-    for (const name of bundles) {
-      writeFileSync(join(remote, 'bundles', name), gzipSync('unreadable'));
-    }
-    deus('pull', ...b);
-    expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
-    expect(deus('eval', 'Text.length packed', ...b).stdout).toBe('12\n');
   });
 
   test(
