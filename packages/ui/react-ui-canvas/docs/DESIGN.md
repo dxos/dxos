@@ -586,3 +586,91 @@ nothing from illustrator is copied.
    first decides whether phase 2 needs the `CellDef` hook.
 7. Mode switch trigger: media queries only, or also a user toggle in the toolbar on desktop (columns as a reading
    mode for large diagrams)?
+
+## 13. Canvas core: services, state and a controller (designed 2026-10-18, not built)
+
+`CanvasRoot` (`components/Canvas/Canvas.tsx`, ~1,380 of its 2,507 lines) builds one context of 88 fields and passes it to
+eleven parts. An inventory (2026-10-18) found:
+
+| Measure               | Count                                                                           |
+| --------------------- | ------------------------------------------------------------------------------- |
+| Fields by kind        | atom-state 20, derived 14, command 16, handler 14, service 8, config 8, other 8 |
+| Fields by change rate | static 21, rare 26, per-edit 19, per-gesture 14, per-frame 8                    |
+| Fields by readers     | none 14, one part 57 (39 of them Viewport), several parts 17                    |
+
+Three consequences:
+
+1. **Every part re-renders on every camera change.** The provider memoizes on all field values
+   (`react-hooks/src/createContext.ts:28`), and eight fields change per frame (camera, pointer, focus, frameUnit,
+   latticeBounds, time, generated, toolbarActions). During playback the scene-keyed fields (`scene`, `displayScene`,
+   handlers, paste) are per-frame too, since the projection animates.
+2. **`toolbarActions` is per-frame by accident**: `createAtCentre` closes over the camera-derived `pointer`.
+3. **Most of the context is Viewport's private state routed through the root**, and fourteen fields are read by no
+   part (the root binds them itself).
+
+### 13.1 Target: aspects
+
+The state stays where it is (the store, the projection, `CanvasAtoms`); what changes is how parts reach it. The context
+is split by **aspect**: a functional slice of the canvas pairing the atoms that hold its state with the commands that
+change it. Every value an aspect exposes is stable for the life of the canvas (atoms, registries, command functions),
+so a part re-renders only for the atoms it subscribes to, never because the context changed.
+
+```
+Document (persisted)        SceneStore: scenes, scene(id), styles
+Projection (per View)       baseProjection → animate(…, clock) → { scene, apply, capabilities }
+View state (CanvasAtoms)    Navigation · Selection · Gesture · Editing · Tools · Time · Look
+                                │  each aspect: its atoms + its controller commands
+Context (one provider)      services: registry, atoms, store, registries, capabilities, readonly, controller
+  ├─ useCanvasDocument()    ├─ useCanvasNavigation()   ├─ useCanvasSelection()   ├─ useCanvasTools()
+  ├─ useCanvasLook()        └─ optional providers:  TimeProvider · GestureProvider · EditingProvider
+Parts                       read atoms with useAtomValue; call commands; derive their own values
+```
+
+Delivery: **one static provider** in `CanvasRoot` holds the services, the atoms and the controller, and each aspect
+has a hook that returns only its slice. Sharing one provider costs nothing because nothing in it changes. Three aspects
+that a canvas may lack or a host may replace get **their own provider**: Time (no timeline), Gesture and Editing (a
+read-only view mounts neither, so its parts cannot reach their commands).
+
+| Aspect         | Purpose                                      | State (atoms)                                                      | Commands                                                                                        | Derived (computed by its reader)                                                                                               | Hook / provider                  | Read by                                               |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- | ----------------------------------------------------- |
+| **Document**   | What the canvas shows and the one write path | `store.scenes`, `store.styles`, `projection.scene`; `capabilities` | `apply` and the intent helpers: create, delete, update, reorder, group, ungroup                 | `scene` (current View), `look` inputs                                                                                          | `useCanvasDocument()` · shared   | Viewport, Properties, Layers, Objects, About          |
+| **Navigation** | Where the camera is and which View is open   | `camera`, `path`, `history`, `isolation`                           | `drillIn`, `drillOut`, `goHistory`, `isolate`, `exitIsolation`, `fit`, `zoomIn/Out/At`, `panBy` | `bounds` (kept entry frame), `fitTarget`, `focus`, `frameUnit`                                                                 | `useCanvasNavigation()` · shared | Viewport, Navigation, Objects, Debug                  |
+| **Selection**  | What is selected or under the pointer        | `selection`, `hover`, `linkHover`, `point`                         | `select`, `selectAll`, `clearSelection`, `deleteSelection`, `duplicateSelection`                | the selected instance, `selected` flag for the inspector panel                                                                 | `useCanvasSelection()` · shared  | Viewport, Properties, Layers, Actions                 |
+| **Gesture**    | The pointer gesture in flight                | `drag`                                                             | the pointer machine's handlers (internal), `cancelDrag`                                         | `displayScene` (projection × drag), `createFrame`, `landing`, `blocked` — a derived atom, as Viewport and Objects both read it | `GestureProvider` · separate     | Viewport only (handlers); `displayScene` via its atom |
+| **Editing**    | Text editing and the clipboard               | `editing`, `active`, `clipboard`                                   | `editPart`, `commitPart`, `cancelPart`, `copy`, `cut`, `paste`                                  | —                                                                                                                              | `EditingProvider` · separate     | Viewport, Actions                                     |
+| **Tools**      | The active tool and the grid aids            | `tool`, `linkType`, `layer`, `snap`, `guides`, `lattice`, `debug`  | `setTool`, `toggleSnap`, `toggleGuides`, `toggleLattice`, `toggleDebug`, `createAtCentre`       | `grid` (snap spacing for the zoom), `latticeBounds`                                                                            | `useCanvasTools()` · shared      | Tools, Theme, Viewport, Debug                         |
+| **Time**       | The clock and keyframing                     | `clock.time`, `clock.playing`, `autoKey`                           | `play`, `pause`, `seek`, `toggleAutoKey`, the timeline key commands                             | `fps`, the sampled scene (inside `projection`)                                                                                 | `TimeProvider` · separate        | Timeline, Viewport                                    |
+| **Look**       | Theme and background                         | theme override, background grid (host props or atoms)              | `setTheme`, `setBackgroundGrid`                                                                 | `look`, `themeGrid`                                                                                                            | `useCanvasLook()` · shared       | Theme, Viewport                                       |
+
+Rules:
+
+1. **Values never go in a context.** An aspect hook returns atoms and functions; a part calls `useAtomValue` on the
+   atoms it draws. The services object is created once per canvas and never rebuilt.
+2. **Commands read state when called**, from the registry, never from a render-time closure, so their identity never
+   depends on state (the `createAtCentre`/`pointer` bug in the findings above is this rule broken).
+3. **Derived state lives with its reader.** A value read by one part is computed in that part; a value read by several
+   parts becomes a derived atom on the aspect (`displayScene`).
+4. **The controller is organised by aspect**: `controller.navigation.drillIn(…)`, `controller.selection.delete()`, and
+   so on, React-free in `engine/controller.ts`, unit-tested per aspect. Every command that edits the document goes
+   through `Document`'s `apply`, which Phase 6 replaces with `CanvasOperation.Apply` (VIEWS.md §8).
+5. **Undo leaves `CanvasAtoms`** in Phase 6 (the scoped `HistoryTracker`), and `layers` becomes the document-wide tag
+   table in Phase 3; both are aspect changes, not new contexts.
+
+### 13.2 Phases
+
+Each phase is one commit with the Canvas, panels and inspectors story tests and a Storybook smoke render after it.
+
+1. **Prune.** Remove the 14 dead fields (bind them in `CanvasRoot` only); read the camera at call time in
+   `createAtCentre`; drop the unused memo dependencies; fix the inconsistencies the inventory found (the
+   `drillIn` type, the duplicated menu delete, Timeline writing atoms directly, panels calling `useRegistry()`).
+2. **Viewport owns its state.** Viewport reads its atom-state itself and computes its own derived values
+   (`latticeBounds`, `focus`, `frameUnit`, `createFrame`, link-hover handlers, `themeGrid`).
+3. **Aspects.** The services provider, the shared aspect hooks and the Time, Gesture and Editing providers; the
+   `displayScene` derived atom. A story test counts panel renders across a scripted pan and asserts they do not
+   grow with it.
+4. **Controller.** `createCanvasController` in `engine/`, organised by aspect, with node unit tests per aspect;
+   `CanvasRoot`, the keys, menus and panels call it.
+5. **Split Viewport** into Background, Scene and Overlay, and the remaining parts into their own files.
+
+Done when: no part but Viewport re-renders on a pan (measured by the story test), the controller's commands are
+unit-tested without React, and no file in `components/Canvas` exceeds ~600 lines.
