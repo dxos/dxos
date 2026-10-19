@@ -37,12 +37,36 @@ describe('cloudPath', () => {
   });
 });
 
+/** The vertices of a polygon path. */
+const vertices = (d: string) =>
+  [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x), y: Number(y) }));
+
 describe('polygonPath', () => {
   test('a vertex per side, the first centred on top', () => {
     const d = polygonPath({ width: 100, height: 80 }, 2, 5);
-    expect(d).toMatch(/^M 50 2 L /);
+    expect(d.startsWith('M 50 ')).toBe(true);
     expect(d.split(' L ')).toHaveLength(5);
     expect(d.endsWith(' Z')).toBe(true);
+  });
+
+  test('regular in any frame, and centred in it by its own bounds', () => {
+    const size = { width: 300, height: 100 };
+    for (const sides of [3, 5, 6]) {
+      const points = vertices(polygonPath(size, 0, sides));
+      const xs = points.map(({ x }) => x);
+      const ys = points.map(({ y }) => y);
+      expect((Math.min(...xs) + Math.max(...xs)) / 2).toBeCloseTo(150, 1);
+      expect((Math.min(...ys) + Math.max(...ys)) / 2).toBeCloseTo(50, 1);
+      // Fits the height (the shorter side), and every edge is as long as the first.
+      expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(100, 1);
+      const edges = points.map((point, index) => {
+        const next = points[(index + 1) % points.length];
+        return Math.hypot(next.x - point.x, next.y - point.y);
+      });
+      for (const edge of edges) {
+        expect(edge).toBeCloseTo(edges[0], 1);
+      }
+    }
   });
 
   test('a triangle at least', () => {

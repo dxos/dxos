@@ -244,7 +244,7 @@ export const CloudNode = Schema.Struct({
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
 
-/** A regular polygon inscribed in the frame (stretched with it), a vertex at the top; labelled like a box. */
+/** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
 export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,

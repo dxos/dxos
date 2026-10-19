@@ -47,11 +47,21 @@ export const cloudPath = (size: Size, inset = 0, bumps = DEFAULT_CLOUD_BUMPS): s
 };
 
 /**
- * SVG path data for a regular polygon of `sides` inscribed in a frame of `size` (stretched with it), a vertex on top,
- * kept `inset` px inside the frame.
+ * SVG path data for a regular polygon of `sides`, a vertex on top: as large as fits a frame of `size` kept `inset` px
+ * inside it, and centred in the frame by its own bounds (an odd polygon is lower on top than across its base).
  */
 export const polygonPath = (size: Size, inset = 0, sides = DEFAULT_POLYGON_SIDES): string => {
   const count = Math.max(3, Math.round(sides));
-  const points = ring(size, Math.max(0, size.width / 2 - inset), Math.max(0, size.height / 2 - inset), count);
-  return `M ${points.map(({ x, y }) => `${round(x)} ${round(y)}`).join(' L ')} Z`;
+  const unit = ring({ width: 0, height: 0 }, 1, 1, count);
+  const xs = unit.map(({ x }) => x);
+  const ys = unit.map(({ y }) => y);
+  const [left, right, top, bottom] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  // Uniform, so the polygon stays regular in a frame of any aspect.
+  const scale = Math.max(
+    0,
+    Math.min((size.width - 2 * inset) / (right - left), (size.height - 2 * inset) / (bottom - top)),
+  );
+  const dx = size.width / 2 - ((left + right) / 2) * scale;
+  const dy = size.height / 2 - ((top + bottom) / 2) * scale;
+  return `M ${unit.map(({ x, y }) => `${round(dx + x * scale)} ${round(dy + y * scale)}`).join(' L ')} Z`;
 };

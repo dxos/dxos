@@ -24,6 +24,7 @@ import {
   type Size,
 } from '../model/index.ts';
 import { type PartField } from './parts.ts';
+import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
 export const nodeBounds = (node: Node): Bounds => ({
@@ -107,9 +108,12 @@ export const createNode = ({
     case 'rect':
       return { type, id, z, center, size };
     case 'ellipse':
-    case 'cloud':
-    case 'polygon':
       return { type, id, z, center, size };
+    // The count is set, so the panel shows the shape's own value rather than an empty field.
+    case 'cloud':
+      return { type, id, z, center, size, bumps: DEFAULT_CLOUD_BUMPS };
+    case 'polygon':
+      return { type, id, z, center, size, sides: DEFAULT_POLYGON_SIDES };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'frame':
