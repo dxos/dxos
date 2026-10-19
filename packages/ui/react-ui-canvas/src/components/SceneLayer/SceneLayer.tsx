@@ -1020,7 +1020,8 @@ export const FrameNodeView = (props: NodeViewProps) => {
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
-  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
+  // A scene named by no one shows no title, rather than its id.
+  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? '';
   // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
   if (!contents || tier === 'dot') {
     return (

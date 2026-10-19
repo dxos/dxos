@@ -2136,7 +2136,7 @@ const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: Ca
       return;
     }
     const before = registry.get(store.scenes);
-    registry.set(store.scenes, { ...before, [id]: { ...group.child, name: 'Untitled' } });
+    registry.set(store.scenes, { ...before, [id]: group.child });
     projection.apply({ kind: 'batch', intents: group.intents });
     // A projection may refuse the batch (`apply` reports nothing), so the shape's presence is the result: without
     // it the new scene would be an orphan, so it goes and the selection stays.

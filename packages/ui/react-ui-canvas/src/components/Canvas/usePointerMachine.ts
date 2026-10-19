@@ -724,7 +724,14 @@ export const usePointerMachine = ({
       const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
       const pending = pendingRef.current;
       // No `fontSize`: a new node inherits the view's default, as one created by dropping a link does.
-      const node: Node = pending?.type === drag.type ? { ...pending.node, ...props } : def.create(props);
+      const reused = pending?.type === drag.type ? { ...pending.node, ...props } : undefined;
+      // A frame's scene is minted from its id, so it follows the id the node lands with; kept from the ghost, every frame
+      // drawn would open onto the ghost's one scene.
+      const node: Node = !reused
+        ? def.create(props)
+        : isFrameNode(reused) && pending && isFrameNode(pending.node) && pending.node.scene === pending.node.id
+          ? { ...reused, scene: id }
+          : reused;
       pendingRef.current = { type: drag.type, node };
       return node;
     },
@@ -739,7 +746,6 @@ export const usePointerMachine = ({
           ...registry.get(store.scenes),
           [node.scene]: {
             id: node.scene,
-            name: 'Untitled',
             nodes: {},
             links: {},
             layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
