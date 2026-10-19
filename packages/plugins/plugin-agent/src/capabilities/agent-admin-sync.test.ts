@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Queue from 'effect/Queue';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -14,7 +18,7 @@ import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AgentSpace } from '#types';
 
-import { type EdgeRequest, makeAdminSync } from './agent-admin-sync.ts';
+import { type EdgeRequest, makeAdminSync, runOnWake } from './agent-admin-sync.ts';
 
 const member = (key: PublicKey, role: SpaceMember_Role, did = '') =>
   createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key), did }, role });
@@ -37,7 +41,10 @@ const agentSpace = (initial: Member[]) => {
   };
 };
 
-/** EDGE as far as the sync reaches it: the agents it minted, by DID, and the calls made of it. */
+/**
+ * EDGE as far as the sync reaches it: the agents it minted, by DID, and the calls made of it. A failure is answered as
+ * EDGE's error envelope is, which its client marks not retryable whatever the status.
+ */
 const fakeEdge = (agents: Record<string, { defaultSpaceId: SpaceId; role?: string }>) => {
   const calls: string[] = [];
   const failures = new Map<string, number>();
@@ -118,15 +125,22 @@ describe('AgentAdminSync', () => {
       member(editor, SpaceMember_Role.EDITOR),
     ]);
     const elsewhere = fakeEdge({ [did]: { defaultSpaceId: SpaceId.random() } });
-    await run(makeAdminSync(elsewhere.request), [claimed.space]);
+    expect(await run(makeAdminSync(elsewhere.request), [claimed.space])).toBe(false);
     expect(elsewhere.calls).toEqual([`GET /compute/brain/${did}`]);
 
     const contact = fakeEdge({ [did]: { defaultSpaceId: claimed.space.id, role: 'contact' } });
-    await run(makeAdminSync(contact.request), [claimed.space]);
+    expect(await run(makeAdminSync(contact.request), [claimed.space])).toBe(false);
     expect(contact.calls).toEqual([`GET /compute/brain/${did}`]);
+
+    // An agent EDGE does not know (404) is a refusal too, so it asks for no retry.
+    const unknown = fakeEdge({});
+    expect(await run(makeAdminSync(unknown.request), [claimed.space])).toBe(false);
+    expect(unknown.calls).toEqual([`GET /compute/brain/${did}`]);
   });
 
-  test('a change EDGE settles is not told again, and one that failed is', async ({ expect }) => {
+  test('a change EDGE settles is not told again, and one it could not take is, after asking for a retry', async ({
+    expect,
+  }) => {
     const kai = agentSpace([
       member(agent, SpaceMember_Role.OWNER, did),
       member(me, SpaceMember_Role.ADMIN),
@@ -139,11 +153,61 @@ describe('AgentAdminSync', () => {
     edge.failures.set(listEditor, 503);
     edge.failures.set(delistReader, 409);
     const sync = makeAdminSync(edge.request);
-    await run(sync, [kai.space]);
+    expect(await run(sync, [kai.space])).toBe(true);
 
     edge.calls.length = 0;
     edge.failures.clear();
-    await run(sync, [kai.space]);
+    expect(await run(sync, [kai.space])).toBe(false);
     expect(edge.calls).toEqual([listEditor]);
   });
+
+  test('EDGE down when a space is to be confirmed asks for a retry; a refused change does not', async ({ expect }) => {
+    const kai = agentSpace([
+      member(agent, SpaceMember_Role.OWNER, did),
+      member(me, SpaceMember_Role.ADMIN),
+      member(editor, SpaceMember_Role.EDITOR),
+    ]);
+    const edge = fakeEdge({ [did]: { defaultSpaceId: kai.space.id } });
+    const confirmKai = `GET /compute/brain/${did}`;
+    const listMe = `POST /compute/brain/${did}/admins {"identityKey":"${me.toHex()}"}`;
+    const listEditor = `POST /compute/brain/${did}/admins {"identityKey":"${editor.toHex()}"}`;
+    const sync = makeAdminSync(edge.request);
+
+    edge.failures.set(confirmKai, 503);
+    expect(await run(sync, [kai.space])).toBe(true);
+    expect(edge.calls).toEqual([confirmKai]);
+
+    // A refusal (403) gets the same answer however soon it is asked again, so it waits for the next pass.
+    edge.calls.length = 0;
+    edge.failures.clear();
+    edge.failures.set(listEditor, 403);
+    expect(await run(sync, [kai.space])).toBe(false);
+    expect(edge.calls).toEqual([confirmKai, listMe, listEditor]);
+  });
+
+  it.effect(
+    'a pass that could not reach EDGE runs again after a pause; one that could waits for a wake',
+    ({ expect }) =>
+      Effect.gen(function* () {
+        const wake = yield* Queue.sliding<void>(1);
+        const passes = yield* Queue.unbounded<number>();
+        let count = 0;
+        const pass = Effect.gen(function* () {
+          count++;
+          yield* Queue.offer(passes, count);
+          return count === 1;
+        });
+        yield* Effect.forkScoped(runOnWake(wake, pass));
+
+        yield* Queue.offer(wake, undefined);
+        expect(yield* Queue.take(passes)).toBe(1);
+        yield* TestClock.adjust('30 seconds');
+        expect(yield* Queue.take(passes)).toBe(2);
+
+        yield* TestClock.adjust('10 minutes');
+        expect(yield* Queue.size(passes)).toBe(0);
+        yield* Queue.offer(wake, undefined);
+        expect(yield* Queue.take(passes)).toBe(3);
+      }).pipe(Effect.scoped),
+  );
 });
