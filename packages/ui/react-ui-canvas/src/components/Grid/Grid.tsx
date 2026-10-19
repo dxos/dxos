@@ -27,6 +27,9 @@ const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${g
  */
 const levelOpacity = (size: number, min: number) => Math.min(0.12, 0.04 + (0.02 * Math.log(size / min)) / Math.log(4));
 
+/** A dot level fades in over its first doubling past the finest drawn spacing, so a level arriving with the zoom does not pop. */
+const dotOpacity = (size: number, min: number) => Math.min(1, (size - min) / min);
+
 export type GridProps = Util.ThemedClassName<{
   size?: number;
   scale?: number;
@@ -36,6 +39,10 @@ export type GridProps = Util.ThemedClassName<{
   ratios?: readonly number[];
   /** On-screen cell size (px) outside which a level is not drawn. */
   range?: readonly [min: number, max: number];
+  /** Crossing lines, or a dot at each grid point. */
+  variant?: 'lines' | 'dots';
+  /** The dots' fill, as the stroke colours the lines. */
+  dotsClassName?: string;
 }>;
 
 /** Multi-level grid in screen space, fed the camera's scale and offset. */
@@ -48,6 +55,8 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       showAxes = true,
       ratios = gridRatios,
       range = defaultRange,
+      variant = 'lines',
+      dotsClassName = 'fill-neutral-500',
       classNames,
     },
     forwardedRef,
@@ -80,7 +89,14 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
         {/* NOTE: The pattern is offset so that the middle of the pattern aligns with the grid. */}
         <defs>
           {grids.map(({ id, size }) => (
-            <GridPattern key={id} id={createId(instanceId, id)} offset={offset} size={size} />
+            <GridPattern
+              key={id}
+              id={createId(instanceId, id)}
+              offset={offset}
+              size={size}
+              variant={variant}
+              dotsClassName={dotsClassName}
+            />
           ))}
         </defs>
         {showAxes && (
@@ -93,7 +109,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
           {grids.map(({ id, size }) => (
             <rect
               key={id}
-              opacity={levelOpacity(size, min)}
+              opacity={variant === 'dots' ? dotOpacity(size, min) : levelOpacity(size, min)}
               fill={`url(#${createId(instanceId, id)})`}
               width='100%'
               height='100%'
@@ -107,8 +123,10 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
 
 GridComponent.displayName = 'GridComponent';
 
-/** One grid level as an SVG pattern of crossing lines, offset so a line sits on the origin. */
-const GridPattern = ({ id, size, offset }: { id: string; size: number; offset: Point }) => (
+type GridPatternProps = Pick<GridProps, 'variant' | 'dotsClassName'> & { id: string; size: number; offset: Point };
+
+/** One grid level as an SVG pattern of crossing lines (or a dot where they cross), offset so a line sits on the origin. */
+const GridPattern = ({ id, size, offset, variant, dotsClassName }: GridPatternProps) => (
   <pattern
     id={id}
     x={(size / 2 + offset.x) % size}
@@ -117,7 +135,13 @@ const GridPattern = ({ id, size, offset }: { id: string; size: number; offset: P
     height={size}
     patternUnits='userSpaceOnUse'
   >
-    <line x1={0} y1={size / 2} x2={size} y2={size / 2} />
-    <line x1={size / 2} y1={0} x2={size / 2} y2={size} />
+    {variant === 'dots' ? (
+      <circle cx={size / 2} cy={size / 2} r={1} stroke='none' className={dotsClassName} />
+    ) : (
+      <>
+        <line x1={0} y1={size / 2} x2={size} y2={size / 2} />
+        <line x1={size / 2} y1={0} x2={size / 2} y2={size} />
+      </>
+    )}
   </pattern>
 );

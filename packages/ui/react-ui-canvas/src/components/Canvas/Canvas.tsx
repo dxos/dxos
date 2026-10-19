@@ -100,6 +100,7 @@ import {
   timelineFps,
 } from '../../model/index.ts';
 import {
+  GRID_CLASSES,
   MIN_ZOOM,
   NOMINAL_ZOOM,
   type PartKey,
@@ -178,6 +179,9 @@ import { useSceneClipboard } from './useSceneClipboard.ts';
 import { useSceneKeys } from './useSceneKeys.ts';
 import { useSceneNavigation } from './useSceneNavigation.ts';
 import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
+
+/** On-screen dot spacing (px) outside which a dot level is not drawn: denser dots read as a tone, not a grid. */
+const DOTS_RANGE: [number, number] = [12, 2048];
 
 /** Milliseconds the camera's zoom must hold still before the background grid fades back in. */
 const ZOOM_SETTLE = 250;
@@ -1769,16 +1773,18 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
   // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
   const snapLines = !readonly && look.background.grid === 'lines';
   const snapGridDrawn = snapEnabled && snapLines && !(latticeOn && projection.lattice);
+  // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
+  const dotsDrawn = look.background.grid === 'dots';
   // With WebGL, the surface and washes are drawn per pixel on the GPU (smooth, with no grain needed); the SVG field then
   // draws only the grid. Without it (a test DOM), the SVG draws the washes as before.
   const gpuWashes = look.background.washes.length > 0 && supportsWashCanvas();
   const fieldBackground = useMemo(
     () => ({
       ...look.background,
-      ...(snapGridDrawn && { grid: 'none' as const }),
+      ...((snapGridDrawn || dotsDrawn) && { grid: 'none' as const }),
       ...(gpuWashes && { washes: [] }),
     }),
-    [snapGridDrawn, gpuWashes, look.background],
+    [snapGridDrawn, dotsDrawn, gpuWashes, look.background],
   );
 
   return (
@@ -1815,6 +1821,18 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
           showAxes={false}
           ratios={GRID_LEVELS}
           range={GRID_RANGE}
+        />
+      )}
+      {measured && dotsDrawn && (
+        <GridComponent
+          variant='dots'
+          dotsClassName={GRID_CLASSES[look.tone].dots}
+          size={grid}
+          scale={camera.zoom}
+          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+          showAxes={false}
+          ratios={GRID_LEVELS}
+          range={DOTS_RANGE}
         />
       )}
       <div
