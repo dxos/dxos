@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: the Tree's filter, reveal and range selection are react-ui-list API that its users look up apart from the canvas changes
 '@dxos/react-ui-list': minor
 ---
 
