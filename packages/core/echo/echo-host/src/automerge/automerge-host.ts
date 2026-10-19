@@ -539,9 +539,20 @@ export class AutomergeHost extends Resource {
           log.warn('document load failed', { documentId, source, error });
           return;
         }
-        this.#quarantineIfLargeEnough(documentId, error).catch((err) =>
-          log.error('failed to quarantine document', { documentId, err }),
-        );
+        if (this.#quarantined.has(documentId)) {
+          return;
+        }
+        // Once the heap is full every load fails, so only a document big enough to be the cause is quarantined.
+        this.#countStoredOps(documentId)
+          .then((ops) => {
+            if (ops < QUARANTINE_MIN_OPS) {
+              log.warn('document ran out of memory but holds too few ops to be the cause', { documentId, ops, error });
+              return;
+            }
+            log.warn('quarantining a document that ran out of memory', { documentId, source, ops, error });
+            return this.quarantineDocument(documentId, { reason: 'load-failed', error });
+          })
+          .catch((err) => log.error('failed to quarantine document', { documentId, err }));
       },
     );
 
@@ -866,16 +877,8 @@ export class AutomergeHost extends Resource {
     return this.#quarantined;
   }
 
-  /**
-   * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
-   * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
-   * {@link removeDocument}.
-   */
-  /** Quarantines a document whose load ran out of memory, unless it holds too few ops to be the cause. */
-  async #quarantineIfLargeEnough(documentId: DocumentId, error: unknown): Promise<void> {
-    if (this.#quarantined.has(documentId)) {
-      return;
-    }
+  /** A lower bound on a document's ops, read from its stored bytes since loading it is what ran out of memory. */
+  async #countStoredOps(documentId: DocumentId): Promise<number> {
     // Settled apart so one failed read does not hide the ops in the others.
     const recordsUnder = async (...prefixes: string[][]): Promise<Uint8Array[]> =>
       (await Promise.allSettled(prefixes.map((prefix) => this._storage.loadRange(prefix))))
@@ -883,7 +886,7 @@ export class AutomergeHost extends Resource {
         .flatMap(({ data }) => (data ? [data] : []));
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
     // Either store may hold the whole document, so each is counted on its own rather than summed.
-    const ops = Math.max(
+    return Math.max(
       await countStoredOps(await recordsUnder([documentId])),
       await countStoredOps(
         await recordsUnder(
@@ -892,13 +895,13 @@ export class AutomergeHost extends Resource {
         ),
       ),
     );
-    if (ops < QUARANTINE_MIN_OPS) {
-      log.warn('document ran out of memory but holds too few ops to be the cause', { documentId, ops, error });
-      return;
-    }
-    await this.quarantineDocument(documentId, { reason: 'load-failed', error });
   }
 
+  /**
+   * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
+   * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
+   * {@link removeDocument}.
+   */
   async quarantineDocument(
     documentId: DocumentId,
     { reason, error }: { reason: QuarantineReason; error?: unknown },
@@ -928,12 +931,8 @@ export class AutomergeHost extends Resource {
     // Detaches every source, so none retries the load.
     await this._repo.removeFromCache(documentId);
 
-    // Every open re-applies the space root's `retired` entries, so only a load failure is news.
-    if (reason === 'load-failed') {
-      log.warn('quarantined document', { documentId, reason, error: record.error });
-    } else {
-      log('quarantined document', { documentId, reason });
-    }
+    // Debug level: every open re-applies the `retired` entries, and a load failure already warned where it was caught.
+    log('quarantined document', { documentId, reason });
     this.documentQuarantined.emit(record);
   }
 
