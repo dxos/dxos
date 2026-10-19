@@ -1,0 +1,32 @@
+diagram flow=down
+group echo "ECHO" {
+  node Map "FeatureMap" ref="packages/plugins/plugin-projects/src/types/FeatureMap.ts"
+  node Queries "scoped useQuery" ref="packages/plugins/plugin-projects/src/hooks/useFeatureGraph.ts"
+}
+group model "Model" {
+  node Graph "useFeatureGraph" ref="packages/plugins/plugin-projects/src/hooks/useFeatureGraph.ts"
+  node Build "buildFeatureModels" ref="packages/plugins/plugin-projects/src/components/FeatureCard/feature.ts"
+  node Article "FeatureMapArticle" ref="packages/plugins/plugin-projects/src/containers/FeatureMapArticle/FeatureMapArticle.tsx"
+}
+group view "Views" {
+  node Board "FeatureBoard" ref="packages/plugins/plugin-projects/src/components/FeatureCard/FeatureBoard.tsx"
+  node Card "FeatureCard" ref="packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx"
+  node Canvas "FeatureCanvas" ref="packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx"
+  node Projection "dynamic projection" ref="packages/ui/react-ui-canvas/src/index.ts"
+  node Overlay "overlay atom" ref="packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx"
+}
+edge Article -> Graph "map ids"
+edge Graph -> Queries "scope"
+edge Queries -> Graph "results"
+edge Graph -> Build "input"
+edge Build -> Graph "models"
+edge Graph -> Article "lookup"
+edge Map -> Article "refs"
+edge Article -> Board "cards mode"
+edge Article -> Canvas "canvas mode"
+edge Board -> Card
+edge Canvas -> Projection "createNode, link"
+edge Projection -> Card "node view"
+edge Projection -> Overlay "move"
+edge Overlay -> Article "onPositionsChange"
+edge Article -> Map "positions"

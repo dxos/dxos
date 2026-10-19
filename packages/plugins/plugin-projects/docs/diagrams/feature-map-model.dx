@@ -1,0 +1,29 @@
+diagram flow=down
+group map "Feature map" {
+  node FeatureMap "FeatureMap" ref="packages/plugins/plugin-projects/src/types/FeatureMap.ts"
+  node Feature "Feature" ref="packages/plugins/plugin-projects/src/types/Feature.ts"
+  node Subfeature "Subfeature record" ref="packages/plugins/plugin-projects/src/types/Feature.ts"
+  node Implements "Implements" ref="packages/plugins/plugin-projects/src/types/Feature.ts"
+  node DependsOn "DependsOn" ref="packages/plugins/plugin-projects/src/types/Feature.ts"
+}
+group evidence "Evidence" {
+  node Showcase "Showcase" ref="packages/plugins/plugin-projects/src/types/Showcase.ts"
+  node Demonstrates "Demonstrates" ref="packages/plugins/plugin-projects/src/types/Showcase.ts"
+  node Text "Text" ref="packages/sdk/schema/src/types/Text.ts"
+}
+group work "@dxos/types" {
+  node Task "Task" ref="packages/sdk/types/src/types/Task.ts"
+  node File "File" ref="packages/sdk/types/src/types/File.ts"
+  node PullRequest "PullRequest" ref="packages/sdk/types/src/types/PullRequest.ts"
+}
+edge FeatureMap -> Feature "features[]"
+edge Feature composes Subfeature "subfeatures[]"
+edge DependsOn -> Feature "source, target"
+edge Implements -> Task "source"
+edge Implements -> Feature "target"
+edge Demonstrates -> Showcase "source"
+edge Demonstrates -> Feature "target"
+edge Demonstrates -> Task "target"
+edge Showcase owns Text "content"
+edge Showcase -> File "artifacts[]"
+edge Showcase -> PullRequest "artifacts[]"
