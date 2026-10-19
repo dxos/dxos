@@ -228,14 +228,9 @@ export const check: (options: CheckOptions) => Effect.Effect<Result> = Effect.fn
   source,
   now = Date.now(),
 }: CheckOptions) {
-  let subject: Subject.Subject;
-  try {
-    subject = Requirement.resolveSubject(requirement, args);
-  } catch (error) {
-    if (error instanceof SubjectResolutionError) {
-      return { _tag: 'Denied', reason: { kind: 'subject', error } } satisfies Denied;
-    }
-    throw error;
+  const subject = Requirement.resolveSubjectOrError(requirement, args);
+  if (subject instanceof SubjectResolutionError) {
+    return { _tag: 'Denied', reason: { kind: 'subject', error: subject } } satisfies Denied;
   }
   const target = { subject, command: requirement.command };
   const input: Policy.Input = { args, caller };

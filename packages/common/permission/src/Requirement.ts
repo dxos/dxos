@@ -71,6 +71,18 @@ const uriOf = (value: unknown): string | undefined => {
  * requirement names none.
  */
 export const resolveSubject = (requirement: Requirement, args: unknown): Subject.Subject => {
+  const resolved = resolveSubjectOrError(requirement, args);
+  if (resolved instanceof SubjectResolutionError) {
+    throw resolved;
+  }
+  return resolved;
+};
+
+/** {@link resolveSubject} returning the resolution error instead of throwing it, for Effect code. */
+export const resolveSubjectOrError = (
+  requirement: Requirement,
+  args: unknown,
+): Subject.Subject | SubjectResolutionError => {
   const { subject } = requirement;
   if (subject === undefined) {
     return Subject.any();
@@ -80,7 +92,7 @@ export const resolveSubject = (requirement: Requirement, args: unknown): Subject
   }
   const uri = uriOf(Policy.select({ args }, subject));
   if (uri === undefined || !Subject.isSubject(uri)) {
-    throw new SubjectResolutionError({ context: { selector: subject, value: uri } });
+    return new SubjectResolutionError({ context: { selector: subject, value: uri } });
   }
   return uri;
 };
