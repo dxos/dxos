@@ -130,7 +130,9 @@ export const semanticDiagrams = trim`
   statements may follow in the same document to decorate it: \`elements PM { text note 0,-30 "hot" }\`.
   \`problems\` reports unknown nodes and bad words as errors (nothing is applied), and relations or
   pins the engine had to relax as warnings (the drawing is applied without them). Then read
-  \`diagnostics\` as for generation and adjust relations to remove crossings.
+  \`diagnostics\`: every \`error\` (overlapping boxes, a connector through a box, a label that does
+  not fit) must be fixed; \`warning\`s (crossings, bends) are quality hints. Adjust relations to
+  remove crossings.
 `;
 
 export const make = () =>

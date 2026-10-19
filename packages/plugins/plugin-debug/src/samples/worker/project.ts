@@ -9,6 +9,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
+import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
@@ -19,7 +20,7 @@ export type ProjectInput = { tasks: TasksResult };
 export type ProjectResult = { project: Project.Project; instructions: Instructions.Instructions };
 
 /** Bound to every chat the project delegates, so the diagram task never depends on the agent enabling it. */
-const SKILL_KEYS = ['org.dxos.skill.drawing'] as const;
+const SKILL_KEYS = [DrawingSkill.key] as const;
 
 const INSTRUCTIONS = `Deploy the Worker described by the task list, working the tasks in order and \
 setting each one's status as you finish it: the task list is how I follow this run.
