@@ -219,6 +219,9 @@
     },
     {
       "path": "../plugin-tldraw"
+    },
+    {
+      "path": "../plugin-voxel"
     }
   ]
 }

@@ -226,6 +226,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
+    "@dxos/plugin-voxel": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

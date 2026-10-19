@@ -12,6 +12,8 @@ import { Ref } from '@dxos/echo';
 
 import { Games } from './games.ts';
 import { DataCenterMap } from './map.ts';
+import { Sculpture } from './sculpture.ts';
+import { Town } from './town.ts';
 
 /** Stable reference date so regenerations are reproducible. */
 const REFERENCE = new Date('2026-10-19T12:00:00Z');
@@ -19,11 +21,14 @@ const REFERENCE = new Date('2026-10-19T12:00:00Z');
 const partials = {
   games: Games,
   map: DataCenterMap,
+  sculpture: Sculpture,
+  town: Town,
 };
 
 /**
  * A demo space of boards to look at: sixteen chess games at every stage, from famous finished games to openings a few
- * moves in and endgame studies, and a world map pinning every Cloudflare data centre.
+ * moves in and endgame studies, a world map pinning every Cloudflare data centre, a voxel Minecraft creeper, and a voxel
+ * town where three racing cars and a fire truck drive past houses and towers.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
@@ -36,6 +41,10 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
         const { map } = yield* partials.map();
         // Games are not collection items, so they surface through the games section; the map is.
         yield* SampleSpace.collection('Maps', [Ref.make(map)]);
+        // No navtree section lists voxel worlds, so without a collection they would be reachable only from the database.
+        const { sculpture } = yield* partials.sculpture();
+        const { town } = yield* partials.town();
+        yield* SampleSpace.collection('Voxels', [Ref.make(sculpture), Ref.make(town)]);
       }),
   });
 
@@ -43,6 +52,6 @@ export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.chess-club',
     description:
-      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, and a map of Cloudflare data centres.',
+      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper and a voxel town.',
     definition: make(),
   });

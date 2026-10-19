@@ -10755,6 +10755,9 @@ importers:
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../plugin-tldraw
+      '@dxos/plugin-voxel':
+        specifier: workspace:*
+        version: link:../plugin-voxel
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

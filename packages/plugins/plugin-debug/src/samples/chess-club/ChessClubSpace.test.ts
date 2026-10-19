@@ -11,6 +11,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ChessClubSpace from './ChessClubSpace.ts';
 import { DATA_CENTERS } from './data-centers.ts';
 import { GAMES } from './games.ts';
+import { creeper } from './sculpture.ts';
+import { TOWN, town } from './town.ts';
 
 describe('Chess Club template', () => {
   test('every game is legal to its last move and in the stage it claims', ({ expect }) => {
@@ -56,6 +58,7 @@ describe('Chess Club template', () => {
     expect(countOf('type.chess.state')).toBe(16);
     expect(countOf('type.map')).toBe(1);
     expect(countOf('type.organization')).toBe(DATA_CENTERS.length);
+    expect(countOf('type.voxel')).toBe(2);
 
     // The map's view pivots on the organizations' location, which is what the map plots.
     const {
@@ -64,10 +67,49 @@ describe('Chess Club template', () => {
       objects: Array<{
         '@type'?: string;
         'projection'?: { pivotFieldId?: string; fields?: Array<{ id: string; path: string }> };
+        'name'?: string;
+        'voxels'?: Record<string, { hue: string }>;
       }>;
     } = JSON.parse(json);
     const view = objects.find((object) => object['@type']?.includes('type.view'));
     const pivot = view?.projection?.fields?.find((field) => field.id === view.projection?.pivotFieldId);
     expect(pivot?.path).toBe('location');
+
+    // Every voxel generated survives the archive, so the worlds hold what the generators drew.
+    const voxelCount = (name: string) =>
+      Object.keys(objects.find((object) => object.name === name)?.voxels ?? {}).length;
+    expect(voxelCount('Creeper')).toBe(creeper().length);
+    expect(voxelCount('Town')).toBe(town().length);
+  });
+
+  test('the creeper stands on a grass block with its face on the front', ({ expect }) => {
+    const voxels = creeper();
+    expect(voxels.length).toBeGreaterThan(800);
+    const hues = new Set(voxels.map((voxel) => voxel.hue));
+    expect([...hues]).toEqual(expect.arrayContaining(['green', 'lime', 'amber', 'neutral']));
+    // Two eyes of four pixels and a mouth of twelve.
+    expect(voxels.filter((voxel) => voxel.hue === 'neutral')).toHaveLength(20);
+    // Ground, legs, body and an eight-voxel head stacked up.
+    expect(Math.max(...voxels.map((voxel) => voxel.z))).toBe(28);
+  });
+
+  test('the town has three racing cars, a fire truck and its buildings, none overlapping', ({ expect }) => {
+    const ofKind = (kind: string) => TOWN.filter((part) => part.kind === kind);
+    const cars = ofKind('car');
+    expect(cars).toHaveLength(3);
+    expect(new Set(cars.map((car) => car.hue)).size).toBe(3);
+    expect(ofKind('fire-truck').map((truck) => truck.hue)).toEqual(['red']);
+    expect(ofKind('house').length + ofKind('tower').length).toBeGreaterThanOrEqual(4);
+
+    // No two parts claim the same cell, or the merge would silently repaint one with the other.
+    const cells = new Map<string, string>();
+    for (const part of TOWN) {
+      for (const { x, y, z } of part.voxels) {
+        const key = `${x}:${y}:${z}`;
+        expect(cells.get(key), `${part.name} overlaps at ${key}`).toBeUndefined();
+        cells.set(key, part.name);
+      }
+    }
+    expect(town().length).toBeGreaterThan(1_000);
   });
 });

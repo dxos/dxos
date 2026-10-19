@@ -48,6 +48,7 @@ import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -230,6 +231,7 @@ const meta = {
         TablePlugin.make(),
         TasksPlugin.make(),
         ThreadPlugin.make(),
+        VoxelPlugin.make(),
       ],
     }),
     withIframePath,
