@@ -11,9 +11,8 @@ and never use Mermaid for a diagram this skill can draw.
 ## Install
 
 Nothing needs installing: when `drawing` is not on PATH,
-`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render diagram.dx` runs the latest build of `main`.
-Installing from npm (`npm i -g @dxos/drawing`, or `npx -y @dxos/drawing`) is optional and makes repeat runs
-faster. If the skill was installed with `npx skills add`, that left `skills-lock.json`, `.agents/` and `.claude/`
+`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@0cc622dceb38943f22df4d9669e86dc55459d95c render diagram.dx` runs the CLI from one pinned commit, so the code never changes under you; use this
+form. An npm install (`npm i -g @dxos/drawing`) is an optional alternative, only if the user asks for it. If the skill was installed with `npx skills add`, that left `skills-lock.json`, `.agents/` and `.claude/`
 untracked in the repo; tell the user once, so they can commit or ignore them.
 
 ## Workflow
@@ -34,7 +33,7 @@ untracked in the repo; tell the user once, so they can commit or ignore them.
    ```
 
    If that reports `command not found`, run
-   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main render /tmp/arch.dx -o docs/arch.dx.svg` instead. Don't probe for
+   `npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@0cc622dceb38943f22df4d9669e86dc55459d95c render /tmp/arch.dx -o docs/arch.dx.svg` instead. Don't probe for
    the command first; just run it. If that fails too (for example npm `ETARGET` or `E404`), stop: tell
    the user the exact error and the commands under Install. Don't hand-draw an SVG, switch to Mermaid or
    guess other package names.
@@ -144,7 +143,7 @@ If a hint makes the report worse, remove it instead of adding a second one to fi
 ## Opening it in app.drawing.sh
 
 When the user wants to see or edit the diagram on a canvas, run `drawing open docs/arch.dx.svg` (the same
-`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@main open …` form when `drawing` is not on PATH). It
+`npx -y https://pkg.pr.new/dxos/dxos/@dxos/drawing@0cc622dceb38943f22df4d9669e86dc55459d95c open …` form when `drawing` is not on PATH). It
 uploads the source, prints a link and opens it in the browser. Give the user the link, and say that anyone
 with it can open the diagram and that it expires 30 days after it was last opened. Only `open` uploads;
 `render` never does.
