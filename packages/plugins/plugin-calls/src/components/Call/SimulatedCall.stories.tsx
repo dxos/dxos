@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
-import * as Button from '@dxos/react-ui/Button';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
 
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
+import { Lobby } from '../Lobby/index.ts';
 import { Call } from './Call.tsx';
 
 const LOCAL = 'Astrid Holm';
@@ -25,8 +26,6 @@ const COLLEAGUES: Participant[] = [
 ];
 /** An agent with no camera: its tile is an abstract shape that moves with its synthesized voice. */
 const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
-
-const JOIN_TIMEOUT = 10_000;
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */
 type Timeline = { screenshares?: { speaker: string; start: number; file: string }[] };
@@ -42,30 +41,28 @@ type StoryProps = {
 /**
  * A four-person call with no network: three simulated participants and a local camera, each played from a track of
  * one scripted conversation, so the call starts in step and the speaking outline follows whoever is talking.
+ * Nothing plays until Join, whose click is also the gesture the browser needs to play sound; Leave stops the call
+ * and resets it to the lobby.
  */
 const SimulatedStory = ({ media, agent }: StoryProps) => {
   const callManager = Hooks.useCapability(CallsCapabilities.Manager);
-  // Each attempt rejoins from the top; a click starts the next one where the browser refused to autoplay the last.
-  const [attempt, setAttempt] = useState(0);
-  const [blocked, setBlocked] = useState(false);
+  const joined = useAtomValue(callManager.joinedAtom);
+  const participants = COLLEAGUES.length + (agent ? 1 : 0);
+  // Each session loads the files paused; leaving starts the next one, so a rejoin plays from the top.
+  const [session, setSession] = useState(0);
+  const [ready, setReady] = useState<{ start: () => Promise<void> }>();
 
   useEffect(() => {
-    setBlocked(false);
+    setReady(undefined);
     let restore: (() => void) | undefined;
     let cancelled = false;
-    // The attempt keeps running after a timeout or cleanup, so it stops at its next step once it is stale.
+    // The setup keeps running after cleanup, so it stops at its next step once it is stale.
     const live = () => {
       if (cancelled) {
-        throw new DOMException('Attempt superseded', 'AbortError');
+        throw new DOMException('Session superseded', 'AbortError');
       }
     };
-    const teardown = () => {
-      void callManager.leave();
-      void callManager.simulate(undefined);
-      restore?.();
-      restore = undefined;
-    };
-    const join = async () => {
+    const prepare = async () => {
       const local = await fakeUserMedia(`${media}/astrid.webm`);
       restore = local.restore;
       live();
@@ -89,51 +86,45 @@ const SimulatedStory = ({ media, agent }: StoryProps) => {
       await callManager.turnVideoOn();
       await callManager.turnAudioOn();
       live();
-      await callManager.join();
-      live();
-      await local.start();
+      setReady({ start: local.start });
     };
-    // A blocked autoplay either rejects or leaves `AudioContext.resume()` pending until a gesture, so a stall counts too.
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const stalled = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new DOMException('Autoplay stalled', 'NotAllowedError')), JOIN_TIMEOUT);
-    });
-    const attemptDone = join();
-    void Promise.race([attemptDone, stalled])
-      .then(() => clearTimeout(timer))
-      .catch((err) => {
-        if (cancelled) {
-          return;
-        }
-        if (err instanceof DOMException && err.name === 'NotAllowedError') {
-          // The blocked attempt has already joined, so it leaves before the retry button replaces the call.
-          cancelled = true;
-          teardown();
-          setBlocked(true);
-        } else {
-          log.catch(err);
-        }
-      });
-    // Media a stale attempt acquires after cleanup ran is released when that attempt stops.
-    void attemptDone.catch(() => {
+    void prepare().catch((err) => {
       if (cancelled) {
+        // Media a stale setup acquired after cleanup ran is released here.
         restore?.();
         restore = undefined;
+      } else {
+        log.catch(err);
       }
     });
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
-      teardown();
+      void callManager.leave();
+      void callManager.simulate(undefined);
+      restore?.();
+      restore = undefined;
     };
-  }, [callManager, media, agent, attempt]);
+  }, [callManager, media, agent, session]);
 
-  if (blocked) {
+  const handleJoin = async () => {
+    await callManager.join();
+    await ready?.start();
+  };
+
+  const handleLeave = () => setSession((value) => value + 1);
+
+  if (!joined) {
     return (
-      <div className='grid h-full place-items-center'>
-        <Button.Root icon='ph--phone--regular' label='Join the call' onClick={() => setAttempt((value) => value + 1)} />
-      </div>
+      <Lobby.Root>
+        <Lobby.Preview />
+        <Lobby.Toolbar
+          roomId='story-room'
+          participants={participants}
+          joinDisabled={!ready}
+          onJoin={() => void handleJoin().catch((err) => log.catch(err))}
+        />
+      </Lobby.Root>
     );
   }
 
@@ -141,7 +132,7 @@ const SimulatedStory = ({ media, agent }: StoryProps) => {
     <Call.Root>
       <Call.Viewport>
         <Call.Grid />
-        <Call.Toolbar onLeave={() => callManager.leave()} />
+        <Call.Toolbar onLeave={handleLeave} />
       </Call.Viewport>
     </Call.Root>
   );
@@ -156,7 +147,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Tracks come from `.agents/skills/autocue/scripts/conversation.mjs`; serve them at `media` (copy them to `tools/storybook-react/static/simulated-call/` for the default). Where the browser blocks autoplay the call waits for a click on Join.',
+          'Tracks come from `.agents/skills/autocue/scripts/conversation.mjs`; serve them at `media` (copy them to `tools/storybook-react/static/simulated-call/` for the default). Nothing plays until Join; Leave resets the call to the lobby.',
       },
     },
   },

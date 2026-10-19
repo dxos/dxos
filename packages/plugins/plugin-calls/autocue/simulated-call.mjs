@@ -58,6 +58,10 @@ export const steps = [
     name: 'Join the call',
     run: async ({ demo, page }) => {
       state.release();
+      // The story waits in its lobby until Join, enabled once every track has loaded.
+      const join = page.locator('button:has-text("Join"):not([disabled])');
+      await join.waitFor({ timeout: 60_000 });
+      await demo.click({ selector: 'button:has-text("Join"):not([disabled])', label: 'Join' });
       for (const participant of Object.values(CONVERSATION.participants)) {
         await page.getByText(participant.name, { exact: true }).first().waitFor({ timeout: 30_000 });
       }
