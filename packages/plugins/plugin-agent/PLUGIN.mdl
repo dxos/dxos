@@ -598,6 +598,7 @@ feat F-1: Agents
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
   req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
   req F-1.4: A space's agents are added, opened and deleted in Settings › Agents; "Add to space" does not offer them.
+  req F-1.5: A member has one private chat with an agent in a space. Opening the agent again while the first open is still making that chat waits for it, and when two opens each made one (two devices at once), the article opens the one with the latest message.
 ```
 
 ```mdl
