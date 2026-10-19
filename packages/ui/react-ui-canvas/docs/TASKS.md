@@ -27,17 +27,18 @@ Design: DESIGN.md §13.
 - [x] Design: services context, parts read atoms, a React-free `CanvasController`, derived state with its reader.
 - [x] 0.1 Prune: dead fields, `createAtCentre` camera read, unused memo deps, inventory inconsistencies. (`keyCamera` removed: no caller; returns with the Time aspect. Timeline's explicit `onPlayingChange`/`onAutoKeyChange` writes kept for 0.3.)
 - [x] 0.2 Viewport reads its own atom-state and computes its own derived values (hover, point, latticeBounds, focus, frameUnit; `viewport` added to the context). `createFrame`, `handlers` and `themeGrid` move with their aspects in 0.3.
-- [ ] 0.3 Aspects (DESIGN.md §13.1): services provider, aspect hooks, Time/Gesture/Editing providers, `displayScene` atom; story test that panels do not re-render on a pan.
+- [x] 0.3 Aspects (DESIGN.md §13.1): services provider, aspect hooks, Time/Gesture/Editing providers, `displayScene` atom; story test that panels do not re-render on a pan.
   - [x] Camera out of the context; `Renders.stories.tsx` › Test: 0 panel commits across a 20-step pan (was 20 each).
-  - [ ] The aspect hooks and providers — after 0.4, which supplies their commands (order swapped 2026-10-18: the hooks are plumbing until the controller exists).
-- [ ] 0.4 `createCanvasController` in `engine/`, organised by aspect, unit-tested per aspect; callers use it.
+  - [x] The aspect hooks and providers — after 0.4, which supplies their commands (order swapped 2026-10-18: the hooks are plumbing until the controller exists). `CanvasServices` plus `useCanvasDocument/Navigation/Selection/Tools`, and Look, Time, Editing and Gesture providers; each toolbar builds its own `ToolbarActions` slice; `Renders` › Test also asserts that a selection re-renders none of Navigation, Theme, Tools, About.
+    - Decisions: Look rides its own provider, as its values are host props; `displayScene` (with `bounds`, `viewport`, `navigating`) rides the Gesture provider rather than a derived atom, as it depends on React-side gesture state, and Objects reads the stored scene, which names the same instance; `generated` rides the Time provider; fit mode is a per-mount atom; `InspectorSection` subscribes to its own slot, so the panel's selection flag re-renders only the sections it shows or hides.
+- [x] 0.4 `createCanvasController` in `engine/`, organised by aspect, unit-tested per aspect; callers use it.
   - [x] Selection (select, clear, delete, group, classFrom) and Editing (copy, cut, paste); `useSceneClipboard` removed; `createId` moved to `utils/`.
   - [x] Tools (setTool, grid toggles) and Time (seek, play, step, jump, add/remove key, auto-key); the controller is in the context.
-  - [ ] Navigation and Look. Layers and Objects wait for Phases 3 and 2, which replace them.
-- [ ] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.
+  - [x] Navigation and Look. Layers and Objects wait for Phases 3 and 2, which replace them. Navigation: drill in/out, back, history, breadcrumbs, isolation, fit, fit selection, zoom; the kept entry frames live in the controller; the view's animation and fit mode come in as `CameraMotion` and `ViewFit`. Look: the theme and grid pickers call the host's handlers.
+- [x] 0.5 Split Viewport (Background, Scene, Overlay) and the parts into their own files.
   - [x] Parts into files: `Canvas.tsx` (namespace, 37 lines), `CanvasRoot.tsx`, `CanvasViewport.tsx`, `CanvasBars.tsx`, `CanvasInspectors.tsx`, `constants.ts`.
-  - [ ] Viewport into Background, Scene and Overlay; `CanvasRoot.tsx` under ~600 lines (needs the rest of 0.4).
-  - [ ] Move the Canvas hooks to `hooks/canvas/` once 0.4 settles them (needs `handlePoint` and the tool catalogue behind `toolForKey` in `utils/`).
+  - [x] Viewport into Background, Scene and Overlay; `CanvasRoot.tsx` under ~600 lines (needs the rest of 0.4). `ViewportBackground/Scene/Overlay.tsx`; `CanvasRoot.tsx` 1,477 → 540 lines, its props in `CanvasRootProps.ts`.
+  - [x] Move the Canvas hooks to `hooks/canvas/` once 0.4 settles them (needs `handlePoint` and the tool catalogue behind `toolForKey` in `utils/`). Plus the hooks split out of the root (`useSceneView`, `useCanvasController`, `useGesturePreview`, `useElementHandlers`, `useObjectActions`, `useDocumentCommands`, ...); `ElementHandlers`, `TimelineKeys`, `SceneDisplay` moved with them.
 
 ## Phase 1 — View
 
