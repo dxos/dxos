@@ -8224,6 +8224,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../sdk/shell
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

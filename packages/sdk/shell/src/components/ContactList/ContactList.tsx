@@ -45,10 +45,22 @@ export type ContactListProps = Util.ThemedClassName<{
   contacts: Contact[];
   spaces: ContactSpace[];
   filter?: string;
+  /** Names the list for assistive technology; defaults to "Contacts". */
+  label?: string;
+  /** Shown when no contact matches; defaults to the contacts book's own message. */
+  emptyMessage?: string;
   onSelectSpace?: (space: ContactSpace) => void;
 }>;
 
-export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelectSpace }: ContactListProps) => {
+export const ContactList = ({
+  classNames,
+  contacts,
+  spaces,
+  filter = '',
+  label,
+  emptyMessage,
+  onSelectSpace,
+}: ContactListProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   // filterContacts returns the input array unchanged when the filter is empty, so copy before sorting to avoid mutating the caller's prop.
   const visible = useMemo(
@@ -58,14 +70,14 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
   );
 
   if (visible.length === 0) {
-    return <p className='text-fg-muted text-center my-2'>{t('empty-contacts.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{emptyMessage ?? t('empty-contacts.message')}</p>;
   }
 
   return (
     <Listbox.Root
       items={visible.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) }))}
     >
-      <Listbox.Content classNames={classNames} aria-label={t('contacts.label')} data-testid='contact-list'>
+      <Listbox.Content classNames={classNames} aria-label={label ?? t('contacts.label')} data-testid='contact-list'>
         {visible.map((contact) => (
           <ContactListItem
             key={contactKeyHex(contact)}
