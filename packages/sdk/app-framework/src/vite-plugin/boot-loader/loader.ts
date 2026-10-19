@@ -8,7 +8,7 @@ import * as babel from '@babel/core';
 import babelPresetTypeScript from '@babel/preset-typescript';
 // @ts-ignore — babel-preset-solid ships no .d.ts.
 import babelPresetSolid from 'babel-preset-solid';
-import { type Plugin as EsbuildPlugin, build } from 'esbuild';
+import { type Plugin as EsbuildPlugin, build, stop as stopEsbuild } from 'esbuild';
 import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';
@@ -133,11 +133,18 @@ const compileLoaderBundle = async (): Promise<string> => {
   return result.outputFiles[0].text;
 };
 
+// esbuild's errors once its long-lived service process has died.
+const DEAD_SERVICE = /The service (was stopped|is no longer running)/;
+
 let bundlePromise: Promise<string> | undefined;
 const getLoaderBundle = (): Promise<string> =>
-  (bundlePromise ??= compileLoaderBundle().catch((err) => {
+  (bundlePromise ??= compileLoaderBundle().catch(async (err) => {
     // A transient esbuild spawn failure (e.g. `spawn EBADF`) must not poison every later request.
     bundlePromise = undefined;
+    if (err instanceof Error && DEAD_SERVICE.test(err.message)) {
+      // esbuild otherwise keeps reusing the dead service, so the retry would fail with `write EPIPE`.
+      await stopEsbuild();
+    }
     throw err;
   }));
 
