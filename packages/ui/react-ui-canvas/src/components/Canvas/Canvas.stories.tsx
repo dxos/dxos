@@ -250,7 +250,7 @@ export const Floating: Story = {
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));
-    // A selection splits the panel: the properties above the seam, the other sections below.
+    // The panel is split: the properties above the seam, the other sections below.
     await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
     const exposed = await canvas.findByText('Exposed');
     exposed.scrollIntoView();

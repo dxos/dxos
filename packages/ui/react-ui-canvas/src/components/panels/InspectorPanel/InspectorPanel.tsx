@@ -200,7 +200,6 @@ const InspectorPanelContent = () => {
   const { docked, closed, setSlot, setClosed, actions, onDockedChange } = context;
   const upper = visible.filter((section) => section.pane === 'upper');
   const lower = visible.filter((section) => section.pane !== 'upper');
-  const split = upper.length > 0 && lower.length > 0;
 
   // One half's sections: a scroll area of bordered frames, each as tall as its inspector, any number open.
   const list = (sections: readonly InspectorSectionDef[]) => (
@@ -291,21 +290,18 @@ const InspectorPanelContent = () => {
           </Toolbar.Root>
         </Panel.Header>
       )}
-      {/* Always the splitter, collapsed to one half while the other is empty: a section changing halves would remount. */}
+      {/* Split even while a half is empty, so the halves keep their place and size as the selection comes and goes. */}
       <Panel.Body asChild>
         <Splitter.Root
           ref={splitterRef}
           orientation='vertical'
-          resizable={split}
+          resizable
           minSize={MIN_PANE_SIZE}
-          mode={split ? 'split' : upper.length > 0 ? 'start' : 'end'}
           size={size}
           onSizeChange={setSize}
         >
           <Splitter.Panel position='start'>{list(upper)}</Splitter.Panel>
-          {split && (
-            <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
-          )}
+          <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
           <Splitter.Panel position='end'>{list(lower)}</Splitter.Panel>
         </Splitter.Root>
       </Panel.Body>
