@@ -124,26 +124,26 @@ itself, on Composer's history system rather than beside it (Q2).
 
 ### 8.1 Today
 
-|                          | Canvas undo (\`utils/undo.ts\`)                                                                                                           | Composer \`HistoryTracker\` (app-framework \`plugin-process-manager/history\`)                                                                |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Records                  | A snapshot of the open View's projection model before each intent; for store steps (group, composite rename) the whole store's scenes too | Each operation invocation with an \`UndoMapping\`: the inverse operation and its input, derived from the forward operation's input and output |
-| Scope                    | One log keyed by the open View: drilling into another View starts an empty log                                                            | One stack for the whole app                                                                                                                   |
-| Redo                     | Yes                                                                                                                                       | No                                                                                                                                            |
-| Under ECHO collaboration | Restoring a snapshot overwrites others' concurrent edits to that View                                                                     | Inverse operations: concurrent edits survive                                                                                                  |
+|                          | Canvas undo (`utils/undo.ts`)                                                                                                             | Composer `HistoryTracker` (app-framework `plugin-process-manager/history`)                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Records                  | A snapshot of the open View's projection model before each intent; for store steps (group, composite rename) the whole store's scenes too | Each operation invocation with an `UndoMapping`: the inverse operation and its input, derived from the forward operation's input and output |
+| Scope                    | One log keyed by the open View: drilling into another View starts an empty log                                                            | One stack for the whole app                                                                                                                 |
+| Redo                     | Yes                                                                                                                                       | No                                                                                                                                          |
+| Under ECHO collaboration | Restoring a snapshot overwrites others' concurrent edits to that View                                                                     | Inverse operations: concurrent edits survive                                                                                                |
 
 The precedent to follow is the tracker's: a forward operation returns the patch that reverses it (plugin-markdown's
-\`AcceptChange\` returns its \`undo\` splice; \`RestoreText\` re-applies it). That is a patch computed by the change itself.
+`AcceptChange` returns its `undo` splice; `RestoreText` re-applies it). That is a patch computed by the change itself.
 
 ### 8.2 Evolving the tracker
 
-| Need                            | Evolution                                                                                                                                                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Redo                            | A future stack; redo re-invokes the forward operation with its recorded input. Recording anything new clears it.                                                                                                       |
-| A log per canvas                | Each entry carries a **scope** (document or subject id). \`undo(scope)\` / \`redo(scope)\` / \`canUndo(scope)\` act on the latest entry in that scope; the unscoped calls and the toast keep working across the app.   |
-| One entry per gesture           | **Transactions**: invocations inside \`tracker.transaction(label, effect)\` become one entry whose inverse runs their inverses in reverse order.                                                                       |
-| Merging                         | A **merge key** (scope, element, field) and a window: an entry matching the previous one within it folds in, keeping the earliest inverse. Typing in a number field and nudging with arrow keys become one step.       |
-| Back to where it happened       | An optional **context** per entry (canvas: the View path and the selection before and after), restored before the inverse runs.                                                                                        |
-| Canvas edits are not operations | Canvas intents become operations: \`CanvasOperation.Apply { document, intents }\` returns the inverse patch; its \`UndoMapping\` pairs it with \`CanvasOperation.Patch\`. Gestures, agents and MCP then share one log. |
+| Need                            | Evolution                                                                                                                                                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redo                            | A future stack; redo re-invokes the forward operation with its recorded input. Recording anything new clears it.                                                                                                 |
+| A log per canvas                | Each entry carries a **scope** (document or subject id). `undo(scope)` / `redo(scope)` / `canUndo(scope)` act on the latest entry in that scope; the unscoped calls and the toast keep working across the app.   |
+| One entry per gesture           | **Transactions**: invocations inside `tracker.transaction(label, effect)` become one entry whose inverse runs their inverses in reverse order.                                                                   |
+| Merging                         | A **merge key** (scope, element, field) and a window: an entry matching the previous one within it folds in, keeping the earliest inverse. Typing in a number field and nudging with arrow keys become one step. |
+| Back to where it happened       | An optional **context** per entry (canvas: the View path and the selection before and after), restored before the inverse runs.                                                                                  |
+| Canvas edits are not operations | Canvas intents become operations: `CanvasOperation.Apply { document, intents }` returns the inverse patch; its `UndoMapping` pairs it with `CanvasOperation.Patch`. Gestures, agents and MCP then share one log. |
 
 The inverse patch is field-level over the store records the intents touched (Views, Objects, the tag table), so undo
 writes only what the change wrote and concurrent edits to other fields survive. Projections (constrained, dynamic)
@@ -152,7 +152,7 @@ emit their changes as the same patches instead of model snapshots.
 ### 8.3 Questions
 
 1. ~~Scope~~ Decided: one document-wide log per canvas; undo returns to the View it changed.
-2. ~~Entry shape~~ Decided: patches computed by the change, on the evolved \`HistoryTracker\`.
+2. ~~Entry shape~~ Decided: patches computed by the change, on the evolved `HistoryTracker`.
 
 ## 7. Open questions
 
