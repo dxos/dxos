@@ -19,7 +19,7 @@ import { Canvas } from './Canvas.tsx';
 
 /**
  * Test:
- * 1. Ctrl/cmd+wheel zooms about the cursor; wheel or hand-tool drag pans; drag on empty canvas draws a marquee.
+ * 1. Pinch or ctrl/cmd+wheel zooms about the cursor, as does a mouse wheel; a trackpad swipe or hand-tool drag pans; drag on empty canvas draws a marquee.
  * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single node.
  *    Hovering a node shows its ports; drag from a port onto a node or port links (a smart line, or the last link type
  *    picked).

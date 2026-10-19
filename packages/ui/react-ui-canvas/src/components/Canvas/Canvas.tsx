@@ -43,6 +43,7 @@ import { type GeneratorCompiler, type GeneratorSource } from '../../generator/in
 import {
   SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
+  isTrackpadScroll,
   useChanging,
   useClock,
   useGeneratorFrames,
@@ -704,10 +705,11 @@ const CanvasRoot = ({
         if (event.ctrlKey || event.metaKey) {
           // A trackpad pinch: small deltas, so a steeper rate.
           setCamera((camera) => zoomAt(camera, pointer, camera.zoom * Math.exp(-event.deltaY * 0.006)));
-        } else if (event.shiftKey) {
+        } else if (event.shiftKey || isTrackpadScroll(event)) {
+          // A two-finger swipe pans both ways, as on any trackpad canvas.
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
         } else {
-          // Wheel up and down zoom about the pointer; a sideways scroll still pans.
+          // Mouse-wheel notches up and down zoom about the pointer; a sideways scroll still pans.
           setCamera((camera) =>
             zoomAt(
               panBy(camera, { x: -event.deltaX / camera.zoom, y: 0 }),
