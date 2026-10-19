@@ -9,6 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
@@ -950,6 +952,57 @@ describe('RepoProxy', () => {
     expect(clientRepo.hasUnsavedChanges()).toBe(false);
   });
 
+  // A handler that never finishes never closes its proxy, so nothing global may hold one: on workerd
+  // that pinned the invocation's whole client for the life of the isolate until it ran out of memory.
+  // workerd's global scope is an EventTarget (unlike Node's), so the test gives Node one.
+  test('a proxy that is never closed is still collectable', { timeout: 30_000 }, async () => {
+    const target = new EventTarget();
+    for (const method of ['addEventListener', 'removeEventListener'] as const) {
+      const previous = Reflect.get(globalThis, method);
+      Reflect.set(globalThis, method, target[method].bind(target));
+      onTestFinished(() => {
+        Reflect.set(globalThis, method, previous);
+      });
+    }
+    setFlagsFromString('--expose_gc');
+    const gc: () => void = runInNewContext('gc');
+
+    // Each proxy gets its own transport, dropped with it as an invocation's is, and a host that keeps
+    // no subscriber; so only something global can keep a proxy alive.
+    let props: DataServiceProps | undefined;
+    await setup(undefined, (captured) => new DataServiceImpl((props = captured)));
+    invariant(props);
+    let live = 0;
+    const registry = new FinalizationRegistry(() => {
+      live--;
+    });
+    // Opened in its own frame so no local of the test's suspended frame still points at the last one.
+    const openUnclosed = async (handlers: DataService.Handlers) => {
+      const dataService = await EffectEx.runPromise(
+        makeInProcessClient(DataService.Rpcs, handlers).pipe(
+          Effect.provideService(Scope.Scope, Effect.runSync(Scope.make())),
+        ),
+      );
+      const repo = new RepoProxy(dataService, EffectContext.empty(), SpaceId.random());
+      await repo.open();
+      registry.register(repo, undefined);
+      live++;
+    };
+    for (let index = 0; index < 10; index++) {
+      await openUnclosed(new SilentDataService(props));
+    }
+
+    await expect
+      .poll(
+        () => {
+          gc();
+          return live;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(0);
+  });
+
   test('a closed proxy has nothing unsaved', { timeout: 5_000 }, async () => {
     let failing: FailingUpdateDataService | undefined;
     const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
@@ -1027,6 +1080,13 @@ const setupWithDroppableSubscription = async () => {
 
   return { droppable, host, clientRepo, clientHandle };
 };
+
+/** Serves a subscription that never emits and registers nothing, so the host holds no subscriber. */
+class SilentDataService extends DataServiceImpl {
+  override ['DataService.subscribe'](): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectStream.never;
+  }
+}
 
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
