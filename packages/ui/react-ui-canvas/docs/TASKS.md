@@ -9,6 +9,16 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 3. Phase 0 below: refactor `CanvasRoot` and its context.
 4. Phases 1-6.
 
+## Overnight plan (agreed 2026-10-19; all in PR #14050, unlanded)
+
+1. Finish Phase 0: Navigation and Look in the controller; aspect hooks and the Time/Gesture/Editing providers; Viewport split (Background, Scene, Overlay); Canvas hooks to `hooks/canvas/`; `CanvasRoot.tsx` under ~600 lines; re-render test extended to selection.
+2. `Canvas.Views`: the Views inspector in the canvas — rows select, Open drills in, drag restacks through the projection, the canvas selection reveals its row.
+3. Phase 1 (View rename) across react-ui-canvas and plugin-canvas.
+4. Phase 2 (groups are Objects).
+5. Phase 3b (orphans).
+   In parallel, as chips: react-ui-list Tree filter/reveal/range selection; tldraw import (plugin-canvas backlog).
+   Not attempted: Phases 3 and 4 (saved-data changes), Phase 6 (needs #14047 reviewed).
+
 ## Phase 0 — Canvas core refactor
 
 Design: DESIGN.md §13.
