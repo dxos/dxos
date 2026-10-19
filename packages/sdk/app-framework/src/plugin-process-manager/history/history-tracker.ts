@@ -192,6 +192,11 @@ export const make = (
     past.push(entry);
     trim(past, limit);
     future.length = 0;
+    // A newer entry touching a scope must block merges into older entries of that scope, even when it is
+    // stored under another scope (an explicit transaction scope, or none for a mixed-scope transaction).
+    for (const step of entry.steps) {
+      mergeCandidates.delete(undoRegistry.lookup(step.operation)?.scope?.(step.input, step.output));
+    }
     mergeCandidates.set(entry.scope, entry);
     log('history entry added', { scope: entry.scope, steps: entry.steps.length, historyLength: past.length });
   };
@@ -374,21 +379,28 @@ export const make = (
 
       yield* emit('redo', 'before', result);
       const steps: HistoryStep[] = [];
-      for (const step of entry.steps) {
-        // Use _invokeCore so the redo is not recorded as a new entry (which would clear the redo stack).
-        const output = yield* invoker._invokeCore(step.operation, step.input);
-        // The forward may produce new identities (e.g. a re-created object), so the inverse is derived afresh.
-        const mapping = undoRegistry.lookup(step.operation);
-        const inverseInput = mapping?.deriveContext(step.input, output);
-        if (mapping && inverseInput !== undefined) {
-          steps.push({ ...step, output, inverse: mapping.inverse, inverseInput });
+      yield* Effect.gen(function* () {
+        for (const step of entry.steps) {
+          // Use _invokeCore so the redo is not recorded as a new entry (which would clear the redo stack).
+          const output = yield* invoker._invokeCore(step.operation, step.input);
+          // The forward may produce new identities (e.g. a re-created object), so the inverse is derived afresh.
+          const mapping = undoRegistry.lookup(step.operation);
+          const inverseInput = mapping?.deriveContext(step.input, output);
+          if (mapping && inverseInput !== undefined) {
+            steps.push({ ...step, output, inverse: mapping.inverse, inverseInput });
+          }
         }
-      }
-
-      if (steps.length > 0) {
-        past.push({ ...entry, steps });
-        trim(past, limit);
-      }
+      }).pipe(
+        // Forwards that ran before a failure already changed state, so they stay undoable.
+        Effect.ensuring(
+          Effect.sync(() => {
+            if (steps.length > 0) {
+              past.push({ ...entry, steps });
+              trim(past, limit);
+            }
+          }),
+        ),
+      );
 
       yield* emit('redo', 'after', result);
       return result;

@@ -381,16 +381,19 @@ const setup = (options?: HistoryTracker.HistoryTrackerOptions) => {
   const writes: string[] = [];
   // Counts tracker lookups so tests can wait for the asynchronous consumer deterministically.
   const counter = { processed: 0 };
-  const hooks: { onWrite?: () => void } = {};
+  const hooks: { onWrite?: () => void; failOn?: string } = {};
 
   const setFieldHandler = Operation.withHandler(SetField, ({ doc, field, value }) =>
-    Effect.sync(() => {
+    Effect.suspend(() => {
       const key = `${doc}.${field}`;
+      if (key === hooks.failOn) {
+        return Effect.die(new Error(`write to ${key} failed`));
+      }
       const previous = store.get(key) ?? 0;
       store.set(key, value);
       writes.push(`${key}=${value}`);
       hooks.onWrite?.();
-      return { previous };
+      return Effect.succeed({ previous });
     }),
   );
   const failHandler = Operation.withHandler(Fail, () => Effect.die(new Error('fail')));
@@ -472,6 +475,32 @@ describe('HistoryTracker redo', () => {
       if (result._tag === 'Failure') {
         expect(result.failure).toBeInstanceOf(EmptyFutureError);
       }
+    }),
+  );
+
+  it.effect('a failed redo keeps the forwards that ran undoable', () =>
+    Effect.gen(function* () {
+      const { invoker, tracker, get, hooks } = setup();
+      yield* tracker.transaction(
+        'pair',
+        Effect.gen(function* () {
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'x', value: 1 });
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'y', value: 2 });
+        }),
+      );
+      yield* tracker.undo();
+
+      hooks.failOn = 'a.y';
+      const exit = yield* tracker.redo().pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(get('a', 'x')).toBe(1);
+      expect(tracker.canUndo()).toBe(true);
+      expect(tracker.canRedo()).toBe(false);
+
+      hooks.failOn = undefined;
+      yield* tracker.undo();
+      expect(get('a', 'x')).toBe(0);
+      expect(tracker.canUndo()).toBe(false);
     }),
   );
 
@@ -792,6 +821,30 @@ describe('HistoryTracker merging', () => {
       expect(tracker.canRedo()).toBe(false);
       yield* tracker.undo();
       expect(get('a', 'x')).toBe(0);
+    }),
+  );
+
+  it.effect('does not fold past a transaction that touched the scope under another scope', () =>
+    Effect.gen(function* () {
+      const { invoker, tracker, get, set } = setup();
+      yield* set('a', 'x', 1);
+      yield* tracker.transaction(
+        'mixed',
+        Effect.gen(function* () {
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'x', value: 5 });
+          yield* invoker.invoke(SetField, { doc: 'b', field: 'x', value: 1 });
+        }),
+      );
+      yield* set('a', 'x', 2);
+
+      yield* tracker.undo();
+      expect(get('a', 'x')).toBe(5);
+      yield* tracker.undo();
+      expect(get('a', 'x')).toBe(1);
+      expect(get('b', 'x')).toBe(0);
+      yield* tracker.undo();
+      expect(get('a', 'x')).toBe(0);
+      expect(tracker.canUndo()).toBe(false);
     }),
   );
 
