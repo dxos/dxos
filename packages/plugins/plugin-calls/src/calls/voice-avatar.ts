@@ -558,6 +558,8 @@ const LINE_HALF_WIDTH = 2.4;
 /** The morph's ring radius, matching the ink ring's, and its height when flattened, as a share of it. */
 const MORPH_RADIUS = 1.05;
 const MORPH_FLAT = 0.04;
+/** Loudness that opens the ring fully is `1 / MORPH_GAIN`. */
+const MORPH_GAIN = 3;
 /** Seconds to open into the circle and to flatten back: near instant, so the ring tracks the voice. */
 const MORPH_IN = 0.04;
 const MORPH_OUT = 0.08;
@@ -567,7 +569,7 @@ const MORPH_OUT = 0.08;
  * frequency sounds the stroke thickens and vibrates in place (faster toward the high end) and sheds blots that drift
  * away; passive, it is a thin brush line that wobbles in an irregular wave. Strands stack `separation` apart, the
  * middle one thickest; the stroke tapers to a point at both ends. With `morph` it is instead a closed ring of fixed
- * width, flattened in silence and opening to a circle while speaking; frequency still runs left to right, along both
+ * width, flattened in silence, whose height follows the voice's loudness up to a circle; frequency still runs left to right, along both
  * its top and bottom halves, so the flattened ring reads as the line and has no seam.
  */
 const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
@@ -611,7 +613,7 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
     return linear[below] + (linear[above] - linear[below]) * (point - below);
   };
 
-  /** How open the morph's ring is, from 0 (flattened) to 1 (a circle). */
+  /** How open the morph's ring is, from 0 (flattened) to 1 (a circle), in proportion to loudness. */
   let open = 0;
   /**
    * The stroke at `position` (0..1 along it): its point, unit normal, and where it sits in the spectrum (0..1, left to
@@ -622,8 +624,7 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
     if (!morph) {
       return { x: (position - 0.5) * 2 * LINE_HALF_WIDTH, y: 0, nx: 0, ny: 1, spectrum: position };
     }
-    const eased = open * open * (3 - 2 * open);
-    const height = MORPH_RADIUS * (MORPH_FLAT + (1 - MORPH_FLAT) * eased);
+    const height = MORPH_RADIUS * (MORPH_FLAT + (1 - MORPH_FLAT) * open);
     const angle = Math.PI - Math.PI * 2 * position;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
@@ -653,7 +654,8 @@ const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
       // Accumulated, so changing the speed changes the pace without jumping the wave.
       phase += delta * waveSpeed;
       if (morph) {
-        const target = level > 0.05 ? 1 : 0;
+        // The ring's height follows the voice's loudness; this voice's loud syllables reach a full circle.
+        const target = Math.min(1, level * MORPH_GAIN);
         open += (target - open) * Math.min(1, delta / (target > open ? MORPH_IN : MORPH_OUT));
       }
       const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
