@@ -18,11 +18,21 @@ export type VoiceAvatarTuning = {
   waveAmplitude: number;
   /** A fine, fast tremble over the ink ring's passive wobble; 0 is smooth. */
   jitter: number;
+  /** Pace of the passive wave; 0 freezes it in place. */
+  waveSpeed: number;
   /** Blots a fully loud band of the ink ring sheds per second. */
   particles: number;
+  /** Overlapping strands the ink ring is drawn with, each on its own radius and wave phase. */
+  strands: number;
 };
 
-export const DEFAULT_TUNING: VoiceAvatarTuning = { waveAmplitude: 1, jitter: 0, particles: 6 };
+export const DEFAULT_TUNING: VoiceAvatarTuning = {
+  waveAmplitude: 1,
+  jitter: 0,
+  waveSpeed: 1,
+  particles: 6,
+  strands: 1,
+};
 
 /**
  * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
@@ -232,8 +242,11 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
     return { mesh, geometry, base, material, pinch: 0 };
   });
 
+  let phase = 0;
   return {
-    update: ({ time, level, bands }, { waveAmplitude }) => {
+    update: ({ time, delta, level, bands }, { waveAmplitude, waveSpeed }) => {
+      // Accumulated, so changing the speed changes the pace without jumping the wave.
+      phase += delta * waveSpeed;
       // The wave fades as the voice takes over, so speech reads as the bands and not the swell.
       const idle = Math.max(0, 1 - level * 4);
       blobs.forEach((blob, index) => {
@@ -242,7 +255,7 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
         const stretch = 1 + energy * 2.2;
         const squeeze = 1 / Math.sqrt(stretch);
         mesh.scale.set(squeeze, stretch, squeeze);
-        mesh.position.y = Math.sin(time * 1.4 - index * 0.45) * idle * 0.08 * waveAmplitude;
+        mesh.position.y = Math.sin(phase * 1.4 - index * 0.45) * idle * 0.08 * waveAmplitude;
 
         // An hourglass: the equator narrows most, the poles not at all.
         const pinch = Math.min(0.55, energy * 0.8);
@@ -276,29 +289,38 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
 const INK_SEGMENTS = 360;
 /** Enough blots for a high emission rate; a spawn past the pool reuses the oldest. */
 const INK_BLOTS = 240;
+const MAX_STRANDS = 8;
 
 /**
- * An ink ring on pale mist. Each band owns an arc (lowest at the top, rising clockwise), which thickens with the
- * band's energy and sheds blots that drift outward, spread and fade; passive, the ring is thin and turns slowly.
+ * An ink ring on pale mist, drawn with one or more overlapping strands. Each band owns an arc (lowest at the top,
+ * rising clockwise), which thickens with the band's energy and sheds blots that drift outward, spread and fade;
+ * passive, the strands are thin, wobble in an irregular wave and turn slowly.
  */
 const inkShape = (scene: THREE.Scene): Shape => {
   scene.background = new THREE.Color('#e9e7e2');
   const ink = new THREE.Color('#151515');
   const radius = 1.05;
+  const ring = new THREE.Group();
+  scene.add(ring);
+  const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
 
-  // A strip of quads, inner and outer edge per sample, rewritten every frame.
-  const positions = new Float32Array((INK_SEGMENTS + 1) * 2 * 3);
+  // Each strand is a strip of quads, inner and outer edge per sample, rewritten every frame.
   const indices: number[] = [];
   for (let segment = 0; segment < INK_SEGMENTS; segment++) {
     const inner = segment * 2;
     indices.push(inner, inner + 1, inner + 2, inner + 1, inner + 3, inner + 2);
   }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
-  const ring = new THREE.Mesh(geometry, material);
-  scene.add(ring);
+  const strands = Array.from({ length: MAX_STRANDS }, (_, index) => {
+    const positions = new Float32Array((INK_SEGMENTS + 1) * 2 * 3);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = index === 0;
+    ring.add(mesh);
+    // Fixed per strand, so a strand keeps its own character as the count changes.
+    return { positions, geometry, mesh, phase: index * 1.9, offset: ((index * 7) % MAX_STRANDS) / MAX_STRANDS - 0.5 };
+  });
 
   const blotGeometry = new THREE.CircleGeometry(1, 24);
   const blots = Array.from({ length: INK_BLOTS }, () => {
@@ -309,8 +331,8 @@ const inkShape = (scene: THREE.Scene): Shape => {
     return { mesh, material: blotMaterial, angle: 0, distance: 0, size: 0, age: 0, life: 0 };
   });
 
-  /** Thickness at `angle` (radians from the top, clockwise): each band's energy, spread over its neighbours. */
-  const thickness = (angle: number, bands: number[], time: number) => {
+  /** Voice thickness at `angle` (radians from the top, clockwise): each band's energy, spread over its neighbours. */
+  const voice = (angle: number, bands: number[]) => {
     let sum = 0;
     bands.forEach((energy, index) => {
       const centre = (index / bands.length) * Math.PI * 2;
@@ -318,41 +340,57 @@ const inkShape = (scene: THREE.Scene): Shape => {
       distance = Math.min(distance, Math.PI * 2 - distance);
       sum += energy * Math.exp(-(((distance * bands.length) / 2.2) ** 2));
     });
-    // A slow, uneven wobble keeps the passive ring hand-drawn rather than machined.
-    const wobble = Math.sin(angle * 3 + time * 0.7) * 0.006 + Math.sin(angle * 7 - time * 0.4) * 0.004;
-    return 0.035 + wobble + sum * 0.22;
+    return sum;
   };
 
+  let phase = 0;
   let spawned = 0;
   return {
-    update: ({ time, delta, level, bands }, { waveAmplitude, jitter, particles }) => {
-      // Passive, the circle drifts in an irregular wave: undulations whose speeds share no common period, fading out
+    update: ({ time, delta, level, bands }, { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount }) => {
+      // Accumulated, so changing the speed changes the pace without jumping the wave.
+      phase += delta * waveSpeed;
+      const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
+      // Passive, the strands drift in an irregular wave: undulations whose speeds share no common period, fading out
       // as the voice takes over.
       const idle = Math.max(0, 1 - level * 4);
-      for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
-        const angle = (sample / INK_SEGMENTS) * Math.PI * 2;
-        const width = thickness(angle, bands, time);
-        const centre =
-          radius +
-          idle *
-            (waveAmplitude *
-              (Math.sin(angle * 2 + time * 0.9) * 0.03 +
-                Math.sin(angle * 3 - time * 1.37 + 1) * 0.02 +
-                Math.sin(angle * 5 + time * 2.11 + 2) * 0.012) +
-              jitter *
-                (Math.sin(angle * 13 + time * 7.3) * 0.006 +
-                  Math.sin(angle * 23 - time * 11.9 + 3) * 0.004 +
-                  Math.sin(angle * 37 + time * 17.1 + 1) * 0.003));
-        // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
-        const inner = centre - width * 0.35;
-        const outer = centre + width * 0.65;
-        const x = Math.sin(angle);
-        const y = Math.cos(angle);
-        positions.set([x * inner, y * inner, 0, x * outer, y * outer, 0], sample * 6);
-      }
-      geometry.attributes.position.needsUpdate = true;
-      geometry.computeBoundingSphere();
-      ring.rotation.z -= delta * (0.04 + level * 0.1);
+      // More strands share the ink, so each is thinner and they spread a little further apart.
+      const share = 1 / Math.sqrt(count);
+      const spread = count > 1 ? 0.06 + count * 0.008 : 0;
+      strands.forEach((strand, index) => {
+        strand.mesh.visible = index < count;
+        if (!strand.mesh.visible) {
+          return;
+        }
+        const own = phase + strand.phase;
+        const base = radius + strand.offset * spread;
+        for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
+          const angle = (sample / INK_SEGMENTS) * Math.PI * 2;
+          // A slow, uneven wobble in the width keeps the stroke hand-drawn rather than machined.
+          const width =
+            (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * share +
+            voice(angle, bands) * 0.22 * share;
+          const centre =
+            base +
+            idle *
+              (waveAmplitude *
+                (Math.sin(angle * 2 + own * 0.9) * 0.03 +
+                  Math.sin(angle * 3 - own * 1.37 + 1) * 0.02 +
+                  Math.sin(angle * 5 + own * 2.11 + 2) * 0.012) +
+                jitter *
+                  (Math.sin(angle * 13 + time * 7.3 + strand.phase) * 0.006 +
+                    Math.sin(angle * 23 - time * 11.9 + 3) * 0.004 +
+                    Math.sin(angle * 37 + time * 17.1 + 1) * 0.003));
+          // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
+          const inner = centre - width * 0.35;
+          const outer = centre + width * 0.65;
+          const x = Math.sin(angle);
+          const y = Math.cos(angle);
+          strand.positions.set([x * inner, y * inner, 0, x * outer, y * outer, 0], sample * 6);
+        }
+        strand.geometry.attributes.position.needsUpdate = true;
+        strand.geometry.computeBoundingSphere();
+      });
+      ring.rotation.z -= delta * (0.04 + level * 0.1) * waveSpeed;
 
       // Loud bands shed blots; how often follows how loud. A high rate can owe several blots in one frame.
       bands.forEach((energy, index) => {
@@ -360,8 +398,8 @@ const inkShape = (scene: THREE.Scene): Shape => {
           return;
         }
         const owed = energy * delta * particles;
-        const count = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
-        for (let spawn = 0; spawn < count; spawn++) {
+        const due = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
+        for (let spawn = 0; spawn < due; spawn++) {
           const blot = blots[spawned++ % blots.length];
           blot.angle = (index / bands.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
           blot.distance = radius + 0.05;
@@ -388,7 +426,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
       }
     },
     dispose: () => {
-      geometry.dispose();
+      strands.forEach(({ geometry }) => geometry.dispose());
       material.dispose();
       blotGeometry.dispose();
       blots.forEach(({ material: blotMaterial }) => blotMaterial.dispose());

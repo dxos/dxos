@@ -31,7 +31,7 @@ type StoryProps = {
 type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioContext };
 
 /** The abstract avatar on its own, moving with a voice file that plays through the speakers. */
-const VoiceAvatarStory = ({ src, variant, waveAmplitude, jitter, particles }: StoryProps) => {
+const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
   const [voice, setVoice] = useState<Voice>();
   const [playing, setPlaying] = useState(false);
 
@@ -62,13 +62,16 @@ const VoiceAvatarStory = ({ src, variant, waveAmplitude, jitter, particles }: St
   }, [src, variant]);
 
   // Tuning applies to the running avatar, so moving a slider does not restart it.
+  const { waveAmplitude, jitter, waveSpeed, particles, strands } = tuning;
   useEffect(() => {
-    voice?.avatar.tune({
-      ...(waveAmplitude !== undefined ? { waveAmplitude } : {}),
-      ...(jitter !== undefined ? { jitter } : {}),
-      ...(particles !== undefined ? { particles } : {}),
-    });
-  }, [voice, waveAmplitude, jitter, particles]);
+    voice?.avatar.tune(
+      Object.fromEntries(
+        Object.entries({ waveAmplitude, jitter, waveSpeed, particles, strands }).filter(
+          ([, value]) => value !== undefined,
+        ),
+      ),
+    );
+  }, [voice, waveAmplitude, jitter, waveSpeed, particles, strands]);
 
   const handlePlay = async () => {
     if (!voice) {
@@ -132,7 +135,9 @@ const meta = {
     variant: { control: 'select', options: ['torus', 'spectrum', 'ink'] satisfies VoiceAvatarVariant[] },
     waveAmplitude: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
     jitter: { control: { type: 'range', min: 0, max: 4, step: 0.1 } },
+    waveSpeed: { control: { type: 'range', min: 0, max: 5, step: 0.1 } },
     particles: { control: { type: 'range', min: 0, max: 60, step: 1 } },
+    strands: { control: { type: 'range', min: 1, max: 8, step: 1 } },
   },
   args: { src: '/simulated-call/agent-voice.webm', variant: 'ink', ...DEFAULT_TUNING },
 } satisfies Meta<typeof VoiceAvatarStory>;
