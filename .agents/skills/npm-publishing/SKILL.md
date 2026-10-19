@@ -86,6 +86,20 @@ The script restores `package.json` after the publish, so the only change to comm
 `"private": true` (plus any `publishConfig` fix). Add a changeset only if the PR also changes the package
 (`agents/instructions/changesets.md`).
 
+## npm bot account
+
+The `npm-bot` npm account's credentials live in 1Password (`CI` vault, item `NPM bot`). Use the references, never
+the values (`1password` skill):
+
+| Field             | Reference                           |
+| ----------------- | ----------------------------------- |
+| Username          | `op://CI/NPM bot/username`          |
+| Password          | `op://CI/NPM bot/password`          |
+| One-time password | `op://CI/NPM bot/one-time password` |
+
+A TOTP code lasts 30 seconds, so read it fresh for each npm command that asks for one (`--otp "$(op read -n
+'op://CI/NPM bot/one-time password?attribute=otp')"`), never once for a loop.
+
 ## Many packages
 
 `node scripts/publish-unpublished-packages.mjs` bootstrap-publishes every package that fails the gate, in
