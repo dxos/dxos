@@ -24619,6 +24619,9 @@ importers:
 
   packages/ui/react-ui-plot:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui-geo':
         specifier: workspace:*
         version: link:../react-ui-geo
@@ -24628,6 +24631,9 @@ importers:
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
+      '@types/geojson':
+        specifier: 'catalog:'
+        version: 7946.0.14
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -24653,9 +24659,6 @@ importers:
       '@types/d3':
         specifier: 'catalog:'
         version: 7.4.3
-      '@types/geojson':
-        specifier: 'catalog:'
-        version: 7946.0.14
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -24665,9 +24668,6 @@ importers:
       '@types/topojson-client':
         specifier: 'catalog:'
         version: 3.1.4
-      '@types/topojson-specification':
-        specifier: 'catalog:'
-        version: 1.0.5
       react:
         specifier: ~19.2.7
         version: 19.2.7

@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import { feature } from 'topojson-client';
 
+import { log } from '@dxos/log';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
@@ -54,6 +55,9 @@ const RADAR_RINGS = [0.2, 0.4, 0.6, 0.8, 1];
 
 type Countries = FeatureCollection;
 
+/** Without outlines the map still draws its globe and legend. */
+const NO_COUNTRIES: Countries = { type: 'FeatureCollection', features: [] };
+
 const countryName = (country: Feature): string | undefined => country.properties?.name;
 
 const useCountries = (enabled: boolean): Countries | undefined => {
@@ -64,12 +68,20 @@ const useCountries = (enabled: boolean): Countries | undefined => {
     }
 
     let cancelled = false;
-    void loadTopology('110m').then((topology) => {
-      const collection = topology.objects.countries;
-      if (!cancelled && collection.type === 'GeometryCollection') {
-        setCountries(feature(topology, collection));
-      }
-    });
+    void loadTopology('110m')
+      .then((topology) => {
+        const collection = topology.objects.countries;
+        return collection.type === 'GeometryCollection' ? feature(topology, collection) : NO_COUNTRIES;
+      })
+      .catch((error) => {
+        log.catch(error);
+        return NO_COUNTRIES;
+      })
+      .then((result) => {
+        if (!cancelled) {
+          setCountries(result);
+        }
+      });
     return () => {
       cancelled = true;
     };

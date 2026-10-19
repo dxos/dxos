@@ -25,9 +25,11 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@observablehq/plot": "catalog:",
+    "@types/geojson": "catalog:",
     "d3": "catalog:",
     "effect": "catalog:",
     "react-resize-detector": "catalog:",
@@ -38,11 +40,9 @@
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
-    "@types/geojson": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/topojson-client": "catalog:",
-    "@types/topojson-specification": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
