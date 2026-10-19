@@ -12,7 +12,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
 
-import { type VoiceAvatarOptions } from '../../calls/voice-avatar.ts';
+import { TUNING_PRESETS, type VoiceAvatarOptions } from '../../calls/voice-avatar.ts';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Lobby } from '../Lobby/index.ts';
 import { Call } from './Call.tsx';
@@ -28,7 +28,12 @@ const COLLEAGUES: Participant[] = [
 /** An agent with no camera: its tile is an abstract shape that moves with its synthesized voice. */
 const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
 /** The agent as it appears standing in for a colleague. */
-const STAND_IN = { name: 'Composer', avatar: { variant: 'ink-morph' } } satisfies Omit<Participant, 'track'>;
+const NAVY = '#26406b';
+const NAVY_INK = '#f1ede4';
+const STAND_IN = {
+  name: 'Composer',
+  avatar: { variant: 'ink', background: NAVY, ink: NAVY_INK, tuning: TUNING_PRESETS.scribble },
+} satisfies Omit<Participant, 'track'>;
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */
 type Timeline = { screenshares?: { speaker: string; start: number; file: string }[] };

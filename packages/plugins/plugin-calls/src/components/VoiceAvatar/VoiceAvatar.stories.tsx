@@ -28,6 +28,9 @@ type StoryProps = {
   /** Audio file the avatar speaks. */
   src: string;
   variant?: VoiceAvatarVariant;
+  /** Paper and ink colours of the ink variants. */
+  background?: string;
+  ink?: string;
 } & Partial<VoiceAvatarTuning>;
 
 /** Slider range of each tuning value; Randomize draws from the same ranges. */
@@ -51,6 +54,8 @@ type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioConte
 const VoiceAvatarStory = ({
   src,
   variant,
+  background,
+  ink,
   onTune,
   ...tuning
 }: StoryProps & {
@@ -70,6 +75,8 @@ const VoiceAvatarStory = ({
     source.connect(context.destination);
     const avatar = createVoiceAvatar(context, destination.stream.getAudioTracks()[0], {
       variant,
+      ...(background ? { background } : {}),
+      ...(ink ? { ink } : {}),
       width: 960,
       height: 540,
     });
@@ -84,7 +91,7 @@ const VoiceAvatarStory = ({
       void context.close();
       setPlaying(false);
     };
-  }, [src, variant]);
+  }, [src, variant, background, ink]);
 
   // Tuning applies to the running avatar, so moving a slider does not restart it.
   const { waveAmplitude, jitter, waveSpeed, particles, strands, separation, thickness } = tuning;
@@ -212,4 +219,8 @@ export const Orbits: Story = {
 
 export const Scribble: Story = {
   args: { variant: 'ink', ...TUNING_PRESETS.scribble },
+};
+
+export const Navy: Story = {
+  args: { variant: 'ink', background: '#26406b', ink: '#f1ede4', ...TUNING_PRESETS.scribble },
 };

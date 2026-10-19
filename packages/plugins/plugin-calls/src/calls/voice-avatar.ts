@@ -110,6 +110,10 @@ export type VoiceAvatarOptions = {
   color?: string;
   /** Colour it glows toward while speaking loudly. */
   speakingColor?: string;
+  /** Paper colour of the ink variants. */
+  background?: string;
+  /** Ink colour of the ink variants; light ink for a dark paper. */
+  ink?: string;
   tuning?: Partial<VoiceAvatarTuning>;
 };
 
@@ -157,6 +161,8 @@ export const createVoiceAvatar = (
     color = '#5b8cff',
     speakingColor = '#2ecc71',
     tuning: initialTuning,
+    background = '#e9e7e2',
+    ink = '#151515',
   }: VoiceAvatarOptions = {},
 ): VoiceAvatar => {
   const analyser = audioContext.createAnalyser();
@@ -194,11 +200,11 @@ export const createVoiceAvatar = (
     variant === 'spectrum'
       ? spectrumShape(scene, palette)
       : variant === 'ink'
-        ? inkShape(scene)
+        ? inkShape(scene, background, ink)
         : variant === 'ink-line'
-          ? inkLineShape(scene, false)
+          ? inkLineShape(scene, background, ink, false)
           : variant === 'ink-morph'
-            ? inkLineShape(scene, true)
+            ? inkLineShape(scene, background, ink, true)
             : torusShape(scene, palette);
 
   const hearing: Hearing = {
@@ -396,9 +402,9 @@ const MAX_STRANDS = 8;
  * ones in fine, fast ripples), its slice's bands thicken arcs around it, and it sheds blots that drift outward, spread
  * and fade. Passive, the strands are thin, wobble in an irregular wave and turn slowly.
  */
-const inkShape = (scene: THREE.Scene): Shape => {
-  scene.background = new THREE.Color('#e9e7e2');
-  const ink = new THREE.Color('#151515');
+const inkShape = (scene: THREE.Scene, background: string, inkColor: string): Shape => {
+  scene.background = new THREE.Color(background);
+  const ink = new THREE.Color(inkColor);
   const radius = 1.05;
   const ring = new THREE.Group();
   // The spectrum starts on the left (bands are laid out from the top, clockwise, before this turn).
@@ -584,9 +590,9 @@ const MORPH_OUT = 0.08;
  * width, flattened in silence, whose height follows the voice's loudness up to a circle; its frequency runs from the
  * bottom point (lowest) up both sides to the top point (highest), so it has no seam.
  */
-const inkLineShape = (scene: THREE.Scene, morph: boolean): Shape => {
-  scene.background = new THREE.Color('#e9e7e2');
-  const ink = new THREE.Color('#151515');
+const inkLineShape = (scene: THREE.Scene, background: string, inkColor: string, morph: boolean): Shape => {
+  scene.background = new THREE.Color(background);
+  const ink = new THREE.Color(inkColor);
   const group = new THREE.Group();
   scene.add(group);
   const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
