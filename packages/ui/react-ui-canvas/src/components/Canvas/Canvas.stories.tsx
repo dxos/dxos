@@ -316,6 +316,12 @@ export const Views: Story = {
     await userEvent.click(viewRow(views, 'a'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
     await waitFor(() => expect(rowSelected(views, 'a')).toBe(true));
+
+    // 7. The root View's row selects everything in it, as a View's contents.
+    await userEvent.click(views.querySelector<HTMLElement>('[data-tree-row]') ?? views);
+    await waitFor(() => expect(rowSelected(views, 'b')).toBe(true));
+    await expect(rowSelected(views, 'a')).toBe(true);
+    await expect(rowSelected(views, 'c')).toBe(true);
   },
 };
 
@@ -364,5 +370,18 @@ export const Group: Story = {
     view.focus();
     await userEvent.keyboard('{Meta>}z{/Meta}');
     await waitFor(() => expect(instance()?.querySelector('[data-node-id="a"]')).not.toBeNull());
+
+    // 5. A row inside the group opens its Object on its own and selects the node there.
+    const id = instance()?.getAttribute('data-node-id') ?? '';
+    const dock = await canvas.findByTestId('scene-view-dock');
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-views')).getByRole('button', { name: 'Views' }),
+    );
+    const views = await within(dock).findByTestId('views');
+    const group = viewRow(views, id);
+    await userEvent.click(group.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? group);
+    await userEvent.click(await within(views).findByTestId(`views-row-${id}/a`));
+    await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeDefined());
+    await waitFor(() => expect(rowSelected(views, `${id}/a`)).toBe(true));
   },
 };

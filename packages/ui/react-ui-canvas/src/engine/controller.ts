@@ -141,6 +141,14 @@ export type NavigationCommands = {
    * frame, animating only the last step; then selects `select` there. A path the canvas cannot reach stops where it can.
    */
   openView: (path: readonly ViewId[], options?: { animate?: boolean; select?: Iterable<ElementId> }) => void;
+  /**
+   * Opens `path` as `openView` does or, with `isolate`, inside that Object opened on its own (`path` then starts with the
+   * Object); then selects `select` there.
+   */
+  openPlace: (
+    place: { path: readonly ViewId[]; isolate?: ViewId },
+    options?: { animate?: boolean; select?: Iterable<ElementId> },
+  ) => void;
   /** Opens the breadcrumb at `index`; in isolation the first leads back out. */
   openPath: (index: number) => void;
   /** Opens a composite on its own: its definition scene, fitted, on a plain background; Escape returns. */
@@ -682,13 +690,14 @@ export const createCanvasController = ({
     camera().animateTo(zoomAt(camera().target(), centre(), zoom));
   };
 
-  const openView: NavigationCommands['openView'] = (target, { animate = true, select: ids } = {}) => {
-    if (registry.get(atoms.isolation)) {
-      exitIsolation();
-    }
+  /**
+   * Out to the shared ancestor of the open path and `target`, then in through each frame, animating only the last step;
+   * false when `target` starts elsewhere (another root, or out of isolation), so nothing is selected there.
+   */
+  const navigateTo = (target: readonly ViewId[], animate: boolean): boolean => {
     const current = registry.get(atoms.path);
     if (target[0] !== current[0]) {
-      return;
+      return false;
     }
     let shared = 1;
     while (shared < Math.min(current.length, target.length) && current[shared] === target[shared]) {
@@ -705,13 +714,33 @@ export const createCanvasController = ({
       }
       drillInto(portal, animate && index === descend.length - 1);
     }
-    if (ids) {
+    return true;
+  };
+
+  const openView: NavigationCommands['openView'] = (target, { animate = true, select: ids } = {}) => {
+    if (registry.get(atoms.isolation)) {
+      exitIsolation();
+    }
+    if (navigateTo(target, animate) && ids) {
       select(ids);
+    }
+  };
+
+  const openPlace: NavigationCommands['openPlace'] = ({ path, isolate: composite }, options = {}) => {
+    if (composite === undefined) {
+      return openView(path, options);
+    }
+    if (registry.get(atoms.isolation)?.composite !== composite) {
+      isolate(composite);
+    }
+    if (navigateTo(path, options.animate ?? true) && options.select) {
+      select(options.select);
     }
   };
 
   const navigation: NavigationCommands = {
     openView,
+    openPlace,
     drillIn: (node, animate) => (isInstanceNode(node) ? isolate(node.composite) : drillInto(node, animate)),
     drillOut,
     back: () => (registry.get(atoms.isolation) ? exitIsolation() : drillOut()),

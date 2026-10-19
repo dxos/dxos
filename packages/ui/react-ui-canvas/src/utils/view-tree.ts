@@ -17,6 +17,12 @@ import { between, sortByZ } from './order.ts';
 /** What a row of the views tree stands for (VIEWS.md §2). */
 export type ViewTreeKind = 'view' | 'node' | 'link' | 'instance' | 'object';
 
+/**
+ * Where the canvas shows an element for editing: a View path from the root, or, for an Object's contents, the Object
+ * opened in isolation (`isolate`) and the path within it, the Object first.
+ */
+export type ViewPlace = { path: ViewId[]; isolate?: ViewId };
+
 /** One row of the views tree: a View, a node or link in one, an instance, or an object's contents under it. */
 export type ViewTreeItem = {
   /** Unique in the tree: an object's contents are prefixed with the instance path, as one object shows under many. */
@@ -33,6 +39,8 @@ export type ViewTreeItem = {
   type?: string;
   /** Read-only: an object's contents are edited by opening the object, not where it is placed. */
   readonly?: boolean;
+  /** For an object's contents, where the element is drawn inside the (innermost) object, which is where it is edited. */
+  object?: ViewPlace;
   children: ViewTreeItem[];
 };
 
@@ -58,9 +66,11 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
     scene: View,
     path: ViewId[],
     prefix: string,
-    readonly: boolean,
+    object: ViewPlace | undefined,
     seen: Set<ViewId>,
   ): ViewTreeItem[] => {
+    const readonly = object !== undefined;
+    const inObject = object ? { readonly, object } : {};
     const nodes = sortByZ(Object.values(scene.nodes)).map((node): ViewTreeItem => {
       const id = `${prefix}${node.id}`;
       if (isViewNode(node)) {
@@ -74,26 +84,40 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
           path: childPath,
           label: textOf(node) ?? child?.name ?? 'View',
           type: node.type,
-          readonly,
+          ...inObject,
           children:
             child && !seen.has(child.id)
-              ? contents(child, childPath, `${id}/`, readonly, new Set([...seen, child.id]))
+              ? contents(
+                  child,
+                  childPath,
+                  `${id}/`,
+                  object && { ...object, path: [...object.path, node.scene] },
+                  new Set([...seen, child.id]),
+                )
               : [],
         };
       }
       if (isInstanceNode(node)) {
-        const object = scenes[node.composite];
+        const definition = scenes[node.composite];
         return {
           id,
           kind: 'instance',
           element: node.id,
           container: scene.id,
           path,
-          label: object?.name ?? node.composite,
+          label: definition?.name ?? node.composite,
           type: node.type,
-          readonly,
+          ...inObject,
           children:
-            object && !seen.has(object.id) ? contents(object, path, `${id}/`, true, new Set([...seen, object.id])) : [],
+            definition && !seen.has(definition.id)
+              ? contents(
+                  definition,
+                  path,
+                  `${id}/`,
+                  { path: [definition.id], isolate: definition.id },
+                  new Set([...seen, definition.id]),
+                )
+              : [],
         };
       }
       return {
@@ -104,7 +128,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
         path,
         label: textOf(node) ?? node.type,
         type: node.type,
-        readonly,
+        ...inObject,
         children: [],
       };
     });
@@ -118,7 +142,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
         textOf(link) ??
         `${'node' in link.source ? link.source.node : 'point'} → ${'node' in link.target ? link.target.node : 'point'}`,
       type: link.type,
-      readonly,
+      ...inObject,
       children: [],
     }));
     return [...nodes, ...links];
@@ -129,7 +153,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
     kind: 'view',
     path: [root],
     label: scene?.name ?? root,
-    children: scene ? contents(scene, [root], '', false, new Set([root])) : [],
+    children: scene ? contents(scene, [root], '', undefined, new Set([root])) : [],
   };
 };
 
@@ -163,15 +187,21 @@ export const restackZ = (
 /** The View path a row's element is drawn in: a View row's frame sits in its parent, every other row in its own. */
 export const rowView = (item: ViewTreeItem): ViewId[] => (item.kind === 'view' ? item.path.slice(0, -1) : item.path);
 
-/** Whether a row selects on the canvas: the root View has no element, and an object's contents are edited elsewhere. */
-export const isSelectableRow = (item: ViewTreeItem): boolean =>
-  !item.readonly && item.element !== undefined && item.path.length > 0;
+/** Where a row's element is selected: its View, or inside the Object it belongs to, opened in isolation. */
+export const rowPlace = (item: ViewTreeItem): ViewPlace => item.object ?? { path: rowView(item) };
+
+/** Whether a row stands for one element on the canvas; the root View stands for its whole contents instead. */
+export const isSelectableRow = (item: ViewTreeItem): boolean => item.element !== undefined && item.path.length > 0;
 
 const samePath = (left: readonly ViewId[] | undefined, right: readonly ViewId[]) =>
   left !== undefined && left.length === right.length && left.every((id, index) => id === right[index]);
 
-/** A canvas selection a row activation asks for: the View to open, and what to select there. */
-export type ViewRowSelection = { path: ViewId[]; ids: ElementId[] };
+/** Whether two places are the same View, isolated or not alike. */
+export const samePlace = (left: ViewPlace | undefined, right: ViewPlace): boolean =>
+  left !== undefined && left.isolate === right.isolate && samePath(left.path, right.path);
+
+/** A canvas selection a row activation asks for: the place to open, and what to select there. */
+export type ViewRowSelection = ViewPlace & { ids: ElementId[] };
 
 export type SelectRowsOptions = {
   item: ViewTreeItem;
@@ -183,13 +213,13 @@ export type SelectRowsOptions = {
   current?: boolean;
   /** The canvas selection now. */
   selection: ReadonlySet<ElementId>;
-  /** The open View's path; undefined in isolation, where no row's View is open. */
-  path?: readonly ViewId[];
+  /** What the canvas shows now. */
+  place?: ViewPlace;
 };
 
 /**
  * What activating a row selects on the canvas: the row's element alone, toggled into the selection with meta, or a
- * range of rows in the same View; undefined for a row that selects nothing.
+ * range of rows in the same place; the root View selects everything in it, like any View its contents.
  */
 export const selectRows = ({
   item,
@@ -197,25 +227,26 @@ export const selectRows = ({
   meta = false,
   current = true,
   selection,
-  path,
+  place,
 }: SelectRowsOptions): ViewRowSelection | undefined => {
-  if (!isSelectableRow(item) || item.element === undefined) {
-    return undefined;
+  if (item.element === undefined) {
+    const ids = item.children.flatMap((child) => (child.element === undefined ? [] : [child.element]));
+    return { path: item.path, ids };
   }
-  const view = rowView(item);
-  const open = samePath(path, view);
+  const target = rowPlace(item);
+  const open = samePlace(place, target);
   if (range) {
     const ids = range.flatMap((row) =>
-      isSelectableRow(row) && row.element !== undefined && samePath(rowView(row), view) ? [row.element] : [],
+      isSelectableRow(row) && row.element !== undefined && samePlace(rowPlace(row), target) ? [row.element] : [],
     );
-    return { path: view, ids: meta && open ? [...new Set([...selection, ...ids])] : ids };
+    return { ...target, ids: meta && open ? [...new Set([...selection, ...ids])] : ids };
   }
   if (meta && open) {
     const next = new Set(selection);
     current ? next.add(item.element) : next.delete(item.element);
-    return { path: view, ids: [...next] };
+    return { ...target, ids: [...next] };
   }
-  return { path: view, ids: [item.element] };
+  return { ...target, ids: [item.element] };
 };
 
 /** A row dropped before or after a sibling: restack `element` in `container`'s drawing order. */

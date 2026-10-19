@@ -225,15 +225,15 @@ export const CanvasViews = () => {
   const path = useAtomValue(navigation.atoms.path);
   const isolation = useAtomValue(navigation.atoms.isolation);
   const scenes = useAtomValue(store.views);
-  const { openView } = navigation.commands;
+  const { openView, openPlace } = navigation.commands;
   return (
     <InspectorSection section={VIEWS_INSPECTOR}>
       <ViewsInspector
         scenes={scenes}
         root={root}
-        path={isolation ? undefined : path}
+        place={isolation ? { path, isolate: isolation.composite } : { path }}
         selected={selection}
-        onSelect={({ path, ids }) => openView(path, { animate: false, select: ids })}
+        onSelect={({ ids, ...place }) => openPlace(place, { animate: false, select: ids })}
         onOpen={openView}
         onReorder={
           readonly || !capabilities.update

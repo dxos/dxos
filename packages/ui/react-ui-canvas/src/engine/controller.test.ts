@@ -175,6 +175,17 @@ describe('CanvasController', () => {
       expect(registry.get(atoms.camera)).toEqual(camera);
     });
 
+    test('openPlace selects inside an object opened on its own, and a plain path leaves isolation', ({ expect }) => {
+      const { registry, atoms, controller } = setup({ tree: nested() });
+      controller.navigation.openPlace({ path: ['child'], isolate: 'child' }, { animate: false, select: ['c'] });
+      expect(registry.get(atoms.isolation)?.composite).toBe('child');
+      expect(registry.get(atoms.path)).toEqual(['child']);
+      expect([...registry.get(atoms.selection)]).toEqual(['c']);
+      controller.navigation.openPlace({ path: ['root'] }, { animate: false, select: ['a'] });
+      expect(registry.get(atoms.isolation)).toBeUndefined();
+      expect([...registry.get(atoms.selection)]).toEqual(['a']);
+    });
+
     test("zoomTo and zoomBy zoom about the view's centre; resetZoom returns to true size", ({ expect }) => {
       const { registry, atoms, controller } = setup();
       controller.navigation.zoomTo(2);

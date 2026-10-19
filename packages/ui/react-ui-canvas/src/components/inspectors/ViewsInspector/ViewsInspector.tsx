@@ -22,13 +22,15 @@ import { mx } from '@dxos/ui-theme';
 import { useRegistry } from '../../../hooks/index.ts';
 import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
 import {
+  type ViewPlace,
   type ViewReorder,
   type ViewRowSelection,
   type ViewTreeItem,
   buildViewTree,
   canRestack,
   isSelectableRow,
-  rowView,
+  rowPlace,
+  samePlace,
   selectRows,
   viewReorder,
 } from '../../../utils/index.ts';
@@ -38,11 +40,11 @@ export type ViewsInspectorProps = InspectorProps & {
   scenes: ViewMap;
   /** The canvas's root View. */
   root: ViewId;
-  /** The open View's path, root first; undefined while an object is open on its own. */
-  path?: readonly ViewId[];
+  /** What the canvas shows: the open View's path, or the Object open in isolation and the path within it. */
+  place?: ViewPlace;
   /** The canvas selection, in the open View: the rows of these elements show as selected, and the first is revealed. */
   selected?: ReadonlySet<ElementId>;
-  /** A row was activated: open `selection.path` and select `selection.ids` there; `item` is the row activated. */
+  /** A row was activated: open the selection's place and select `selection.ids` there; `item` is the row activated. */
   onSelect?: (selection: ViewRowSelection, item: ViewTreeItem) => void;
   /** Opens a View in the viewport, by its path from the root. */
   onOpen?: (path: ViewId[]) => void;
@@ -91,7 +93,7 @@ export const ViewsInspector = ({
   classNames,
   scenes,
   root,
-  path,
+  place,
   selected,
   onSelect,
   onOpen,
@@ -118,9 +120,8 @@ export const ViewsInspector = ({
       isSelectableRow(item) &&
       item.element !== undefined &&
       (selected?.has(item.element) ?? false) &&
-      path !== undefined &&
-      rowView(item).join(' ') === path.join(' '),
-    [selected, path],
+      samePlace(place, rowPlace(item)),
+    [selected, place],
   );
   const isCurrentRef = useRef(isCurrent);
   isCurrentRef.current = isCurrent;
@@ -176,7 +177,7 @@ export const ViewsInspector = ({
   useEffect(() => {
     const first = [...rowsRef.current.values()].find(({ item }) => isCurrentRef.current(item));
     first && treeRef.current?.reveal(first.path, { focus: false });
-  }, [selected, path]);
+  }, [selected, place]);
 
   const onOpenChange = useCallback(
     ({ path: rowPath, open }: { path: string[]; open: boolean }) => {
@@ -203,11 +204,11 @@ export const ViewsInspector = ({
         meta,
         current,
         selection: selected ?? new Set(),
-        path,
+        place,
       });
       selection && onSelect?.(selection, item);
     },
-    [onSelect, onOpen, selected, path],
+    [onSelect, onOpen, selected, place],
   );
 
   const handleDoubleClick = useCallback(
@@ -225,7 +226,7 @@ export const ViewsInspector = ({
   );
 
   // A row moves only among its siblings in the open View, as a restack: another container is another View's drawing.
-  const view = path?.at(-1);
+  const view = place && !place.isolate ? place.path.at(-1) : undefined;
   const canDrop = useCallback(
     ({ source, target }: { source: TreeData; target: TreeData }) => {
       const from: Row = source.item;

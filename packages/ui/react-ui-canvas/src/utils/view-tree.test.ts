@@ -87,21 +87,43 @@ describe('buildViewTree', () => {
       return item;
     };
     const root = [tree.root];
+    const place = { path: root };
     const selection = new Set(['a']);
-    // The root View row and an element in a nested View.
-    expect(selectRows({ item: views, selection, path: root })).toBeUndefined();
-    expect(selectRows({ item: row('c/d'), selection, path: root })).toEqual({ path: [tree.root, 'c'], ids: ['d'] });
+    // The root View row selects everything in it, nodes and links; an element in a nested View opens that View.
+    expect(selectRows({ item: views, selection, place })).toEqual({
+      path: root,
+      ids: views.children.flatMap((child) => (child.element ? [child.element] : [])),
+    });
+    expect(selectRows({ item: views, selection, place })?.ids).toContain('a');
+    expect(selectRows({ item: row('c/d'), selection, place })).toEqual({ path: [tree.root, 'c'], ids: ['d'] });
     // A View row selects its frame in the parent View.
     expect(rowView(row('c'))).toEqual(root);
-    expect(selectRows({ item: row('c'), selection, path: root })).toEqual({ path: root, ids: ['c'] });
+    expect(selectRows({ item: row('c'), selection, place })).toEqual({ path: root, ids: ['c'] });
     // Meta toggles within the open View, and starts over in another.
-    expect(selectRows({ item: row('b'), meta: true, selection, path: root })?.ids).toEqual(['a', 'b']);
-    expect(selectRows({ item: row('a'), meta: true, current: false, selection, path: root })?.ids).toEqual([]);
-    expect(selectRows({ item: row('c/d'), meta: true, selection, path: root })?.ids).toEqual(['d']);
+    expect(selectRows({ item: row('b'), meta: true, selection, place })?.ids).toEqual(['a', 'b']);
+    expect(selectRows({ item: row('a'), meta: true, current: false, selection, place })?.ids).toEqual([]);
+    expect(selectRows({ item: row('c/d'), meta: true, selection, place })?.ids).toEqual(['d']);
     // A range keeps the rows drawn in the clicked row's View.
     const range = [row('b'), row('c'), row('c/d'), row('c/e')];
-    expect(selectRows({ item: row('c'), range, selection, path: root })?.ids).toEqual(['b', 'c']);
-    expect(selectRows({ item: row('c'), range, meta: true, selection, path: root })?.ids).toEqual(['a', 'b', 'c']);
+    expect(selectRows({ item: row('c'), range, selection, place })?.ids).toEqual(['b', 'c']);
+    expect(selectRows({ item: row('c'), range, meta: true, selection, place })?.ids).toEqual(['a', 'b', 'c']);
+  });
+
+  test("an object's contents select inside the object, opened in isolation", ({ expect }) => {
+    const tree = createObjectsTree();
+    const views = buildViewTree(Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), tree.root);
+    const all = (items: ViewTreeItem[]): ViewTreeItem[] => items.flatMap((item) => [item, ...all(item.children)]);
+    const mark = all(views.children).find((item) => item.id === 'logo-1/mark');
+    if (!mark?.object) {
+      throw new Error('fixture has no logo mark');
+    }
+    const logo = mark.object.isolate;
+    expect(mark.object).toEqual({ path: [logo], isolate: logo });
+    expect(selectRows({ item: mark, selection: new Set(), place: { path: [tree.root] } })).toEqual({
+      path: [logo],
+      isolate: logo,
+      ids: ['mark'],
+    });
   });
 
   test('a drop restacks among siblings in the open View only, above or below', ({ expect }) => {

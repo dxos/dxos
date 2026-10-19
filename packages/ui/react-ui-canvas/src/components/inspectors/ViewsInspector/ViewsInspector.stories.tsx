@@ -13,7 +13,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { reduceIntent } from '../../../engine/index.ts';
 import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
-import { type ViewRowSelection, restackZ } from '../../../utils/index.ts';
+import { type ViewPlace, type ViewRowSelection, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { ViewsInspector } from './ViewsInspector.tsx';
 
@@ -38,20 +38,20 @@ const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
   // Local state stands in for the store: a drag restacks the element in its scene.
   const [scenes, setScenes] = useState(initial.scenes);
   const [selected, setSelected] = useState<ReadonlySet<ElementId>>(new Set());
-  const [path, setPath] = useState<ViewId[]>([initial.root]);
+  const [place, setPlace] = useState<ViewPlace>({ path: [initial.root] });
   return (
     <ViewsInspector
       scenes={scenes}
       root={initial.root}
-      path={path}
+      place={place}
       selected={selected}
       onSelect={(selection) => {
-        setPath(selection.path);
+        setPlace({ path: selection.path, isolate: selection.isolate });
         setSelected(new Set(selection.ids));
         onSelect?.(selection);
       }}
       onOpen={(next) => {
-        setPath(next);
+        setPlace({ path: next });
         setSelected(new Set());
         onOpen?.(next);
       }}
