@@ -104,7 +104,7 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [x] Views panel: drag rows to restack within a container. `controller.document.restack` → one `reorder` intent through the open View's projection; `canRestack`/`viewReorder` unit-tested.
   - Decisions (2026-10-19): the restack is the existing `reorder` intent rather than `update` with a `z`, as `reorder` is exactly that edit; a drop is accepted only among siblings in the open View, since the projection is the open View's (restacking another View would need its own projection or navigating there mid-drag); a View row's click selects its frame in the parent View, and only Open/Enter/double-click drill in; row selection navigates without animation so the selection lands in the View it names; `restackZ` now reports a move that changes nothing as undefined.
 - [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden. (Hidden since Phase 2, but for the selected one.)
-- [ ] Delete AboutInspector, its story and its Canvas part.
+- [x] Delete AboutInspector, its story and its Canvas part. (`Canvas.About` removed; the Views rows carry the counts.)
 
 ## Phase 6 — Undo (VIEWS.md §8)
 

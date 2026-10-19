@@ -43,8 +43,6 @@ import {
   viewOptions,
 } from '../../utils/index.ts';
 import {
-  AboutInspector,
-  type AboutStat,
   LayersInspector,
   ObjectsInspector,
   PropertiesInspector,
@@ -193,13 +191,6 @@ const OBJECTS_INSPECTOR: InspectorSectionDef = {
   title: 'Objects',
   icon: 'ph--cube--regular',
   order: 2,
-};
-
-const ABOUT_INSPECTOR: InspectorSectionDef = {
-  id: 'about',
-  title: 'About',
-  icon: 'ph--info--regular',
-  order: 4,
 };
 
 //
@@ -408,30 +399,3 @@ export const CanvasObjects = () => {
 };
 
 CanvasObjects.displayName = 'Canvas.Objects';
-
-//
-// About
-//
-
-/** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
-export const CanvasAbout = () => {
-  const { store, projection } = useCanvasDocument('Canvas.About');
-  const scene = useAtomValue(projection.scene);
-  const scenes = useAtomValue(store.views);
-  const stats = useMemo<AboutStat[]>(
-    () => [
-      { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
-      { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
-      { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
-      { id: 'views', label: 'Views', value: Object.keys(scenes).length },
-    ],
-    [scene, scenes],
-  );
-  return (
-    <InspectorSection section={ABOUT_INSPECTOR}>
-      <AboutInspector stats={stats} />
-    </InspectorSection>
-  );
-};
-
-CanvasAbout.displayName = 'Canvas.About';
