@@ -56,6 +56,11 @@ node scripts/publish-package.mjs @dxos/<name> --trust
 For the guided option, drop `--trust`. Then read the terminal (`mcp__terminal__read_terminal`, with
 `wait_for_output_ms`) to follow progress, and tell the user when the browser confirmation is pending.
 
+Where `op` can read the `CI` vault (the cloud sandbox, with `OP_SERVICE_ACCOUNT_TOKEN` set), add `--op`:
+`--trust --op` runs unattended as the [npm bot account](#npm-bot-account) — it logs in from 1Password,
+answers each 2FA prompt with a fresh TOTP code, and revokes the session token on exit — so the Bash tool
+can run it.
+
 Manual settings, for the guided option or to check the automatic one on
 `https://www.npmjs.com/package/@dxos/<name>/access` → Trusted Publisher → GitHub Actions:
 

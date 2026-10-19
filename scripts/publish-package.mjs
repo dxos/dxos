@@ -14,19 +14,23 @@
 //      for a browser 2FA confirmation, so run this in an interactive terminal. Without `--trust` the
 //      script prints the manual settings and opens the package's npm access page.
 // Already-published packages skip step 1, so re-running for a package that only lacks a trusted
-// publisher is safe. Credentials stay with npm and never pass through this script.
+// publisher is safe. Credentials stay with npm and never pass through this script, except with `--op`:
+// it logs in as the npm-bot account from 1Password (`op` CLI) and answers every 2FA prompt with a fresh
+// TOTP code, so the flow runs unattended; the session token lives in a temporary npmrc and is revoked on exit.
 //
 // Usage:
-//   node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--dry-run] [--no-build] [--no-open]
+//   node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]
 //
 // Examples:
 //   node scripts/publish-package.mjs @dxos/plugin-discord --dry-run
 //   node scripts/publish-package.mjs @dxos/plugin-discord --trust
+//   node scripts/publish-package.mjs @dxos/plugin-discord --trust --op
 //   node scripts/publish-package.mjs packages/core/compute/progress
 
 import { globby } from 'globby';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,8 +45,15 @@ const TRUST_WORKFLOW = 'publish-all.yml';
 // First npm release whose `trust github` accepts `--allow-publish` (11.10–11.14 have `trust` without it).
 const NPM_TRUST_MIN_VERSION = [11, 15, 0];
 
+// The npm-bot account (see the npm-publishing skill).
+const OP_NPM_BOT = {
+  username: 'op://CI/NPM bot/username',
+  password: 'op://CI/NPM bot/password',
+  otp: 'op://CI/NPM bot/one-time password?attribute=otp',
+};
+
 const USAGE =
-  'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--dry-run] [--no-build] [--no-open]';
+  'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]';
 
 const usage = () => {
   console.error(USAGE);
@@ -50,7 +61,7 @@ const usage = () => {
 };
 
 const parseArgs = (argv) => {
-  const options = { dryRun: false, build: true, open: true, trust: false };
+  const options = { dryRun: false, build: true, open: true, trust: false, op: false };
   let target;
   for (const arg of argv) {
     if (arg === '--dry-run') {
@@ -61,6 +72,8 @@ const parseArgs = (argv) => {
       options.open = false;
     } else if (arg === '--trust') {
       options.trust = true;
+    } else if (arg === '--op') {
+      options.op = true;
     } else if (arg.startsWith('--')) {
       console.error(`Unknown option: ${arg}`);
       usage();
@@ -105,9 +118,71 @@ const readPackageJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 
 const writePackageJson = (file, pkg) => writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`);
 
+// Set by `--op`: child processes read the temporary npmrc, and `otpArgs()` supplies each 2FA code.
+let session;
+
+// npm reads config env vars case-insensitively, so an inherited `NPM_CONFIG_USERCONFIG` would shadow ours.
+const sessionEnv = () => {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'npm_config_userconfig'),
+  );
+  return { ...env, npm_config_userconfig: session.userconfig };
+};
+
+// The OTP value is redacted from the echoed command line.
 const run = (command, args, cwd = REPO_ROOT) => {
-  console.log(`$ ${command} ${args.join(' ')}`);
-  execFileSync(command, args, { cwd, stdio: 'inherit' });
+  const shown = args.map((arg, index) => (args[index - 1] === '--otp' ? '******' : arg));
+  console.log(`$ ${command} ${shown.join(' ')}`);
+  execFileSync(command, args, { cwd, stdio: 'inherit', env: session ? sessionEnv() : process.env });
+};
+
+const opRead = (reference) =>
+  execFileSync('op', ['read', '--no-newline', reference], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+
+// A TOTP code lasts 30 seconds, so each command that needs one reads it fresh.
+const otpArgs = () => (session ? ['--otp', opRead(OP_NPM_BOT.otp)] : []);
+
+// Logs in as npm-bot through the registry's legacy login endpoint, which takes the OTP as a header.
+const startOpSession = async () => {
+  const name = opRead(OP_NPM_BOT.username);
+  const response = await fetch(`${NPM_REGISTRY}/-/user/org.couchdb.user:${encodeURIComponent(name)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json', 'npm-otp': opRead(OP_NPM_BOT.otp) },
+    body: JSON.stringify({
+      _id: `org.couchdb.user:${name}`,
+      name,
+      password: opRead(OP_NPM_BOT.password),
+      type: 'user',
+      roles: [],
+      date: new Date().toISOString(),
+    }),
+  });
+  const { token } = await response.json().catch(() => ({}));
+  if (!response.ok || !token) {
+    throw new Error(`npm login as ${name} failed (status ${response.status})`);
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'npm-bot-'));
+  const userconfig = join(dir, '.npmrc');
+  writeFileSync(userconfig, `//registry.npmjs.org/:_authToken=${token}\n`, { mode: 0o600 });
+  session = { dir, token, userconfig };
+  console.log(`npm user: ${name} (1Password)`);
+};
+
+// Revokes the session token so it does not outlive the run.
+const endOpSession = async () => {
+  if (!session) {
+    return;
+  }
+  const { dir, token } = session;
+  session = undefined;
+  try {
+    await fetch(`${NPM_REGISTRY}/-/user/token/${token}`, {
+      method: 'DELETE',
+      headers: { authorization: `Bearer ${token}` },
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 };
 
 // Prefer the repo-pinned moon; the bare `moon` on PATH may be a stale global that rejects this workspace's config.
@@ -204,8 +279,10 @@ const configureTrust = (name, dryRun) => {
     console.log(`\nWould run: ${command} ${args.join(' ')}`);
     return;
   }
-  console.log('\nnpm prints a URL and waits ~5 minutes: press ENTER (or open the URL) and approve in the browser.');
-  run(command, args);
+  if (!session) {
+    console.log('\nnpm prints a URL and waits ~5 minutes: press ENTER (or open the URL) and approve in the browser.');
+  }
+  run(command, [...args, ...otpArgs()]);
 };
 
 const printManualTrust = (name, settingsUrl) => {
@@ -246,6 +323,8 @@ const bootstrapPublish = ({ packageJsonPath, packageDir, pkg, access, dryRun, bu
     const args = ['publish', '--access', access, '--no-git-checks'];
     if (dryRun) {
       args.push('--dry-run');
+    } else {
+      args.push(...otpArgs());
     }
     run('pnpm', args, packageDir);
   } finally {
@@ -255,7 +334,7 @@ const bootstrapPublish = ({ packageJsonPath, packageDir, pkg, access, dryRun, bu
 };
 
 const main = async () => {
-  const { target, dryRun, build, open, trust } = parseArgs(process.argv.slice(2));
+  const { target, dryRun, build, open, trust, op } = parseArgs(process.argv.slice(2));
   const packageJsonPath = await resolvePackageJson(target);
   const packageDir = dirname(packageJsonPath);
   const pkg = readPackageJson(packageJsonPath);
@@ -283,7 +362,11 @@ const main = async () => {
   console.log(`Registry: ${published ? 'already published' : 'not published'}`);
 
   if (!dryRun && (!published || trust)) {
-    ensureNpmAuth(pkg.name.split('/')[0]);
+    if (op) {
+      await startOpSession();
+    } else {
+      ensureNpmAuth(pkg.name.split('/')[0]);
+    }
   }
 
   if (published) {
@@ -320,5 +403,7 @@ try {
   await main();
 } catch (error) {
   console.error(`ERROR: ${error.cause?.message ?? error.message}`);
-  process.exit(1);
+  process.exitCode = 1;
+} finally {
+  await endOpSession();
 }
