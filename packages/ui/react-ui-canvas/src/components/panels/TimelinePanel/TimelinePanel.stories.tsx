@@ -122,7 +122,7 @@ export const Test: Story = {
     );
 
     // 6. From the play button: ⌘ with an arrow walks the keys and then reaches the end (or the start), a plain arrow
-    // scrubs a frame, Space keys the playhead once and Delete removes that key.
+    // scrubs a frame, Enter keys the playhead once, Delete removes that key and Space plays and pauses.
     const play = canvas.getByTestId('timeline-play');
     play.focus();
     const keyCount = canvas.getAllByTestId('timeline-key').length;
@@ -140,14 +140,22 @@ export const Test: Story = {
       await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
     }
     const count = canvas.getAllByTestId('timeline-key').length;
-    await userEvent.keyboard(' ');
+    await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1));
-    // Already on a key: Space adds nothing, and it never presses the button (still paused).
-    await userEvent.keyboard(' ');
+    // Already on a key: Enter adds nothing, and it never presses the button (still paused).
+    await userEvent.keyboard('{Enter}');
     await expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1);
     await expect(play).toHaveAccessibleName('Play');
     await userEvent.keyboard('{Delete}');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count));
+    await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    }
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(play).toHaveAccessibleName('Pause'));
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(play).toHaveAccessibleName('Play'));
 
     // 7. Play, then pause.
     await userEvent.click(canvas.getByTestId('timeline-play'));

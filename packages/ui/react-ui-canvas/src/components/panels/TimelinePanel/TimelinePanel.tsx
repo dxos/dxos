@@ -55,7 +55,7 @@ export const formatTime = (t: number, fps: number): string => {
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
  * previous or next key (the start or end when there is none that way), and Delete removes the key under the playhead. On the play button, Left and Right jump to the
- * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Space keys the playhead and Delete removes the key there.
+ * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Enter keys the playhead, Delete removes the key there and Space plays and pauses.
  */
 export const TimelinePanel = ({
   classNames,
@@ -137,8 +137,8 @@ export const TimelinePanel = ({
         label={playing ? 'Pause' : 'Play'}
         data-testid='timeline-play'
         // Focused, the button drives the playhead and keys: Left and Right scrub a frame (Shift, a second), with ⌘ or
-        // Ctrl they jump to the next key, or the end when there is none; Space keys the playhead (unless it is on a key) and Delete removes the key there.
-        // Enter still plays and pauses.
+        // Ctrl they jump to the next key, or the end when there is none; Enter keys the playhead (unless it is on a key)
+        // and Delete removes the key there. Space, the button's own key, plays and pauses.
         onKeyDown={(event) => {
           if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             event.preventDefault();
@@ -151,7 +151,8 @@ export const TimelinePanel = ({
               const step = event.shiftKey ? 1 : 1 / fps;
               onTimeChange?.(Math.min(duration, Math.max(0, time + (back ? -step : step))));
             }
-          } else if (event.key === ' ') {
+          } else if (event.key === 'Enter') {
+            // Enter keys rather than presses: preventing it here keeps the button from playing.
             event.preventDefault();
             event.stopPropagation();
             if (current === undefined && onAddKey && !readonly) {
@@ -163,8 +164,6 @@ export const TimelinePanel = ({
             onRemoveKey();
           }
         }}
-        // A space keys rather than presses: the keydown above takes it, so the keyup must not click the button.
-        onKeyUp={(event) => event.key === ' ' && event.preventDefault()}
         onClick={() => {
           // Played from the end, the timeline starts over.
           if (!playing && time >= duration) {
