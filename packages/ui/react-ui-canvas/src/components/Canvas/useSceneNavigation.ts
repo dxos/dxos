@@ -195,8 +195,9 @@ export const useSceneNavigation = ({
         // Land the child where fitting it would, margin and all, but never past 1:1, so its text lands at
         // its natural size rather than magnified to fill the view. Expressed in the child's own space and
         // mapped back out, so the zoom ends exactly where the swap puts the camera.
-        const fit = contentBounds(child, 0, 1) ?? emptyBounds(viewport);
-        const target = exitPortal(fitBounds(fit, viewport, inset, NOMINAL_ZOOM), portal, childBounds);
+        // An empty child lands where Fit puts it (the origin at 1:1), which its viewport-sized frame fills exactly, so
+        // fit mode has nothing left to animate once the scenes swap.
+        const target = exitPortal(fitBounds(fitFrame(child), viewport, inset, NOMINAL_ZOOM), portal, childBounds);
         animateTo(target, () => swap(target), DRILL_ANIMATION_MS);
         setOpening(portal.id);
       } else {
