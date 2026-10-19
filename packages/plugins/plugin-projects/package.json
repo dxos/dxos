@@ -74,6 +74,26 @@
       "import": "./dist/lib/index.mjs"
     },
     "./package.json": "./package.json",
+    "./Feature": {
+      "source": "./src/types/Feature.ts",
+      "types": "./dist/types/src/types/Feature.d.ts",
+      "import": "./dist/lib/Feature.mjs"
+    },
+    "./FeatureMap": {
+      "source": "./src/types/FeatureMap.ts",
+      "types": "./dist/types/src/types/FeatureMap.d.ts",
+      "import": "./dist/lib/FeatureMap.mjs"
+    },
+    "./FeatureMapView": {
+      "source": "./src/types/FeatureMapView.ts",
+      "types": "./dist/types/src/types/FeatureMapView.d.ts",
+      "import": "./dist/lib/FeatureMapView.mjs"
+    },
+    "./FeatureOperation": {
+      "source": "./src/types/FeatureOperation.ts",
+      "types": "./dist/types/src/types/FeatureOperation.d.ts",
+      "import": "./dist/lib/FeatureOperation.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -118,6 +138,11 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./Showcase": {
+      "source": "./src/types/Showcase.ts",
+      "types": "./dist/types/src/types/Showcase.d.ts",
+      "import": "./dist/lib/Showcase.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",
@@ -167,6 +192,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -182,6 +208,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

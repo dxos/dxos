@@ -15360,6 +15360,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib
@@ -15405,6 +15408,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
