@@ -361,6 +361,9 @@ export type ShiftOptions = {
 /** Strong ease-in-out for the zooms: quick to leave and quick to settle. */
 export const snap = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2);
 
+/** How much of the rows beyond the 3x3 the zoomed-out shift loop shows, as a fraction of a tile's height. */
+export const PEEK = 0.15;
+
 /** The distances a varying shift takes in turn. */
 export const DISTANCES = [1, 2, 1, 1, 2, 2, 1, 2];
 
@@ -445,8 +448,10 @@ export const shiftShots = ({
 
   const bounds = ({ x, y }: Point): Bounds => ({ x: x * pitch.x, y: y * pitch.y, ...TILE });
   const near = fitBounds(bounds({ x: 0, y: 0 }), viewport);
+  // Zoomed out, a sliver of the rows beyond the 3x3 shows at the top and bottom, so the wall reads as continuing.
+  const peek = PEEK * TILE.height;
   const far = fitBounds(
-    { x: -pitch.x, y: -pitch.y, width: 3 * pitch.x - gap, height: 3 * pitch.y - gap },
+    { x: -pitch.x, y: -pitch.y - peek, width: 3 * pitch.x - gap, height: 3 * pitch.y - gap + 2 * peek },
     viewport,
     gap,
   );
