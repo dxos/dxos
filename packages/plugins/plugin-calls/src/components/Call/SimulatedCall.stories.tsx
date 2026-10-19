@@ -12,12 +12,13 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
 
+import { type VoiceAvatarOptions } from '../../calls/voice-avatar.ts';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Lobby } from '../Lobby/index.ts';
 import { Call } from './Call.tsx';
 
 const LOCAL = 'Astrid Holm';
-type Participant = { name: string; track: string; avatar?: boolean };
+type Participant = { name: string; track: string; avatar?: boolean | VoiceAvatarOptions };
 
 const COLLEAGUES: Participant[] = [
   { name: 'Lucía Ferreira', track: 'lucia' },
@@ -26,6 +27,8 @@ const COLLEAGUES: Participant[] = [
 ];
 /** An agent with no camera: its tile is an abstract shape that moves with its synthesized voice. */
 const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
+/** The agent as it appears standing in for a colleague. */
+const STAND_IN = { name: 'Composer', avatar: { variant: 'ink-morph' } } satisfies Omit<Participant, 'track'>;
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */
 type Timeline = { screenshares?: { speaker: string; start: number; file: string }[] };
@@ -36,6 +39,9 @@ type StoryProps = {
   media: string;
   /** Adds the agent, whose voice is `agent.webm` (audio only). */
   agent?: boolean;
+  /** A colleague's track (e.g. `tomas`) the agent stands in for: their tile becomes the agent's avatar, which speaks
+   * their lines. */
+  standIn?: string;
 };
 
 /**
@@ -44,7 +50,7 @@ type StoryProps = {
  * Nothing plays until Join, whose click is also the gesture the browser needs to play sound; Leave stops the call
  * and resets it to the lobby.
  */
-const SimulatedStory = ({ media, agent }: StoryProps) => {
+const SimulatedStory = ({ media, agent, standIn }: StoryProps) => {
   const callManager = Hooks.useCapability(CallsCapabilities.Manager);
   const joined = useAtomValue(callManager.joinedAtom);
   const participants = COLLEAGUES.length + (agent ? 1 : 0);
@@ -71,7 +77,10 @@ const SimulatedStory = ({ media, agent }: StoryProps) => {
         .catch(() => undefined);
       live();
       await callManager.simulate(
-        [...COLLEAGUES, ...(agent ? [AGENT] : [])].map(({ name, track, avatar }) => {
+        [
+          ...COLLEAGUES.map((colleague) => (colleague.track === standIn ? { ...colleague, ...STAND_IN } : colleague)),
+          ...(agent ? [AGENT] : []),
+        ].map(({ name, track, avatar }) => {
           const share = timeline?.screenshares?.find(({ speaker }) => speaker === track);
           return {
             name,
@@ -105,7 +114,7 @@ const SimulatedStory = ({ media, agent }: StoryProps) => {
       restore?.();
       restore = undefined;
     };
-  }, [callManager, media, agent, session]);
+  }, [callManager, media, agent, standIn, session]);
 
   const handleJoin = async () => {
     await callManager.join();
@@ -162,4 +171,8 @@ export const Default: Story = {};
 
 export const WithAgent: Story = {
   args: { agent: true },
+};
+
+export const AgentStandIn: Story = {
+  args: { standIn: 'tomas' },
 };

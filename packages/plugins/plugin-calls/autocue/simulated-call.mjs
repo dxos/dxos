@@ -25,6 +25,9 @@ const CONVERSATION = JSON.parse(
   readFileSync(new URL('../../plugin-meeting/autocue/fieldstone-dashboard.conversation.json', import.meta.url), 'utf8'),
 );
 const TIMELINE = JSON.parse(readFileSync(path.join(TRACKS, 'timeline.json'), 'utf8'));
+/** `SIMULATED_STAND_IN=<participant id>` records the AgentStandIn story, where the agent takes that participant's seat. */
+const STAND_IN = process.env.SIMULATED_STAND_IN;
+const nameOf = (id) => (id === STAND_IN ? 'Composer' : CONVERSATION.participants[id].name);
 
 /** `release` lets the held track requests through; `startedAt` is when the tracks started playing (wall clock). */
 const state = {};
@@ -62,8 +65,8 @@ export const steps = [
       const join = page.locator('button:has-text("Join"):not([disabled])');
       await join.waitFor({ timeout: 60_000 });
       await demo.click({ selector: 'button:has-text("Join"):not([disabled])', label: 'Join' });
-      for (const participant of Object.values(CONVERSATION.participants)) {
-        await page.getByText(participant.name, { exact: true }).first().waitFor({ timeout: 30_000 });
+      for (const id of Object.keys(CONVERSATION.participants)) {
+        await page.getByText(nameOf(id), { exact: true }).first().waitFor({ timeout: 30_000 });
       }
       // Every track starts on join; the furthest-along player is the conversation's clock.
       const played = await page.waitForFunction(
@@ -87,7 +90,7 @@ export const steps = [
         if (wait > 0) {
           await page.waitForTimeout(wait);
         }
-        await demo.caption({ value: line.text, subtitle: CONVERSATION.participants[line.speaker].name });
+        await demo.caption({ value: line.text, subtitle: nameOf(line.speaker) });
       }
       const wait = state.startedAt + (TIMELINE.lines.at(-1).end + 1) * 1_000 - Date.now();
       if (wait > 0) {
