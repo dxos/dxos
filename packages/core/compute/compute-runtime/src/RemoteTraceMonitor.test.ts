@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, test } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
@@ -58,6 +62,34 @@ describe('createSwarmRemoteTraceMonitor', () => {
     await EffectEx.runPromise(Stream.runCollect(monitor.subscribeToTraceMessages({})));
     expect(requestedTags).toEqual([[]]);
   });
+
+  // Remote progress has no other path to the client, so one transient failure must not end it.
+  it.effect(
+    'resubscribes with backoff after the transport fails',
+    Effect.fnUntraced(function* ({ expect }) {
+      let attempts = 0;
+      const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
+        subscribe: () => {
+          attempts++;
+          return attempts < 3
+            ? Stream.fail('disconnected')
+            : Stream.make(broadcast({ pid: 'p1', space: 'SPACE1' }, 'status.update'));
+        },
+      });
+
+      const fiber = yield* monitor
+        .subscribeToTraceMessages({ type: 'status.update' })
+        .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild);
+      // One step per backoff sleep; each `adjust` lets the retried subscription run up to its next sleep.
+      for (let step = 0; step < 10 && attempts < 3; step++) {
+        yield* TestClock.adjust('30 seconds');
+      }
+      const messages = yield* Fiber.join(fiber);
+
+      expect(attempts).toBe(3);
+      expect(messages).toHaveLength(1);
+    }),
+  );
 
   // The wire payload drops ref meta fields; the envelope tags must restore `meta.trigger` through
   // this seam or downstream cancel addressing silently loses its target (the mailbox-sync cancel bug).

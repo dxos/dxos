@@ -9,9 +9,12 @@ import * as Stream from 'effect/Stream';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
+import { BaseError } from '@dxos/errors';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientCapabilities } from '#types';
+
+class ClientNotReadyError extends BaseError.extend('ClientNotReadyError', 'Client is not available yet.') {}
 
 /**
  * Contributes a swarm-backed {@link Capabilities.RemoteTraceMonitor} (DX-1125). Remote runtimes
@@ -19,9 +22,9 @@ import { ClientCapabilities } from '#types';
  * this monitor subscribes via the client's network service and decodes them so the aggregate
  * {@link Process.Manager.subscribeToTraceMessages} surfaces remote progress.
  *
- * The client is resolved lazily inside the subscribe closure (invoked only when a consumer
- * subscribes, well after `ClientReady`), so this module can be collected at `SetupProcessManager`
- * before the client capability exists.
+ * The client is resolved lazily inside the subscribe closure, so this module can be collected at
+ * `SetupProcessManager` before the client capability exists. Both a missing client and a network
+ * error fail the subscription, which the monitor retries with backoff.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,10 +36,10 @@ export default Capability.makeModule(
         tags.length === 0
           ? Stream.empty
           : Stream.unwrap(
-              Effect.sync(() => {
+              Effect.sync((): Stream.Stream<RemoteTraceMonitor.SwarmTraceBroadcast, unknown> => {
                 const client = capabilityManager.getAll(ClientCapabilities.Client)[0];
                 if (!client) {
-                  return Stream.empty;
+                  return Stream.fail(new ClientNotReadyError());
                 }
                 // The subscribing peer is nominal for broadcasts: the edge keys the subscription off
                 // the WebSocket connection, not this object; it only affects point-to-point filtering.
@@ -55,8 +58,6 @@ export default Capability.makeModule(
                       ? Result.succeed({ payload: message.payload.value, tags: message.tags })
                       : Result.failVoid,
                   ),
-                  // Never fail the aggregate monitor stream on a transient network error.
-                  Stream.catch(() => Stream.empty),
                 );
               }),
             ),

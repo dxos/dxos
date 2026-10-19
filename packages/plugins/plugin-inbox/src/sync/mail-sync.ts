@@ -18,6 +18,7 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -36,14 +37,10 @@ import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, t
  */
 
 /**
- * Progress-registry key for a mailbox's mail-sync monitor — the mailbox URI plus `#sync` so distinct
- * monitor types (e.g. `#topics`) can coexist. `MailboxArticle` subscribes to show the sync meter.
+ * Progress-registry key for a mailbox's mail-sync monitor. `MailboxArticle` subscribes to show the sync
+ * meter, and the connector registers the same key when it fires the sync, before this run reports.
  */
-// Absolute form, matching the other pipeline keys: the producer (this module, running in an
-// operation) and the consumer (`MailboxArticle`) derive the key independently, so a hydration-
-// dependent URI form would silently hide the meter. See `InboxOperation.createProgressKey`.
-export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
-  Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + '#sync';
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Binding.createSyncProgressKey(mailbox);
 
 /** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {
@@ -761,8 +758,6 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    reportStatus({ message: Progress.STATUS_COMPLETE });
-
     // Fold the run's observed key extent so the window advances even if every scanned message was
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
     Cursor.extendRange(binding, extent);
@@ -801,8 +796,12 @@ export const runMailSync = (
       // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
       // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
       // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
+      // The status stays non-terminal: the continuation is the same sync, so its meter must not end here.
+      reportStatus();
       return yield* Operation.runAgain().pipe(Effect.orDie);
     }
+
+    reportStatus({ message: Progress.STATUS_COMPLETE });
 
     log('sync complete', {
       provider: provider.name,
