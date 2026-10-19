@@ -363,6 +363,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 353 | 10-20 15:10 | 1h 00m | 3ad6a3828e | Group merges, rehashed dependents and forged objects are cached DEUS tests; the vitest replication test takes 2.0 s instead of 6.9 s (D328) |
 | 354 | 10-20 16:10 | 1h 00m | a93b462a40 | The object cache is keyed by store: a pulled store gets its builtin types, and compaction is a cached DEUS test (D329) |
 | 355 | 10-20 16:40 | 30m 00s | 00b06462df | An author reaching pullers and pushes recording packs are cached DEUS tests (D330) |
-| 356 | 10-20 23:30 | 30m 00s | pending | A pull reading only packs is a cached DEUS test (D331) |
+| 356 | 10-20 23:30 | 30m 00s | 7e2f155f66 | A pull reading only packs is a cached DEUS test (D331) |
 
 Total from stage 1 to stage 356: 156h 20m.
