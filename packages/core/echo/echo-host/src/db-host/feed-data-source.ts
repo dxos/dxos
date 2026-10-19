@@ -26,7 +26,7 @@ export type FeedDataSourceOptions = {
 
   /**
    * Feed namespaces to index.
-   * @default [WellKnownNamespaces.data, WellKnownNamespaces.trace]
+   * @default the well-known namespaces {@link FeedProtocol.isIndexedNamespace} accepts
    */
   feedNamespaces?: string[];
 };
@@ -56,10 +56,14 @@ export class FeedDataSource implements IndexDataSource {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
     this._getSpaceIds = options.getSpaceIds;
-    this._feedNamespaces = options.feedNamespaces ?? [
-      FeedProtocol.WellKnownNamespaces.data,
-      FeedProtocol.WellKnownNamespaces.trace,
-    ];
+    this._feedNamespaces =
+      options.feedNamespaces ??
+      Object.values(FeedProtocol.WellKnownNamespaces).filter((namespace) => FeedProtocol.isIndexedNamespace(namespace));
+  }
+
+  /** The feed namespaces this source indexes. */
+  get feedNamespaces(): readonly string[] {
+    return this._feedNamespaces;
   }
 
   beginPass(): void {
@@ -123,13 +127,9 @@ export class FeedDataSource implements IndexDataSource {
           updatedCursors.push(cursor);
           continue;
         }
-        if (
-          FeedProtocol.WellKnownNamespaces.data !== cursor.resourceId &&
-          FeedProtocol.WellKnownNamespaces.trace !== cursor.resourceId
-        ) {
-          // TODO(dmaretskyi): Update/remove this check when adding new feed namespaces.
-          log.warn('Ignoring cursor with invaliding feed namespace', { namespace: cursor.resourceId });
-          // Ignore cursors with unknown resourceId.
+        const feedNamespace = cursor.resourceId;
+        if (feedNamespace === null || !this._feedNamespaces.includes(feedNamespace)) {
+          // A cursor left from when this namespace was indexed; `IndexEngine.dropFeedNamespace` retires it.
           updatedCursors.push(cursor);
           continue;
         }
@@ -141,12 +141,12 @@ export class FeedDataSource implements IndexDataSource {
             : undefined;
 
         try {
-          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);
+          const readKey = JSON.stringify([cursor.spaceId, feedNamespace, currentCursor ?? null, remainingLimit]);
           const result =
             this.#passReads?.get(readKey) ??
             (yield* this._feedStore.query({
               spaceId: cursor.spaceId,
-              feedNamespace: cursor.resourceId,
+              feedNamespace,
               cursor: currentCursor,
               limit: remainingLimit,
             }));
@@ -162,7 +162,7 @@ export class FeedDataSource implements IndexDataSource {
               objects.push({
                 spaceId: cursor.spaceId,
                 queueId: block.feedId ?? failedInvariant(),
-                queueNamespace: cursor.resourceId,
+                queueNamespace: feedNamespace,
                 documentId: null,
                 recordId: null,
                 queuePosition: block.position ?? null,
@@ -178,7 +178,7 @@ export class FeedDataSource implements IndexDataSource {
           remainingLimit -= result.blocks.length;
           updatedCursors.push({
             spaceId: cursor.spaceId,
-            resourceId: cursor.resourceId,
+            resourceId: feedNamespace,
             cursor: result.nextCursor,
           });
         } catch (error) {

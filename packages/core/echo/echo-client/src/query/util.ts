@@ -4,6 +4,7 @@
 
 import { QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
 
 /**
  * Lists spaces this query will select from.
@@ -194,9 +195,13 @@ export const isSimpleSelectionQuery = (
  * false: it is answered entirely by other sources (`RegistryQuerySource`), and forwarding
  * it to a space-backed source is at best wasted work — the edge query host rejects such
  * queries outright ("Query must specify at least one spaceId in options"), failing the
- * whole query even though the registry source produced results.
+ * whole query even though the registry source produced results. A query over unindexed feeds
+ * only (see {@link getUnindexedFeedScopes}) returns false too: `DirectFeedQuerySource` reads those.
  */
 export const queryTargetsSpacesOrFeeds = (query: QueryAST.Query): boolean => {
+  if (getUnindexedFeedScopes(query) !== undefined) {
+    return false;
+  }
   let hasExplicitNonEmptyScope = false;
   let hasSpaceOrFeedScope = false;
   QueryAST.visit(query, (node) => {
@@ -208,6 +213,29 @@ export const queryTargetsSpacesOrFeeds = (query: QueryAST.Query): boolean => {
     }
   });
   return !hasExplicitNonEmptyScope || hasSpaceOrFeedScope;
+};
+
+/**
+ * The scopes of a query that selects only from feeds in namespaces the index does not ingest, which
+ * are read from the feeds themselves; `undefined` for any other query, including one that mixes such
+ * feeds with other scopes.
+ */
+export const getUnindexedFeedScopes = (query: QueryAST.Query): readonly QueryAST.FeedScope[] | undefined => {
+  const clauses: QueryAST.QueryFromClause[] = [];
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from') {
+      clauses.push(node);
+    }
+  });
+  const [clause] = clauses;
+  if (clauses.length !== 1 || clause.from._tag !== 'scope') {
+    return undefined;
+  }
+  const scopes = clause.from.scopes.filter(
+    (scope): scope is QueryAST.FeedScope =>
+      scope._tag === 'feed' && scope.namespace !== undefined && !FeedProtocol.isIndexedNamespace(scope.namespace),
+  );
+  return scopes.length > 0 && scopes.length === clause.from.scopes.length ? scopes : undefined;
 };
 
 export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'local' | 'remote'> };

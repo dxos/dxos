@@ -36,7 +36,7 @@ const setup = Effect.gen(function* () {
         data: EchoFeedCodec.encode({ id: EntityId.random() }),
       })),
     );
-  return { source, append };
+  return { source, append, spaceId };
 });
 
 /** Hides the blocks table, so any read of it fails the test rather than going unnoticed. */
@@ -48,39 +48,45 @@ const withoutBlocks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   );
 
 describe('FeedDataSource', () => {
-  it.effect('reads data and trace blocks, then answers caught-up cursors without reading blocks', () =>
+  it.effect('reads data blocks, then answers caught-up cursors without reading blocks', () =>
     Effect.gen(function* () {
       const { source, append } = yield* setup;
       yield* append(FeedProtocol.WellKnownNamespaces.data, 2);
       yield* append(FeedProtocol.WellKnownNamespaces.trace, 3);
 
       const first = yield* source.getChangedObjects(Context.default(), [], { limit: 50 });
-      expect(first.objects.map((object) => object.queueNamespace).sort()).toEqual([
-        'data',
-        'data',
-        'trace',
-        'trace',
-        'trace',
-      ]);
+      expect(first.objects.map((object) => object.queueNamespace)).toEqual(['data', 'data']);
+      expect(first.cursors.map((cursor) => cursor.resourceId)).toEqual(['data']);
 
       const idle = yield* withoutBlocks(source.getChangedObjects(Context.default(), first.cursors, { limit: 50 }));
       expect(idle.objects).toEqual([]);
       expect(idle.cursors).toEqual(first.cursors);
       expect(idle.more).toBe(false);
 
-      // Moving one namespace's head is seen on the next read; the other stays caught up.
+      // A trace append is not the index's to read; a data append is seen on the next read.
       yield* append(FeedProtocol.WellKnownNamespaces.trace);
+      yield* append(FeedProtocol.WellKnownNamespaces.data);
       const next = yield* source.getChangedObjects(Context.default(), idle.cursors, { limit: 50 });
-      expect(next.objects.map((object) => object.queueNamespace)).toEqual(['trace']);
-      const dataCursor = (cursors: DataSourceCursor[]) => cursors.find((cursor) => cursor.resourceId === 'data');
-      expect(dataCursor(next.cursors)).toEqual(dataCursor(first.cursors));
+      expect(next.objects.map((object) => object.queueNamespace)).toEqual(['data']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('passes a cursor over an unindexed namespace through without reading it', () =>
+    Effect.gen(function* () {
+      const { source, append, spaceId } = yield* setup;
+      yield* append(FeedProtocol.WellKnownNamespaces.trace, 2);
+      const legacy: DataSourceCursor = { spaceId, resourceId: FeedProtocol.WellKnownNamespaces.trace, cursor: '' };
+
+      const result = yield* source.getChangedObjects(Context.default(), [legacy], { limit: 50 });
+      expect(result.objects).toEqual([]);
+      expect(result.cursors).toContainEqual(legacy);
     }).pipe(Effect.provide(TestLayer)),
   );
 
   it.effect('shares one read between the legs of a pass', () =>
     Effect.gen(function* () {
       const { source, append } = yield* setup;
-      yield* append(FeedProtocol.WellKnownNamespaces.trace, 2);
+      yield* append(FeedProtocol.WellKnownNamespaces.data, 2);
 
       source.beginPass();
       const first = yield* source.getChangedObjects(Context.default(), [], { limit: 50 });
