@@ -146,8 +146,7 @@ describe('buildThreadSemiJoin', () => {
       const query = buildThreadSemiJoin(viewFilter, Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })));
 
       // A union of the semi-join and the direct matches, so a threadless message still reaches the list.
-      expect(query.ast).toMatchObject({ type: 'union' });
-      expect((query.ast as any).queries).toHaveLength(2);
+      expect(query.ast).toMatchObject({ type: 'union', queries: [expect.anything(), expect.anything()] });
       expect(semiJoinArm(query)).toMatchObject({
         type: 'select',
         filter: {
@@ -156,7 +155,9 @@ describe('buildThreadSemiJoin', () => {
         },
       });
       // The second arm is the view filter itself, unscoped — the caller's own `.from` scopes it.
-      expect((query.ast as any).queries[1]).toMatchObject({ type: 'select', filter: viewFilter.ast });
+      expect(query.ast).toMatchObject({
+        queries: [expect.anything(), { type: 'select', filter: viewFilter.ast }],
+      });
       // The subquery carries the view filter over exactly the given matches scope.
       const subquery = semiJoinArm(query).filter.props.threadId.subquery;
       expect(subquery.query.filter).toEqual(viewFilter.ast);

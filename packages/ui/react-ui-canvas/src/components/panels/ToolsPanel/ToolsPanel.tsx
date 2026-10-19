@@ -8,6 +8,7 @@ import React, { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
@@ -164,9 +165,9 @@ export const ToolsPanel = ({
     >
       {groups.map((group) =>
         group.folded || (collapsed && group.collapsible) ? (
-          <div key={group.name} className='flex flex-col p-1'>
+          <Layout.Flex key={group.name} column classNames='p-1'>
             <ToolsFlyout group={group} tool={tool} layout={flyout} onToolChange={onToolChange} />
-          </div>
+          </Layout.Flex>
         ) : (
           <div key={group.name} className='flex flex-col gap-1 p-1'>
             {group.entries.map((entry) => (

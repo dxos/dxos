@@ -216,7 +216,7 @@ export const Test: Story = {
       let calendar = await openCalendar(canvasElement, `date-${size}`);
       const style = getComputedStyle(calendar);
       const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-      // The calendar takes the field row's size (Phase 4 decision 2).
+      // The calendar takes the field row's size.
       await expectPopupSize(calendar, size);
       const width = await expectEndAnchored(row, calendar);
       await expect(width, `${size} calendar width`).toBeCloseTo(7 * block + padding, 0);

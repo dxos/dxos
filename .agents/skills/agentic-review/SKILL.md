@@ -165,7 +165,7 @@ How it works:
   uncertain pairs regrouped into batches of one rule each, beside the groups whose
   rule is `system-one: off` — are only printed, since they steer this run alone.
   **Spawn one subagent per printed line**, then finalize as usual. Every verdict
-  is kept in `system-one.json`.
+  is kept in `system-one.json`, a local dump that is gitignored and never committed.
 - **Scale.** A 202-file change against about a hundred rules took under four
   minutes and $2.73, reported 312 violations and routed 13% of pairs onward
   (`.agents/projects/architecture-rules/TRIAL.md`).
