@@ -76,25 +76,31 @@ const closeCompanion = async (page) => {
   }
 };
 
-/** The statuses of the named tasks across every open space, read from ECHO rather than the screen. */
+/** Where the take's own space id is kept in the page, so a replay that reuses the page still finds it. */
+const TAKE_SPACE = '__helloWorkerSpace';
+
+/**
+ * The statuses of the named tasks in the space this take created, read from ECHO rather than the screen. Only that
+ * space: a reused profile keeps earlier Hello Worker spaces whose tasks carry the same titles.
+ */
 const statuses = (page, titles) =>
   page
-    .evaluate(async (titles) => {
-      const result = {};
-      for (const space of dxos.spaces()) {
+    .evaluate(
+      async ({ titles, key }) => {
+        const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
         // A space still opening has no database to query yet.
-        const tasks = await space.db
-          .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task')))
-          .run()
-          .catch(() => []);
-        for (const task of tasks) {
-          if (titles.includes(task.title)) {
-            result[task.title] = task.status;
-          }
-        }
-      }
-      return result;
-    }, titles)
+        const tasks = space
+          ? await space.db
+              .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task')))
+              .run()
+              .catch(() => [])
+          : [];
+        return Object.fromEntries(
+          tasks.filter((task) => titles.includes(task.title)).map((task) => [task.title, task.status]),
+        );
+      },
+      { titles, key: TAKE_SPACE },
+    )
     .catch(() => ({}));
 
 /** Polls until every named task is finished. */
@@ -187,7 +193,19 @@ export const steps = [
         label: TEMPLATE,
       });
       await page.waitForTimeout(BEAT);
+      const before = await page.evaluate(() => dxos.spaces().map((space) => space.id));
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', label: 'Create' });
+      await page.waitForFunction(
+        ({ before, key }) => {
+          const created = dxos.spaces().find((space) => !before.includes(space.id));
+          if (created) {
+            globalThis[key] = created.id;
+          }
+          return created !== undefined;
+        },
+        { before, key: TAKE_SPACE },
+        { timeout: 60_000 },
+      );
       await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 60_000 });
       await closeCompanion(page);
       await showProject(page);
