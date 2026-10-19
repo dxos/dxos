@@ -24,6 +24,8 @@ export type VoiceAvatarTuning = {
   particles: number;
   /** Overlapping strands the ink ring is drawn with, each on its own radius and wave phase. */
   strands: number;
+  /** Radial distance between neighbouring strands. */
+  separation: number;
 };
 
 export const DEFAULT_TUNING: VoiceAvatarTuning = {
@@ -32,6 +34,7 @@ export const DEFAULT_TUNING: VoiceAvatarTuning = {
   waveSpeed: 1,
   particles: 6,
   strands: 1,
+  separation: 0.03,
 };
 
 /**
@@ -185,8 +188,12 @@ const torusShape = (scene: THREE.Scene, palette: Palette): Shape => {
   rim.position.set(-3, -1, 2);
   scene.add(rim);
 
+  let phase = 0;
   return {
-    update: ({ time, delta, level, low, high }) => {
+    update: ({ delta, level, low, high }, { waveSpeed }) => {
+      // Accumulated, so speed 0 freezes the passive motion.
+      phase += delta * waveSpeed;
+      const time = phase;
       const positions = geometry.attributes.position.array;
       for (let index = 0; index < positions.length; index += 3) {
         const x = base[index];
@@ -205,7 +212,7 @@ const torusShape = (scene: THREE.Scene, palette: Palette): Shape => {
       geometry.attributes.position.needsUpdate = true;
       geometry.computeVertexNormals();
 
-      mesh.rotation.y += delta * (0.12 + level * 0.3);
+      mesh.rotation.y += delta * (0.12 + level * 0.3) * waveSpeed;
       mesh.rotation.x = 0.5 + Math.sin(time * 0.4) * 0.12 + Math.sin(time * 4) * level * 0.02;
       // A small bob on each syllable reads as talking even when the shape is small on a tile.
       mesh.position.y = Math.sin(time * 7) * level * 0.015;
@@ -318,8 +325,8 @@ const inkShape = (scene: THREE.Scene): Shape => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.visible = index === 0;
     ring.add(mesh);
-    // Fixed per strand, so a strand keeps its own character as the count changes.
-    return { positions, geometry, mesh, phase: index * 1.9, offset: ((index * 7) % MAX_STRANDS) / MAX_STRANDS - 0.5 };
+    // Fixed per strand, so a strand keeps its own wave as the count changes.
+    return { positions, geometry, mesh, phase: index * 1.9 };
   });
 
   const blotGeometry = new THREE.CircleGeometry(1, 24);
@@ -346,29 +353,35 @@ const inkShape = (scene: THREE.Scene): Shape => {
   let phase = 0;
   let spawned = 0;
   return {
-    update: ({ time, delta, level, bands }, { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount }) => {
+    update: (
+      { delta, level, bands },
+      { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount, separation },
+    ) => {
       // Accumulated, so changing the speed changes the pace without jumping the wave.
       phase += delta * waveSpeed;
       const count = Math.max(1, Math.min(MAX_STRANDS, Math.round(strandCount)));
       // Passive, the strands drift in an irregular wave: undulations whose speeds share no common period, fading out
       // as the voice takes over.
       const idle = Math.max(0, 1 - level * 4);
-      // More strands share the ink, so each is thinner and they spread a little further apart.
-      const share = 1 / Math.sqrt(count);
-      const spread = count > 1 ? 0.06 + count * 0.008 : 0;
+      // More strands share the ink: the middle strand is thickest and they thin progressively toward both edges.
+      const middle = (count - 1) / 2;
+      const share = 1.4 / Math.sqrt(count);
       strands.forEach((strand, index) => {
         strand.mesh.visible = index < count;
         if (!strand.mesh.visible) {
           return;
         }
         const own = phase + strand.phase;
-        const base = radius + strand.offset * spread;
+        // Strands sit in order from the inside out, `separation` apart, centred on the ring's radius.
+        const base = radius + (index - middle) * separation;
+        const taper = count > 1 ? 1 - 0.7 * (Math.abs(index - middle) / middle) ** 1.2 : 1;
+        const weight = (count > 1 ? share : 1) * taper;
         for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
           const angle = (sample / INK_SEGMENTS) * Math.PI * 2;
           // A slow, uneven wobble in the width keeps the stroke hand-drawn rather than machined.
           const width =
-            (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * share +
-            voice(angle, bands) * 0.22 * share;
+            (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * weight +
+            voice(angle, bands) * 0.22 * weight;
           const centre =
             base +
             idle *
@@ -377,9 +390,9 @@ const inkShape = (scene: THREE.Scene): Shape => {
                   Math.sin(angle * 3 - own * 1.37 + 1) * 0.02 +
                   Math.sin(angle * 5 + own * 2.11 + 2) * 0.012) +
                 jitter *
-                  (Math.sin(angle * 13 + time * 7.3 + strand.phase) * 0.006 +
-                    Math.sin(angle * 23 - time * 11.9 + 3) * 0.004 +
-                    Math.sin(angle * 37 + time * 17.1 + 1) * 0.003));
+                  (Math.sin(angle * 13 + own * 7.3) * 0.006 +
+                    Math.sin(angle * 23 - own * 11.9 + 3) * 0.004 +
+                    Math.sin(angle * 37 + own * 17.1 + 1) * 0.003));
           // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
           const inner = centre - width * 0.35;
           const outer = centre + width * 0.65;

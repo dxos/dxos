@@ -62,16 +62,16 @@ const VoiceAvatarStory = ({ src, variant, ...tuning }: StoryProps) => {
   }, [src, variant]);
 
   // Tuning applies to the running avatar, so moving a slider does not restart it.
-  const { waveAmplitude, jitter, waveSpeed, particles, strands } = tuning;
+  const { waveAmplitude, jitter, waveSpeed, particles, strands, separation } = tuning;
   useEffect(() => {
     voice?.avatar.tune(
       Object.fromEntries(
-        Object.entries({ waveAmplitude, jitter, waveSpeed, particles, strands }).filter(
+        Object.entries({ waveAmplitude, jitter, waveSpeed, particles, strands, separation }).filter(
           ([, value]) => value !== undefined,
         ),
       ),
     );
-  }, [voice, waveAmplitude, jitter, waveSpeed, particles, strands]);
+  }, [voice, waveAmplitude, jitter, waveSpeed, particles, strands, separation]);
 
   const handlePlay = async () => {
     if (!voice) {
@@ -138,6 +138,7 @@ const meta = {
     waveSpeed: { control: { type: 'range', min: 0, max: 5, step: 0.1 } },
     particles: { control: { type: 'range', min: 0, max: 60, step: 1 } },
     strands: { control: { type: 'range', min: 1, max: 8, step: 1 } },
+    separation: { control: { type: 'range', min: 0, max: 0.2, step: 0.005 } },
   },
   args: { src: '/simulated-call/agent-voice.webm', variant: 'ink', ...DEFAULT_TUNING },
 } satisfies Meta<typeof VoiceAvatarStory>;
