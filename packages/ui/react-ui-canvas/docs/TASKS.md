@@ -117,16 +117,8 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 
 ## Follow-ups
 
-- [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).<<<<<<< ours
+- [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
 - [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.
 - [ ] Docked inspectors: the bottom-left (navigation) and bottom-centre (actions) bars overlap when the canvas is narrow (seen in `Canvas › Docked` with the dock open).
 - [x] Ungroup brings the Object's animation tracks back out, renamed to the new nodes and mapped through the Instance's transform.
 - [x] The Objects panel's "Delete object and its instances" cleans up orphans in the same step (`removeComposite`). Host operations still clean up on load.
-||||||| original
-
-=======
-- [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.
-- [ ] Docked inspectors: the bottom-left (navigation) and bottom-centre (actions) bars overlap when the canvas is narrow (seen in `Canvas › Docked` with the dock open).
-- [x] Ungroup brings the Object's animation tracks back out, renamed to the new nodes and mapped through the Instance's transform.
-- [ ] The Objects panel's "Delete object and its instances" and host operations clean up orphans in the same intent, not on the next load.
->>>>>>> theirs
