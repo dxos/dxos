@@ -5,12 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Filter, JsonSchema, Query, View } from '@dxos/echo';
+import { Database, Filter, Format, JsonSchema, Query, View } from '@dxos/echo';
 import * as Map from '@dxos/plugin-map/Map';
 import { ViewModel } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
 import { DATA_CENTERS } from './data-centers.ts';
+
+/** The tour's stops, by data-centre code: Los Angeles, Texas, New York, London, Istanbul, Bangkok, Singapore, Sydney. */
+export const TOUR = ['LAX', 'DFW', 'EWR', 'LHR', 'IST', 'BKK', 'SIN', 'SYD'] as const;
 
 export type MapResult = { map: Map.Map; dataCenters: Organization.Organization[] };
 
@@ -45,7 +48,14 @@ export const DataCenterMap: SampleSpace.Partial<MapResult> = SampleSpace.partial
           pivotFieldName: 'location',
         }),
       );
-      const map = yield* Database.add(Map.make({ name: 'Cloudflare data centres', view, zoom: 1.5 }));
+      // The globe's tour: one westward-to-eastward lap of the world's busiest data centres, back to Los Angeles.
+      const tour = TOUR.flatMap((code): Format.GeoPoint[] => {
+        const dataCenter = DATA_CENTERS.find(([candidate]) => candidate === code);
+        return dataCenter ? [[dataCenter[2], dataCenter[3]]] : [];
+      });
+      const map = yield* Database.add(
+        Map.make({ name: 'Cloudflare data centres', view, zoom: 1.5, coordinates: tour }),
+      );
       return { map, dataCenters };
     }),
 });

@@ -11,6 +11,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ChessClubSpace from './ChessClubSpace.ts';
 import { DATA_CENTERS } from './data-centers.ts';
 import { GAMES } from './games.ts';
+import { TOUR } from './map.ts';
 import { creeper } from './sculpture.ts';
 import { TOWN, town } from './town.ts';
 
@@ -67,6 +68,7 @@ describe('Chess Club template', () => {
       objects: Array<{
         '@type'?: string;
         'projection'?: { pivotFieldId?: string; fields?: Array<{ id: string; path: string }> };
+        'coordinates'?: number[][];
         'name'?: string;
         'voxels'?: Record<string, { hue: string }>;
       }>;
@@ -74,6 +76,13 @@ describe('Chess Club template', () => {
     const view = objects.find((object) => object['@type']?.includes('type.view'));
     const pivot = view?.projection?.fields?.find((field) => field.id === view.projection?.pivotFieldId);
     expect(pivot?.path).toBe('location');
+
+    // The map carries its globe tour as coordinates, one per stop and in order.
+    const map = objects.find((object) => object['@type']?.includes('type.map'));
+    const coordinates = map?.coordinates;
+    expect(coordinates).toHaveLength(TOUR.length);
+    const la = DATA_CENTERS.find(([code]) => code === 'LAX');
+    expect(coordinates?.[0]).toEqual([la?.[2], la?.[3]]);
 
     // Every voxel generated survives the archive, so the worlds hold what the generators drew.
     const voxelCount = (name: string) =>
