@@ -398,11 +398,13 @@ const inkShape = (scene: THREE.Scene): Shape => {
           const width =
             (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * weight +
             voice(angle, slice) * 0.22 * weight;
-          // The vibration follows the sound in real time, whatever the passive wave's speed.
+          // Standing waves, so the strands shake in place on fixed nodes rather than seeming to turn; the vibration
+          // follows the sound in real time, whatever the passive wave's speed.
           const centre =
             base +
             vibration *
-              (Math.sin(angle * lobes + time * rate) + 0.5 * Math.sin(angle * (lobes * 2 + 1) - time * rate * 1.6)) +
+              (Math.sin(angle * lobes) * Math.sin(time * rate) +
+                0.5 * Math.sin(angle * (lobes * 2 + 1) + 1) * Math.sin(time * rate * 1.6 + 1)) +
             idle *
               (waveAmplitude *
                 (Math.sin(angle * 2 + own * 0.9) * 0.03 +
@@ -422,7 +424,8 @@ const inkShape = (scene: THREE.Scene): Shape => {
         strand.geometry.attributes.position.needsUpdate = true;
         strand.geometry.computeBoundingSphere();
       });
-      ring.rotation.z -= delta * (0.04 + level * 0.1) * waveSpeed;
+      // Only the passive drift turns the ring; speech holds it steady.
+      ring.rotation.z -= delta * 0.04 * idle * waveSpeed;
 
       // Loud strands shed blots; how often follows how loud, scaled by the bands a strand holds so the total rate
       // does not depend on the strand count. A high rate can owe several blots in one frame.
