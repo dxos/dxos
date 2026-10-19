@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-A failed index pass no longer closes the ECHO host for the rest of the session: it is retried with backoff while queries keep answering, where before every space on the device stopped opening until the worker restarted. A stored feed index cursor carrying a token the feed store did not issue now makes the indexer read that feed again from the start, instead of failing every pass with `Cursor token mismatch`. `FeedStore.isCursorCurrent` reports whether the store issued a cursor.
+Deleting an identity in place no longer leaves feed index cursors without their stored token, which made every index pass fail with `Cursor token mismatch` after the next restart and kept every space on the device from opening. The wipe now waits for the index pass under way and drops the feed store's cached tokens (`EchoHost.wipeStorage`, `FeedStore.resetCaches`). A profile already in that state recovers: the indexer reads a feed again from the start when its cursor was issued by another store (`FeedStore.isCursorCurrent`), and a failed index pass is retried with backoff instead of closing the ECHO host for the rest of the session.

@@ -24,6 +24,7 @@ import { type QueryService } from '@dxos/protocols/rpc';
 import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
+import { FeedDataSource } from './feed-data-source.ts';
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
@@ -299,6 +300,93 @@ describe('EchoHost index failures', () => {
       sql<{ cursor: string }>`SELECT cursor FROM indexCursor WHERE sourceName = 'queue' AND spaceId = ${spaceId}`,
     );
     expect(cursors.map(({ cursor }) => cursor)).not.toContain('foreign|5');
+  });
+});
+
+// `deleteIdentity` wipes every row while the host stays open. A cursor left without its token's row
+// failed every index pass after the next start, so no space on the device opened again.
+describe('EchoHost storage wipe', () => {
+  const setupWipe = async () => {
+    const { host, runtime } = await setup();
+    const run = RuntimeProvider.runPromise(runtime);
+    const sql = await run(SqlClient.SqlClient);
+    const spaceId = SpaceId.random();
+    const append = () =>
+      run(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId: EntityId.random(),
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+    const wipe = () =>
+      host.wipeStorage(() =>
+        run(
+          Effect.gen(function* () {
+            yield* sql`DELETE FROM cursor_tokens`;
+            yield* sql`DELETE FROM indexCursor`;
+            yield* sql`DELETE FROM blocks`;
+            yield* sql`DELETE FROM feeds`;
+          }),
+        ),
+      );
+    // Cursors the next start would fail on: no token stored for the space, or another one.
+    const orphanedCursors = () =>
+      run(sql<{ spaceId: string; cursor: string; token: string | null }>`
+        SELECT indexCursor.spaceId, indexCursor.cursor, cursor_tokens.token
+        FROM indexCursor LEFT JOIN cursor_tokens ON cursor_tokens.spaceId = indexCursor.spaceId
+        WHERE indexCursor.sourceName = 'queue'
+      `).then((rows) => rows.filter(({ cursor, token }) => token === null || !cursor.startsWith(`${token}|`)));
+
+    // The space's feed, indexed once.
+    vi.spyOn(host['_spaceStateManager'], 'spaceIds', 'get').mockReturnValue([spaceId]);
+    await append();
+    await host.updateIndexes();
+    return { host, append, wipe, orphanedCursors };
+  };
+
+  test('a pass under way when the wipe starts does not write its cursors back after it', async () => {
+    const { host, append, wipe, orphanedCursors } = await setupWipe();
+
+    // A trace block lands as the identity is deleted; hold the pass reading it until the wipe has started.
+    await append();
+    const passRead = new Trigger();
+    const releasePass = new Trigger();
+    const read = FeedDataSource.prototype.getChangedObjects;
+    vi.spyOn(FeedDataSource.prototype, 'getChangedObjects').mockImplementationOnce(function (
+      this: FeedDataSource,
+      ...args
+    ) {
+      return read.apply(this, args).pipe(
+        Effect.tap(() =>
+          Effect.promise(async () => {
+            passRead.wake();
+            await releasePass.wait();
+          }),
+        ),
+      );
+    });
+    const pass = host.updateIndexes();
+    await passRead.wait();
+    const wiped = wipe();
+    releasePass.wake();
+    await Promise.all([pass, wiped]);
+
+    expect(await orphanedCursors()).toEqual([]);
+  });
+
+  // An identity deleted in place and then recovered brings back the same space ids.
+  test('a space indexed again after the wipe stores its cursor under a stored token', async () => {
+    const { host, append, wipe, orphanedCursors } = await setupWipe();
+    await wipe();
+
+    await append();
+    await host.updateIndexes();
+
+    expect(await orphanedCursors()).toEqual([]);
   });
 });
 

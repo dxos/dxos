@@ -175,8 +175,18 @@ export class FeedStore {
    */
   readonly #feedNamespaces = new Map<number, string | null>();
 
-  /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
+  /** Keyed by space; a space's token is written once, so only {@link resetCaches} invalidates it. */
   readonly #cursorTokens = new Map<string, string>();
+
+  /**
+   * Forgets every cached row. A caller that deletes the store's rows while it stays in use calls this,
+   * or a cursor would be issued under a token no longer stored and fail every read after a restart.
+   */
+  resetCaches(): void {
+    this.#feedNamespaces.clear();
+    this.#cursorTokens.clear();
+    this.#heads.clear();
+  }
 
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
