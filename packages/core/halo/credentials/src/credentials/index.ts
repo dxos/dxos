@@ -2,6 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
+export * from './agent-admins.ts';
 export * from './assertions.ts';
 export * from './credential-factory.ts';
 export * from './credential-keys.ts';

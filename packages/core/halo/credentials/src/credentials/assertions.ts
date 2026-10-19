@@ -10,6 +10,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import {
   type AdmittedFeed,
+  type AgentAdmins,
   type Auth,
   type AuthorizedDevice,
   type Credential,
@@ -41,6 +42,7 @@ import {
  */
 export type CredentialAssertion =
   | AdmittedFeed
+  | AgentAdmins
   | Auth
   | AuthorizedDevice
   | DefaultSpace
