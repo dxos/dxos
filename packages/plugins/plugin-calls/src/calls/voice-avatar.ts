@@ -10,8 +10,11 @@ export type VoiceAvatar = {
   close: () => void;
 };
 
-/** `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band. */
-export type VoiceAvatarVariant = 'torus' | 'spectrum';
+/**
+ * `torus`: one ring that swells with the voice; `spectrum`: a row of 16 blobs, one per frequency band; `ink`: an ink ring
+ * whose arcs thicken and shed blots with their bands, after the heptapod logograms in the film Arrival.
+ */
+export type VoiceAvatarVariant = 'torus' | 'spectrum' | 'ink';
 
 export type VoiceAvatarOptions = {
   variant?: VoiceAvatarVariant;
@@ -84,7 +87,12 @@ export const createVoiceAvatar = (
   scene.add(key);
 
   const palette = { silent: new THREE.Color(color), loud: new THREE.Color(speakingColor) };
-  const shape = variant === 'spectrum' ? spectrumShape(scene, palette) : torusShape(scene, palette);
+  const shape =
+    variant === 'spectrum'
+      ? spectrumShape(scene, palette)
+      : variant === 'ink'
+        ? inkShape(scene)
+        : torusShape(scene, palette);
 
   const hearing: Hearing = { time: 0, delta: 0, level: 0, low: 0, high: 0, bands: new Array(BANDS).fill(0) };
   const smooth = (current: number, target: number, delta: number) =>
@@ -242,6 +250,110 @@ const spectrumShape = (scene: THREE.Scene, palette: Palette): Shape => {
         geometry.dispose();
         material.dispose();
       });
+    },
+  };
+};
+
+/** Angular samples around the ink ring. */
+const INK_SEGMENTS = 360;
+const INK_BLOTS = 48;
+
+/**
+ * An ink ring on pale mist. Each band owns an arc (lowest at the top, rising clockwise), which thickens with the
+ * band's energy and sheds blots that drift outward, spread and fade; passive, the ring is thin and turns slowly.
+ */
+const inkShape = (scene: THREE.Scene): Shape => {
+  scene.background = new THREE.Color('#e9e7e2');
+  const ink = new THREE.Color('#151515');
+  const radius = 1.05;
+
+  // A strip of quads, inner and outer edge per sample, rewritten every frame.
+  const positions = new Float32Array((INK_SEGMENTS + 1) * 2 * 3);
+  const indices: number[] = [];
+  for (let segment = 0; segment < INK_SEGMENTS; segment++) {
+    const inner = segment * 2;
+    indices.push(inner, inner + 1, inner + 2, inner + 1, inner + 3, inner + 2);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  const material = new THREE.MeshBasicMaterial({ color: ink, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(geometry, material);
+  scene.add(ring);
+
+  const blotGeometry = new THREE.CircleGeometry(1, 24);
+  const blots = Array.from({ length: INK_BLOTS }, () => {
+    const blotMaterial = new THREE.MeshBasicMaterial({ color: ink, transparent: true, opacity: 0 });
+    const mesh = new THREE.Mesh(blotGeometry, blotMaterial);
+    mesh.visible = false;
+    ring.add(mesh);
+    return { mesh, material: blotMaterial, angle: 0, distance: 0, size: 0, age: 0, life: 0 };
+  });
+
+  /** Thickness at `angle` (radians from the top, clockwise): each band's energy, spread over its neighbours. */
+  const thickness = (angle: number, bands: number[], time: number) => {
+    let sum = 0;
+    bands.forEach((energy, index) => {
+      const centre = (index / bands.length) * Math.PI * 2;
+      let distance = Math.abs(angle - centre);
+      distance = Math.min(distance, Math.PI * 2 - distance);
+      sum += energy * Math.exp(-(((distance * bands.length) / 2.2) ** 2));
+    });
+    // A slow, uneven wobble keeps the passive ring hand-drawn rather than machined.
+    const wobble = Math.sin(angle * 3 + time * 0.7) * 0.006 + Math.sin(angle * 7 - time * 0.4) * 0.004;
+    return 0.035 + wobble + sum * 0.22;
+  };
+
+  let spawned = 0;
+  return {
+    update: ({ time, delta, level, bands }) => {
+      for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
+        const angle = (sample / INK_SEGMENTS) * Math.PI * 2;
+        const width = thickness(angle, bands, time);
+        // Ink spreads outward more than inward, as a brush stroke bleeds into wet paper.
+        const inner = radius - width * 0.35;
+        const outer = radius + width * 0.65;
+        const x = Math.sin(angle);
+        const y = Math.cos(angle);
+        positions.set([x * inner, y * inner, 0, x * outer, y * outer, 0], sample * 6);
+      }
+      geometry.attributes.position.needsUpdate = true;
+      geometry.computeBoundingSphere();
+      ring.rotation.z -= delta * (0.04 + level * 0.1);
+
+      // Loud bands shed blots; how often follows how loud.
+      bands.forEach((energy, index) => {
+        if (energy > 0.35 && Math.random() < energy * delta * 6) {
+          const blot = blots[spawned++ % blots.length];
+          blot.angle = (index / bands.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+          blot.distance = radius + 0.05;
+          blot.size = 0.02 + energy * 0.05 * Math.random();
+          blot.age = 0;
+          blot.life = 1.2 + Math.random() * 1.5;
+          blot.mesh.visible = true;
+        }
+      });
+      for (const blot of blots) {
+        if (!blot.mesh.visible) {
+          continue;
+        }
+        blot.age += delta;
+        const progress = blot.age / blot.life;
+        if (progress >= 1) {
+          blot.mesh.visible = false;
+          continue;
+        }
+        blot.distance += delta * 0.18 * (1 - progress);
+        blot.mesh.position.set(Math.sin(blot.angle) * blot.distance, Math.cos(blot.angle) * blot.distance, 0.01);
+        blot.mesh.scale.setScalar(blot.size * (1 + progress * 1.5));
+        blot.material.opacity = 0.85 * (1 - progress) ** 1.5;
+      }
+    },
+    dispose: () => {
+      geometry.dispose();
+      material.dispose();
+      blotGeometry.dispose();
+      blots.forEach(({ material: blotMaterial }) => blotMaterial.dispose());
     },
   };
 };

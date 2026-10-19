@@ -109,12 +109,12 @@ const meta = {
     docs: {
       description: {
         component:
-          'The shape a simulated participant with `avatar` shows. Serve the voice at `src` (copy it to `tools/storybook-react/static/simulated-call/` for the default).',
+          "The shape a simulated participant with `avatar` shows. Serve the voice at `src`; the default is made with `say -v Daniel -r 150 -o voice.aiff \"I'm sorry, Dave. I'm afraid I can't do that.\"`, converted with `ffmpeg -i voice.aiff -c:a libopus agent-voice.webm` into `tools/storybook-react/static/simulated-call/`.",
       },
     },
   },
   argTypes: {
-    variant: { control: 'select', options: ['torus', 'spectrum'] satisfies VoiceAvatarVariant[] },
+    variant: { control: 'select', options: ['torus', 'spectrum', 'ink'] satisfies VoiceAvatarVariant[] },
   },
   args: { src: '/simulated-call/agent-voice.webm', variant: 'spectrum' },
 } satisfies Meta<typeof VoiceAvatarStory>;
