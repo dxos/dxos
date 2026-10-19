@@ -54,6 +54,8 @@
     "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
+    // Off repo-wide; a package opts in from "overrides".
+    "@dxos/eslint-plugin-rules/folder-barrel-imports": "off",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
