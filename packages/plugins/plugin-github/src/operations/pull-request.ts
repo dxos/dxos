@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
+import { type AccessToken, Connection } from '@dxos/link';
 import { type PullRequest } from '@dxos/types';
 
 import { type GitHubOperation } from '#types';
 
-import { GITHUB_PROVIDER_ID } from '../constants.ts';
+import { GITHUB_CONNECTOR_IDS } from '../constants.ts';
 import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 
@@ -19,16 +20,20 @@ import { GitHubApi } from '../services/index.ts';
  * The GitHub connection whose token requests are sent with: the first one holding a token. Shared by
  * the handlers and by the UI that sends the user to reconnect, so both name the same connection.
  */
-export const githubConnection = () =>
+export const githubConnection = (): Effect.Effect<
+  { connection: Connection.Connection; accessToken: AccessToken.AccessToken } | undefined,
+  EntityNotFoundError,
+  Database.Service
+> =>
   Effect.gen(function* () {
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
     for (const connection of connections) {
-      if (connection.connectorId !== GITHUB_PROVIDER_ID) {
+      if (!connection.connectorId || !GITHUB_CONNECTOR_IDS.includes(connection.connectorId)) {
         continue;
       }
       const accessToken = yield* Database.load(connection.accessToken);
       if (accessToken.token) {
-        return { connection, token: accessToken.token };
+        return { connection, accessToken };
       }
     }
 
@@ -39,7 +44,10 @@ export const githubConnection = () =>
  * The token of {@link githubConnection}, or empty for anonymous — which reaches any public pull
  * request, and is the only option in a space that has not connected GitHub.
  */
-export const githubToken = () => githubConnection().pipe(Effect.map((selected) => selected?.token ?? ''));
+export const githubToken = () =>
+  Effect.flatMap(githubConnection(), (selected) =>
+    selected ? GitHubApi.resolveToken(selected.accessToken) : Effect.succeed(''),
+  );
 
 /**
  * The stored pull request behind an operation's input and credentials for its space.

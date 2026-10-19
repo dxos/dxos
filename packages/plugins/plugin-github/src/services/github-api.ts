@@ -14,6 +14,7 @@ import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
+import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
@@ -73,6 +74,11 @@ const GitHubRepoSchema = Schema.Struct({
   owner: Schema.Struct({ id: Schema.Number, login: Schema.String }),
 });
 export type GitHubRepo = Schema.Schema.Type<typeof GitHubRepoSchema>;
+
+const GitHubInstallationReposSchema = Schema.Struct({ repositories: Schema.Array(GitHubRepoSchema) });
+
+/** GitHub's prefix for an App installation access token. */
+const INSTALLATION_TOKEN_PREFIX = 'ghs_';
 
 const GitHubLabelSchema = Schema.Struct({
   name: Schema.String,
@@ -169,24 +175,31 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
   '@dxos/plugin-github/GitHubCredentials',
 ) {}
 
-/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+/**
+ * The usable token behind an `AccessToken`. An app connection's token is custodied by EDGE and the
+ * object holds only a placeholder, so it is always read through {@link Credential.CredentialsService}.
+ */
+export const resolveToken = (accessToken: AccessToken.AccessToken) =>
+  Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+
+/** Creates a credentials layer from an AccessToken ref. */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
   Layer.effect(
     GitHubCredentials,
     Effect.gen(function* () {
       const accessToken = yield* Database.load(accessTokenRef);
-      return { token: accessToken.token };
+      return { token: yield* resolveToken(accessToken) };
     }),
   );
 
-/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
+/** Creates a credentials layer from a Connection ref's `accessToken`. */
 export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
   Layer.effect(
     GitHubCredentials,
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
       const accessToken = yield* Database.load(connection.accessToken);
-      return { token: accessToken.token };
+      return { token: yield* resolveToken(accessToken) };
     }),
   );
 
@@ -405,6 +418,36 @@ export const fetchUserOrgs = (): GitHubEffect<readonly GitHubOrg[]> =>
  */
 export const fetchUserRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
   githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/repos`), GitHubRepoSchema);
+
+/**
+ * GET /installation/repositories — the repos an App installation token reaches. Such a token acts as
+ * no user, so `/user/repos` refuses it.
+ */
+export const fetchInstallationRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  githubPages(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/installation/repositories`),
+    GitHubInstallationReposSchema,
+    (page) => page.repositories,
+  );
+
+/**
+ * GET /installation/repositories (one repo) — the account an App installation token acts on, which
+ * stands in for `/user` (refused to such a token). Undefined when the installation selected no repos.
+ */
+export const fetchInstallationAccount = (): GitHubEffect<string | undefined> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/installation/repositories?per_page=1`),
+    GitHubInstallationReposSchema,
+  ).pipe(Effect.map(({ repositories }) => repositories[0]?.owner.login));
+
+/**
+ * Every repo the credential reaches: an installation's repos for an App installation token (GitHub
+ * prefixes those `ghs_`), the user's otherwise.
+ */
+export const fetchReachableRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  Effect.flatMap(GitHubCredentials, ({ token }) =>
+    token.startsWith(INSTALLATION_TOKEN_PREFIX) ? fetchInstallationRepos() : fetchUserRepos(),
+  );
 
 /** GET /orgs/{org} — full org metadata. */
 export const fetchOrg = (org: string): GitHubEffect<GitHubOrg> =>

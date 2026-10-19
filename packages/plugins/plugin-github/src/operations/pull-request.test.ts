@@ -2,9 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { summarizeCheckRuns, summarizeReviews, toCheckRun } from './pull-request.ts';
+import * as Credential from '@dxos/compute/Credential';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { AccessToken, Connection } from '@dxos/link';
+import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
+
+import { GITHUB_APP_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { githubToken, summarizeCheckRuns, summarizeReviews, toCheckRun } from './pull-request.ts';
 
 describe('summarizeCheckRuns', () => {
   test('no runs is none', () => {
@@ -116,5 +126,43 @@ describe('summarizeReviews', () => {
       review: 'none',
       approvals: 0,
     });
+  });
+});
+
+describe('githubToken', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  // An app connection's token stays with EDGE; the object holds a placeholder that only the
+  // credentials service can turn into the live installation token.
+  test("resolves an app connection's custodied token through the credentials service", async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection]);
+    const accessToken = db.add(
+      Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token: MANAGED_ACCESS_TOKEN }),
+    );
+    db.add(
+      Obj.make(Connection.Connection, { connectorId: GITHUB_APP_PROVIDER_ID, accessToken: Ref.make(accessToken) }),
+    );
+    const credentials = Layer.succeed(Credential.CredentialsService, {
+      queryCredentials: async () => [],
+      getCredential: async ({ accessTokenId }) => ({
+        service: GITHUB_SOURCE,
+        apiKey: accessTokenId === accessToken.id ? 'ghs_live' : undefined,
+      }),
+    });
+
+    const token = await EffectEx.runPromise(
+      githubToken().pipe(Effect.provide(Layer.merge(Database.layer(db), credentials))),
+    );
+
+    expect(token).toEqual('ghs_live');
   });
 });

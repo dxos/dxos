@@ -14,7 +14,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GITHUB_APP_PROVIDER_ID, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -58,10 +58,48 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/** The App installation's account names the connection; an installation token cannot call `/user`. */
+const onAppTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
+  Effect.gen(function* () {
+    if (accessToken.account) {
+      return;
+    }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+    const account = yield* GitHubApi.fetchInstallationAccount().pipe(
+      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
+    );
+    if (account) {
+      Obj.update(accessToken, (accessToken) => {
+        accessToken.account = account;
+      });
+    }
+  }).pipe(Effect.orDie);
+
+/** An uninstalled App, or a token EDGE can no longer mint, fails the installation's repository read. */
+const testAppConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+    GitHubApi.fetchInstallationAccount().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
+  ).pipe(
+    Effect.asVoid,
+    Effect.mapError(
+      () =>
+        new ConnectorError.ConnectionTestError({
+          message: 'GitHub rejected the App installation. Reinstall the App to continue syncing.',
+        }),
+    ),
+  );
+
+const sync: ConnectorSpec.ConnectorEntry['sync'] = {
+  operation: GitHubOperation.SyncGitHubRepositories,
+  getTargets: GitHubOperation.GetGitHubRepositories,
+  materializeTarget: GitHubOperation.MaterializeGitHubTarget,
+  optionsSchema: GitHubOperation.SyncOptions,
+};
+
 /**
- * Contributes a single `ConnectorSpec.Connector` entry that wires GitHub's two operations,
- * its target materializer, and the token-created hook to the `'github.com'`
- * source. plugin-connector routes by `connectorId`.
+ * Contributes GitHub's two `ConnectorSpec.Connector` entries: one acting as the user who connects,
+ * one as DXOS's GitHub App installed on an account or org. Both wire the same sync operations and
+ * target materializer to the `'github.com'` source; plugin-connector routes by `connectorId`.
  *
  * Sync targets are repositories, not organizations — orgs and their members
  * are auto-pulled as a side effect of syncing any repo they own.
@@ -77,18 +115,27 @@ export default Capability.makeModule(
         id: GITHUB_PROVIDER_ID,
         source: GITHUB_SOURCE,
         label: 'GitHub',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],
         },
-        sync: {
-          operation: GitHubOperation.SyncGitHubRepositories,
-          getTargets: GitHubOperation.GetGitHubRepositories,
-          materializeTarget: GitHubOperation.MaterializeGitHubTarget,
-          optionsSchema: GitHubOperation.SyncOptions,
-        },
+        sync,
         onTokenCreated,
         testConnection,
+      },
+      {
+        id: GITHUB_APP_PROVIDER_ID,
+        source: GITHUB_SOURCE,
+        label: 'GitHub App',
+        kind: 'app',
+        oauth: {
+          provider: OAuthProvider.GITHUB,
+          scopes: [],
+        },
+        sync,
+        onTokenCreated: onAppTokenCreated,
+        testConnection: testAppConnection,
       },
     ]);
   }),

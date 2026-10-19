@@ -442,7 +442,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        yield* beginOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, { kind: connector.kind, oauth }, token.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
@@ -491,7 +491,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        yield* beginOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, { kind: connector.kind, oauth }, accessToken.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(accessToken.id);

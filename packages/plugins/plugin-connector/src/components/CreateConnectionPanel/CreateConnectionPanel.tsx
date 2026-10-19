@@ -7,7 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
@@ -16,7 +18,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
-import { Connector, type ConnectorEntry } from '../../types/ConnectorSpec.ts';
+import { Connector, type ConnectorEntry, type ConnectorKind } from '../../types/ConnectorSpec.ts';
+
+/** Picker order: connecting as yourself is the common case, then the app, then your own credentials. */
+const KIND_ORDER: readonly ConnectorKind[] = ['user', 'app', 'custom'];
 
 const ConnectorSelection = Schema.Struct({ connectorId: Schema.String });
 
@@ -39,6 +44,7 @@ export type CreateConnectionPanelProps = SpaceCapabilities.CreateObjectCustomPan
  * returns to the picker.
  */
 export const CreateConnectionPanel = ({
+  target,
   onCreateObject,
   onCancel,
   connectors: connectorsProp,
@@ -69,8 +75,22 @@ export const CreateConnectionPanel = ({
   const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
   const selection = useMemo(() => ({ connectorId: pickedId }), [pickedId]);
 
+  const groups = useMemo(
+    () =>
+      KIND_ORDER.map((kind) => ({ kind, entries: results.filter((entry) => entry.kind === kind) })).filter(
+        ({ entries }) => entries.length > 0,
+      ),
+    [results],
+  );
+
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
+
+  // Every member of a space can use its connections, so a user-kind one lends the connecting
+  // person's account to all of them.
+  const spaceId = Database.isDatabase(target) ? target.spaceId : Obj.getDatabase(target)?.spaceId;
+  const members = useMembers(spaceId);
+  const sharesAccount = connector?.kind === 'user' && members.length > 1;
 
   // Takes its connector as an argument: `connectorId` is not applied yet in the tick it is chosen.
   const submit = useCallback(
@@ -130,15 +150,19 @@ export const CreateConnectionPanel = ({
               placeholder={t('create-connection.service.placeholder')}
             />
             <SearchList.Viewport>
-              {results.map((entry) => (
-                <SearchList.Item
-                  key={entry.id}
-                  value={entry.id}
-                  label={entry.label ?? entry.id}
-                  icon='ph--plugs-connected--regular'
-                  checked={entry.id === pickedId}
-                  onSelect={() => setSelectedId(entry.id)}
-                />
+              {groups.map(({ kind, entries }) => (
+                <SearchList.Group key={kind} heading={t(`connector-kind.${kind}.label`)}>
+                  {entries.map((entry) => (
+                    <SearchList.Item
+                      key={entry.id}
+                      value={entry.id}
+                      label={entry.label ?? entry.id}
+                      icon='ph--plugs-connected--regular'
+                      checked={entry.id === pickedId}
+                      onSelect={() => setSelectedId(entry.id)}
+                    />
+                  ))}
+                </SearchList.Group>
               ))}
             </SearchList.Viewport>
           </SearchList.Root>
@@ -152,6 +176,11 @@ export const CreateConnectionPanel = ({
   // second inset the whole form inside it.
   return (
     <>
+      {sharesAccount && (
+        <p role='note' className='text-sm text-warning-text' data-testid='create-connection-panel.shared-account'>
+          {t('user-connection-shared.message')}
+        </p>
+      )}
       {credentialForm ? (
         <Form.Root
           autoFocus

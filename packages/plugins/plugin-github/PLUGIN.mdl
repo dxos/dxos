@@ -285,6 +285,15 @@ feat F-1: OAuth Integration
     then: accessToken stored in ECHO; fetchUser called to set accessToken.account to user login
 
   req F-1.3: Integration source is "github.com"; provider id is "github".
+
+  req F-1.4:
+    when: user connects the GitHub App ("github-app", kind app)
+    then: EDGE sends them to the App's install page, verifies they can access the installation,
+      and stores a grant whose installation tokens EDGE mints; the AccessToken holds the managed
+      placeholder and resolves through CredentialsService
+
+  req F-1.5: An app connection is named after the installation's account, read from
+    `/installation/repositories`, since an installation token cannot call `/user`.
 ```
 
 ```mdl
@@ -297,6 +306,9 @@ feat F-2: Repository Discovery
   req F-2.2: No local ECHO objects are created during discovery.
 
   req F-2.3: Owner, collaborator, and org-member repo affiliations are included.
+
+  req F-2.4: For an App installation token (`ghs_`), discovery and sync list the installation's
+    repositories instead of the user's.
 ```
 
 ```mdl
