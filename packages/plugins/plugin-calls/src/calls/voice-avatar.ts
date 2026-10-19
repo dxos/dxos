@@ -299,9 +299,10 @@ const INK_BLOTS = 240;
 const MAX_STRANDS = 8;
 
 /**
- * An ink ring on pale mist, drawn with one or more overlapping strands. Each band owns an arc (lowest at the top,
- * rising clockwise), which thickens with the band's energy and sheds blots that drift outward, spread and fade;
- * passive, the strands are thin, wobble in an irregular wave and turn slowly.
+ * An ink ring on pale mist, drawn with one or more overlapping strands. Each strand owns a contiguous slice of the
+ * spectrum (lowest on the inside): it vibrates while its slice sounds (low strands in broad, slow undulations, high
+ * ones in fine, fast ripples), its slice's bands thicken arcs around it, and it sheds blots that drift outward, spread
+ * and fade. Passive, the strands are thin, wobble in an irregular wave and turn slowly.
  */
 const inkShape = (scene: THREE.Scene): Shape => {
   scene.background = new THREE.Color('#e9e7e2');
@@ -326,7 +327,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
     mesh.visible = index === 0;
     ring.add(mesh);
     // Fixed per strand, so a strand keeps its own wave as the count changes.
-    return { positions, geometry, mesh, phase: index * 1.9 };
+    return { positions, geometry, mesh, phase: index * 1.9, energy: 0, base: radius };
   });
 
   const blotGeometry = new THREE.CircleGeometry(1, 24);
@@ -338,14 +339,17 @@ const inkShape = (scene: THREE.Scene): Shape => {
     return { mesh, material: blotMaterial, angle: 0, distance: 0, size: 0, age: 0, life: 0 };
   });
 
-  /** Voice thickness at `angle` (radians from the top, clockwise): each band's energy, spread over its neighbours. */
-  const voice = (angle: number, bands: number[]) => {
+  /**
+   * Voice thickness at `angle` (radians from the top, clockwise) from a strand's `slice` of bands, each owning an
+   * arc of the strand and spread over its neighbours; a single strand spans the whole spectrum this way.
+   */
+  const voice = (angle: number, slice: number[]) => {
     let sum = 0;
-    bands.forEach((energy, index) => {
-      const centre = (index / bands.length) * Math.PI * 2;
+    slice.forEach((energy, index) => {
+      const centre = (index / slice.length) * Math.PI * 2;
       let distance = Math.abs(angle - centre);
       distance = Math.min(distance, Math.PI * 2 - distance);
-      sum += energy * Math.exp(-(((distance * bands.length) / 2.2) ** 2));
+      sum += energy * Math.exp(-(((distance * slice.length) / 2.2) ** 2));
     });
     return sum;
   };
@@ -354,7 +358,7 @@ const inkShape = (scene: THREE.Scene): Shape => {
   let spawned = 0;
   return {
     update: (
-      { delta, level, bands },
+      { time, delta, level, bands },
       { waveAmplitude, jitter, waveSpeed, particles, strands: strandCount, separation },
     ) => {
       // Accumulated, so changing the speed changes the pace without jumping the wave.
@@ -374,6 +378,18 @@ const inkShape = (scene: THREE.Scene): Shape => {
         const own = phase + strand.phase;
         // Strands sit in order from the inside out, `separation` apart, centred on the ring's radius.
         const base = radius + (index - middle) * separation;
+        const slice = bands.slice(
+          Math.floor((index * bands.length) / count),
+          Math.floor(((index + 1) * bands.length) / count),
+        );
+        const energy = slice.reduce((sum, value) => sum + value, 0) / slice.length;
+        // Where in the spectrum the slice sits, 0 (lowest) to 1 (highest), sets how it vibrates.
+        const pitch = count > 1 ? index / (count - 1) : 0.5;
+        const lobes = 3 + Math.round(pitch * 12);
+        const rate = 8 + pitch * 40;
+        const vibration = energy * 0.045 * (1 - pitch * 0.5);
+        strand.energy = energy;
+        strand.base = base;
         const taper = count > 1 ? 1 - 0.7 * (Math.abs(index - middle) / middle) ** 1.2 : 1;
         const weight = (count > 1 ? share : 1) * taper;
         for (let sample = 0; sample <= INK_SEGMENTS; sample++) {
@@ -381,9 +397,12 @@ const inkShape = (scene: THREE.Scene): Shape => {
           // A slow, uneven wobble in the width keeps the stroke hand-drawn rather than machined.
           const width =
             (0.035 + Math.sin(angle * 3 + own * 0.7) * 0.006 + Math.sin(angle * 7 - own * 0.4) * 0.004) * weight +
-            voice(angle, bands) * 0.22 * weight;
+            voice(angle, slice) * 0.22 * weight;
+          // The vibration follows the sound in real time, whatever the passive wave's speed.
           const centre =
             base +
+            vibration *
+              (Math.sin(angle * lobes + time * rate) + 0.5 * Math.sin(angle * (lobes * 2 + 1) - time * rate * 1.6)) +
             idle *
               (waveAmplitude *
                 (Math.sin(angle * 2 + own * 0.9) * 0.03 +
@@ -405,17 +424,18 @@ const inkShape = (scene: THREE.Scene): Shape => {
       });
       ring.rotation.z -= delta * (0.04 + level * 0.1) * waveSpeed;
 
-      // Loud bands shed blots; how often follows how loud. A high rate can owe several blots in one frame.
-      bands.forEach((energy, index) => {
+      // Loud strands shed blots; how often follows how loud, scaled by the bands a strand holds so the total rate
+      // does not depend on the strand count. A high rate can owe several blots in one frame.
+      strands.slice(0, count).forEach(({ energy, base }) => {
         if (energy <= 0.35) {
           return;
         }
-        const owed = energy * delta * particles;
+        const owed = energy * delta * particles * (bands.length / count);
         const due = Math.floor(owed) + (Math.random() < owed % 1 ? 1 : 0);
         for (let spawn = 0; spawn < due; spawn++) {
           const blot = blots[spawned++ % blots.length];
-          blot.angle = (index / bands.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-          blot.distance = radius + 0.05;
+          blot.angle = Math.random() * Math.PI * 2;
+          blot.distance = base + 0.05;
           blot.size = 0.02 + energy * 0.05 * Math.random();
           blot.age = 0;
           blot.life = 1.2 + Math.random() * 1.5;
