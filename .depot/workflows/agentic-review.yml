@@ -7,12 +7,14 @@ name: Agentic Review
 # committed files. A separate workflow so it is never a required `Check` job — keep
 # it out of branch protection, since it is meant to prompt a review, not block a merge.
 
-# Runs only on PRs authored by dmaretskyi while the review flow is reworked; everyone else is skipped.
+# Runs only on PRs authored by dmaretskyi, or with dmaretskyi among the requested reviewers, while
+# the review flow is reworked; everyone else is skipped. `review_requested` starts a run when dmaretskyi is
+# added as a reviewer, since no push follows to trigger one.
 # Draft PRs skip this, and converting a PR to a draft cancels the run in flight: the same gate as
 # `Check`.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, review_requested]
 
   workflow_dispatch:
 
@@ -26,8 +28,9 @@ concurrency:
 jobs:
   review-present:
     if: >-
-      github.event_name != 'pull_request' || (github.event.pull_request.user.login == 'dmaretskyi' &&
-      !github.event.pull_request.draft)
+      github.event_name != 'pull_request' || (!github.event.pull_request.draft &&
+      (github.event.pull_request.user.login == 'dmaretskyi' ||
+      contains(github.event.pull_request.requested_reviewers.*.login, 'dmaretskyi')))
     # The `ci-image.yml` snapshot: toolchains and browsers already in place.
     runs-on:
       size: 2x8
