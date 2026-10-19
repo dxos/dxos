@@ -7,11 +7,15 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Model } from '@dxos/ai';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Diagnostics, SVG_SCHEMA } from '@dxos/diagram';
-import { Database, Ref } from '@dxos/echo';
+import { DXN, Database, Ref } from '@dxos/echo';
 import * as WorkerSpace from '@dxos/plugin-debug/WorkerSpace';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { trim } from '@dxos/util';
@@ -66,6 +70,30 @@ const calls = (operation: string) => (invocation: { operationKey?: string; name:
   (invocation.operationKey ?? invocation.name).includes(`illustrator.${operation}`) ||
   invocation.name === `illustrator-${operation}`;
 
+/**
+ * The SVG variant, headless. The plugin registers its own only in a browser, since that one also carries the React
+ * article; the drawing operations need nothing but the builder.
+ */
+const HeadlessSvgVariant = Plugin.make(
+  Plugin.define(
+    Plugin.makeMeta({ key: DXN.make('org.dxos.test.headlessSvgVariant'), name: 'Headless SVG variant' }),
+  ).pipe(
+    Plugin.addModule({
+      id: 'headless-svg-variant',
+      activatesOn: ActivationEvents.Startup,
+      provides: [IllustratorCapabilities.VariantProvider],
+      activate: () =>
+        Effect.succeed([
+          Capability.contribute(IllustratorCapabilities.VariantProvider, {
+            id: SVG_SCHEMA,
+            label: 'svg',
+            builder: IllustratorModel.SvgBuilder,
+          }),
+        ]),
+    }),
+  ),
+);
+
 const SCORERS = [
   Scorer.make({
     name: 'drawing-created',
@@ -111,7 +139,7 @@ const task = createEvalRunner({
   `,
   input: Schema.Unknown,
   output: Schema.Unknown,
-  plugins: [IllustratorPlugin.make()],
+  plugins: [IllustratorPlugin.make(), HeadlessSvgVariant()],
   // A function, so each variant builds its own skill objects: the two models run concurrently, each in its own space.
   skills: () => [...getDefaultSkills(), Ref.make(DrawingSkill.make())],
   timeout: 240_000,
