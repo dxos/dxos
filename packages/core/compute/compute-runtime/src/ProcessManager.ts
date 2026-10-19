@@ -200,6 +200,8 @@ export interface ImplOpts {
 export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
+  /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
+  readonly #guards = new Map<Process.ID, Process.Guard>();
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -343,6 +345,7 @@ export class Impl implements Manager {
       return;
     }
     this.#handles.delete(pid);
+    this.#guards.delete(pid);
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -426,6 +429,15 @@ export class Impl implements Manager {
         ...(parentHandle !== undefined ? parentHandle.environment : {}),
         ...options?.environment,
       };
+      const parentGuard =
+        options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
+      const guard =
+        parentGuard !== undefined && options?.guard !== undefined
+          ? Process.bothGuards(parentGuard, options.guard)
+          : (options?.guard ?? parentGuard);
+      if (guard !== undefined) {
+        this.#guards.set(id, guard);
+      }
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -493,10 +505,14 @@ export class Impl implements Manager {
         ),
       );
 
+      if (guard !== undefined) {
+        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, guard));
+      }
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
@@ -706,6 +722,7 @@ export class Impl implements Manager {
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,

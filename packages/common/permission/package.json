@@ -26,6 +26,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*"
   },

@@ -6,6 +6,7 @@ export * as Check from './Check.ts';
 export * as Command from './Command.ts';
 export * as Consent from './Consent.ts';
 export * as Grant from './Grant.ts';
+export * as Guard from './Guard.ts';
 export * as Permission from './Permission.ts';
 export * as Policy from './Policy.ts';
 export * as Principal from './Principal.ts';

@@ -559,6 +559,27 @@ sources).
 
 ## Interfaces
 
+**Implemented first cut (opt-in).** The runtime knows nothing of grants; it knows a guard.
+
+- `Operation.RequiresAnnotation` (set with `Guard.requires(...requirements)`) declares what an
+  operation needs. An operation that declares nothing is never checked.
+- `Process.Guard` is `{ check(op, input) }`, passed as `SpawnOptions.guard`. Children inherit the
+  parent's guard; a child spawned with its own gets both (`Process.bothGuards`), so it can only
+  narrow. Guards are closures and are not persisted, so a rehydrated process, or one spawned on
+  EDGE, holds none.
+- `OperationProcess` checks after input validation: an operation with requirements in a process
+  with no guard dies with `OperationDeniedError`, otherwise the guard decides.
+- `Guard.make({ principal, source })` is the guard backed by this package: every requirement goes
+  through `Check.check` with the operation's input as `.args`. `Guard.attested(grants)` is the
+  source for grants the spawning runtime vouches for.
+- `compute-runtime/src/permission.test.ts` covers it at the process-manager level: unannotated
+  operations run anywhere; annotated ones are refused without a guard (spawned or via the
+  invoker), allowed with a covering grant or a parent command, refused on an uncovered command or
+  a failing policy; nested invocations are checked against the parent's guard; a child cannot
+  widen it.
+
+The sections below are the fuller target design.
+
 ### Operations
 
 Three touch points, all in `@dxos/compute`:

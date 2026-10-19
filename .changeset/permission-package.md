@@ -1,5 +1,6 @@
 ---
 '@dxos/permission': minor
+'@dxos/compute': minor
 ---
 
-Add the `@dxos/permission` package: the permission DSL and its pure evaluator, with the design document. `Principal` (HALO DID, space or process URI), `Subject` (echo URI or `*`), `Command` (`/`-separated path; a prefix covers its descendants), `Policy` (UCAN predicates as JSON arrays with builders, `evaluate`, `describe`), `Permission` and `Permission.define`, `Requirement` with argument selectors, `Grant` (content-addressed id over canonical JSON, `attenuate`), `Revocation`, `Consent`, and `Check` (`check`, `GrantSource`, `fromGrants`, `merge`). Scenario tests show when a check passes or fails.
+Add opt-in operation permissions. `@dxos/permission` is the permission DSL and its pure evaluator, with the design document: principals, subjects, commands with prefix coverage, UCAN-style policies, permissions, requirements, content-addressed grants with attenuation, revocation, consent, and `Check.check` over a `GrantSource`; `Guard` turns a principal and its grants into a process guard. In `@dxos/compute`, an operation can declare requirements (`Operation.RequiresAnnotation`, set with `Guard.requires`), and a process can be spawned with a `Process.Guard` that its children inherit and can only narrow. An operation that declares requirements is refused with `OperationDeniedError` unless the invoking process's guard admits it; operations that declare none are never checked.
