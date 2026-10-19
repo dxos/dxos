@@ -10,10 +10,10 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { createSceneTree } from '../../builder/testing.ts';
 import { createCanvasAtoms } from '../../engine/index.ts';
 import { useRegistry } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
+import { createSceneTree } from '../../testing/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** Commits per part, keyed by the Profiler id; read by the play function. */

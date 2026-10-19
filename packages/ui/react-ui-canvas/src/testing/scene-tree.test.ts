@@ -8,7 +8,7 @@ import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
 import { layoutGraph, solve } from '../engine/index.ts';
 import { MAJOR_GRID, type Point, type Scene } from '../model/index.ts';
 import { nodeBounds } from '../utils/index.ts';
-import { createModelSceneTree, createSceneTree } from './testing.ts';
+import { createModelSceneTree, createSceneTree } from './scene-tree.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
 const offGrid = (scene: Scene): string[] =>

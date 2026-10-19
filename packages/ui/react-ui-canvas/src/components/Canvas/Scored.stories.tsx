@@ -16,9 +16,9 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { SceneBuilder } from '../../builder/index.ts';
-import { createModelSceneTree } from '../../builder/testing.ts';
 import { type CanvasAtoms, createCanvasAtoms } from '../../engine/index.ts';
 import { type Scene, type SceneId, type SceneStore, createMemoryStore } from '../../model/index.ts';
+import { createModelSceneTree } from '../../testing/index.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { Canvas } from './Canvas.tsx';

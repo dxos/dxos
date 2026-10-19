@@ -11,7 +11,7 @@ import { describe, test } from 'vitest';
  * The package's layers, lowest first. A module may import values only from its own layer or one below it, so no cycle
  * can form between layers; type-only imports are erased on emit and may point anywhere.
  */
-const LAYERS = ['model', 'utils', 'engine', 'generator', 'hooks', 'components', 'builder'] as const;
+const LAYERS = ['model', 'utils', 'engine', 'generator', 'hooks', 'components', 'builder', 'testing'] as const;
 
 const SRC = dirname(fileURLToPath(import.meta.url));
 

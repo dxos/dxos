@@ -10,19 +10,26 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type SceneId } from '../../../model/index.ts';
+import { createObjectsTree } from '../../../testing/index.ts';
+import { compositeScenes, instanceCounts } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
 import { type ObjectEntry, ObjectsInspector } from './ObjectsInspector.tsx';
 
-/** Three composites, one not yet placed anywhere. */
-const OBJECTS: ObjectEntry[] = [
-  { id: 'logo', name: 'Logo', instances: 2 },
-  { id: 'card', name: 'Card', instances: 5 },
-  { id: 'badge', name: 'Badge', instances: 0 },
-];
+/** The objects of the shared fixture: Logo placed three times (once inside Card), Card once, Badge nowhere. */
+const createObjects = (): ObjectEntry[] => {
+  const tree = createObjectsTree();
+  const scenes = Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene]));
+  const counts = instanceCounts(scenes);
+  return compositeScenes(scenes).map((scene) => ({
+    id: scene.id,
+    name: scene.name ?? scene.id,
+    instances: counts[scene.id] ?? 0,
+  }));
+};
 
 /** The panel over local state, as a host keeps the drawing's composites. */
 const DefaultStory = () => {
-  const [objects, setObjects] = useState(OBJECTS);
+  const [objects, setObjects] = useState(createObjects);
   const [selected, setSelected] = useState<SceneId>();
   const update = (id: SceneId, values: Partial<ObjectEntry>) =>
     setObjects((objects) => objects.map((entry) => (entry.id === id ? { ...entry, ...values } : entry)));

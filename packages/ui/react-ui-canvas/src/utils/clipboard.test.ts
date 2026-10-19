@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { createSceneTree } from '../builder/testing.ts';
 import { reduceIntent } from '../engine/index.ts';
 import { type Link, type Scene, endpointNode } from '../model/index.ts';
+import { createSceneTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 
 const fixture = (): Scene => {
