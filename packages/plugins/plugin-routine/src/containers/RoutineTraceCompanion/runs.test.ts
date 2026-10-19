@@ -143,6 +143,62 @@ describe('groupIntoRuns', () => {
     expect(runs[0].duration).toBe(1000);
   });
 
+  describe('run-again chain', () => {
+    // A run that calls `Operation.runAgain()` continues in a new root process carrying the first
+    // invocation's pid as `runId`: one run with several invocations, not a run per invocation.
+    const chain = (...ends: { outcome: string; errorCode?: string }[]) =>
+      ends.flatMap((end, index) => {
+        const pid = `p${index + 1}`;
+        const runId = index === 0 ? undefined : 'p1';
+        const start = (index + 1) * 1000;
+        return [
+          makeMessage({ pid, runId, triggerEntityId: TRIGGER_ID, timestamp: start }),
+          ...(end.outcome === 'running'
+            ? []
+            : [
+                makeMessage({
+                  pid,
+                  runId,
+                  triggerEntityId: TRIGGER_ID,
+                  eventType: Trace.OperationEnd.key,
+                  eventOutcome: end.outcome,
+                  eventErrorCode: end.errorCode,
+                  timestamp: start + 500,
+                }),
+              ]),
+        ];
+      });
+    const yielded = { outcome: 'failure', errorCode: Process.RUN_AGAIN_ERROR_CODE };
+
+    test('continuations join the run they continue', ({ expect }) => {
+      const runs = groupIntoRuns(chain(yielded, yielded, { outcome: 'success' }), new Set([TRIGGER_ID]));
+      expect(runs).toHaveLength(1);
+      expect(runs[0].pid).toBe('p1');
+      expect(runs[0].duration).toBe(2500);
+      expect(new Set(runs[0].events.map((event) => event.pid))).toEqual(new Set(['p1', 'p2', 'p3']));
+    });
+
+    test('a chain that finished is a success, not incomplete', ({ expect }) => {
+      const runs = groupIntoRuns(chain(yielded, { outcome: 'success' }), new Set([TRIGGER_ID]));
+      expect(runs[0].status).toBe('success');
+    });
+
+    test('a chain whose continuation is still running is pending', ({ expect }) => {
+      const runs = groupIntoRuns(chain(yielded, { outcome: 'running' }), new Set([TRIGGER_ID]));
+      expect(runs[0].status).toBe('pending');
+    });
+
+    test('a chain whose latest invocation yielded is incomplete', ({ expect }) => {
+      const runs = groupIntoRuns(chain(yielded, yielded), new Set([TRIGGER_ID]));
+      expect(runs[0].status).toBe('incomplete');
+    });
+
+    test('a continuation that failed fails the run', ({ expect }) => {
+      const runs = groupIntoRuns(chain(yielded, { outcome: 'failure' }), new Set([TRIGGER_ID]));
+      expect(runs[0].status).toBe('failure');
+    });
+  });
+
   test('deep parent chain (>20 levels) resolves to root run', ({ expect }) => {
     const depth = 25;
     const messages: Trace.Message[] = [];
@@ -172,6 +228,7 @@ function makeRef(entityId: EntityId): Ref.Ref<never> {
 function makeMessage(opts: {
   pid: string;
   parentPid?: string;
+  runId?: string;
   triggerEntityId?: EntityId;
   eventType?: string;
   eventOutcome?: string;
@@ -195,6 +252,7 @@ function makeMessage(opts: {
     meta: {
       pid: opts.pid,
       parentPid: opts.parentPid,
+      runId: opts.runId,
       trigger: opts.triggerEntityId ? makeRef(opts.triggerEntityId) : undefined,
     },
     isEphemeral: false,

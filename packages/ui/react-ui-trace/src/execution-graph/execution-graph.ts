@@ -626,11 +626,17 @@ const spanTreeToCommits = (
 
   // The branch name for a span is its pid — multiple sequential spans of the same process
   // (e.g. successive agent requests in one session) share a branch so they reuse a single lane.
+  // A run-again continuation names its run's first pid instead, so a whole run is one lane.
+  const branchByPid = new Map<string, string>();
   const branchOf = (span: Span | null): string => {
     if (!span || span.id === ROOT_SPAN_ID) {
       return MAIN_BRANCH;
     }
-    return span.meta.pid ?? span.id;
+    const branch = span.meta.runId ?? span.meta.pid ?? span.id;
+    if (span.meta.pid) {
+      branchByPid.set(span.meta.pid, branch);
+    }
+    return branch;
   };
 
   // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
@@ -677,6 +683,7 @@ const spanTreeToCommits = (
     if (!process) {
       return;
     }
+    const branch = branchByPid.get(process.pid) ?? process.pid;
 
     if (
       Process.isHarnessHost(process) &&
@@ -685,10 +692,10 @@ const spanTreeToCommits = (
     ) {
       builder.addCommit({
         id: `running:${process.pid}`,
-        branch: process.pid,
+        branch,
         // Falls back to the tail of main: a completed request collapses onto main, leaving the
         // agent's own branch empty, and a parentless spinner draws as a second, disconnected root.
-        parents: parentIds(builder.firstTipOf(process.pid, MAIN_BRANCH)),
+        parents: parentIds(builder.firstTipOf(branch, MAIN_BRANCH)),
         icon: ICONS.agentRequestRunning.icon,
         level: ICONS.agentRequestRunning.level,
         message: 'Generating...',
@@ -696,11 +703,11 @@ const spanTreeToCommits = (
         tags: [SHIMMER_EFFECT_TAG],
       });
       insertedRunningPids.add(pid);
-    } else if (process.state === Process.State.RUNNING && builder.hasBranch(process.pid)) {
+    } else if (process.state === Process.State.RUNNING && builder.hasBranch(branch)) {
       builder.addCommit({
         id: `running:${process.pid}`,
-        branch: process.pid,
-        parents: parentIds(builder.tipOf(process.pid)),
+        branch,
+        parents: parentIds(builder.tipOf(branch)),
         icon: ICONS.processRunning.icon,
         level: ICONS.processRunning.level,
         message: 'Running...',
