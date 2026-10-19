@@ -5,6 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
@@ -27,13 +28,13 @@ export const ROOT_SPAN_ID = '<main>';
 export interface SpanMeta {
   readonly pid?: string;
   readonly parentPid?: string;
-  /** Pid of the run's first invocation, on a run-again continuation; see `Trace.Meta.runId`. */
-  readonly runId?: string;
   readonly processName?: string;
   readonly conversationId?: string;
   readonly triggerId?: string;
   readonly toolCallId?: string;
   readonly runtimeName?: string;
+  /** Set on the span that groups the invocations of one run; see {@link buildSpanTree}. */
+  readonly run?: boolean;
 }
 
 /**
@@ -61,10 +62,25 @@ export const END_EVENT_TYPES = new Set<string>([Trace.OperationEnd.key, Trace.Ag
 export const isSpanBeginEvent = (event: Trace.FlatEvent): boolean => BEGIN_EVENT_TYPES.has(event.type);
 export const isSpanEndEvent = (event: Trace.FlatEvent): boolean => END_EVENT_TYPES.has(event.type);
 
+/**
+ * Whether an event ends an invocation that called `Operation.runAgain()`. The trace records the yield as a
+ * failure tagged with the run-again error code; events persisted before `errorCode` existed carry only the
+ * message.
+ */
+export const isRunAgainEnd = (event: Trace.FlatEvent): boolean => {
+  if (!Trace.isOfType(Trace.OperationEnd, event) || !Schema.is(Trace.OperationEnd.schema)(event.data)) {
+    return false;
+  }
+  const { outcome, errorCode, error } = event.data;
+  return (
+    outcome === 'failure' &&
+    (errorCode === Process.RUN_AGAIN_ERROR_CODE || (errorCode === undefined && error === Process.RUN_AGAIN_MESSAGE))
+  );
+};
+
 const computeMeta = (rawMeta: Trace.Meta): SpanMeta => ({
   pid: rawMeta.pid,
   parentPid: rawMeta.parentPid,
-  runId: rawMeta.runId,
   processName: rawMeta.processName,
   conversationId: rawMeta.conversation ? EID.getEntityId(EID.parse(rawMeta.conversation.uri)) : undefined,
   triggerId: rawMeta.trigger ? EID.getEntityId(EID.parse(rawMeta.trigger.uri)) : undefined,
@@ -133,7 +149,8 @@ export interface BuildSpanTreeOptions {
  *        the event's `meta.pid` and become its last event.
  *      - Other events attach to the currently-open span for their `meta.pid`, or to the
  *        root span if no span is currently open for that pid (or the event has no pid).
- *   3. Sort each span's children by their earliest event timestamp.
+ *   3. Group the invocations of each run under one span (see {@link groupRuns}).
+ *   4. Sort each span's children by their earliest event timestamp.
  */
 export const buildSpanTree = (messages: readonly Trace.Message[], options: BuildSpanTreeOptions = {}): Span => {
   const allEvents = messages.flatMap((message) => Trace.flatten(message));
@@ -251,6 +268,8 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
     }
   }
 
+  groupRuns(root);
+
   // Sort children chronologically for deterministic output.
   const sortChildren = (span: MutableSpan): void => {
     span.children.sort((a, b) => a.firstTimestamp - b.firstTimestamp);
@@ -261,6 +280,71 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   sortChildren(root);
 
   return freezeSpan(root);
+};
+
+/**
+ * Groups the invocations of each run under one span.
+ *
+ * A run that calls `Operation.runAgain()` continues in a new process, so each invocation is a top-level span
+ * of its own. Each continuation names the first invocation's pid as `runId`. The run span opens with the first
+ * invocation's begin and closes with the end of the last invocation, unless that one yielded too: then the run
+ * is still going. An invocation joins a run when it carries `runId`, when a continuation names it, or when it
+ * yielded, which means a continuation is on its way.
+ */
+const groupRuns = (root: MutableSpan): void => {
+  const named = new Set<string>();
+  for (const span of root.children) {
+    const runId = span.events[0]?.meta.runId;
+    if (runId) {
+      named.add(runId);
+    }
+  }
+
+  const runOf = (span: MutableSpan): string | undefined => {
+    const begin = span.events[0];
+    if (!begin || !isSpanBeginEvent(begin) || begin.meta.parentPid) {
+      return undefined;
+    }
+    if (begin.meta.runId) {
+      return begin.meta.runId;
+    }
+    const end = span.events.at(-1);
+    const pid = span.meta.pid;
+    return pid && (named.has(pid) || (end && isRunAgainEnd(end))) ? pid : undefined;
+  };
+
+  const children: MutableSpan[] = [];
+  const runs = new Map<string, MutableSpan[]>();
+  for (const span of root.children) {
+    const runId = runOf(span);
+    if (runId === undefined) {
+      children.push(span);
+    } else {
+      runs.set(runId, [...(runs.get(runId) ?? []), span]);
+    }
+  }
+
+  for (const [runId, invocations] of runs) {
+    invocations.sort((left, right) => left.firstTimestamp - right.firstTimestamp);
+    const first = invocations[0]!;
+    const run = makeMutableSpan(`run:${runId}`, {
+      processName: first.meta.processName,
+      conversationId: first.meta.conversationId,
+      triggerId: first.meta.triggerId,
+      runtimeName: first.meta.runtimeName,
+      run: true,
+    });
+    run.events.push({ ...first.events[0]! });
+    const end = invocations.at(-1)!.events.at(-1);
+    if (end && isSpanEndEvent(end) && !isRunAgainEnd(end)) {
+      run.events.push({ ...end });
+    }
+    run.children = invocations;
+    run.firstTimestamp = first.firstTimestamp;
+    children.push(run);
+  }
+
+  root.children = children;
 };
 
 /**

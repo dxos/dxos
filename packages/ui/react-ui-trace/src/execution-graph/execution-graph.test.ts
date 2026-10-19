@@ -610,12 +610,18 @@ describe('buildExecutionGraph scenarios', () => {
   });
 
   /**
-   * A run that calls `Operation.runAgain()` continues in a new process; the continuation carries the
-   * first invocation's pid as `runId`. The run is one lane, its invocations in sequence on it, like the
-   * agent sessions above.
+   * A run that calls `Operation.runAgain()` continues in a new process; each continuation carries the
+   * first invocation's pid as `runId`. While the run continues it is a branch off main with a commit per
+   * invocation; once it is over it is one commit.
    */
-  test('a run-again continuation continues its run on the same branch', ({ expect }) => {
-    const invocation = (meta: Trace.Meta, batch: string, outcome: Trace.PayloadType<typeof Trace.OperationEnd>) =>
+  describe('a run-again chain', () => {
+    const yielded = {
+      key: 'sync',
+      name: 'Sync',
+      outcome: 'failure',
+      errorCode: Process.RUN_AGAIN_ERROR_CODE,
+    } as const;
+    const invocation = (meta: Trace.Meta, batch: string, outcome?: Trace.PayloadType<typeof Trace.OperationEnd>) =>
       withMeta(
         meta,
         Effect.gen(function* () {
@@ -625,42 +631,51 @@ describe('buildExecutionGraph scenarios', () => {
             role: 'assistant',
             block: { _tag: 'status', statusText: batch, pending: false },
           });
-          yield* Trace.write(Trace.OperationEnd, outcome);
+          if (outcome) {
+            yield* Trace.write(Trace.OperationEnd, outcome);
+          }
         }),
       );
-    const yielded = {
-      key: 'sync',
-      name: 'Sync',
-      outcome: 'failure',
-      errorCode: Process.RUN_AGAIN_ERROR_CODE,
-    } as const;
-    const messages = collectTraceEvents(
-      Effect.gen(function* () {
-        yield* invocation({ pid: 'sync-1' }, 'batch 1', yielded);
-        yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, 'batch 2', yielded);
-        yield* invocation({ pid: 'sync-3', runId: 'sync-1' }, 'batch 3', {
-          key: 'sync',
-          name: 'Sync',
-          outcome: 'success',
-        });
-      }),
-    );
 
-    const { branches } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans: false });
-    expect(branches.filter((branch) => branch !== 'main')).toEqual(['sync-1']);
-    expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
-      "
-      ●     [function] Sync
-      ├──●  [info] batch 1
-      ◆──╯  [arrows-clockwise] Sync - Incomplete
-      ●  │  [function] Sync
-      │  ●  [info] batch 2
-      ◆──╯  [arrows-clockwise] Sync - Incomplete
-      ●  │  [function] Sync
-      │  ●  [info] batch 3
-      ◆──╯  [function] Sync
-      "
-    `);
+    test('is a branch with a commit per invocation while it continues', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, 'batch 1', yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, 'batch 2', yielded);
+          yield* invocation({ pid: 'sync-3', runId: 'sync-1' }, 'batch 3');
+        }),
+      );
+
+      expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+        "
+        ●        [function] Sync
+        ├──●     [arrows-clockwise] Sync - Incomplete
+           ●     [arrows-clockwise] Sync - Incomplete
+           ●     [function] Sync
+           ├──●  [info] batch 3
+        "
+      `);
+    });
+
+    test('collapses to one commit once it is over', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, 'batch 1', yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, 'batch 2', yielded);
+          yield* invocation({ pid: 'sync-3', runId: 'sync-1' }, 'batch 3', {
+            key: 'sync',
+            name: 'Sync',
+            outcome: 'success',
+          });
+        }),
+      );
+
+      expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+        "
+        ●  [function] Sync
+        "
+      `);
+    });
   });
 
   /**
