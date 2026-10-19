@@ -30,7 +30,7 @@ npx -y $DRAWING open arch.dx.svg               # a link that opens it in app.dra
 
 The URL pins one commit, so agents run immutable code rather than the moving `@main`. After a CLI change lands
 and pkg.pr.new publishes its merge commit, re-pin the skill and this README with
-`node packages/devtools/drawing/scripts/pin-skill.mjs <40-char sha>`. Optionally, from npm, `npm i -g @dxos/drawing`
+`bun packages/devtools/drawing/scripts/pin-skill.ts <40-char sha>`. Optionally, from npm, `npm i -g @dxos/drawing`
 puts `drawing` on PATH.
 
 Exit code 1 means a source error or a layout defect. From code: `import { render } from '@dxos/drawing'`.

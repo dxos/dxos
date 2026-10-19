@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 //
 // Copyright 2026 DXOS.org
@@ -6,7 +6,7 @@
 
 // Pins the drawing skill and README to one pkg.pr.new build of `@dxos/drawing`, so agents run an immutable
 // commit rather than the moving `@main`. Run after a drawing CLI change lands and pkg.pr.new has published it:
-//   node packages/devtools/drawing/scripts/pin-skill.mjs <40-char commit sha>
+//   bun packages/devtools/drawing/scripts/pin-skill.ts <40-char commit sha>
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -17,7 +17,7 @@ const PIN = /https:\/\/pkg\.pr\.new\/dxos\/dxos\/@dxos\/drawing@[0-9a-z]+/g;
 
 const sha = process.argv[2];
 if (!sha || !/^[0-9a-f]{40}$/.test(sha)) {
-  console.error('Usage: pin-skill.mjs <40-char commit sha>');
+  console.error('Usage: pin-skill.ts <40-char commit sha>');
   process.exit(1);
 }
 
