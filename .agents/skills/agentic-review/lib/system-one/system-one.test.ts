@@ -13,7 +13,7 @@ import { join } from 'node:path';
 
 import { loadRules } from '../mdl.ts';
 import { estimateTokens, packQuestions, REQUEST_BUDGET, STATE_PLUS_QUESTION_BUDGET } from './budget.ts';
-import { classify, followUpBatches, runReview, uncertainBounds } from './checker.ts';
+import { classify, costForTokens, followUpBatches, predictCostUsd, runReview, uncertainBounds } from './checker.ts';
 import { parseImports } from './fetchers.ts';
 import { contextQuestion, ruleText, verdictQuestion } from './questions.ts';
 import { exportedNames, identifierWords, MAX_SEGMENTS, segmentLines, truncateText, windowLines } from './source.ts';
@@ -328,5 +328,29 @@ describe('two rounds', () => {
     });
     assert.equal(calls, 1);
     assert.equal(classify(verdicts[0], settings), 'clean');
+  });
+
+  test('sends nothing past the cost ceiling, and predicts a bound on both rounds', async () => {
+    let calls = 0;
+    const client = {
+      evaluate: async () => {
+        calls++;
+        return { answers: {} };
+      },
+    };
+    const options = {
+      root: process.cwd(),
+      base: null,
+      fileTargets: [{ file, rules: [rule] }],
+      prTargets: [],
+      settings,
+    };
+    const plan = await runReview({ ...options, client: null });
+    assert.ok(plan.stats.estimatedTokens > 0);
+    assert.equal(predictCostUsd(plan.stats.estimatedTokens), costForTokens(plan.stats.estimatedTokens * 2));
+    const { verdicts, stats } = await runReview({ ...options, client, maxCostUsd: 0 });
+    assert.equal(calls, 0);
+    assert.equal(stats.budgetSkipped, 1);
+    assert.equal(classify(verdicts[0], settings), 'unanswered');
   });
 });

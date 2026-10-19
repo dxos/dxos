@@ -34,6 +34,7 @@ test.describe('Canvas lattice', () => {
   });
 
   test('draws the lattice cells, and no grid, since the cells are what a shape lands on', async () => {
+    await page.getByTestId('theme-grid-lines').click();
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
     await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(0);
   });

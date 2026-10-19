@@ -6,20 +6,20 @@ import { describe, test } from 'vitest';
 
 import { Diagnostics } from '@dxos/diagram';
 
-import { type Box, type BuilderElement, SceneBuilder } from '../builder/index.ts';
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { type Box, type BuilderElement, ViewBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { diagnosticElements, toDiagramObjects } from './diagram.ts';
 
 const box = (x: number, y: number) => ({ x, y, width: 128, height: 64 });
-const rect = (id: string, frame: Box, label: string) => SceneBuilder.rect(id, frame).properties({ label });
-const build = (elements: BuilderElement[]) => SceneBuilder.scene('scene:test', elements).build().scenes[0];
+const rect = (id: string, frame: Box, label: string) => ViewBuilder.rect(id, frame).properties({ label });
+const build = (elements: BuilderElement[]) => ViewBuilder.view('scene:test', elements).build().views[0];
 
 describe('diagram', () => {
   test('a clean scene has no errors and one connector per link', ({ expect }) => {
     const scene = build([
       rect('scene:test/a', box(0, 0), 'A'),
       rect('scene:test/b', box(256, 0), 'B'),
-      SceneBuilder.link('line', 'scene:test/a', 'scene:test/b')
+      ViewBuilder.link('line', 'scene:test/a', 'scene:test/b')
         .id('scene:test/ab')
         .properties({ ends: { end: 'arrow' } }),
     ]);
@@ -51,8 +51,8 @@ describe('diagram', () => {
       rect('scene:test/b', box(512, 512), 'B'),
       rect('scene:test/c', box(512, 0), 'C'),
       rect('scene:test/d', box(0, 512), 'D'),
-      SceneBuilder.link('line', 'scene:test/a', 'scene:test/b'),
-      SceneBuilder.link('line', 'scene:test/c', 'scene:test/d'),
+      ViewBuilder.link('line', 'scene:test/a', 'scene:test/b'),
+      ViewBuilder.link('line', 'scene:test/c', 'scene:test/d'),
     ]);
     const { metrics } = Diagnostics.analyze(toDiagramObjects(scene, defaultNodeRegistry).objects);
     expect(metrics.crossings).toBe(1);

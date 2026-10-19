@@ -9,7 +9,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../builder/index.ts';
+import { ViewBuilder } from '../../builder/index.ts';
 import { type BackgroundGrid, THEME_IDS, createMemoryStore } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
@@ -22,36 +22,36 @@ const cell = (x: number, y: number, width = 4, height = 2) => ({
 
 /** One of each element: plain and hued rectangles at several tones, an ellipse, a note, a frame and links between them. */
 const createSample = () =>
-  SceneBuilder.scene('root', [
-    SceneBuilder.rect('plain', cell(0, 0)).properties({ label: 'Plain' }),
-    SceneBuilder.rect('blue', cell(6, 0)).properties({ label: 'Blue', style: { hue: 'blue' } }),
-    SceneBuilder.rect('strong', cell(12, 0)).properties({ label: 'Strong', style: { hue: 'violet', tone: 1 } }),
-    SceneBuilder.ellipse('ellipse', cell(0, 4, 4, 3)).properties({ label: 'Ellipse', style: { hue: 'teal' } }),
-    SceneBuilder.rect('rounded', cell(6, 4)).properties({
+  ViewBuilder.view('root', [
+    ViewBuilder.rect('plain', cell(0, 0)).properties({ label: 'Plain' }),
+    ViewBuilder.rect('blue', cell(6, 0)).properties({ label: 'Blue', style: { hue: 'blue' } }),
+    ViewBuilder.rect('strong', cell(12, 0)).properties({ label: 'Strong', style: { hue: 'violet', tone: 1 } }),
+    ViewBuilder.ellipse('ellipse', cell(0, 4, 4, 3)).properties({ label: 'Ellipse', style: { hue: 'teal' } }),
+    ViewBuilder.rect('rounded', cell(6, 4)).properties({
       label: 'Rounded',
       style: { hue: 'amber', rounded: true },
     }),
-    SceneBuilder.rect('outline', cell(12, 4)).properties({
+    ViewBuilder.rect('outline', cell(12, 4)).properties({
       label: 'Outline tone',
       style: { hue: 'red', tone: 0, lineStyle: 'dashed' },
     }),
-    SceneBuilder.note('note', cell(0, 8, 5, 2)).properties({ text: 'A note says what the diagram does not.' }),
-    SceneBuilder.scene('child', [
-      SceneBuilder.rect('inner-a', cell(0, 0)).properties({ label: 'Inside', style: { hue: 'green' } }),
-      SceneBuilder.rect('inner-b', cell(6, 0)).properties({ label: 'Frame', style: { hue: 'sky' } }),
-      SceneBuilder.link('smart', 'inner-a', 'inner-b').id('inner-link'),
+    ViewBuilder.note('note', cell(0, 8, 5, 2)).properties({ text: 'A note says what the diagram does not.' }),
+    ViewBuilder.view('child', [
+      ViewBuilder.rect('inner-a', cell(0, 0)).properties({ label: 'Inside', style: { hue: 'green' } }),
+      ViewBuilder.rect('inner-b', cell(6, 0)).properties({ label: 'Frame', style: { hue: 'sky' } }),
+      ViewBuilder.link('smart', 'inner-a', 'inner-b').id('inner-link'),
     ])
       .name('Child')
       .at(cell(7, 8, 9, 4))
       .properties({ label: 'Frame' }),
-    SceneBuilder.link('smart', 'plain', 'blue').id('l1'),
-    SceneBuilder.link('smart', 'blue', 'strong')
+    ViewBuilder.link('smart', 'plain', 'blue').id('l1'),
+    ViewBuilder.link('smart', 'blue', 'strong')
       .id('l2')
       .properties({ style: { hue: 'violet' }, ends: { end: 'arrow' } }),
-    SceneBuilder.link('smart', 'ellipse', 'rounded')
+    ViewBuilder.link('smart', 'ellipse', 'rounded')
       .id('l3')
       .properties({ style: { hue: 'teal' }, text: 'flows' }),
-    SceneBuilder.link('smart', 'rounded', 'outline')
+    ViewBuilder.link('smart', 'rounded', 'outline')
       .id('l4')
       .properties({ style: { hue: 'red', lineStyle: 'dashed' } }),
   ]).build();
@@ -61,7 +61,7 @@ type StoryArgs = { theme?: string; defaultTheme?: string };
 const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     const tree = createSample();
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+    return { store: createMemoryStore(tree.views), root: tree.root };
   }, []);
   // The args are where the view starts; the theme bar changes it from there.
   const [theme, setTheme] = useState(initialTheme);

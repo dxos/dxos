@@ -31,6 +31,30 @@ export const splitStatements = (script: string): string[] =>
     .filter((statement) => statement.length > 0);
 
 /**
+ * Names of the migrations in a `Migrator` record that `table` has not recorded yet, in order: those
+ * numbered past the highest id it holds, or all of them before the table exists. Lets a host say
+ * what an upgrade will run before running it.
+ */
+export const pending = (
+  migrations: Readonly<Record<string, unknown>>,
+  table: string,
+): Effect.Effect<string[], SqlError.SqlError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const tables = yield* sql<{
+      name: string;
+    }>`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ${table}`;
+    const [row] =
+      tables.length > 0
+        ? yield* sql<{ latest: number | null }>`SELECT MAX(migration_id) AS latest FROM ${sql(table)}`
+        : [];
+    const latest = row?.latest ?? 0;
+    return Object.keys(migrations)
+      .filter((name) => Number.parseInt(name, 10) > latest)
+      .sort();
+  });
+
+/**
  * Executes SQL scripts in order, one statement at a time.
  *
  * The raw executor: it runs everything it is given, every time, and records nothing. Recording what

@@ -280,6 +280,7 @@ node_modules
 .agents/reviews/*/STAGING.md
 .agents/reviews/*/groups.json
 .agents/reviews/*/groups/
+.agents/reviews/*/system-one.json
 
 # Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.

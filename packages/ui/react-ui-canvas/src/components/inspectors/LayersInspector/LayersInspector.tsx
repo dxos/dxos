@@ -15,7 +15,7 @@ import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { type InspectorProps } from '../types.ts';
 
 export type LayersInspectorProps = InspectorProps & {
-  /** The scene's layers, bottom first (`sceneLayers`); the panel lists them top first, as they stack. */
+  /** The scene's layers, bottom first (`viewLayers`); the panel lists them top first, as they stack. */
   layers: readonly Layer[];
   /** The selected layers; the top-most of them is the one new shapes go on. */
   selected?: readonly LayerId[];

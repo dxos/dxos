@@ -1,6 +1,6 @@
 # Views, objects and tags — Design
 
-Status: designed 2026-10-18, not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
+Status: designed 2026-10-18; Phase 1 (the View rename), Phase 2 (groups are Objects) and the orphans rule (§7.4) built 2026-10-19, the rest not built. Ledger: [TASKS.md](./TASKS.md). Supersedes the scene, frame, composite and
 layer terms of [DESIGN.md](./DESIGN.md) §4 and [ANIMATION.md](./ANIMATION.md) §4.1 where they conflict.
 
 ## 1. Goal
@@ -56,7 +56,8 @@ Tag     ─ labels ─▶ Node | Link | Instance | Object (many to many)
 1. **Two panels.** _Views_ shows the hierarchy under the root; _Objects_ is the library. An Object appears once in
    the library however many times it is placed.
 2. **Rename to View in the UI and the public API**, not the stored shape: `SceneId` → `ViewId`, `Canvas.Scenes` →
-   `Canvas.Views`, `frame` → `view`, `SceneKind` → `ViewKind`. A View stays a node pointing at a separate contents
+   `Canvas.Views` (there was no such part; `Canvas.Views` is the Views panel), `frame` → `view`, `SceneKind` →
+   `ViewKind`. A View stays a node pointing at a separate contents
    record, so persistence does not change; merging the record into the node is a later option (§7).
 3. **The Views panel shows the full hierarchy**: Views, their nodes and links, and inside each Instance its Object's
    contents (read-only there; edit by opening the Object). Rows select on the canvas; a filter narrows the tree by

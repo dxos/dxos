@@ -9,11 +9,19 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
+import {
+  AutomergeHost,
+  DataServiceImpl,
+  type DataServiceProps,
+  IndexStatusTracker,
+  SpaceStateManager,
+} from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -950,6 +958,45 @@ describe('RepoProxy', () => {
     expect(clientRepo.hasUnsavedChanges()).toBe(false);
   });
 
+  test('a proxy that is never closed is still collectable', { timeout: 30_000 }, async () => {
+    makeGlobalAnEventTargetLikeWorkerd();
+    setFlagsFromString('--expose_gc');
+    const gc: () => void = runInNewContext('gc');
+
+    let props: DataServiceProps | undefined;
+    await setup(undefined, (captured) => new DataServiceImpl((props = captured)));
+    invariant(props);
+    let live = 0;
+    const registry = new FinalizationRegistry(() => {
+      live--;
+    });
+    // Opened in its own frame so no local of the test's suspended frame still points at the last one.
+    const openUnclosedOnOwnTransport = async (handlers: DataService.Handlers) => {
+      const dataService = await EffectEx.runPromise(
+        makeInProcessClient(DataService.Rpcs, handlers).pipe(
+          Effect.provideService(Scope.Scope, Effect.runSync(Scope.make())),
+        ),
+      );
+      const repo = new RepoProxy(dataService, EffectContext.empty(), SpaceId.random());
+      await repo.open();
+      registry.register(repo, undefined);
+      live++;
+    };
+    for (let index = 0; index < 10; index++) {
+      await openUnclosedOnOwnTransport(new SubscriberlessDataService(props));
+    }
+
+    await expect
+      .poll(
+        () => {
+          gc();
+          return live;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(0);
+  });
+
   test('a closed proxy has nothing unsaved', { timeout: 5_000 }, async () => {
     let failing: FailingUpdateDataService | undefined;
     const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
@@ -1013,6 +1060,17 @@ describe('RepoProxy', () => {
  * A repo whose document handle is registered with a first subscription that
  * {@link DroppableDataService.dropSubscription} ends on demand.
  */
+const makeGlobalAnEventTargetLikeWorkerd = () => {
+  const target = new EventTarget();
+  for (const method of ['addEventListener', 'removeEventListener'] as const) {
+    const previous = Reflect.get(globalThis, method);
+    Reflect.set(globalThis, method, target[method].bind(target));
+    onTestFinished(() => {
+      Reflect.set(globalThis, method, previous);
+    });
+  }
+};
+
 const setupWithDroppableSubscription = async () => {
   let droppable: DroppableDataService | undefined;
   const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
@@ -1027,6 +1085,12 @@ const setupWithDroppableSubscription = async () => {
 
   return { droppable, host, clientRepo, clientHandle };
 };
+
+class SubscriberlessDataService extends DataServiceImpl {
+  override ['DataService.subscribe'](): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectStream.never;
+  }
+}
 
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
@@ -1224,6 +1288,7 @@ const setup = async (
       removedIndexEntries: 0,
       purgedFeedBlocks: 0,
     }),
+    indexStatus: new IndexStatusTracker(),
   });
 
   // Bridge the host's DataService handlers to an in-process effect-rpc client (no wire hop).
