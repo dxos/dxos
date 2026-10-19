@@ -277,6 +277,8 @@ status: `planned`, `in-progress`, `prototype`, `operational` or `failing`. Featu
 subfeatures and depend on each other; a **feature map** is a board of them. Specs stay in the repo, so a
 feature lists spec paths rather than holding the text.
 
+- Make a map with `projects-create-feature-map { name, features? }`; it is a board scoped to one plugin,
+  product or release. Find existing maps with `space-query-objects { typename: 'org.dxos.type.featureMap' }`.
 - Read a map with `projects-get-feature-map { map }` before changing it: it returns each feature's status,
   dependencies, linked tasks and showcases.
 - Create a feature with `projects-create-feature { name, map? }`. A feature's parts are **subfeatures**:
@@ -286,7 +288,7 @@ feature lists spec paths rather than holding the text.
   Record that one feature needs another with `projects-add-feature-dependency { feature, dependsOn }` — a
   dependency that would close a cycle is refused, and the error names the cycle.
   `projects-remove-feature-dependency` undoes one; `projects-add-feature-to-map { map, feature }` puts an
-  existing feature on a map.
+  existing feature on a map and `projects-remove-feature-from-map` takes it off.
 - **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`.
 - **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `in-progress`
   when work starts, `prototype` when it works in a demo, `operational` when people can rely on it, and

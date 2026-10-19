@@ -10,12 +10,29 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
+import { Text } from '@dxos/schema';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
 import * as FeatureMap from './FeatureMap.ts';
 import * as Showcase from './Showcase.ts';
+
+/**
+ * Every type a feature map touches. Declared on the operations (`types`) as well as in the plugin's schema
+ * capability, because a host that imports the handler set without activating the plugin — the EDGE
+ * operation-service behind MCP — registers only what the operations declare.
+ */
+export const TYPES = [
+  Feature.Feature,
+  Feature.DependsOn,
+  Feature.Implements,
+  FeatureMap.FeatureMap,
+  Showcase.Showcase,
+  Showcase.Demonstrates,
+  Task.Task,
+  Text.Text,
+];
 
 /** Adding the dependency would close a cycle; the message names the features on it. */
 export class DependencyCycleError extends BaseError.extend(
@@ -35,6 +52,7 @@ export const Create = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: [Feature.Feature, FeatureMap.FeatureMap],
   input: Schema.Struct({
     name: Schema.String,
     description: Schema.optional(Schema.String),
@@ -61,6 +79,7 @@ export const Update = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: [Feature.Feature],
   input: Schema.Struct({
     feature: Ref.Ref(Feature.Feature),
     name: Schema.optional(Schema.String),
@@ -83,6 +102,7 @@ export const AddDependency = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: [Feature.Feature, Feature.DependsOn],
   input: Schema.Struct({
     feature: Ref.Ref(Feature.Feature).annotate({ description: 'The feature that needs the other.' }),
     dependsOn: Ref.Ref(Feature.Feature).annotate({ description: 'The feature it needs.' }),
@@ -98,6 +118,7 @@ export const RemoveDependency = Operation.make({
     description: 'Removes the record that a feature needs another one. Removing a missing dependency is a no-op.',
   },
   services: [Database.Service],
+  types: [Feature.Feature, Feature.DependsOn],
   input: Schema.Struct({
     feature: Ref.Ref(Feature.Feature),
     dependsOn: Ref.Ref(Feature.Feature),
@@ -116,6 +137,7 @@ export const LinkTask = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: [Feature.Feature, Feature.Implements, Task.Task],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     feature: Ref.Ref(Feature.Feature),
@@ -135,6 +157,7 @@ export const CreateShowcase = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: [Showcase.Showcase, Showcase.Demonstrates, Text.Text],
   input: Schema.Struct({
     name: Schema.String,
     content: Schema.String.annotate({ description: 'Markdown body.' }),
@@ -154,6 +177,43 @@ export const AddToMap = Operation.make({
     description: 'Adds an existing feature to a feature map. Adding one twice is a no-op.',
   },
   services: [Database.Service],
+  types: [FeatureMap.FeatureMap, Feature.Feature],
+  input: Schema.Struct({
+    map: Ref.Ref(FeatureMap.FeatureMap),
+    feature: Ref.Ref(Feature.Feature),
+  }),
+  output: Schema.Void,
+}).pipe(Operation.mutation('write'));
+
+export const CreateMap = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.createFeatureMap'),
+    name: 'Create feature map',
+    icon: 'ph--graph--regular',
+    description: trim`
+      Creates a feature map: a board of features scoped to one plugin, product or release. Pass existing
+      features to place them on it; add more later with the add-feature-to-map operation.
+    `,
+  },
+  services: [Database.Service],
+  types: [FeatureMap.FeatureMap, Feature.Feature],
+  input: Schema.Struct({
+    name: Schema.String,
+    features: Schema.optional(Schema.Array(Ref.Ref(Feature.Feature))),
+  }),
+  output: Schema.Struct({ map: Type.getSchema(FeatureMap.FeatureMap) }),
+}).pipe(Operation.mutation('write'));
+
+export const RemoveFromMap = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.removeFeatureFromMap'),
+    name: 'Remove feature from map',
+    icon: 'ph--graph--regular',
+    description:
+      'Takes a feature off a feature map; the feature itself is kept. Removing a feature that is not on the map is a no-op.',
+  },
+  services: [Database.Service],
+  types: [FeatureMap.FeatureMap, Feature.Feature],
   input: Schema.Struct({
     map: Ref.Ref(FeatureMap.FeatureMap),
     feature: Ref.Ref(Feature.Feature),
@@ -185,6 +245,7 @@ export const GetMap = Operation.make({
     `,
   },
   services: [Database.Service],
+  types: TYPES,
   input: Schema.Struct({ map: Ref.Ref(FeatureMap.FeatureMap) }),
   output: Schema.Struct({ name: Schema.optional(Schema.String), features: Schema.Array(FeatureSummary) }),
 }).pipe(Operation.mutation('none'));

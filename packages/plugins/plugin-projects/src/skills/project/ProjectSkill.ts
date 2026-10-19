@@ -66,7 +66,9 @@ export const operations: readonly Operation.Definition.Any[] = [
   FeatureOperation.RemoveDependency,
   FeatureOperation.LinkTask,
   FeatureOperation.CreateShowcase,
+  FeatureOperation.CreateMap,
   FeatureOperation.AddToMap,
+  FeatureOperation.RemoveFromMap,
   FeatureOperation.GetMap,
 ];
 
