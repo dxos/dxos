@@ -50,39 +50,53 @@ export type FromGrantsOptions = {
   trusted?: readonly Principal.Principal[];
 };
 
-/** An in-memory source over explicit lists, which is also the shape tests use. */
+/**
+ * An in-memory source over explicit lists, which is also the shape tests use. A `once` consent is
+ * consumed by the first lookup that returns it, so it admits a single check.
+ */
 export const fromGrants = ({
   grants = [],
   revoked = [],
   members = [],
   consents = [],
   trusted = [],
-}: FromGrantsOptions): GrantSource => ({
-  get: (id) => Effect.succeed(grants.find((grant) => grant.id === id)),
-  grantsFor: (audience) => Effect.succeed(grants.filter((grant) => grant.audience === audience)),
-  isRevoked: (id) => Effect.succeed(revoked.includes(id)),
-  roleOf: (principal, spaceId) =>
-    Effect.succeed(members.find((member) => member.principal === principal && member.spaceId === spaceId)?.role),
-  ownsSubject: (issuer, subject) => {
-    if (trusted.includes(issuer)) {
-      return Effect.succeed(true);
-    }
-    const spaceId = Subject.spaceIdOf(subject);
-    if (spaceId === undefined) {
-      return Effect.succeed(false);
-    }
-    if (Principal.spaceIdOf(issuer) === spaceId) {
-      return Effect.succeed(true);
-    }
-    return Effect.succeed(
-      members.some(
-        (member) => member.principal === issuer && member.spaceId === spaceId && OWNING_ROLES.includes(member.role),
-      ),
-    );
-  },
-  consentFor: (grantId, by) =>
-    Effect.succeed(consents.find((consent) => consent.grantId === grantId && consent.by === by)),
-});
+}: FromGrantsOptions): GrantSource => {
+  const consumed = new Set<Consent.Consent>();
+  return {
+    get: (id) => Effect.succeed(grants.find((grant) => grant.id === id)),
+    grantsFor: (audience) => Effect.succeed(grants.filter((grant) => grant.audience === audience)),
+    isRevoked: (id) => Effect.succeed(revoked.includes(id)),
+    roleOf: (principal, spaceId) =>
+      Effect.succeed(members.find((member) => member.principal === principal && member.spaceId === spaceId)?.role),
+    ownsSubject: (issuer, subject) => {
+      if (trusted.includes(issuer)) {
+        return Effect.succeed(true);
+      }
+      const spaceId = Subject.spaceIdOf(subject);
+      if (spaceId === undefined) {
+        return Effect.succeed(false);
+      }
+      if (Principal.spaceIdOf(issuer) === spaceId) {
+        return Effect.succeed(true);
+      }
+      return Effect.succeed(
+        members.some(
+          (member) => member.principal === issuer && member.spaceId === spaceId && OWNING_ROLES.includes(member.role),
+        ),
+      );
+    },
+    consentFor: (grantId, by) =>
+      Effect.sync(() => {
+        const consent = consents.find(
+          (candidate) => candidate.grantId === grantId && candidate.by === by && !consumed.has(candidate),
+        );
+        if (consent?.scope === 'once') {
+          consumed.add(consent);
+        }
+        return consent;
+      }),
+  };
+};
 
 const anyOf = Effect.fnUntraced(function* <A>(
   sources: readonly GrantSource[],

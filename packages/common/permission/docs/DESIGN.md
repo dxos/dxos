@@ -415,6 +415,20 @@ manifest lists `permissions.defines: [SendEmail, ExecSandbox]`.
 
 ### Requiring it on an operation
 
+Implemented today: pipe the definition through `Guard.requires`.
+
+```ts
+import { Guard, Requirement } from '@dxos/permission';
+
+export const sendEmail = Operation.make({
+  meta: { key: DXN.make('org.dxos.operation.email.send'), name: 'Send email' },
+  input: Schema.Struct({ mailbox: Ref.Ref(Mailbox), to: Schema.String, body: Schema.String }),
+  output: Schema.Void,
+}).pipe(Guard.requires(Requirement.make(SendEmail, { subject: Requirement.arg('mailbox') })));
+```
+
+Proposed sugar, not implemented: a `permissions` option on `Operation.make`.
+
 ```ts
 import { Requirement } from '@dxos/permission';
 
@@ -426,7 +440,7 @@ export const sendEmail = Operation.make({
 });
 ```
 
-`permissions` is sugar for `Permission.Required.set([...])` on `meta.annotations`, so it serializes
+Either form stores the requirements in `Operation.RequiresAnnotation` on `meta.annotations`, so they serialize
 with the operation record and a remote invoker sees the same requirement. `Requirement.arg('mailbox')`
 reads the ref out of the input and turns it into the mailbox's `echo://` URI at check time. A fixed
 subject is `Requirement.make(ExecSandbox, { subject: 'echo://<spaceId>' })`.

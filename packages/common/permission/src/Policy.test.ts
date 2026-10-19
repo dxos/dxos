@@ -73,6 +73,14 @@ describe('Policy', () => {
     expect(Policy.isPolicy('not a policy')).toBe(false);
   });
 
+  test('callerOnly reads selectors from the root, not from inside all and any', ({ expect }) => {
+    const adminRole = Policy.any('.caller.roles', Policy.eq('.', 'admin'));
+    const everyAttachmentSmall = Policy.all('.args.attachments', Policy.lte('.size', 5));
+    expect(Policy.callerOnly([adminRole, everyAttachmentSmall])).toEqual([adminRole]);
+    expect(Policy.callerOnly([Policy.eq('.callerRole', 'admin')])).toEqual([]);
+    expect(Policy.callerOnly([Policy.not(Policy.eq('.caller.role', 'reader'))])).toHaveLength(1);
+  });
+
   test('conjoin dedupes and callerOnly keeps the predicates judged without args', ({ expect }) => {
     const shared = Policy.eq('.caller.role', 'editor');
     const conjoined = Policy.conjoin([[shared, Policy.like('.args.to', '*')], [shared]]);

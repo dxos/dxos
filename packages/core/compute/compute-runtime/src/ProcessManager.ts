@@ -253,11 +253,16 @@ export class Impl implements Manager {
       spawn: (definition, { location, ...options } = {}) =>
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot spawn a remote process.'))
-          : this.spawn(definition, {
-              origin,
-              ...options,
-              parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
-            }),
+          : this.#spawn(
+              definition,
+              {
+                origin,
+                ...options,
+                parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
+              },
+              // A detached child must not shed the guard of the process that spawned it.
+              this.#guards.get(pid),
+            ),
       handles: ({ location, ...options } = {}) =>
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot list remote processes.'))
@@ -380,6 +385,7 @@ export class Impl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#guards.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
@@ -406,6 +412,14 @@ export class Impl implements Manager {
     definition: Operation.Durable<I, O, any, _Rpcs>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
+    return this.#spawn(definition, options, undefined);
+  }
+
+  #spawn<I, O, _Rpcs extends Rpc.Any>(
+    definition: Operation.Durable<I, O, any, _Rpcs>,
+    options: Process.SpawnOptions | undefined,
+    spawnerGuard: Process.Guard | undefined,
+  ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
@@ -431,13 +445,12 @@ export class Impl implements Manager {
       };
       const parentGuard =
         options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
-      const guard =
-        parentGuard !== undefined && options?.guard !== undefined
-          ? Process.bothGuards(parentGuard, options.guard)
-          : (options?.guard ?? parentGuard);
-      if (guard !== undefined) {
-        this.#guards.set(id, guard);
-      }
+      const guard = [...new Set([spawnerGuard, parentGuard, options?.guard])]
+        .filter((candidate): candidate is Process.Guard => candidate !== undefined)
+        .reduce<Process.Guard | undefined>(
+          (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+          undefined,
+        );
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -612,6 +625,9 @@ export class Impl implements Manager {
       );
       handleRef = handle;
       this.#handles.set(id, handle);
+      if (guard !== undefined) {
+        this.#guards.set(id, guard);
+      }
       this.#refreshProcessTree();
 
       // Write the initial durable record, spawn event included, before running onSpawn: one write

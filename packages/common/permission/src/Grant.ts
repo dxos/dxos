@@ -24,7 +24,11 @@ export type ConsentCondition = Schema.Schema.Type<typeof ConsentCondition>;
  * substitute it; the role is what the signer claimed and `check` re-reads the real one from its
  * source rather than trusting it.
  */
-export const Signer = Schema.Struct({ did: Schema.String, role: Schema.String });
+const IdentityDid = Principal.Principal.pipe(
+  Schema.refine((value): value is Principal.Principal => Principal.kind(value) === 'identity'),
+);
+
+export const Signer = Schema.Struct({ did: IdentityDid, role: Schema.String });
 export type Signer = Schema.Schema.Type<typeof Signer>;
 
 /** The signed part of a grant: everything except `id` and the unsigned `meta`. */

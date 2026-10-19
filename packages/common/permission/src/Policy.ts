@@ -121,7 +121,23 @@ export const selectors = (predicate: Predicate): readonly Selector[] => {
 
 /** The predicates of a policy that read only caller facts, which is all that can be judged without args. */
 export const callerOnly = (policy: Policy): Policy =>
-  policy.filter((predicate) => selectors(predicate).every((selector) => selector.startsWith('.caller')));
+  policy.filter((predicate) => rootSelectors(predicate).every(isCallerSelector));
+
+const isCallerSelector = (selector: Selector): boolean => selector === '.caller' || selector.startsWith('.caller.');
+
+/** The selectors a predicate reads from the input root; those under `all` and `any` are item-relative. */
+const rootSelectors = (predicate: Predicate): readonly Selector[] => {
+  const [op] = predicate;
+  switch (op) {
+    case 'and':
+    case 'or':
+      return predicate[1].flatMap(rootSelectors);
+    case 'not':
+      return rootSelectors(predicate[1]);
+    default:
+      return [predicate[1]];
+  }
+};
 
 //
 // Evaluation.

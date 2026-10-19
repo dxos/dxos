@@ -494,9 +494,7 @@ describe('Check', () => {
 
     test('an admin can re-grant and the chain passes', async ({ expect }) => {
       const parent = await run(adminsDelegate());
-      const child = await run(
-        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:ALICE', role: 'admin' } }),
-      );
+      const child = await run(Grant.attenuate([parent], request, { now: NOW, signer: { did: alice, role: 'admin' } }));
       expect(child.issuer).toBe(space);
       expect(child.signer).toEqual({ did: 'did:halo:ALICE', role: 'admin' });
       const result = await check({
@@ -513,9 +511,7 @@ describe('Check', () => {
 
     test('a signer whose claimed role the source does not confirm fails at check', async ({ expect }) => {
       const parent = await run(adminsDelegate());
-      const child = await run(
-        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:BOB', role: 'admin' } }),
-      );
+      const child = await run(Grant.attenuate([parent], request, { now: NOW, signer: { did: bob, role: 'admin' } }));
       const requirement = Requirement.make('/space/read', { subject: Subject.space(SPACE_ID) });
       const demoted = await check({
         principal: agent,
@@ -542,18 +538,14 @@ describe('Check', () => {
 
     test('the signer is in the signed payload, so swapping it changes the id', async ({ expect }) => {
       const parent = await run(adminsDelegate());
-      const signed = await run(
-        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:ALICE', role: 'admin' } }),
-      );
-      expect(await run(Grant.verifyId({ ...signed, signer: { did: 'did:halo:BOB', role: 'admin' } }))).toBe(false);
+      const signed = await run(Grant.attenuate([parent], request, { now: NOW, signer: { did: alice, role: 'admin' } }));
+      expect(await run(Grant.verifyId({ ...signed, signer: { did: bob, role: 'admin' } }))).toBe(false);
     });
 
     test('an editor cannot re-grant', async ({ expect }) => {
       const parent = await run(adminsDelegate());
       const error = await run(
-        Grant.attenuate([parent], request, { now: NOW, signer: { did: 'did:halo:BOB', role: 'editor' } }).pipe(
-          Effect.flip,
-        ),
+        Grant.attenuate([parent], request, { now: NOW, signer: { did: bob, role: 'editor' } }).pipe(Effect.flip),
       );
       expect(AttenuationError.is(error)).toBe(true);
       expect(error.message).toContain('role');
@@ -617,6 +609,17 @@ describe('Check', () => {
         now: Grant.inHours(2, NOW),
       });
       expect(later).toMatchObject({ _tag: 'Denied', reason: { kind: 'consent' } });
+    });
+
+    test('a once consent admits a single check from the same source', async ({ expect }) => {
+      const grant = await run(needsAlice());
+      const consent = Consent.make({ grantId: grant.id, by: alice, scope: 'once', grantedAt: NOW });
+      const source = sourceWith({ grants: [grant], consents: [consent] });
+      expect(
+        Check.isAllowed(await check({ principal: agent, requirement: sendEmail, args: { mailbox }, source })),
+      ).toBe(true);
+      const again = await check({ principal: agent, requirement: sendEmail, args: { mailbox }, source });
+      expect(again).toMatchObject({ _tag: 'Denied', reason: { kind: 'consent' } });
     });
 
     test("someone else's consent does not count", async ({ expect }) => {

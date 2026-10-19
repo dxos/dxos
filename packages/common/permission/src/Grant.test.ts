@@ -49,6 +49,17 @@ describe('Grant', () => {
     expect(Grant.decode(JSON.parse(JSON.stringify(Grant.encode(grant))))).toEqual(grant);
   });
 
+  test('rejects a signer that is not a HALO identity', ({ expect }) => {
+    const payload = { id: 'x', issuer: alice, audience: agent, permissions: [] };
+    expect(() =>
+      Grant.decode({ ...payload, signer: { did: 'echo://BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA', role: 'admin' } }),
+    ).toThrow();
+    expect(() => Grant.decode({ ...payload, signer: { did: 'not a did', role: 'admin' } })).toThrow();
+    expect(Grant.decode({ ...payload, signer: { did: 'did:halo:ALICE', role: 'admin' } }).signer?.did).toBe(
+      'did:halo:ALICE',
+    );
+  });
+
   test('rejects a malformed principal', ({ expect }) => {
     expect(() => Grant.decode({ id: 'x', issuer: 'alice', audience: agent, permissions: [] })).toThrow();
   });

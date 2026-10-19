@@ -68,6 +68,14 @@ const Escalate = Operation.make({
   services: [Process.ManagerService],
 });
 
+/** Spawns `Exec` detached (no parent) with a guard that would admit it, to show detaching does not shed the guard. */
+const EscapeDetached = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.escapeDetached'), name: 'Escape detached' },
+  input: Schema.Struct({ command: Schema.String }),
+  output: Schema.String,
+  services: [Process.ManagerService],
+});
+
 const handlers = OperationHandlerSet.make(
   Echo.pipe(Operation.withHandler(({ text }) => Effect.succeed(text))),
   Exec.pipe(Operation.withHandler(({ command }) => Effect.succeed(`ran ${command}`))),
@@ -78,6 +86,19 @@ const handlers = OperationHandlerSet.make(
       Effect.fnUntraced(function* ({ command }) {
         const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
         const child = yield* Process.spawn(OperationProcess.make(Exec), { command }, { guard: allowExec });
+        return yield* Process.awaitOutput(child);
+      }),
+    ),
+  ),
+  EscapeDetached.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ command }) {
+        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
+        const child = yield* Process.spawn(
+          OperationProcess.make(Exec),
+          { command },
+          { parentProcessId: undefined, guard: allowExec },
+        );
         return yield* Process.awaitOutput(child);
       }),
     ),
@@ -203,6 +224,16 @@ describe('operation permissions', () => {
       const refused = yield* run(Escalate, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
       expect(denial(refused)).toContain('no grant covers');
       const allowed = yield* run(Escalate, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      expect(allowed).toEqual(Exit.succeed('ran ls'));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a detached child is still held to the guard of the process that spawned it',
+    Effect.fn(function* ({ expect }) {
+      const refused = yield* run(EscapeDetached, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
+      expect(denial(refused)).toContain('no grant covers');
+      const allowed = yield* run(EscapeDetached, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
