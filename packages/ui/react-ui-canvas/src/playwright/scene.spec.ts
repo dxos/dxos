@@ -228,8 +228,8 @@ test.describe('Canvas', () => {
     await page.mouse.up();
     expect(await scene.linkCount()).toBe(3);
     // A click on the background ends the link tool: the select tool is back.
-    await expect(page.getByTestId('palette-L')).not.toHaveClass(/bg-primary-500\/20/);
-    await expect(page.getByTestId('palette-V')).toHaveClass(/bg-primary-500\/20/);
+    await expect(page.getByTestId('palette-L')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('palette-V')).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('picking a creation tool clears the selection', async () => {
