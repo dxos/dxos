@@ -85,18 +85,39 @@ export const Test: Story = {
     // 2. Scrub to the middle.
     const track = canvas.getByTestId('timeline-track');
     const rect = track.getBoundingClientRect();
-    await fireEvent.pointerDown(track, { clientX: rect.left + rect.width / 2, clientY: rect.top + 4, pointerId: 1 });
+    await userEvent.pointer({
+      keys: '[MouseLeft]',
+      target: track,
+      coords: { clientX: rect.left + rect.width / 2, clientY: rect.top + 4 },
+    });
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('2.00 / 4.00'));
 
-    // 3. A key at the playhead, removed and added back by the same control.
-    const toggle = canvas.getByTestId('timeline-toggle-key');
-    await userEvent.click(toggle);
+    // 3. From the menu: a key at the playhead, deleted and added back; auto-key turns off and on.
+    const choose = async (testId: string) => {
+      await userEvent.click(canvas.getByTestId('timeline-menu'));
+      const item = await within(document.body).findByTestId(testId);
+      await waitFor(() => expect(item).toBeVisible());
+      // The menu ignores synthetic pointer events on its items, so the item is highlighted and chosen from the keyboard.
+      for (let step = 0; step < 4 && !item.hasAttribute('data-highlighted'); step++) {
+        await userEvent.keyboard('{ArrowDown}');
+      }
+      await expect(item).toHaveAttribute('data-highlighted');
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(item).not.toBeVisible());
+    };
+    await choose('timeline-add-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
-    await expect(toggle).toHaveAttribute('data-state', 'on');
-    await userEvent.click(toggle);
+    await choose('timeline-remove-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
-    await userEvent.click(toggle);
+    await choose('timeline-add-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
+    await choose('timeline-auto-key');
+    await userEvent.click(canvas.getByTestId('timeline-menu'));
+    await expect(await within(document.body).findByTestId('timeline-auto-key')).toHaveAttribute(
+      'data-state',
+      'unchecked',
+    );
+    await userEvent.keyboard('{Escape}');
 
     // 4. Jump between keys from the track, and delete one.
     track.focus();
@@ -167,13 +188,12 @@ export const Test: Story = {
   },
 };
 
-/** Read-only: play and scrub stay, the key and auto-key controls go. */
+/** Read-only: play and scrub stay, the key and auto-key menu goes. */
 export const Readonly: Story = {
   args: { readonly: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('timeline-play')).toBeInTheDocument();
-    await expect(canvas.queryByTestId('timeline-toggle-key')).toBeNull();
-    await expect(canvas.queryByTestId('timeline-auto-key')).toBeNull();
+    await expect(canvas.queryByTestId('timeline-menu')).toBeNull();
   },
 };

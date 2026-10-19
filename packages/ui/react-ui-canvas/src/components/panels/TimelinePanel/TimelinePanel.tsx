@@ -5,6 +5,7 @@
 import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -246,29 +247,40 @@ export const TimelinePanel = ({
       </span>
       {!readonly && (
         <>
-          {/* One control: on a key it removes the key, elsewhere it adds one. */}
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            classNames={NO_RING}
-            icon={current !== undefined ? 'ph--diamond--fill' : 'ph--diamond--regular'}
-            label={current !== undefined ? 'Remove key (Delete)' : 'Add key (K)'}
-            disabled={current !== undefined ? !onRemoveKey : !onAddKey}
-            data-testid='timeline-toggle-key'
-            data-state={current !== undefined ? 'on' : 'off'}
-            onClick={current !== undefined ? onRemoveKey : onAddKey}
-          />
-          {/* The record dot says whether it is on; a pressed button's fill would shout over the bar. */}
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon={autoKey ? 'ph--record--fill' : 'ph--record--regular'}
-            label={autoKey ? 'Auto-key on: edits away from the start make keys' : 'Auto-key off'}
-            classNames={mx(NO_RING, autoKey ? 'text-error-text' : 'text-fg-muted')}
-            data-testid='timeline-auto-key'
-            data-state={autoKey ? 'on' : 'off'}
-            onClick={() => onAutoKeyChange?.(!autoKey)}
-          />
+          {/* The less frequent actions, in one menu: the keyboard covers keying from the play button. */}
+          <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
+            <Menu.Trigger asChild>
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                classNames={NO_RING}
+                icon='ph--dots-three-vertical--regular'
+                label='Timeline actions'
+                data-testid='timeline-menu'
+              />
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item
+                item={{ value: 'add-key', label: 'Add key', shortcut: '↵' }}
+                disabled={current !== undefined || !onAddKey}
+                data-testid='timeline-add-key'
+                onSelect={() => onAddKey?.()}
+              />
+              <Menu.Item
+                item={{ value: 'remove-key', label: 'Delete key', shortcut: '⌫' }}
+                disabled={current === undefined || !onRemoveKey}
+                data-testid='timeline-remove-key'
+                onSelect={() => onRemoveKey?.()}
+              />
+              <Menu.Separator />
+              <Menu.CheckboxItem
+                item={{ value: 'auto-key', label: 'Auto-key' }}
+                checked={!!autoKey}
+                data-testid='timeline-auto-key'
+                onCheckedChange={(checked) => onAutoKeyChange?.(checked === true)}
+              />
+            </Menu.Content>
+          </Menu.Root>
         </>
       )}
     </Toolbar.Root>
