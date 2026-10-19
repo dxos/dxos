@@ -209,3 +209,7 @@ export const Brush: Story = {
 export const Orbits: Story = {
   args: { variant: 'ink', ...TUNING_PRESETS.orbits },
 };
+
+export const Scribble: Story = {
+  args: { variant: 'ink', ...TUNING_PRESETS.scribble },
+};

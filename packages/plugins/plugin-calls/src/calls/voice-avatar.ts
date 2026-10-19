@@ -82,6 +82,16 @@ export const TUNING_PRESETS = {
     separation: 0.06,
     thickness: 1.9,
   },
+  /** Six tight, trembling strands with no blots, like a hand-scribbled ring. */
+  scribble: {
+    waveAmplitude: 1.4,
+    jitter: 3.6,
+    waveSpeed: 0.4,
+    particles: 0,
+    strands: 6,
+    separation: 0.02,
+    thickness: 1.2,
+  },
 } satisfies Record<string, VoiceAvatarTuning>;
 
 /**
