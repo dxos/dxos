@@ -103,7 +103,7 @@ export const Test: Story = {
 
     const content = body.getByTestId('save-tooltip-xs');
     await expect(content).not.toHaveAttribute('data-surface');
-    // Inherits the trigger's row size (Phase 4 decision 2).
+    // Inherits the trigger's row size.
     await expect(content).toHaveAttribute('data-size', 'xs');
     // The inverted surface, as the current Tooltip: not the popup level, and the arrow shares the fill.
     const fill = getComputedStyle(content).backgroundColor;

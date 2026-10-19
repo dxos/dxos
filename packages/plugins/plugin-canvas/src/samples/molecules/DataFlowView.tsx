@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, us
 import {
   type BackgroundGrid,
   type Bounds,
-  SceneView,
+  Canvas,
   createMemoryStore,
   defaultThemeRegistry,
   resolveLook,
@@ -230,7 +230,7 @@ export const DataFlowView = ({
   // The containers are drawn by the overlay, in the theme's style set (glass for one the sample has no palette for).
   const overlayLook = LOOKS.find((candidate) => candidate === look.styleSet.id) ?? 'glass';
   return (
-    <SceneView.Root
+    <Canvas.Root
       store={store}
       root={DATA_FLOW_SCENE_ID}
       readonly
@@ -245,7 +245,7 @@ export const DataFlowView = ({
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
-      <SceneView.Canvas
+      <Canvas.Viewport
         backgroundBounds={field}
         overlay={
           <MoleculeOverlay
@@ -269,11 +269,11 @@ export const DataFlowView = ({
       />
       {chrome && (
         <>
-          <SceneView.Navigation />
-          <SceneView.Debug />
-          <SceneView.Theme />
+          <Canvas.Navigation />
+          <Canvas.Debug />
+          <Canvas.Theme />
         </>
       )}
-    </SceneView.Root>
+    </Canvas.Root>
   );
 };

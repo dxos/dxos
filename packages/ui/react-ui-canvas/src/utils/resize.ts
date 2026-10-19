@@ -7,8 +7,8 @@
 // view only feeds it the drag and the projection receives one `resize` intent.
 //
 
-import { type Handle } from '../model/atoms.ts';
-import { type Bounds, type Point, type Size } from '../model/types.ts';
+import { type Handle } from '../engine/index.ts';
+import { type Bounds, type Point, type Size } from '../model/index.ts';
 
 export type ResizeOptions = {
   minSize: Size;

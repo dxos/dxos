@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { createTimeline, setKey } from '../model/timeline.ts';
-import { type GeneratorNode, type Scene } from '../model/types.ts';
-import { pathBounds } from '../utils/path.ts';
+import { type GeneratorNode, type Scene, createTimeline, setKey } from '../model/index.ts';
+import { pathBounds } from '../utils/index.ts';
 import { checkGenerator } from './check.ts';
 import { createEsbuildCompiler, loadGenerator } from './compile.ts';
 import { GeneratorHost } from './host.ts';

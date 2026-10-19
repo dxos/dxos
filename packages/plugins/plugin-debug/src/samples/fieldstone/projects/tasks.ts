@@ -1006,73 +1006,69 @@ const makeTask = (
 };
 
 /** One TaskSet per project, with its milestones, root tasks and subtasks. */
-export const makeTasks = ({ team, timeline, okapiIncident }: TasksInput) =>
-  Effect.gen(function* () {
-    const { now, daysFromNow } = yield* SampleSpace.Clock;
-    const milestones = Object.fromEntries(
-      MILESTONE_SEEDS.map((seed) => [
-        seed.key,
-        Milestone.make({
-          name: seed.name,
-          description: seed.description,
-          targetDate: daysFromNow(seed.target).slice(0, 10),
-        }),
-      ]),
-    ) as Record<MilestoneKey, Milestone.Milestone>;
+export const makeTasks = Effect.fnUntraced(function* ({ team, timeline, okapiIncident }: TasksInput) {
+  const { now, daysFromNow } = yield* SampleSpace.Clock;
+  const milestones = Object.fromEntries(
+    MILESTONE_SEEDS.map((seed) => [
+      seed.key,
+      Milestone.make({
+        name: seed.name,
+        description: seed.description,
+        targetDate: daysFromNow(seed.target).slice(0, 10),
+      }),
+    ]),
+  ) as Record<MilestoneKey, Milestone.Milestone>;
 
-    const tasks = Object.fromEntries(
-      TASK_SEEDS.map((seed) => [
-        seed.key,
-        makeTask(seed, { team, timeline, okapiIncident }, now.getTime(), milestones),
-      ]),
-    ) as Record<TaskKey, Task.Task>;
+  const tasks = Object.fromEntries(
+    TASK_SEEDS.map((seed) => [seed.key, makeTask(seed, { team, timeline, okapiIncident }, now.getTime(), milestones)]),
+  ) as Record<TaskKey, Task.Task>;
 
-    const entries: Array<[ProjectKey, TaskSet.TaskSet]> = [];
-    for (const project of PROJECT_KEYS) {
-      const taskSet = yield* Database.add(TaskSet.make({ name: PROJECT_NAMES[project] }));
-      const seeds: ReadonlyArray<TaskSeed> = TASK_SEEDS.filter((seed) => seed.project === project);
-      yield* SampleSpace.children(
-        taskSet,
-        MILESTONE_SEEDS.filter((seed) => seed.project === project).map((seed) => milestones[seed.key]),
-        (taskSet, refs) => {
-          taskSet.milestones = refs;
-        },
-      );
-      yield* SampleSpace.children(
-        taskSet,
-        seeds.filter((seed) => !seed.parent).map((seed) => tasks[seed.key as TaskKey]),
-        (taskSet, refs) => {
-          taskSet.tasks = refs;
-        },
-      );
-      for (const parent of seeds) {
-        const subtasks = seeds.filter((seed) => seed.parent === parent.key);
-        if (subtasks.length > 0) {
-          yield* SampleSpace.children(
-            tasks[parent.key as TaskKey],
-            subtasks.map((seed) => tasks[seed.key as TaskKey]),
-            (task, refs) => {
-              task.subtasks = refs;
-            },
-          );
-        }
-      }
-      entries.push([project, taskSet]);
-    }
-
-    for (const seed of TASK_SEEDS as ReadonlyArray<TaskSeed>) {
-      if (seed.dependsOn) {
-        Obj.update(tasks[seed.key as TaskKey], (task) => {
-          task.dependsOn = seed.dependsOn!.map((key) => Ref.make(tasks[key as TaskKey]));
-        });
+  const entries: Array<[ProjectKey, TaskSet.TaskSet]> = [];
+  for (const project of PROJECT_KEYS) {
+    const taskSet = yield* Database.add(TaskSet.make({ name: PROJECT_NAMES[project] }));
+    const seeds: ReadonlyArray<TaskSeed> = TASK_SEEDS.filter((seed) => seed.project === project);
+    yield* SampleSpace.children(
+      taskSet,
+      MILESTONE_SEEDS.filter((seed) => seed.project === project).map((seed) => milestones[seed.key]),
+      (taskSet, refs) => {
+        taskSet.milestones = refs;
+      },
+    );
+    yield* SampleSpace.children(
+      taskSet,
+      seeds.filter((seed) => !seed.parent).map((seed) => tasks[seed.key as TaskKey]),
+      (taskSet, refs) => {
+        taskSet.tasks = refs;
+      },
+    );
+    for (const parent of seeds) {
+      const subtasks = seeds.filter((seed) => seed.parent === parent.key);
+      if (subtasks.length > 0) {
+        yield* SampleSpace.children(
+          tasks[parent.key as TaskKey],
+          subtasks.map((seed) => tasks[seed.key as TaskKey]),
+          (task, refs) => {
+            task.subtasks = refs;
+          },
+        );
       }
     }
+    entries.push([project, taskSet]);
+  }
 
-    return {
-      taskSets: Object.fromEntries(entries) as Record<ProjectKey, TaskSet.TaskSet>,
-      tasks,
-    } satisfies TasksResult;
-  });
+  for (const seed of TASK_SEEDS as ReadonlyArray<TaskSeed>) {
+    if (seed.dependsOn) {
+      Obj.update(tasks[seed.key as TaskKey], (task) => {
+        task.dependsOn = seed.dependsOn!.map((key) => Ref.make(tasks[key as TaskKey]));
+      });
+    }
+  }
+
+  return {
+    taskSets: Object.fromEntries(entries) as Record<ProjectKey, TaskSet.TaskSet>,
+    tasks,
+  } satisfies TasksResult;
+});
 
 export const PROJECT_NAMES: Record<ProjectKey, string> = {
   cache: 'Cairn 1.8: remote cache v2',

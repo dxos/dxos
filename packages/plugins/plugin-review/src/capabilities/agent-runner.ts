@@ -119,14 +119,15 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<Edi
       (relation: AnchoredTo.AnchoredTo) =>
         Relation.getSource(relation) === thread && Relation.getTarget(relation) === subject,
     );
-    if (!ours?.anchor) {
+    const anchor = ours?.anchor;
+    if (!anchor) {
       return { kind: 'document', text };
     }
-    try {
+    return yield* Effect.try(() => {
       const accessor = Doc.createAccessor(text, ['content']);
-      const range = getRangeFromCursor(accessor, ours.anchor);
+      const range = getRangeFromCursor(accessor, anchor);
       if (!range || range.start === range.end) {
-        return { kind: 'document', text };
+        return { kind: 'document', text } satisfies EditTarget;
       }
       const content = (text as unknown as { content: string }).content ?? '';
       return {
@@ -136,11 +137,13 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<Edi
         to: range.end,
         snippet: content.slice(range.start, range.end),
         relation: ours,
-      };
-    } catch (err) {
-      log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
-      return { kind: 'document', text };
-    }
+      } satisfies EditTarget;
+    }).pipe(
+      Effect.catch((err) => {
+        log.warn('failed to resolve anchored range; falling back to whole-document edit', { error: err });
+        return Effect.succeed({ kind: 'document', text } satisfies EditTarget);
+      }),
+    );
   });
 
 /**

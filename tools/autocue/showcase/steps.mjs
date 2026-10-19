@@ -194,7 +194,18 @@ export const prep = (plugins = []) => ({
     }
     if (plugins.length > 0) {
       const ids = plugins.map((id) => (id.includes('.') ? id : `org.dxos.plugin.${id}`));
-      await page.evaluate((ids) => composer.invoke('org.dxos.operation.registry.enablePlugins', { ids }), ids);
+      // The operation invoker registers after boot; on a slow machine the first call can arrive before it.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await page.evaluate((ids) => composer.invoke('org.dxos.operation.registry.enablePlugins', { ids }), ids);
+          break;
+        } catch (error) {
+          if (attempt === 10 || !String(error).includes('CapabilityNotFoundError')) {
+            throw error;
+          }
+          await page.waitForTimeout(2_000);
+        }
+      }
       await page.waitForTimeout(2_000);
     }
   },

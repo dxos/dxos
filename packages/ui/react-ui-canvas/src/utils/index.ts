@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './builder.ts';
 export * from './camera.ts';
+export * from './chrome.ts';
 export * from './clipboard.ts';
 export * from './compose.ts';
 export * from './diagram.ts';
@@ -17,6 +17,7 @@ export * from './order.ts';
 export * from './parts.ts';
 export * from './path.ts';
 export * from './ports.ts';
+export * from './properties.ts';
 export * from './resize.ts';
 export * from './route.ts';
 export * from './scenes.ts';

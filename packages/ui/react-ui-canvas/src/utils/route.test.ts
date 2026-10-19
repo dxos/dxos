@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Link, type Scene } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { SceneBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { type Link, type Scene } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import {
   insertIndex,

@@ -7,7 +7,7 @@
 // generator never touches the DOM; it returns `Shape` lists, plain data the generator layer draws.
 //
 
-import { type Bounds, type Node, type Point, type Scene } from '../model/types.ts';
+import { type Bounds, type Node, type Point, type Scene } from '../model/index.ts';
 
 /** What a generator draws, in scene coordinates. A hue is a theme hue; `color` a CSS colour, which wins over it. */
 export type Shape =

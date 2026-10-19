@@ -146,46 +146,45 @@ export type ProjectsInput = {
 };
 
 /** The four projects, each owning its instructions and task set and naming its repository. */
-export const makeProjects = ({ team, taskSets, artifacts, inboxCrm }: ProjectsInput) =>
-  Effect.gen(function* () {
-    const repos = yield* SampleSpace.seed(REPO_SEEDS, (seed) =>
-      Database.add(
-        Repo.make({
-          name: seed.name,
-          owner: 'alien-labs',
-          url: `https://github.com/alien-labs/${seed.name}`,
-          description: seed.description,
-          defaultBranch: 'main',
-          organization: Ref.make(team.orgs.fieldstone),
-        }),
-      ),
-    );
-
-    const entries: Array<[ProjectKey, Project.Project]> = [];
-    for (const [key, seed] of Object.entries(PROJECT_SEEDS) as Array<[ProjectKey, ProjectSeed]>) {
-      const repo = repos[seed.repo];
-      const project = Project.make({
-        name: PROJECT_NAMES[key],
+export const makeProjects = Effect.fnUntraced(function* ({ team, taskSets, artifacts, inboxCrm }: ProjectsInput) {
+  const repos = yield* SampleSpace.seed(REPO_SEEDS, (seed) =>
+    Database.add(
+      Repo.make({
+        name: seed.name,
+        owner: 'alien-labs',
+        url: `https://github.com/alien-labs/${seed.name}`,
         description: seed.description,
-        status: 'active',
-        taskSet: Ref.make(taskSets[key]),
-        repo: Ref.make(repo),
-        repositories: [Ref.make(repo)],
-        artifacts: seed.artifacts.map((artifact) => Ref.make(artifacts[artifact])),
-      });
-      const instructions = Instructions.make({
-        name: 'Instructions',
-        text: seed.instructions(inboxCrm),
-        skills: skillRefs([...BASE_SKILLS, ...(inboxCrm ? [INBOX_SKILL] : [])]),
-        objects: seed.context(team, inboxCrm).map((object) => Ref.make(object)),
-      });
-      // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
-      Obj.update(project, (project) => {
-        project.instructions = Ref.make(instructions);
-      });
-      Obj.setParent(instructions, project);
-      entries.push([key, yield* Database.add(project)]);
-    }
+        defaultBranch: 'main',
+        organization: Ref.make(team.orgs.fieldstone),
+      }),
+    ),
+  );
 
-    return Object.fromEntries(entries) as Record<ProjectKey, Project.Project>;
-  });
+  const entries: Array<[ProjectKey, Project.Project]> = [];
+  for (const [key, seed] of Object.entries(PROJECT_SEEDS) as Array<[ProjectKey, ProjectSeed]>) {
+    const repo = repos[seed.repo];
+    const project = Project.make({
+      name: PROJECT_NAMES[key],
+      description: seed.description,
+      status: 'active',
+      taskSet: Ref.make(taskSets[key]),
+      repo: Ref.make(repo),
+      repositories: [Ref.make(repo)],
+      artifacts: seed.artifacts.map((artifact) => Ref.make(artifacts[artifact])),
+    });
+    const instructions = Instructions.make({
+      name: 'Instructions',
+      text: seed.instructions(inboxCrm),
+      skills: skillRefs([...BASE_SKILLS, ...(inboxCrm ? [INBOX_SKILL] : [])]),
+      objects: seed.context(team, inboxCrm).map((object) => Ref.make(object)),
+    });
+    // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
+    Obj.update(project, (project) => {
+      project.instructions = Ref.make(instructions);
+    });
+    Obj.setParent(instructions, project);
+    entries.push([key, yield* Database.add(project)]);
+  }
+
+  return Object.fromEntries(entries) as Record<ProjectKey, Project.Project>;
+});

@@ -107,7 +107,10 @@ describe('Alien Labs projects', () => {
     const chatsByTask = new Map<string, ArchiveObject[]>();
     for (const chat of chats) {
       for (const ref of chat.tasks ?? []) {
-        chatsByTask.set(idOf(ref)!, [...(chatsByTask.get(idOf(ref)!) ?? []), chat]);
+        const taskId = idOf(ref);
+        if (taskId) {
+          chatsByTask.set(taskId, [...(chatsByTask.get(taskId) ?? []), chat]);
+        }
       }
     }
     const statusEvents = events.filter((event) => event.type === 'task.statusChanged');

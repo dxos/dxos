@@ -70,8 +70,10 @@ import {
   type DocumentSize,
   OVERSIZED_DOCUMENT_CHANGES,
   OVERSIZED_DOCUMENT_OPS,
+  QUARANTINE_MIN_OPS,
   type QuarantineReason,
   type QuarantineRecord,
+  countStoredOps,
   isOutOfMemoryError,
   oversizeLevel,
 } from './quarantine.ts';
@@ -537,9 +539,20 @@ export class AutomergeHost extends Resource {
           log.warn('document load failed', { documentId, source, error });
           return;
         }
-        this.quarantineDocument(documentId, { reason: 'load-failed', error }).catch((err) =>
-          log.error('failed to quarantine document', { documentId, err }),
-        );
+        if (this.#quarantined.has(documentId)) {
+          return;
+        }
+        // Once the heap is full every load fails, so only a document big enough to be the cause is quarantined.
+        this.#countStoredOps(documentId)
+          .then((ops) => {
+            if (ops < QUARANTINE_MIN_OPS) {
+              log.warn('document ran out of memory but holds too few ops to be the cause', { documentId, ops, error });
+              return;
+            }
+            log.warn('quarantining a document that ran out of memory', { documentId, source, ops, error });
+            return this.quarantineDocument(documentId, { reason: 'load-failed', error });
+          })
+          .catch((err) => log.error('failed to quarantine document', { documentId, err }));
       },
     );
 
@@ -864,6 +877,26 @@ export class AutomergeHost extends Resource {
     return this.#quarantined;
   }
 
+  /** A lower bound on a document's ops, read from its stored bytes since loading it is what ran out of memory. */
+  async #countStoredOps(documentId: DocumentId): Promise<number> {
+    // Settled apart so one failed read does not hide the ops in the others.
+    const recordsUnder = async (...prefixes: string[][]): Promise<Uint8Array[]> =>
+      (await Promise.allSettled(prefixes.map((prefix) => this._storage.loadRange(prefix))))
+        .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+        .flatMap(({ data }) => (data ? [data] : []));
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    // Either store may hold the whole document, so each is counted on its own rather than summed.
+    return Math.max(
+      await countStoredOps(await recordsUnder([documentId])),
+      await countStoredOps(
+        await recordsUnder(
+          [SUBDUCTION_PREFIX, 'blobs', sedimentreeId],
+          [SUBDUCTION_PREFIX, 'fragment-blobs', sedimentreeId],
+        ),
+      ),
+    );
+  }
+
   /**
    * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
    * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
@@ -898,7 +931,8 @@ export class AutomergeHost extends Resource {
     // Detaches every source, so none retries the load.
     await this._repo.removeFromCache(documentId);
 
-    log.warn('quarantined document', { documentId, reason, error: record.error });
+    // Debug level: every open re-applies the `retired` entries, and a load failure already warned where it was caught.
+    log('quarantined document', { documentId, reason });
     this.documentQuarantined.emit(record);
   }
 
@@ -1494,7 +1528,7 @@ export class AutomergeHost extends Resource {
     // Read the spaceKey iff the document is already loaded; otherwise let the share policy
     // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
     // `isDocumentInRemoteCollection` check on the caller.
-    const handle = this._repo.getHandle(documentId as any);
+    const handle = this._repo.getHandle(documentId as DocumentId);
     if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
       const doc = handle.doc();
       if (doc) {

@@ -1,5 +1,39 @@
 # @dxos/plugin-canvas
 
+## 0.16.0
+
+### Minor Changes
+
+- 4be32be: `SceneView` is renamed `Canvas` (`SceneView.Canvas` is now `Canvas.Viewport`), and its inspectors sit in one `InspectorPanel` that docks beside the canvas or floats over it, with each inspector framed by an `InspectorSection`. Background dots now hold their size while the view moves, a trackpad swipe pans in both directions, each drawn frame opens onto a scene of its own, and drilling into an empty or nested frame zooms and returns level by level. A number field with a fractional step rounds to that step, and opacity is bounded to 0–1.
+
+### Patch Changes
+
+- Updated dependencies [4be32be]
+- Updated dependencies [67f3f9f]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui-canvas@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-illustrator@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-sheet@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/diagram@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

@@ -897,6 +897,46 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('skips into a natural window before capping it', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const objectIds = Array.from({ length: 6 }, () => EntityId.random()).sort();
+      yield* index.update(
+        objectIds.map((objectId, position): IndexerObject => ({
+          spaceId,
+          queueId,
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          queuePosition: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: position === 5 },
+        })),
+      );
+
+      // The skip counts only rows the caller keeps, so the deleted newest row does not eat into it.
+      const page = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'desc', limit: 2, skip: 1, deleted: false },
+      });
+      expect(page.map((row) => row.objectId)).toEqual([objectIds[3], objectIds[2]]);
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        typeDxns: [TYPE_PERSON],
+        window: { kind: 'natural', direction: 'asc', limit: 2, skip: 2 },
+      });
+      expect(typed.map((row) => row.objectId)).toEqual([objectIds[2], objectIds[3]]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   // The query compiler joins `parentId`/`sourceId`/`targetId` to `objectId` within one space, so a
   // reference into another space must not be normalized to an id that may collide there.
   it.effect('fills the normalized id columns for local references only', () =>

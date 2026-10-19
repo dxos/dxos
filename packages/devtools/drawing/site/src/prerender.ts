@@ -11,11 +11,11 @@ import { HERO, escapeHtml, fileName, inline, reportHtml, stageHtml } from './mar
 
 const RELATIONS = [
   ['extends', 'edge Dog extends Animal', 'a subtype, with a hollow triangle'],
-  ['implements', 'edge Store implements Readable', 'a contract, dashed'],
+  ['implements', 'edge Socket implements Stream', 'a contract, dashed'],
   ['composes', 'edge Car composes Engine', 'a part that lives and dies with the whole'],
   ['owns', 'edge Team owns Player', 'a part that can outlive the whole'],
   ['depends-on', 'edge App depends-on Logger', 'a dependency, dashed with an open arrow'],
-  ['one-to-many', 'edge Customer one-to-many Order', "cardinality, with a crow's foot"],
+  ['one-to-many', 'edge Author one-to-many Book', "cardinality, with a crow's foot"],
 ] as const;
 
 /** The source with keywords and strings marked for the page's code colours, shown until the editor loads. */
@@ -53,14 +53,14 @@ export type Prerendered = {
 export const prerender = async (directory: string): Promise<Prerendered> => {
   const hero = await renderOrThrow(directory, HERO);
   const { markup, cols, rows } = inline(hero.svg, { prefix: 'h', label: `${HERO} diagram`, className: 'hero-diagram' });
-  const relations: string[] = [];
-  for (const [index, [key, code, text]] of RELATIONS.entries()) {
-    const { svg } = await renderOrThrow(directory, `rel-${key}`);
-    const relation = inline(svg, { prefix: `r${index}`, label: `${key} relation` });
-    relations.push(
-      `<div class="relation"><code>${escapeHtml(code)}</code><p>${escapeHtml(text)}</p>${relation.markup}</div>`,
-    );
-  }
+  const rendered = await Promise.all(RELATIONS.map(([key]) => renderOrThrow(directory, `rel-${key}`)));
+  const sizes = rendered.map(({ svg }, index) => inline(svg, { prefix: `r${index}`, label: '' }));
+  const minCols = Math.max(...sizes.map(({ cols }) => cols));
+  const minRows = Math.max(...sizes.map(({ rows }) => rows));
+  const relations = RELATIONS.map(([key, code, text], index) => {
+    const relation = inline(rendered[index].svg, { prefix: `r${index}`, label: `${key} relation`, minCols, minRows });
+    return `<div class="relation"><code>${escapeHtml(code)}</code><p>${escapeHtml(text)}</p>${relation.markup}</div>`;
+  });
 
   return {
     slots: {

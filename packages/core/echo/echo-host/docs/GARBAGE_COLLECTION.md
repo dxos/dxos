@@ -316,14 +316,55 @@ the client's reconciliation today. Its view corrects on reload.
 
 A document that cannot be loaded (Automerge's WASM heap runs out of memory
 inflating it) would stall every start that reaches it, on every peer. The host
-handles it without reading it:
+handles it without reading it. Quarantine lasts one session; retirement is
+permanent. Retirement replaces a whole linked document, never one object, and
+objects inline in the space root are never retired.
+
+```
+        TRIGGER                      QUARANTINED                     RETIRED
+                              (in memory, cleared on restart)   (permanent, in the space root)
+
+ ┌────────────────────┐        ┌─────────────────────┐   index has  ┌──────────────────────┐
+ │ load runs out of   │───────►│ reason: load-failed │─────────────►│ rebuilt from index   │
+ │ memory, and stored │        └─────────────────────┘ all objects  │ reason: load-failed  │
+ │ bytes hold ≥100K   │                  │                          └──────────┬───────────┘
+ │ ops                │                  │                                     │
+ └────────────────────┘                  │                                     │
+                                         │ index lacks objects                 │
+                                         ▼                                     │
+                                 restart → load again                          │
+                                 → out of memory again → retry                 │
+                                                                               │
+ ┌────────────────────┐                                             ┌──────────┴───────────┐
+ │ cursor loads with  │                                             │ rebuilt from its     │
+ │ ≥100K ops, ≥4×     │────────────────────────────────────────────►│ current state        │
+ │ state, cursors only│                                             │ reason: history      │
+ └────────────────────┘                                             └──────────┬───────────┘
+                                                                               │
+ ┌────────────────────┐                                                        │
+ │ peer's retirement  │───────────────────────────────────────────────────────►│
+ │ arrives            │                                                        │
+ └────────────────────┘                                                        ▼
+                                                                 ┌───────────────────────────┐
+                                                                 │ every peer, every open:   │
+                                                                 │ wipe bytes + index rows,  │
+                                                                 │ quarantine (retired)      │
+                                                                 │ unless still linked or    │
+                                                                 │ indexed by another space  │
+                                                                 └───────────────────────────┘
+```
 
 1. **Quarantine.** `AutomergeHost` listens for `document-load-failed` (a DXOS
    patch on automerge-repo; the repo otherwise swallows the error and leaves
    the load waiting forever). An out-of-memory failure quarantines the document
    for the life of the host: loads resolve as unavailable, and nothing
    replicates or advertises it. Other failures are only logged, since they may
-   not repeat.
+   not repeat. Once the heap is full every load fails, so the host first counts
+   the document's ops from its stored chunks, without loading it, and
+   quarantines it only at `QUARANTINE_MIN_OPS` (100K) or more; a smaller
+   document is a bystander and is only logged. The classical store and the
+   Subduction store are counted apart, since either may hold the whole
+   document, and the larger count decides.
 2. **Retire.** `EchoHost` rebuilds each linked, quarantined document from the
    index (the last indexed JSON of each of its objects) into a replacement whose
    id is derived from the original, so peers retiring concurrently converge on

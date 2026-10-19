@@ -511,3 +511,57 @@ describe('simulation', () => {
     expect(simulation.time).toBeCloseTo(1 / 20);
   });
 });
+
+describe('threads', () => {
+  test('colours molecules by thread and collects each thread in its own bucket', ({ expect }) => {
+    const threads = ['amber', 'sky', 'green'];
+    const layout = layoutDataFlow({ ...SPEC, hub: { label: 'Hub', partitions: 3 } });
+    const buckets = layout.hub.buckets ?? [];
+    expect(buckets).toHaveLength(3);
+    const simulation = new DataFlowSimulation(layout, { seed: 5, threads });
+    run(simulation, 30);
+    const docked = simulation.bodies.filter((body) => body.zone === 'hub' && body.phase === 'docked');
+    expect(docked.length).toBeGreaterThan(10);
+    for (const body of docked) {
+      invariant(body.thread !== undefined);
+      expect(body.hue).toBe(threads[body.thread]);
+      // Molecules keep their thread's colour in the hub rather than fading to the hub's own.
+      expect(body.tint ?? 0).toBe(0);
+      const bucket = buckets[body.thread];
+      expect(body.position.x).toBeGreaterThanOrEqual(bucket.x);
+      expect(body.position.x).toBeLessThanOrEqual(bucket.x + bucket.width);
+    }
+    // Every thread is in play.
+    expect(new Set(docked.map((body) => body.thread)).size).toBe(3);
+  });
+});
+
+describe('thread sinks', () => {
+  test('each agent takes from and writes back to its own thread only', ({ expect }) => {
+    const threads = ['amber', 'sky', 'green', 'fuchsia'];
+    const layout = layoutDataFlow({
+      ...SPEC,
+      hub: { label: 'Hub', partitions: 4 },
+      sinks: threads.map((_, index) => ({ label: `Agent ${index + 1}` })),
+    });
+    const simulation = new DataFlowSimulation(layout, { seed: 3, threads, threadSinks: true, upInterval: 1.5 });
+    run(simulation, 45);
+    const sinkBodies = simulation.bodies.filter((body) => body.zone === 'sink');
+    expect(sinkBodies.length).toBeGreaterThan(5);
+    for (const body of sinkBodies) {
+      expect(body.thread).toBe(body.agent);
+    }
+    // What the agents write rises into its thread's bucket like everything else.
+    const buckets = layout.hub.buckets ?? [];
+    const written = simulation.bodies.filter((body) => body.zone === 'hub' && body.authored && body.phase === 'docked');
+    expect(written.length).toBeGreaterThan(0);
+    for (const body of written) {
+      invariant(body.thread !== undefined);
+      const bucket = buckets[body.thread];
+      // The molecule's middle: its root atom can sit at one end of it, past the bucket's edge.
+      const middle = body.position.x + body.offsets.reduce((sum, offset) => sum + offset.x, 0) / body.offsets.length;
+      expect(middle).toBeGreaterThanOrEqual(bucket.x);
+      expect(middle).toBeLessThanOrEqual(bucket.x + bucket.width);
+    }
+  });
+});

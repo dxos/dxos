@@ -98,6 +98,8 @@ export type Body = {
   read?: boolean;
   /** For a hub molecule due to sync, the agent its copy goes to (otherwise a random one at hand-off). */
   syncTo?: number;
+  /** With `threads`, the conversation it belongs to: its colour, and the hub bucket it collects in. */
+  thread?: number;
 };
 
 /** A bond across molecules: how a docked molecule attaches to the edge of the lattice. */
@@ -115,7 +117,7 @@ export type Frame = {
 };
 
 /** One piece of an application's content, made from a molecule that flowed in: its source's colour, and when it came. */
-export type AppItem = { hue: string; source: number; since: number };
+export type AppItem = { hue: string; source: number; since: number; thread?: number };
 
 export type SimulationOptions = {
   seed?: number;
@@ -132,6 +134,8 @@ export type SimulationOptions = {
   hubCapacity?: number;
   /** Seconds a molecule stays cached in the hub before it may decay. */
   hubLifetime?: number;
+  /** How full the hub is (0 to 1) when it starts decaying at its full rate; until then it decays slowly, to build up. */
+  fullDecayAt?: number;
   /** Seconds a molecule stays cached in the sink before it may decay. */
   sinkLifetime?: number;
   /** Seconds between decays in one lattice. */
@@ -153,9 +157,21 @@ export type SimulationOptions = {
   warmup?: number;
   /** Which hub molecules sync to the sink; every third by default. */
   subset?: (body: Body) => boolean;
+  /**
+   * Colours molecules by conversation rather than by source: each molecule joins one of these threads at random, takes
+   * its hue, and collects in the hub bucket of the same index, so a bucket gathers one thread from every source.
+   */
+  threads?: readonly string[];
+  /**
+   * With `threads`, sink `n` serves thread `n` alone: it takes copies only from that thread's bucket, and what it writes
+   * joins that thread and rises back into the same bucket.
+   */
+  threadSinks?: boolean;
 };
 
-const DEFAULTS: Required<Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup'>> = {
+const DEFAULTS: Required<
+  Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgents' | 'prefill' | 'warmup' | 'threads' | 'threadSinks'>
+> = {
   interval: 1.4,
   perSource: 2,
   speed: 240,
@@ -163,6 +179,7 @@ const DEFAULTS: Required<Omit<SimulationOptions, 'seed' | 'subset' | 'spawnAgent
   fadeOut: 1.6,
   hubCapacity: 160,
   hubLifetime: 30,
+  fullDecayAt: 0.5,
   sinkLifetime: 20,
   decayInterval: 0.25,
   upInterval: 5,
@@ -279,9 +296,6 @@ const FLICKER_RATE = 8;
 
 /** Blinks a molecule gives as it attaches. */
 const BLINKS = 3;
-
-/** How full the hub is when it starts decaying at its full rate. */
-const HUB_HALF = 0.5;
 
 /** Until then the hub decays on one tick in this many. */
 const SLOW_DECAY = 16;
@@ -478,15 +492,25 @@ class Crystal {
    * The best place for `molecule` on a free edge site (or a fresh seed, while nothing is near one). A molecule never
    * turns and keeps its bonds: it lands in its own shape, or bends at its bonds (each still joining lattice neighbours)
    * to fill a gap. Scored by the lattice's shape, by closeness to `aim` (the section the molecule is headed for), by how
-   * snugly it fits among its neighbours, and by how far its atoms had to move.
+   * snugly it fits among its neighbours, and by how far its atoms had to move. With `within`, every atom stays inside it.
    */
-  place(molecule: Molecule, aim: Point, random: Random): Placement | undefined {
+  place(molecule: Molecule, aim: Point, random: Random, within?: Rect): Placement | undefined {
     const seed = this.#seed(aim);
+    const inside = (site: Hex) => {
+      const point = this.position(site);
+      return (
+        !within ||
+        (point.x >= within.x &&
+          point.x <= within.x + within.width &&
+          point.y >= within.y &&
+          point.y <= within.y + within.height)
+      );
+    };
     const anchors = [...(seed ? [seed] : []), ...this.#frontier()];
     const { spacing } = this.grid;
     let best: { placement: Placement; score: number } | undefined;
     const consider = (sites: Hex[], anchor: Hex, pivot: number) => {
-      if (!sites.every((site) => this.#free(site))) {
+      if (!sites.every((site) => this.#free(site) && inside(site))) {
         return;
       }
       const bond = this.#attachment(sites);
@@ -781,6 +805,8 @@ export class DataFlowSimulation {
   #focus?: { left: number; right: number; boost: number };
   /** Most molecules the hub holds: the option's figure, scaled up as a relayout adds buckets, so new ones crowd none out. */
   #hubCapacity = 0;
+  #threads?: readonly string[];
+  #threadSinks = false;
   /** When each source a relayout added came into play, by source; the first sources have none. */
   readonly #sourceSince: (number | undefined)[] = [];
 
@@ -1037,9 +1063,11 @@ export class DataFlowSimulation {
 
   constructor(
     layout: DataFlowLayout,
-    { seed, subset, spawnAgents, prefill, warmup = 0, ...options }: SimulationOptions = {},
+    { seed, subset, spawnAgents, prefill, warmup = 0, threads, threadSinks, ...options }: SimulationOptions = {},
   ) {
     this.#layout = layout;
+    this.#threads = threads;
+    this.#threadSinks = threadSinks === true && threads !== undefined;
     this.#options = { ...DEFAULTS, ...options };
     this.#hubCapacity = this.#options.hubCapacity;
     this.#spawnAgents = spawnAgents;
@@ -1127,7 +1155,7 @@ export class DataFlowSimulation {
           const slot = Math.floor(this.#time * FLICKER_RATE);
           const blinking = body.blink !== undefined && slot >= body.blink && slot < body.blink + 2 * BLINKS;
           body.opacity = blinking && slot % 2 === 1 ? 0.3 : 1;
-          if (body.zone === 'hub') {
+          if (body.zone === 'hub' && !this.#threads) {
             // Once settled, a hub molecule loses its source's colour: in the hub, data is just data.
             body.tint = Math.min(1, Math.max(0, (body.age - TINT_DELAY) / TINT_TIME));
           }
@@ -1305,8 +1333,7 @@ export class DataFlowSimulation {
           id,
           serial,
           molecule,
-          hue: source.hue,
-          source: index,
+          ...this.#colour(index),
           zone: 'source',
           phase: 'forming',
           position: home.root,
@@ -1403,7 +1430,7 @@ export class DataFlowSimulation {
     this.#nextDecay = this.#time + this.#options.decayInterval;
     this.#decays++;
     // The hub decays slowly until it is half full, so its lattice has time to build up before it starts wearing away.
-    if (this.#hub.fill >= HUB_HALF || this.#decays % SLOW_DECAY === 0) {
+    if (this.#hub.fill >= this.#options.fullDecayAt || this.#decays % SLOW_DECAY === 0) {
       this.#evictEdge('hub', this.#options.hubLifetime);
     }
     for (let agent = 0; agent < this.#agents; agent++) {
@@ -1445,8 +1472,7 @@ export class DataFlowSimulation {
       id: `m${serial}`,
       serial,
       molecule: generateMolecule(this.#random),
-      hue: this.#layout.sources[source].hue,
-      source,
+      ...(this.#threadSinks ? this.#threadColour(agent, source) : this.#colour(source)),
       zone: 'source',
       phase: 'forming',
       position: snap(sinkGrid, this.#freeSpot(sink.well)),
@@ -1503,6 +1529,46 @@ export class DataFlowSimulation {
     }
   }
 
+  /** A molecule from `source`: its source's colour, or with `threads` a thread at random and that thread's colour. */
+  #colour(source: number): { hue: string; source: number; thread?: number } {
+    if (!this.#threads?.length) {
+      return { hue: this.#layout.sources[source].hue, source };
+    }
+    const thread = Math.floor(this.#random() * this.#threads.length);
+    return { hue: this.#threads[thread], source, thread };
+  }
+
+  /** A molecule of thread `thread`, as an agent serving it writes. */
+  #threadColour(thread: number, source: number): { hue: string; source: number; thread?: number } {
+    const hue = this.#threads?.[thread];
+    return hue === undefined ? { hue: this.#layout.sources[source].hue, source } : { hue, source, thread };
+  }
+
+  /** The agent serving `thread`, if it is present and on screen. */
+  #threadAgent(thread: number | undefined): number | undefined {
+    if (thread === undefined || thread >= this.#agents || this.#agentSince[thread] > this.#time) {
+      return undefined;
+    }
+    return this.#focused(this.#layout.sinks[thread]) ? thread : undefined;
+  }
+
+  /** The hub bucket a threaded molecule collects in: one bucket per thread, in order. */
+  #threadBucket(body: Body): Rect | undefined {
+    const { buckets } = this.#layout.hub;
+    return body.thread === undefined || !buckets?.length ? undefined : buckets[body.thread % buckets.length];
+  }
+
+  /** `aim` moved into a threaded molecule's bucket, so a write rising into the hub lands with the rest of its thread. */
+  #threadAim(body: Body, aim: Point): Point {
+    const bucket = this.#threadBucket(body);
+    if (!bucket) {
+      return aim;
+    }
+    const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
+    // Inside the bucket, not on the lane beside it: a placement aimed at the lane can settle in a neighbour.
+    return { x: bucket.x + bucket.width * (0.5 + spread / 2), y: bucket.y + bucket.height / 2 };
+  }
+
   /**
    * A bucket at random, weighted to those near `x` (where a source's channel meets the hub): each source feeds the
    * buckets around it, so an extended hub's far buckets fill from their own sources and none near the middle starves.
@@ -1534,7 +1600,7 @@ export class DataFlowSimulation {
     // beneath it; the aims crowd toward the middle, so the lattice keeps clear of the walls.
     const { bounds, origin } = this.#layout.hubGrid;
     const { buckets } = this.#layout.hub;
-    const region = buckets ? this.#nearBucket(buckets, channel.to.x) : bounds;
+    const region = buckets ? (this.#threadBucket(body) ?? this.#nearBucket(buckets, channel.to.x)) : bounds;
     const spread = (this.#random() + this.#random() - 1) * AIM_SPREAD;
     const aim = { x: region.x + region.width * (0.5 + spread / 2), y: origin.y };
     const well = this.#wellGate(`well-source-${body.source}`);
@@ -1598,9 +1664,11 @@ export class DataFlowSimulation {
         this.#evictEdge('hub');
       }
     }
-    let placement = crystal.place(body.molecule, aim, this.#random);
+    // A thread's molecules bond only within its own bucket, never onto a neighbour's lattice across the wall.
+    const within = zone === 'hub' ? this.#threadBucket(body) : undefined;
+    let placement = crystal.place(body.molecule, aim, this.#random, within);
     while (!placement && this.#evictEdge(zone, 0, agent)) {
-      placement = crystal.place(body.molecule, aim, this.#random);
+      placement = crystal.place(body.molecule, aim, this.#random, within);
     }
     if (!placement) {
       return false;
@@ -1723,9 +1791,9 @@ export class DataFlowSimulation {
         app.reserved.delete(body.slot);
         // A conversation takes it as a new message at the end; any other app fills the slot it was given.
         if (this.#layout.sinks[body.agent ?? 0]?.app === 'messaging') {
-          this.#post(body.agent ?? 0, body.hue, body.source);
+          this.#post(body.agent ?? 0, body.hue, body.source, body.thread);
         } else {
-          app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time };
+          app.items[body.slot] = { hue: body.hue, source: body.source, since: this.#time, thread: body.thread };
         }
       }
       body.phase = 'leaving';
@@ -1755,7 +1823,7 @@ export class DataFlowSimulation {
       }
     } else if (body.zone === 'hub' && this.#inFocus(body.position.x)) {
       // Only what settles in a bucket on screen syncs on.
-      const agent = body.syncTo ?? this.#anyAgent();
+      const agent = body.syncTo ?? (this.#threadSinks ? this.#threadAgent(body.thread) : this.#anyAgent());
       body.syncTo = undefined;
       if (agent !== undefined && !body.synced) {
         if (this.#layout.sinks[agent]?.app) {
@@ -1821,7 +1889,7 @@ export class DataFlowSimulation {
     const top = sink.well.y + this.#layout.hubGrid.spacing;
     const aim = { x: channel.from.x, y: lane };
     const well = this.#wellGate(`well-sink-${agent}`);
-    const sent = this.#send(copy, 'hub', aim, (target) => {
+    const sent = this.#send(copy, 'hub', this.#threadAim(copy, aim), (target) => {
       const span = laneGate('bottom', channel.from.x, target.x, 'up');
       return [
         { point: { x: start.x, y: top }, gate: well },
@@ -1850,7 +1918,7 @@ export class DataFlowSimulation {
         if (this.#random() < 0.65) {
           const source = Math.floor(this.#random() * sources.length);
           const fresh = this.#random() < 1 / 7;
-          app.items[slot] = { hue: sources[source].hue, source, since: fresh ? 0 : -60 };
+          app.items[slot] = { ...this.#colour(source), since: fresh ? 0 : -60 };
         }
       });
     });
@@ -1865,7 +1933,7 @@ export class DataFlowSimulation {
         return undefined;
       }
       const source = Math.floor(this.#random() * sources.length);
-      return { hue: sources[source].hue, source, since: -60 };
+      return { ...this.#colour(source), since: -60 };
     });
     return { slots, items, reserved: new Set<number>() };
   }
@@ -1874,7 +1942,7 @@ export class DataFlowSimulation {
    * Adds a message to the end of conversation `agent`; once it is full, the two oldest scroll off the top first, so
    * every message keeps its side (they alternate left and right).
    */
-  #post(agent: number, hue: string, source: number): void {
+  #post(agent: number, hue: string, source: number, thread?: number): void {
     const app = this.#apps[agent];
     if (!app) {
       return;
@@ -1885,7 +1953,7 @@ export class DataFlowSimulation {
       app.items.push(undefined, undefined);
       next = app.items.length - 2;
     }
-    app.items[next] = { hue, source, since: this.#time };
+    app.items[next] = { hue, source, since: this.#time, thread };
   }
 
   /** The middle of an application's frame: molecules flowing in or out pass behind the app to and from here. */
@@ -2079,7 +2147,7 @@ export class DataFlowSimulation {
     }
     // What a conversation sends is a message of its own; any other app lights up the content it sends.
     if (sink.app === 'messaging') {
-      this.#post(agent, item.hue, item.source);
+      this.#post(agent, item.hue, item.source, item.thread);
     } else {
       item.since = this.#time;
     }
@@ -2099,6 +2167,7 @@ export class DataFlowSimulation {
       molecule,
       hue: item.hue,
       source: item.source,
+      thread: item.thread,
       zone: 'source',
       phase: 'forming',
       position: { x: centreOf.x - middle.x, y: centreOf.y - middle.y },
@@ -2106,7 +2175,7 @@ export class DataFlowSimulation {
       authored: true,
     });
     const aim = { x: channel.from.x, y: lane };
-    const sent = this.#send(body, 'hub', aim, (target) => {
+    const sent = this.#send(body, 'hub', this.#threadAim(body, aim), (target) => {
       const span = laneGate('bottom', channel.from.x, target.x, 'up');
       return [
         { point: channel.to, gate },

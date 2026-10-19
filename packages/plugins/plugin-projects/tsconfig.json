@@ -22,6 +22,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -92,6 +95,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-canvas"
     },
     {
       "path": "../../ui/react-ui-form"

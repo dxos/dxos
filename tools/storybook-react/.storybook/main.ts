@@ -174,6 +174,42 @@ const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: fa
  * watch on an inode change only on Linux, so on macOS the first such save is reported and every
  * later one is silently lost — the server keeps serving the stale transform until restarted.
  */
+/**
+ * Starts every story dark, since `preview.ts` defaults to the dark theme whatever the OS prefers: ThemePlugin's head
+ * script follows `prefers-color-scheme`, so on a light OS the first paint is near white until the theme decorator
+ * runs. Prepended to the head, so it holds from the first paint; an explicit light theme in the URL starts light, and
+ * the class goes once a light theme is applied.
+ */
+const darkBootPlugin = (): Plugin => ({
+  name: 'dxos:dark-boot',
+  transformIndexHtml: () => [
+    {
+      tag: 'style',
+      injectTo: 'head-prepend',
+      children: [
+        ':is(html.dx-boot-dark, html.dark), :is(html.dx-boot-dark, html.dark) body,',
+        ':is(html.dx-boot-dark, html.dark) :is(.sb-preparing-story, .sb-preparing-docs, .sb-previewBlock) {',
+        '  background: oklch(0.145 0 0) !important; color: oklch(0.985 0 0) !important; color-scheme: dark;',
+        '}',
+      ].join('\n'),
+    },
+    {
+      tag: 'script',
+      injectTo: 'head-prepend',
+      children: [
+        '(() => {',
+        '  if (/theme:light/.test(decodeURIComponent(location.search))) return;',
+        '  const root = document.documentElement;',
+        "  root.classList.add('dx-boot-dark');",
+        '  new MutationObserver((_, observer) => {',
+        "    if (root.classList.contains('light')) { root.classList.remove('dx-boot-dark'); observer.disconnect(); }",
+        "  }).observe(root, { attributes: true, attributeFilter: ['class'] });",
+        '})();',
+      ].join('\n'),
+    },
+  ],
+});
+
 const rearmWatchPlugin = (): Plugin => ({
   name: 'dxos:rearm-watch',
   apply: 'serve',
@@ -569,6 +605,7 @@ export const createConfig = ({
           }),
 
           ThemePlugin({}),
+          darkBootPlugin(),
         ],
       },
     ) as InlineConfig;

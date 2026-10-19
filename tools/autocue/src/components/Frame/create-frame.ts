@@ -94,8 +94,13 @@ export const FRAME_STYLES = `
   /* A fixed height, so a caption with or without a subtitle never moves. */
   .caption { height: var(--autocue-caption-height); padding: 0 24px; display: flex; flex-direction: column;
     justify-content: center; }
-  .caption.panel { bottom: var(--autocue-panel-inset); padding: 0 28px;
-    --autocue-band-surface: var(--autocue-caption-surface); backdrop-filter: blur(6px); }
+  /* Final Cut Pro's caption: a black box fitted to the text, low in the frame, with no shadow or blur. */
+  .caption.panel { bottom: var(--autocue-caption-inset); height: auto; padding: 14px 30px 16px;
+    border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: none;
+    --autocue-band-surface: var(--autocue-caption-surface); --autocue-band-fg: var(--autocue-caption-fg);
+    --autocue-band-muted: var(--autocue-caption-muted); }
+  .caption.panel .title { font: 700 40px/1.2 var(--autocue-caption-font); letter-spacing: -0.01em; }
+  .caption.panel .subtitle { font: 500 20px/1.3 var(--autocue-caption-font); margin-top: 6px; }
   .caption .title, .caption .subtitle, .panel .title, .panel .subtitle { white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; }
   .caption .title { font: 600 26px/1.3 var(--autocue-font); }

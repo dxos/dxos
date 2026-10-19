@@ -12,7 +12,7 @@ import all from 'it-all';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 
-import { storeName } from '#helpers';
+import { STORE_NAME } from '#helpers';
 
 export const create = (apiHost?: string) => {
   return new MixedBlockstore(apiHost);
@@ -34,7 +34,7 @@ export class MixedBlockstore extends BaseBlockstore {
     super();
 
     this.#apiHost = apiHost ? apiHost.replace(/\/?$/, '') : undefined;
-    this.#localStore = new IDBBlockstore(storeName());
+    this.#localStore = new IDBBlockstore(STORE_NAME);
     this.#isConnected = navigator.onLine;
     this.#queue = [];
 
@@ -145,7 +145,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   // QUEUE
 
-  readonly queueCacheName = `${storeName()}.state.queue`;
+  readonly queueCacheName = `${STORE_NAME}.state.queue`;
 
   async #addToQueue(key: CID): Promise<void> {
     await this.#saveQueue([...this.#queue, key.toString()]);
