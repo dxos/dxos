@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Grant from './Grant.ts';
 import * as Permission from './Permission.ts';
