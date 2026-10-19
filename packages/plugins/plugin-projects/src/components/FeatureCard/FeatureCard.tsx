@@ -18,6 +18,7 @@ import {
   type FeatureRelation,
   type FeatureSignal,
   type FeatureStage,
+  getFeatureIdParts,
   getFeatureSignals,
 } from './feature.ts';
 
@@ -42,8 +43,9 @@ export type FeatureCardProps = {
   feature: FeatureModel;
   /** Resolves `dependsOn` ids to features, for their labels, stages and the derived signals. */
   lookup: FeatureLookup;
-  /** Adds the requirement and task lists. */
+  /** Adds the description and the requirement and task lists. */
   expanded?: boolean;
+  /** Like `expanded`, shows every signal and each dependency rather than their counts. */
   selected?: boolean;
   /** How this card relates to the selected feature; dims nothing by itself. */
   relation?: FeatureRelation;
@@ -54,7 +56,8 @@ export type FeatureCardProps = {
 /**
  * One feature of a spec: its stage, the derived signals, test coverage, the work implementing it,
  * and the features it needs. Stage and signals each carry an icon and a word, so colour is never
- * the only cue.
+ * the only cue. A compact card shows only the most serious signal and a dependency count, so the
+ * tag row stays on one line and dependencies do not outweigh the feature.
  */
 export const FeatureCard = ({
   feature,
@@ -67,7 +70,11 @@ export const FeatureCard = ({
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const stage = FEATURE_STAGE_STYLE[feature.stage];
+  const detailed = expanded || selected;
   const signals = getFeatureSignals(feature, lookup);
+  const shownSignals = detailed ? signals : signals.slice(0, 1);
+  const hiddenSignals = signals.slice(shownSignals.length);
+  const missingDependency = signals.includes('missing-dependency');
   const covered = feature.requirements.filter((requirement) => requirement.covered).length;
   const openTasks = feature.tasks.filter((task) => !task.done);
   const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
@@ -96,12 +103,20 @@ export const FeatureCard = ({
           <div className='flex flex-wrap gap-1'>
             <Tag.Tag hue={stage.hue}>{t(`feature-stage.${feature.stage}.label`)}</Tag.Tag>
             {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
-            {signals.map((signal) => (
+            {shownSignals.map((signal) => (
               <Tag.Tag key={signal} hue={SIGNAL_STYLE[signal].hue} data-testid={`feature-signal.${signal}`}>
                 <Icon.Icon icon={SIGNAL_STYLE[signal].icon} size='xs' />
                 {t(`feature-signal.${signal}.label`)}
               </Tag.Tag>
             ))}
+            {hiddenSignals.length > 0 && (
+              <Tag.Tag
+                title={hiddenSignals.map((signal) => t(`feature-signal.${signal}.label`)).join(', ')}
+                data-testid='feature-signal.more'
+              >
+                {t('feature-card.more-signals.label', { count: hiddenSignals.length })}
+              </Tag.Tag>
+            )}
           </div>
         </Card.Row>
 
@@ -129,14 +144,24 @@ export const FeatureCard = ({
           </Card.Row>
         )}
 
-        {feature.dependsOn.length > 0 && (
+        {!detailed && feature.dependsOn.length > 0 && (
+          <Card.Row icon={missingDependency ? 'ph--link-break--regular' : 'ph--tree-structure--regular'}>
+            <Card.Text truncate>{t('feature-card.depends-on.label', { count: feature.dependsOn.length })}</Card.Text>
+          </Card.Row>
+        )}
+        {detailed && feature.dependsOn.length > 0 && (
           <Card.Section title={t('feature-card.depends-on.title')}>
             {feature.dependsOn.map((id) => {
               const dependency = lookup(id);
               if (!dependency) {
                 return (
-                  <Card.Row key={id} icon='ph--link-break--regular'>
-                    <Card.Text truncate>{t('feature-card.missing-dependency.label', { id })}</Card.Text>
+                  <Card.Row
+                    key={id}
+                    icon='ph--link-break--regular'
+                    trailing={<Card.Text variant='muted'>{t('feature-card.missing-dependency.trailing')}</Card.Text>}
+                    title={id}
+                  >
+                    <Card.Text truncate>{t('feature-card.missing-dependency.label', getFeatureIdParts(id))}</Card.Text>
                   </Card.Row>
                 );
               }

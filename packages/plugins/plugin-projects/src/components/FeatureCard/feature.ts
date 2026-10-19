@@ -52,6 +52,15 @@ export type FeatureLookup = (id: string) => FeatureModel | undefined;
 
 const STAGE_RANK: Record<FeatureStage, number> = { planned: 0, preview: 1, stable: 2 };
 
+/**
+ * Short form of a global id for when the feature cannot be resolved: the last segment of the spec key
+ * (`agent` for `org.dxos.plugin.agent`) and the block key, so a missing dependency stays readable when truncated.
+ */
+export const getFeatureIdParts = (id: string): { spec: string; key: string } => {
+  const [specKey, key = ''] = id.split('#');
+  return { spec: specKey.split('.').at(-1) ?? specKey, key };
+};
+
 /** Builds a lookup by global id. */
 export const makeFeatureLookup = (features: readonly FeatureModel[]): FeatureLookup => {
   const byId = new Map(features.map((feature) => [feature.id, feature]));

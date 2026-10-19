@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import {
   type FeatureModel,
   getDependents,
+  getFeatureIdParts,
   getFeatureRelation,
   getFeatureSignals,
   makeFeatureLookup,
@@ -61,5 +62,12 @@ describe('relations', () => {
     expect(getFeatureRelation(top, middle)).toBe('dependent');
     expect(getFeatureRelation(middle, middle)).toBeUndefined();
     expect(getFeatureRelation(top, base)).toBeUndefined();
+  });
+});
+
+describe('getFeatureIdParts', () => {
+  test('keeps the last spec key segment and the block key', ({ expect }) => {
+    expect(getFeatureIdParts('org.dxos.plugin.agent#F-2')).toEqual({ spec: 'agent', key: 'F-2' });
+    expect(getFeatureIdParts('local#F-1')).toEqual({ spec: 'local', key: 'F-1' });
   });
 });

@@ -54,16 +54,29 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** One card per stage: the icon, hue and word change together. */
+/** One card per stage: the icon, hue and word change together. Compact cards show one signal and a dependency count. */
 export const Stages: Story = {
   args: {
     ids: ['org.dxos.plugin.inbox#F-9', 'org.dxos.plugin.inbox#F-3', 'org.dxos.plugin.connector#F-1'],
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = canvasElement.querySelector<HTMLElement>('[data-feature="org.dxos.plugin.inbox#F-9"]');
+    if (!card) {
+      throw new Error('no card for org.dxos.plugin.inbox#F-9');
+    }
+    const triage = within(card);
+    await expect(await triage.findByTestId('feature-signal.blocked')).toBeInTheDocument();
+    await expect(triage.queryByTestId('feature-signal.unplanned')).toBeNull();
+    await expect(triage.getByTestId('feature-signal.more')).toHaveTextContent('+1');
+    await expect(canvas.getAllByText('Depends on 1').length).toBeGreaterThan(0);
+  },
 };
 
-/** Every derived signal at least once; problems sort before status. */
+/** Every derived signal at least once; problems sort before status. Expanded, so no signal is folded into a count. */
 export const Signals: Story = {
   args: {
+    expanded: true,
     ids: [
       'org.dxos.plugin.inbox#F-4',
       'org.dxos.plugin.inbox#F-9',
@@ -76,6 +89,7 @@ export const Signals: Story = {
     for (const signal of ['overclaimed', 'untested', 'blocked', 'unplanned', 'missing-dependency', 'in-flight']) {
       await expect((await canvas.findAllByTestId(`feature-signal.${signal}`)).length).toBeGreaterThan(0);
     }
+    await expect(canvas.getByText('agent · F-2')).toBeInTheDocument();
   },
 };
 
