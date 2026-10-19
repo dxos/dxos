@@ -1,13 +1,13 @@
 ---
 branch: dm/clever-hopper-cppvvs
-commit: 9086265800c3e1e51bf0382bd7b708a5762cbca4
+commit: a67f99fd2a33e251fc8a6c56663c2f11fbe8802d
 base: b440559823fb87ed1a4590dab21ae924d4d76c3a
 mode: fast
-createdAt: 2026-10-19T05:07:12.698Z
+createdAt: 2026-10-19T05:36:07.404Z
 isFinalized: true
 groups: 8
 rules: [catalog-is-dependency-source-of-truth, ci-and-tooling-avoid-duplicate-mechanisms, moon-yml-entrypoint-registration, one-changeset-per-pr, private-new-packages, repo-scripts-are-typescript-on-bun, subpath-lint-not-adhoc-entrypoints, workspace-deps]
-reviewId: 90862658
+reviewId: a67f99fd
 ---
 
 _Clean: no issues._
@@ -30,7 +30,7 @@ _Clean: no issues._
 
 ```text
 requests: 8 (2 verdicts re-asked with context the model requested)
-estimated input tokens: 13910
-billed input tokens: 14664 (cost $0.0006)
-measured chars per token: 2.85
+estimated input tokens: 15237
+billed input tokens: 15720 (cost $0.0007)
+measured chars per token: 2.91
 ```
