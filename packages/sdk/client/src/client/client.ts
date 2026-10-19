@@ -169,7 +169,6 @@ export class Client {
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
-    // The ECHO client outlives re-initialization, so its status is forwarded once.
     this._echoClient.indexStatusUpdated.on((status) => this._indexStatusUpdate.emit(status));
     this._echoClient.indexActivityUpdated.on((activity) => this._indexActivityUpdate.emit(activity));
   }
@@ -228,9 +227,6 @@ export class Client {
   }
 
   /**
-   * Client services system status.
-   */
-  /**
    * What the ECHO index is doing (migrating, rebuilding, idle), for a boot screen or progress
    * indicator. Reported by the worker while the client opens, then streamed from the host;
    * `null` until the host first reports.
@@ -244,6 +240,9 @@ export class Client {
     return this._indexActivity;
   }
 
+  /**
+   * Client services system status.
+   */
   get status(): MulticastObservable<SystemStatus | null> {
     return this._status;
   }
@@ -459,7 +458,6 @@ export class Client {
       this._echoClient._updateServices({ dataService: rpc, queryService: rpc, feedService: rpc });
       await this._echoClient._notifyReconnect();
     });
-    // Reported while the services open, before the host's index status stream can be reached.
     services.hostStatus?.on((status) => {
       const decoded = Schema.decodeUnknownOption(DataService.IndexStatus)(status);
       if (Option.isSome(decoded)) {

@@ -33,7 +33,7 @@ import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork } from '@dxos/util';
@@ -111,7 +111,7 @@ export type EchoHostProps = {
   /** Overrides the bounds on one index write transaction; see {@link IndexTransactionLimits}. */
   indexTransactionLimits?: Partial<IndexTransactionLimits>;
 
-  /** Overrides how often index progress is counted, once a second by default; tests count every pass. */
+  /** Overrides how often index progress is counted, once a second by default. */
   indexRecountInterval?: number;
 
   peerIdProvider?: PeerIdProvider;
@@ -195,7 +195,6 @@ export class EchoHost extends Resource {
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
-  /** Serializes {@link updateSecondaryIndexes}, so one run owns the full-text lane at a time. */
   readonly #secondaryIndexLock = new Mutex();
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
@@ -393,7 +392,6 @@ export class EchoHost extends Resource {
       yieldBetweenTransactions: yieldBehindQueuedTasks,
     });
 
-    // Reported before migrating, so a migration that rewrites a large index reads as progress rather than a hang.
     const pendingMigrations = await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.pendingMigrations());
     log('echo-host: running index engine migration...', { pending: pendingMigrations });
     if (pendingMigrations > 0) {
@@ -424,12 +422,9 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
 
-    // Counted once every store is migrated and the persisted spaces are loaded, whose feeds the indexer
-    // reads from its first pass: a cursor-resetting migration shows up here as the rebuild it starts.
-    // Without the pin every block counts as catch-up, which only shows in the meter.
     const pin = await RuntimeProvider.runPromise(this._runtime)(readFeedPin()).catch((err) => {
       log.warn('index feed pin read failed', { err });
-      return -1;
+      return FeedProtocol.FEED_START;
     });
     await this.indexStatus.opened(() =>
       RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
@@ -558,7 +553,6 @@ export class EchoHost extends Resource {
         );
       }
     } finally {
-      // A failed batch leaves the rest to the next flush, which reports it again.
       this.indexStatus.fullTextEnded();
     }
 
@@ -1398,7 +1392,6 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
 
-      // A count against a closing host would only report a failure.
       if (!this._ctx.disposed && this.isOpen) {
         await this.indexStatus.afterPass(combinedResult);
       }

@@ -14,7 +14,6 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 const IDLE: DataService.IndexStatus = { phase: 'idle', done: 0, total: 0 };
 
-/** `remaining` items left in `progress`, growing its total to cover any that arrived since it was set; none once nothing remains. */
 const advance = (
   progress: DataService.IndexProgress | undefined,
   remaining: number,
@@ -29,7 +28,6 @@ const advance = (
 const sameProgress = (a: DataService.IndexProgress | undefined, b: DataService.IndexProgress | undefined): boolean =>
   a?.done === b?.done && a?.total === b?.total;
 
-/** `status` with the rebuild set to `remaining` items, idle once none remain. */
 const withRebuild = (status: DataService.IndexStatus, remaining: number): DataService.IndexStatus => {
   const rebuild = advance(
     status.phase === 'indexing' ? { done: status.done, total: status.total } : undefined,
@@ -38,7 +36,6 @@ const withRebuild = (status: DataService.IndexStatus, remaining: number): DataSe
   return rebuild ? { phase: 'indexing', ...rebuild } : IDLE;
 };
 
-/** `activity` with `lane` set to `remaining` items, as {@link advance} grows it. */
 const withLane = (
   activity: DataService.IndexActivity,
   lane: keyof DataService.IndexActivity,
@@ -49,7 +46,6 @@ const withLane = (
   return next ? { ...rest, [lane]: next } : rest;
 };
 
-/** The rebuild a backlog count found: documents with no cursor and feed blocks stored before the host opened. */
 const rebuildOf = ({ documents, blocks }: IndexBacklog): number => documents + blocks;
 
 /** How often the tracker reads a count while work goes on. */
@@ -71,24 +67,21 @@ export class IndexStatusTracker {
 
   #activity: DataService.IndexActivity = {};
 
-  /** Documents whose heads moved on, from the last pass that counted them. */
   #documentCatchUp = 0;
 
-  /** Feed blocks stored after the host opened, from the last backlog count. */
   #feedCatchUp = 0;
 
   readonly #recountInterval: number;
 
   #countBacklog: () => Promise<IndexBacklog> = () => Promise.reject(new Error('index status not opened'));
 
-  /** Whether the running pass counts; see {@link beginPass}. */
   #counting = false;
 
   #countedAt = Number.NEGATIVE_INFINITY;
 
   #fullTextCountedAt = Number.NEGATIVE_INFINITY;
 
-  /** `recountInterval` overrides {@link BACKLOG_RECOUNT_INTERVAL}; tests count every pass. */
+  /** `recountInterval` overrides {@link BACKLOG_RECOUNT_INTERVAL}. */
   constructor({ recountInterval = BACKLOG_RECOUNT_INTERVAL }: { recountInterval?: number } = {}) {
     this.#recountInterval = recountInterval;
   }
@@ -165,7 +158,6 @@ export class IndexStatusTracker {
     this.#setActivity(withLane(this.#activity, 'fullText', 0));
   }
 
-  /** Runs a count for progress; one that fails is logged rather than failing the work it reports on. */
   async #count<T>(count: () => Promise<T>): Promise<T | undefined> {
     try {
       return await count();
@@ -217,7 +209,7 @@ export const readFeedPin = (): Effect.Effect<number, SqlError.SqlError, SqlClien
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const [row] = yield* sql<{ pin: number | null }>`SELECT MAX(insertionId) AS pin FROM blocks`;
-    return row?.pin ?? -1;
+    return row?.pin ?? FeedProtocol.FEED_START;
   });
 
 /**
@@ -238,8 +230,6 @@ export const countIndexBacklog = ({
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
 
-    // `NOT IN` evaluates the cursor list once; a correlated `NOT EXISTS` cannot use the cursor
-    // table's key, which puts `spaceId` before `resourceId`, and was 200 times slower.
     let documents = 0;
     for (const indexName of IndexEngine.primaryIndexNames) {
       const [row] = yield* sql<{ count: number }>`
@@ -254,8 +244,6 @@ export const countIndexBacklog = ({
     if (spaceIds.length === 0) {
       return { documents, blocks, catchUp };
     }
-    // A feed cursor is `<token>|<insertionId>` and covers every feed of one namespace in a space; the
-    // furthest-behind primary index sets where reading resumes, and one with no cursor starts over.
     const feeds = yield* sql<{ spaceId: string; feedNamespace: string }>`
       SELECT DISTINCT spaceId, feedNamespace FROM feeds
       WHERE feedNamespace IN ${sql.in(FEED_NAMESPACES)} AND spaceId IN ${sql.in([...spaceIds])}`;
@@ -264,11 +252,13 @@ export const countIndexBacklog = ({
         SELECT cursor FROM indexCursor
         WHERE sourceName = ${SOURCE_FEED} AND spaceId = ${spaceId} AND resourceId = ${feedNamespace}
           AND indexName IN ${sql.in([...IndexEngine.primaryIndexNames])}`;
-      const positions = cursors.map(({ cursor }) => Number(cursor?.split('|')[1] ?? Number.NaN));
+      const positions = cursors.map(({ cursor }) =>
+        cursor ? FeedProtocol.decodeFeedCursor(FeedProtocol.FeedCursor.make(cursor)).insertionId : Number.NaN,
+      );
       const after =
         positions.length === IndexEngine.primaryIndexNames.length && positions.every(Number.isFinite)
           ? Math.min(...positions)
-          : -1;
+          : FeedProtocol.FEED_START;
       const [row] = yield* sql<{ rebuild: number | null; catchUp: number | null }>`
         SELECT SUM(b.insertionId <= ${pin}) AS rebuild, SUM(b.insertionId > ${pin}) AS catchUp
         FROM blocks b JOIN feeds f ON f.feedPrivateId = b.feedPrivateId

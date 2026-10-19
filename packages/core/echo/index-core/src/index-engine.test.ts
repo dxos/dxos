@@ -193,13 +193,10 @@ describe('IndexEngine', () => {
     }, Effect.provide(TestLayer)),
   );
 
-  // A document with nothing to index, such as one of another kind, still counts as read, so a batch of
-  // them neither ends the work behind it nor is read again.
   it.effect(
     'an empty batch still moves the cursors of what it read, and the next goes past them',
     Effect.fnUntraced(function* () {
       const { engine } = yield* setup;
-      // The cursors each primary read starts from; the activity leg keeps its own.
       const reads: DataSourceCursor[][] = [];
       const dataSource: IndexDataSource = {
         sourceName: 'skipping-source',

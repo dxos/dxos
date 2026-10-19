@@ -27,8 +27,7 @@ const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: nu
  */
 const INDEX_BATCH_SIZE = 500;
 
-/** The `objectMeta.version` an index has read up to. */
-const position = (cursors: DataSourceCursor[]): number => {
+const readVersion = (cursors: DataSourceCursor[]): number => {
   const cursor = cursors[0]?.cursor;
   return typeof cursor === 'number' ? cursor : 0;
 };
@@ -59,7 +58,7 @@ export class IndexedObjectSource implements IndexDataSource {
         SELECT COUNT(*) AS count
         FROM objectMeta AS m
         JOIN objectSnapshot AS s ON s.recordId = m.recordId
-        WHERE m.version > ${position(cursors)}
+        WHERE m.version > ${readVersion(cursors)}
       `;
       return row?.count ?? 0;
     });
@@ -72,7 +71,7 @@ export class IndexedObjectSource implements IndexDataSource {
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
-      const cursor = position(cursors);
+      const cursor = readVersion(cursors);
       const limit = Math.min(opts?.limit ?? INDEX_BATCH_SIZE, INDEX_BATCH_SIZE);
 
       // Inner join: a record's snapshot row is written in the same transaction that stamps its

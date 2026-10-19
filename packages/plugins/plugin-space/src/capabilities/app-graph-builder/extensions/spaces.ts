@@ -54,12 +54,7 @@ const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }
 
 const SPACE_OPEN_TIMEOUT = 60_000;
 
-/**
- * Flips to true once a pending space has waited {@link SPACE_OPEN_TIMEOUT} without the index
- * moving: a space waiting on a rebuild that is still making progress (e.g. after an upgrade) is
- * not stuck, so each index status the client reports restarts the wait.
- */
-const makeDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
+const makeStallDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
   Atom.make((get) => {
     const client = get(clientAtom).at(0);
     let timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
@@ -84,7 +79,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
-  const openDeadlineFamily = Atom.family((_spaceId: string) => makeDeadlineAtom(clientAtom));
+  const openDeadlineFamily = Atom.family((_spaceId: string) => makeStallDeadlineAtom(clientAtom));
   const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
   return yield* Effect.all([

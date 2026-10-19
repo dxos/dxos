@@ -42,7 +42,6 @@ describe('timeoutUnlessProgress', () => {
       return 'done';
     })();
 
-    // 120 ms of work outlasts the 50 ms timeout, but no gap between reports does.
     await expect(timeoutUnlessProgress(work, 50, progress, new Error('stalled'))).resolves.toBe('done');
   });
 });

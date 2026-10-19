@@ -99,7 +99,6 @@ describe('Spaces', () => {
     await expect(client.spaces.create()).rejects.toBe(error);
   });
 
-  /** Reopens a persisted space in a new client whose first open of that space's database fails. */
   const openSpaceWhoseDatabaseFailsOnce = async (error: Error) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());

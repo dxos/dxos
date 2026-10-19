@@ -139,7 +139,6 @@ export class AutomergeDataSource implements IndexDataSource {
       const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
       const limit = opts?.limit ?? Infinity;
       let more = false;
-      // Counting reads on past the limit, comparing heads for every document, so only when asked.
       let catchUp = opts?.countCatchUp ? 0 : undefined;
       for (const { documentId, heads } of allDocumentHeads) {
         const cursor = cursorMap.get(documentId);
@@ -168,6 +167,8 @@ export class AutomergeDataSource implements IndexDataSource {
       for (const { documentId, heads: docHeads } of changedDocuments) {
         const firstObject = objects.length;
         let docSpaceId: SpaceId | null = null;
+        const markRead = (spaceId: SpaceId | null) =>
+          updatedCursors.push({ spaceId, resourceId: documentId, cursor: headsCodec.encode(docHeads) });
         try {
           using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
           if (!lease) {
@@ -175,8 +176,6 @@ export class AutomergeDataSource implements IndexDataSource {
           }
           const doc: DatabaseDirectory = lease.doc();
 
-          // Extract spaceId from document, coalescing legacy space key fields. Read before the version
-          // check, so it also runs on documents of other kinds, where a failure only means no space.
           const spaceId = yield* Effect.promise(() =>
             DatabaseDirectory.getSpaceId(doc).catch((err) => {
               log.warn('document space id could not be derived', { documentId, err });
@@ -185,15 +184,8 @@ export class AutomergeDataSource implements IndexDataSource {
           );
           docSpaceId = spaceId;
 
-          // A document with nothing to index (another kind, such as a space root or credentials; an
-          // outdated directory; or one with no space) still moves its cursor to the heads read, so it
-          // is read again only once it changes. The cursor carries the document's space, if any.
           if (doc.version !== SpaceDocVersion.CURRENT || !spaceId) {
-            updatedCursors.push({
-              spaceId: spaceId ?? null,
-              resourceId: documentId,
-              cursor: headsCodec.encode(docHeads),
-            });
+            markRead(spaceId);
             continue;
           }
 
@@ -236,12 +228,7 @@ export class AutomergeDataSource implements IndexDataSource {
             });
           }
 
-          // Update cursor for this document.
-          updatedCursors.push({
-            spaceId,
-            resourceId: documentId,
-            cursor: headsCodec.encode(docHeads),
-          });
+          markRead(spaceId);
           if (opts?.activity) {
             pendingActivity.set(documentId, {
               spaceId,
@@ -254,11 +241,9 @@ export class AutomergeDataSource implements IndexDataSource {
             });
           }
         } catch (error) {
-          // A read that throws throws again on the same heads, so the document counts as read, with
-          // none of its objects, until it changes.
           log.error('Error loading document for indexing', { documentId, error });
           objects.length = firstObject;
-          updatedCursors.push({ spaceId: docSpaceId, resourceId: documentId, cursor: headsCodec.encode(docHeads) });
+          markRead(docSpaceId);
         }
       }
 

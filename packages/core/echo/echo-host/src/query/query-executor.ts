@@ -470,7 +470,6 @@ type QueryScopes = {
   queueIds: Set<EntityId> | null;
   typenames: Set<string> | null;
   objectIds: Set<EntityId> | null;
-  /** True when a select reads feed rows: a feed scope, or a space scope that includes all feeds. */
   readsFeeds: boolean;
 };
 

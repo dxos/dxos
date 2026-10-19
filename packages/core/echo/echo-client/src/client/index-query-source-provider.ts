@@ -76,8 +76,7 @@ export type IndexQueryProviderProps = {
 
 /**
  * Budget for the host's index response, and for that alone: it is cleared the moment the host
- * answers, so a query that timed out here genuinely means the index never responded. Index
- * progress restarts it, since a host rebuilding its index after an upgrade answers late but does answer.
+ * answers, so a query that timed out here genuinely means the index never responded.
  */
 const QUERY_SERVICE_TIMEOUT = 20_000;
 

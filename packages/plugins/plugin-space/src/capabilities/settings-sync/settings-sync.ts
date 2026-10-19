@@ -72,7 +72,6 @@ export default Capability.makeModule(
     const unsynced = Atom.make<readonly string[]>([]).pipe(Atom.keepAlive);
     const pinned = Atom.make<AppSettings.DeviceSettings>(structuredClone(registry.get(device))).pipe(Atom.keepAlive);
 
-    // Set once the settings space is open; until then the actions have nothing to act on.
     let bound: { store: Store; sync: Sync } | undefined;
     const unsubscribe: (() => void)[] = [];
 
@@ -149,8 +148,6 @@ export default Capability.makeModule(
       refresh();
     });
 
-    // Off the activation path: a settings space slow to open (e.g. during a reindex after an upgrade)
-    // must not fail the plugin's activation. A failed attempt subscribes nothing, so it just runs again.
     const bindFiber = Effect.runFork(
       Effect.gen(function* () {
         while (!bound) {

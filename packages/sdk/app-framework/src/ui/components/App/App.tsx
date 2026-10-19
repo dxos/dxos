@@ -18,10 +18,6 @@ import {
 } from '../../hooks/index.ts';
 import { bootLoader } from './loader.ts';
 
-/**
- * The gate status line last opened on the boot loader. Module-level because the loader is a page
- * singleton and `App` remounts when `useApp` flips `ready`, which a ref would not survive.
- */
 let relayedGateStatus: string | undefined;
 
 export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus'> & {
@@ -39,7 +35,6 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     () => Atom.make((get) => gates.map((gate) => get(gate.state)).find((state) => state.pending)),
     [gates],
   );
-  // A pending gate keeps the loader up past startup, showing the gate's own status and progress.
   const held = useAtomValue(heldAtom);
   const stage = useLoading(ready && !held, debounce);
   const placeholderDismissed = stage >= LoadingState.Done;
@@ -103,7 +98,6 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     verboseStatus,
   ]);
 
-  // The status opens a line once; its count then ticks on that line in place (a range tick replaces the current line).
   useEffect(() => {
     if (!held || stage >= LoadingState.FadeOut) {
       return;

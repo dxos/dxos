@@ -47,7 +47,6 @@ export const HubHttpClient = Capability.lazyModule(
 export const BootGate = Capability.lazyModule(
   'BootGate',
   {
-    // Must be contributed before startup completes: the boot loader dismisses once it does.
     activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
     provides: [Capabilities.BootGate],
@@ -96,7 +95,6 @@ export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts
 export const IndexProgress = Capability.lazyModule(
   'IndexProgress',
   {
-    // ProgressRegistry is read optionally in the body, so a host without plugin-progress loses only the meter.
     requires: [ClientCapabilities.Client],
     provides: [],
     activatesOn: ClientEvents.Initialized,

@@ -145,13 +145,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return Array.from(this._queries, (query) => query.executor.trace);
   }
 
-  /** Scopes cached once complete: the store only ever finishes filling, so a check need not repeat. */
   readonly #snapshotsKnownComplete = new Set<string>();
 
-  /** Shared by queries over the same scope that register while its check is running; each check is a scan. */
   readonly #snapshotsChecks = new Map<string, Promise<boolean>>();
 
-  /** Whether the snapshot store holds every row the query can read: its spaces, and feed rows only if it reads feeds. */
   async #snapshotsComplete(executor: QueryExecutor): Promise<boolean> {
     const hasCompleteSnapshots = this._params.hasCompleteSnapshots;
     if (!hasCompleteSnapshots) {

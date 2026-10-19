@@ -77,7 +77,6 @@ import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
-/** Backoff for retrying a failed initialization while the space stays ready: doubles from the base up to the cap. */
 const INITIALIZATION_RETRY_BASE_MS = 1_000;
 const INITIALIZATION_RETRY_MAX_MS = 30_000;
 
@@ -149,7 +148,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   /** Set by a failed initialization, whose rejected triggers the next attempt re-arms. */
   private _initializationFailed = false;
 
-  /** Consecutive failed initializations; sets the retry backoff. */
   private _initializationRetries = 0;
 
   /**
@@ -454,7 +452,6 @@ export class SpaceProxy implements Space, CustomInspectable {
       const error = err instanceof Error ? err : new Error(String(err));
       this._databaseInitialized.throw(error);
       this._initializationComplete.throw(error);
-      // Starts over after a backoff while the space stays ready, or when it next returns to ready (see `_processSpaceUpdate`).
       this._initializationFailed = true;
       this._initializing = false;
       const delay = Math.min(

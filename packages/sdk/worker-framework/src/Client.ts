@@ -287,7 +287,6 @@ export class Connection extends Resource {
     // `portTimeout` so a caller that widens the port wait widens the boot budget with it.
     const openTimeout = this.#leaderPortTimeout + LOCK_OR_RPC_WAIT_TIMEOUT;
     const timeoutError = lockOrRpcTimeoutError('establishing initial worker connection', openTimeout);
-    // A worker that reports progress while it starts (e.g. migrating a large database) is not hung.
     await timeoutUnlessProgress(this.#initialConnection.wait(), openTimeout, this.workerStatus, timeoutError).catch(
       async (error) => {
         // Snapshotted before the teardown below, which is what they describe.
@@ -897,7 +896,6 @@ class LeaderSession extends Resource {
 
   readonly onClose = new Event<Error | undefined>();
 
-  /** Each `status` the worker reports; see {@link WorkerProtocol.DedicatedWorkerStatusMessage}. */
   readonly onStatus = new Event<unknown>();
 
   /** The error the worker reported when its runtime failed to start. */

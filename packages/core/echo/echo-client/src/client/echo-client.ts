@@ -85,7 +85,7 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  /** Each index status the host reports (see `DataService.IndexStatus`); also restarts one-shot query budgets. */
+  /** Each index status the host reports; see `DataService.IndexStatus`. */
   readonly indexStatusUpdated = new Event<DataService.IndexStatus>();
 
   /** Each index activity the host reports; see `DataService.IndexActivity`. */
@@ -133,7 +133,6 @@ export class EchoClient extends Resource {
     this.#subscribeIndexStatus();
   }
 
-  /** Follows the host's index status and activity; re-run after a reconnect, which closes the previous streams. */
   #subscribeIndexStatus(): void {
     invariant(this._dataService);
     this.#indexStatusCleanup?.();

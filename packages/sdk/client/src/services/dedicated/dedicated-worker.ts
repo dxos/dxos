@@ -86,7 +86,6 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           }),
           automaticallyConnectWebrtc: false,
           sqliteLayer: options.sqliteLayer,
-          // Reaches the leader tab before `ready`, so its boot screen can show migrations and a rebuild.
           onIndexStatus: reportStatus,
         });
         log('dedicated-worker: WorkerRuntime started');

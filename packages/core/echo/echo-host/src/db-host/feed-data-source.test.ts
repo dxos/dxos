@@ -77,15 +77,11 @@ describe('FeedDataSource', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // A block written locally is positioned when the authority answers, so position order is not insertion
-  // order. A read from an empty cursor once paged by position and resumed by insertion id, skipping every
-  // block inserted early but positioned late: after a cursor reset they were never indexed again.
   it.effect('reads every block from an empty cursor when position order differs from insertion order', () =>
     Effect.gen(function* () {
       const { source, append } = yield* setup;
       const trace = FeedProtocol.WellKnownNamespaces.trace;
       yield* append(trace, 60);
-      // The first 10 blocks inserted are positioned after the other 50.
       const sql = yield* SqlClient.SqlClient;
       yield* sql`UPDATE blocks SET position = CASE WHEN insertionId <= 10 THEN insertionId + 1000 ELSE insertionId END`;
 

@@ -208,7 +208,6 @@ const compareVersions = (version: string, minimum: readonly number[]): number =>
   return 0;
 };
 
-/** The cursors in `updated` whose position changed: a source may hand back every cursor it holds. */
 const movedCursors = (
   sourceName: string,
   previous: readonly IndexCursor[],
@@ -314,7 +313,6 @@ export class IndexEngine {
     });
   }
 
-  /** Each store's migrations, in the order {@link migrate} applies them. */
   #stores() {
     return [
       { ...TrackerMigrations, migrate: () => this.#tracker.migrate() },
@@ -610,7 +608,6 @@ export class IndexEngine {
         result.updated += updated;
         result.done = result.done && done;
         result.drained = result.drained && drained;
-        // The furthest-behind index, as the backlog is counted.
         if (catchUp !== undefined) {
           result.catchUp = Math.max(result.catchUp ?? 0, catchUp);
         }
@@ -695,7 +692,6 @@ export class IndexEngine {
       });
 
       if (objects.length === 0) {
-        // Entries read with nothing to index still move their cursors, so the next batch goes past them.
         const moved = movedCursors(source.sourceName, opts.cursors, updatedCursors);
         if (moved.length > 0) {
           yield* sql.withTransaction(
@@ -719,9 +715,6 @@ export class IndexEngine {
             objects: [] as readonly IndexerObject[],
           };
         }
-        // An empty batch that moves nothing counts as drained even when the source says it stopped at
-        // the limit: the entries it skipped (a document that will not load) do not advance, so waiting
-        // would spin.
         return { updated: 0, done: true, drained: true, catchUp, objects: [] as readonly IndexerObject[] };
       }
 

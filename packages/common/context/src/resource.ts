@@ -168,7 +168,6 @@ export abstract class Resource implements Lifecycle {
     try {
       await this._open(this.#parentCtx);
     } catch (err) {
-      // A failed open leaves the resource closed, with the attempt's context released, so a later `open()` retries.
       this.#openPromise = null;
       await this.#internalCtx.dispose();
       this.#internalCtx = this.#createContext();

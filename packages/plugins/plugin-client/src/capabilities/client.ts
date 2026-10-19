@@ -205,10 +205,6 @@ export default Capability.makeModule(
   }),
 );
 
-/**
- * Waits for `promise`, failing after `timeout` ms in which the client reports no index status: a
- * worker migrating or rebuilding a large index on its first boot after an upgrade is slow, not hung.
- */
 const untilStalled = async <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> => {
   const progress = new Event();
   const subscription = client.indexStatus.subscribe(() => progress.emit());

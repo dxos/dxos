@@ -175,7 +175,6 @@ export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
-      // Subscribed before opening, which is when migrations run and a rebuild is first counted.
       const controller = yield* Hook.Controller;
       const unsubscribeStatus = echoHost.indexStatus.updated.on((status) => {
         void EffectEx.runPromise(

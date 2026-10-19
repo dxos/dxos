@@ -120,7 +120,6 @@ describe('EchoHost index status', () => {
     expect(first.indexStatus.current.phase).toBe('idle');
     await first.close();
 
-    // As a cursor-resetting migration leaves the index on the next boot.
     await RuntimeProvider.runPromise(runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -137,7 +136,6 @@ describe('EchoHost index status', () => {
     onTestFinished(async () => {
       await host.close();
     });
-    // The objects' documents; the trace block's space is not one of the host's.
     expect(statuses.find((status) => status.phase === 'indexing')).toEqual({ phase: 'indexing', done: 0, total: 3 });
 
     await host.updateIndexes();
@@ -145,9 +143,7 @@ describe('EchoHost index status', () => {
   });
 
   test('reports catch-up on indexed documents whose heads moved on, without changing the status', async () => {
-    // Every pass counts, rather than one a second.
     const { host, saveObject } = await setup({ indexRecountInterval: 0 });
-    // Enough for three passes of 50.
     const objectIds = Array.from({ length: 110 }, () => EntityId.random());
     const handles = [];
     for (const objectId of objectIds) {
@@ -171,7 +167,6 @@ describe('EchoHost index status', () => {
     await host.flush(Context.default());
     await host.updateIndexes();
 
-    // The catch-up lane's values; full-text flushes also move the activity.
     const catchUps = activities
       .map((activity) => activity.catchUp)
       .filter((catchUp, index, all) => index === 0 || JSON.stringify(catchUp) !== JSON.stringify(all[index - 1]));
@@ -184,7 +179,6 @@ describe('EchoHost index status', () => {
     onTestFinished(() => dispose());
     const first = new EchoHost({ runtime });
     await first.open(Context.default());
-    // A persisted space; its empty root still gets a cursor once read.
     const root = await first.createSpaceRoot(Context.default(), PublicKey.random());
     const spaceId = root.doc()!.access!.spaceId!;
     await RuntimeProvider.runPromise(runtime)(
@@ -200,7 +194,6 @@ describe('EchoHost index status', () => {
     await first.flush(Context.default());
     await first.updateIndexes();
     await first.close();
-    // As a migration that resets the feed cursors leaves them.
     await RuntimeProvider.runPromise(runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -252,7 +245,6 @@ describe('EchoHost index status', () => {
     host.indexStatus.activityUpdated.on((activity) => {
       activities.push(activity);
     });
-    // The first batch reports the lane, and the second fails.
     const update = host.indexEngine.updateSecondaryIndexes.bind(host.indexEngine);
     vi.spyOn(host.indexEngine, 'updateSecondaryIndexes')
       .mockImplementationOnce(update)
@@ -279,7 +271,6 @@ describe('EchoHost index status', () => {
     });
     await saveObjects(12);
     await host.updateIndexes({ secondaryIndexes: true });
-    // As renaming the full-text index leaves it.
     await RuntimeProvider.runPromise(runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -455,9 +446,6 @@ describe('EchoHost query service', () => {
     expect(executed).toEqual(['answered']);
   });
 
-  // After an upgrade resets the snapshot cursors, the reindex can run for minutes; a query over a
-  // space's objects answers from the snapshot rows already stored instead of waiting it out, even
-  // when a feed row elsewhere has no snapshot.
   test('a one-shot query answers from stored snapshots while a cursor reset reindexes', async () => {
     const { host, runtime, spaceId, saveObject, saveObjects } = await setup({ queryExecutor: 'sql' });
     await saveObjects(3);
@@ -474,7 +462,6 @@ describe('EchoHost query service', () => {
       }),
     );
 
-    // The reindex never finishes: every pass from here on blocks.
     const releasePasses = new Trigger();
     onTestFinished(() => {
       releasePasses.wake();

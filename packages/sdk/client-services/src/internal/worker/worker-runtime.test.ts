@@ -71,7 +71,6 @@ describe('WorkerRuntime', () => {
         sqliteLayer: layerMemory,
         onIndexStatus: (status) => statuses.push(status),
       }).pipe(
-        // Recorded as the runtime finishes starting, before anything it serves could ask.
         Effect.tap(() => Effect.sync(() => expect(statuses.some((status) => status.phase === 'migrating')).toBe(true))),
         Effect.scoped,
       ),
@@ -80,7 +79,6 @@ describe('WorkerRuntime', () => {
   });
 
   test('stops reporting index status once ready', async () => {
-    // A total no real migration count reaches.
     const MIGRATED_AFTER_READY = 999;
     const statuses: DataService.IndexStatus[] = [];
     await EffectEx.runPromise(
@@ -89,7 +87,6 @@ describe('WorkerRuntime', () => {
         sqliteLayer: layerMemory,
         onIndexStatus: (status) => statuses.push(status),
       }).pipe(
-        // A migration moving after `ready`.
         Effect.tap((runtime) =>
           runtime
             .stack()

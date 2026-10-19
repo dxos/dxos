@@ -213,7 +213,6 @@ describe('ObjectSnapshotIndex', () => {
       const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
       yield* metaIndex.migrate();
 
-      // One feed object in space A has no snapshot; space A's document object and space B's object do.
       const [spaceA, spaceB] = [SpaceId.random(), SpaceId.random()];
       const make = (spaceId: SpaceId, source: 'document' | 'feed'): IndexerObject => ({
         spaceId,

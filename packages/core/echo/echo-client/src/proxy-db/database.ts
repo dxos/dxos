@@ -424,7 +424,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      // Best effort: schemas also load on demand, and a slow index (e.g. a reindex after an upgrade) must not fail the open.
       await this.query(Filter.type(PersistentSchema))
         .run()
         .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));

@@ -9,7 +9,7 @@ import { MulticastObservable } from '@dxos/async';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import {
-  BOOT_GATE_BUDGET,
+  BOOT_GATE_FIRST_STATUS_BUDGET,
   BOOT_GATE_STALL_BUDGET,
   MAJOR_REINDEX_THRESHOLD,
   followIndexStatus,
@@ -38,7 +38,6 @@ describe('followIndexStatus', () => {
   });
 
   const setup = async () => {
-    // Driven through its observer, which delivers synchronously once the subscription has settled.
     let next: ((status: DataService.IndexStatus) => void) | undefined;
     const indexStatus = new MulticastObservable<DataService.IndexStatus | null>((observer) => {
       next = (status) => observer.next(status);
@@ -52,7 +51,7 @@ describe('followIndexStatus', () => {
 
   test('releases if no status arrives within the budget', async () => {
     const { states, cleanup } = await setup();
-    vi.advanceTimersByTime(BOOT_GATE_BUDGET);
+    vi.advanceTimersByTime(BOOT_GATE_FIRST_STATUS_BUDGET);
     expect(states).toEqual([{ pending: false }]);
     cleanup();
   });

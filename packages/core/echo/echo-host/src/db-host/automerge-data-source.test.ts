@@ -310,7 +310,6 @@ describe('AutomergeDataSource', () => {
     const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
-    // Read, so its cursor moves and it is not read again until it changes.
     expect(result.cursors).toEqual([{ spaceId, resourceId: handle.documentId, cursor: expect.any(String) }]);
     const again = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), result.cursors));
     expect(again.cursors).toEqual([]);

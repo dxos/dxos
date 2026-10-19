@@ -427,7 +427,6 @@ describe('IndexQuerySource', () => {
     });
   });
 
-  // A host rebuilding its index after an upgrade answers one-shot queries late, but does answer.
   test('index progress restarts the one-shot budget', async () => {
     const spaceId = SpaceId$.random();
     let answer: (() => void) | undefined;
@@ -452,7 +451,6 @@ describe('IndexQuerySource', () => {
     onTestFinished(() => source.close());
 
     const result = source.run(Context.default(), makeQuery(spaceId));
-    // The host answers after 250 ms, past the 100 ms budget, while reporting progress every 50 ms.
     for (let i = 0; i < 5; i++) {
       await sleep(50);
       indexProgress.emit();

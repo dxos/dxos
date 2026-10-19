@@ -12,24 +12,16 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 import { ClientCapabilities } from '#types';
 
-/** A rebuild of at least this many documents and feed blocks holds the boot loader; a smaller one finishes about as fast as the app opens. */
 export const MAJOR_REINDEX_THRESHOLD = 500;
 
-/** How long the gate waits for the worker's first index status before letting the app open anyway. */
-export const BOOT_GATE_BUDGET = 5_000;
+export const BOOT_GATE_FIRST_STATUS_BUDGET = 5_000;
 
-/** How long a holding gate waits between statuses before letting the app open anyway; a rebuild reports about once a second. */
 export const BOOT_GATE_STALL_BUDGET = 60_000;
 
 const RELEASED: Capabilities.BootGateState = { pending: false };
 
 const UPDATING = 'Updating database';
 
-/**
- * The gate's next state for an index status, while it still holds the loader: hold through
- * migrations and a major rebuild, and release for anything else. The gate stops consulting this once
- * released, since a dismissed loader does not come back.
- */
 export const gateStateFor = (status: DataService.IndexStatus): Capabilities.BootGateState => {
   const progress = status.total > 0 ? status.done / status.total : undefined;
   switch (status.phase) {
@@ -44,31 +36,22 @@ export const gateStateFor = (status: DataService.IndexStatus): Capabilities.Boot
   }
 };
 
-/**
- * Drives a boot gate from the client's index status until it releases: the first status (or
- * {@link BOOT_GATE_BUDGET}) decides, and a gate left holding without a status for
- * {@link BOOT_GATE_STALL_BUDGET} releases. Returns a cleanup.
- */
 export const followIndexStatus = (
   indexStatus: MulticastObservable<DataService.IndexStatus | null>,
   set: (state: Capabilities.BootGateState) => void,
 ): (() => void) => {
-  let released = false;
   let deadline: ReturnType<typeof setTimeout> | undefined;
   const update = (next: Capabilities.BootGateState) => {
-    if (released) {
-      return;
-    }
     clearTimeout(deadline);
     set(next);
-    // Later statuses are ignored rather than unsubscribed here: the observable can emit during `subscribe`.
-    released = !next.pending;
-    if (!released) {
+    if (next.pending) {
       deadline = setTimeout(() => update(RELEASED), BOOT_GATE_STALL_BUDGET);
+    } else {
+      subscription.unsubscribe();
     }
   };
 
-  deadline = setTimeout(() => update(RELEASED), BOOT_GATE_BUDGET);
+  deadline = setTimeout(() => update(RELEASED), BOOT_GATE_FIRST_STATUS_BUDGET);
   const subscription = indexStatus.subscribe((status) => {
     if (status) {
       update(gateStateFor(status));
@@ -80,11 +63,6 @@ export const followIndexStatus = (
   };
 };
 
-/**
- * Holds the boot loader while the client's worker migrates or rebuilds a large index after an
- * upgrade, when the app would open with no data. Contributed at `Startup`, closed, so it is in place
- * before the loader can dismiss.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;

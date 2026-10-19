@@ -45,7 +45,6 @@ describe('IndexStatusTracker', () => {
     tracker.updated.on((status) => {
       statuses.push(status);
     });
-    // A pass that counts, as one is due once an interval has passed.
     const countingPass = () => {
       now += BACKLOG_RECOUNT_INTERVAL;
       expect(tracker.beginPass()).toBe(true);
@@ -143,7 +142,6 @@ describe('countIndexBacklog', () => {
   test('feed blocks stored before the pin stay a rebuild until read, later ones are catch-up, and only the spaces of the host count', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    // Opened for its tables; the feed is read by nothing here.
     const host = new EchoHost({ runtime });
     await host.open(Context.default());
     onTestFinished(async () => {
@@ -173,14 +171,12 @@ describe('countIndexBacklog', () => {
       blocks: 120,
       catchUp: 0,
     });
-    // Another space is the host's, and this one is not.
     expect(await run(countIndexBacklog({ pin, spaceIds: [SpaceId.random()] }))).toEqual({
       documents: 0,
       blocks: 0,
       catchUp: 0,
     });
 
-    // As the first pass over the feed leaves its namespace cursor behind it.
     await run(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -197,7 +193,6 @@ describe('countIndexBacklog', () => {
       catchUp: 5,
     });
 
-    // The furthest-behind primary index sets where reading resumes, and one with no cursor starts over.
     const setCursor = (indexName: string, cursor: string | null) =>
       run(
         Effect.gen(function* () {
