@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as ChessClubSpace from './chess-club/ChessClubSpace.ts';
 export * as FieldstoneSpace from './fieldstone/FieldstoneSpace.ts';
 export * as IncidentSpace from './incident/IncidentSpace.ts';
 export * as PipelineSpace from './crm/PipelineSpace.ts';

@@ -31,6 +31,7 @@ import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -55,6 +56,7 @@ import { isNonNullable } from '@dxos/util';
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
+  chessClub: 'org.dxos.plugin-debug.template.chess-club',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
@@ -218,6 +220,7 @@ const meta = {
         IllustratorPlugin.make(),
         InboxPlugin.make(),
         KanbanPlugin.make(),
+        MapPlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
         ProjectsPlugin.make(),
@@ -286,6 +289,8 @@ const play: Story['play'] = async ({ canvasElement }) => {
 };
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
+
+export const ChessClub: Story = { args: { template: TEMPLATES.chessClub }, play };
 
 export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
 

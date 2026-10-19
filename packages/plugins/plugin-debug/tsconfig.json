@@ -188,6 +188,9 @@
       "path": "../plugin-kanban"
     },
     {
+      "path": "../plugin-map"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {

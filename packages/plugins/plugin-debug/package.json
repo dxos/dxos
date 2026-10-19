@@ -98,6 +98,11 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./ChessClubSpace": {
+      "source": "./src/samples/chess-club/ChessClubSpace.ts",
+      "types": "./dist/types/src/samples/chess-club/ChessClubSpace.d.ts",
+      "import": "./dist/lib/ChessClubSpace.mjs"
+    },
     "./FieldstoneSpace": {
       "source": "./src/samples/fieldstone/FieldstoneSpace.ts",
       "types": "./dist/types/src/samples/fieldstone/FieldstoneSpace.d.ts",
@@ -215,6 +220,7 @@
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
+    "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -258,6 +264,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
