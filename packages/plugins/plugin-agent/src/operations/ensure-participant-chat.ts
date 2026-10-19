@@ -32,15 +32,19 @@ const latestOf = Effect.fnUntraced(function* (chats: readonly Chat.Chat[]) {
     return chats[0];
   }
 
-  const dated = yield* Effect.forEach(chats, (chat) =>
-    Effect.gen(function* () {
-      const feed = yield* Database.load(chat.feed);
-      // A chat hosted on EDGE may not have its messages on this device yet, and would read as empty.
-      yield* Feed.sync(feed, { shouldPush: false }).pipe(Effect.timeoutOption(FEED_SYNC_TIMEOUT), Effect.exit);
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      const last = messages.reduce((newest, message) => (message.created > newest ? message.created : newest), '');
-      return { chat, last };
-    }).pipe(Effect.orElseSucceed(() => ({ chat, last: '' }))),
+  const dated = yield* Effect.forEach(
+    chats,
+    (chat) =>
+      Effect.gen(function* () {
+        const feed = yield* Database.load(chat.feed);
+        // A chat hosted on EDGE may not have its messages on this device yet, and would read as empty.
+        yield* Feed.sync(feed, { shouldPush: false }).pipe(Effect.timeoutOption(FEED_SYNC_TIMEOUT), Effect.exit);
+        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        // Compared as instants: an ISO timestamp may carry any offset.
+        const last = messages.reduce((newest, message) => Math.max(newest, Date.parse(message.created) || 0), 0);
+        return { chat, last };
+      }).pipe(Effect.orElseSucceed(() => ({ chat, last: 0 }))),
+    { concurrency: 4 },
   );
   return dated.reduce((latest, entry) => (entry.last > latest.last ? entry : latest)).chat;
 });
@@ -59,8 +63,10 @@ export type ParticipantChatOptions = {
 export const ensureParticipantChat = Effect.fnUntraced(function* (
   agent: Agent.Agent,
   person: Person.Person,
-  { owner, remote }: ParticipantChatOptions = {},
+  { owner: givenOwner, remote }: ParticipantChatOptions = {},
 ) {
+  // An empty owner is no owner, for the lookup as for a chat created here.
+  const owner = givenOwner || undefined;
   const key = { source: ChatParticipant.PARTICIPANT_SOURCE, id: person.id };
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
   const candidates = existing.filter((chat) => Obj.getParent(chat)?.id === agent.id);

@@ -81,5 +81,12 @@ describe('A person’s chat with an agent', () => {
 
     await say(first, 'It is on May 12.', '2026-10-19T11:00:00.000Z');
     expect((await open()).id).toBe(first.id);
+
+    // 12:30 at +02:00 is 10:30 UTC, before the message above.
+    await say(second, 'See you there.', '2026-10-19T12:30:00.000+02:00');
+    expect((await open()).id).toBe(first.id);
+
+    // An empty owner is no owner, which a relay gives: it reaches the member's latest chat rather than making one.
+    expect((await run(ensureParticipantChat(agent, person, { owner: '' }))).id).toBe(first.id);
   });
 });
