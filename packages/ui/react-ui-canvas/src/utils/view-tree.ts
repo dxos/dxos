@@ -12,7 +12,7 @@ import {
   isFrameNode,
   isInstanceNode,
 } from '../model/index.ts';
-import { sortByZ } from './order.ts';
+import { between, sortByZ } from './order.ts';
 
 /** What a row of the views tree stands for (VIEWS.md §2). */
 export type ViewTreeKind = 'view' | 'node' | 'link' | 'instance' | 'object';
@@ -26,6 +26,8 @@ export type ViewTreeItem = {
   element?: ElementId;
   /** The View path the row belongs to, root first: what opening it, or selecting its element, navigates to. */
   path: SceneId[];
+  /** The scene that holds the row's element, whose drawing order a restack changes; undefined for the root view. */
+  container?: SceneId;
   label: string;
   /** The node or link type, for its icon. */
   type?: string;
@@ -68,6 +70,7 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
           id,
           kind: 'view',
           element: node.id,
+          container: scene.id,
           path: childPath,
           label: textOf(node) ?? child?.name ?? 'View',
           type: node.type,
@@ -84,6 +87,7 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
           id,
           kind: 'instance',
           element: node.id,
+          container: scene.id,
           path,
           label: object?.name ?? node.composite,
           type: node.type,
@@ -96,6 +100,7 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
         id,
         kind: 'node',
         element: node.id,
+        container: scene.id,
         path,
         label: textOf(node) ?? node.type,
         type: node.type,
@@ -107,6 +112,7 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
       id: `${prefix}${link.id}`,
       kind: 'link',
       element: link.id,
+      container: scene.id,
       path,
       label:
         textOf(link) ??
@@ -125,4 +131,28 @@ export const buildViewTree = (scenes: SceneMap, root: SceneId): ViewTreeItem => 
     label: scene?.name ?? root,
     children: scene ? contents(scene, [root], '', false, new Set([root])) : [],
   };
+};
+
+/**
+ * The `z` that moves `id` just before or after `target` in its scene's drawing order (nodes among nodes, links among
+ * links), or undefined when the two are not siblings or the move changes nothing.
+ */
+export const restackZ = (
+  scene: Scene,
+  id: ElementId,
+  target: ElementId,
+  position: 'before' | 'after',
+): string | undefined => {
+  const elements: readonly { id: ElementId; z: string }[] = scene.nodes[id]
+    ? Object.values(scene.nodes)
+    : Object.values(scene.links);
+  const group = elements.map(({ id, z }) => ({ id, z }));
+  const ordered = sortByZ(group).filter((element) => element.id !== id);
+  const index = ordered.findIndex((element) => element.id === target);
+  if (index < 0 || id === target) {
+    return undefined;
+  }
+  const [low, high] =
+    position === 'before' ? [ordered[index - 1], ordered[index]] : [ordered[index], ordered[index + 1]];
+  return between(low?.z, high?.z);
 };

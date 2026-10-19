@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { createNestedSimpleTree, createObjectsTree } from '../testing/index.ts';
-import { buildViewTree } from './view-tree.ts';
+import { buildViewTree, restackZ } from './view-tree.ts';
 
 const labels = (items: { label: string }[]) => items.map((item) => item.label);
 
@@ -36,5 +36,26 @@ describe('buildViewTree', () => {
     expect(new Set(rows.map((item) => item.id)).size).toBe(rows.length);
     // Badge is defined but placed nowhere, so it is no row of the views tree.
     expect(rows.some((item) => item.label === 'Badge')).toBe(false);
+  });
+
+  test('restackZ moves an element just before or after a sibling, nodes among nodes', ({ expect }) => {
+    const tree = createNestedSimpleTree();
+    const scene = tree.scenes.find((scene) => scene.id === tree.root);
+    if (!scene) {
+      throw new Error('fixture has no root scene');
+    }
+    const order = (z: Record<string, string>) =>
+      Object.entries(z)
+        .sort(([, left], [, right]) => (left < right ? -1 : left > right ? 1 : 0))
+        .map(([id]) => id);
+    const zs = Object.fromEntries(Object.values(scene.nodes).map((node) => [node.id, node.z]));
+    expect(order(zs)).toEqual(['a', 'b', 'c']);
+    const before = restackZ(scene, 'c', 'a', 'before');
+    expect(order({ ...zs, c: before ?? '' })).toEqual(['c', 'a', 'b']);
+    const after = restackZ(scene, 'a', 'c', 'after');
+    expect(order({ ...zs, a: after ?? '' })).toEqual(['b', 'c', 'a']);
+    // A node is not restacked among links, nor against itself.
+    expect(restackZ(scene, 'a', 'a', 'before')).toBeUndefined();
+    expect(restackZ(scene, 'a', Object.keys(scene.links)[0], 'before')).toBeUndefined();
   });
 });

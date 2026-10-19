@@ -10,9 +10,10 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { reduceIntent } from '../../../engine/index.ts';
 import { type ElementId, type SceneId, type SceneMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
-import { type ViewTreeItem } from '../../../utils/index.ts';
+import { type ViewTreeItem, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { ViewsInspector } from './ViewsInspector.tsx';
 
@@ -30,21 +31,32 @@ type StoryArgs = {
 
 /** The views tree over a shared fixture; picking a row selects its element, as the canvas would. */
 const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
-  const { scenes, root } = useMemo((): { scenes: SceneMap; root: SceneId } => {
+  const initial = useMemo((): { scenes: SceneMap; root: SceneId } => {
     const tree = FIXTURES[fixture]();
     return { scenes: Object.fromEntries(tree.scenes.map((scene) => [scene.id, scene])), root: tree.root };
   }, [fixture]);
+  // Local state stands in for the store: a drag restacks the element in its scene.
+  const [scenes, setScenes] = useState(initial.scenes);
   const [selected, setSelected] = useState<ReadonlySet<ElementId>>(new Set());
   return (
     <ViewsInspector
       scenes={scenes}
-      root={root}
+      root={initial.root}
       selected={selected}
       onSelect={(item) => {
         setSelected(new Set(item.element ? [item.element] : []));
         onSelect?.(item);
       }}
       onOpen={onOpen}
+      onReorder={({ container, element, target, position }) =>
+        setScenes((scenes) => {
+          const scene = scenes[container];
+          const z = scene && restackZ(scene, element, target, position);
+          return scene && z
+            ? { ...scenes, [container]: reduceIntent(scene, { kind: 'reorder', id: element, z }) }
+            : scenes;
+        })
+      }
     />
   );
 };

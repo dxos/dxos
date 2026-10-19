@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { SceneBuilder } from '../../builder/index.ts';
-import { type Scene, createMemoryStore, createTimeline } from '../../model/index.ts';
+import { OPACITY_PATH, type Scene, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */
@@ -20,8 +20,8 @@ const topLevel = (root: HTMLElement, id: string) =>
     (element) => !element.closest('[data-instance]'),
   );
 
-/** Three shapes in a row on a scene with a four-second timeline, nothing keyed yet. */
-const createTree = () => {
+/** Three shapes in a row on a four-second loop: A rises and returns, B fades and returns, C grows and returns. */
+const createTree = (keyed: boolean) => {
   const box = (x: number) => ({ x, y: -64, width: 128, height: 128 });
   const tree = SceneBuilder.scene('scene:root', [
     SceneBuilder.rect('a', box(-320)).properties({ label: 'A', style: { hue: 'blue' } }),
@@ -31,17 +31,33 @@ const createTree = () => {
   ])
     .name('Animation')
     .build();
+  // Each shape keyed at the start, the middle and the end, so playback shows motion straight away.
+  const keys: [string, string, unknown, unknown][] = [
+    ['a', 'center', { x: -256, y: 0 }, { x: -256, y: -192 }],
+    ['b', OPACITY_PATH, 1, 0.2],
+    ['c', 'size', { width: 128, height: 128 }, { width: 256, height: 256 }],
+  ];
+  const timeline = keys.reduce(
+    (timeline, [target, property, rest, peak]) =>
+      [0, 2, 4].reduce((next, t) => setKey(next, target, property, { t, value: t === 2 ? peak : rest }), timeline),
+    createTimeline(4),
+  );
   const scenes = tree.scenes.map((scene): Scene =>
-    scene.id === tree.root ? { ...scene, timeline: createTimeline(4) } : scene,
+    scene.id === tree.root ? { ...scene, timeline: keyed ? timeline : createTimeline(4) } : scene,
   );
   return { scenes, root: tree.root };
 };
 
-const DefaultStory = () => {
+type StoryArgs = {
+  /** The shapes start keyed, so playback shows motion; off, the timeline is blank for keying from scratch. */
+  keyed?: boolean;
+};
+
+const DefaultStory = ({ keyed = true }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    const tree = createTree();
+    const tree = createTree(keyed);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
-  }, []);
+  }, [keyed]);
   // Docked: the objects inspector, which the story uses, never floats.
   return (
     <Canvas.Root store={store} root={root} inspectors='docked'>
@@ -57,7 +73,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'ui/react-ui-canvas/components/Animation',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -66,7 +82,7 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 /**
  * Test:
@@ -77,8 +93,9 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
-/** The default story, driven: its steps run as a play test. */
+/** The steps above as a play test, from a blank timeline. */
 export const Test: Story = {
+  args: { keyed: false },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view');

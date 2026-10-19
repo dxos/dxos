@@ -2,9 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
+import {
+  Tree,
+  type TreeData,
+  type TreeDropEvent,
+  type TreeNode,
+  type TreeSelectEvent,
+  createStaticTreeModel,
+} from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
@@ -23,6 +30,15 @@ export type ViewsInspectorProps = InspectorProps & {
   onSelect?: (item: ViewTreeItem) => void;
   /** Opens a View in the viewport, by its path from the root. */
   onOpen?: (path: SceneId[]) => void;
+  /** A row was dragged before or after a sibling: restack its element in `container`'s drawing order. */
+  onReorder?: (event: ViewReorderEvent) => void;
+};
+
+export type ViewReorderEvent = {
+  container: SceneId;
+  element: ElementId;
+  target: ElementId;
+  position: 'before' | 'after';
 };
 
 const ICONS: Record<string, string> = {
@@ -43,6 +59,8 @@ const iconFor = (item: ViewTreeItem): string =>
 
 /** The synthetic root the tree model needs, so the root View is a row of its own. */
 const ROOT = '__views';
+/** The Tree's id, which starts every row's path. */
+const TREE_ID = 'views';
 type Row = ViewTreeItem | { id: typeof ROOT; children: ViewTreeItem[] };
 const isItem = (row: Row): row is ViewTreeItem => row.id !== ROOT;
 
@@ -53,9 +71,18 @@ const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) m
  * The views tree (VIEWS.md §4, decision 3): the root View, its nodes and links, the Views nested in it, and inside
  * each instance its object's contents, read-only. Selecting a row reports it to the host; a View row opens it.
  */
-export const ViewsInspector = ({ classNames, scenes, root, selected, onSelect, onOpen }: ViewsInspectorProps) => {
+export const ViewsInspector = ({
+  classNames,
+  scenes,
+  root,
+  selected,
+  onSelect,
+  onOpen,
+  onReorder,
+}: ViewsInspectorProps) => {
   const registry = useRegistry();
   const tree = useMemo(() => buildViewTree(scenes, root), [scenes, root]);
+  // Made once per tree, not per selection: a new model starts every row closed, so a click would collapse its branch.
   const model = useMemo(
     () =>
       createStaticTreeModel<Row>(
@@ -69,16 +96,38 @@ export const ViewsInspector = ({ classNames, scenes, root, selected, onSelect, o
                   icon: iconFor(row),
                   testId: `views-row-${row.id}`,
                   ...(row.kind === 'view' ? { count: row.children.length } : {}),
+                  // Placed objects' contents are drawn where they are defined, so they stay where they are.
+                  draggable: !row.readonly && row.container !== undefined,
                 }
               : {},
           // The root View starts open, to show what the canvas holds; everything below it waits closed.
           isOpen: (row) => row.id === ROOT || row === tree,
-          isCurrent: (row) => isItem(row) && row.element !== undefined && (selected?.has(row.element) ?? false),
         },
       ),
-    [tree, selected],
+    [tree],
   );
-  const currentRef = useRef<string[] | undefined>(undefined);
+
+  // Every row with its path as the Tree keys it, for writing the selection into the rows' state.
+  const rows = useMemo(() => {
+    const all: { item: ViewTreeItem; path: string[] }[] = [];
+    const walk = (item: ViewTreeItem, parent: string[]) => {
+      const path = [...parent, item.id];
+      all.push({ item, path });
+      item.children.forEach((child) => walk(child, path));
+    };
+    walk(tree, [TREE_ID]);
+    return all;
+  }, [tree]);
+  useEffect(() => {
+    for (const { item, path } of rows) {
+      const current = !item.readonly && item.element !== undefined && (selected?.has(item.element) ?? false);
+      const atom = model.stateAtom(path);
+      const state = registry.get(atom);
+      if (state.current !== current) {
+        registry.set(atom, { ...state, current });
+      }
+    }
+  }, [rows, selected, model, registry]);
 
   const onOpenChange = useCallback(
     ({ path, open }: { path: string[]; open: boolean }) => {
@@ -88,20 +137,46 @@ export const ViewsInspector = ({ classNames, scenes, root, selected, onSelect, o
     [model, registry],
   );
 
+  // The host owns the selection; the rows follow it through the effect above.
   const handleSelect = useCallback(
-    ({ item, path, current }: TreeSelectEvent<Row>) => {
-      if (current && currentRef.current) {
-        const previous = model.stateAtom(currentRef.current);
-        registry.set(previous, { ...registry.get(previous), current: false });
-      }
-      const atom = model.stateAtom(path);
-      registry.set(atom, { ...registry.get(atom), current });
-      currentRef.current = current ? path : undefined;
+    ({ item, current }: TreeSelectEvent<Row>) => {
       if (current && isItem(item)) {
         onSelect?.(item);
       }
     },
-    [model, registry, onSelect],
+    [onSelect],
+  );
+
+  // A row moves only among its siblings, as a restack: another container is another View's drawing.
+  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
+    const from: Row = source.item;
+    const to: Row = target.item;
+    return (
+      isItem(from) &&
+      isItem(to) &&
+      !to.readonly &&
+      from.container !== undefined &&
+      from.container === to.container &&
+      (from.kind === 'link') === (to.kind === 'link')
+    );
+  }, []);
+  const handleDrop = useCallback(
+    ({ instruction, source, target }: TreeDropEvent<Row>) => {
+      const from: Row = source.item;
+      const to: Row = target.item;
+      if (!isItem(from) || !isItem(to) || !from.container || !from.element || !to.element) {
+        return;
+      }
+      if (instruction.type === 'reorder-above' || instruction.type === 'reorder-below') {
+        onReorder?.({
+          container: from.container,
+          element: from.element,
+          target: to.element,
+          position: instruction.type === 'reorder-above' ? 'before' : 'after',
+        });
+      }
+    },
+    [onReorder],
   );
 
   const renderRow = useCallback(
@@ -137,14 +212,21 @@ export const ViewsInspector = ({ classNames, scenes, root, selected, onSelect, o
       <Tree.Root
         model={model}
         rootId={model.rootId}
-        id='views'
+        id={TREE_ID}
         selectionMode='multiple'
         columns={COLUMNS}
+        draggable={onReorder !== undefined}
+        canDrop={canDrop}
+        getDropKind={({ instruction }) =>
+          instruction.type === 'reorder-above' || instruction.type === 'reorder-below' ? 'move' : 'reject'
+        }
         onOpenChange={onOpenChange}
         onSelect={handleSelect}
+        onDrop={handleDrop}
       >
         <Tree.Label srOnly>Views</Tree.Label>
-        <Tree.Content>{renderRow}</Tree.Content>
+        {/* The inspector panel scrolls its sections, so the rows take their full height rather than scroll here. */}
+        <Tree.Content scroll={false}>{renderRow}</Tree.Content>
       </Tree.Root>
     </div>
   );
