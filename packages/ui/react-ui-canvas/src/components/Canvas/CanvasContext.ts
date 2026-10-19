@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
-
 import { createContext } from '@dxos/react-hooks';
 
 import {
@@ -11,7 +9,6 @@ import {
   type ControlPointRef,
   type Drag,
   type EditingPart,
-  type InspectorMode,
   type Isolation,
   type Projection,
 } from '../../engine/index.ts';
@@ -25,6 +22,7 @@ import {
   type ElementId,
   type LinkId,
   type LinkRegistry,
+  type Node,
   type NodeId,
   type NodeRegistry,
   type Scene,
@@ -105,9 +103,6 @@ export type CanvasContextValue = {
   latticeBounds: Bounds;
   path: SceneId[];
   camera: Camera;
-  /** The zoom against this level's own 1:1 rather than the root's; display only. */
-  /** The centre of the view in scene coordinates. */
-  pointer: { x: number; y: number };
   /** Whether the viewport has been measured; the scene stays hidden until it has. */
   measured: boolean;
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
@@ -132,10 +127,6 @@ export type CanvasContextValue = {
   drag: Drag | undefined;
   tool: Tool;
   debug: boolean;
-  /** Where the inspectors sit. */
-  inspectors: InspectorMode;
-  /** Docks or floats the inspectors; absent when the host does not offer the choice. */
-  onInspectorsChange?: (mode: InspectorMode) => void;
 
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;
@@ -158,25 +149,18 @@ export type CanvasContextValue = {
   /** Pauses and moves the playhead. */
   seek: (t: number) => void;
   timelineKeys: TimelineKeys;
-  /** Keys the current camera at the playhead. */
-  keyCamera: () => void;
   isolation: Isolation | undefined;
   isolate: (composite: SceneId) => void;
-  exitIsolation: () => void;
+  /** Drills into a frame, or opens an instance's composite in isolation. */
+  drillIn: (portal: Node, animate?: boolean) => void;
   objectActions: ObjectActions;
   /** What the scene's generators drew, and for which time. */
   generated: GeneratorFrames | undefined;
 } & Pick<SceneCamera, 'navigating' | 'opening'> &
-  Pick<SceneNavigation, 'drillIn' | 'childFrame'> &
+  Pick<SceneNavigation, 'childFrame'> &
   Pick<SceneClipboard, 'copy' | 'cut' | 'paste'> &
   Pick<
     PointerMachine,
-    | 'onBackgroundPointerDown'
-    | 'onPointerMove'
-    | 'onPointerUp'
-    | 'onContextMenu'
-    | 'cancelDrag'
-    | 'updateHover'
     | 'onHandlePointerDown'
     | 'onPortPointerDown'
     | 'onEndPointerDown'
@@ -188,10 +172,6 @@ export type CanvasContextValue = {
     | 'menu'
     | 'closeMenu'
     | 'menuAnchorRef'
-  > & {
-    onDoubleClick: (event: MouseEvent) => void;
-    onKeyDown: (event: KeyboardEvent) => void;
-    rootRef: RefObject<HTMLDivElement | null>;
-  };
+  >;
 
 export const [CanvasProvider, useCanvasContext] = createContext<CanvasContextValue>('Canvas.Root');

@@ -79,7 +79,6 @@ import {
   type ThemeRegistry,
   type Timeline,
   applyCameraKey,
-  cameraKey,
   clampTime,
   createTimeline,
   defaultThemeRegistry,
@@ -829,16 +828,6 @@ const CanvasRoot = ({
       baseProjection.apply({ kind: 'timeline', timeline: next });
     }
   }, [registry, atoms, baseProjection]);
-  /** Stores the current camera at the playhead. */
-  const keyCamera = useCallback(() => {
-    const t = registry.get(atoms.clock.time);
-    const key = cameraKey(registry.get(atoms.camera), viewport.width, viewport.height);
-    let next = registry.get(baseProjection.scene).timeline ?? createTimeline();
-    for (const property of ['x', 'y', 'zoom'] as const) {
-      next = setKey(next, 'camera', property, { t, value: key[property] });
-    }
-    baseProjection.apply({ kind: 'timeline', timeline: next });
-  }, [registry, atoms, baseProjection, viewport.width, viewport.height]);
   const timelineKeys = useMemo(
     () => ({
       active: timeline !== undefined,
@@ -1396,11 +1385,6 @@ const CanvasRoot = ({
     });
   }, [capabilities.create, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag]);
 
-  const pointer = useMemo(
-    () => screenToScene(camera, { x: viewport.width / 2, y: viewport.height / 2 }),
-    [camera, viewport],
-  );
-
   // Shapes may land on free cells beyond the scene's frame, so the cells cover what is in view; only the view,
   // since a union with a distant frame would exceed the grid's cell budget and hide the lattice.
   const latticeBounds = useMemo(
@@ -1441,14 +1425,16 @@ const CanvasRoot = ({
         return;
       }
       const size = nominalSize(def.defaultSize, cell);
-      const from = { x: snapMinor(pointer.x - size.width / 2), y: snapMinor(pointer.y - size.height / 2) };
+      // The camera is read when the command runs, so the command keeps its identity while the view moves.
+      const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
+      const from = { x: snapMinor(centre.x - size.width / 2), y: snapMinor(centre.y - size.height / 2) };
       // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
       const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
       if (node) {
         commitCreated(node);
       }
     },
-    [nodeRegistry, capabilities.create, cell, snapMinor, pointer, createdNode, commitCreated],
+    [nodeRegistry, capabilities.create, cell, snapMinor, registry, atoms.camera, viewport, createdNode, commitCreated],
   );
 
   const toolbarActions = useMemo<ToolbarActions>(
@@ -1490,18 +1476,12 @@ const CanvasRoot = ({
       drillOut,
       isolation,
       exitIsolation,
-      animateTo,
-      fitTarget,
       enterFit,
       fitting,
-      viewport,
-      inset,
       zoomBy,
       zoomTo,
       snapEnabled,
       toggleSnap,
-      guides,
-      toggleGuides,
       latticeOn,
       toggleLattice,
       debug,
@@ -1565,7 +1545,6 @@ const CanvasRoot = ({
       latticeBounds={latticeBounds}
       path={path}
       camera={camera}
-      pointer={pointer}
       measured={measured}
       frameUnit={frameUnit}
       focus={focus}
@@ -1584,8 +1563,6 @@ const CanvasRoot = ({
       tool={tool}
       debug={debug}
       // Read-only, nothing is edited, so there is no dock taking room from the canvas and no inspector floats over it.
-      inspectors={readonly ? 'floating' : inspectors}
-      onInspectorsChange={onInspectorsChange}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -1599,12 +1576,6 @@ const CanvasRoot = ({
       copy={copy}
       cut={cut}
       paste={paste}
-      onBackgroundPointerDown={onBackgroundPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onContextMenu={onContextMenu}
-      cancelDrag={cancelDrag}
-      updateHover={updateHover}
       onHandlePointerDown={onHandlePointerDown}
       onPortPointerDown={onPortPointerDown}
       onEndPointerDown={onEndPointerDown}
@@ -1616,9 +1587,6 @@ const CanvasRoot = ({
       menu={menu}
       closeMenu={closeMenu}
       menuAnchorRef={menuAnchorRef}
-      onDoubleClick={onDoubleClick}
-      onKeyDown={onKeyDown}
-      rootRef={rootRef}
       look={look}
       themes={themes}
       themeOverride={theme}
@@ -1632,10 +1600,8 @@ const CanvasRoot = ({
       fps={fps}
       seek={seek}
       timelineKeys={timelineKeys}
-      keyCamera={keyCamera}
       isolation={isolation}
       isolate={isolate}
-      exitIsolation={exitIsolation}
       objectActions={objectActions}
       generated={generated}
     >
@@ -1755,6 +1721,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
     drillIn,
     childFrame,
     generated,
+    toolbarActions,
   } = useCanvasContext('Canvas.Viewport');
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
   const selectedInstance = useMemo(() => {
@@ -1996,10 +1963,7 @@ const CanvasViewport = ({ liveDepth = MAX_LIVE_DEPTH, overlay, backgroundBounds 
               <Menu.Item
                 data-testid='menu-delete'
                 disabled={!capabilities.delete}
-                onSelect={() => {
-                  projection.apply({ kind: 'delete', ids: [...registry.get(atoms.selection)] });
-                  select([]);
-                }}
+                onSelect={toolbarActions.delete}
                 item={{ value: 'Delete', label: 'Delete' }}
               />
               <Menu.Separator />
@@ -2165,9 +2129,8 @@ export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'd
 
 /** The selected element's properties: an inspector that floats only while something is selected. */
 const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+  const { registry, projection, atoms, nodeRegistry, capabilities, selection, store, path } =
     useCanvasContext('Canvas.Properties');
-  const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
@@ -2269,8 +2232,7 @@ const ABOUT_INSPECTOR: InspectorSectionDef = {
  * turns). Each edit is one intent, so one undo step.
  */
 const CanvasLayers = () => {
-  const { projection, atoms, capabilities } = useCanvasContext('Canvas.Layers');
-  const registry = useRegistry();
+  const { registry, projection, atoms, capabilities } = useCanvasContext('Canvas.Layers');
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
   const layers = useMemo(() => sceneLayers(scene), [scene]);
