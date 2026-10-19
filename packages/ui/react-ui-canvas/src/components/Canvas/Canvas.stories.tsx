@@ -42,7 +42,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame' | 'nested';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'deep' | 'view' | 'nested';
   inspectors?: InspectorMode;
 };
 
@@ -106,9 +106,9 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: Story
           ? createSquareTree()
           : fixture === 'lattice'
             ? createLatticeTree()
-            : fixture === 'scenes'
+            : fixture === 'deep'
               ? createNestedDeepTree()
-              : fixture === 'frame'
+              : fixture === 'view'
                 ? createNestedViewTree()
                 : fixture === 'nested'
                   ? createNestedSimpleTree()
@@ -144,7 +144,7 @@ const meta: Meta<StoryArgs> = {
     },
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
-      description: 'Levels of nested scenes in the fixture; 0 is an empty scene',
+      description: 'Levels of nested views in the fixture; 0 is an empty view',
     },
     liveDepth: {
       control: { type: 'range', min: 0, max: 4, step: 1 },
@@ -192,9 +192,9 @@ export const NestedSimple: Story = {
  * Lattice mode (DESIGN §8b): shapes snap to whole cells of a 256x128 lattice with 128x64 gutters, span any number
  * of cells, and may not overlap; a drag onto occupied cells previews in red and is refused.
  */
-/** A, an empty scene B and C in a column: open B, draw in it, and compare sizes at 100% on both levels. */
+/** A, an empty view B and C in a column: open B, draw in it, and compare sizes at 100% on both levels. */
 export const NestedDeep: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'scenes' },
+  args: { depth: 0, liveDepth: 1, fixture: 'deep' },
 };
 
 /** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
@@ -248,15 +248,15 @@ export const Floating: Story = {
   },
 };
 
-/** A frame onto a nested scene: its open control drills into the child scene, and Up returns. */
-export const Frame: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'frame' },
+/** A view node onto a nested View: its open control drills into the child View, and Up returns. */
+export const View: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'view' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. The frame shows its label and an open control; the root has nowhere up to go.
-    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).toHaveTextContent('Frame'));
+    // 1. The view node shows its label and an open control; the root has nowhere up to go.
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="view"]')).toHaveTextContent('View'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
-    // 2. Opening the frame drills into its scene, once the camera has animated into it, which a loaded run slows.
+    // 2. Opening the view node drills into its View, once the camera has animated into it, which a loaded run slows.
     await userEvent.click(await canvas.findByTestId('portal-open'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());

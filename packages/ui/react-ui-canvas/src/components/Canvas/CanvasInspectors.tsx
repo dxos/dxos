@@ -131,7 +131,7 @@ export const useSelectionActions = ({
           variant='ghost'
           iconOnly
           icon='ph--frame-corners--regular'
-          label='New scene from selection'
+          label='New view from selection'
           data-testid='inspector-group'
           onClick={controller.selection.group}
         />
@@ -417,7 +417,7 @@ export const CanvasAbout = () => {
       { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
       { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
       { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
-      { id: 'scenes', label: 'Scenes', value: Object.keys(scenes).length },
+      { id: 'views', label: 'Views', value: Object.keys(scenes).length },
     ],
     [scene, scenes],
   );

@@ -1205,7 +1205,7 @@ export const PathNodeView = ({ node }: NodeViewProps) => {
 export type OpenControlProps = { label?: string; onOpen: () => void };
 
 /** The open control at a frame's top-right; it takes the press, so it neither drags nor selects the node. */
-export const OpenControl = ({ label = 'Open scene', onOpen }: OpenControlProps) => (
+export const OpenControl = ({ label = 'Open view', onOpen }: OpenControlProps) => (
   <Button.Root
     variant='ghost'
     iconOnly

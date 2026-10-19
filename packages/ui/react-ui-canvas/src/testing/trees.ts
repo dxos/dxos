@@ -152,22 +152,22 @@ export const createNestedSimpleTree = () => {
     .build();
 };
 
-/** A labelled frame onto a nested scene of two linked shapes, beside a rectangle. */
+/** A labelled view node onto a nested View of two linked shapes, beside a rectangle. */
 export const createNestedViewTree = () => {
   const root = 'scene:root';
   const size = { width: 256, height: 128 };
   const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
   return ViewBuilder.view(root, [
     ViewBuilder.rect('a', at(-384)).properties({ label: 'A' }),
-    ViewBuilder.view('frame', [
+    ViewBuilder.view('view', [
       ViewBuilder.rect('b', at(-192)).properties({ label: 'B' }),
       ViewBuilder.rect('c', at(192)).properties({ label: 'C' }),
       ViewBuilder.link('smart', 'b', 'c'),
     ])
       .name('Inner')
       .at({ x: 0, y: -128, width: 512, height: 256 })
-      .properties({ label: 'Frame' }),
-    ViewBuilder.link('smart', 'a', 'frame'),
+      .properties({ label: 'View' }),
+    ViewBuilder.link('smart', 'a', 'view'),
   ])
     .name('root')
     .build();

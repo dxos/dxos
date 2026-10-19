@@ -275,7 +275,7 @@ export const createCanvasController = ({
       return true;
     },
     group: () => {
-      const id = newId('scene');
+      const id = newId('view');
       const current = currentScene();
       const group = groupIntoView(
         current,

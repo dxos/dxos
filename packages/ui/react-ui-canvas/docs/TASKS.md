@@ -13,7 +13,7 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 
 1. Finish Phase 0: Navigation and Look in the controller; aspect hooks and the Time/Gesture/Editing providers; Viewport split (Background, Scene, Overlay); Canvas hooks to `hooks/canvas/`; `CanvasRoot.tsx` under ~600 lines; re-render test extended to selection.
 2. ~~`Canvas.Views`~~ Done 2026-10-19: the Views inspector in the canvas — rows select, Open drills in, drag restacks through the projection, the canvas selection reveals its row.
-3. Phase 1 (View rename) across react-ui-canvas and plugin-canvas.
+3. ~~Phase 1 (View rename) across react-ui-canvas and plugin-canvas.~~ Done 2026-10-19.
 4. Phase 2 (groups are Objects).
 5. Phase 3b (orphans).
    In parallel, as chips: react-ui-list Tree filter/reveal/range selection; tldraw import (plugin-canvas backlog).
@@ -42,11 +42,18 @@ Design: DESIGN.md §13.
 
 ## Phase 1 — View
 
-- [ ] Rename the public types: `SceneId` → `ViewId`, `SceneStore` → `ViewStore`, `SceneKind` → `ViewKind`, `Canvas.Scenes` → `Canvas.Views`.
-- [ ] Rename the `frame` node type to `view` (schema, registry, tool, palette key); read stored `frame` as `view` on load.
-- [ ] Update every call site, plugin-canvas included; no compatibility re-exports.
-- [ ] User-facing strings say "View" (tool, menus, tooltips, breadcrumbs).
-- [ ] Rename stories and their titles; restart Storybook and smoke-render the touched stories.
+- [x] Rename the public types: `SceneId` → `ViewId`, `SceneStore` → `ViewStore`, `SceneKind` → `ViewKind`, `Canvas.Scenes` → `Canvas.Views`.
+  - Also: `Scene` → `View` (type and schema), `SceneMap` → `ViewMap`, `MemorySceneStore` → `MemoryViewStore`, `OpenScene` → `OpenView`, `createSceneSchema` → `createViewSchema`, `updateScene`/`putScene` → `updateView`/`putView`, the store's `scenes`/`scene(id)` → `views`/`view(id)`, `SceneBuilder`/`SceneElement`/`SceneTree` → `ViewBuilder`/`ViewElement`/`ViewTree` (`.scene()` → `.view()`, `tree.scenes` → `tree.views`), `useSceneProjection` → `useViewProjection`, and the View-sense helpers (`sceneOptions`, `SceneField`, `groupIntoScene`, `compositeScenes`, `recordScenes`, `instanceScene`, `layoutScene`, `sceneLayers`, `visibleScene`, `sampleScene`, `sceneLinkGeometry`, `createSceneTree`, `createModelSceneTree`; `createFrameTree` → `createNestedViewTree`).
+  - Decisions: there was no `Canvas.Scenes` part (`Canvas.Views` is the Views inspector), so nothing clashed. `ViewKind` is `'view' | 'composite'`; plugin-canvas never stored `'scene'` (it omits the plain kind). Names where _scene_ means the drawn world or the render layer keep it: `SceneLayer`, `ViewportScene`, `SceneView`/`useSceneView`, `SceneCamera`, `SceneNavigation`, `SceneSnap`, `useSceneKeys`, `useSceneWheel`, `SceneDisplay`, `SceneLook`, `SceneViewAtoms`, `screenToScene`/`sceneToScreen`, `SCENE_OVERLAY_ATTRIBUTE`, the playwright `SceneManager`, and the `scene-view` test ids. `FrameHeader` (an animation's sequence of scenes) and the camera-framing helpers (`fitFrame`, `childFrame`, `portalFrame`, `frameClasses`) keep _frame_. Local variables and prose comments still say _scene_; renaming them would double the diff without changing the API.
+  - The stored shape is unchanged: plugin-canvas keeps `SceneRecord`, the `scene:<id>` keys, `kind: 'scene'` records, the records' `scene` field, `sceneKind`, `SCENE_SCHEMA`, and a view node's `scene` field (its child View).
+- [x] Rename the `frame` node type to `view` (schema, registry, tool, palette key); read stored `frame` as `view` on load.
+  - `FrameNode` → `ViewNode`, `isFrameNode` → `isViewNode`, `FrameLink`/`frameLinkFields` → `ViewLink`/`viewLinkFields`, `FrameNodeView` → `ViewNodeView`; the style set's `frame` part → `view` (`FRAME_FILLS` → `VIEW_FILLS`); palette name "View", key `F` kept. `withLegacyNodeType`/`withLegacyView` (model) map `frame` to `view`: the memory store applies them to its initial Views, plugin-canvas to every node record it reads (`readViews`, `migrateContent`, the linked-drawing write path). Tests: `model/store.test.ts`, plugin-canvas `content.test.ts`. New Views made from a selection get `view-` ids.
+- [x] Update every call site, plugin-canvas included; no compatibility re-exports.
+  - plugin-canvas (`CanvasFrameNode*` → `CanvasViewNode*`, `CanvasFrameToolbar` → `CanvasViewToolbar`, `FrameRole` → `ViewRole`, `frame-node.ts` → `view-node.ts`, `readScenes`/`writeScenes` → `readViews`/`writeViews`, `ROOT_SCENE_ID` → `ROOT_VIEW_ID`, `parseLinkedSceneId`/`linkedSceneId` → `…ViewId`), react-ui-canvas-compute (`boardSceneId` → `boardViewId`, `sceneFromCircuit`/`sceneFromLayout`/`applySceneToLayout` → `view…`/`applyViewToLayout`), plugin-conductor and plugin-uml. plugin-debug only reaches the canvas through react-ui-canvas-compute's presets, which did not change.
+- [x] User-facing strings say "View" (tool, menus, tooltips, breadcrumbs).
+  - "New view from selection", "Open view", the About count "Views", the properties field "View", the Live depth setting, and the plugin-canvas autocue flows' labels and `view` node selectors. Kept: plugin-canvas operation and skill descriptions (memoized LLM fixtures key on them).
+- [x] Rename stories and their titles; restart Storybook and smoke-render the touched stories.
+  - `Canvas` › `Frame` → `View` (fixture `frame` → `view`, `scenes` → `deep`), `PropertiesInspector` › `Frame`/`FrameTest` → `ViewNode`/`ViewNodeTest` (`View` clashes with the imported type), plugin-canvas `CanvasArticle` › `ObjectFrame` → `ObjectView`. No title named a scene or frame. Smoke-rendered through the storybook test project (20 files, 59 tests); the shared server was not restarted.
 
 ## Phase 2 — Groups are objects
 

@@ -43,11 +43,11 @@ type Scene
   desc: >
     One diagram: nodes and links keyed by id in a single flat coordinate space (decision 4). Bounds are
     NEVER stored — they are derived from the content, padded and grown to the major grid (decision 6),
-    so a scene has no edges to run out of. `createSceneSchema(nodes)` composes the schema from a
-    registry's node schemas; `OpenScene` is the same over `NodeBase`, which is what the engine itself
+    so a scene has no edges to run out of. `createViewSchema(nodes)` composes the schema from a
+    registry's node schemas; `OpenView` is the same over `NodeBase`, which is what the engine itself
     can validate for a host it does not know the types of.
   fields:
-    id: SceneId
+    id: ViewId
     name?: string
     nodes: Record<NodeId, Node>
     links: Record<LinkId, Link>
@@ -84,7 +84,7 @@ type BuiltinNode
     EllipseNode: { label?: string }       # inscribed in the frame; one port per side, at its centre
     ClassNode: { name, attributes: string[], methods: string[] }   # UML compartments
     TextNode: { text: string }
-    PortalNode: { scene: SceneId }        # renders the referenced scene scaled into this frame
+    PortalNode: { scene: ViewId }        # renders the referenced scene scaled into this frame
 ```
 
 ```mdl
@@ -169,7 +169,7 @@ type NodeDef
   desc: >
     A node type's definition: its schema, what it renders, where its ports are, how it may be
     manipulated, and how the palette presents it. Per type, never per instance, so the data stays small
-    and ports come for free. A host composes its registry (and with `createSceneSchema` its scene
+    and ports come for free. A host composes its registry (and with `createViewSchema` its scene
     schema) from the built-ins and its own — this is the whole of what "open node types" means.
   fields:
     type: NodeType
@@ -190,14 +190,14 @@ type NodeDef
 ```
 
 ```mdl
-type SceneStore
+type ViewStore
   desc: >
     Scenes by id behind atoms, so a view subscribes to exactly the scene it shows. The seam that lets
     persistence change without the surface noticing: `createMemoryStore` for stories and tests,
     `createEchoStore(board)` over `CanvasBoard.layout` for a plugin (M4).
   fields:
-    scenes: Atom.Writable<Record<SceneId, Scene>>
-    scene: (id: SceneId) => Atom<Scene | undefined>
+    views: Atom.Writable<Record<ViewId, View>>
+    view: (id: ViewId) => Atom<View | undefined>
 ```
 
 ```mdl
@@ -236,8 +236,8 @@ component Canvas
     around it. Owns the pointer state machine, the key table, navigation between depths and the undo
     log; owns NO model — every change leaves through `projection.apply`.
   props:
-    store: SceneStore
-    root: SceneId
+    store: ViewStore
+    root: ViewId
     nodes?: NodeRegistry              # defaults to the built-in five
     links?: LinkRegistry
     createProjection?: (options) => Projection     # per scene; freehand by default
@@ -251,7 +251,7 @@ component Canvas
     overlay?: ReactNode               # extra layers in scene coordinates (e.g. compute's Bullets)
   state:
     camera: Camera
-    path: SceneId[]                   # root to the scene being edited; its length is the depth
+    path: ViewId[]                   # root to the scene being edited; its length is the depth
     selection: Set<ElementId>         # nodes and links together
     hover, point, tool, linkType, snap, debug, drag, editing, history, undo, clipboard
   layout: |
@@ -336,7 +336,7 @@ component GeometryField
 ```mdl
 component Breadcrumbs
   desc: The path from the root to the scene being edited; a click drills out to that level.
-  props: { path: SceneId[], store }
+  props: { path: ViewId[], store }
 ```
 
 ```mdl
@@ -520,8 +520,8 @@ feat F-3: Selection and editing
   req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
     `style.fontSize` among them: set, it overrides the view's own size class for every text part.
   req F-3.11: A scene shape's Scene picks any scene of the store for it to open, so several shapes may
-    share one scene; a scene that would open the current path again is not offered (`sceneOptions`).
-  req F-3.12: Style classes are named looks kept beside the scenes (`SceneStore.styles`): an element
+    share one scene; a scene that would open the current path again is not offered (`viewOptions`).
+  req F-3.12: Style classes are named looks kept beside the scenes (`ViewStore.styles`): an element
     naming one in `class` derives its style or line from it. Taking a class drops the element's own
     look; editing a classed element's look edits the class, so every element of it changes together.
     "New class from selection" makes a class of the selected element's look and moves the element onto it.
@@ -535,9 +535,9 @@ feat F-3: Selection and editing
     layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
     hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
     properties panel picks an element's layer.
-  req F-3.13: "New scene from selection" moves the selected nodes, and the links between them, into a new
+  req F-3.13: "New view from selection" moves the selected nodes, and the links between them, into a new
     scene opened by a scene shape over their bounds; a link crossing out of the group stays, re-attached to
-    the shape. It is one undo step (`groupIntoScene`).
+    the shape. It is one undo step (`groupIntoView`).
 ```
 
 ```mdl
@@ -561,7 +561,7 @@ feat F-5: Read-only
 feat F-6: Open registry
   req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
   req F-6.2: A host composes its registry from the built-ins and its own defs, and its scene schema with
-    `createSceneSchema`.
+    `createViewSchema`.
   req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
     a box showing its `label`, with ports and an editable label, and a link as a straight line. A scene
     written by a newer host, or one whose plugin is off, opens.
@@ -602,18 +602,18 @@ agentic-review harness.
 rule intents-not-coordinates: The surface emits intents; only a projection writes coordinates
   Every model change leaves the view through `projection.apply(intent)`. A component under
   `src/components` must not write `center`, `size`, `z`, `points` or an endpoint into a scene, a
-  store or a node object — not through `updateScene`, not by constructing a `Scene` and putting it
+  store or a node object — not through `updateView`, not by constructing a `Scene` and putting it
   back, not by mutating a node it read from the projection. Transient gesture state (the `drag`
   atom's `delta`, `bounds`, `points`, a preview node or link that is never applied) is exactly what
-  that state is for and is not a violation. Flag a component that reaches `store`/`updateScene`/
-  `putScene` to change geometry, or that calls `reduceIntent` itself instead of applying an intent.
+  that state is for and is not a violation. Flag a component that reaches `store`/`updateView`/
+  `putView` to change geometry, or that calls `reduceIntent` itself instead of applying an intent.
   Do not flag projections (`src/model/projections/**`, `src/model/projection.ts`), stores, or a host's
   own projection outside this package.
   scope: dir
   files:
     - src/components/**/*.tsx
     - src/components/**/*.ts
-  grep: updateScene|putScene|reduceIntent
+  grep: updateView|putView|reduceIntent
   severity: error
 ```
 

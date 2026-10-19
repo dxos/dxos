@@ -243,13 +243,15 @@ describe('CanvasController', () => {
       expect(registry.get(atoms.selection).size).toBe(0);
     });
 
-    test('group moves the selection into a new scene opened by a frame, which becomes the selection', ({ expect }) => {
+    test('group moves the selection into a new View opened by a view node, which becomes the selection', ({
+      expect,
+    }) => {
       const { registry, store, atoms, controller, scene } = setup();
       controller.selection.select(['a', 'b']);
       const id = controller.selection.group();
-      expect(id).toBe('scene-0');
-      const frame = id === undefined ? undefined : scene().nodes[id];
-      expect(frame && isViewNode(frame) ? frame.scene : undefined).toBe(id);
+      expect(id).toBe('view-0');
+      const node = id === undefined ? undefined : scene().nodes[id];
+      expect(node && isViewNode(node) ? node.scene : undefined).toBe(id);
       expect(scene().nodes.a).toBeUndefined();
       expect(id && registry.get(store.views)[id]?.nodes.a).toBeDefined();
       expect([...registry.get(atoms.selection)]).toEqual([id]);
