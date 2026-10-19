@@ -82,6 +82,11 @@ export type NodeDef = {
   /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
   ellipse?: boolean;
   /**
+   * The frame's fill and border take this outline (SVG path data in the frame's px, kept `inset` px inside it) rather
+   * than the box: a cloud is a box drawn as a cloud.
+   */
+  silhouette?: (size: Size, inset: number) => string;
+  /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.
    */

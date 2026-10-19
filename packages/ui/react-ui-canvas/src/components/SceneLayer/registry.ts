@@ -8,6 +8,7 @@
 //
 
 import {
+  CloudNode,
   EllipseNode,
   FrameNode,
   GeneratorNode,
@@ -22,9 +23,10 @@ import {
   type Size,
   createNodeRegistry,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, createNode } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode } from '../../utils/index.ts';
 import {
   BoxNodeView,
+  CloudNodeView,
   EllipseNodeView,
   FrameNodeView,
   GeneratorNodeView,
@@ -72,7 +74,21 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-
+  cloud: {
+    name: 'Cloud',
+    icon: 'ph--cloud--regular',
+    key: 'C',
+    schema: CloudNode,
+    component: CloudNodeView,
+    create: (props) => createNode({ type: 'cloud', ...props }),
+    defaultSize: NOMINAL_SIZES.cloud,
+    silhouette: cloudPath,
+    // Only the side centres of the frame lie near the outline.
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',

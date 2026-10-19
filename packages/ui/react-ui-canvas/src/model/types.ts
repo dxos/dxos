@@ -224,6 +224,14 @@ export const EllipseNode = Schema.Struct({
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
+/** A cloud filling the frame, its outline a ring of bumps; labelled like a box. */
+export const CloudNode = Schema.Struct({
+  type: Schema.Literal('cloud'),
+  ...nodeBase,
+  ...boxFields,
+});
+export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
+
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
@@ -305,6 +313,7 @@ export type GeneratorNode = Schema.Schema.Type<typeof GeneratorNode>;
 export const BuiltinNode = Schema.Union([
   RectNode,
   EllipseNode,
+  CloudNode,
   NoteNode,
   FrameNode,
   InstanceNode,
@@ -316,6 +325,7 @@ export type BuiltinNodeType = BuiltinNode['type'];
 export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'rect',
   'ellipse',
+  'cloud',
   'note',
   'frame',
   'instance',
@@ -331,6 +341,7 @@ export type NodeType = string;
 /** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
+export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
@@ -530,6 +541,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
 export const Scene = createSceneSchema([
   RectNode,
   EllipseNode,
+  CloudNode,
   NoteNode,
   FrameNode,
   InstanceNode,

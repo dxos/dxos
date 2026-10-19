@@ -36,11 +36,13 @@ import {
   type Marker,
   NO_STYLES,
   type Node,
+  type NodeDef,
   type NodeId,
   type NodeRegistry,
   type NodeViewProps,
   type Scene,
   type SceneStore,
+  type Size,
   type StyleMap,
   frameTimeAttribute,
   isFrameNode,
@@ -840,8 +842,10 @@ const NodeFrame = memo(
     const thick = border !== nominal;
     // A bare type drawing no fill or border has no frame at all: the frame clips its contents, so a transparent border
     // would shave the drawing (a 4px rule drew 2px) and a rounded corner would cut a glyph's sharp corners.
+    const silhouette = chromeFade ? undefined : def?.silhouette;
     const borderless =
-      def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade;
+      (def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade) ||
+      silhouette !== undefined;
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
@@ -866,7 +870,9 @@ const NodeFrame = memo(
             // Fading, the border becomes padding of the same width so the contents stay put.
             ...(chromeFade
               ? [BORDER_CLASSES[nominal].padding, 'isolate']
-              : [BORDER_CLASSES[nominal].border, ...frameLook]),
+              : silhouette
+                ? []
+                : [BORDER_CLASSES[nominal].border, ...frameLook]),
             // Every text part inherits the face, as it does `fontSize`.
             drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
@@ -895,7 +901,15 @@ const NodeFrame = memo(
               style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
             />
           )}
-          <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          {silhouette ? (
+            // The look's classes on a box-less wrapper, so the silhouette's layers inherit its colours.
+            <div className={mx('contents', ...frameLook)}>
+              <Silhouette outline={silhouette} size={node.size} border={border} />
+              <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+            </div>
+          ) : (
+            <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          )}
           {debug && (
             <div
               className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
@@ -935,6 +949,48 @@ const NodeFrame = memo(
 );
 
 NodeFrame.displayName = 'NodeFrame';
+
+type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; size: Size; border: number };
+
+/**
+ * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
+ * the path (filled, then stroked), so the shape draws with every look a box has.
+ */
+const Silhouette = ({ outline, size, border }: SilhouetteProps) => {
+  const { width, height } = size;
+  const masks = useMemo(() => {
+    const path = outline({ width, height }, border / 2);
+    const image = (body: string) =>
+      `url("data:image/svg+xml,${encodeURIComponent(
+        `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'>${body}</svg>`,
+      )}")`;
+    return {
+      fill: image(`<path d='${path}' fill='white'/>`),
+      stroke: image(`<path d='${path}' fill='none' stroke='white' stroke-width='${border}'/>`),
+    };
+  }, [outline, width, height, border]);
+  const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
+  return (
+    <>
+      <div
+        aria-hidden
+        className='dx-cover pointer-events-none'
+        style={{ ...layer, backgroundColor: 'inherit', maskImage: masks.fill }}
+      />
+      {/* Border all the way in, so the whole layer is the border colour. */}
+      <div
+        aria-hidden
+        className='dx-cover box-border border-solid pointer-events-none'
+        style={{
+          ...layer,
+          borderColor: 'inherit',
+          borderWidth: `${height / 2}px ${width / 2}px`,
+          maskImage: masks.stroke,
+        }}
+      />
+    </>
+  );
+};
 
 /** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
@@ -991,6 +1047,8 @@ const LabelNodeView = ({ node, editing }: NodeViewProps) => (
 export const BoxNodeView = LabelNodeView;
 
 export const EllipseNodeView = LabelNodeView;
+
+export const CloudNodeView = LabelNodeView;
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
