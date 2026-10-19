@@ -33,6 +33,8 @@ const JOIN = 'button:has-text("Join"):not([disabled])';
 /** The pin control on the stand-in's tile, which maximises it in the call. */
 // Matched on the tile's own name label (two levels down), since outer containers hold every tile's name.
 const PIN_STAND_IN = '.dx-expand.group:has(> div > div:text-is("Composer")) button[aria-label="Pin video"]';
+/** The pin control on a screenshare's tile (marked by its broadcast icon), which maximises the shared screen. */
+const PIN_SCREENSHARE = '.dx-expand.group:has([data-icon="ph--broadcast--regular"]) button[aria-label="Pin video"]';
 /** Seconds the take holds on the maximised stand-in after the conversation ends. */
 const FINAL_HOLD = 4_000;
 
@@ -94,8 +96,18 @@ export const steps = [
     run: async ({ demo, page }) => {
       // With a stand-in, its tile is maximised for its last line, so the take ends on the agent.
       const last = STAND_IN ? TIMELINE.lines.findLastIndex(({ speaker }) => speaker === STAND_IN) : -1;
+      // With a stand-in, the shared screen is maximised through the app a beat after it appears.
+      const share = STAND_IN ? TIMELINE.screenshares?.[0] : undefined;
+      let shared = !share;
       for (const [index, line] of TIMELINE.lines.entries()) {
-        const wait = state.startedAt + line.start * 1_000 - Date.now() - (index === last ? 1_200 : 0);
+        const at = state.startedAt + line.start * 1_000 - (index === last ? 1_200 : 0);
+        if (!shared && state.startedAt + (share.start + 1.5) * 1_000 < at) {
+          await page.waitForTimeout(Math.max(0, state.startedAt + (share.start + 1.5) * 1_000 - Date.now()));
+          await demo.click({ selector: PIN_SCREENSHARE, label: 'Expand the shared screen' });
+          await page.mouse.move(10, 10);
+          shared = true;
+        }
+        const wait = at - Date.now();
         if (wait > 0) {
           await page.waitForTimeout(wait);
         }
