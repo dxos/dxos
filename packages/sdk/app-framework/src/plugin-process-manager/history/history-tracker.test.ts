@@ -504,6 +504,51 @@ describe('HistoryTracker redo', () => {
     }),
   );
 
+  it.effect('a failed undo keeps the undone tail redoable and the earlier steps undoable', () =>
+    Effect.gen(function* () {
+      const { invoker, tracker, get, hooks } = setup();
+      yield* tracker.transaction(
+        'triple',
+        Effect.gen(function* () {
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'x', value: 1 });
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'y', value: 2 });
+          yield* invoker.invoke(SetField, { doc: 'a', field: 'z', value: 3 });
+        }),
+      );
+
+      hooks.failOn = 'a.y';
+      const exit = yield* tracker.undo().pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(get('a', 'z')).toBe(0);
+      hooks.failOn = undefined;
+
+      expect(tracker.canUndo()).toBe(true);
+      yield* tracker.undo();
+      expect(get('a', 'x')).toBe(0);
+      expect(get('a', 'y')).toBe(2);
+      expect(tracker.canUndo()).toBe(false);
+
+      // Redo order is most recent undo first: x, then the z tail from the failed undo.
+      yield* tracker.redo();
+      expect(get('a', 'x')).toBe(1);
+      yield* tracker.redo();
+      expect(get('a', 'z')).toBe(3);
+      expect(tracker.canRedo()).toBe(false);
+    }),
+  );
+
+  it.effect('a failed single-step undo drops the entry', () =>
+    Effect.gen(function* () {
+      const { tracker, hooks, set } = setup();
+      yield* set('a', 'x', 1);
+      hooks.failOn = 'a.x';
+      const exit = yield* tracker.undo().pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(tracker.canUndo()).toBe(false);
+      expect(tracker.canRedo()).toBe(false);
+    }),
+  );
+
   it.effect('undo and redo are not recorded as new invocations', () =>
     Effect.gen(function* () {
       const { invoker, tracker, set } = setup();

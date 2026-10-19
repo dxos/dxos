@@ -354,13 +354,34 @@ export const make = (
       log('undoing entry', { scope: entry.scope, steps: entry.steps.length });
 
       yield* emit('undo', 'before', result);
-      for (const step of entry.steps.toReversed()) {
-        // Use _invokeCore to skip event emission (avoid undo-of-undo loops).
-        yield* invoker._invokeCore(step.inverse, step.inverseInput);
-      }
+      // Index of the first step whose inverse has run; steps run backwards from the end.
+      let undone = entry.steps.length;
+      yield* Effect.gen(function* () {
+        while (undone > 0) {
+          const step = entry.steps[undone - 1];
+          // Use _invokeCore to skip event emission (avoid undo-of-undo loops).
+          yield* invoker._invokeCore(step.inverse, step.inverseInput);
+          undone--;
+        }
+      }).pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            // On failure the undone tail stays redoable and the steps before the failing one stay undoable;
+            // the failing step is dropped so a permanently failing inverse cannot block undo.
+            const failed = undone > 0 ? 1 : 0;
+            const remaining = entry.steps.slice(0, undone - failed);
+            if (remaining.length > 0) {
+              past.splice(index, 0, { ...entry, steps: remaining });
+            }
+            const reverted = entry.steps.slice(undone);
+            if (reverted.length > 0) {
+              future.push({ ...entry, steps: reverted });
+              trim(future, limit);
+            }
+          }),
+        ),
+      );
 
-      future.push(entry);
-      trim(future, limit);
       yield* emit('undo', 'after', result);
       return result;
     });
