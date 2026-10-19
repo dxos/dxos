@@ -431,8 +431,8 @@ export class RepoProxy extends Resource {
   };
 
   /**
-   * Registers or unregisters {@link _onPageHide} on a page only. workerd's global scope also takes the
-   * listener, and there it would hold this proxy, and its whole client, until close.
+   * workerd's global scope is an EventTarget too, and there the listener would hold this proxy, and its
+   * whole client, until close.
    */
   private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
     if (typeof globalThis.document === 'undefined') {

@@ -952,23 +952,11 @@ describe('RepoProxy', () => {
     expect(clientRepo.hasUnsavedChanges()).toBe(false);
   });
 
-  // A handler that never finishes never closes its proxy, so nothing global may hold one: on workerd
-  // that pinned the invocation's whole client for the life of the isolate until it ran out of memory.
-  // workerd's global scope is an EventTarget (unlike Node's), so the test gives Node one.
   test('a proxy that is never closed is still collectable', { timeout: 30_000 }, async () => {
-    const target = new EventTarget();
-    for (const method of ['addEventListener', 'removeEventListener'] as const) {
-      const previous = Reflect.get(globalThis, method);
-      Reflect.set(globalThis, method, target[method].bind(target));
-      onTestFinished(() => {
-        Reflect.set(globalThis, method, previous);
-      });
-    }
+    makeGlobalAnEventTargetLikeWorkerd();
     setFlagsFromString('--expose_gc');
     const gc: () => void = runInNewContext('gc');
 
-    // Each proxy gets its own transport, dropped with it as an invocation's is, and a host that keeps
-    // no subscriber; so only something global can keep a proxy alive.
     let props: DataServiceProps | undefined;
     await setup(undefined, (captured) => new DataServiceImpl((props = captured)));
     invariant(props);
@@ -977,7 +965,7 @@ describe('RepoProxy', () => {
       live--;
     });
     // Opened in its own frame so no local of the test's suspended frame still points at the last one.
-    const openUnclosed = async (handlers: DataService.Handlers) => {
+    const openUnclosedOnOwnTransport = async (handlers: DataService.Handlers) => {
       const dataService = await EffectEx.runPromise(
         makeInProcessClient(DataService.Rpcs, handlers).pipe(
           Effect.provideService(Scope.Scope, Effect.runSync(Scope.make())),
@@ -989,7 +977,7 @@ describe('RepoProxy', () => {
       live++;
     };
     for (let index = 0; index < 10; index++) {
-      await openUnclosed(new SilentDataService(props));
+      await openUnclosedOnOwnTransport(new SubscriberlessDataService(props));
     }
 
     await expect
@@ -1066,6 +1054,17 @@ describe('RepoProxy', () => {
  * A repo whose document handle is registered with a first subscription that
  * {@link DroppableDataService.dropSubscription} ends on demand.
  */
+const makeGlobalAnEventTargetLikeWorkerd = () => {
+  const target = new EventTarget();
+  for (const method of ['addEventListener', 'removeEventListener'] as const) {
+    const previous = Reflect.get(globalThis, method);
+    Reflect.set(globalThis, method, target[method].bind(target));
+    onTestFinished(() => {
+      Reflect.set(globalThis, method, previous);
+    });
+  }
+};
+
 const setupWithDroppableSubscription = async () => {
   let droppable: DroppableDataService | undefined;
   const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
@@ -1081,8 +1080,7 @@ const setupWithDroppableSubscription = async () => {
   return { droppable, host, clientRepo, clientHandle };
 };
 
-/** Serves a subscription that never emits and registers nothing, so the host holds no subscriber. */
-class SilentDataService extends DataServiceImpl {
+class SubscriberlessDataService extends DataServiceImpl {
   override ['DataService.subscribe'](): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
     return EffectStream.never;
   }
