@@ -252,9 +252,9 @@ export const Floating: Story = {
     node && (await userEvent.click(node));
     // The panel is split: the properties above the seam, the other sections below.
     await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
-    const exposed = await canvas.findByText('Exposed');
-    exposed.scrollIntoView();
-    await userEvent.click(exposed);
+    const guide = await within(await canvas.findByTestId('properties')).findByText('Guide');
+    guide.scrollIntoView();
+    await userEvent.click(guide);
     await expect(canvas.getByTestId('scene-view-dock').scrollTop).toBe(0);
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));

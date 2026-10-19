@@ -79,7 +79,8 @@ import { LineStyleField } from './LineStyleField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's. */
-const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target'];
+// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
+const HIDDEN = ['id', 'type', 'z', 'ports', 'points', 'source', 'target', 'exposed'];
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -361,9 +362,11 @@ export const PropertiesInspector = ({
           </StyleClassesContext.Provider>
         </LayersContext.Provider>
       )}
-      <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
-        {summary}
-      </p>
+      {summary && (
+        <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>
+          {summary}
+        </p>
+      )}
     </div>
   );
 };
