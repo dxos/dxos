@@ -20,7 +20,7 @@ import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
-import { usePresets } from '#hooks';
+import { bindMentions, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
@@ -103,8 +103,9 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
       onSent();
-      void context
-        .flush()
+      // The objects the prompt mentions join the draft's context as it is sent, then the bindings flush.
+      void bindMentions(context, space.db, text)
+        .then(() => context.flush())
         .then(() => {
           atomRegistry.update(stateAtom, (current) => ({
             ...current,

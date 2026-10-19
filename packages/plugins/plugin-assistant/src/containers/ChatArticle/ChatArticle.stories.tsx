@@ -14,16 +14,21 @@ import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
+import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -34,10 +39,12 @@ import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task } from '@dxos/types';
+import { File, Message, Organization, Outline, Person, Task } from '@dxos/types';
 
+import { ChatDetailsSection } from '#components';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
+import { ChatSurface } from '#types';
 
 import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
@@ -128,7 +135,45 @@ type StoryArgs = {
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
+  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the tray. */
+  workspace?: boolean;
 } & Pick<ChatArticleProps, 'debug'>;
+
+/**
+ * Objects worth mentioning, and two MCP servers left off so the "+" menu has something to switch on.
+ * Returns what the conversation starts with in context.
+ */
+const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
+  const spec = db.add(
+    Markdown.make({
+      name: 'Prompt redesign spec',
+      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a tray above it.',
+    }),
+  );
+  db.add(Markdown.make({ name: 'Q4 roadmap', content: '# Q4 roadmap\n\n- Ship the new prompt.' }));
+  db.add(Markdown.make({ name: 'Meeting notes', content: '# Meeting notes\n\nAgreed on one PR.' }));
+  db.add(Person.make({ fullName: 'Rich Burdon' }));
+  db.add(Person.make({ fullName: 'Dmytro Maretskyi' }));
+  db.add(Organization.make({ name: 'DXOS' }));
+  for (const [name, url] of [
+    ['Linear', 'https://mcp.linear.app/mcp'],
+    ['GitHub', 'https://api.githubcopilot.com/mcp/'],
+  ]) {
+    db.add(Obj.make(McpServer.McpServer, { name, url, protocol: 'http', enabled: false }));
+  }
+  return [spec];
+};
+
+/** Stands in for a plugin adding its own section to the tray (here, the changes an agent made). */
+const changesSection = Surface.create({
+  id: 'storyChanges',
+  filter: Surface.makeFilter(ChatSurface.ChatDetails),
+  component: () => (
+    <ChatDetailsSection title='Changes' count={3} defaultOpen={false}>
+      <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
+    </ChatDetailsSection>
+  ),
+});
 
 const DefaultStory = ({ debug }: StoryArgs) => {
   const [space] = useSpaces();
@@ -145,12 +190,25 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform, workspace } }) => {
       return {
         plugins: [
           ...CorePlugins.make(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
+            types: [
+              Blob.Blob,
+              Chat.Chat,
+              Feed.Feed,
+              File.File,
+              Markdown.Document,
+              McpServer.McpServer,
+              Message.Message,
+              Organization.Organization,
+              Outline.Outline,
+              Person.Person,
+              Task.Task,
+              Text.Text,
+            ],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -166,7 +224,9 @@ const meta = {
                 // story renders without waiting on a lazy resolution nothing triggers.
                 yield* Effect.promise(() => Promise.all(chat.tasks.map((task) => task.load())));
 
-                if (tasks.length > 0) {
+                const mentioned = workspace ? seedWorkspace(space.db) : [];
+
+                if (tasks.length > 0 || mentioned.length > 0) {
                   // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
                   // holding tasks is not the same as working them: the planning skill's update-tasks
                   // tool and its end-request reminder both reach the checklist through
@@ -180,8 +240,10 @@ const meta = {
                   yield* Effect.promise(() =>
                     binder.use((binder: AiContext.Binder) =>
                       binder.bind({
-                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
-                        objects: [Ref.make(chat)],
+                        // The workspace binds a skill that ends its turn when it replies: planning's
+                        // checklist reminder would spend every scripted reply on one prompt.
+                        skills: [Ref.fromURI(Skill.registryURI(workspace ? MemorySkill.key : PlanningSkill.key))],
+                        objects: [Ref.make(chat), ...mentioned.map((object) => Ref.make(object))],
                       }),
                     ),
                   );
@@ -204,13 +266,17 @@ const meta = {
           SpacePlugin({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
+          // Handles `FileOperation.Create`: without it the "+" menu offers no files.
+          ...(workspace ? [FilePlugin.make()] : []),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this
         // one value, so a story can stand in for the mobile shell without its layout.
-        capabilities: platform
-          ? [...capabilities, Capability.contribute(DeckCapabilities.Platform, platform)]
-          : capabilities,
+        capabilities: [
+          ...capabilities,
+          ...(platform ? [Capability.contribute(DeckCapabilities.Platform, platform)] : []),
+          ...(workspace ? [Capability.contribute(Capabilities.ReactSurface, changesSection)] : []),
+        ],
       };
     }),
   ],
@@ -231,11 +297,11 @@ export const Default: Story = {
 };
 
 /**
- * The article's working tasks, and the disclosure that shows them.
+ * The article's working tasks, in the details tray, and the disclosure that shows it.
  *
- * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
- * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
- * what asserts that wiring, since the button is not the collapsible's own trigger.
+ * The tray is `Chat.Prompt`'s own collapsible region rather than a sibling the article places, so the
+ * toggle in the composer's action bar is the only thing that opens and closes it — this is what
+ * asserts that wiring, since the button is not the collapsible's own trigger.
  */
 export const Tasks: Story = {
   args: {
@@ -257,7 +323,7 @@ export const Tasks: Story = {
     // the machine only stamps that once it has run a transition, so the region carries no state
     // attribute until the reader opens it.
     const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
-    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
+    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-details"]')!;
     await expect(region()).toHaveAttribute('hidden');
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
 
@@ -526,4 +592,27 @@ const clearPrompt = async (canvasElement: HTMLElement) => {
     await userEvent.click(content);
     await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
   }
+};
+
+/**
+ * The whole prompt: agent and model pickers in the row, "+" for files, objects, commands and MCP
+ * servers, `@` to mention an object, `/` for commands and skills, and the details tray above the prompt
+ * (context, tasks, and a section another plugin contributes). Replies are scripted, so it runs offline.
+ */
+export const FullExperience: Story = {
+  args: {
+    workspace: true,
+    tasks: [
+      { title: 'Read the spec', status: 'done' },
+      { title: 'Compare with the roadmap', status: 'started' },
+      { title: 'Review with Rich', status: 'todo' },
+    ],
+    messages: [
+      { prompt: 'first', reply: 'Got it. The spec and the roadmap are in context; ask me anything about them.' },
+      { prompt: 'second', reply: 'The roadmap ships the new prompt this quarter, which matches the spec.' },
+      { prompt: 'third', reply: 'Done. I would review the tray behavior with Rich next.' },
+      { prompt: 'fourth', reply: 'Anything else?' },
+      { prompt: 'fifth', reply: 'That is the end of the scripted replies.' },
+    ],
+  },
 };

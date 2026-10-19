@@ -6,7 +6,17 @@ import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, {
+  type ChangeEvent,
+  type ClipboardEvent,
+  type DragEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
@@ -20,25 +30,27 @@ import {
   type ChatEditorProps,
   ChatStatusIndicator,
   commands,
+  openCommandCompletion,
 } from '@dxos/react-ui-chat';
 import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
-import { pendingText } from '@dxos/ui-editor';
+import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions } from '#hooks';
+import { insertMention, useAttachFiles, useChatKeymapExtensions, useObjectMentions, useSlashCommands } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
-import { TaskSlashCommands } from '../../commands/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
+import { McpServersDialog } from '../McpServers/index.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
+import { ChatAddMenu } from './ChatAddMenu.tsx';
+import { ChatAgentPicker } from './ChatAgentPicker.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
-import { ChatOptions } from './ChatOptions.tsx';
-import { ChatReferences } from './ChatReferences.tsx';
+import { ChatObjectPicker } from './ChatObjectPicker.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
 /** Prompts that may wait behind a running turn, by default. */
@@ -61,8 +73,8 @@ export type ChatPromptProps = Merge<
     /** Skill registry for the context controls when there is no chat model. */
     registry?: Registry.Registry;
     event: Event<ChatEvent>;
-    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
-    tasksVisible?: boolean;
+    /** Whether the details tray above the prompt is shown; the toggle renders only when provided. */
+    detailsVisible?: boolean;
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
     /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
@@ -96,7 +108,7 @@ export const ChatPrompt = ({
   context: draftContext,
   registry: draftRegistry,
   event,
-  tasksVisible,
+  detailsVisible,
   attendableId,
   customActions,
   nodeId,
@@ -138,21 +150,90 @@ export const ChatPrompt = ({
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands
-  // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
+  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands are
+  // what plugins contribute plus one per skill, run without the model (see `Chat.Root`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
-  const commandsRef = Hooks.useDynamicRef(instructions?.commands ?? []);
-  const commandsExtension = useMemo(
-    () =>
-      commands({
-        getCommands: () => [
-          ...commandsRef.current.map(({ sentinel, description }) => ({ sentinel, description })),
-          ...TaskSlashCommands.map(({ command, description }) => ({ sentinel: command, description })),
-        ],
-      }),
-    [commandsRef],
+  const slashCommands = useSlashCommands({ registry, db });
+  const commandsRef = Hooks.useDynamicRef([
+    ...(instructions?.commands ?? []).map(({ sentinel, description }) => ({ sentinel, description })),
+    ...slashCommands.map(({ command, description }) => ({ sentinel: command, description })),
+  ]);
+  const commandsExtension = useMemo(() => commands({ getCommands: () => commandsRef.current }), [commandsRef]);
+
+  // `@` mentions: picking an object inserts a link to it and binds it into the context.
+  const mentions = useObjectMentions({ db });
+
+  const handleMention = useCallback(
+    (object: Obj.Unknown) => {
+      const view = editorRef.current?.view;
+      if (view) {
+        insertMention(view, object, Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id);
+      }
+    },
+    [context],
   );
+
+  // Files become objects in the space, then mentions like any other object.
+  const attachFiles = useAttachFiles(db);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleFiles = useCallback(
+    async (files: readonly globalThis.File[]) => {
+      for (const object of (await attachFiles?.(files)) ?? []) {
+        handleMention(object);
+      }
+    },
+    [attachFiles, handleMention],
+  );
+  const handleFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      void handleFiles(Array.from(event.target.files ?? []));
+      event.target.value = '';
+    },
+    [handleFiles],
+  );
+  const handleDragOver = useCallback(
+    (event: DragEvent) => {
+      if (attachFiles && event.dataTransfer.types.includes('Files')) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }
+    },
+    [attachFiles],
+  );
+  const handleDrop = useCallback(
+    (event: DragEvent) => {
+      const files = Array.from(event.dataTransfer.files);
+      if (attachFiles && files.length > 0) {
+        // Captured, so the editor does not insert the file's bytes as text.
+        event.preventDefault();
+        event.stopPropagation();
+        void handleFiles(files);
+      }
+    },
+    [attachFiles, handleFiles],
+  );
+  // Only a paste that is nothing but files: a paste carrying text as well belongs to the editor.
+  const handlePaste = useCallback(
+    (event: ClipboardEvent) => {
+      const files = Array.from(event.clipboardData.files);
+      if (attachFiles && files.length > 0 && !event.clipboardData.types.includes('text/plain')) {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleFiles(files);
+      }
+    },
+    [attachFiles, handleFiles],
+  );
+
+  const [objectPickerOpen, setObjectPickerOpen] = useState(false);
+  const [mcpServersOpen, setMcpServersOpen] = useState(false);
+  const handleCommands = useCallback(() => {
+    const view = editorRef.current?.view;
+    if (view) {
+      openCommandCompletion(view);
+    }
+  }, []);
 
   // The editor owns the prompt text; only its emptiness is mirrored into React so the send control
   // can disable itself without re-rendering the prompt on every keystroke's content. Dictation is
@@ -174,8 +255,9 @@ export const ChatPrompt = ({
   const queueFull = active && queueSize >= maxQueue;
   const canSend = hasText && context != null && !queueFull;
 
+  // Object links show as the same chips the markdown editor draws, not as their link markup.
   const extensions = useMemo(
-    () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
+    () => [keymapExtensions, pendingText(), objectLinks(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
@@ -215,8 +297,7 @@ export const ChatPrompt = ({
   return (
     <Layout.Flex
       column
-      data-testid='assistant.prompt'
-      role='group'
+      asChild
       classNames={[
         'w-full dx-density-md',
         outline &&
@@ -224,55 +305,77 @@ export const ChatPrompt = ({
         classNames,
       ]}
     >
-      {chatModel && <ChatMcpErrors chatModel={chatModel} />}
+      {/* A plain element: the drop and paste handlers are captured here, ahead of the editor. */}
+      <div
+        data-testid='assistant.prompt'
+        role='group'
+        onDragOverCapture={handleDragOver}
+        onDropCapture={handleDrop}
+        onPasteCapture={handlePaste}
+      >
+        {chatModel && <ChatMcpErrors chatModel={chatModel} />}
 
-      <Layout.Flex gap='sm' classNames='p-2'>
-        <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
-        <ChatEditor
-          ref={editorRef}
-          autoFocus={autoFocus}
-          markdown
-          lineWrapping
-          classNames='col-span-2 pt-0.5'
-          placeholder={placeholder ?? t('prompt.placeholder')}
-          extensions={extensions}
-          onSubmit={handleSubmit}
-        />
-      </Layout.Flex>
-
-      {db &&
-        settings && (
-          // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
-          <ChatActions
-            classNames='p-1.5'
-            attendableId={attendableId}
-            customActions={customActions}
-            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
-            // and the reader still needs a way to stop it.
-            processing={active}
-            canSend={canSend}
-            tasksVisible={tasksVisible}
-            onSend={handleSend}
-            onEvent={handleEvent}
-            leading={
-              <>
-                <ChatOptions
-                  db={db}
-                  chat={chat}
-                  registry={registry}
-                  context={context}
-                  started={started}
-                  preset={preset}
-                  presets={presets}
-                  onPresetChange={onPresetChange}
-                />
-                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
-                  {context && <ChatReferences db={db} context={context} />}
-                </Layout.Flex>
-              </>
-            }
+        <Layout.Flex gap='sm' classNames='p-2'>
+          <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
+          <ChatEditor
+            ref={editorRef}
+            autoFocus={autoFocus}
+            markdown
+            lineWrapping
+            classNames='col-span-2 pt-0.5'
+            placeholder={placeholder ?? t('prompt.placeholder')}
+            extensions={extensions}
+            menu={mentions}
+            onSubmit={handleSubmit}
           />
+        </Layout.Flex>
+
+        {db && settings && (
+          <>
+            {/* One toolbar for the row: what can go into the message and who answers it lead, the actions end it. */}
+            <ChatActions
+              classNames='p-1.5'
+              attendableId={attendableId}
+              customActions={customActions}
+              // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+              // and the reader still needs a way to stop it.
+              processing={active}
+              canSend={canSend}
+              detailsVisible={detailsVisible}
+              onSend={handleSend}
+              onEvent={handleEvent}
+              leading={
+                <>
+                  <ChatAddMenu
+                    db={db}
+                    disabled={!context}
+                    onAddFiles={attachFiles ? () => fileInputRef.current?.click() : undefined}
+                    onAddObject={() => setObjectPickerOpen(true)}
+                    onCommands={handleCommands}
+                    onManageMcpServers={() => setMcpServersOpen(true)}
+                  />
+                  <ChatAgentPicker
+                    chat={chat}
+                    started={started}
+                    presets={presets}
+                    preset={preset}
+                    onPresetChange={onPresetChange}
+                  />
+                  <Layout.Flex grow />
+                </>
+              }
+            />
+            <input hidden type='file' multiple onChange={handleFileChange} ref={fileInputRef} />
+            <ChatObjectPicker
+              db={db}
+              open={objectPickerOpen}
+              onOpenChange={setObjectPickerOpen}
+              onSelect={handleMention}
+            />
+            <McpServersDialog db={db} open={mcpServersOpen} onOpenChange={setMcpServersOpen} />
+          </>
         )}
+      </div>
     </Layout.Flex>
   );
 };

@@ -208,6 +208,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-graph"
     },
     {

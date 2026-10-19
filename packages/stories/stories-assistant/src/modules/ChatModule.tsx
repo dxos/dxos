@@ -85,7 +85,7 @@ const ChatModuleContainer = ({
   const runtime = Hooks.useProcessManagerRuntime();
   const chatModel = AssistantHooks.useChatModel({ runtime, db: space.db, chat, preset, registry, sender });
 
-  // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
+  // Honor the view mode selected in the View menu or with `/view` (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
   const [viewValue] = useObject(chat, 'viewType');
   const view = Assistant.ChatViews.find((value) => value === viewValue);

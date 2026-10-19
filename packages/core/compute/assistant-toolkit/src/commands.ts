@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
@@ -25,6 +26,8 @@ export type SlashCommandContext = {
   db: Database.Database;
   chat: Chat.Chat;
   invoke: OperationInvoke;
+  /** The conversation's bindings, for a command that changes what is in context (e.g. loading a skill). */
+  binder?: AiContext.Binder;
 };
 
 /** `OperationService['invokePromise']`, so the operation's input and output types survive the call. */

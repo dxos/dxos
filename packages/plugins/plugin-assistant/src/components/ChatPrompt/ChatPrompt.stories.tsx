@@ -32,9 +32,9 @@ import { AssistantCapabilities } from '#types';
 import { Chat } from '../Chat/index.ts';
 
 type StoryArgs = {
-  /** Seed the chat's checklist, so the tasks toggle has something to show. */
+  /** Seed the chat's checklist, so the details tray has tasks to show. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
-  tasksVisible?: boolean;
+  detailsVisible?: boolean;
   /** Prompts already queued on the feed, as a submit-while-busy leaves them. */
   queued?: string[];
   /**
@@ -47,7 +47,7 @@ type StoryArgs = {
   alarmInMinutes?: number;
 };
 
-const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
+const DefaultStory = ({ detailsVisible: initialDetailsVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(AssistantChat.Chat));
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
@@ -79,7 +79,7 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. The
               checklist is the prompt's own disclosed region now, not a sibling the story places. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultTasksVisible={initialTasksVisible} />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultDetailsVisible={initialDetailsVisible} />
         </Chat.Root>
       </div>
     </div>
@@ -145,7 +145,7 @@ export const Default: Story = {
 
 export const WithTasks: Story = {
   args: {
-    tasksVisible: true,
+    detailsVisible: true,
     tasks: [
       { title: 'Gather the requirements', status: 'done' },
       { title: 'Draft the plan', status: 'started' },

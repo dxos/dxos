@@ -31,9 +31,11 @@ export type UsePresets = {
 } & Pick<AssistantPreset.ChatPresetProps, 'presets' | 'onPresetChange'>;
 
 /**
- * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}).
- * The selection is the chat's own (`Chat.session.model`), written back to it when the user picks; a chat that
- * has not selected one shows the configured per-provider model.
+ * Resolves the chat model presets: every EDGE model, then the models this device serves (the bundled
+ * sidecar's installed models, a reachable LM Studio, or the external server settings name). Each preset
+ * carries its own provider, so the model picked decides where inference runs. The selection is the chat's
+ * own (`Chat.session.model`), written back to it when the user picks; a chat that has not selected one
+ * shows the configured default.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -46,39 +48,42 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // `built-in` provider (rather than an external Ollama server) is available.
   const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
 
+  // The local runtime settings name, if any: its models are offered beside EDGE's, and its default
+  // model is the chat's fallback. Settings stay the switch for local models because listing them means
+  // starting the sidecar or probing a server, which the app does not do unasked on every launch.
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
   const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];
 
   // Installed models reported by the bundled sidecar; used to offer only models actually present.
   const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
 
-  // When the bundled sidecar is the active provider, list installed models in the background so the
-  // chat selector is populated without first opening settings. Idempotent: kicks off only from the
-  // idle state, so it spawns the sidecar once when local models are in use (not on every launch);
-  // settings remains the explicit path for retrying after a failure.
+  // When the bundled sidecar is the configured runtime, list installed models in the background so the
+  // picker offers them without first opening settings. Idempotent: kicks off only from the idle state.
   useEffect(() => {
     if (provider === Provider.builtIn.id && ollamaManager && localModels.kind === 'idle') {
       void EffectEx.runPromise(ollamaManager.refresh);
     }
   }, [provider, ollamaManager, localModels.kind]);
 
-  // Probe the external LM Studio server only when that provider is selected on desktop.
+  // Probe the external LM Studio server only when that runtime is configured on desktop.
   const lmStudioProbeUrl =
     provider === Provider.lmStudio.id && ollamaManager ? `${Provider.lmStudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
   const presets = useMemo(() => {
-    const base = presetsForProvider(provider);
-    // Desktop LM Studio: only offer presets when the external server responds.
-    if (provider === Provider.lmStudio.id && ollamaManager) {
-      return lmStudioReachable ? base : [];
+    const edge = presetsForProvider(Provider.edge.id);
+    if (provider === Provider.edge.id) {
+      return edge;
     }
-    // Bundled sidecar: only offer models that are actually installed (matched by back-end pull tag).
-    if (provider === Provider.builtIn.id && ollamaManager) {
+    let local = presetsForProvider(provider);
+    if (provider === Provider.lmStudio.id && ollamaManager && !lmStudioReachable) {
+      local = [];
+    } else if (provider === Provider.builtIn.id && ollamaManager) {
+      // Bundled sidecar: only models actually installed (matched by back-end pull tag).
       const installed = new Set(localModels.models.map((model) => model.name));
-      return base.filter((preset) => installed.has(preset.backend));
+      local = local.filter((preset) => installed.has(preset.backend));
     }
-    return base;
+    return [...edge, ...local.map((preset) => ({ ...preset, local: true }))];
   }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
   // The chat's selection when the active provider serves it, else the provider's configured model.
@@ -108,9 +113,10 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
 
   const presetOptions = useMemo(
     () =>
-      [...presets, ...(unavailable ? [unavailable] : [])].map(({ id, model, label }) => ({
-        id,
-        label: label ?? model,
+      [...presets, ...(unavailable ? [unavailable] : [])].map((preset) => ({
+        id: preset.id,
+        label: preset.label ?? preset.model,
+        local: 'local' in preset && preset.local === true,
       })),
     [presets, unavailable],
   );

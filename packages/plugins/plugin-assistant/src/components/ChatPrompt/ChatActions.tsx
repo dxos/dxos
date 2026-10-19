@@ -39,8 +39,8 @@ export type ChatActionsProps = Util.ThemedClassName<
     debug?: boolean;
     /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
     canSend?: boolean;
-    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
-    tasksVisible?: boolean;
+    /** Whether the details tray above the prompt is shown; the toggle renders only when provided. */
+    detailsVisible?: boolean;
     /** Submits the current prompt; the send control renders only when provided. */
     onSend?: () => void;
     onEvent?: (event: ChatEvent) => void;
@@ -56,7 +56,7 @@ export const ChatActions = ({
   processing,
   debug,
   canSend,
-  tasksVisible,
+  detailsVisible,
   onSend,
   onEvent,
 }: ChatActionsProps) => {
@@ -77,16 +77,16 @@ export const ChatActions = ({
         />
       )}
 
-      {tasksVisible != null && (
+      {detailsVisible != null && (
         <Button.Root
           variant='ghost'
           classNames={TOUCH_TARGET}
-          icon='ph--list-checks--regular'
+          icon='ph--stack--regular'
           iconOnly
-          aria-pressed={tasksVisible}
-          label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
-          data-testid='assistant.toggle-tasks'
-          onClick={() => onEvent?.({ type: 'toggle-tasks' })}
+          aria-pressed={detailsVisible}
+          label={t(detailsVisible ? 'hide-details.button' : 'show-details.button')}
+          data-testid='assistant.toggle-details'
+          onClick={() => onEvent?.({ type: 'toggle-details' })}
         />
       )}
 

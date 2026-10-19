@@ -525,10 +525,10 @@ export const steps = [
     },
   },
   {
-    // The checklist starts collapsed; opened for a moment so the viewer sees the tasks the agent holds.
+    // The details tray starts collapsed; opened for a moment so the viewer sees the tasks the agent holds.
     name: "Show the chat's tasks, then hide them",
     run: async ({ demo, page }) => {
-      const toggle = '[data-testid="deck.companion"] [data-testid="assistant.toggle-tasks"]';
+      const toggle = '[data-testid="deck.companion"] [data-testid="assistant.toggle-details"]';
       const checklist = page.locator('[data-testid="deck.companion"] [data-testid="taskList.item"]').first();
       await demo.click({ selector: toggle, label: 'Show tasks' });
       await checklist.waitFor({ state: 'visible', timeout: 10_000 });

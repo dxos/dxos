@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { diffRange } from './diff-range.ts';
+import { diffRange, syncChange } from './diff-range.ts';
 
 const apply = (before: string, { from, to, insert }: ReturnType<typeof diffRange>) =>
   before.slice(0, from) + insert + before.slice(to);
@@ -29,5 +29,23 @@ describe('diffRange', () => {
     ]) {
       expect(apply(before, diffRange(before, after))).toBe(after);
     }
+  });
+});
+
+describe('syncChange', () => {
+  const doc = (text: string) => ({
+    length: text.length,
+    sliceString: (from: number, to?: number) => text.slice(from, to),
+    toString: () => text,
+  });
+
+  test('appends when the document is the start of the text', ({ expect }) => {
+    expect(syncChange(doc('Hello'), 'Hello, world')).toEqual({ from: 5, to: 5, insert: ', world' });
+  });
+
+  test('resyncs a document that has drifted, rather than appending past its end', ({ expect }) => {
+    // The caller believed the document held "a\r\nb" (4 characters); it holds "a\nb" (3).
+    expect(syncChange(doc('a\nb'), 'a\nbc')).toEqual({ from: 3, to: 3, insert: 'c' });
+    expect(syncChange(doc('a\nb!'), 'a\nbc')).toEqual({ from: 3, to: 4, insert: 'c' });
   });
 });

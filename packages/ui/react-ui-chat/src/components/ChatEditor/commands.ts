@@ -11,6 +11,7 @@ import {
   currentCompletions,
   selectedCompletionIndex,
   setSelectedCompletion,
+  startCompletion,
 } from '@codemirror/autocomplete';
 import { type Extension, Prec } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
@@ -174,3 +175,21 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
     ]),
   ),
 ];
+
+/**
+ * Starts a slash command and opens the completion list on it, as a reader typing `/` at the start of
+ * an empty prompt would. Text already in the prompt is kept after the command.
+ *
+ * Uses this module's own `startCompletion`, for the same reason the Enter binding above does: the
+ * completion state it opens has to be the one `commands()` reads.
+ */
+export const openCommandCompletion = (view: EditorView): void => {
+  const text = view.state.doc.toString();
+  if (!text.startsWith('/')) {
+    view.dispatch({ changes: { from: 0, insert: text.length ? '/ ' : '/' }, selection: { anchor: 1 } });
+  } else {
+    view.dispatch({ selection: { anchor: 1 } });
+  }
+  view.focus();
+  startCompletion(view);
+};

@@ -256,6 +256,7 @@ export type TaskEstimatePickerProps = {
 
 /** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
 export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
@@ -278,6 +279,9 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
       >
         <Button.Root
           variant='ghost'
+          // Unset, the glyph is the button's only content, so it is icon-only and named by its label.
+          iconOnly={estimate === undefined}
+          label={t('task-estimate.label')}
           data-testid={testId}
           classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}

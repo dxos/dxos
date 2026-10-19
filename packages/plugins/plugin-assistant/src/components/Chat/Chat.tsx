@@ -10,6 +10,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { Alarm } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
@@ -41,9 +42,9 @@ import * as Util from '@dxos/react-ui/Util';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback, markWork } from '@dxos/util';
 
-import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
+import { AssistantOperation, ChatSurface } from '#types';
 
 import {
   AiUsageQuotaError,
@@ -53,7 +54,7 @@ import {
   projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
-import { TaskSlashCommands } from '../../commands/index.ts';
+import { ChatContextSection, ChatDetailsSection } from '../ChatDetails/index.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -117,6 +118,8 @@ const ChatRoot = ({
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
+  // Read at submit, so the handler does not resubscribe whenever a skill is added to the registry.
+  const slashCommands = UiHooks.useDynamicRef(useSlashCommands({ registry: chatModel?.registry, db }));
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
@@ -234,7 +237,7 @@ const ChatRoot = ({
           if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
+            const resolved = SlashCommand.resolveSlashCommand(text, slashCommands.current);
             if (resolved) {
               // One command at a time: `invokePromise` does not queue, so two quick submissions
               // would interleave their operations and land their summaries out of order.
@@ -257,6 +260,7 @@ const ChatRoot = ({
                   db: currentDb,
                   chat,
                   invoke: invokePromise,
+                  binder: chatModel.context,
                 });
                 if (result instanceof Error) {
                   throw result;
@@ -296,7 +300,20 @@ const ChatRoot = ({
             // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
             // transient chat and before the agent acknowledges it. The chat model requests it when the
             // agent is idle and queues it behind a running turn otherwise.
-            chatModel.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
+            // The objects the prompt mentions join the context as it is sent, after `onSubmit` has persisted
+            // a transient chat and before the request reads its bindings.
+            chatModel.send(
+              { message: text, context: getContext?.() },
+              {
+                prepare: async () => {
+                  await onSubmit?.(text);
+                  const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                  if (currentDb) {
+                    await bindMentions(chatModel.context, currentDb, text);
+                  }
+                },
+              },
+            );
           }
           break;
         }
@@ -721,75 +738,106 @@ const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
 type ChatPromptProps = Omit<
   NaturalChatPromptProps,
-  'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible' | 'started'
+  'chat' | 'db' | 'chatModel' | 'event' | 'detailsVisible' | 'started'
 > & {
-  /** Whether the checklist is disclosed on mount. */
-  defaultTasksVisible?: boolean;
+  /** Whether the details tray is open on mount. */
+  defaultDetailsVisible?: boolean;
 };
 
 /**
- * The composer with the chat's checklist disclosed above it.
+ * The composer with the details tray above it: what the conversation has in context, its checklist,
+ * and any section a plugin contributes.
  *
  * One component rather than two siblings: they share a border and a rounded shell, and the control
- * that discloses the checklist lives in the composer's own action bar — so a host that placed them
- * side by side had to hold the disclosure state between them and coordinate the corner radius.
+ * that opens the tray lives in the composer's own action bar — so a host that placed them side by side
+ * had to hold the open state between them and coordinate the corner radius.
  *
  * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
  * trigger is not used: the toggle is a button inside the composer, which reports through the chat
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
-const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
+const ChatPrompt = ({ classNames, defaultDetailsVisible = false, ...props }: ChatPromptProps) => {
   const { chat, db, chatModel, event, queueSize, started } = useChatContext(CHAT_PROMPT_NAME);
 
-  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
-  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
-  const [tasks] = useObject(chat, 'tasks');
-  const hasTasks = tasks != null;
-
-  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
-  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
-  // it is a glance, not a preference.
-  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
+  // The tray stays as the reader left it: new context or a new task does not open it. Per mount rather
+  // than persisted, since it is a glance, not a preference.
+  const [detailsVisible, setDetailsVisible] = useState(defaultDetailsVisible);
   useEffect(() => {
     return event.on((ev) => {
-      if (ev.type === 'toggle-tasks') {
-        setTasksVisible((visible) => !visible);
+      if (ev.type === 'toggle-details') {
+        setDetailsVisible((visible) => !visible);
       }
     });
   }, [event]);
 
+  // A tray with nothing to show withholds its toggle rather than pointing at nothing — `ChatActions`
+  // renders it only when `detailsVisible` is defined.
+  const [tasks] = useObject(chat, 'tasks');
+  const hasDetails = (chatModel !== undefined && db !== undefined) || tasks != null;
+
   return (
     <Collapsible.Root
-      open={tasksVisible}
-      onOpenChange={({ open }) => setTasksVisible(open)}
-      // Clipped rather than unmounted: the list holds its own subscriptions, and remounting it on
-      // every toggle would refetch the checklist to show what the reader just hid.
+      open={detailsVisible}
+      onOpenChange={({ open }) => setDetailsVisible(open)}
+      // Clipped rather than unmounted: the sections hold their own subscriptions, and remounting them on
+      // every toggle would refetch what the reader just hid.
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      {hasTasks && (
+      {hasDetails && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
-          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
+          <ChatDetailsTray classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
         {...props}
-        // Square where the checklist meets it, so the two read as one shell rather than two cards.
-        classNames={[tasksVisible && 'rounded-t-none', classNames]}
+        // Square where the tray meets it, so the two read as one shell rather than two cards.
+        classNames={[detailsVisible && hasDetails && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
         chatModel={chatModel}
         event={event}
         queueSize={queueSize}
         started={started}
-        tasksVisible={hasTasks ? tasksVisible : undefined}
+        detailsVisible={hasDetails ? detailsVisible : undefined}
       />
     </Collapsible.Root>
   );
 };
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
+
+//
+// DetailsTray
+//
+
+const CHAT_DETAILS_TRAY_NAME = 'Chat.DetailsTray';
+
+/** Rows the tray shows before it scrolls, so a long context does not push the thread off screen. */
+const ChatDetailsTray = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { chat, db, chatModel } = useChatContext(CHAT_DETAILS_TRAY_NAME);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const [tasks] = useObject(chat, 'tasks');
+
+  return (
+    <div
+      {...Util.composableProps(props, { classNames: 'flex flex-col gap-1 p-1 max-h-[40dvh] overflow-y-auto' })}
+      data-testid='assistant.details'
+      ref={forwardedRef}
+    >
+      {db && chatModel && <ChatContextSection db={db} context={chatModel.context} />}
+      {tasks != null && (
+        <ChatDetailsSection title={t('details.tasks.title')} count={tasks.length} testId='assistant.details.tasks'>
+          <ChatTaskList classNames='text-fg-muted' />
+        </ChatDetailsSection>
+      )}
+      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat }} />}
+    </div>
+  );
+});
+
+ChatDetailsTray.displayName = CHAT_DETAILS_TRAY_NAME;
 
 //
 // TaskList

@@ -60,7 +60,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender });
     const getContext = useSelectionContext(companionTo);
 
-    // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
+    // Subscribe to the view type via `useObject` so the thread re-renders when the View menu or `/view` changes it;
     // a direct `chat.viewType` read in render does not establish a reactive dependency.
     const [chatViewType] = useObject(chat, 'viewType');
     const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
