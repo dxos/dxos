@@ -54,6 +54,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
       <Canvas.Properties />
       <Canvas.Layers />
       <Canvas.Objects />
+      <Canvas.Objects />
     </Canvas.Root>
   );
 };
