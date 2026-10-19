@@ -430,12 +430,15 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob?.forceTrigger();
   };
 
-  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  /**
+   * workerd's global scope is an EventTarget too, and there the listener would hold this proxy, and its
+   * whole client, until close.
+   */
   private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
-    const fn = Reflect.get(globalThis, method);
-    if (typeof fn === 'function') {
-      fn.call(globalThis, 'pagehide', this._onPageHide);
+    if (typeof globalThis.document === 'undefined') {
+      return;
     }
+    globalThis[method]('pagehide', this._onPageHide);
   }
 
   /**
