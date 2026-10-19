@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
+import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -83,9 +84,25 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS: Layout.GridTrack[] = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map((): Layout.GridTrack => '3.75rem')];
+// Items is wider: it shows the latest count and, when larger, the most ever returned.
+const TRACKS: Layout.GridTrack[] = [
+  'minmax(12rem,1fr)',
+  ...COLUMNS.slice(1).map(({ id }): Layout.GridTrack => (id === 'items' ? '5rem' : '3.75rem')),
+];
+
+/** The same tracks as one template, which the list's rows share as a subgrid. */
+const COLUMNS_TEMPLATE = TRACKS.join(' ');
 
 type Sort = { column: string; descending: boolean };
+
+/** A selector-safe option value: zag builds element ids and selectors from it, and query text holds quotes. */
+const queryKey = (query: string): string => {
+  let hash = 5381;
+  for (let index = 0; index < query.length; index++) {
+    hash = (hash * 33) ^ query.charCodeAt(index);
+  }
+  return `q${(hash >>> 0).toString(36)}`;
+};
 
 export type QueryMetricsTableProps = {
   queries: QueryMetrics[];
@@ -93,13 +110,14 @@ export type QueryMetricsTableProps = {
 };
 
 /**
- * Every query of this page's client, grouped by query text, sortable by any figure and slowest first.
+ * Every query of this page's client, grouped by query text, sortable by any figure and slowest first. Rows are a
+ * Listbox, so the arrow keys move the selection and the selected query's metrics show below the list.
  */
 export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) => {
   const [filter, setFilter] = useState('');
   const [liveOnly, setLiveOnly] = useState(false);
   const [sort, setSort] = useState<Sort>({ column: 'max', descending: true });
-  const [expanded, setExpanded] = useState<string>();
+  const [selected, setSelected] = useState<string>();
 
   const rows = useMemo(() => {
     const column = COLUMNS.find(({ id }) => id === sort.column) ?? COLUMNS[0];
@@ -116,6 +134,12 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
         return (sort.descending ? -order : order) || a.query.localeCompare(b.query);
       });
   }, [queries, filter, liveOnly, sort]);
+
+  const items = useMemo(
+    () => rows.map((query) => ({ value: queryKey(query.query), label: shortQueryText(query.query) })),
+    [rows],
+  );
+  const current = rows.find((query) => queryKey(query.query) === selected);
 
   const live = queries.reduce((sum, query) => sum + query.active, 0);
 
@@ -144,7 +168,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Layout.Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
+      <Layout.Grid cols={TRACKS} classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
@@ -160,46 +184,47 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           </Tooltip.Trigger>
         ))}
       </Layout.Grid>
-      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
-        <ScrollArea.Viewport>
-          {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
-          {rows.map((query) => {
-            const open = expanded === query.query;
-            return (
-              <Fragment key={query.query}>
-                <Layout.Grid
-                  asChild
-                  cols={TRACKS}
-                  gap='sm'
-                  align='center'
-                  classNames={[
-                    'w-full px-2 py-0.5 font-mono text-xs tabular-nums text-end hover:bg-hover-surface',
-                    open && 'bg-hover-surface',
-                  ]}
+      {rows.length === 0 ? (
+        <p className='p-2 text-xs text-fg-muted'>No queries.</p>
+      ) : (
+        <Listbox.Root
+          items={items}
+          columns={COLUMNS_TEMPLATE}
+          value={selected}
+          onValueChange={setSelected}
+          onDeselect={() => setSelected(undefined)}
+          // The detail follows the arrow keys, not only a click.
+          onHighlightChange={(value) => value && setSelected(value)}
+          classNames='dx-grow'
+        >
+          <Listbox.Viewport>
+            <Listbox.Content>
+              {rows.map((query) => (
+                <Listbox.Item
+                  key={query.query}
+                  id={queryKey(query.query)}
+                  classNames='font-mono text-xs tabular-nums text-end whitespace-nowrap'
+                  data-testid='query-metrics.row'
                 >
-                  <button
-                    type='button'
-                    aria-expanded={open}
-                    onClick={() => setExpanded(open ? undefined : query.query)}
-                  >
-                    <Tooltip.Trigger asChild content={query.query}>
-                      <span className='truncate text-start'>{shortQueryText(query.query)}</span>
-                    </Tooltip.Trigger>
-                    {COLUMNS.slice(1).map((column) => (
-                      <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
-                    ))}
-                  </button>
-                </Layout.Grid>
-                {open && (
-                  <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
-                    <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />
-                  </div>
-                )}
-              </Fragment>
-            );
-          })}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+                  <Tooltip.Trigger asChild content={query.query}>
+                    <span className='truncate text-start'>{shortQueryText(query.query)}</span>
+                  </Tooltip.Trigger>
+                  {COLUMNS.slice(1).map((column) => (
+                    <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
+                  ))}
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
+        </Listbox.Root>
+      )}
+      {current && (
+        <ScrollArea.Root orientation='vertical' classNames='max-h-48 shrink-0 border-t border-separator-subtle'>
+          <ScrollArea.Viewport classNames='px-2 py-1 text-xs'>
+            <JsonHighlighter data={{ ...current, avgTime: averageQueryTime(current) }} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      )}
     </div>
   );
 };

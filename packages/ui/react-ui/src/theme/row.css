@@ -63,9 +63,14 @@
   }
 
   /* The source row stays in place, dimmed, while its preview is dragged. Not the parts of zag controls whose drag is a
-     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam or slider thumb is
-     pulled, and they must stay as they are. */
-  [data-dragging]:not([data-scope='splitter'], [data-scope='slider'], [data-scope='angle-slider']) {
+     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam, slider thumb or
+     floating panel is pulled, and they must stay as they are. */
+  [data-dragging]:not(
+    [data-scope='splitter'],
+    [data-scope='slider'],
+    [data-scope='angle-slider'],
+    [data-scope='floating-panel']
+  ) {
     opacity: 0.5;
   }
 

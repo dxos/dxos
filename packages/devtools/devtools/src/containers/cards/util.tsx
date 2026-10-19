@@ -32,12 +32,34 @@ export const averageQueryTime = ({ totalTime, executions }: QueryMetrics): numbe
 /** Times a query was fired: one-shot runs plus reactive subscriptions. */
 export const queryFiredCount = ({ runs, subscriptions }: QueryMetrics): number => runs + subscriptions;
 
+/** Characters kept of an object id or space key, enough to tell rows apart. */
+const KEY_PREFIX = 4;
+
 /**
- * Query text without the boilerplate every query shares (`Query.select(…)`, `Filter.`), so the part
- * that tells queries apart survives truncation in a narrow column.
+ * Query text a narrow column can show: the `Query.select(…)` wrapper every query shares is dropped, object ids and space
+ * keys keep their first characters, and a `.from()` of one space loses its array and flag options, e.g.
+ * `Filter.type(id: [01M3]).from({ space: "BPBG" })`.
  */
 export const shortQueryText = (query: string): string =>
-  query
-    .replace(/^Query\.select\(([\s\S]*)\)$/, '$1')
-    .replace(/^Filter\.type\(([^(),]+)\)/, '$1')
-    .replace(/\bFilter\./g, '');
+  unwrapSelect(query)
+    .replace(/\b[0-9A-Z]{20,}\b/g, (key) => key.slice(0, KEY_PREFIX))
+    .replace(/,\s*\w+:\s*(?:true|false)\b/g, '')
+    .replace(/\.from\(\[\s*(\{[^{}]*\})\s*\]\)/g, '.from($1)');
+
+/** The argument of a leading `Query.select(…)` followed by the rest of the chain. */
+const unwrapSelect = (query: string): string => {
+  const prefix = 'Query.select(';
+  if (!query.startsWith(prefix)) {
+    return query;
+  }
+  let depth = 1;
+  for (let index = prefix.length; index < query.length; index++) {
+    const char = query[index];
+    if (char === '(') {
+      depth++;
+    } else if (char === ')' && --depth === 0) {
+      return query.slice(prefix.length, index) + query.slice(index + 1);
+    }
+  }
+  return query;
+};
