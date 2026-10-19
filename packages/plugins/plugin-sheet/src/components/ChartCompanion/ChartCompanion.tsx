@@ -50,7 +50,7 @@ export const ChartCompanion = ({
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
   const [editing, setEditing] = useState(false);
-  const current = charts.find((chart) => chart.id === selected);
+  const current = charts.find((chart) => chart.id === selected) ?? charts[0];
 
   const handleAdd = useCallback(() => {
     const chart: Sheet.Chart = {
@@ -64,13 +64,13 @@ export const ChartCompanion = ({
   }, [charts, selection, onChange]);
 
   const handleDelete = useCallback(() => {
-    const index = charts.findIndex((chart) => chart.id === selected);
+    const index = charts.findIndex((chart) => chart.id === current?.id);
     if (index >= 0) {
-      const next = charts.filter((chart) => chart.id !== selected);
+      const next = charts.filter((chart) => chart.id !== current?.id);
       onChange(next);
       setSelected(next[Math.min(index, next.length - 1)]?.id);
     }
-  }, [charts, selected, onChange]);
+  }, [charts, current, onChange]);
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -86,8 +86,8 @@ export const ChartCompanion = ({
 
   const handleUpdate = useCallback(
     (values: Partial<Sheet.Chart>) =>
-      onChange(charts.map((chart) => (chart.id === selected ? { ...chart, ...values, id: chart.id } : chart))),
-    [charts, selected, onChange],
+      onChange(charts.map((chart) => (chart.id === current?.id ? { ...chart, ...values, id: chart.id } : chart))),
+    [charts, current, onChange],
   );
 
   const menuActions = useMenuBuilder(
@@ -145,7 +145,7 @@ export const ChartCompanion = ({
           <Splitter.Panel position='start' asChild>
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport>
-                <Listbox.Root items={items} value={selected} onValueChange={handleSelect}>
+                <Listbox.Root items={items} value={current?.id} onValueChange={handleSelect}>
                   <Listbox.Content aria-label={t('chart-list.label')}>
                     {items.map((item) => (
                       <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
@@ -235,6 +235,14 @@ const chartIcon = (type?: Sheet.ChartType) => {
       return 'ph--chart-pie--regular';
     case 'xy':
       return 'ph--chart-line--regular';
+    case 'scatter':
+      return 'ph--chart-scatter--regular';
+    case 'heatmap':
+      return 'ph--squares-four--regular';
+    case 'radar':
+      return 'ph--chart-polar--regular';
+    case 'map':
+      return 'ph--globe-hemisphere-west--regular';
     case 'bar':
     default:
       return 'ph--chart-bar--regular';
