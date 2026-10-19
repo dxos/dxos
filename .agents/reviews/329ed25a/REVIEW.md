@@ -16,21 +16,21 @@ _1 error(s), 14 warning(s)._
 
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
-- 329ed25a-1 - unresolved - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-projects/src/capabilities/create-object.ts:30
-- 329ed25a-2 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx:42
-- 329ed25a-3 - unresolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx:106
-- 329ed25a-4 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureBoard.tsx:44
-- 329ed25a-5 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.stories.tsx:24
-- 329ed25a-6 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx:149
-- 329ed25a-7 - unresolved - story-for-new-ui-component - packages/plugins/plugin-projects/src/containers/FeatureCardContent/FeatureCardContent.tsx:18
-- 329ed25a-8 - unresolved - no-casts - packages/plugins/plugin-projects/src/containers/index.ts:11
-- 329ed25a-9 - unresolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/containers/ShowcaseArticle/ShowcaseArticle.tsx:58
-- 329ed25a-10 - unresolved - story-for-new-ui-component - packages/plugins/plugin-projects/src/containers/ShowcaseCardContent/ShowcaseCardContent.tsx:18
-- 329ed25a-11 - unresolved - one-test-suite-per-module - packages/plugins/plugin-projects/src/operations/feature/feature.test.ts:42
-- 329ed25a-12 - unresolved - operations-resolve-database-from-service - packages/plugins/plugin-projects/src/testing/FeatureSeed.ts:36
-- 329ed25a-13 - unresolved - no-echo-internal-in-sdk - packages/plugins/plugin-projects/src/types/Feature.ts:1
-- 329ed25a-14 - unresolved - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-projects/src/types/FeatureMap.ts:1
-- 329ed25a-15 - unresolved - atom-lifetime-bound-to-owner - packages/ui/react-ui-canvas/src/model/projections/dynamic.ts:157
+- 329ed25a-1 - ignored - effect-fn-not-hand-wrapped-gen - packages/plugins/plugin-projects/src/capabilities/create-object.ts:30
+- 329ed25a-2 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx:42
+- 329ed25a-3 - resolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx:106
+- 329ed25a-4 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureBoard.tsx:44
+- 329ed25a-5 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.stories.tsx:24
+- 329ed25a-6 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx:149
+- 329ed25a-7 - resolved - story-for-new-ui-component - packages/plugins/plugin-projects/src/containers/FeatureCardContent/FeatureCardContent.tsx:18
+- 329ed25a-8 - resolved - no-casts - packages/plugins/plugin-projects/src/containers/index.ts:11
+- 329ed25a-9 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-projects/src/containers/ShowcaseArticle/ShowcaseArticle.tsx:58
+- 329ed25a-10 - resolved - story-for-new-ui-component - packages/plugins/plugin-projects/src/containers/ShowcaseCardContent/ShowcaseCardContent.tsx:18
+- 329ed25a-11 - resolved - one-test-suite-per-module - packages/plugins/plugin-projects/src/operations/feature/feature.test.ts:42
+- 329ed25a-12 - ignored - operations-resolve-database-from-service - packages/plugins/plugin-projects/src/testing/FeatureSeed.ts:36
+- 329ed25a-13 - ignored - no-echo-internal-in-sdk - packages/plugins/plugin-projects/src/types/Feature.ts:1
+- 329ed25a-14 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-projects/src/types/FeatureMap.ts:1
+- 329ed25a-15 - ignored - atom-lifetime-bound-to-owner - packages/ui/react-ui-canvas/src/model/projections/dynamic.ts:157
 
 ## Issues
 
@@ -110,3 +110,11 @@ estimated input tokens: 4506068
 billed input tokens: 4097792 (cost $0.1721)
 measured chars per token: 3.30
 ```
+
+### Triage notes
+
+- 329ed25a-1 (ignored): the hand-wrapped `Effect.gen` is the existing Project create entry; this PR only appends sibling entries, which call `Operation.invoke` directly.
+- 329ed25a-12 (ignored): `FeatureSeed.seed` is a story/test fixture that writes to a database it is handed, not an operation.
+- 329ed25a-13 (ignored): `PropertyMetaAnnotationId` has no public `@dxos/echo` equivalent; `Task.ts` in `@dxos/types` imports it from the same place for the same single-select options.
+- 329ed25a-14 (ignored): `FeatureMap.ts` carries the directive, its filename is the namespace, the barrel re-exports it as `FeatureMap`, and every consumer imports the namespace.
+- 329ed25a-15 (ignored): the `keepAlive` on the scene atom in `createDynamicProjection` predates this PR, which only added options to the function; the new canvas no longer pins its own atoms (329ed25a-3).

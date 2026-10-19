@@ -144,7 +144,7 @@ export const FeatureCardBody = ({
   return (
     <Card.Body>
       <Card.Row>
-        <div className='flex flex-wrap gap-1'>
+        <Layout.Flex wrap gap='xs'>
           <Tag.Tag hue={status.hue}>{statusLabel}</Tag.Tag>
           {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
           {shownSignals.map((signal) => (
@@ -161,7 +161,7 @@ export const FeatureCardBody = ({
               {t('feature-card.more-signals.label', { count: hiddenSignals.length })}
             </Tag.Tag>
           )}
-        </div>
+        </Layout.Flex>
       </Card.Row>
 
       {expanded && showFields && feature.description && (

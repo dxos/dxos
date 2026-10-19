@@ -13,6 +13,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
@@ -55,38 +56,42 @@ export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticle
     <Panel.Root role={role}>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical' classNames='dx-cover'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
-            <Form.Root db={db} schema={Values} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-              <Form.Content>
-                <Form.Fields />
-              </Form.Content>
-            </Form.Root>
+          <ScrollArea.Viewport classNames='p-4'>
+            <Layout.Flex column gap='lg'>
+              <Form.Root db={db} schema={Values} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
 
-            {targets.length > 0 && (
-              <section className='flex flex-wrap gap-2' aria-label={t('showcase-article.targets.label')}>
-                {targets.map((target) => (
-                  <Card.Root
-                    key={target.id}
-                    onClick={() => void openObject(target.id)}
-                    data-testid='showcase-article.target'
-                  >
-                    <Card.Header>
-                      <Card.Title>{Obj.getLabel(target) ?? target.id}</Card.Title>
-                    </Card.Header>
-                  </Card.Root>
-                ))}
-              </section>
-            )}
+              {targets.length > 0 && (
+                <Layout.Flex asChild wrap gap='sm'>
+                  <section aria-label={t('showcase-article.targets.label')}>
+                    {targets.map((target) => (
+                      <Card.Root
+                        key={target.id}
+                        onClick={() => void openObject(target.id)}
+                        data-testid='showcase-article.target'
+                      >
+                        <Card.Header>
+                          <Card.Title>{Obj.getLabel(target) ?? target.id}</Card.Title>
+                        </Card.Header>
+                      </Card.Root>
+                    ))}
+                  </section>
+                </Layout.Flex>
+              )}
 
-            {content && (
-              <Surface.Surface type={AppSurface.Section} data={{ subject: content, attendableId }} limit={1} />
-            )}
+              {content && (
+                <Surface.Surface type={AppSurface.Section} data={{ subject: content, attendableId }} limit={1} />
+              )}
 
-            <ObjectCards
-              label={t('showcase-article.artifacts.label')}
-              refs={showcase.artifacts}
-              onOpen={(id) => void openObject(id)}
-            />
+              <ObjectCards
+                label={t('showcase-article.artifacts.label')}
+                refs={showcase.artifacts}
+                onOpen={(id) => void openObject(id)}
+              />
+            </Layout.Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
@@ -107,14 +112,17 @@ const ObjectCards = ({ label, refs, onOpen }: ObjectCardsProps) => {
     return null;
   }
   return (
-    <section className='flex flex-col gap-2' aria-label={label}>
-      <h2 className='text-sm text-description'>{label}</h2>
-      <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3 items-start'>
-        {items.map((ref) => (
-          <ObjectCard key={ref.uri} objectRef={ref} onOpen={onOpen} />
-        ))}
-      </div>
-    </section>
+    <Layout.Flex asChild column gap='sm'>
+      <section aria-label={label}>
+        <h2 className='text-sm text-description'>{label}</h2>
+        {/* An auto-filling track count has no `cols` form, so the template stays a class. */}
+        <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]'>
+          {items.map((ref) => (
+            <ObjectCard key={ref.uri} objectRef={ref} onOpen={onOpen} />
+          ))}
+        </Layout.Grid>
+      </section>
+    </Layout.Flex>
   );
 };
 

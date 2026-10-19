@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -24,7 +25,7 @@ type StoryArgs = {
 const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
   const lookup = useMemo(() => makeFeatureLookup(SAMPLE_FEATURES), []);
   return (
-    <div className='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-3 items-start'>
+    <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]'>
       {ids.flatMap((id) => {
         const feature = lookup(id);
         return feature
@@ -39,7 +40,7 @@ const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
             ]
           : [];
       })}
-    </div>
+    </Layout.Grid>
   );
 };
 

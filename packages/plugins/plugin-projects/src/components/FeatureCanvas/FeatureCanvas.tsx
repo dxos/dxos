@@ -26,6 +26,7 @@ import {
   defaultNodeTypes,
   nodeBase,
 } from '@dxos/react-ui-canvas/scene';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 
@@ -44,9 +45,9 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
   const feature = lookup(node.id);
   return (
     // Inert, so a press anywhere on the card selects and drags the box rather than reaching the card.
-    <div className='dx-cover grid overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
+    <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
       {feature && <FeatureCard feature={feature} lookup={lookup} showDependencies={false} />}
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -106,8 +107,9 @@ export type FeatureCanvasProps = {
 export const FeatureCanvas = ({ features, positions = {}, onPositionsChange }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const graph = useMemo(() => Atom.keepAlive(Atom.make<GraphModel>(toGraph(features))), []);
-  const overlay = useMemo(() => Atom.keepAlive(Atom.make<Overlay>({ positions })), []);
+  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
+  const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
+  const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
   const store = useMemo(() => createMemoryStore([]), []);
   const atoms = useMemo(() => createSceneViewAtoms(DYNAMIC_SCENE_ID), []);
 

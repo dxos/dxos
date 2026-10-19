@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -43,8 +44,8 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, o
   };
 
   return (
-    <div className='flex flex-col gap-3 p-3 w-full' data-testid='feature-board'>
-      <div className='flex flex-wrap gap-1'>
+    <Layout.Flex column gap='md' classNames='p-3 w-full' data-testid='feature-board'>
+      <Layout.Flex wrap gap='xs'>
         {STATUSES.map((status) => {
           const count = features.filter((feature) => feature.status === status).length;
           return (
@@ -56,8 +57,9 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, o
             )
           );
         })}
-      </div>
-      <div className='grid grid-cols-[repeat(auto-fill,minmax(17rem,1fr))] gap-3 items-start'>
+      </Layout.Flex>
+      {/* An auto-filling track count has no `cols` form, so the template stays a class. */}
+      <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]'>
         {features.map((feature) => {
           const relation = getFeatureRelation(feature, selected);
           const faded = selected && feature.id !== selected.id && !relation;
@@ -75,7 +77,7 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, o
             </div>
           );
         })}
-      </div>
-    </div>
+      </Layout.Grid>
+    </Layout.Flex>
   );
 };

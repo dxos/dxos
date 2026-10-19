@@ -5,18 +5,23 @@
 import { type ComponentType } from 'react';
 import { lazy } from 'react';
 
+import { type FeatureArticleProps } from './FeatureArticle/index.ts';
+import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
+import { type FeatureMapArticleProps } from './FeatureMapArticle/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
+import { type ShowcaseArticleProps } from './ShowcaseArticle/index.ts';
+import { type ShowcaseCardContentProps } from './ShowcaseCardContent/index.ts';
 
-export const FeatureArticle: ComponentType<any> = lazy(() =>
+export const FeatureArticle: ComponentType<FeatureArticleProps> = lazy(() =>
   import('./FeatureArticle/index.ts').then((module) => ({ default: module.FeatureArticle })),
 );
 
-export const FeatureCardContent: ComponentType<any> = lazy(() =>
+export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy(() =>
   import('./FeatureCardContent/index.ts').then((module) => ({ default: module.FeatureCardContent })),
 );
 
-export const FeatureMapArticle: ComponentType<any> = lazy(() =>
+export const FeatureMapArticle: ComponentType<FeatureMapArticleProps> = lazy(() =>
   import('./FeatureMapArticle/index.ts').then((module) => ({ default: module.FeatureMapArticle })),
 );
 
@@ -32,11 +37,11 @@ export const ProjectArtifactsArticle: ComponentType<ProjectBranchArticleProps> =
   import('./ProjectBranchArticle/index.ts').then((module) => ({ default: module.ProjectArtifactsArticle })),
 );
 
-export const ShowcaseArticle: ComponentType<any> = lazy(() =>
+export const ShowcaseArticle: ComponentType<ShowcaseArticleProps> = lazy(() =>
   import('./ShowcaseArticle/index.ts').then((module) => ({ default: module.ShowcaseArticle })),
 );
 
-export const ShowcaseCardContent: ComponentType<any> = lazy(() =>
+export const ShowcaseCardContent: ComponentType<ShowcaseCardContentProps> = lazy(() =>
   import('./ShowcaseCardContent/index.ts').then((module) => ({ default: module.ShowcaseCardContent })),
 );
 
