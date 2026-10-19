@@ -17,6 +17,7 @@ import { readFile } from 'node:fs/promises';
 const NPM_REGISTRY = 'https://registry.npmjs.org';
 const CONCURRENCY = 16;
 const RETRIES = 2;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 const PATTERNS = ['{packages,tools,vendor}/**/package.json', 'docs/package.json'];
 const IGNORED = /(^|\/)(node_modules|__fixtures__|dist|build|out)\//;
@@ -53,15 +54,22 @@ const findPublicPackages = async (): Promise<PublicPackage[]> => {
 const isPublished = async (name: string): Promise<boolean> => {
   const url = `${NPM_REGISTRY}/${encodeURIComponent(name)}`;
   for (let attempt = 0; ; attempt++) {
-    const response = await fetch(url, { method: 'HEAD' });
-    if (response.status === 404) {
-      return false;
-    }
-    if (response.ok) {
-      return true;
+    let failure: string;
+    try {
+      const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      if (response.status === 404) {
+        return false;
+      }
+      if (response.ok) {
+        return true;
+      }
+      failure = `unexpected status ${response.status}`;
+    } catch (error) {
+      // A dropped connection or timeout is as transient as a 5xx, so it takes the same retries.
+      failure = error instanceof Error ? error.message : String(error);
     }
     if (attempt >= RETRIES) {
-      throw new Error(`unexpected status ${response.status} fetching ${url}`);
+      throw new Error(`${failure} fetching ${url}`);
     }
   }
 };
