@@ -25,6 +25,7 @@ import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
 import { FeedDataSource } from './feed-data-source.ts';
+import { IndexPassFailedError } from './index-scheduler.ts';
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
@@ -300,6 +301,35 @@ describe('EchoHost index failures', () => {
       sql<{ cursor: string }>`SELECT cursor FROM indexCursor WHERE sourceName = 'queue' AND spaceId = ${spaceId}`,
     );
     expect(cursors.map(({ cursor }) => cursor)).not.toContain('foreign|5');
+  });
+});
+
+describe('EchoHost failed index pass', () => {
+  // A flush that resolved would drop the client's record of writes the index does not hold yet.
+  test('updateIndexes fails with the pass, and a query that waits on it still answers', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation(() => Effect.die(new Error('pass failed')));
+
+    await saveObject(EntityId.random());
+    await expect(host.updateIndexes()).rejects.toBeInstanceOf(IndexPassFailedError);
+    expect(host.isOpen).toBe(true);
+
+    const feedScoped: QueryService.QueryRequest = {
+      queryId: EntityId.random(),
+      reactivity: QueryReactivity.ONE_SHOT,
+      query: JSON.stringify(
+        Query.select(Filter.everything()).from([{ _tag: 'feed', feedUri: `echo://${spaceId}/${EntityId.random()}` }])
+          .ast,
+      ),
+    };
+    const responses = await EffectEx.runPromise(
+      Stream.runCollect(host.queryService['QueryService.execQuery'](feedScoped)),
+    );
+    expect(responses).toHaveLength(1);
+
+    vi.mocked(host.indexEngine.update).mockImplementation(update);
+    await host.updateIndexes();
   });
 });
 

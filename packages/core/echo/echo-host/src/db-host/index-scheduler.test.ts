@@ -8,7 +8,13 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { INDEX_RETRY_DELAY_MS, type IndexPassResult, IndexScheduler, TRACE_INDEX_DELAY_MS } from './index-scheduler.ts';
+import {
+  INDEX_RETRY_DELAY_MS,
+  IndexPassFailedError,
+  type IndexPassResult,
+  IndexScheduler,
+  TRACE_INDEX_DELAY_MS,
+} from './index-scheduler.ts';
 
 describe('IndexScheduler', () => {
   beforeEach(() => {
@@ -69,16 +75,18 @@ describe('IndexScheduler', () => {
   });
 
   // A failed pass used to raise into the scheduler's context, which put the host into ERROR for good.
-  test('a failed pass leaves the scheduler open, releases waiters and retries', async () => {
+  test('a failed pass leaves the scheduler open, fails its waiters and retries', async () => {
     const raised = vi.fn();
     const parent = new Context({ onError: raised });
     const { scheduler, runPass, documentsSaved } = await setup({ done: true, drained: true }, parent);
     runPass.mockRejectedValueOnce(new Error('pass failed'));
 
+    // A waiter that resolved here would tell `EntityManager.flush` its writes are indexed.
     documentsSaved.emit();
     const waited = scheduler.waitForIndexed('rpc-update-indexes');
+    const failed = expect(waited).rejects.toBeInstanceOf(IndexPassFailedError);
     await vi.advanceTimersByTimeAsync(0);
-    await waited;
+    await failed;
     expect(runPass).toHaveBeenCalledTimes(1);
     expect(scheduler.isOpen).toBe(true);
     expect(raised).not.toHaveBeenCalled();
@@ -89,6 +97,11 @@ describe('IndexScheduler', () => {
     await vi.advanceTimersByTimeAsync(2);
     expect(runPass).toHaveBeenCalledTimes(2);
     expect(runPass.mock.calls[1][1]).toEqual({ retry: 1 });
+
+    // Once a pass succeeds, waiting works again.
+    const next = scheduler.waitForIndexed('rpc-update-indexes');
+    await vi.advanceTimersByTimeAsync(0);
+    await next;
   });
 
   // Closing cancels the pending timers, and a flag only the timer cleared kept the reopened scheduler from starting one.
