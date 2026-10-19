@@ -32,35 +32,34 @@ export type RoutinesInput = {
 };
 
 /** Triage's nightly sweep, on the cache project; disabled so a sample space spends no credits. */
-export const makeRoutines = ({ team, projects, inboxCrm }: RoutinesInput) =>
-  Effect.gen(function* () {
-    const instructions = Instructions.make({
-      name: 'Nightly triage',
-      text: NIGHTLY_TRIAGE,
-      skills: ['org.dxos.skill.project', 'org.dxos.skill.database', ...(inboxCrm ? ['org.dxos.skill.inbox'] : [])].map(
-        (key) => Ref.fromURI(Skill.registryURI(key)),
-      ),
-      objects: [
-        Ref.make(team.agents.triage),
-        Ref.make(projects.cache),
-        Ref.make(projects.billing),
-        Ref.make(projects.soc2),
-        ...(inboxCrm ? [Ref.make(inboxCrm.mailbox)] : []),
-      ],
-    });
-    const trigger = Trigger.make({
-      enabled: false,
-      spec: Trigger.specTimer('0 2 * * *'),
-      runnable: Ref.fromURI(AgentOperation.RunInstructions.meta.key),
-      input: { input: {}, instructions: Ref.make(instructions) },
-    });
-    const routine = Routine.make({
-      name: 'Nightly triage',
-      description: 'Triage reads the inbox and open issues every night at 02:00 UTC and files tasks.',
-      spec: { kind: 'instructions', instructions: Ref.make(instructions) },
-      triggers: [Ref.make(trigger)],
-    });
-    yield* Database.add(routine);
-    Project.addRoutine(projects.cache, routine);
-    return { triage: routine };
+export const makeRoutines = Effect.fnUntraced(function* ({ team, projects, inboxCrm }: RoutinesInput) {
+  const instructions = Instructions.make({
+    name: 'Nightly triage',
+    text: NIGHTLY_TRIAGE,
+    skills: ['org.dxos.skill.project', 'org.dxos.skill.database', ...(inboxCrm ? ['org.dxos.skill.inbox'] : [])].map(
+      (key) => Ref.fromURI(Skill.registryURI(key)),
+    ),
+    objects: [
+      Ref.make(team.agents.triage),
+      Ref.make(projects.cache),
+      Ref.make(projects.billing),
+      Ref.make(projects.soc2),
+      ...(inboxCrm ? [Ref.make(inboxCrm.mailbox)] : []),
+    ],
   });
+  const trigger = Trigger.make({
+    enabled: false,
+    spec: Trigger.specTimer('0 2 * * *'),
+    runnable: Ref.fromURI(AgentOperation.RunInstructions.meta.key),
+    input: { input: {}, instructions: Ref.make(instructions) },
+  });
+  const routine = Routine.make({
+    name: 'Nightly triage',
+    description: 'Triage reads the inbox and open issues every night at 02:00 UTC and files tasks.',
+    spec: { kind: 'instructions', instructions: Ref.make(instructions) },
+    triggers: [Ref.make(trigger)],
+  });
+  yield* Database.add(routine);
+  Project.addRoutine(projects.cache, routine);
+  return { triage: routine };
+});

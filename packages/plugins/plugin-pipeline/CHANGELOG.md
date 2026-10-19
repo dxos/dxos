@@ -1,5 +1,31 @@
 # @dxos/plugin-pipeline
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-mosaic@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

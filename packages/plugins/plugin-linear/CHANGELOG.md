@@ -1,5 +1,22 @@
 # @dxos/plugin-linear
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

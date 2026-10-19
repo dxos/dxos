@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "A canvas component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/test-utils": "workspace:*",

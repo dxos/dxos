@@ -8,7 +8,6 @@
 // functions here that return the scenes and intents the view applies, so each is one undoable step.
 //
 
-import { type SceneMap } from '../model/store.ts';
 import {
   type Bounds,
   type Endpoint,
@@ -23,12 +22,13 @@ import {
   type Port,
   type Scene,
   type SceneId,
+  type SceneMap,
   type Side,
   type Timeline,
   type Track,
   endpointNode,
   isInstanceNode,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, sceneLayers } from './layers.ts';
 import { topZ } from './order.ts';

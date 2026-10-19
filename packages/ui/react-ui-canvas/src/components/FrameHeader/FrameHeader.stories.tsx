@@ -5,22 +5,25 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { FrameHeader, type FrameHeaderProps } from './FrameHeader.tsx';
 
+random.seed(123);
+
 const SCENES = [
   {
-    title: 'The Silo Problem',
-    caption: 'Each application keeps its own data, fed only by its own source.',
+    title: 'The Decentralized Operating System',
+    caption: random.lorem.paragraph(),
   },
   {
-    title: 'ECHO',
-    caption: 'The sources feed one ECHO space, and the apps sync from it.',
+    title: 'The ECHO Hypergraph',
+    caption: random.lorem.paragraph(),
   },
   {
-    title: 'Monolithic Agents',
-    caption: 'One agent reaches into every source at once, beside the apps.',
+    title: 'The OS for your Agents',
+    caption: random.lorem.paragraph(),
   },
 ];
 
@@ -50,7 +53,7 @@ const Stepping = (props: Partial<FrameHeaderProps>) => {
  * 2. Play turns to pause and back.
  */
 const meta: Meta<typeof Stepping> = {
-  title: 'ui/react-ui-canvas/FrameHeader',
+  title: 'ui/react-ui-canvas/components/FrameHeader',
   render: (args) => <Stepping {...args} />,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 };

@@ -87,12 +87,26 @@ export const preview: Preview = {
       // https://storybook.js.org/docs/api/parameters#optionsstorysort
       // https://storybook.js.org/docs/writing-stories/naming-components-and-hierarchy#sorting-stories
       // @ts-ignore
+      // Within a folder, subfolders come before components, then each group sorts by name; a component's stories keep
+      // their order in the file, its docs first.
       storySort: (a, b) => {
-        if (a.title === b.title && a.type === 'docs' && b.type !== 'docs') {
-          return -1;
+        if (a.title === b.title) {
+          return a.type === 'docs' && b.type !== 'docs' ? -1 : b.type === 'docs' && a.type !== 'docs' ? 1 : 0;
         }
-
-        return a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
+        const left = a.title.split('/');
+        const right = b.title.split('/');
+        for (let index = 0; index < Math.min(left.length, right.length); index++) {
+          if (left[index] === right[index]) {
+            continue;
+          }
+          const leftFolder = index < left.length - 1;
+          const rightFolder = index < right.length - 1;
+          if (leftFolder !== rightFolder) {
+            return leftFolder ? -1 : 1;
+          }
+          return left[index].localeCompare(right[index], undefined, { numeric: true, sensitivity: 'base' });
+        }
+        return left.length - right.length;
       },
     },
   },

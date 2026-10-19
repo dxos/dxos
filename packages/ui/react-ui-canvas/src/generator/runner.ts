@@ -9,11 +9,8 @@
 // worker runs it, and so does a headless check.
 //
 
-import { sampleScene } from '../model/timeline.ts';
-import { type Bounds, type NodeId, type Scene, isGeneratorNode } from '../model/types.ts';
-import { flattenPath } from '../utils/path.ts';
-import { sceneLinkGeometry } from '../utils/route.ts';
-import { nodeBounds } from '../utils/shapes.ts';
+import { type Bounds, type NodeId, type Scene, isGeneratorNode, sampleScene } from '../model/index.ts';
+import { flattenPath, nodeBounds, sceneLinkGeometry } from '../utils/index.ts';
 import { hashSeed, seeded } from './motion.ts';
 import {
   type BoundLink,

@@ -21,7 +21,7 @@ import { daysAgo } from './util.ts';
 // of order rather than merely early.
 //
 
-type TaskSeed = {
+export type TaskSeed = {
   readonly title: string;
   readonly description: string;
   readonly estimate?: Task.Estimate;
@@ -35,13 +35,16 @@ type TaskSeed = {
  */
 const USER: Actor.Actor = { role: 'user', name: 'You' };
 
+/** The first step, on its own: the evals give an agent exactly this task. */
+export const ARCHITECTURE: TaskSeed = {
+  title: 'Draw the proposed architecture',
+  description:
+    "A diagram on the canvas, filed on the project, before any code: the sandbox where wrangler runs, the Worker it deploys, the temporary Cloudflare account that hosts it, and the request and JSON response between a client and the Worker URL. Write it in the Drawing skill's semantic diagram language (`node`, `edge`, `group`) and draw it, so the layout engine places every box and routes every arrow; never position the boxes by hand. Label each arrow in a few words, keep to what the later steps build, and draw again until the result reports no errors.",
+  estimate: 'xs',
+};
+
 const STEPS: ReadonlyArray<TaskSeed> = [
-  {
-    title: 'Draw the proposed architecture',
-    description:
-      'A diagram on the canvas, filed on the project, before any code: the sandbox where wrangler runs, the Worker it deploys, the temporary Cloudflare account that hosts it, and the request and JSON response between a client and the Worker URL. Label each box and arrow; keep it to what the later steps build. Drawing it belongs to the Drawing skill.',
-    estimate: 'xs',
-  },
+  ARCHITECTURE,
   {
     title: 'Create a sandbox and install wrangler',
     description:

@@ -40,4 +40,4 @@ rm -rf ./* ./.claude ./.git
 touch .drawing-demo
 cp -r "$DEMO_HERE/fixtures/shop/." .
 git init -q . 2>/dev/null
-npx -y skills add "$DEMO_ROOT/packages/devtools/drawing" --skill drawing -a claude-code -y >/dev/null 2>&1
+npx -y skills add "$DEMO_ROOT" --skill drawing -a claude-code -y >/dev/null

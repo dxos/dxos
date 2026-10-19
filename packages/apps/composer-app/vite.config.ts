@@ -559,6 +559,9 @@ export default defineConfig((env) => ({
     format: 'es' as const,
 
     plugins: () => [...sharedPlugins(env)],
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),

@@ -4,10 +4,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { type GeneratorCompiler } from '../generator/compile.ts';
-import { type GeneratorFrames, GeneratorHost } from '../generator/host.ts';
-import { type GeneratorSource } from '../generator/types.ts';
-import { type Scene, isGeneratorNode } from '../model/types.ts';
+import {
+  type GeneratorCompiler,
+  type GeneratorFrames,
+  GeneratorHost,
+  type GeneratorSource,
+} from '../generator/index.ts';
+import { type Scene, isGeneratorNode } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
   /** The scene as stored: the worker samples it per step. */

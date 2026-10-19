@@ -1,5 +1,31 @@
 # @dxos/assistant
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/mcp-client@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+
 ## 0.15.0
 
 ### Minor Changes

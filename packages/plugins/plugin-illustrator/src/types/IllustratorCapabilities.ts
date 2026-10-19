@@ -8,7 +8,9 @@ import type * as Effect from 'effect/Effect';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { SVG_SCHEMA } from '@dxos/diagram';
 import type { Database, Obj, Type } from '@dxos/echo';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { type DrawingBuilder } from '#model';
@@ -69,3 +71,17 @@ export type DrawingVariantSurfaceProps = {
   /** The user activated an object (double-click / enter): open what it depicts. */
   onActivate?: (objectId: string) => void;
 };
+
+/** Variant label as an id segment: variant ids carry `.` and `/`, which graph node ids reserve. */
+export const variantSlug = (variant: Pick<DrawingVariant, 'label'>): string =>
+  variant.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+/** The variants a drawing on `schema` can be converted to for editing; the SVG variant is a read-only viewer. */
+export const editTargets = (variants: readonly DrawingVariant[], schema: string | undefined): DrawingVariant[] =>
+  variants.filter(({ id }) => id !== schema && id !== SVG_SCHEMA);
+
+/** The "Edit in …" label of the action converting a drawing to `variant`, keyed per variant so known ones translate. */
+export const editLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [
+  `edit-in-${variantSlug(variant)}.label`,
+  { ns: meta.profile.key, defaultValue: `Edit in ${variant.label}` },
+];

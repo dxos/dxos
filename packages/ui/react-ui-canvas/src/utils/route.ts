@@ -11,20 +11,20 @@
 
 import { Nudge } from '@dxos/diagram';
 
-import { type NodeRegistry } from '../model/registry.ts';
 import {
   DEFAULT_GRID,
   type Endpoint,
   type Link,
   MAJOR_GRID,
   type Node,
+  type NodeRegistry,
   type Point,
   type Port,
   type PortEndpoint,
   type Scene,
   type Side,
   isPointEndpoint,
-} from '../model/types.ts';
+} from '../model/index.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec } from './lattice.ts';
 import {

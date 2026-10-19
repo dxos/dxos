@@ -1,5 +1,25 @@
 # @dxos/stories-projects
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [e26ed70]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/plugin-inbox@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/plugin-projects@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/storybook-testing@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/keys@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

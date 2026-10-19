@@ -41,7 +41,7 @@ each piece to the general mechanism that replaces it.
 | `Crystal` hex lattice                                                                | Pack bodies into a container                                        | Packing inside the flow generator (§6.3)              |
 | `morph.ts`: `planSplit`, `planMove`, `planArrivals`                                  | Change the layout while bodies are in flight                        | Generator transitions between keyed parameters (§6.5) |
 | `simulation.focus`, `#inFocus`                                                       | Spend work only on what is on screen                                | Viewport culling in the generator context (§6.4)      |
-| `MoleculeOverlay` SVG over `SceneView`, `data-frame-time`                            | Draw many small bodies cheaply; tell the recorder a frame is drawn  | A generator layer and a clock frame marker (§7)       |
+| `MoleculeOverlay` SVG over `Canvas`, `data-frame-time`                               | Draw many small bodies cheaply; tell the recorder a frame is drawn  | A generator layer and a clock frame marker (§7)       |
 | `render-story.mjs` on Playwright's fake clock                                        | Deterministic video export                                          | Export by seeking the scene clock (§7.2)              |
 
 ### 2.1 Pitfalls the design must prevent
@@ -134,14 +134,14 @@ and an `OrderedList` of rows.
 - **Selecting an instance** on the canvas highlights its row; selecting a row while instances are selected offers
   "swap to this object".
 
-Because the isolated view is a normal `SceneView` on the composite scene, everything else works there: editing,
+Because the isolated view is a normal `Canvas` on the composite scene, everything else works there: editing,
 layers, and the composite's own timeline (§5.7).
 
 ## 5. Timeline
 
 ### 5.1 Clock
 
-Each view owns a clock in its `SceneViewAtoms`:
+Each view owns a clock in its `CanvasAtoms`:
 
 ```ts
 Clock = {
@@ -230,7 +230,7 @@ physics if needed.
 `Marker = { t, label, caption? }` names a point on the timeline. Markers replace the sample's chapters:
 
 - The timeline bar draws them as ticks; prev and next jump between them.
-- An optional caption overlay (`SceneView.Caption`, built on `FrameHeader`, the sample's `SequenceHeader` now in the engine) shows the
+- An optional caption overlay (`Canvas.Caption`, built on `FrameHeader`, the sample's `SequenceHeader` now in the engine) shows the
   current marker's label and caption, and its counter (`2 / 5`).
 - Playback can pause at each marker ("presentation mode"), which is how the sample's sequence stepped chapter by
   chapter.
@@ -244,7 +244,7 @@ card is a composite with a one-second looping timeline.
 
 ### 5.8 Timeline bar
 
-`SceneView.Timeline` is a bar across the bottom of the canvas, beside the theme bar, shown when the scene has a
+`Canvas.Timeline` is a bar across the bottom of the canvas, beside the theme bar, shown when the scene has a
 timeline or the user adds one ("Animate" in the scene menu).
 
 - **Collapsed** (default): play/pause, the playhead slider over the duration, current time, marker ticks, and key
@@ -481,13 +481,13 @@ generators follow in phase 2.
 | `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `style.opacity`, `exposed`  | `src/model/types.ts`                                                                                                        |
 | Easing, keys, `sampleScene`, camera keys                                                           | `src/model/timeline.ts` (+ `timeline.test.ts`)                                                                              |
 | `animate(projection, clock)` and the intent rewrite                                                | `src/model/animate.ts` (+ `animate.test.ts`)                                                                                |
-| Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `SceneViewAtoms.clock`, `autoKey`, `isolation`                               |
+| Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `CanvasAtoms.clock`, `autoKey`, `isolation`                                  |
 | Compose, ungroup, make unique (`copyComposite` + `retargetInstance`), instance ports and transform | `src/utils/compose.ts` (+ `compose.test.ts`)                                                                                |
-| `ObjectsPanel`, `SceneView.Objects`, isolation (`Objects › name`)                                  | `src/components/Objects/`, `SceneView.tsx`                                                                                  |
-| `SceneView.Timeline` (collapsed bar) and the space , . [ ] K keys                                  | `src/components/Timeline/`, `src/model/keys.ts`, `useSceneKeys.ts`                                                          |
+| `ObjectsPanel`, `Canvas.Objects`, isolation (`Objects › name`)                                     | `src/components/inspectors/ObjectsInspector/`, `Canvas.tsx`                                                                 |
+| `Canvas.Timeline` (collapsed bar) and the space , . [ ] K keys                                     | `src/components/panels/TimelinePanel/`, `src/model/keys.ts`, `useSceneKeys.ts`                                              |
 | Generator contract, motion library, runner, compile, worker, host, check                           | `src/generator/` (+ `generator.test.ts`); subpaths `@dxos/react-ui-canvas/motion`, `@dxos/react-ui-canvas/generator-worker` |
 | Generator layer per scene layer, `data-frame-time`                                                 | `SceneLayer.tsx` (`GeneratedShapes`), `src/hooks/useGeneratorFrames.ts`                                                     |
-| Export by seeking                                                                                  | `scripts/render-story.mjs` (`--mode auto` finds an exposed clock; `SceneView.Root exportable`)                              |
+| Export by seeking                                                                                  | `scripts/render-story.mjs` (`--mode auto` finds an exposed clock; `Canvas.Root exportable`)                                 |
 | `Generator` ECHO type, operations, `canvas-generators` skill                                       | plugin-canvas `src/types/Generator.ts`, `src/types/CanvasOperation.ts`, `src/operations/`, `src/skills/`                    |
 | Demo: the DXOS end card as a document                                                              | plugin-canvas `src/samples/endcard/` (story `plugins/plugin-canvas/samples/EndCard`)                                        |
 
@@ -500,7 +500,7 @@ generators follow in phase 2.
    and never resolved.
 3. **A generator node stores a reference string, not a `Ref`.** The engine stays ECHO-free and the canvas content is
    plain records, so the node holds the `Generator`'s fully qualified EID (`Generator.referenceOf`); the host resolves
-   references to `GeneratorSource`s and passes them to `SceneView.Root generators`.
+   references to `GeneratorSource`s and passes them to `Canvas.Root generators`.
 4. **Bindings are declared in the JSON schema** (`"x-binding": "node" | "link"` on a property), since the parameter
    schema is stored data. A bound link is routed without the node registry (each node's own ports, else the defaults).
 5. **Compile errors only.** esbuild-wasm transforms without type checking, as the script plugin does today.
