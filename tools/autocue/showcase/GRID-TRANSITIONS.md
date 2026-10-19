@@ -5,6 +5,35 @@ Research notes and the prototype variants for the showcase grid. The prototypes 
 [`reveal.ts`](../src/components/Grid/reveal.ts), [`deck.ts`](../src/components/Grid/deck.ts) and
 [`border.ts`](../src/components/Grid/border.ts).
 
+## Links
+
+Stories (storybook on :9009; the border style is the `border` control on any story):
+
+1. `shift`: [clips](http://localhost:9009/?path=/story/tools-autocue-grid--shift-clips) ·
+   [tours](http://localhost:9009/?path=/story/tools-autocue-grid--shift-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--shift-numbers)
+2. `console`: [clips](http://localhost:9009/?path=/story/tools-autocue-grid--console-clips) ·
+   [tours](http://localhost:9009/?path=/story/tools-autocue-grid--console-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--console-numbers)
+3. `columns`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--columns-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--columns-numbers)
+4. `steps`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--steps-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--steps-numbers)
+5. `mosaic`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--mosaic-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--mosaic-numbers)
+6. `zoom`: [tours](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-tours) ·
+   [numbers](http://localhost:9009/?path=/story/tools-autocue-grid--zoom-numbers) ·
+   [default](http://localhost:9009/?path=/story/tools-autocue-grid--default)
+
+Renders (local only, under the gitignored `temp/grid-variants/`):
+
+- Previews, 60s with no audio: [shift-clips-preview.mp4](../../../temp/grid-variants/shift-clips-preview.mp4) ·
+  [console-clips-preview.mp4](../../../temp/grid-variants/console-clips-preview.mp4)
+- Contact sheets: [console-clips-contact.png](../../../temp/grid-variants/console/console-clips-contact.png) ·
+  [borders-contact.png](../../../temp/grid-variants/borders/borders-contact.png) ·
+  [borders-mid.png](../../../temp/grid-variants/borders/borders-mid.png)
+- Reference: [Grid Transitions (After Effects template)](https://www.youtube.com/watch?v=GYcYHWn3MpQ)
+
 ## What After Effects does
 
 "Grid transition", "video wall" and "photo wall" templates share one build: every clip is a precomp placed on a
