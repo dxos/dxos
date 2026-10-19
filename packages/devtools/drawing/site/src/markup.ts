@@ -22,17 +22,23 @@ export type InlineOptions = {
   readonly prefix: string;
   readonly label: string;
   readonly className?: string;
+  /** Pads the viewBox to at least this many cells (odd), so drawings that share a row also share a scale. */
+  readonly minCols?: number;
+  readonly minRows?: number;
 };
 
 /**
  * Grows a viewBox span outwards to whole grid cells, to an odd count: the page centres the drawing on a grid
  * whose lines it also centres, and only an odd count puts the scene's cell lines on the page's.
  */
-const snap = (start: number, size: number): { start: number; size: number; cells: number } => {
+const snap = (start: number, size: number, min = 0): { start: number; size: number; cells: number } => {
   const first = Math.floor(start / GRID);
   const last = Math.ceil((start + size) / GRID);
-  const cells = (last - first) % 2 === 0 ? last - first + 1 : last - first;
-  return { start: first * GRID, size: cells * GRID, cells };
+  const odd = (last - first) % 2 === 0 ? last - first + 1 : last - first;
+  const cells = Math.max(odd, min % 2 === 0 ? min + 1 : min);
+  // Odd minus odd is even, so the padding splits evenly and the drawing stays centred.
+  const pad = (cells - odd) / 2;
+  return { start: (first - pad) * GRID, size: cells * GRID, cells };
 };
 
 /**
@@ -40,14 +46,14 @@ const snap = (start: number, size: number): { start: number; size: number; cells
  * classes), its fixed size dropped so CSS sizes it per grid cell, its viewBox snapped to whole cells, and its
  * marker ids prefixed.
  */
-export const inline = (svg: string, { prefix, label, className = '' }: InlineOptions): Inline => {
+export const inline = (svg: string, { prefix, label, className = '', minCols, minRows }: InlineOptions): Inline => {
   const viewBox = /viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/.exec(svg);
   if (!viewBox) {
     throw new Error('Not a rendered diagram: the SVG has no viewBox.');
   }
   const [x, y, width, height] = viewBox.slice(1).map(Number);
-  const horizontal = snap(x, width);
-  const vertical = snap(y, height);
+  const horizontal = snap(x, width, minCols);
+  const vertical = snap(y, height, minRows);
   const markup = svg
     .replace(/<!--[\s\S]*?-->\n?/g, '')
     .replace(/<metadata\b[\s\S]*?<\/metadata>/, '')

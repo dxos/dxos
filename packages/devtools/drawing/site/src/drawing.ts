@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Dsl } from '@dxos/diagram';
 import { type Report, render } from '@dxos/drawing';
 import { BaseError } from '@dxos/errors';
 
@@ -20,6 +21,14 @@ export type Drawing = {
 };
 
 export class RenderError extends BaseError.extend('RenderError', 'The drawing could not be rendered') {}
+
+export class ConvertError extends BaseError.extend(
+  'ConvertError',
+  'Only a Mermaid flowchart or classDiagram converts',
+) {}
+
+/** The source languages the editor accepts; `.dx` is the drawing's own, Mermaid converts to it. */
+export type Language = 'dx' | 'mermaid';
 
 /**
  * Renders source the way the CLI does, through `render`, so the downloaded `.dx.svg` carries its source and
@@ -41,3 +50,15 @@ export const draw: (text: string, name?: string) => Effect.Effect<Drawing, Rende
     stageHtml: stage && stageHtml(stage.markup, stage.cols, stage.rows),
   };
 });
+
+/**
+ * Converts Mermaid to `.dx` text, then renders that, so the download carries editable `.dx` source whichever
+ * language it was written in.
+ */
+export const drawMermaid: (text: string, name?: string) => Effect.Effect<Drawing, RenderError | ConvertError> =
+  Effect.fn('drawMermaid')(function* (text: string, name: string = HERO) {
+    const source = yield* Dsl.convert(text).pipe(
+      Effect.mapError((cause) => new ConvertError({ cause, context: { name } })),
+    );
+    return yield* draw(source, name);
+  });
