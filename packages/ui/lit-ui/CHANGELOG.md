@@ -1,5 +1,12 @@
 # @dxos/lit-ui
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/react-hooks@0.16.0
+  - @dxos/ui-types@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

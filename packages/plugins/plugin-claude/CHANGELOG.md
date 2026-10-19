@@ -1,5 +1,30 @@
 # @dxos/plugin-claude
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-assistant@0.16.0
+  - @dxos/plugin-code@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/agent-runtime@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

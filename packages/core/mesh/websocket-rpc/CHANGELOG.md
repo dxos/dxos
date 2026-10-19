@@ -1,5 +1,15 @@
 # @dxos/websocket-rpc
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/protocols@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

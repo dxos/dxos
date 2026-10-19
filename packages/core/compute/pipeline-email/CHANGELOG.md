@@ -1,5 +1,24 @@
 # @dxos/pipeline-email
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/pipeline-rdf@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/markdown@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

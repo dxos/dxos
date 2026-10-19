@@ -1,5 +1,11 @@
 # @dxos/nlp
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/ai@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes
