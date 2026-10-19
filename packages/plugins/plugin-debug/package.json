@@ -224,6 +224,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-spacetime": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",

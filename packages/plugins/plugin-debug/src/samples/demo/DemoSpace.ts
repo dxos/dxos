@@ -14,6 +14,7 @@ import { Games } from './games.ts';
 import { DataCenterMap } from './map.ts';
 import { Sculpture } from './sculpture.ts';
 import { Town } from './town.ts';
+import { Vehicles } from './vehicles.ts';
 
 /** Stable reference date so regenerations are reproducible. */
 const REFERENCE = new Date('2026-10-19T12:00:00Z');
@@ -23,12 +24,13 @@ const partials = {
   map: DataCenterMap,
   sculpture: Sculpture,
   town: Town,
+  vehicles: Vehicles,
 };
 
 /**
  * A demo space of boards to look at: sixteen chess games at every stage, from famous finished games to openings a few
  * moves in and endgame studies, a world map pinning every Cloudflare data centre, a voxel Minecraft creeper, and a voxel
- * town where three racing cars and a fire truck drive past houses and towers.
+ * town where three racing cars and a fire truck drive past houses and towers, and the same line-up as a spacetime scene.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
@@ -45,6 +47,9 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
         const { sculpture } = yield* partials.sculpture();
         const { town } = yield* partials.town();
         yield* SampleSpace.collection('Voxels', [Ref.make(sculpture), Ref.make(town)]);
+        // Spacetime scenes have no navtree section either, so the scene gets its own collection.
+        const { scene } = yield* partials.vehicles();
+        yield* SampleSpace.collection('Scenes', [Ref.make(scene)]);
       }),
   });
 
@@ -52,6 +57,6 @@ export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.demo',
     description:
-      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper and a voxel town.',
+      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper, a voxel town and a spacetime scene of race cars and a fire truck.',
     definition: make(),
   });

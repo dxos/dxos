@@ -209,6 +209,9 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-spacetime"
+    },
+    {
       "path": "../plugin-status-bar"
     },
     {

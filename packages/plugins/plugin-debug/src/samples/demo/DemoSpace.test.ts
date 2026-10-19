@@ -14,6 +14,7 @@ import { GAMES } from './games.ts';
 import { TOUR } from './map.ts';
 import { creeper } from './sculpture.ts';
 import { TOWN, town } from './town.ts';
+import { VEHICLES } from './vehicles.ts';
 
 describe('Demo template', () => {
   test('every game is legal to its last move and in the stage it claims', ({ expect }) => {
@@ -60,6 +61,11 @@ describe('Demo template', () => {
     expect(countOf('type.map')).toBe(1);
     expect(countOf('type.organization')).toBe(DATA_CENTERS.length);
     expect(countOf('type.voxel')).toBe(2);
+    // The spacetime scene: three race cars and a fire truck, each a preset mesh rather than a primitive.
+    expect(countOf('type.spacetime.scene')).toBe(1);
+    expect(countOf('type.spacetime.object')).toBe(VEHICLES.length);
+    expect(VEHICLES.filter(({ preset }) => preset === 'race')).toHaveLength(3);
+    expect(VEHICLES.filter(({ preset }) => preset === 'firetruck')).toHaveLength(1);
 
     // The map's view pivots on the organizations' location, which is what the map plots.
     const {
@@ -70,10 +76,14 @@ describe('Demo template', () => {
         'projection'?: { pivotFieldId?: string; fields?: Array<{ id: string; path: string }> };
         'coordinates'?: number[][];
         'description'?: string;
+        'mesh'?: { vertexData: string; indexData: string };
         'name'?: string;
         'voxels'?: Record<string, { hue: string }>;
       }>;
     } = JSON.parse(json);
+    // Every vehicle carries its preset's parsed geometry, so the scene renders without the editor's toolbar.
+    const vehicles = objects.filter((object) => object['@type']?.includes('type.spacetime.object'));
+    expect(vehicles.every((vehicle) => (vehicle.mesh?.vertexData.length ?? 0) > 1000)).toBe(true);
     // Every game's description is its current position, which the Games table shows as a column.
     const descriptions = objects
       .filter((object) => object['@type']?.includes('type.game:'))

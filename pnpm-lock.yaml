@@ -10749,6 +10749,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-spacetime':
+        specifier: workspace:*
+        version: link:../plugin-spacetime
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
