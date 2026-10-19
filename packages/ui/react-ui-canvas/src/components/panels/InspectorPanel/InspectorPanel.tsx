@@ -254,8 +254,9 @@ const InspectorPanelContent = () => {
           : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
             // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
-              // The full height, as docked: the splitter divides a height, so it cannot size itself to its sections.
-              'absolute top-2 right-2 z-10 w-80 h-[calc(100%-1rem)] overflow-clip',
+              // A set height, as the splitter divides one rather than sizing to its sections; it stops above the bottom
+              // toolbars so they stay reachable.
+              'absolute top-2 right-2 z-10 w-80 h-[calc(100%-4.25rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
