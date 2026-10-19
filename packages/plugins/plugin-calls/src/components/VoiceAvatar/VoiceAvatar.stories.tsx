@@ -9,18 +9,19 @@ import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type VoiceAvatar, createVoiceAvatar } from '../../calls/voice-avatar.ts';
+import { type VoiceAvatar, type VoiceAvatarVariant, createVoiceAvatar } from '../../calls/voice-avatar.ts';
 import { VideoObject } from '../Media/index.ts';
 
 type StoryProps = {
   /** Audio file the avatar speaks. */
   src: string;
+  variant?: VoiceAvatarVariant;
 };
 
 type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioContext };
 
 /** The abstract avatar on its own, moving with a voice file that plays through the speakers. */
-const VoiceAvatarStory = ({ src }: StoryProps) => {
+const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
   const [voice, setVoice] = useState<Voice>();
   const [playing, setPlaying] = useState(false);
 
@@ -32,7 +33,11 @@ const VoiceAvatarStory = ({ src }: StoryProps) => {
     const destination = context.createMediaStreamDestination();
     source.connect(destination);
     source.connect(context.destination);
-    const avatar = createVoiceAvatar(context, destination.stream.getAudioTracks()[0], { width: 960, height: 540 });
+    const avatar = createVoiceAvatar(context, destination.stream.getAudioTracks()[0], {
+      variant,
+      width: 960,
+      height: 540,
+    });
     const onEnded = () => setPlaying(false);
     audio.addEventListener('ended', onEnded);
     setVoice({ avatar, audio, context });
@@ -44,7 +49,7 @@ const VoiceAvatarStory = ({ src }: StoryProps) => {
       void context.close();
       setPlaying(false);
     };
-  }, [src]);
+  }, [src, variant]);
 
   const handlePlay = async () => {
     if (!voice) {
@@ -102,3 +107,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Spectrum: Story = {
+  args: { variant: 'spectrum' },
+};
