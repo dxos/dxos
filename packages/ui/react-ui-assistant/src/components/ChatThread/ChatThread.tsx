@@ -21,13 +21,14 @@ import {
 } from '@dxos/react-ui-feed';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import { type Actor } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
 import { translationKey } from '../../translations.ts';
 import { type ChatThreadEvent, type ChatView } from '../../types.ts';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
+import { type MessageAuthor, MessageChrome, MessageChromeProvider, hasOtherAuthors } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -69,6 +70,10 @@ type ChatThreadRootProps = PropsWithChildren<
     objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
+    /** The reader's DID; prompts from anyone else turn on author avatars for the whole thread. */
+    userDid?: string;
+    /** Resolves a prompt's sender to the profile its avatar shows. */
+    getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
@@ -98,6 +103,8 @@ const ChatThreadRoot = ({
   objectImage,
   getObjectLabel,
   userHue,
+  userDid,
+  getAuthor,
   tailLines,
   debug,
   rewind = true,
@@ -122,6 +129,12 @@ const ChatThreadRoot = ({
     return model.subscribe(() => setStreaming(!!model.streamingId));
   }, [model]);
 
+  const [showAuthors, setShowAuthors] = useState(() => hasOtherAuthors(model.messages, userDid));
+  useEffect(() => {
+    setShowAuthors(hasOtherAuthors(model.messages, userDid));
+    return model.subscribe(() => setShowAuthors(hasOtherAuthors(model.messages, userDid)));
+  }, [model, userDid]);
+
   return (
     <ChatThreadProvider userHue={userHue} viewType={viewType} onEvent={onEvent}>
       <MessageChromeProvider
@@ -130,6 +143,9 @@ const ChatThreadRoot = ({
         showContext={viewType !== 'summary'}
         debug={debug}
         userHue={userHue}
+        userDid={userDid}
+        showAuthors={showAuthors}
+        getAuthor={getAuthor}
       >
         <MessageList.Root
           model={model}

@@ -3,7 +3,8 @@
   "compilerOptions": {},
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "scripts/**/*.ts"
   ],
   "references": []
 }

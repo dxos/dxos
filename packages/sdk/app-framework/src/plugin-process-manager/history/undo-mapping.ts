@@ -57,6 +57,24 @@ export interface UndoMapping<
    * Can be a static Label or a function that derives the message from input/output.
    */
   readonly message?: MessageProvider<Op>;
+
+  /**
+   * Optional scope (document or subject id) so scoped undo/redo can act on this entry alone.
+   * Return undefined to leave the entry reachable only by unscoped undo/redo.
+   */
+  readonly scope?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional merge key; consecutive entries in one scope with equal keys inside the tracker's merge
+   * window fold into one undo step (e.g. typing into one field).
+   */
+  readonly mergeKey?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional opaque context (e.g. view path and selection) returned on undo and redo so the UI can
+   * return to where the change happened.
+   */
+  readonly context?: (input: InputOf<Op>, output: OutputOf<Op>) => unknown;
 }
 
 /**
@@ -83,6 +101,24 @@ export interface UndoMappingProps<
    * Can be a static Label or a function that derives the message from input/output.
    */
   message?: MessageProvider<Op>;
+
+  /**
+   * Optional scope (document or subject id) so scoped undo/redo can act on this entry alone.
+   * Return undefined to leave the entry reachable only by unscoped undo/redo.
+   */
+  scope?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional merge key; consecutive entries in one scope with equal keys inside the tracker's merge
+   * window fold into one undo step (e.g. typing into one field).
+   */
+  mergeKey?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional opaque context (e.g. view path and selection) returned on undo and redo so the UI can
+   * return to where the change happened.
+   */
+  context?: (input: InputOf<Op>, output: OutputOf<Op>) => unknown;
 }
 
 /**

@@ -5,9 +5,11 @@
 import React, { type MouseEvent } from 'react';
 
 import * as Card from '@dxos/react-ui/Card';
+import * as Editable from '@dxos/react-ui/Editable';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -57,23 +59,99 @@ export type FeatureCardBodyProps = {
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
+  /** Adds a remove action to each dependency row of a detailed card. */
+  onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
+  /** Makes the description editable in place, shown with a placeholder while empty. */
+  onDescribe?: (feature: FeatureModel, description: string) => void;
+  /** How a text field opens: a double-click, or only its pencil where a press must stay the host's (a canvas box). */
+  editActivation?: InlineTextProps['activation'];
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
   onSelect?: (feature: FeatureModel) => void;
-  /** Adds an open button to the header. */
+  /** The header menu offers each of these that is given. */
   onOpen?: (feature: FeatureModel) => void;
+  onSetStatus?: (feature: FeatureModel, status: FeatureStatus) => void;
+  /** Takes the feature off the map it is shown on; the feature itself is kept. */
+  onRemove?: (feature: FeatureModel) => void;
+  /** Makes the name editable in place. */
+  onRename?: (feature: FeatureModel, name: string) => void;
+  /** Opens the name field, as for a feature just created; reports when it closes. */
+  editingName?: boolean;
+  onEditingNameChange?: (editing: boolean) => void;
 };
+
+type InlineTextProps = {
+  value: string;
+  placeholder: string;
+  label: string;
+  testId: string;
+  activation?: 'dblclick' | 'none';
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  onCommit: (value: string) => void;
+};
+
+/** A text field edited in place on a card, which keeps its keys and presses from the card and the canvas around it. */
+const InlineText = ({
+  value,
+  placeholder,
+  label,
+  testId,
+  activation = 'dblclick',
+  editing,
+  onEditingChange,
+  onCommit,
+}: InlineTextProps) => (
+  <Editable.Root
+    // Inert boxes on a canvas still let the field and its pencil take the pointer.
+    classNames='min-w-0 pointer-events-auto'
+    value={value}
+    placeholder={placeholder}
+    activation={activation}
+    editing={editing}
+    onEditingChange={onEditingChange}
+    onValueChange={(next) => {
+      const trimmed = next.trim();
+      if (trimmed !== value) {
+        onCommit(trimmed);
+      }
+    }}
+    // The double-click's second press would otherwise toggle the card's selection back off.
+    onClick={(event) => event.detail > 1 && event.stopPropagation()}
+  >
+    <Editable.Preview classNames='px-0' data-testid={`${testId}.preview`} />
+    <Editable.Input
+      aria-label={label}
+      data-testid={`${testId}.input`}
+      // Typing must not reach the card or the canvas, whose Delete and Backspace remove the box.
+      onKeyDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    />
+  </Editable.Root>
+);
+
+const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
  * features it needs. Status and signals each carry an icon and a word, so colour is never the only cue.
  */
-export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) => {
+export const FeatureCard = ({
+  onSelect,
+  onOpen,
+  onSetStatus,
+  onRemove,
+  onRename,
+  editingName,
+  onEditingNameChange,
+  ...props
+}: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, selected, relation } = props;
+  const { feature, selected, relation, editActivation } = props;
   const status = FEATURE_STATUS_STYLE[feature.status];
   return (
     <Card.Root
@@ -82,21 +160,73 @@ export const FeatureCard = ({ onSelect, onOpen, ...props }: FeatureCardProps) =>
       onClick={onSelect ? () => onSelect(feature) : undefined}
       data-testid='feature-card'
       data-feature={feature.id}
+      data-status={feature.status}
       data-relation={relation}
     >
       <Card.Header>
         <Layout.Block rail='start'>
           <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
-        <Card.Title lines={2}>{feature.name}</Card.Title>
-        {onOpen && (
-          <Layout.Block rail='end'>
-            <Card.Action
-              icon='ph--arrow-square-out--regular'
-              label={t('feature-card.open.label')}
-              data-testid='feature-card.open'
-              onClick={() => onOpen(feature)}
+        <Card.Title lines={2}>
+          {onRename ? (
+            <InlineText
+              value={feature.name}
+              placeholder={t('feature-card.name.placeholder')}
+              label={t('feature-card.name.label')}
+              testId='feature-card.name'
+              activation={editActivation}
+              editing={editingName}
+              onEditingChange={onEditingNameChange}
+              onCommit={(name) => onRename(feature, name)}
             />
+          ) : (
+            feature.name
+          )}
+        </Card.Title>
+        {(onOpen || onSetStatus || onRemove) && (
+          <Layout.Block rail='end' data-testid='feature-card.menu'>
+            <Card.Menu label={t('feature-card.menu.label')}>
+              {onOpen && (
+                <Menu.Item
+                  item={{ value: 'open', label: t('feature-card.open.label'), icon: 'ph--arrow-square-out--regular' }}
+                  data-testid='feature-card.open'
+                  onClick={() => onOpen(feature)}
+                />
+              )}
+              {onOpen && onSetStatus && <Menu.Separator />}
+              {onSetStatus && (
+                <Menu.RadioItemGroup
+                  value={feature.status}
+                  onValueChange={({ value }) => {
+                    const next = STATUSES.find((candidate) => candidate === value);
+                    if (next && next !== feature.status) {
+                      onSetStatus(feature, next);
+                    }
+                  }}
+                >
+                  <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
+                  {STATUSES.map((candidate) => (
+                    <Menu.RadioItem
+                      key={candidate}
+                      item={{
+                        value: candidate,
+                        label: t(`feature-status.${candidate}.label`),
+                        icon: FEATURE_STATUS_STYLE[candidate].icon,
+                      }}
+                      data-testid={`feature-card.status.${candidate}`}
+                    />
+                  ))}
+                </Menu.RadioItemGroup>
+              )}
+              {(onOpen || onSetStatus) && onRemove && <Menu.Separator />}
+              {onRemove && (
+                <Menu.Item
+                  item={{ value: 'remove', label: t('feature-card.remove.label'), icon: 'ph--minus-circle--regular' }}
+                  data-testid='feature-card.remove'
+                  onClick={() => onRemove(feature)}
+                />
+              )}
+            </Card.Menu>
           </Layout.Block>
         )}
       </Card.Header>
@@ -120,7 +250,10 @@ export const FeatureCardBody = ({
   showFields = true,
   dependents = [],
   onSelectDependency,
+  onRemoveDependency,
   onOpenObject,
+  onDescribe,
+  editActivation,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const status = FEATURE_STATUS_STYLE[feature.status];
@@ -164,7 +297,20 @@ export const FeatureCardBody = ({
         </Layout.Flex>
       </Card.Row>
 
-      {expanded && showFields && feature.description && (
+      {showFields && onDescribe && (
+        <Card.Row icon='ph--text-align-left--regular'>
+          <InlineText
+            value={feature.description ?? ''}
+            placeholder={t('feature-card.description.placeholder')}
+            label={t('feature-card.description.label')}
+            testId='feature-card.description'
+            activation={editActivation}
+            onCommit={(description) => onDescribe(feature, description)}
+          />
+        </Card.Row>
+      )}
+
+      {expanded && showFields && !onDescribe && feature.description && (
         <Card.Row span='full'>
           <Card.Text variant='muted' lines={3}>
             {feature.description}
@@ -202,6 +348,16 @@ export const FeatureCardBody = ({
             <Card.Row
               key={dependency.id}
               icon={FEATURE_STATUS_STYLE[dependency.status].icon}
+              trailing={
+                onRemoveDependency && (
+                  <Card.Action
+                    icon='ph--x--regular'
+                    label={t('feature-card.remove-dependency.label', { name: dependency.name })}
+                    data-testid='feature-card.remove-dependency'
+                    onClick={() => onRemoveDependency(dependency.id)}
+                  />
+                )
+              }
               onClick={
                 onSelectDependency
                   ? (event: MouseEvent) => {
