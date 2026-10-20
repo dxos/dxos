@@ -23585,12 +23585,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@react-three/drei':
-        specifier: 'catalog:'
-        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0))(@types/react@19.2.17)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0)
-      '@react-three/fiber':
-        specifier: 'catalog:'
-        version: 9.5.0(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0)
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -23634,9 +23628,6 @@ importers:
       '@types/flubber':
         specifier: 'catalog:'
         version: 0.4.0
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -23652,9 +23643,6 @@ importers:
       leva:
         specifier: 'catalog:'
         version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
       ogl:
         specifier: 'catalog:'
         version: 1.0.11

@@ -37,3 +37,10 @@ export const toConfig = (values: Record<string, unknown>): Config =>
 /** Leva store paths for `config`'s fields in the folder `folder`. */
 export const levaPaths = (folder: string, config: Config): Record<string, number | string> =>
   Object.fromEntries(Object.entries(config).map(([key, value]) => [`${folder}.${key}`, value]));
+
+/** `defaults` with each field Leva holds a value of the same kind for replaced by that value. */
+export const applyValues = <C extends Config>(defaults: C, values: Config): C =>
+  Object.assign(
+    { ...defaults },
+    Object.fromEntries(Object.entries(values).filter(([key, value]) => typeof value === typeof defaults[key])),
+  );

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { useAudioStream } from '@dxos/react-ui-audio';
-import { Chaos, shaderPresets } from '@dxos/react-ui-experimental';
+import { Chaos, chaosPresets } from '@dxos/react-ui-experimental';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { type ComputeNodeViewProps } from './common/index.ts';
@@ -20,7 +20,7 @@ export const ScopeComponent = ({ node: shape }: ComputeNodeViewProps<ScopeShape>
 
   return (
     <div className='flex w-full justify-center items-center bg-black'>
-      <Chaos active={active} getValue={getAverage} options={{ ...shaderPresets.heptapod, zoom: 1.2 }} />
+      <Chaos active={active} getValue={getAverage} options={{ ...chaosPresets.heptapod, zoom: 1.2 }} />
     </div>
   );
 };
