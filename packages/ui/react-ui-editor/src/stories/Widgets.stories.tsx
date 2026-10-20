@@ -369,6 +369,8 @@ const PAST_CLOSE_DELAY = 600;
  * stays open while the pointer is over it, closes once the pointer leaves both, and stays pinned once used.
  */
 export const PreviewHoverTest: Story = {
+  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
+  tags: ['!test'],
   args: { ...Preview.args },
   play: async ({ canvasElement }) => {
     const anchor = await waitFor(

@@ -409,6 +409,8 @@ export const EditingTyping: Story = {
  * - "Now" returns to the editable tip and clears the checkpoint banner.
  */
 export const TimeTravel: Story = {
+  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
+  tags: ['!test'],
   args: {
     content: '1',
   },

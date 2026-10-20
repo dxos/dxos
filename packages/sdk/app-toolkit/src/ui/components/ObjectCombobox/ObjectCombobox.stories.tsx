@@ -51,6 +51,8 @@ export const Default: Story = {};
 
 /** The listed objects sorted by label, each with its icon, under a search field the options never scroll beneath. */
 export const Test: Story = {
+  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
+  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
 

@@ -91,8 +91,9 @@ jobs:
         run: bash .github/ci-trial/monitor.sh report
 
   # Depot: one 8x32 cell per browser, 3 workers, peak 11 GB (chromium), 17 GB (firefox), 28 GB (webkit).
-  # Here: Playwright shards. WebKit at 2 workers swapped (load 20 on 4 vCPU) and lost pages, so it
-  # gets 4 shards of 1 worker.
+  # Here: Playwright shards. WebKit at 2 workers swapped (load 20 on 4 vCPU) and lost pages; at 4 shards
+  # of 1 worker it still peaked at 13-14 GB, so it gets 8 shards to show whether the peak tracks how
+  # many tests one browser runs.
   e2e:
     name: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
     strategy:
@@ -103,10 +104,14 @@ jobs:
           - { browser: chromium, shard: 2, total: 2, workers: 2 }
           - { browser: firefox, shard: 1, total: 2, workers: 2 }
           - { browser: firefox, shard: 2, total: 2, workers: 2 }
-          - { browser: webkit, shard: 1, total: 4, workers: 1 }
-          - { browser: webkit, shard: 2, total: 4, workers: 1 }
-          - { browser: webkit, shard: 3, total: 4, workers: 1 }
-          - { browser: webkit, shard: 4, total: 4, workers: 1 }
+          - { browser: webkit, shard: 1, total: 8, workers: 1 }
+          - { browser: webkit, shard: 2, total: 8, workers: 1 }
+          - { browser: webkit, shard: 3, total: 8, workers: 1 }
+          - { browser: webkit, shard: 4, total: 8, workers: 1 }
+          - { browser: webkit, shard: 5, total: 8, workers: 1 }
+          - { browser: webkit, shard: 6, total: 8, workers: 1 }
+          - { browser: webkit, shard: 7, total: 8, workers: 1 }
+          - { browser: webkit, shard: 8, total: 8, workers: 1 }
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
