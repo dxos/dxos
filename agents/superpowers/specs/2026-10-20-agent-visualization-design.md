@@ -206,7 +206,21 @@ Each phase is one PR, separate from #14040.
    panel per visualization, presets in the story toolbar (user, 2026-10-20).
 4. No project registration (user, 2026-10-20).
 
-## Open questions
+## Agent runtime state (investigated 2026-10-20)
 
-1. Is the agent runtime state (thinking, ready to speak, acting) already observable in plugin-assistant, or does it
-   need a new capability? Under investigation.
+Thinking, acting and idle already exist; "ready to speak" does not, and nothing outside a chat's React component can
+read any of them.
+
+- The agent emits `Trace.RequestPhase` events (`core/compute/compute/src/Trace.ts`: generating, calling-tool with the
+  tool name, sleeping, …) and `AgentRequestBegin` / `AgentRequestEnd`, readable from any plugin through
+  `AgentService.Session.subscribeEphemeral()` (`AgentService.ts`).
+- plugin-assistant reduces them into `ChatModel.streaming`, `active` and `activity` atoms
+  (`plugin-assistant/src/chat-model/chat-model.ts`), but a `ChatModel` is created per component by `useChatModel`, and
+  `AssistantCapabilities` has no status capability.
+
+Proposal: an `AssistantCapabilities.AgentActivity` capability, `{ get(chat): Atom<AgentActivity> }`, with
+`AgentActivity` one of idle, thinking (with its phase), acting (with the tool) and ready (with the reply's message id).
+It is an `Atom.family` keyed by chat over `subscribeEphemeral()`, reusing ChatModel's reduction moved into a shared
+pure reducer; `ChatModel` then reads it instead of keeping its own. `ready` is set on a successful `AgentRequestEnd` and
+cleared by its consumer (`acknowledge(chat)`), until a voice path adds a `speaking` state. `AgentRuntimeProvider` reads
+this atom.
