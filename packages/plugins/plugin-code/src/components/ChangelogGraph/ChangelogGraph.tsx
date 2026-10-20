@@ -318,6 +318,7 @@ export const ChangelogGraph = ({ content, affects = false, selected }: Changelog
   return (
     <NodeLookupContext.Provider value={lookup}>
       <SelectedContext.Provider value={selected}>
+        {/* The positioning context the legend floats in over the canvas. */}
         <div className='dx-fill relative'>
           <Legend />
           <Canvas.Root

@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -48,15 +49,14 @@ export const SpecChangelog = ({ content }: SpecChangelogProps) => {
   );
 
   return (
-    <div className='dx-fill grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] divide-x divide-separator'>
+    <Layout.Grid cols={['fill', 'fill']} grow classNames='divide-x divide-separator'>
+      {/* Scrolls the read-only editor, which sizes to its content. */}
       <div className='relative overflow-auto' data-testid='spec-changelog.spec'>
         <Editor.Root extensions={extensions}>
           <Editor.View classNames={editorClassNames('article')} value={content} />
         </Editor.Root>
       </div>
-      <div className='relative min-h-0'>
-        <ChangelogGraph content={content} selected={selected} />
-      </div>
-    </div>
+      <ChangelogGraph content={content} selected={selected} />
+    </Layout.Grid>
   );
 };
