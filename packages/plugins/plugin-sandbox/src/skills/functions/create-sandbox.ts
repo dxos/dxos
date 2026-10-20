@@ -7,8 +7,9 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type Repo } from '@dxos/types';
 
 import { Sandbox, SandboxOperation, SandboxService } from '#types';
 
@@ -34,7 +35,9 @@ export default SandboxOperation.CreateSandbox.pipe(
       const sandboxId = sandbox.id;
       const spaceId = db.spaceId;
 
-      const attached = yield* resolveAttachments(spaceId, repositories).pipe(Effect.orDie);
+      // Annotated: naming `Repo` here keeps the handler's emitted declaration portable (TS2883).
+      const attachments: readonly Ref.Ref<Repo.Repo>[] = repositories;
+      const attached = yield* resolveAttachments(spaceId, attachments).pipe(Effect.orDie);
       const record = yield* sandboxService
         .create(spaceId, sandboxId, { name, baseImage, repositories: attached })
         .pipe(Effect.orDie);

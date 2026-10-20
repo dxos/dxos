@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { type Repo } from '@dxos/types';
 
 import { RepositoryService, SandboxOperation, SandboxService } from '#types';
 
@@ -21,7 +22,8 @@ export default SandboxOperation.AttachRepository.pipe(
     Effect.fn(function* ({ sandbox: sandboxRef, repository }) {
       const { db } = yield* Database.Service;
       const sandbox = yield* Database.load(sandboxRef);
-      const loadedRepository = yield* Database.load(repository);
+      // Annotated: naming `Repo` here keeps the handler's emitted declaration portable (TS2883).
+      const loadedRepository: Repo.Repo = yield* Database.load(repository);
 
       const current = sandbox.repositories ?? [];
       const currentIds = new Set<string>();
