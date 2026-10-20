@@ -76,6 +76,9 @@ describe('polygonPath', () => {
         expect(Math.hypot(x - 150, y - 50)).toBeCloseTo(50, 1);
       }
     }
+    // A sharp corner's mitred stroke stays on the circle: a triangle's tip reaches twice the inset past its vertex.
+    const [top] = vertices(polygonPath({ width: 100, height: 100 }, { sides: 3, fit: 'circle', inset: 2 }));
+    expect(top.y - 2 / Math.sin(Math.PI / 6)).toBeCloseTo(0, 1);
     // A triangle on the circle leaves room below its base, where fitting the frame would fill it.
     const ys = vertices(polygonPath({ width: 100, height: 100 }, { sides: 3, fit: 'circle' })).map(({ y }) => y);
     expect(Math.max(...ys)).toBeCloseTo(75, 1);

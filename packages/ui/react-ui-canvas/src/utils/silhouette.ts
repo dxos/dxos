@@ -70,10 +70,14 @@ export const polygonPath = (
   const ys = unit.map(({ y }) => y);
   const [left, right, top, bottom] =
     fit === 'circle' ? [-1, 1, -1, 1] : [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  // A sharp corner's mitred stroke reaches `inset / sin(θ/2)` past its vertex (θ the interior angle), so on a circle the
+  // vertices are pulled in by that much for the tips to stay on it; a rounded corner's stroke reaches only `inset`.
+  const halfAngle = (Math.PI - (2 * Math.PI) / count) / 2;
+  const reach = fit === 'circle' && radius <= 0 ? inset / Math.sin(halfAngle) : inset;
   // Uniform, so the polygon stays regular in a frame of any aspect.
   const scale = Math.max(
     0,
-    Math.min((size.width - 2 * inset) / (right - left), (size.height - 2 * inset) / (bottom - top)),
+    Math.min((size.width - 2 * reach) / (right - left), (size.height - 2 * reach) / (bottom - top)),
   );
   const dx = size.width / 2 - ((left + right) / 2) * scale;
   const dy = size.height / 2 - ((top + bottom) / 2) * scale;
@@ -83,7 +87,6 @@ export const polygonPath = (
   }
   // A corner of interior angle θ, rounded by radius r, starts r / tan(θ/2) back along each edge.
   const edge = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
-  const halfAngle = (Math.PI - (2 * Math.PI) / count) / 2;
   const back = Math.min(radius / Math.tan(halfAngle), edge / 2);
   const arc = back * Math.tan(halfAngle);
   const toward = (from: { x: number; y: number }, to: { x: number; y: number }) => ({

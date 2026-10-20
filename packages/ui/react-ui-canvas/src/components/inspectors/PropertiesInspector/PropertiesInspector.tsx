@@ -212,6 +212,9 @@ export type PropertiesInspectorProps = InspectorProps & {
   viewOptions?: readonly ViewOption[];
   /** The drawing's style classes (`ViewStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
+  /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
+  groups?: Readonly<Record<string, boolean>>;
+  onGroupsChange?: (groups: Record<string, boolean>) => void;
 };
 
 /** The selection's properties, as one form; read-only too where the projection cannot `update`. */
@@ -227,6 +230,8 @@ export const PropertiesInspector = ({
   overrides,
   viewOptions,
   styles,
+  groups,
+  onGroupsChange,
 }: PropertiesInspectorProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -269,8 +274,18 @@ export const PropertiesInspector = ({
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
+    // Only a group reads these, so every top-level field may carry them.
+    if (onGroupsChange) {
+      for (const path of Object.keys(values)) {
+        fieldOverrides[path] = {
+          ...fieldOverrides[path],
+          open: groups?.[path],
+          onOpenChange: (open) => onGroupsChange({ ...groups, [path]: open }),
+        };
+      }
+    }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {

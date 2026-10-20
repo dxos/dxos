@@ -111,6 +111,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     grid: snap,
     guides,
     fit,
+    groups,
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
@@ -125,6 +126,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const handleReadonlyChange = useCallback(
     (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
+    [updateViewState],
+  );
+  const handleGroupsChange = useCallback(
+    (groups: Record<string, boolean>) => updateViewState((state) => ({ ...state, groups })),
     [updateViewState],
   );
   const handleCameraChange = useCallback(
@@ -231,7 +236,14 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               {!section && (
                 <>
                   {(settings.showPalette ?? true) && <Canvas.Tools />}
-                  <Canvas.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
+                  <Canvas.Properties
+                    db={db}
+                    getOptions={getOptions}
+                    overrides={overrides}
+                    groups={groups}
+                    onGroupsChange={handleGroupsChange}
+                    sceneFilter={isLocalScene}
+                  />
                   <Canvas.Timeline />
                   <Canvas.Views />
                   <Canvas.Layers />
