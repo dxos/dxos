@@ -45,8 +45,27 @@ agents decided. The dialect and its rules are in `lang/changelog.mdl`; read them
 
 **Every change to a spec adds at least one decision, in the same commit.** That includes renames,
 reworded requirements and spec-sync reconciliation. CI rejects a changed spec with no new entry
-(see [Checking your work](#checking-your-work)). If the spec has no `## Changelog` yet, add one as
-the last section before any appendix, and add `decision` to its Extensions table:
+(see [Checking your work](#checking-your-work)). Two exceptions:
+
+- **Trivial edits need no decision.** These are whitespace changes, and fixes to at most 3 words of
+  1–2 letters each (`recieved` → `received`). The check decides this, not you. A changed word that
+  contains a digit (an id such as `F-1.2`, a number) or is a normative word (`must`, `not`,
+  `never`, `only`, …) is never trivial.
+- **Escape hatch: the `Spec-Changelog-Skip` commit trailer.** Use it only for a bulk mechanical
+  edit that changes no requirement, such as a rename across many specs or a reformat. Do not use
+  it for a change that is real but small, and do not use it to avoid asking who made a decision.
+  Add the trailer, with a reason, to a commit on the branch:
+
+  ```
+  plugins: rename DeckPlank to Plank in every PLUGIN.mdl
+
+  Spec-Changelog-Skip: mechanical rename, no requirement changes
+  ```
+
+  It lifts only the missing-decision rule, for every spec on the branch. The append-only rules
+  still apply. Say in the PR body that you used it, and why.
+  If the spec has no `## Changelog` yet, add one as
+  the last section before any appendix, and add `decision` to its Extensions table:
 
 ```
 | `decision` | `org.dxos.mdl.decision@1.0` |
@@ -58,11 +77,16 @@ A person usually gives coarse direction and you fill in the gaps. Never merge th
 entry. Record them in this order:
 
 1. **First, what the person said: faithfully, and nothing more.** One `by: user:<them>` entry per
-   instruction. The prose restates their decision in spec terms. `quote:` carries their words
-   verbatim. `context:` may add facts that make the entry readable on its own, such as what a name
-   refers to or where they said it. Do not add requirements, rationale they did not give, or
-   assumptions. If you had to interpret something, the interpretation goes in step 2. `source:`
-   links to where they said it, when there is a link.
+   instruction. The prose restates their decision in spec terms. Prompts are messy and lack
+   context, so do not paste them. You may:
+   - resolve references ("it", "the canvas" → `Scene`, "that bug" → the issue);
+   - include the context needed to read the entry on its own;
+   - fix wording, spelling and grammar.
+
+   You must not add or remove information: no requirement, rationale or assumption they did not
+   give, and nothing they said dropped. If you had to choose between readings, that choice is
+   yours and goes in step 2. `source:` links to where they said it, when there is a link.
+
 2. **Then, what you added: as separate entries.** One `by: agent:claude-code` entry per independent
    choice you made to fill the gaps (a shape, a name, an edge case, your reading of an ambiguous
    phrase). Each one names your principal in `for:` and the entry it builds on in its prose
@@ -73,11 +97,9 @@ entry. Record them in this order:
    edit your own entry to say it was approved.
 
 ```mdl
-decision D-1: The canvas grows to fit its content.
+decision D-1: The `Scene` canvas grows when a node moves past its edge.
   date: 2026-10-20
   by: user:alice
-  quote: "canvas should just grow when stuff goes past the edge"
-  context: "The canvas" is the `Scene` surface.
   affects: [Scene]
 ```
 
@@ -136,7 +158,8 @@ node packages/reflect/deus/scripts/lint-mdl.ts --only mdl/decision <file.mdl>...
 `check-changelog.ts` compares every changed `.mdl` file with the merge base of `origin/main`,
 uncommitted edits included. CI runs the same script as **Check spec changelogs**. It fails when:
 
-- the spec changed outside `## Changelog` and no decision was added;
+- the spec changed outside `## Changelog` beyond a trivial edit, no decision was added, and no
+  branch commit carries `Spec-Changelog-Skip`;
 - a new spec has no decision;
 - an existing entry was edited, removed or reordered;
 - an id is out of sequence, or `supersedes:` names an id that is not in the log;
@@ -148,7 +171,7 @@ in the document are ignored.
 
 `lint-mdl.ts` runs the editor's checks. With `--only mdl/decision` it reports a `decision` with no
 typed `by:`, an `agent:` decision with no `for:`, a `for:` on a `user:` decision or one that names
-an agent, and a `quote:` on an `agent:` decision. Without `--only` it also runs the block-type
+an agent. Without `--only` it also runs the block-type
 check. That check knows only the built-in types, so it flags dialect blocks such as `node` or
 `plank` in documents that are valid.
 

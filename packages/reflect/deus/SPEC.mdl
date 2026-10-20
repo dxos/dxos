@@ -25,7 +25,7 @@ feat F-1: Attributed decision log
   req F-1.1: Each decision names exactly one decider in `by:`, typed `user:<handle>` (GitHub username or email) or `agent:<name>`.
   req F-1.2: An agent is named by its harness, never by the model that served it.
   req F-1.3: An `agent:` decision names the person it acted for in `for:`; a `user:` decision has no `for:`.
-  req F-1.4: A `user:` decision may carry the person's words verbatim in `quote:`; an `agent:` decision may not.
+  req F-1.4: A `user:` decision restates what the person said: references resolved, context included and wording fixed, with no information added or removed.
   req F-1.5: The log is append-only. A reversal is a new decision with `supersedes: D-n`.
   req F-1.6: Decision ids are `D-1`, `D-2`, … in the order appended, newest last.
   req F-1.7: Approval of agent decisions is a new `user:` decision whose prose says what it approves.
@@ -38,11 +38,13 @@ feat F-2: Every spec change adds a decision
   req F-2.3: `scripts/check-changelog.ts` enforces F-1.5, F-1.6, F-2.1 and F-2.2 by comparing each changed `.mdl` file with the merge base, and runs in CI as "Check spec changelogs".
   req F-2.4: Language definitions (`lang/`), review rules (`rules/`) and test fixtures are not specs and are exempt.
   req F-2.5: Only `decision` blocks under `## Changelog` form the log; examples elsewhere are ignored.
+  req F-2.6: A trivial edit needs no decision: whitespace, or at most 3 words each fixed by an edit distance of at most a third of the word, where no changed word has a digit or is a normative word.
+  req F-2.7: A `Spec-Changelog-Skip: <reason>` trailer on any branch commit waives F-2.1 for that branch; the append-only rules still apply.
 ```
 
 ```mdl
 feat F-3: Linting
-  req F-3.1: The editor linter and `scripts/lint-mdl.ts` report decisions that break F-1.1, F-1.3 or F-1.4.
+  req F-3.1: The editor linter and `scripts/lint-mdl.ts` report decisions that break F-1.1 or F-1.3.
   req F-3.2: `lint-mdl.ts --only <source>` restricts output to one check, so the block-type check (which knows only built-in types) does not hide decision errors.
 ```
 
@@ -235,4 +237,71 @@ decision D-18: Read the handle from the session's GitHub account first, then the
   for: user:dmaretskyi
   affects: [F-4.3]
   why: The GitHub login is the preferred handle form (F-1.1). In the cloud sandbox `git config` names the agent, not the person.
+```
+
+```mdl
+decision D-19: The changelog check tolerates small "type" changes, so they can go through without a decision.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-2.6]
+  supersedes: D-11
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-20: The mdl skill documents an escape hatch from the every-change-adds-a-decision rule.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-2.7, F-4]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-21: "Small type changes" in [D-19] means typo fixes. A trivial edit is whitespace, or at most 3 changed words, each within an edit distance of a third of its length (adjacent swaps count once), with no digits and no normative word on either side. Fills in [D-19].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: Typos are short, local, and leave the word count unchanged. Ids, numbers and words like must/most or can/can't change meaning in one letter. Existing decisions get no tolerance, because the log is append-only.
+  rejected:
+    - A fixed distance of 2 for every word: lets one-letter words such as X and Y swap.
+```
+
+```mdl
+decision D-22: The escape hatch is a `Spec-Changelog-Skip: <reason>` commit trailer that lifts only the missing-decision rule for the branch. Fills in [D-20].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.7]
+  why: Same shape as the changesets waiver; the reason is kept in git history, and append-only stays enforced.
+  rejected:
+    - A PR label: not visible to a local run of the script, and leaves no reason in history.
+```
+
+```mdl
+decision D-23: An unclosed `decision` block, as while typing, ends at the next fence or at the end of the text.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1]
+  why: The editor linter otherwise reported a missing `by:`, or read the next block's fields. Raised by the CodeRabbit review.
+  source: https://github.com/dxos/dxos/pull/14093#discussion_r4321642968
+```
+
+```mdl
+decision D-24: A person's input is not quoted verbatim, because prompts are messy and lack context. The agent restates it and may resolve references, include context and fix wording, but must not add or remove information.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.4, F-4.2]
+  supersedes: D-13
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-25: Drop the `quote:` and `context:` fields and their lint rule; the restatement lives in the entry's prose. Entries D-1 to D-18 keep their `quote:` fields as written. Fills in [D-24].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-3.1]
+  why: With no verbatim quote, a separate context field only splits one restatement in two. The log is append-only, so earlier entries are not rewritten to the new shape.
 ```

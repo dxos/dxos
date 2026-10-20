@@ -19,7 +19,7 @@ const BLOCK_FIELDS: Record<string, string[]> = {
   service: ['desc', 'loading', 'ops', 'errors', 'note'],
   db: ['desc', 'backend', 'entities', 'queries', 'note'],
   module: ['desc', 'api', 'styleguide'],
-  decision: ['date', 'by', 'for', 'quote', 'context', 'affects', 'supersedes', 'why', 'rejected', 'source'],
+  decision: ['date', 'by', 'for', 'affects', 'supersedes', 'why', 'rejected', 'source'],
 };
 
 /**

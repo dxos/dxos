@@ -3,12 +3,16 @@
 //
 
 // Fails when a changed .mdl spec has no new `## Changelog` decision, or edits the log in place (lang/changelog.mdl).
+// Whitespace and small typo fixes need no decision; a `Spec-Changelog-Skip: <reason>` commit trailer waives the rule.
 // Usage: node packages/reflect/deus/scripts/check-changelog.ts — compares the working tree with the merge base of
 // MDL_BASE_REF (default origin/main), so a local run also covers uncommitted edits.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-import { checkChangelogChange, lintMdl } from '../src/extension/check.ts';
+import { MISSING_DECISION, checkChangelogChange, lintMdl } from '../src/extension/check.ts';
+
+// A commit trailer that waives the missing-decision rule for a bulk mechanical edit; append-only rules still apply.
+const WAIVER = 'Spec-Changelog-Skip';
 
 // Language definitions, review rules and test fixtures are .mdl files but not specs.
 const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//];
@@ -31,6 +35,11 @@ try {
   base = baseRef;
 }
 
+const waivers = lines(git('log', `${base}..HEAD`, `--format=%(trailers:key=${WAIVER},valueonly)`));
+if (waivers.length > 0) {
+  console.log(`Missing-decision rule waived by ${WAIVER}: ${waivers.join('; ')}`);
+}
+
 // Path in the working tree → path at the base (undefined for a new file).
 const changed = new Map<string, string | undefined>();
 for (const line of lines(git('diff', '--name-status', '-M', '--diff-filter=AMR', base, '--', '*.mdl'))) {
@@ -49,7 +58,7 @@ for (const [path, basePath] of [...changed].sort(([a], [b]) => a.localeCompare(b
   const after = readFileSync(path, 'utf8');
   const before = basePath === undefined ? undefined : git('show', `${base}:${basePath}`);
   const errors = [
-    ...checkChangelogChange(before, after),
+    ...checkChangelogChange(before, after).filter((error) => waivers.length === 0 || error !== MISSING_DECISION),
     ...lintMdl(after)
       .filter(({ source }) => source === 'mdl/decision')
       .map(({ message }) => message),

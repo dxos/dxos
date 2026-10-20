@@ -443,12 +443,15 @@ decision D-2: Bounds grow to the major grid. Fills in [D-1].
   why: Growing to the minor grid re-lays the canvas on every drag step.
 ```
 
-- **Every change adds a decision.** `scripts/check-changelog.ts` enforces this in CI. It also
-  rejects edits to existing entries: a reversal is a new entry with `supersedes: D-n`.
+- **Every change adds a decision.** `scripts/check-changelog.ts` enforces this in CI. It tolerates
+  trivial edits (whitespace, small typo fixes), and a `Spec-Changelog-Skip: <reason>` commit
+  trailer waives it for a bulk mechanical edit. It also rejects edits to existing entries: a
+  reversal is a new entry with `supersedes: D-n`.
 - **One typed decider per entry.** `by:` is `user:<handle>` or `agent:<name>` (the harness, never
   the model), and an `agent:` entry names its principal in `for:`.
 - **The person's input is recorded faithfully, then the agent's additions.** The `user:` entry
-  carries what they said (`quote:`), with context but no assumptions. What the agent filled in is
+  restates what they said: references resolved, context included, wording fixed, but no
+  information added or removed. What the agent filled in is
   in separate `agent:` entries. Approval of those entries is a later `user:` entry.
 
 ## Domain Dialects

@@ -37,8 +37,11 @@ const parseBlockHeaders = (text: string): BlockHeader[] => {
       firstBodyLineEnd === -1 ? text.slice(firstBodyLineStart) : text.slice(firstBodyLineStart, firstBodyLineEnd)
     ).trim();
 
-    const closeMatch = /^```\s*$/m.exec(text.slice(firstBodyLineStart));
-    const body = closeMatch ? text.slice(firstBodyLineStart, firstBodyLineStart + closeMatch.index) : '';
+    // An unclosed block (mid-edit) ends at the next fence of either kind, or at the end of the text.
+    const endMatch = /^```/m.exec(text.slice(firstBodyLineStart));
+    const body = endMatch
+      ? text.slice(firstBodyLineStart, firstBodyLineStart + endMatch.index)
+      : text.slice(firstBodyLineStart);
 
     // First body line: "<blockType> [name][: label]"
     const lineMatch = firstBodyLine.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
@@ -69,9 +72,6 @@ const lintDecision = (body: string): string[] => {
     if (!principal) {
       errors.push('Agent decision is missing `for:` — name the user: the agent acted for.');
     }
-    if (fieldValue(body, 'quote') !== undefined) {
-      errors.push('`quote:` applies only to user decisions — an agent records what a person said in a user: entry.');
-    }
   } else if (USER_REF.test(by)) {
     if (principal !== undefined) {
       errors.push('`for:` applies only to agent decisions.');
@@ -90,7 +90,7 @@ const lintDecision = (body: string): string[] => {
  *
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
- *   - `decision` attribution (`by:` / `for:` actor prefixes, `quote:` on user entries only) → error
+ *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
  *   - (future) Missing required fields → error
  *   - (future) Unresolved cross-references → error
  */
@@ -147,9 +147,74 @@ const normalize = (text: string): string =>
     .join('\n')
     .trim();
 
+/** Reported when a spec changed beyond a trivial edit with no new decision; the one error a waiver lifts. */
+export const MISSING_DECISION = 'The spec changed but no decision was added to `## Changelog`.';
+
+const TYPO_MAX_WORDS = 3;
+
+// One letter in these flips what a requirement says (must/most, can/can't), so they are never a typo fix.
+const NORMATIVE_WORDS = new Set([
+  'all',
+  'always',
+  'any',
+  'can',
+  'cannot',
+  'every',
+  'may',
+  'must',
+  'never',
+  'no',
+  'none',
+  'not',
+  'only',
+  'shall',
+  'should',
+]);
+
+/** Optimal string alignment distance: insertions, deletions, substitutions and adjacent swaps each cost one. */
+const editDistance = (left: string, right: string): number => {
+  const rows = Array.from({ length: left.length + 1 }, (_, row) =>
+    Array.from({ length: right.length + 1 }, (_, col) => (row === 0 ? col : col === 0 ? row : 0)),
+  );
+  for (let row = 1; row <= left.length; row++) {
+    for (let col = 1; col <= right.length; col++) {
+      const cost = left[row - 1] === right[col - 1] ? 0 : 1;
+      rows[row][col] = Math.min(rows[row - 1][col] + 1, rows[row][col - 1] + 1, rows[row - 1][col - 1] + cost);
+      if (row > 1 && col > 1 && left[row - 1] === right[col - 2] && left[row - 2] === right[col - 1]) {
+        rows[row][col] = Math.min(rows[row][col], rows[row - 2][col - 2] + 1);
+      }
+    }
+  }
+  return rows[left.length][right.length];
+};
+
+const bareWord = (word: string): string => word.toLowerCase().replace(/[^a-z']/g, '');
+
+const isTypoFix = (prev: string, next: string): boolean =>
+  !/\d/.test(prev + next) &&
+  !NORMATIVE_WORDS.has(bareWord(prev)) &&
+  !NORMATIVE_WORDS.has(bareWord(next)) &&
+  editDistance(prev, next) <= Math.floor(Math.max(prev.length, next.length) / 3);
+
 /**
- * Checks one spec change against the changelog rules: every change adds a decision, and the log is
- * append-only with monotonic ids. `before` is undefined for a new spec.
+ * True when `after` differs from `before` only by whitespace or a few small typo fixes, which do not change what
+ * the spec requires. Words with digits are ids or numbers, where one character is a different meaning.
+ */
+export const isTrivialEdit = (before: string, after: string): boolean => {
+  const prevWords = before.split(/\s+/).filter(Boolean);
+  const nextWords = after.split(/\s+/).filter(Boolean);
+  if (prevWords.length !== nextWords.length) {
+    return false;
+  }
+  const changed = prevWords
+    .map((word, index) => [word, nextWords[index]] as const)
+    .filter(([prev, next]) => prev !== next);
+  return changed.length <= TYPO_MAX_WORDS && changed.every(([prev, next]) => isTypoFix(prev, next));
+};
+
+/**
+ * Checks one spec change against the changelog rules: every change except a trivial edit adds a decision, and the
+ * log is append-only with monotonic ids. `before` is undefined for a new spec.
  */
 export const checkChangelogChange = (before: string | undefined, after: string): string[] => {
   const errors: string[] = [];
@@ -205,11 +270,9 @@ export const checkChangelogChange = (before: string | undefined, after: string):
     }
   }
 
-  if (added.length === 0 && (before === undefined || normalize(prev.rest) !== normalize(next.rest))) {
+  if (added.length === 0 && (before === undefined || !isTrivialEdit(prev.rest, next.rest))) {
     errors.push(
-      before === undefined
-        ? 'A new spec needs a `## Changelog` with at least one decision.'
-        : 'The spec changed but no decision was added to `## Changelog`.',
+      before === undefined ? 'A new spec needs a `## Changelog` with at least one decision.' : MISSING_DECISION,
     );
   }
 
