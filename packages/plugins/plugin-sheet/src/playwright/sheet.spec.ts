@@ -9,16 +9,25 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { SheetManager } from './sheet-manager.ts';
 
+const url = storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005);
+const viewportSize = { width: 1280, height: 720 };
+
 test.describe('plugin-sheet', () => {
   let page: Page;
   let sheet: SheetManager;
   let close: () => Promise<void>;
 
+  // The first visit pays Storybook's on-demand compile (about 50 s on a 4 vCPU runner), so it runs
+  // once per worker outside any test's 60 s budget.
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(180_000);
+    const warmup = await setupPage(browser, { url, viewportSize });
+    await warmup.page.locator('dx-grid .dx-grid').waitFor({ state: 'visible', timeout: 150_000 });
+    await warmup.close();
+  });
+
   test.beforeEach(async ({ browser }) => {
-    const setup = await setupPage(browser, {
-      url: storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005),
-      viewportSize: { width: 1280, height: 720 },
-    });
+    const setup = await setupPage(browser, { url, viewportSize });
     page = setup.page;
     close = setup.close;
     sheet = new SheetManager(page);
