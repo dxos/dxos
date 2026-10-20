@@ -16,7 +16,7 @@ import {
   resolveLook,
   styleVariant,
 } from '../../model/index.ts';
-import { ThemePanel } from '../panels/ThemePanel/index.ts';
+import { ThemePanel } from '../panels/index.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 
 type StoryArgs = Pick<StyleGridProps, 'indeterminate' | 'readonly'> & { theme?: string };

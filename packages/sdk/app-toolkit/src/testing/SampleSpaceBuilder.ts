@@ -44,14 +44,14 @@ export type SampleSpaceArchive<A> = {
  * Builds a sample space headlessly and exports it as a JSON archive: no live client, no network.
  * Drop the archive into Composer (`client.spaces.import(...)`) to get the content as real data.
  */
-export const buildArchive = <Partials extends SampleSpace.PartialMap, A>(
-  definition: SampleSpace.Definition<Partials, A>,
+export const buildArchive = <Partials extends SampleSpace.PartialMap, A, R>(
+  definition: SampleSpace.Definition<Partials, A, R>,
   options: {
     readonly identity?: string;
     /** Extra types to register beyond those the definition's partials declare. */
     readonly schemas?: ReadonlyArray<Type.AnyEntity>;
   } = {},
-): Effect.Effect<SampleSpaceArchive<A>, SampleSpace.SampleSpaceError> =>
+): Effect.Effect<SampleSpaceArchive<A>, SampleSpace.SampleSpaceError, Exclude<R, SampleSpace.Services>> =>
   Effect.gen(function* () {
     const client = yield* ephemeralClient;
     yield* Effect.promise(() =>

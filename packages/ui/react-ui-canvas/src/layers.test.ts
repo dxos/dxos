@@ -11,7 +11,7 @@ import { describe, test } from 'vitest';
  * The package's layers, lowest first. A module may import values only from its own layer or one below it, so no cycle
  * can form between layers; type-only imports are erased on emit and may point anywhere.
  */
-const LAYERS = ['model', 'utils', 'engine', 'generator', 'hooks', 'components', 'builder'] as const;
+const LAYERS = ['model', 'utils', 'engine', 'generator', 'hooks', 'components', 'builder', 'testing'] as const;
 
 const SRC = dirname(fileURLToPath(import.meta.url));
 
@@ -27,15 +27,6 @@ const sources = (dir: string): string[] =>
   });
 
 const layerOf = (path: string): number => LAYERS.indexOf(relative(SRC, path).split('/')[0] as (typeof LAYERS)[number]);
-
-/** The unit a module belongs to: a layer, or one component's (or panel's, or inspector's) folder within the components layer. */
-const unitOf = (path: string): string => {
-  const [top, next, panel] = relative(SRC, path).split('/');
-  if (top !== 'components') {
-    return top;
-  }
-  return next === 'panels' || next === 'inspectors' ? `${top}/${next}/${panel}` : `${top}/${next}`;
-};
 
 type Edge = { from: string; to: string; names: string[] };
 
@@ -53,18 +44,11 @@ const valueImports = (): Edge[] =>
   );
 
 describe('layers', () => {
+  // Barrels across folders are the `folder-barrel-imports` lint rule's (.oxlintrc.json); this test keeps the order.
   test('no module imports a value from a layer above its own', ({ expect }) => {
     const upward = valueImports()
       .filter(({ from, to }) => layerOf(from) >= 0 && layerOf(to) > layerOf(from))
       .map(({ from, to, names }) => `${relative(SRC, from)} -> ${relative(SRC, to)}: ${names.join(', ')}`);
     expect(upward).toEqual([]);
-  });
-
-  test('imports from another unit go through its barrel', ({ expect }) => {
-    const direct = valueImports()
-      .filter(({ from, to }) => layerOf(from) >= 0 && layerOf(to) >= 0 && unitOf(from) !== unitOf(to))
-      .filter(({ to }) => !to.endsWith('index.ts'))
-      .map(({ from, to }) => `${relative(SRC, from)} -> ${relative(SRC, to)}`);
-    expect(direct).toEqual([]);
   });
 });

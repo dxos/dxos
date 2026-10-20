@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -10,7 +11,6 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { DebugOperation } from '#types';
@@ -42,12 +42,19 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSpaceFromTempla
           icon: template.icon,
           hue: template.hue,
         });
-        const client = yield* Capability.get(ClientCapabilities.Client);
         AppSpace.setSpaceTemplateId(space, template.id);
-        yield* Effect.tryPromise({
-          try: () => template.apply({ client, space }),
-          catch: (cause) => new SpaceTemplateApplyError({ context: { id: template.id }, cause }),
-        }).pipe(Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))));
+        yield* Operation.invoke(
+          SpaceOperation.ApplyTemplate,
+          { template: template.id, space },
+          { spaceId: space.id },
+        ).pipe(
+          Effect.catchCause((cause): Effect.Effect<never, SpaceTemplateApplyError> =>
+            Cause.hasInterruptsOnly(cause)
+              ? Effect.interrupt
+              : Effect.fail(new SpaceTemplateApplyError({ context: { id: template.id }, cause: Cause.squash(cause) })),
+          ),
+          Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))),
+        );
 
         return { applied: summarize(template), spaceId: space.id, subject, available };
       }),

@@ -14,7 +14,7 @@ import * as Card from '@dxos/react-ui/Card';
 
 import { canvasRecordOf } from '#model';
 
-import { CanvasDatabaseContext } from '../CanvasArticle/CanvasFrameNodeView.tsx';
+import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
 import { useBoundCanvasStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
 
 // A card is a preview: only the drawing, fitted, with no grid or guides.

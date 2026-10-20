@@ -21,7 +21,6 @@ type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
 type Block = FeedProtocol.Block;
 type BlockKey = FeedProtocol.BlockKey;
-const FeedCursor = FeedProtocol.FeedCursor;
 type FeedCursor = FeedProtocol.FeedCursor;
 const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
 type QueryRequest = FeedProtocol.QueryRequest;
@@ -463,7 +462,7 @@ export class FeedStore {
         }
 
         if (request.cursor) {
-          const { token, insertionId } = decodeCursor(request.cursor as FeedCursor);
+          const { token, insertionId } = FeedProtocol.decodeFeedCursor(request.cursor as FeedCursor);
           if (!token || insertionId === undefined || isNaN(insertionId)) {
             return yield* Effect.die(new Error(`Invalid cursor format`));
           }
@@ -492,7 +491,7 @@ export class FeedStore {
             return {
               requestId: request.requestId,
               blocks: [],
-              nextCursor: request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`),
+              nextCursor: request.cursor ?? FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START),
               hasMore: false,
               serverToken,
               maxPosition,
@@ -556,7 +555,7 @@ export class FeedStore {
           return {
             requestId: request.requestId,
             blocks: [],
-            nextCursor: FeedCursor.make(`${validCursorToken}|-1`),
+            nextCursor: FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START),
             hasMore: false,
             serverToken,
             maxPosition,
@@ -599,11 +598,12 @@ export class FeedStore {
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
         const blocks = yield* this.#openRows(slice, request.spaceId, request.feedNamespace);
 
-        let nextCursor: FeedCursor = request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`);
+        let nextCursor: FeedCursor =
+          request.cursor ?? FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START);
         if (blocks.length > 0 && request.spaceId) {
           const lastBlock = blocks[blocks.length - 1];
           if (lastBlock.insertionId !== undefined) {
-            nextCursor = FeedCursor.make(`${validCursorToken}|${lastBlock.insertionId}`);
+            nextCursor = FeedProtocol.encodeFeedCursor(validCursorToken, lastBlock.insertionId);
           }
         }
 
@@ -1329,8 +1329,3 @@ export class FeedStore {
 
 /** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
-
-const decodeCursor = (cursor: FeedCursor) => {
-  const [token, insertionId] = cursor.split('|');
-  return { token, insertionId: Number(insertionId) };
-};

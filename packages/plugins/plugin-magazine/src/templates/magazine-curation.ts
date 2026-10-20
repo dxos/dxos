@@ -21,6 +21,20 @@ const Input = Schema.Struct({
   magazine: Ref.Ref(Magazine.Magazine).annotate({ title: 'Magazine' }),
 });
 
+export const makeCurationRoutine = (
+  magazine: Magazine.Magazine,
+  { name, enabled = true }: { name?: string; enabled?: boolean } = {},
+) =>
+  Wire.makeRoutine({
+    name: name ?? magazine.name ?? 'Curate Magazine',
+    spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
+    trigger: Trigger.make({
+      enabled,
+      spec: Trigger.specTimer(DEFAULT_CRON),
+      input: { magazine: Ref.make(magazine) },
+    }),
+  });
+
 /**
  * Magazine curation template. Creates a routine that invokes {@link FeedOperation.CurateMagazine} for
  * the chosen Magazine on a daily schedule.
@@ -39,16 +53,6 @@ export const magazineCuration: RoutineCapabilities.Template = {
       }
       const magazine = yield* Database.resolve(input.magazine, Magazine.Magazine);
 
-      // Pre-populate the trigger's input so the magazine binding is preserved through the save flow.
-      return Wire.makeRoutine({
-        name: name ?? magazine.name ?? 'Curate Magazine',
-        // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
-        spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },
-        trigger: Trigger.make({
-          enabled: true,
-          spec: Trigger.specTimer(DEFAULT_CRON),
-          input: { magazine: Ref.make(magazine) },
-        }),
-      });
+      return makeCurationRoutine(magazine, { name });
     }),
 };

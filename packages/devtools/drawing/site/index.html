@@ -284,33 +284,20 @@
         border-color: var(--accent-hover);
         color: var(--on-accent);
       }
-      /* Not a <button disabled>: a disabled control takes no hover or focus, so its tooltip would never show. */
-      .action[aria-disabled='true'] {
-        position: relative;
+      button.action {
+        cursor: pointer;
+      }
+      button.action:hover:enabled {
+        border-color: var(--route);
+        color: var(--route);
+      }
+      /* Disabled until the editor loads, since the editor's text is what gets opened. */
+      button.action:disabled {
         color: var(--muted);
-        cursor: not-allowed;
+        cursor: default;
       }
-      .action[aria-disabled='true']::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        right: 0;
-        top: calc(100% + 8px);
-        z-index: 1;
-        width: max-content;
-        max-width: 240px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: var(--console);
-        color: #fff;
-        font: 400 12px/1.4 var(--sans);
-        white-space: normal;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.12s;
-      }
-      .action[aria-disabled='true']:hover::after,
-      .action[aria-disabled='true']:focus-visible::after {
-        opacity: 1;
+      button.action[aria-busy='true'] {
+        cursor: progress;
       }
       .editor {
         flex: 1;
@@ -722,15 +709,15 @@
             <div class="tab">
               <span><b>arch.dx.svg</b></span>
               <span class="actions">
-                <a
+                <button
+                  type="button"
                   class="action"
                   id="open-in-composer"
-                  role="link"
-                  aria-disabled="true"
-                  tabindex="0"
-                  data-tooltip="Coming soon: open the drawing in Composer and keep editing it on a canvas."
-                  >Open in Composer</a
+                  title="Open this drawing on an editable canvas at app.drawing.sh"
+                  disabled
                 >
+                  Open in Composer
+                </button>
                 <a class="action primary" id="download" href="arch.dx.svg" download="arch.dx.svg">Download</a>
               </span>
             </div>
