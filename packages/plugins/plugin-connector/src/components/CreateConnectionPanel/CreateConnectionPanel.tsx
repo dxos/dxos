@@ -92,7 +92,11 @@ export const CreateConnectionPanel = ({
   // its flow on Continue, so the warning has to show before it.
   const spaceId = Database.isDatabase(target) ? target.spaceId : Obj.getDatabase(target)?.spaceId;
   const members = useMembers(spaceId);
+  // A space's member list always includes the current identity, so an empty one is still loading;
+  // a user connection waits for it, or it could start before the warning has a chance to show.
+  const membersPending = spaceId !== undefined && members.length === 0;
   const considered = connector ?? connectors.find(({ id }) => id === pickedId);
+  const holdBack = considered?.kind === 'user' && membersPending;
   const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
     <Banner.Root valence='warning' data-testid='create-connection-panel.shared-account'>
       <Banner.Title>{t('user-connection-shared.title')}</Banner.Title>
@@ -129,7 +133,7 @@ export const CreateConnectionPanel = ({
   const handleContinue = useCallback(
     ({ connectorId }: ConnectorSelection) => {
       const entry = connectors.find(({ id }) => id === connectorId);
-      if (!entry) {
+      if (!entry || (entry.kind === 'user' && membersPending)) {
         return;
       }
       setConnectorId(entry.id);
@@ -138,7 +142,7 @@ export const CreateConnectionPanel = ({
         void submit(entry).finally(() => setPending(false));
       }
     },
-    [connectors, submit],
+    [connectors, membersPending, submit],
   );
 
   const handleBack = useCallback(() => {
@@ -175,7 +179,11 @@ export const CreateConnectionPanel = ({
             </SearchList.Viewport>
           </SearchList.Root>
           {sharedAccountNote}
-          <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
+          <Form.Actions
+            submitLabel={t('continue.label')}
+            submitIcon='ph--arrow-right--regular'
+            submitDisabled={holdBack}
+          />
         </Form.Content>
       </Form.Root>
     );

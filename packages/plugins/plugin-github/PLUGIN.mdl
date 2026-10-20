@@ -26,6 +26,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -288,9 +289,10 @@ feat F-1: OAuth Integration
 
   req F-1.4:
     when: user connects the GitHub App ("github-app", kind app)
-    then: EDGE sends them to the App's install page, verifies they can access the installation,
-      and stores a grant whose installation tokens EDGE mints; the AccessToken holds the managed
-      placeholder and resolves through CredentialsService
+    then: EDGE authorizes them, offers the installations on accounts they administer, and stores a
+      grant whose installation tokens EDGE mints; the AccessToken holds the managed placeholder,
+      which resolves through CredentialsService; a token that cannot be resolved lets reads go
+      anonymous and fails writes and sync as a connection to reconnect
 
   req F-1.5: An app connection is named after the installation's account, read from
     `/installation/repositories`, since an installation token cannot call `/user`.
@@ -723,6 +725,50 @@ test QA-3: Open a pull request from the browser extension
       invoke: |
         org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/$imported.id" }], target: $given.space.db }
       expect: the pull request no longer appears in the space
+```
+
+## Changelog
+
+```mdl
+decision D-1: A shared space connects GitHub as DXOS's App, through an installation the connecting member administers, so the space does not run on one member's personal token.
+  date: 2026-10-19
+  by: user:wittjosiah
+  affects: [F-1.4]
+  why: A shared space ran on one member's personal GitHub token, and every member's writes showed up as that member.
+  source: https://github.com/dxos/dxos/pull/14085
+```
+
+```mdl
+decision D-2: The space's GitHub connection is the first one holding a token, with no fall-through to another connection; a custodied token that cannot be resolved lets reads go anonymous and fails writes and sync as a connection to reconnect.
+  date: 2026-10-20
+  by: user:wittjosiah
+  affects: [F-1.4]
+  why: Choosing among several connections is out of scope, and a write that silently switched to another member's account would approve or comment as the wrong person.
+  source: https://github.com/dxos/dxos/pull/14085
+```
+
+```mdl
+decision D-3: An app connection is named after the installation's account, read from `/installation/repositories`.
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: An installation token cannot call `/user`, so the user connector's naming does not work for it.
+  rejected:
+    - Asking EDGE for the installation's account: the client would need a new EDGE route for a value GitHub already returns.
+  source: https://github.com/dxos/dxos/pull/14085
+```
+
+```mdl
+decision D-4: Discovery and sync list `/installation/repositories` for an installation token (`ghs_` prefix) and `/user/repos` otherwise.
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.4]
+  why: An installation token cannot call `/user/repos`, and GitHub documents the `ghs_` prefix for installation tokens.
+  rejected:
+    - Passing the connector id down to every request: the credentials layer carries only the token, and threading the connector through every sync step adds a parameter to each.
+  source: https://github.com/dxos/dxos/pull/14085
 ```
 
 ---
