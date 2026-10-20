@@ -362,9 +362,10 @@ export interface ClientServicesProvider {
 
   /**
    * The underlying service connection was re-established.
-   * Fires after all reconnection callbacks have completed.
+   * Fires after all reconnection callbacks have completed. `isOwner` is true when this client hosts
+   * the services it reconnected to, so unloading it would also tear those services down again.
    */
-  reconnected?: Event<void>;
+  reconnected?: Event<{ isOwner: boolean }>;
 
   /**
    * Register a callback to be invoked when services reconnect.
