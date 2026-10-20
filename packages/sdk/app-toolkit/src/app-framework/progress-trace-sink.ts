@@ -71,8 +71,8 @@ type MonitorEntry = {
    * it restarted from zero; see {@link applyCounts}.
    */
   handover?: { current?: number; total?: number };
-  /** Added to every count the current pid reports, once it turns out to count only its own batch. */
-  base?: { current: number; total: number };
+  /** Added to the count and total the current pid reports, once it turns out to count from zero. */
+  offset?: number;
 };
 
 /**
@@ -248,14 +248,18 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   };
 
   /**
-   * Applies an update's count and total, placed after the counts earlier runs of the chain reached.
+   * Applies an update's count and total, placed after the count earlier runs of the chain reached.
    *
    * A run that yields `Operation.runAgain()` continues under a new pid, and the meter is one meter for
    * the whole chain. A continuation that keeps counting where the last one stopped needs nothing. One
-   * that restarts from zero for its own batch (mail sync: each run counts the messages it enumerates)
-   * would drag the bar back to the start, so its counts are added to what the chain had shown. The
-   * first count from the new pid tells the two apart. The total then goes back to unknown until the new
-   * batch reports its own, because the old total, already reached, would read as complete.
+   * that restarts from zero (mail sync: each run counts the messages it fetches) would drag the bar back
+   * to the start, so the count the chain reached is added to its count and its total. The first count
+   * from the new pid tells the two apart. A run's total covers its own work and, when the producer can
+   * estimate it, the work left after it, so the offset makes it the chain's total.
+   *
+   * On a restart the old total stays until the new run reports its own, so the bar holds its place
+   * between runs. Unless the chain had reached it: a total that only covered the finished batch would
+   * read as complete, so it goes back to unknown instead.
    */
   const applyCounts = (entry: MonitorEntry, progress: { current?: number; total?: number }) => {
     const { handover } = entry;
@@ -263,21 +267,23 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       entry.handover = undefined;
       const reached = handover.current ?? 0;
       if (progress.current < reached) {
-        entry.base = { current: reached, total: handover.total ?? reached };
-        entry.shown.total = undefined;
-        entry.handle.total(undefined);
+        entry.offset = reached;
+        if (handover.total === undefined || reached >= handover.total) {
+          entry.shown.total = undefined;
+          entry.handle.total(undefined);
+        }
       } else {
-        entry.base = undefined;
+        entry.offset = undefined;
       }
     }
 
-    const base = entry.base ?? { current: 0, total: 0 };
+    const offset = entry.offset ?? 0;
     if (progress.total !== undefined) {
-      entry.shown.total = base.total + progress.total;
+      entry.shown.total = offset + progress.total;
       entry.handle.total(entry.shown.total);
     }
     if (progress.current !== undefined) {
-      entry.shown.current = base.current + progress.current;
+      entry.shown.current = offset + progress.current;
       entry.handle.set(entry.shown.current);
     }
   };
@@ -359,7 +365,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
         entry.phase = data.progress.phase;
         // The chain offset is a count too, and it belongs to the phase that is ending.
         entry.shown = {};
-        entry.base = undefined;
+        entry.offset = undefined;
         entry.handover = undefined;
         handle.total(undefined);
         handle.set(0);

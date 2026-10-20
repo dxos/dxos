@@ -127,6 +127,11 @@ const DefaultStory = () => {
 
 /** Messages a capped mail backfill syncs per invocation; every invocation but the last calls `Operation.runAgain()`. */
 const CHAIN_BATCHES = [40, 40, 25];
+/**
+ * Each invocation's estimate of the messages left, its own batch included, as the provider reports it
+ * (Gmail's `resultSizeEstimate`). The first is low; the next run's refresh corrects it.
+ */
+const CHAIN_ESTIMATES = [100, 65, 25];
 const SYNC_KEY = 'mailbox#sync';
 const SYNC_LABEL = 'Syncing Inbox';
 
@@ -136,13 +141,14 @@ type ChainStep =
 
 /**
  * A `runAgain` chain as the trigger dispatcher runs it: one process per batch, each continuation carrying the
- * first invocation's pid as `runId`. Status updates follow mail sync: each run counts its own batch from zero,
- * and only the last one reports complete.
+ * first invocation's pid as `runId`. Status updates follow mail sync: each run counts its own batch from zero
+ * against a total of the messages left, and only the last one reports complete.
  */
 const chainSteps = (): ChainStep[] => {
   const steps: ChainStep[] = [];
   let at = 1_000;
-  CHAIN_BATCHES.forEach((total, index) => {
+  CHAIN_BATCHES.forEach((batch, index) => {
+    const total = CHAIN_ESTIMATES[index];
     const pid = `sync-${index + 1}`;
     const runId = index === 0 ? undefined : 'sync-1';
     const last = index === CHAIN_BATCHES.length - 1;
@@ -152,7 +158,7 @@ const chainSteps = (): ChainStep[] => {
     status({ current: 0 });
     at += 400;
     status({ current: 0, total });
-    for (let current = 5; current <= total; current += 5) {
+    for (let current = 5; current <= batch; current += 5) {
       at += 200;
       status({ current, total });
     }
