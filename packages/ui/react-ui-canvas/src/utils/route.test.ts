@@ -4,19 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
-import { type Link, type Scene } from '../model/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
+import { type Link, type View } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
-import {
-  insertIndex,
-  linkGeometry,
-  linkPath,
-  sceneLinkGeometry,
-  sideToward,
-  smartPoints,
-  splinePath,
-} from './route.ts';
+import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -91,11 +83,11 @@ describe('route', () => {
 
   test('a free end faces the other end, and a node end facing it takes its nearest port', ({ expect }) => {
     const {
-      scenes: [scene],
-    } = SceneBuilder.scene('s', [
-      SceneBuilder.rect('a', { x: 0, y: 0, width: 256, height: 128 }),
-      SceneBuilder.link('line', '@-200,64', '@-100,64').id('free'),
-      SceneBuilder.link('line', '@640,64', 'a').id('half'),
+      views: [scene],
+    } = ViewBuilder.view('s', [
+      ViewBuilder.rect('a', { x: 0, y: 0, width: 256, height: 128 }),
+      ViewBuilder.link('line', '@-200,64', '@-100,64').id('free'),
+      ViewBuilder.link('line', '@640,64', 'a').id('half'),
     ]).build();
     expect(sideToward({ x: 0, y: 0 }, { x: 10, y: 3 })).toBe('e');
     expect(sideToward({ x: 0, y: 0 }, { x: -3, y: 10 })).toBe('s');
@@ -129,12 +121,12 @@ describe('route', () => {
       size: { width: 256, height: 128 },
     });
     const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
-    const scene: Scene = {
+    const scene: View = {
       id: 'root',
       nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
       links: { link },
     };
-    const [geometry] = sceneLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
     expect([geometry.source.side, geometry.source.point, geometry.target.side, geometry.target.point]).toEqual([
       's',
       { x: 1536, y: 256 },

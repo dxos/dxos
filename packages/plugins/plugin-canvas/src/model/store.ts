@@ -3,7 +3,7 @@
 //
 
 //
-// Binds a `Drawing.Canvas` to the engine's `SceneStore`: the store's atom is fed from the canvas
+// Binds a `Drawing.Canvas` to the engine's `ViewStore`: the store's atom is fed from the canvas
 // records and every store write goes back as record-level changes inside one `Obj.update`, so the
 // view stays the memory store's client and ECHO merges edits element by element.
 //
@@ -20,19 +20,21 @@ import { type Database, Entity, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
-  type FrameNode,
   type Node,
-  type Scene,
-  type SceneId,
-  type SceneMap,
-  type SceneStore,
+  type View,
+  type ViewId,
+  type ViewMap,
+  type ViewNode,
+  type ViewStore,
   createMemoryStore,
-  isFrameNode,
+  isViewNode,
+  withLegacyNodeType,
 } from '@dxos/react-ui-canvas/scene';
 
 import { Canvas } from '#types';
 
 import {
+  type CanvasRecord,
   clone,
   hasLegacyRoot,
   hasUnplacedLayers,
@@ -40,26 +42,29 @@ import {
   migrateContent,
   migrateLayers,
   nodeKey,
-  readScenes,
+  orphanedViews,
+  pruneOrphanedViews,
   readStyles,
+  readViews,
   rootOf,
   seedContent,
-  writeScenes,
+  updateCanvasRecord,
   writeStyles,
+  writeViews,
 } from './content.ts';
-import { UNTITLED_DRAWING, isSceneCanvas, linkedSceneId, objectUri, parseLinkedSceneId } from './frame-node.ts';
+import { UNTITLED_DRAWING, isSceneCanvas, linkedViewId, objectUri, parseLinkedViewId } from './view-node.ts';
 
 export type BoundCanvasStore = {
-  store: SceneStore;
-  root: SceneId;
+  store: ViewStore;
+  root: ViewId;
   dispose: () => void;
 };
 
 /** A drawing a frame references, bound for as long as this drawing is. */
-type LinkedCanvas = { canvas: Drawing.Canvas; root: SceneId; name?: string; dispose: () => void };
+type LinkedCanvas = { canvas: Drawing.Canvas; root: ViewId; name?: string; dispose: () => void };
 
 /** Renames, seeds and returns the canvas's root scene and names its layers, writing only when the content needs it. */
-const prepare = (canvas: Drawing.Canvas): SceneId => {
+const prepare = (canvas: Drawing.Canvas): ViewId => {
   if (hasLegacyRoot(canvas.content)) {
     Obj.update(canvas, (canvas) => {
       migrateContent(canvas.content);
@@ -76,12 +81,26 @@ const prepare = (canvas: Drawing.Canvas): SceneId => {
       migrateLayers(canvas.content);
     });
   }
+  if (orphanedViews(canvas.content).length > 0) {
+    Obj.update(canvas, (canvas) => {
+      pruneOrphanedViews(canvas.content);
+    });
+  }
   return root ?? seedContent({});
 };
 
-const withScene = (node: FrameNode, scene: SceneId): FrameNode => ({ ...node, scene });
+const withScene = (node: ViewNode, scene: ViewId): ViewNode => ({ ...node, scene });
 
-const mapNodes = (scene: Scene, map: (node: Node) => Node): Scene => ({
+/** The child View a stored view node opens, read through the legacy type names it may be saved under. */
+const storedChild = (record: unknown): ViewId | undefined => {
+  if (!isNodeRecord(record)) {
+    return undefined;
+  }
+  const node = withLegacyNodeType(record.node);
+  return isViewNode(node) ? node.scene : undefined;
+};
+
+const mapNodes = (scene: View, map: (node: Node) => Node): View => ({
   ...scene,
   nodes: Object.fromEntries(Object.entries(scene.nodes).map(([id, node]) => [id, map(node)])),
 });
@@ -96,12 +115,12 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   let disposed = false;
 
   /** The store's scenes: this drawing's, with linked frames opening their drawing's root, plus each linked drawing's. */
-  const read = (): SceneMap => {
-    const scenes: Record<SceneId, Scene> = {};
-    for (const scene of Object.values(readScenes(clone(canvas.content)))) {
+  const read = (): ViewMap => {
+    const scenes: Record<ViewId, View> = {};
+    for (const scene of Object.values(readViews(clone(canvas.content)))) {
       scenes[scene.id] = mapNodes(scene, (node) => {
-        const uri = isFrameNode(node) ? objectUri(node) : undefined;
-        if (!uri || !isFrameNode(node)) {
+        const uri = isViewNode(node) ? objectUri(node) : undefined;
+        if (!uri || !isViewNode(node)) {
           return node;
         }
         ensure(uri);
@@ -109,17 +128,17 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
         const object = db?.makeRef(uri);
         const link = linked.get(uri);
         return {
-          ...(link ? withScene(node, linkedSceneId(uri, link.root)) : node),
+          ...(link ? withScene(node, linkedViewId(uri, link.root)) : node),
           ...(object ? { link: { ...node.link, object } } : {}),
         };
       });
     }
     for (const [uri, link] of linked) {
-      for (const scene of Object.values(readScenes(clone(link.canvas.content)))) {
-        const id = linkedSceneId(uri, scene.id);
+      for (const scene of Object.values(readViews(clone(link.canvas.content)))) {
+        const id = linkedViewId(uri, scene.id);
         scenes[id] = {
           ...mapNodes(scene, (node) => {
-            if (!isFrameNode(node)) {
+            if (!isViewNode(node)) {
               return node;
             }
             // A frame of a linked drawing that shows another drawing opens that drawing's root, as one here does.
@@ -130,7 +149,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
             const childLink = child ? linked.get(child) : undefined;
             return withScene(
               node,
-              child && childLink ? linkedSceneId(child, childLink.root) : linkedSceneId(uri, node.scene),
+              child && childLink ? linkedViewId(child, childLink.root) : linkedViewId(uri, node.scene),
             );
           }),
           id,
@@ -143,54 +162,61 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   };
 
   /** Writes each scene to the drawing it came from, undoing the prefixes `read` added. */
-  const write = (scenes: SceneMap) => {
-    const own: Record<SceneId, Scene> = {};
-    const byUri = new Map<string, Record<SceneId, Scene>>();
+  const write = (scenes: ViewMap) => {
+    const own: Record<ViewId, View> = {};
+    const byUri = new Map<string, Record<ViewId, View>>();
     for (const [id, scene] of Object.entries(scenes)) {
-      const parsed = parseLinkedSceneId(id);
+      const parsed = parseLinkedViewId(id);
       if (!parsed) {
         // A linked frame keeps its own child scene's id in the record, under the drawing it shows.
         own[id] = mapNodes(scene, (node) => {
-          if (!isFrameNode(node) || !parseLinkedSceneId(node.scene)) {
+          if (!isViewNode(node) || !parseLinkedViewId(node.scene)) {
             return node;
           }
           const record = canvas.content[nodeKey(node.id)];
-          const local = isNodeRecord(record) && isFrameNode(record.node) ? record.node.scene : node.id;
-          return withScene(node, local);
+          return withScene(node, storedChild(record) ?? node.id);
         });
         continue;
       }
       const content = linked.get(parsed.uri)?.canvas.content;
       const unprefixed = mapNodes(scene, (node) => {
-        if (!isFrameNode(node)) {
+        if (!isViewNode(node)) {
           return node;
         }
-        const target = parseLinkedSceneId(node.scene);
+        const target = parseLinkedViewId(node.scene);
         // A frame opening another drawing keeps its own child scene's id in the record, as one here does.
         if (target && target.uri !== parsed.uri) {
           const record = content?.[nodeKey(node.id)];
-          return withScene(node, isNodeRecord(record) && isFrameNode(record.node) ? record.node.scene : node.id);
+          return withScene(node, storedChild(record) ?? node.id);
         }
         return withScene(node, target?.scene ?? node.scene);
       });
       byUri.set(parsed.uri, { ...byUri.get(parsed.uri), [parsed.scene]: { ...unprefixed, id: parsed.scene } });
     }
     Obj.update(canvas, (canvas) => {
-      writeScenes(canvas.content, own);
+      writeViews(canvas.content, own);
     });
     for (const [uri, linkedScenes] of byUri) {
       const link = linked.get(uri);
       if (link) {
         Obj.update(link.canvas, (canvas) => {
-          writeScenes(canvas.content, linkedScenes);
+          writeViews(canvas.content, linkedScenes);
         });
       }
     }
   };
 
   // A linked drawing's classes stay its own: its shapes show here without them.
-  const store = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
-  const { styles } = store;
+  const memory = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
+  const { styles } = memory;
+  // A linked drawing's root is kept with no frame opening it: deleting the frame here must not delete that drawing.
+  const store: ViewStore = {
+    ...memory,
+    isRoot: (id) => {
+      const parsed = parseLinkedViewId(id);
+      return parsed !== undefined && linked.get(parsed.uri)?.root === parsed.scene;
+    },
+  };
 
   // Our own writes notify ECHO synchronously; the flag keeps them from bouncing back into the atom.
   let writing = false;
@@ -198,7 +224,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   let reading = false;
   const refresh = () => {
     if (!writing && !disposed) {
-      registry.set(store.scenes, read());
+      registry.set(store.views, read());
       const next = readStyles(canvas.styles);
       if (JSON.stringify(next) !== JSON.stringify(registry.get(styles))) {
         reading = true;
@@ -268,13 +294,13 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
    * Whether a frame's object and the scene it opens disagree after an edit (the picker changed or cleared the object),
    * so the store must read again; a drawing not yet bound is loaded, and its load reads again itself.
    */
-  const stale = (scenes: SceneMap): boolean => {
+  const stale = (scenes: ViewMap): boolean => {
     let result = false;
     for (const [id, scene] of Object.entries(scenes)) {
       // Frames in a linked drawing are checked too: `read` resolves their objects the same way as this drawing's.
-      const owner = parseLinkedSceneId(id)?.uri;
+      const owner = parseLinkedViewId(id)?.uri;
       for (const node of Object.values(scene.nodes)) {
-        if (!isFrameNode(node)) {
+        if (!isViewNode(node)) {
           continue;
         }
         const uri = objectUri(node);
@@ -284,13 +310,13 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
         const link = uri ? linked.get(uri) : undefined;
         // Without a bound drawing a frame opens its own child scene, which belongs to the frame's own drawing.
         result ||=
-          uri && link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene)?.uri !== owner;
+          uri && link ? node.scene !== linkedViewId(uri, link.root) : parseLinkedViewId(node.scene)?.uri !== owner;
       }
     }
     return result;
   };
 
-  const unsubscribeStore = registry.subscribe(store.scenes, (scenes) => {
+  const unsubscribeStore = registry.subscribe(store.views, (scenes) => {
     writing = true;
     try {
       write(scenes);
@@ -318,9 +344,10 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   };
 };
 
-/** A fresh canvas for the variant: the root scene and nothing else. */
-export const createCanvas = (): Drawing.Canvas => {
+/** A fresh canvas for the variant: the root scene with the drawing's `settings`, and nothing else. */
+export const createCanvas = (settings: Partial<Omit<CanvasRecord, 'kind' | 'root'>> = {}): Drawing.Canvas => {
   const content = {};
   seedContent(content);
+  updateCanvasRecord(content, settings);
   return Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content });
 };

@@ -130,8 +130,19 @@ export interface DedicatedWorkerSessionFailedMessage {
   error: SerializedError;
 }
 
+/**
+ * Worker -> Leader Client: progress of work the runtime does while starting (and after), for a boot
+ * screen. The payload is host-defined and structured-clone-safe; each one also restarts the leader's
+ * handshake deadline, so a long but progressing start is not mistaken for a hung worker.
+ */
+export interface DedicatedWorkerStatusMessage {
+  type: 'status';
+  status: unknown;
+}
+
 export type DedicatedWorkerMessage =
   | DedicatedWorkerListeningMessage
+  | DedicatedWorkerStatusMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage
   | DedicatedWorkerPingMessage

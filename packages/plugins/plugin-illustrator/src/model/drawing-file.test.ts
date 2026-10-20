@@ -57,6 +57,8 @@ describe('.dx.svg', () => {
     expect(first.id).not.toBe(drawing.id);
     expect(second.id).not.toBe(first.id);
     expect(await db.query(Filter.type(Drawing.Drawing)).run()).toHaveLength(2);
+    // The drawing returned is the database's own, so an edit to it (a conversion re-pointing its canvas) persists.
+    expect(await db.query(Filter.id(first.id)).first()).toBe(first);
     expect(first.name).toBe('Request path');
     const imported = await first.canvas.load();
     invariant(imported, 'The imported drawing resolves its canvas.');

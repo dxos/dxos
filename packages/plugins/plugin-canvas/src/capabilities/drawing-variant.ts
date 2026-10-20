@@ -17,7 +17,8 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   id: Canvas.SCENE_SCHEMA,
   label: 'Canvas',
   icon: 'ph--graph--regular',
-  createCanvas: () => Effect.succeed(createCanvas()),
+  // A conversion asks for `diagramShapes`, so a laid-out diagram keeps the look its renderer gave it.
+  createCanvas: (input) => Effect.succeed(createCanvas(input?.diagramShapes === true ? { diagramShapes: true } : {})),
   builder: CanvasBuilder,
   card: CanvasCard,
   article: CanvasArticle,

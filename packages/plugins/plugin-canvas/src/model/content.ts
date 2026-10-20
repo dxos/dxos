@@ -15,24 +15,26 @@ import {
   BackgroundGrid,
   CAMERA_TARGET,
   DEFAULT_LAYER,
-  type FrameNode,
   Layer,
   LINE_STYLES,
   Link,
   type Node,
   NodeBase,
   OPACITY_PATH,
-  type Scene,
-  type SceneId,
-  SceneKind,
-  type SceneMap,
   StyleClass,
   type StyleMap,
   Timeline,
+  type View,
+  type ViewId,
+  ViewKind,
+  type ViewMap,
+  type ViewNode,
   elementLayer,
-  isFrameNode,
+  isViewNode,
+  orphanViews,
   sortByZ,
   trackId,
+  withLegacyNodeType,
 } from '@dxos/react-ui-canvas/headless';
 
 /**
@@ -66,6 +68,11 @@ export const CanvasRecord = Schema.Struct({
   background: Schema.optional(Schema.String),
   /** Overrides the background's grid. */
   backgroundGrid: Schema.optional(BackgroundGrid),
+  /**
+   * The illustrator DSL's elements draw as the diagram's own SVG renderer draws them (diagram nodes and connectors)
+   * rather than as canvas shapes: a laid-out diagram brought onto the canvas keeps the look it had.
+   */
+  diagramShapes: Schema.optional(Schema.Boolean),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -77,7 +84,9 @@ export const SceneRecord = Schema.Struct({
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
-  sceneKind: Schema.optional(SceneKind),
+  sceneKind: Schema.optional(ViewKind),
+  /** An Object the Group command made, kept out of the library until it is named or placed again (`View.anonymous`). */
+  anonymous: Schema.optional(Schema.Boolean),
   /** The scene's animation, kept whole with it: keys are edited as a set and few. */
   timeline: Schema.optional(Timeline),
 });
@@ -111,13 +120,13 @@ export type ContentRecord = Schema.Schema.Type<typeof ContentRecord>;
 export const ElementRecord = Schema.Union([NodeRecord, LinkRecord]);
 export type ElementRecord = Schema.Schema.Type<typeof ElementRecord>;
 
-export const ROOT_SCENE_ID = 'root';
+export const ROOT_VIEW_ID = 'root';
 
 /** The root id drawings were saved with before it lost the `scene:` its key already adds. */
-const LEGACY_ROOT_SCENE_ID = 'scene:root';
+const LEGACY_ROOT_VIEW_ID = 'scene:root';
 const CANVAS_KEY = 'canvas';
 
-export const sceneKey = (id: SceneId) => `scene:${id}`;
+export const sceneKey = (id: ViewId) => `scene:${id}`;
 export const nodeKey = (id: string) => `node:${id}`;
 export const linkKey = (id: string) => `link:${id}`;
 
@@ -131,12 +140,12 @@ export const isElementRecord = Schema.is(ElementRecord);
 /** Plain data from a record that may be an ECHO proxy: records must not alias live content. */
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
-const toRoot = (node: FrameNode): FrameNode => ({ ...node, scene: ROOT_SCENE_ID });
+const toRoot = (node: ViewNode): ViewNode => ({ ...node, scene: ROOT_VIEW_ID });
 
 /** Whether the content was saved with the legacy root scene id, so `migrateContent` would change it. */
 export const hasLegacyRoot = (content: ContentMap): boolean => {
   const canvas = content[CANVAS_KEY];
-  return isCanvasRecord(canvas) && canvas.root === LEGACY_ROOT_SCENE_ID;
+  return isCanvasRecord(canvas) && canvas.root === LEGACY_ROOT_VIEW_ID;
 };
 
 /**
@@ -147,42 +156,42 @@ export const migrateContent = (content: ContentMap): boolean => {
   if (!hasLegacyRoot(content)) {
     return false;
   }
-  const legacy = content[sceneKey(LEGACY_ROOT_SCENE_ID)];
-  delete content[sceneKey(LEGACY_ROOT_SCENE_ID)];
-  content[sceneKey(ROOT_SCENE_ID)] = {
+  const legacy = content[sceneKey(LEGACY_ROOT_VIEW_ID)];
+  delete content[sceneKey(LEGACY_ROOT_VIEW_ID)];
+  content[sceneKey(ROOT_VIEW_ID)] = {
     kind: 'scene',
-    id: ROOT_SCENE_ID,
+    id: ROOT_VIEW_ID,
     ...(isSceneRecord(legacy) && legacy.name !== undefined ? { name: legacy.name } : {}),
   } satisfies SceneRecord;
   const canvas = content[CANVAS_KEY];
   content[CANVAS_KEY] = {
     ...(isCanvasRecord(canvas) ? clone(canvas) : {}),
     kind: 'canvas',
-    root: ROOT_SCENE_ID,
+    root: ROOT_VIEW_ID,
   } satisfies CanvasRecord;
   for (const [key, value] of Object.entries(content)) {
     const record: unknown = value;
     if (isNodeRecord(record)) {
-      const node = clone(record.node);
-      const portal = isFrameNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
-      if (record.scene === LEGACY_ROOT_SCENE_ID || portal) {
-        const next: Node = isFrameNode(node) && portal ? toRoot(node) : node;
+      const node = withLegacyNodeType(clone(record.node));
+      const portal = isViewNode(node) && node.scene === LEGACY_ROOT_VIEW_ID;
+      if (record.scene === LEGACY_ROOT_VIEW_ID || portal) {
+        const next: Node = isViewNode(node) && portal ? toRoot(node) : node;
         content[key] = {
           ...clone(record),
-          scene: record.scene === LEGACY_ROOT_SCENE_ID ? ROOT_SCENE_ID : record.scene,
+          scene: record.scene === LEGACY_ROOT_VIEW_ID ? ROOT_VIEW_ID : record.scene,
           node: next,
         } satisfies NodeRecord;
       }
-    } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_SCENE_ID) {
-      content[key] = { ...clone(record), scene: ROOT_SCENE_ID } satisfies LinkRecord;
+    } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_VIEW_ID) {
+      content[key] = { ...clone(record), scene: ROOT_VIEW_ID } satisfies LinkRecord;
     }
   }
   return true;
 };
 
 /** Each scene's layers, bottom first, as the engine reads them: a scene record naming none has the default one. */
-const layersByScene = (content: ContentMap): Map<SceneId, Layer[]> => {
-  const layers = new Map<SceneId, Layer[]>();
+const layersByScene = (content: ContentMap): Map<ViewId, Layer[]> => {
+  const layers = new Map<ViewId, Layer[]>();
   for (const value of Object.values(content)) {
     const record: unknown = value;
     if (isSceneRecord(record)) {
@@ -250,8 +259,32 @@ export const migrateLayers = (content: ContentMap): boolean => {
   return true;
 };
 
+/**
+ * The scenes nothing reaches from the root (VIEWS.md §7.4): Views no view node opens and anonymous Objects with no
+ * Instance, which edits made before deleting the last of those nodes deleted the record left behind.
+ */
+export const orphanedViews = (content: ContentMap): ViewId[] => {
+  const root = rootOf(content);
+  return root === undefined ? [] : [...orphanViews(readViews(content), [root])];
+};
+
+/** Removes the scenes `orphanedViews` names, with their nodes and links, in place; returns whether it removed any. */
+export const pruneOrphanedViews = (content: ContentMap): boolean => {
+  const orphans = new Set(orphanedViews(content));
+  if (orphans.size === 0) {
+    return false;
+  }
+  for (const [key, value] of Object.entries(content)) {
+    const record: unknown = value;
+    if ((isSceneRecord(record) && orphans.has(record.id)) || (isElementRecord(record) && orphans.has(record.scene))) {
+      delete content[key];
+    }
+  }
+  return true;
+};
+
 /** Content with a root scene, written into an empty map when the first record is needed. */
-export const seedContent = (content: ContentMap, root: SceneId = ROOT_SCENE_ID): SceneId => {
+export const seedContent = (content: ContentMap, root: ViewId = ROOT_VIEW_ID): ViewId => {
   migrateContent(content);
   const canvas = content[CANVAS_KEY];
   if (isCanvasRecord(canvas)) {
@@ -307,7 +340,7 @@ export const resolveDrawingLook = (
 });
 
 /** The root scene id, when the content has been seeded. */
-export const rootOf = (content: ContentMap): SceneId | undefined => {
+export const rootOf = (content: ContentMap): ViewId | undefined => {
   const canvas = content[CANVAS_KEY];
   return isCanvasRecord(canvas) ? canvas.root : undefined;
 };
@@ -436,7 +469,7 @@ const withLegacyNode = (node: Node): Node => {
     style = { ...style, opacity };
   }
   // Only a frame ever carried `object` and `contents`; on another type they are a host's own fields.
-  const framed = isFrameNode(node) && (object !== undefined || contents !== undefined);
+  const framed = isViewNode(node) && (object !== undefined || contents !== undefined);
   if (!framed) {
     return style === node.style ? node : { ...node, style };
   }
@@ -470,10 +503,10 @@ const withLegacyTimeline = (timeline: Timeline): Timeline => {
 };
 
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
-export const readScenes = (content: ContentMap): SceneMap => {
-  const headers: Record<SceneId, SceneRecord> = {};
-  const nodes: Record<SceneId, Record<string, Node>> = {};
-  const links: Record<SceneId, Record<string, Link>> = {};
+export const readViews = (content: ContentMap): ViewMap => {
+  const headers: Record<ViewId, SceneRecord> = {};
+  const nodes: Record<ViewId, Record<string, Node>> = {};
+  const links: Record<ViewId, Record<string, Link>> = {};
   for (const record of Object.values(content)) {
     if (isSceneRecord(record)) {
       headers[record.id] = record;
@@ -483,12 +516,12 @@ export const readScenes = (content: ContentMap): SceneMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = withLegacyNode(clone(record.node));
+      nodes[record.scene][record.node.id] = withLegacyNode(withLegacyNodeType(clone(record.node)));
     } else if (isLinkRecord(record) && links[record.scene]) {
       links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }
   }
-  const scenes: Record<SceneId, Scene> = {};
+  const scenes: Record<ViewId, View> = {};
   for (const header of Object.values(headers)) {
     scenes[header.id] = {
       id: header.id,
@@ -497,6 +530,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
       links: links[header.id],
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
+      ...(header.anonymous ? { anonymous: true } : {}),
       ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
     };
   }
@@ -508,7 +542,7 @@ export const readScenes = (content: ContentMap): SceneMap => {
  * DSL identity of a record whose element the canvas edited. Scenes, nodes and links absent from
  * `scenes` are removed. Returns whether anything was written.
  */
-export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
+export const writeViews = (content: ContentMap, scenes: ViewMap): boolean => {
   let changed = false;
   const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
@@ -519,7 +553,8 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
       id: scene.id,
       ...(scene.name ? { name: scene.name } : {}),
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
-      ...(scene.kind && scene.kind !== 'scene' ? { sceneKind: scene.kind } : {}),
+      ...(scene.kind && scene.kind !== 'view' ? { sceneKind: scene.kind } : {}),
+      ...(scene.anonymous ? { anonymous: true } : {}),
       ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {
@@ -568,18 +603,18 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
 };
 
 /** The scene record `id`, when the content has one. */
-export const sceneRecordOf = (content: ContentMap, id: SceneId): SceneRecord | undefined => {
+export const sceneRecordOf = (content: ContentMap, id: ViewId): SceneRecord | undefined => {
   const record: unknown = content[sceneKey(id)];
   return isSceneRecord(record) ? record : undefined;
 };
 
 /** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
-export const putNodeRecord = (content: ContentMap, scene: SceneId, node: Node): void => {
+export const putNodeRecord = (content: ContentMap, scene: ViewId, node: Node): void => {
   content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
 };
 
 /** Replaces scene `scene`'s timeline in place; the scene must exist. */
-export const putTimeline = (content: ContentMap, scene: SceneId, timeline: Timeline): boolean => {
+export const putTimeline = (content: ContentMap, scene: ViewId, timeline: Timeline): boolean => {
   const record = sceneRecordOf(content, scene);
   if (!record) {
     return false;

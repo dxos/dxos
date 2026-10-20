@@ -106,8 +106,8 @@ export const Test: Story = {
   },
 };
 
-/** Frames holding a markdown document, which is no canvas drawing, show its card and its section surfaces. */
-export const ObjectFrame: Story = {
+/** View nodes holding a markdown document, which is no canvas drawing, show its card and its section surfaces. */
+export const ObjectView: Story = {
   decorators: withDrawing((db, canvas) => {
     const document = db.add(
       Markdown.make({
@@ -122,7 +122,7 @@ export const ObjectFrame: Story = {
       scene: rootOf(canvas.content),
       node: {
         id,
-        type: 'frame',
+        type: 'view',
         z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },

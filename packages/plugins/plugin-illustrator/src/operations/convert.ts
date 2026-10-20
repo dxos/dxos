@@ -87,8 +87,9 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
           new IllustratorError.UnmanagedShapes({ context: { variant: variantId, count: dropped } }),
         );
       }
+      // The source drew a laid-out diagram: a target that can draw the DSL as the diagram renderer does is asked to.
       const target = yield* Database.add(
-        to.createCanvas ? yield* to.createCanvas() : Drawing.makeCanvas({ schema: to.id }),
+        to.createCanvas ? yield* to.createCanvas({ diagramShapes: true }) : Drawing.makeCanvas({ schema: to.id }),
       );
       const { upserted } = to.builder.apply(
         target,
