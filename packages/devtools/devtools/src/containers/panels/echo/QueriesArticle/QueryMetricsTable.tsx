@@ -208,6 +208,8 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
               <Listbox.Item
                 key={query.query}
                 id={queryKey(query.query)}
+                // The row whose metrics the detail shows: ringed while the list has focus, a click included.
+                current={queryKey(query.query) === selected}
                 classNames='font-mono text-xs tabular-nums text-end whitespace-nowrap'
                 data-testid='query-metrics.row'
               >
