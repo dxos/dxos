@@ -49,7 +49,7 @@ import {
   type PropertiesInspectorProps,
   ViewsInspector,
 } from '../inspectors/index.ts';
-import { InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
+import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
 import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasServices } from './CanvasContext.ts';
 
@@ -81,9 +81,16 @@ export const CanvasProperties = ({
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
-  // With nothing selected there is nothing to edit, so the section goes, docked or floating.
+  // Docked, the section keeps its place in the panel so the panes do not shift; floating, it goes with nothing to edit.
+  const docked = InspectorPanel.useDocked();
   if (selection.size === 0) {
-    return null;
+    return docked ? (
+      <InspectorSection section={PROPERTIES_INSPECTOR}>
+        <p className='p-2 text-sm text-fg-subtle' data-testid='properties-empty'>
+          Nothing selected
+        </p>
+      </InspectorSection>
+    ) : null;
   }
   return (
     <InspectorSection section={PROPERTIES_INSPECTOR}>

@@ -214,12 +214,13 @@ export const Docked: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. With nothing selected the dock holds no properties; the layers section starts closed, and its header opens it.
+    // 1. With nothing selected the dock keeps its properties section, saying so; the layers section starts closed, and
+    //    its header opens it.
     const dock = await canvas.findByTestId('scene-view-dock');
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed'),
     );
-    await expect(within(dock).queryByTestId('dock-section-properties')).not.toBeInTheDocument();
+    await expect(await within(dock).findByTestId('properties-empty')).toBeVisible();
     await userEvent.click(
       within(within(dock).getByTestId('dock-section-layers')).getByRole('button', { name: 'Layers' }),
     );
