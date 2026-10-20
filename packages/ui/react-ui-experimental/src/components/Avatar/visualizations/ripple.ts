@@ -18,7 +18,7 @@ export type RippleConfig = {
   spikes: number;
   /** How sharply the waves fade with distance from the source; 0 carries them to the horizon. */
   focus: number;
-  /** How quickly each wave dies out as it ages, per second; 0 keeps it at full height. */
+  /** How quickly each wave dies out as it ages, per second (1-10). */
   decay: number;
   low: string;
   high: string;
@@ -115,7 +115,7 @@ export const ripple: Visualization<RippleConfig> = {
     speed: number(0.2, 4, 0.05, 'Speed'),
     spikes: number(0, 2, 0.05, 'Spikes'),
     focus: number(0, 6, 0.1, 'Focus'),
-    decay: number(0, 5, 0.05, 'Decay'),
+    decay: number(1, 10, 0.1, 'Decay'),
     low: color('Low'),
     high: color('High'),
     peak: color('Peak'),
@@ -126,14 +126,14 @@ export const ripple: Visualization<RippleConfig> = {
     speed: 1.2,
     spikes: 1,
     focus: 2.5,
-    decay: 0.5,
+    decay: 1,
     low: '#5b3cff',
     high: '#2ee6d6',
     peak: '#f5f542',
   },
   presets: {
     calm: { amplitude: 0.6, rings: 12, speed: 0.8, spikes: 0, focus: 1.5, decay: 1 },
-    storm: { amplitude: 2, rings: 40, speed: 2, spikes: 1.8, focus: 1, decay: 0.2 },
+    storm: { amplitude: 2, rings: 40, speed: 2, spikes: 1.8, focus: 1, decay: 1 },
   },
   create: ({ scene, camera }) => {
     const history = new Array<number>(HISTORY).fill(0);
@@ -145,7 +145,7 @@ export const ripple: Visualization<RippleConfig> = {
       uSpeed: { value: 1 },
       uSpikes: { value: 1 },
       uFocus: { value: 2.5 },
-      uDecay: { value: 0.5 },
+      uDecay: { value: 1 },
       uBackground: { value: new THREE.Color() },
       uLow: { value: new THREE.Color() },
       uHigh: { value: new THREE.Color() },
