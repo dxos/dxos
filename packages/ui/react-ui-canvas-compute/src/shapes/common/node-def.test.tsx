@@ -11,14 +11,14 @@ import { type Node, type NodeViewProps, createMemoryStore } from '@dxos/react-ui
 import { ComputeGraphController } from '../../graph/index.ts';
 import { ComputeContext, createComputeGraph } from '../../hooks/index.ts';
 import { computeNodeRegistry } from '../../registry.ts';
-import { sceneFromCircuit } from '../../scene/scene.ts';
+import { viewFromCircuit } from '../../scene/scene.ts';
 import { createTemplateCircuit } from '../../testing/index.ts';
 
 /** The template circuit's GPT shape, rendered through its registry view against a controller over the circuit. */
 const setup = () => {
   const circuit = createTemplateCircuit();
   const model = createComputeGraph(circuit);
-  const scene = sceneFromCircuit(circuit);
+  const scene = viewFromCircuit(circuit);
   const controller = new ComputeGraphController(
     { runPromiseExit: () => Promise.reject(new Error('The view test runs no graph.')) },
     model,

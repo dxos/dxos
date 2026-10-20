@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type GeneratorNode, type Scene, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { type GeneratorNode, type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
 
 import { CanvasOperation, Generator } from '#types';
 
@@ -61,7 +61,7 @@ const standalone = (
   reference: string,
   params: Record<string, unknown> | undefined,
   bounds: { x: number; y: number; width: number; height: number } = { x: -256, y: -256, width: 512, height: 512 },
-): Scene => {
+): View => {
   const node: GeneratorNode = {
     type: 'generator',
     id: STANDALONE_NODE,

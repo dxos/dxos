@@ -17,20 +17,20 @@ import {
   type Intent,
   type Link,
   type Node,
-  OpenScene,
-  type Scene,
-  type SceneId,
-  type SceneStore,
+  OpenView,
+  type View,
+  type ViewId,
+  type ViewStore,
   endpointNode,
-  putScene,
+  putView,
   removeTargets,
-  updateScene,
+  updateView,
 } from '../model/index.ts';
-import { type LatticeSpec, layoutScene, reduceLayerIntent, resizeNode } from '../utils/index.ts';
+import { type LatticeSpec, layoutView, reduceLayerIntent, resizeNode } from '../utils/index.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */
-  readonly scene: Atom.Atom<Scene>;
+  readonly scene: Atom.Atom<View>;
   /** May apply, partially apply, rewrite the model, or reject. */
   apply: (intent: Intent) => void;
   readonly capabilities: Capabilities;
@@ -50,10 +50,10 @@ export type Projection = {
   lattice?: LatticeSpec;
 };
 
-const EMPTY: Scene = { id: '', nodes: {}, links: {} };
+const EMPTY: View = { id: '', nodes: {}, links: {} };
 
 /** Freehand semantics as a pure reducer, so it is testable and reusable by other projections. */
-export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
+export const reduceIntent = (scene: View, intent: Intent): View => {
   switch (intent.kind) {
     case 'move': {
       const nodes = { ...scene.nodes };
@@ -142,7 +142,7 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
     }
 
     case 'layout':
-      return layoutScene(scene, intent.ids);
+      return layoutView(scene, intent.ids);
 
     case 'batch':
       return intent.intents.reduce(reduceIntent, scene);
@@ -169,8 +169,8 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
 
 export type FreehandProjectionOptions = {
   registry: Registry.AtomRegistry;
-  store: SceneStore;
-  sceneId: SceneId;
+  store: ViewStore;
+  sceneId: ViewId;
   /**
    * Whether a constraining projection (the lattice) applies its constraint now; the view passes its snap
    * toggle. Read per intent, so turning it off frees the next gesture without rebuilding the projection.
@@ -201,14 +201,14 @@ export const readonlyCapabilities: Capabilities = {
 
 /** Identity projection over the store: what the surface asks for is what the model becomes. */
 export const createFreehandProjection = ({ registry, store, sceneId }: FreehandProjectionOptions): Projection => ({
-  scene: Atom.keepAlive(Atom.make((get) => get(store.scene(sceneId)) ?? EMPTY)),
-  apply: (intent) => updateScene(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
+  scene: Atom.keepAlive(Atom.make((get) => get(store.view(sceneId)) ?? EMPTY)),
+  apply: (intent) => updateView(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
   capabilities: freehandCapabilities,
-  snapshot: () => registry.get(store.scene(sceneId)),
+  snapshot: () => registry.get(store.view(sceneId)),
   restore: (snapshot) => {
     // A host's nodes are `NodeBase` to the engine, so a snapshot is checked against the open schema.
-    if (Schema.is(OpenScene)(snapshot)) {
-      putScene(registry, store, snapshot);
+    if (Schema.is(OpenView)(snapshot)) {
+      putView(registry, store, snapshot);
     }
   },
 });

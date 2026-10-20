@@ -16,7 +16,7 @@ import { Canvas, EXPOSED_CLOCK_KEY, createCanvasAtoms, useRegistry } from '@dxos
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 
-import { generatorCompiler, seedContent, updateCanvasRecord, writeScenes } from '#model';
+import { generatorCompiler, seedContent, updateCanvasRecord, writeViews } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { CanvasOperation, Canvas as CanvasType, Generator } from '#types';
@@ -35,7 +35,7 @@ const END_CARD_NAME = 'End card';
 const seed = (db: Database.Database): Drawing.Drawing => {
   const content = {};
   seedContent(content, ROOT);
-  writeScenes(content, { [ROOT]: rootScene(), [logoComposite().id]: logoComposite() });
+  writeViews(content, { [ROOT]: rootScene(), [logoComposite().id]: logoComposite() });
   updateCanvasRecord(content, { theme: 'film' });
   const canvas = db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA, content }));
   return db.add(Drawing.make({ name: END_CARD_NAME, canvas }));

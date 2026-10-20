@@ -18,7 +18,7 @@ Human-facing overview and the list of partials: `packages/sdk/app-toolkit/src/sa
 Bramble (`plugin-onboarding/src/samples/bramble/`) and Architecture
 (`plugin-canvas/src/samples/architecture/`) are each one partial with a template that applies only
 it. The Alien Labs template (`plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`) applies the
-four partials in `team/`, `inbox-crm/`, `projects/` and `docs/`, plus Architecture. A partial used
+five partials in `team/`, `inbox-crm/`, `projects/`, `docs/` and `metrics/`, plus Architecture. A partial used
 outside its package is exported as a PascalCase namespace subpath (`@dxos/plugin-canvas/Architecture`),
 which the subpath lint requires, and its package must be public, since `scripts/check-public-dependencies.mjs` fails a public package
 that depends on a private one.
@@ -83,7 +83,10 @@ schemas, run })`. When another directory applies it, re-export it with `Provides
 5. **The template.** Add the partial to its template's partial map, in `Requires` order. In `build`,
    pass each partial's `Provides` into the next one's `Requires`. A new template gets `make`,
    `makeTemplate`, a test, and an entry in the plugin's `capabilities/space-templates.ts`. Keep the
-   content lazy: `composer-app:check-boot-budget` must not move.
+   content lazy: `composer-app:check-boot-budget` must not move. Work that needs an operation once
+   the space exists (a first sync or curation) goes in the template's `build`, never in a partial:
+   `SpaceOperation.ApplyTemplate` runs `build` in the space's process, which provides
+   `Operation.Service`, and the template's test provides a stub.
 6. **The flows.** Walk every `## Flows` entry in the running app with the `composer-qa` or
    `composer-debug` skill. Report each flow you could not walk as not verified.
 7. **The header.** Update `Code` and `Used by` to name the files and templates that now exist, and

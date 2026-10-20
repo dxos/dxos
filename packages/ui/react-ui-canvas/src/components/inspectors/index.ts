@@ -8,3 +8,4 @@ export * from './LayersInspector/index.ts';
 export * from './ObjectsInspector/index.ts';
 export * from './PropertiesInspector/index.ts';
 export * from './types.ts';
+export * from './ViewsInspector/index.ts';

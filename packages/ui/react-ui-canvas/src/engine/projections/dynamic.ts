@@ -25,8 +25,8 @@ import {
   type Node,
   type NodeRegistry,
   type Point,
-  type Scene,
   type Size,
+  type View,
   endpointNode,
 } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
@@ -68,10 +68,10 @@ const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
   size: { width: 192, height: 128 },
 };
 
-export const DYNAMIC_SCENE_ID = 'dynamic';
+export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): Scene => {
+export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
@@ -123,7 +123,7 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
       };
     }
   });
-  return { id: DYNAMIC_SCENE_ID, name: 'Dynamic', nodes, links };
+  return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
 };
 
 /** Drop overrides whose nodes are gone. */

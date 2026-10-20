@@ -12,7 +12,7 @@ const PORT = 9006;
 // The Readonly story's fixture with editing on: Storybook's `args` URL override, so the suite needs no story of its own.
 const FREEHAND_URL = `${storybookUrl('ui-react-ui-canvas-components-canvas--readonly', PORT)}&args=readonly:!false`;
 
-// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
+// The fixture (`createViewTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
 test.describe('Canvas', () => {
   let page: Page;
@@ -219,7 +219,9 @@ test.describe('Canvas', () => {
     await scene.focus();
     await page.keyboard.press('l');
     const right = await scene.nodesRight();
-    const from = { x: right + (view.x + view.width - right) / 2, y: view.y + view.height / 2 };
+    // Between the shapes and the floating inspector panel, which covers the canvas's right edge.
+    const panel = await scene.box(page.getByTestId('scene-view-dock'));
+    const from = { x: right + (Math.min(panel.x, view.x + view.width) - right) / 2, y: view.y + view.height / 2 };
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     // A few pixels is well under a grid cell at any zoom the story fits to.
@@ -300,7 +302,7 @@ test.describe('Canvas', () => {
       .toBe(true);
     // A frame made from the toolbar gets its child scene, so Enter opens it.
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-frame').click();
+    await page.getByTestId('create-view').click();
     await scene.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
@@ -308,7 +310,7 @@ test.describe('Canvas', () => {
 
   test('a frame opens from its zoom-in control', async () => {
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-frame').click();
+    await page.getByTestId('create-view').click();
     await page.getByTestId('portal-open').first().click();
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });

@@ -7,7 +7,7 @@
 // it: it holds the loaded modules, the scene, and one runner per generator node, and answers frame requests.
 //
 
-import { type NodeId, type Scene, isGeneratorNode } from '../model/index.ts';
+import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
 import { hashSeed } from './motion.ts';
 import { GeneratorRunner, type RunnerOptions } from './runner.ts';
@@ -18,7 +18,7 @@ export type GeneratorFrameNode = { id: NodeId; key: string; schema?: Record<stri
 
 export type CoreRequest =
   | { type: 'load'; key: string; code: string }
-  | { type: 'scene'; scene: Scene }
+  | { type: 'scene'; scene: View }
   | { type: 'frame'; id: number; t: number; nodes: GeneratorFrameNode[] };
 
 export type CoreResponse = { type: 'frame'; id: number; t: number; frames: Record<NodeId, GeneratorFrame> };
@@ -27,7 +27,7 @@ export class GeneratorCore {
   readonly #modules = new Map<string, GeneratorModule | Error>();
   readonly #runners = new Map<NodeId, { key: string; runner: GeneratorRunner }>();
   readonly #options: Omit<RunnerOptions, 'seed'>;
-  #scene: Scene | undefined;
+  #scene: View | undefined;
 
   constructor(options: Omit<RunnerOptions, 'seed'> = {}) {
     this.#options = options;
@@ -78,7 +78,7 @@ export class GeneratorCore {
     }
   }
 
-  #runner(node: GeneratorFrameNode, module: GeneratorModule, scene: Scene): GeneratorRunner {
+  #runner(node: GeneratorFrameNode, module: GeneratorModule, scene: View): GeneratorRunner {
     const existing = this.#runners.get(node.id);
     if (existing?.key === node.key) {
       return existing.runner;

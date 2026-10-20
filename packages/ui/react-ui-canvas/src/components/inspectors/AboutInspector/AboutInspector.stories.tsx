@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { withInspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { withInspectorFrame } from '../../panels/testing.ts';
 import { AboutInspector } from './AboutInspector.tsx';
 
 const meta: Meta<typeof AboutInspector> = {
@@ -19,7 +19,6 @@ const meta: Meta<typeof AboutInspector> = {
       title: 'About',
       icon: 'ph--info--regular',
       order: 0,
-      show: 'never',
       defaultOpen: true,
     }),
     withTheme(),

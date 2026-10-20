@@ -7,12 +7,24 @@
 // them back, so `applyCommands` gives the canvas the illustrator operations (draw, edit, move, remove).
 // A DSL element becomes an ordinary node (boxes, circles, text, portals) or link (arrows) carrying
 // its identity; everything the engine cannot show (polylines, curves, arcs, free arrows) is dropped.
+// On a canvas with `diagramShapes` the nodes and links are diagram shapes and connectors, which the
+// diagram's own SVG renderer draws, so a laid-out diagram keeps its look, routes and captions.
 //
 
-import { type ContentHandler, type ContentMap, Scene as Dsl, type ReadWorldObject } from '@dxos/diagram';
+import {
+  type ContentHandler,
+  type ContentMap,
+  Diagnostics,
+  Scene as Dsl,
+  type ReadWorldObject,
+  type SvgFile,
+} from '@dxos/diagram';
 import {
   DEFAULT_LAYER,
   DEFAULT_SIZES,
+  type DiagramConnector,
+  type DiagramNode,
+  type DiagramShape,
   type EllipseNode,
   type Layer,
   type Link,
@@ -23,7 +35,10 @@ import {
   between,
   createLink,
   defaultNodeRegistry,
+  diagramNodeElements,
   endpointNode,
+  isDiagramBackdrop,
+  isDiagramNode,
   isEllipseNode,
   isNoteNode,
   nodeBounds,
@@ -37,6 +52,7 @@ import {
   type ElementRecord,
   type LinkRecord,
   type NodeRecord,
+  canvasRecordOf,
   isElementRecord,
   isLinkRecord,
   isNodeRecord,
@@ -122,6 +138,29 @@ const nodesIn = (content: ContentMap, scene: string): Node[] =>
     .filter((record): record is NodeRecord => isNodeRecord(record) && record.scene === scene)
     .map((record) => record.node);
 
+/** A group's backdrop: a guide, or a diagram's tinted group frame. */
+const isBackdrop = (node: Node): boolean => node.style?.guide === true || isDiagramBackdrop(node);
+
+/** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
+const textFrame = (element: Dsl.Text, scale: number): { w: number; h: number } => {
+  const { size, lineH } = Diagnostics.LABEL_TYPE[element.weight ?? 's'];
+  const lines = element.text.split('\n');
+  const longest = Math.max(1, ...lines.map((line) => line.length));
+  return {
+    w: element.w ?? Math.ceil(longest * size * Diagnostics.CHAR_EM) / scale,
+    h: (lines.length * lineH) / scale,
+  };
+};
+
+/** The style of a connector apart from its route: what a diagram connector keeps of an arrow, and gives back. */
+const connectorStyle = ({ relation, head, tail, stroke, color }: SvgFile.ConnectorStyle): SvgFile.ConnectorStyle => ({
+  ...(relation ? { relation } : {}),
+  ...(head ? { head } : {}),
+  ...(tail ? { tail } : {}),
+  ...(stroke ? { stroke } : {}),
+  ...(color ? { color } : {}),
+});
+
 /** The layer a drawing's decorations (group backdrops, guides) sit on, below the shapes they group. */
 export const BACKDROP_LAYER: Layer = { id: 'backdrop', name: 'Backdrop', z: '' };
 
@@ -138,13 +177,13 @@ const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) 
   const named = layers.filter((layer) => layer.id !== BACKDROP_LAYER.id);
   const own = sortByZ(named.length > 0 ? named : [DEFAULT_LAYER]);
   const main = own.at(-1) ?? DEFAULT_LAYER;
-  const guides = Object.values(records).some((other) => isNodeRecord(other) && other.node.style?.guide);
+  const guides = Object.values(records).some((other) => isNodeRecord(other) && isBackdrop(other.node));
   const backdrop = guides || record.layers?.[BACKDROP_LAYER.id] !== undefined;
   for (const [key, other] of Object.entries(records)) {
     const node: NodeRecord | undefined = isNodeRecord(other) ? other : undefined;
     const link: LinkRecord | undefined = isLinkRecord(other) ? other : undefined;
     if (node) {
-      records[key] = { ...node, node: { ...node.node, layer: node.node.style?.guide ? BACKDROP_LAYER.id : main.id } };
+      records[key] = { ...node, node: { ...node.node, layer: isBackdrop(node.node) ? BACKDROP_LAYER.id : main.id } };
     } else if (link) {
       records[key] = { ...link, link: { ...link.link, layer: main.id } };
     }
@@ -195,6 +234,7 @@ export const SceneHandler: ContentHandler = {
       return index ?? z;
     };
 
+    const diagram = canvasRecordOf(content)?.diagramShapes === true;
     const records: ContentMap = {};
     const put = (element: string, node: Node) => {
       records[nodeKey(node.id)] = { kind: 'node', scene, node, dsl: identity(element) } satisfies NodeRecord;
@@ -202,8 +242,8 @@ export const SceneHandler: ContentHandler = {
 
     // A small text belongs to what it captions rather than standing alone: a connector's caption
     // (`<arrow>-label`) is the link's text, and a title inside an untitled box of its object is that box's label.
-    const captions = new Map<string, string>();
-    const titles = new Map<string, string>();
+    const captions = new Map<string, Dsl.Text>();
+    const titles = new Map<string, Dsl.Text>();
     const absorbed = new Set<string>();
     for (const element of object.elements) {
       if (element.kind !== 'text' || element.weight !== 's') {
@@ -211,7 +251,7 @@ export const SceneHandler: ContentHandler = {
       }
       const arrow = element.id.endsWith('-label') ? element.id.slice(0, -'-label'.length) : undefined;
       if (arrow && object.elements.some((other) => other.kind === 'arrow' && other.id === arrow)) {
-        captions.set(arrow, element.text);
+        captions.set(arrow, element);
         absorbed.add(element.id);
         continue;
       }
@@ -226,7 +266,7 @@ export const SceneHandler: ContentHandler = {
           element.y <= other.y + other.h,
       );
       if (box) {
-        titles.set(box.id, element.text);
+        titles.set(box.id, element);
         absorbed.add(element.id);
       }
     }
@@ -236,13 +276,47 @@ export const SceneHandler: ContentHandler = {
         continue;
       }
       const id = elementId(object.id, element.id);
+      if (diagram && element.kind !== 'arrow') {
+        const shape = diagramShape(element, placement.scale);
+        if (shape) {
+          const title = titles.get(element.id);
+          const node: DiagramNode = {
+            type: 'diagram',
+            id,
+            z: nextZ(),
+            center: place(shape.frame.x + shape.frame.w / 2, shape.frame.y + shape.frame.h / 2),
+            size: { width: shape.frame.w * placement.scale, height: shape.frame.h * placement.scale },
+            element: shape.element,
+            ...(title || shape.text ? { label: title?.text ?? shape.text } : {}),
+            ...(title
+              ? {
+                  heading: {
+                    id: title.id,
+                    x: (title.x - shape.frame.x) * placement.scale,
+                    y: (title.y - shape.frame.y) * placement.scale,
+                    ...(title.w === undefined ? {} : { w: title.w * placement.scale }),
+                    ...(title.color ? { color: title.color } : {}),
+                    ...(title.weight ? { weight: title.weight } : {}),
+                  },
+                }
+              : {}),
+          };
+          records[nodeKey(id)] = {
+            kind: 'node',
+            scene,
+            node,
+            dsl: { ...identity(element.id), ...(element.kind === 'portal' ? { portal: element.ref } : {}) },
+          } satisfies NodeRecord;
+        }
+        continue;
+      }
       switch (element.kind) {
         case 'rect':
         case 'diamond':
         case 'triangle': {
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const title = titles.get(element.id);
+          const title = titles.get(element.id)?.text;
           const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
           const style = styleOf(element);
           // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
@@ -323,7 +397,7 @@ export const SceneHandler: ContentHandler = {
           // A laid-out connector carries points, not refs: each end binds to the node it lands on.
           // A caption (an unbordered label, from this upsert or an earlier one) is never an end.
           const shapes = [...nodesIn(content, scene), ...nodesOf(records)].filter(
-            (node) => node.style?.border !== false,
+            (node) => node.style?.border !== false && !(isDiagramNode(node) && node.element.kind === 'text'),
           );
           // A routed connector is its bends (`<id>-path`) then the arrow's last leg: the path starts at the source.
           const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
@@ -335,6 +409,38 @@ export const SceneHandler: ContentHandler = {
             ? Dsl.resolveRef(element.to, object.id)
             : element.end && nodeAt(shapes, place(element.end.x, element.end.y))?.id;
           if (!from || !to || from === to) {
+            break;
+          }
+          const caption = captions.get(element.id);
+          const text = element.text || caption?.text;
+          if (diagram) {
+            // The layout's route, bends and caption included, as long as the boxes stay where the layout put them.
+            const points =
+              path?.kind === 'line' && element.end
+                ? [...path.points, element.end]
+                : element.start && element.end
+                  ? [element.start, element.end]
+                  : undefined;
+            const connector: DiagramConnector = {
+              ...connectorStyle(element),
+              ...(points ? { route: points.map((point) => place(point.x, point.y)) } : {}),
+              ...(caption
+                ? {
+                    caption: {
+                      ...place(caption.x, caption.y),
+                      ...(caption.w === undefined ? {} : { w: caption.w * placement.scale }),
+                      ...(caption.color ? { color: caption.color } : {}),
+                      ...(caption.weight ? { weight: caption.weight } : {}),
+                    },
+                  }
+                : {}),
+            };
+            const link: Link = {
+              ...createLink({ type: 'line', id, z: nextZ(), source: { node: from }, target: { node: to } }),
+              ...(text ? { text } : {}),
+              connector,
+            };
+            records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
             break;
           }
           const ends = endsOf(element);
@@ -350,7 +456,7 @@ export const SceneHandler: ContentHandler = {
               target: { node: to },
             }),
             ...(ends ? { ends } : {}),
-            ...(element.text || captions.get(element.id) ? { text: element.text || captions.get(element.id) } : {}),
+            ...(text ? { text } : {}),
             ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
           };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
@@ -389,7 +495,14 @@ export const SceneHandler: ContentHandler = {
           const frame = nodeBounds(node);
           const local = { x: frame.x - origin.x, y: frame.y - origin.y, w: frame.width, h: frame.height };
           const text = textOf(node);
-          if (isNoteNode(node)) {
+          if (isDiagramNode(node)) {
+            elements.push(
+              ...diagramNodeElements(node).map((shape) => ({
+                ...translate(shape, -origin.x, -origin.y),
+                ...(shape.id === node.element.id ? { id: element } : {}),
+              })),
+            );
+          } else if (isNoteNode(node)) {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
@@ -414,6 +527,7 @@ export const SceneHandler: ContentHandler = {
               from,
               to,
               ...(record.link.text ? { text: record.link.text } : {}),
+              ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
             });
           }
         }
@@ -436,6 +550,48 @@ export const SceneHandler: ContentHandler = {
       record.node = { ...record.node, center: { x: center.x + delta.x, y: center.y + delta.y } };
     }
   },
+};
+
+/** A DSL element as a diagram node holds it, and its frame in the element's own units. */
+const diagramShape = (
+  element: Dsl.Element,
+  scale: number,
+): { element: DiagramShape; frame: { x: number; y: number; w: number; h: number }; text?: string } | undefined => {
+  switch (element.kind) {
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle':
+    case 'portal':
+      return { element, frame: { x: element.x, y: element.y, w: element.w, h: element.h }, text: element.text };
+    case 'circle':
+      return {
+        element,
+        frame: { x: element.cx - element.r, y: element.cy - element.r, w: element.r * 2, h: element.r * 2 },
+        text: element.text,
+      };
+    case 'text':
+      return { element, frame: { x: element.x, y: element.y, ...textFrame(element, scale) }, text: element.text };
+    default:
+      return undefined;
+  }
+};
+
+/** An element moved by `dx`, `dy`. */
+const translate = (element: Dsl.Element, dx: number, dy: number): Dsl.Element => {
+  switch (element.kind) {
+    case 'circle':
+      return { ...element, cx: element.cx + dx, cy: element.cy + dy };
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle':
+    case 'portal':
+    case 'text':
+      return { ...element, x: element.x + dx, y: element.y + dy };
+    default:
+      return element;
+  }
 };
 
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);

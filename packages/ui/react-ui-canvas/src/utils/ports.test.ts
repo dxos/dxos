@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { type Bounds, NodeBase, type Port } from '../model/index.ts';
 import {
   MAX_PORTS_PER_SIDE,

@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { reduceIntent } from '../engine/index.ts';
-import { MAJOR_GRID, type Node, type Scene } from '../model/index.ts';
-import { layoutScene } from './layout.ts';
+import { MAJOR_GRID, type Node, type View } from '../model/index.ts';
+import { layoutView } from './layout.ts';
 
 const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 64 }): Node => ({
   id,
@@ -17,7 +17,7 @@ const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 
 });
 
 /** a → b → c with a second branch a → d, all piled on the origin. */
-const fixture = (): Scene => ({
+const fixture = (): View => ({
   id: 'scene',
   nodes: Object.fromEntries([node('a'), node('b'), node('c'), node('d')].map((node) => [node.id, node])),
   links: Object.fromEntries(
@@ -32,11 +32,11 @@ const fixture = (): Scene => ({
   ),
 });
 
-const rowOf = (scene: Scene, id: string) => scene.nodes[id].center.y;
+const rowOf = (scene: View, id: string) => scene.nodes[id].center.y;
 
 describe('layout', () => {
   test('a chain ranks into rows, branches share one', ({ expect }) => {
-    const scene = layoutScene(fixture());
+    const scene = layoutView(fixture());
     expect(rowOf(scene, 'a')).toBeLessThan(rowOf(scene, 'b'));
     expect(rowOf(scene, 'b')).toBeLessThan(rowOf(scene, 'c'));
     // `d` is one past `a`, the same rank as `b`.
@@ -46,7 +46,7 @@ describe('layout', () => {
 
   test('every centre lands on the major grid and no node changes size', ({ expect }) => {
     const before = fixture();
-    const scene = layoutScene(before);
+    const scene = layoutView(before);
     for (const node of Object.values(scene.nodes)) {
       expect(node.center.x % MAJOR_GRID).toBe(0);
       expect(node.center.y % MAJOR_GRID).toBe(0);
@@ -58,7 +58,7 @@ describe('layout', () => {
   test('a row is as tall as its tallest node, so mixed sizes do not overlap', ({ expect }) => {
     const base = fixture();
     const tall = { ...base, nodes: { ...base.nodes, b: node('b', { x: 0, y: 0 }, { width: 128, height: 320 }) } };
-    const scene = layoutScene(tall);
+    const scene = layoutView(tall);
     const gap = rowOf(scene, 'c') - rowOf(scene, 'b');
     expect(gap).toBeGreaterThanOrEqual(320 / 2 + scene.nodes.c.size.height / 2);
   });
@@ -66,22 +66,22 @@ describe('layout', () => {
   test('a locked node stays where it is', ({ expect }) => {
     const base = fixture();
     const locked = { ...base, nodes: { ...base.nodes, c: { ...base.nodes.c, locked: true } } };
-    const scene = layoutScene(locked);
+    const scene = layoutView(locked);
     expect(scene.nodes.c.center).toEqual(base.nodes.c.center);
     expect(scene.nodes.a.center).not.toEqual(base.nodes.a.center);
   });
 
   test('ids narrow what moves', ({ expect }) => {
     const base = fixture();
-    const scene = layoutScene(base, ['a', 'b']);
+    const scene = layoutView(base, ['a', 'b']);
     expect(scene.nodes.c.center).toEqual(base.nodes.c.center);
     expect(scene.nodes.d.center).toEqual(base.nodes.d.center);
     expect(rowOf(scene, 'a')).toBeLessThan(rowOf(scene, 'b'));
   });
 
   test('laying out an already laid-out scene changes nothing', ({ expect }) => {
-    const once = layoutScene(fixture());
-    expect(layoutScene(once)).toBe(once);
+    const once = layoutView(fixture());
+    expect(layoutView(once)).toBe(once);
   });
 
   test('the layout intent reaches the reducer', ({ expect }) => {
@@ -94,7 +94,7 @@ describe('layout', () => {
   });
 
   test('an empty scene is returned as it was', ({ expect }) => {
-    const empty: Scene = { id: 'scene', nodes: {}, links: {} };
-    expect(layoutScene(empty)).toBe(empty);
+    const empty: View = { id: 'scene', nodes: {}, links: {} };
+    expect(layoutView(empty)).toBe(empty);
   });
 });

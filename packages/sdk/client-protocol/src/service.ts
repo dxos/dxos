@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Event } from '@dxos/async';
+import { type Event, type ReadOnlyEvent } from '@dxos/async';
 import type { Stream } from '@dxos/async';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -215,6 +215,8 @@ export interface DataServicePromise {
     request: RpcDataService.GetSpaceSyncStateRequest,
     options?: RequestOptions,
   ) => Stream<RpcDataService.SpaceSyncState>;
+  subscribeIndexStatus: (request: void, options?: RequestOptions) => Stream<RpcDataService.IndexStatus>;
+  subscribeIndexActivity: (request: void, options?: RequestOptions) => Stream<RpcDataService.IndexActivity>;
   stats: (
     request: RpcDataService.DatabaseStatsRequest,
     options?: RequestOptions,
@@ -370,6 +372,13 @@ export interface ClientServicesProvider {
    * Reconnection waits for all callbacks to complete before emitting `reconnected`.
    */
   onReconnect?: (callback: () => Promise<void>) => void;
+
+  /**
+   * Status the services' host reports as it starts, before {@link open} resolves (e.g. a worker's
+   * ECHO index migrations); host-defined, so a consumer decodes what it understands. Absent for a
+   * provider whose host reports none.
+   */
+  hostStatus?: ReadOnlyEvent<unknown>;
 
   /**
    * Effect-native client for all client services, inferred from the effect-rpc definitions.

@@ -10,7 +10,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import {
   Canvas,
   type CreateProps,
-  DYNAMIC_SCENE_ID,
+  DYNAMIC_VIEW_ID,
   type DynamicOptions,
   type FreehandProjectionOptions,
   type GraphModel,
@@ -166,7 +166,7 @@ export const FeatureCanvas = ({
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
   const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_SCENE_ID), []);
+  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
 
   // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
   const callbacks = useRef({ onOpen, onLink, onUnlink, onRemove });
@@ -220,13 +220,7 @@ export const FeatureCanvas = ({
 
   return (
     <FeatureNodeContext.Provider value={nodeContext}>
-      <Canvas.Root
-        store={store}
-        root={DYNAMIC_SCENE_ID}
-        atoms={atoms}
-        nodes={nodes}
-        createProjection={createProjection}
-      >
+      <Canvas.Root store={store} root={DYNAMIC_VIEW_ID} atoms={atoms} nodes={nodes} createProjection={createProjection}>
         <Canvas.Viewport />
         <Canvas.Navigation />
       </Canvas.Root>
