@@ -78,32 +78,34 @@ describe('tldrawToViews', () => {
     });
   });
 
-  test('a frame becomes a View node over a child View; links bind only within a View', ({ expect }) => {
+  test('a frame becomes a labelled rectangle on the frames layer, its shapes beside it, arrows bound across it', ({
+    expect,
+  }) => {
     const { views } = tldrawToViews(frameWithChildren(), { snap: false });
-    expect(Object.keys(views).sort()).toEqual(['frame-view', 'root']);
+    // tldraw has no nested scenes: everything stays in the root View.
+    expect(Object.keys(views)).toEqual(['root']);
+    const { nodes, links, layers } = views.root;
 
-    const frame = views.root.nodes.frame;
-    expect(frame).toMatchObject({
-      type: 'view',
-      scene: 'frame-view',
+    expect(nodes.frame).toMatchObject({
+      type: 'rect',
       label: 'Stage',
-      link: { contents: true },
+      layer: 'frames',
       center: { x: 300, y: 250 },
       size: { width: 400, height: 300 },
+      style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+    });
+    // The frames layer is under the content layer, which every other element names.
+    expect(layers?.frames?.z.localeCompare(layers?.layer?.z ?? '')).toBe(-1);
+    expect(nodes['inner-a']).toMatchObject({ center: { x: 170, y: 170 }, label: 'A', layer: 'layer' });
+    expect(nodes['inner-b']).toMatchObject({ center: { x: 400, y: 300 }, label: 'B', layer: 'layer' });
+    expect(links['inner-arrow']).toMatchObject({
+      source: { node: 'inner-a' },
+      target: { node: 'inner-b' },
+      layer: 'layer',
     });
 
-    const child = views['frame-view'];
-    expect(child.name).toBe('Stage');
-    // The child View is centred on the frame: its top-left corner is at (-200, -150).
-    expect(child.nodes['inner-a']).toMatchObject({ center: { x: -130, y: -80 }, label: 'A' });
-    expect(child.nodes['inner-b']).toMatchObject({ center: { x: 100, y: 50 }, label: 'B' });
-    expect(child.links['inner-arrow']).toMatchObject({ source: { node: 'inner-a' }, target: { node: 'inner-b' } });
-
-    // The arrow on the page is bound to a shape inside the frame, a different View, so that end is left free.
-    expect(views.root.links.cross).toMatchObject({
-      source: { node: 'outside' },
-      target: { point: { x: 300, y: 150 } },
-    });
+    // The arrow from outside the frame stays bound to the shape inside it.
+    expect(links.cross).toMatchObject({ source: { node: 'outside' }, target: { node: 'inner-a' } });
   });
 
   test('a group becomes an anonymous Object placed by an Instance; rotation carries over', ({ expect }) => {

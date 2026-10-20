@@ -156,7 +156,7 @@ export const ImportTldraw = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.importTldraw'),
     name: 'Import tldraw drawing',
     description:
-      'Creates a canvas drawing in the same space from a tldraw drawing: shapes become nodes, arrows links (bound ends attach to their nodes), frames View nodes over Views of their own, groups anonymous Objects. The tldraw drawing is left as it is.',
+      'Creates a canvas drawing in the same space from a tldraw drawing: shapes become nodes, arrows links (bound ends attach to their nodes), frames labelled rectangles on a frames layer under their shapes, groups anonymous Objects. The tldraw drawing is left as it is.',
     icon: 'ph--graph--regular',
   },
   input: Schema.Struct({

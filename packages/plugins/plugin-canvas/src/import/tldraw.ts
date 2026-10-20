@@ -14,10 +14,12 @@ import {
   type BuiltinNode,
   type CloudNode,
   DEFAULT_GRID,
+  DEFAULT_LAYER,
   type EllipseNode,
   Endpoint,
   type HorizontalAlign,
   type Intent,
+  type Layer,
   type LineStyle,
   type Link,
   type LinkEnds,
@@ -34,7 +36,7 @@ import {
   type View,
   type ViewId,
   type ViewMap,
-  type ViewNode,
+  between,
   composeSelection,
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
@@ -162,7 +164,16 @@ const POLYGON_SIDES: Readonly<Record<string, number>> = { triangle: 3, pentagon:
 //
 
 /** A View under construction: its id and its elements in paint order (bottom first). */
-type Draft = { id: ViewId; name?: string; elements: Array<Node | PendingLink> };
+type Draft = {
+  id: ViewId;
+  name?: string;
+  elements: Array<Node | PendingLink>;
+  /** The nodes tldraw frames became, drawn on the frames layer under everything else. */
+  frames: Set<string>;
+};
+
+/** Where a View's frames go: below the content layer, so a frame reads as the backdrop its shapes sit on. */
+const FRAMES_LAYER: Layer = { id: 'frames', name: 'Frames', z: between(undefined, DEFAULT_LAYER.z) };
 
 /** An element built once every node is known, since an arrow binds to shapes anywhere in the document. */
 type PendingLink = { pending: true; build: (resolve: Resolver) => Link[] };
@@ -175,7 +186,11 @@ type Transform = { x: number; y: number; rotation: number };
 
 const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
 
-/** Maps a tldraw document's records to canvas Views: the first page becomes the root View, each frame a View node over a View of its own. */
+/**
+ * Maps a tldraw document's records to canvas Views: the first page becomes the root View. tldraw has no nested scenes,
+ * so a frame becomes a labelled rectangle on a frames layer under the content, with its shapes beside it in the same
+ * View, where arrows into and out of the frame stay bound.
+ */
 export const tldrawToViews = (
   content: Readonly<Record<string, unknown>>,
   { root = ROOT_VIEW_ID, snap = true }: TldrawImportOptions = {},
@@ -303,23 +318,21 @@ export const tldrawToViews = (
       case 'frame': {
         const size = { width: num(shape.props, 'w', 0), height: num(shape.props, 'h', 0) };
         const name = str(shape.props, 'name', '');
-        const child: Draft = { id: `${id}-view`, ...(name ? { name } : {}), elements: [] };
-        drafts.push(child);
         add({
-          type: 'view',
+          type: 'rect',
           id,
           z: '',
           center: centerOf(local, size),
           size,
-          scene: child.id,
           ...rotation,
-          // A named frame shows its name as a label, so it asks for its contents explicitly.
-          ...(name ? { label: name, link: { contents: true } } : {}),
-        } satisfies ViewNode);
-        // A frame's children are in its own space; the child View is centred on the frame.
-        const inner: Transform = { x: -size.width / 2, y: -size.height / 2, rotation: 0 };
+          ...(name ? { label: name } : {}),
+          // An outline with its name in the corner, as tldraw draws a frame, clear of the shapes inside.
+          style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+        } satisfies RectNode);
+        draft.frames.add(id);
+        // A frame's children are placed in its space, as a group's are.
         for (const grandchild of children.get(shape.id) ?? []) {
-          visit(grandchild, child, inner);
+          visit(grandchild, draft, local);
         }
         break;
       }
@@ -408,7 +421,7 @@ export const tldrawToViews = (
   };
 
   const [page, ...otherPages] = pages;
-  const rootDraft: Draft = { id: root, elements: [] };
+  const rootDraft: Draft = { id: root, elements: [], frames: new Set() };
   drafts.unshift(rootDraft);
   if (page) {
     for (const shape of children.get(page.id) ?? []) {
@@ -443,7 +456,25 @@ export const tldrawToViews = (
         nodes[element.id] = { ...element, z };
       }
     });
-    const view: View = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
+    // Frames go on their own layer, so every element names its layer: one naming none is on the bottom one.
+    const layered =
+      (layer: string) =>
+      <T extends Node | Link>(element: T): T => ({ ...element, layer });
+    const view: View =
+      draft.frames.size === 0
+        ? { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links }
+        : {
+            id: draft.id,
+            ...(draft.name ? { name: draft.name } : {}),
+            nodes: Object.fromEntries(
+              Object.entries(nodes).map(([id, node]) => [
+                id,
+                layered(draft.frames.has(id) ? FRAMES_LAYER.id : DEFAULT_LAYER.id)(node),
+              ]),
+            ),
+            links: Object.fromEntries(Object.entries(links).map(([id, link]) => [id, layered(DEFAULT_LAYER.id)(link)])),
+            layers: { [FRAMES_LAYER.id]: FRAMES_LAYER, [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+          };
     views[draft.id] = snap ? snapView(view, DEFAULT_GRID) : view;
   }
 

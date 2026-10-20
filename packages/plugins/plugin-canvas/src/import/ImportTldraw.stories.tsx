@@ -72,7 +72,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The conversion side by side: the tldraw drawing (left) and the canvas made from it (right), with every shape snapped
- * to the canvas grid — the operation's default. Shapes become nodes, the bound arrows links, and the frame a View node.
+ * to the canvas grid — the operation's default. Shapes become nodes, the bound arrows links (the one from outside the frame included), and the frame a labelled
+ * rectangle on a layer under its shapes.
  */
 export const Conversion: Story = {
   decorators: withConversion(frameWithChildren(), { snap: true }),
@@ -106,7 +107,7 @@ export const TextNoteAndFreeArrow: Story = {
 
 /**
  * Test:
- * 1. The frame renders as a View node over its child View.
+ * 1. The frame renders as a rectangle, with the shapes inside it on the drawing beside it.
  */
 export const Frame: Story = {
   decorators: withImport(frameWithChildren()),
