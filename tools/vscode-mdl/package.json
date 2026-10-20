@@ -16,9 +16,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "publisher": "dxos",
-  "scripts": {
-    "build": "mkdir -p dist && npx --yes @vscode/vsce@latest package --no-dependencies --out dist/vscode-mdl.vsix"
-  },
+  "type": "module",
   "contributes": {
     "grammars": [
       {
@@ -60,11 +58,19 @@
         "aliases": [
           "DEUS MDL block"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.block.json"
       }
     ]
   },
   "engines": {
     "vscode": "^1.74.0"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "catalog:",
+    "shiki": "catalog:",
+    "tm-grammars": "catalog:",
+    "vitest": "catalog:",
+    "vscode-oniguruma": "catalog:",
+    "vscode-textmate": "catalog:"
   }
 }
