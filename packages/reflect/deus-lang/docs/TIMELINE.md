@@ -366,5 +366,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 356 | 10-20 23:30 | 30m 00s | 7e2f155f66 | A pull reading only packs is a cached DEUS test (D331) |
 | 357 | 10-21 00:40 | 1h 00m | 739577ad4f | Elaborators are cached DEUS tests and cli-elab.test.ts is gone; spec links fixed (D332) |
 | 358 | 10-21 01:40 | 40m 00s | c392fb8830 | Whole-toolchain vitest tests keep their pass by the hash of their inputs: 17.4 s to 1.7 s (D333) |
+| 359 | 10-21 02:40 | 40m 00s | pending | Kept vitest passes hash the test file; the native back-end tests keep theirs: 19.6 s to 2.4 s (D334) |
 
-Total from stage 1 to stage 358: 158h 00m.
+Total from stage 1 to stage 359: 158h 40m.

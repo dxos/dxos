@@ -9,116 +9,131 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
+import { keptTest } from './kept-verdict.ts';
+import { SEED_PATH } from './kernel/main.ts';
 
 const { root, scratch, file, deus, deusNode } = cliHarness('cli-native-');
 
+/** A back end's result depends on the seed that builds, the sources and examples it builds, and the compilers. */
+const kept = keptTest(
+  import.meta.filename,
+  ['deus', 'platform', 'examples', 'src/kernel', 'src/cli-harness.ts']
+    .map((path) => join(root, path))
+    .concat(SEED_PATH),
+  ['cc', 'clang'].map((cc) => spawnSync(cc, ['--version'], { encoding: 'utf8' }).stdout ?? '').join('\n'),
+);
+
 // The C, wasm and executable back ends: the slowest CLI tests, in a file of their own so they run in parallel with the rest.
 describe('deus CLI native back ends', () => {
-  test('compiles first-order functions to wasm that agree with the interpreter', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'wasm')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    const source = [
-      'def gcd (a : Int) (b : Int) : Int := if b == 0 then a else gcd b (a % b)',
-      'def sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else sumTo (n - 1) (acc + n)',
-      'def collatz (n : Int) (steps : Int) : Int :=',
-      '  let half := n / 2',
-      '  if n == 1 then steps else if n % 2 == 0 then collatz half (steps + 1) else collatz (3 * n + 1) (steps + 1)',
-      'def inRange (n : Int) : Bool := not (n < 2) && n != 9',
-      'def shout (t : Text) : Text := t ++ "!"',
-      '',
-    ].join('\n');
-    deus('add', file('nums.deus', source), ...c);
-    const call = (name: string, ...args: number[]) => {
-      const out = join(scratch, `${name}.wasm`);
-      expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
-      const exports = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out)))).exports;
-      const fn = exports[name.split('.').pop() ?? name];
-      return typeof fn === 'function' ? fn(...args) : undefined;
-    };
-    // A million-deep recursion runs in constant stack (`return_call`) and wraps at 32 bits.
-    for (const [name, args] of [
-      ['gcd', [1071, 462]],
-      ['sumTo', [1_000_000, 0]],
-      ['collatz', [27, 0]],
-    ] as const) {
-      expect(String(call(name, ...args))).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim());
-    }
-    expect([call('inRange', 7), call('inRange', 9)]).toEqual([1, 0]);
+  test(
+    'compiles first-order functions to wasm that agree with the interpreter',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'wasm')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const source = [
+        'def gcd (a : Int) (b : Int) : Int := if b == 0 then a else gcd b (a % b)',
+        'def sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else sumTo (n - 1) (acc + n)',
+        'def collatz (n : Int) (steps : Int) : Int :=',
+        '  let half := n / 2',
+        '  if n == 1 then steps else if n % 2 == 0 then collatz half (steps + 1) else collatz (3 * n + 1) (steps + 1)',
+        'def inRange (n : Int) : Bool := not (n < 2) && n != 9',
+        'def shout (t : Text) : Text := t ++ "!"',
+        '',
+      ].join('\n');
+      deus('add', file('nums.deus', source), ...c);
+      const call = (name: string, ...args: number[]) => {
+        const out = join(scratch, `${name}.wasm`);
+        expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
+        const exports = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out)))).exports;
+        const fn = exports[name.split('.').pop() ?? name];
+        return typeof fn === 'function' ? fn(...args) : undefined;
+      };
+      // A million-deep recursion runs in constant stack (`return_call`) and wraps at 32 bits.
+      for (const [name, args] of [
+        ['gcd', [1071, 462]],
+        ['sumTo', [1_000_000, 0]],
+        ['collatz', [27, 0]],
+      ] as const) {
+        expect(String(call(name, ...args))).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim());
+      }
+      expect([call('inRange', 7), call('inRange', 9)]).toEqual([1, 0]);
 
-    // Algebraic data (D56): the sorting example itself, with lists on the module's heap.
-    deus('add', join(root, 'examples/sort.deus'), ...c);
-    deus(
-      'add',
-      file(
-        'lists.deus',
-        [
-          'def build (n : Int) : List Int := if n == 0 then [] else n :: build (n - 1)',
-          'def total (xs : List Int) : Int := match xs with',
-          '  | [] => 0',
-          '  | x :: rest => x + total rest',
-          'def sortedSum (n : Int) : Int := if Sort.sorted (Sort.isort (build n)) then total (Sort.isort (build n)) else 0 - 1',
-          '',
-        ].join('\n'),
-      ),
-      ...c,
-    );
-    expect(String(call('sortedSum', 300))).toBe(deusNode('eval', 'sortedSum 300', ...c).stdout.trim());
-
-    // The pure `Array` (D96): compiled code copies where an old array is still read, and writes in
-    // place where it is not, so every aliasing case gives the kernel's answer.
-    deus('add', join(root, 'examples/aliasing.deus'), ...c);
-    expect(String(call('Aliasing.all', 3))).toBe(deusNode('eval', 'Aliasing.all 3', ...c).stdout.trim());
-    expect(String(call('Aliasing.chain', 100_000))).toBe('704982704');
-
-    const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
-    expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
-
-    // `==` on data calls a generated equality function per type (D100), not an address compare; a long
-    // list compares in constant stack.
-    deus(
-      'add',
-      file(
-        'same.deus',
-        [
-          'inductive Tree (a : Type) where',
-          '  | leaf',
-          '  | node (l : Tree a) (v : a) (r : Tree a)',
-          'def grow (n : Int) (k : Int) : Tree Int := if n == 0 then Tree.leaf else Tree.node (grow (n - 1) k) (n * k) (grow (n - 1) k)',
-          'def sameTree (n : Int) (k : Int) : Bool := grow n 1 == grow n k',
-          'def upto (n : Int) (acc : List Int) : List Int := if n == 0 then acc else upto (n - 1) (n :: acc)',
-          'def sameList (n : Int) (k : Int) : Bool := upto n [] != upto k []',
-          'def sameNested (x : Int) (y : Int) : Bool := some (some x) == some (if y == 0 then none else some y)',
-          'def less (x : Int) : Bool := some x < some x',
-          '',
-        ].join('\n'),
-      ),
-      ...c,
-    );
-    for (const [name, args] of [
-      ['sameTree', [4, 1]],
-      ['sameTree', [4, 2]],
-      ['sameList', [100_000, 100_000]],
-      ['sameList', [5, 6]],
-      ['sameNested', [3, 3]],
-      ['sameNested', [3, 0]],
-      ['sameNested', [3, 4]],
-    ] as const) {
-      expect(call(name, ...args) === 1 ? 'true' : 'false').toBe(
-        deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim(),
+      // Algebraic data (D56): the sorting example itself, with lists on the module's heap.
+      deus('add', join(root, 'examples/sort.deus'), ...c);
+      deus(
+        'add',
+        file(
+          'lists.deus',
+          [
+            'def build (n : Int) : List Int := if n == 0 then [] else n :: build (n - 1)',
+            'def total (xs : List Int) : Int := match xs with',
+            '  | [] => 0',
+            '  | x :: rest => x + total rest',
+            'def sortedSum (n : Int) : Int := if Sort.sorted (Sort.isort (build n)) then total (Sort.isort (build n)) else 0 - 1',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
       );
-    }
-    const ordered = deus('build', 'less', '-o', join(scratch, 'less.wasm'), '--wasm', ...c);
-    expect([ordered.code, ordered.stderr]).toEqual([
-      1,
-      'deus: lt on constructed values is outside the wasm subset, which has no structural order: (app (prim "lt") (app (con "#Option" 1 1) (var 0)) (app (con "#Option" 1 1) (var 0)))\n',
-    ]);
-  });
+      expect(String(call('sortedSum', 300))).toBe(deusNode('eval', 'sortedSum 300', ...c).stdout.trim());
+
+      // The pure `Array` (D96): compiled code copies where an old array is still read, and writes in
+      // place where it is not, so every aliasing case gives the kernel's answer.
+      deus('add', join(root, 'examples/aliasing.deus'), ...c);
+      expect(String(call('Aliasing.all', 3))).toBe(deusNode('eval', 'Aliasing.all 3', ...c).stdout.trim());
+      expect(String(call('Aliasing.chain', 100_000))).toBe('704982704');
+
+      const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
+      expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
+
+      // `==` on data calls a generated equality function per type (D100), not an address compare; a long
+      // list compares in constant stack.
+      deus(
+        'add',
+        file(
+          'same.deus',
+          [
+            'inductive Tree (a : Type) where',
+            '  | leaf',
+            '  | node (l : Tree a) (v : a) (r : Tree a)',
+            'def grow (n : Int) (k : Int) : Tree Int := if n == 0 then Tree.leaf else Tree.node (grow (n - 1) k) (n * k) (grow (n - 1) k)',
+            'def sameTree (n : Int) (k : Int) : Bool := grow n 1 == grow n k',
+            'def upto (n : Int) (acc : List Int) : List Int := if n == 0 then acc else upto (n - 1) (n :: acc)',
+            'def sameList (n : Int) (k : Int) : Bool := upto n [] != upto k []',
+            'def sameNested (x : Int) (y : Int) : Bool := some (some x) == some (if y == 0 then none else some y)',
+            'def less (x : Int) : Bool := some x < some x',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
+      );
+      for (const [name, args] of [
+        ['sameTree', [4, 1]],
+        ['sameTree', [4, 2]],
+        ['sameList', [100_000, 100_000]],
+        ['sameList', [5, 6]],
+        ['sameNested', [3, 3]],
+        ['sameNested', [3, 0]],
+        ['sameNested', [3, 4]],
+      ] as const) {
+        expect(call(name, ...args) === 1 ? 'true' : 'false').toBe(
+          deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim(),
+        );
+      }
+      const ordered = deus('build', 'less', '-o', join(scratch, 'less.wasm'), '--wasm', ...c);
+      expect([ordered.code, ordered.stderr]).toEqual([
+        1,
+        'deus: lt on constructed values is outside the wasm subset, which has no structural order: (app (prim "lt") (app (con "#Option" 1 1) (var 0)) (app (con "#Option" 1 1) (var 0)))\n',
+      ]);
+    }),
+  );
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'compiles first-order functions to C that agree with the interpreter',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'c')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -257,13 +272,13 @@ describe('deus CLI native back ends', () => {
       const resumes = deus('build', 'resumes', '-o', join(scratch, 'resumes'), '--c', ...c);
       expect(resumes.code).toBe(1);
       expect(resumes.stderr).toContain('a handler that resumes other than in tail position is outside the C subset');
-    },
+    }),
   );
 
   test.skipIf(spawnSync('clang', ['--target=wasm32', '-print-prog-name=wasm-ld']).status !== 0)(
     'compiles the C back end to wasm with reference counting',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'c-wasm')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -303,13 +318,13 @@ describe('deus CLI native back ends', () => {
         expect(`${run(...args)}\n`).toBe(deusNode('eval', `${name} ${args.join(' ')}`, ...c).stdout);
         expect(live()).toBe(0);
       }
-    },
+    }),
   );
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'builds a command whose IO the C runtime performs, as the interpreter does',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'command')];
       deus('init', '--empty', ...c);
       deus(
@@ -342,13 +357,13 @@ describe('deus CLI native back ends', () => {
           expect(native.stderr).toContain(', 0 live,');
         }
       }
-    },
+    }),
   );
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'frees what the native interpreter makes, through local recursion',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'churn')];
       deus('init', '--empty', ...c);
       // A local recursive loop builds and sums a 50-cell list 20,000 times: 4 million words if the lists stayed.
@@ -368,13 +383,13 @@ describe('deus CLI native back ends', () => {
       expect([run.status, run.stdout]).toEqual([0, String(20_000 * 1275)]);
       const peak = Number(/(\d+) peak/.exec(run.stderr)?.[1]);
       expect(peak).toBeLessThan(100_000);
-    },
+    }),
   );
 
   test(
     'serves web handlers from a standalone native server',
     { timeout: 240_000 },
-    async ({ expect, onTestFinished }) => {
+    kept(async ({ expect, onTestFinished }) => {
       process.env.DEUS_HOME = root;
       const c = ['--codebase', join(scratch, 'server')];
       deus('init', '--empty', ...c);
@@ -450,23 +465,27 @@ describe('deus CLI native back ends', () => {
       expect((await request(`${tally}/remind?actor=c`, { method: 'POST' }))[1]).toBe('reminder set');
       await logged('alarm fired for c');
       expect((await request(`${tally}/reminded?actor=c`))[1]).toBe('yes');
-    },
+    }),
   );
 
-  test('builds a standalone executable', { timeout: 180_000 }, ({ expect }) => {
-    process.env.DEUS_HOME = root;
-    process.env.DEUS_NODE = process.execPath;
-    const c = ['--codebase', join(scratch, 'binary')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    const source = join(scratch, 'hello.deus');
-    writeFileSync(source, 'def main (u : Unit) : {IO} Unit := IO.print ("hello " ++ Text.join "," (IO.args ()))\n');
-    deus('add', source, ...c);
-    const binary = join(scratch, 'hello');
-    const build = deus('build', 'main', '-o', binary, ...c);
-    expect(build.stderr).toBe('');
-    expect(build.code).toBe(0);
-    const run = spawnSync(binary, ['a', 'b'], { cwd: tmpdir(), encoding: 'utf8' });
-    expect([run.status, run.stdout]).toEqual([0, 'hello a,b']);
-  });
+  test(
+    'builds a standalone executable',
+    { timeout: 180_000 },
+    kept(({ expect }) => {
+      process.env.DEUS_HOME = root;
+      process.env.DEUS_NODE = process.execPath;
+      const c = ['--codebase', join(scratch, 'binary')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const source = join(scratch, 'hello.deus');
+      writeFileSync(source, 'def main (u : Unit) : {IO} Unit := IO.print ("hello " ++ Text.join "," (IO.args ()))\n');
+      deus('add', source, ...c);
+      const binary = join(scratch, 'hello');
+      const build = deus('build', 'main', '-o', binary, ...c);
+      expect(build.stderr).toBe('');
+      expect(build.code).toBe(0);
+      const run = spawnSync(binary, ['a', 'b'], { cwd: tmpdir(), encoding: 'utf8' });
+      expect([run.status, run.stdout]).toEqual([0, 'hello a,b']);
+    }),
+  );
 });

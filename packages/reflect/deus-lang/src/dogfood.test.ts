@@ -18,7 +18,11 @@ describe('deus CLI dogfooding', () => {
     'adds the compiler to a codebase and passes its own tests and theorems',
     { timeout: 360_000 },
     ({ expect, skip }) => {
-      const kept = keptVerdict('dogfood', [SEED_PATH, join(root, 'deus'), join(root, 'src/kernel')]);
+      const kept = keptVerdict(import.meta.filename, 'dogfood', [
+        SEED_PATH,
+        join(root, 'deus'),
+        join(root, 'src/kernel'),
+      ]);
       if (kept.held) {
         skip('the seed, deus/ and the kernel are as they were when this passed');
       }

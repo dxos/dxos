@@ -39,7 +39,11 @@ describe('seed', () => {
   // The compiler is written in DEUS; the seed is its compiled image. Compiling the sources with
   // the seed must reproduce the seed byte for byte, or the checked-in seed is stale.
   test('compiles the compiler to itself (self-hosting fixpoint)', { timeout: 180_000 }, ({ expect, skip }) => {
-    const kept = keptVerdict('seed-fixpoint', [SEED_PATH, join(root, 'deus'), join(root, 'src/kernel')]);
+    const kept = keptVerdict(import.meta.filename, 'seed-fixpoint', [
+      SEED_PATH,
+      join(root, 'deus'),
+      join(root, 'src/kernel'),
+    ]);
     if (kept.held) {
       skip('the seed, deus/ and the kernel are as they were when this passed');
     }

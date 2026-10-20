@@ -16,6 +16,7 @@ const { root, scratch, deus, deusNode } = cliHarness('cli-native-self-');
 /** What a native build's result depends on: the seed that runs the build, the sources, the kernel and the compiler. */
 const kept = (name: string, example: string) =>
   keptVerdict(
+    import.meta.filename,
     name,
     [SEED_PATH, join(root, 'deus'), join(root, 'src/kernel'), join(root, example)],
     spawnSync('cc', ['--version'], { encoding: 'utf8' }).stdout ?? '',
