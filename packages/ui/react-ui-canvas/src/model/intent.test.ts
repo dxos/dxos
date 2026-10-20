@@ -37,6 +37,8 @@ describe('isIntent', () => {
     expect(isIntent({ kind: 'update', id: 'a', values: { center: 'abc' } })).toBe(false);
     expect(isIntent({ kind: 'update', id: 'a', values: { type: 'ellipse' } })).toBe(false);
     expect(isIntent({ kind: 'update', id: 'a', values: { center: undefined } })).toBe(false);
+    // An own `__proto__` key, as JSON.parse makes, is just an unknown field.
+    expect(isIntent({ kind: 'update', id: 'a', values: JSON.parse('{"__proto__":null}') })).toBe(true);
     expect(isIntent({ kind: 'batch', intents: [{ kind: 'delete', ids: ['a'] }, { kind: 'move' }] })).toBe(false);
   });
 });

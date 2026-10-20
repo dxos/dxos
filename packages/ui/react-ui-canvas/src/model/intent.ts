@@ -17,7 +17,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isStrings = (value: unknown): value is string[] => Array.isArray(value) && value.every(isString);
 
-const sharedFields: Readonly<Record<string, (value: unknown) => boolean>> = Object.fromEntries(
+// A map, so a key such as `__proto__` in untrusted values finds no inherited member.
+const sharedFields: ReadonlyMap<string, (value: unknown) => boolean> = new Map(
   Object.entries(nodeBase).map(([key, field]) => [key, Schema.is(field)]),
 );
 
@@ -27,7 +28,7 @@ const isValues = (values: unknown): boolean =>
   !('id' in values) &&
   !('type' in values) &&
   // A required field's schema refuses `undefined`, so an edit cannot clear it; an optional one's accepts it.
-  Object.entries(values).every(([key, value]) => sharedFields[key]?.(value) ?? true);
+  Object.entries(values).every(([key, value]) => sharedFields.get(key)?.(value) ?? true);
 
 /**
  * Whether a value is a well-formed `Intent`, its batches included: intents that arrive over an operation are
