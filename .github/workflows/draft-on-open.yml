@@ -1,11 +1,11 @@
 name: Draft on open
 
-# Converts a PR opened ready into a draft when its branch starts with one of DRAFT_PREFIXES, so CI runs
-# only once someone marks it ready. The conversion triggers each PR workflow's `converted_to_draft`
-# run, which skips every job and cancels the run in flight. A PR that conflicts with main when it opens
-# gets no `opened` run at all (there is no merge commit to read workflows from), so its first push that
-# runs converts it instead. Marking a PR ready is never undone: a push converts only a PR opened in the
-# last day that has never been marked ready or converted.
+# Converts a PR opened ready into a draft when its branch starts with one of DRAFT_PREFIXES, so only
+# `check` runs until someone marks it ready. The conversion triggers each PR workflow's
+# `converted_to_draft` run, which keeps only `check` and cancels the run in flight. A PR that conflicts
+# with main when it opens gets no `opened` run at all (there is no merge commit to read workflows from),
+# so its first push that runs converts it instead. Marking a PR ready is never undone: a push converts
+# only a PR opened in the last day that has never been marked ready or converted.
 
 on:
   pull_request:

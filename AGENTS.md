@@ -299,10 +299,9 @@ Deeper conventions:
   `gh run view <id> --log-failed`.
 - **Retry a failed Check job** with `gh run rerun <run-id> --failed`, or `--job <job-id>` for one.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **Browser, storybook and e2e tests run in the merge queue, not on PRs.** A browser or storybook failure
-  there drops the PR from the queue; reproduce it with `moon run <project>:test-storybook` (or
-  `:test-browser`), fix, and re-queue. `gh workflow run check.yml --ref <branch>` runs every suite on a
-  branch once, when a change needs them before queueing.
+- **A draft PR runs only `check`** (lint, build, types); marking it ready runs every suite, browser,
+  storybook and e2e included, and the merge queue runs them again on top of `main`. Reproduce a browser
+  or storybook failure with `moon run <project>:test-storybook` (or `:test-browser`).
 - **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.

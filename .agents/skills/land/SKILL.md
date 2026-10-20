@@ -30,7 +30,7 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 - Title, body, labels.
 
 If the PR is already merged or closed, tell the user and stop. If it is a draft,
-run `gh pr ready <number>`: CI skips drafts and the merge queue rejects them.
+run `gh pr ready <number>`: a draft runs only `check` and the merge queue rejects it.
 
 Check whether the PR belongs to a stack (GitHub native stacked PRs): the stack
 map on the PR page is the test — `baseRefName` ≠ `main` is only a hint, and a
@@ -150,15 +150,8 @@ stays as it is. Rules for the body and bump level:
 
 ## Step 8 — Enable auto-merge (merge queue)
 
-Browser and storybook tests run only in the merge queue: the PR enters it with them skipped, and a
-failure there drops it again. Before queueing, run them for the projects the PR changed:
-
-```bash
-MOON_BASE=origin/main moon run :test-browser :test-storybook --affected
-```
-
-When the PR changes a shared UI package, whose dependents' stories that command leaves out, run every
-suite on the branch once in CI instead: `gh workflow run check.yml --ref <headRefName>`.
+A ready PR runs every suite, browser, storybook and e2e included, so its own Check run is the signal;
+the merge queue runs them again on top of `main` and drops the PR if they fail there.
 
 Once all required checks pass, these tests pass, and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 

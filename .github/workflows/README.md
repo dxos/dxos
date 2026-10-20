@@ -7,10 +7,10 @@ even on a public repository, so no workflow asks for one. Composite actions live
 
 ## Check
 
-[`check.yml`](check.yml) is the build/test pipeline. A PR runs `check`, `boot-budget` and the node tests;
-the merge queue adds the browser and storybook tests, which gate the merge, and e2e on Chromium, Firefox
-and WebKit, which reports without gating. Pushes to main run nothing: main moves to the commit the merge
-queue tested. Draft PRs run nothing until marked ready.
+[`check.yml`](check.yml) is the build/test pipeline. A draft PR runs only `check` (lint, build, types).
+A ready PR and the merge queue run every job: node, browser and storybook tests, which gate the merge,
+and e2e on Chromium, Firefox and WebKit, which reports without gating. Pushes to main run nothing: main
+moves to the commit the merge queue tested.
 
 ### Sizing for 4 vCPU / 16 GB
 
@@ -81,7 +81,7 @@ gh run rerun <run-id> --failed
 | [`pkg-pr-new.yml`](pkg-pr-new.yml) | schedule, dispatch, `workflow_call` | pkg.pr.new previews. |
 | [`deploy-apps.yml`](deploy-apps.yml), [`deploy-tauri.yaml`](deploy-tauri.yaml), [`deploy-docs-daily.yml`](deploy-docs-daily.yml) | schedule, dispatch | App, desktop and docs deploys. |
 | [`docker-image.yml`](docker-image.yml) | push to main touching the image | `ghcr.io/dxos/gh-actions`, the container the release workflows run in. |
-| [`draft-on-open.yml`](draft-on-open.yml) | `pull_request` | Opens agent PRs as drafts so they run nothing until ready. |
+| [`draft-on-open.yml`](draft-on-open.yml) | `pull_request` | Opens agent PRs as drafts so they run only `check` until ready. |
 | [`claude-*.yml`](.), [`opencode.yml`](opencode.yml) | issue and review events | Bots. |
 
 `.github/actions/` also holds the Cloudflare release helpers (`cn-channel`, `cn-config`, `cn-release`).

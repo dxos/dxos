@@ -1,13 +1,12 @@
 name: Check
 
-# Draft PRs run nothing; marking one ready starts the run. Converting a PR to a draft, by hand or by
-# `draft-on-open.yml`, starts a run that skips every job, and the concurrency group cancels the run in
-# flight. Every PR-triggered job repeats the same gate in its `if:` or inherits it from `plan`.
+# A draft PR runs only `check`; marking it ready runs everything. Converting a PR to a draft, by hand or
+# by `draft-on-open.yml`, starts a run that keeps only `check`, and the concurrency group cancels the run
+# in flight. Every other PR-triggered job repeats the draft gate in its `if:` or inherits it from `plan`.
 #
-# Where suites run: a PR runs `check`, `boot-budget` and the node tests. The merge queue adds the
-# browser and storybook tests, which gate the merge, and e2e on Chromium, Firefox and WebKit, which
-# reports without gating. Pushes to main run nothing: main moves to the exact commit the queue tested,
-# so the queue's results are the ones GitHub shows on it. No `labeled` trigger: its run would post
+# Where suites run: a ready PR and the merge queue run every job; e2e reports without gating. Pushes to
+# main run nothing: main moves to the exact commit the queue tested, so the queue's results are the ones
+# GitHub shows on it. No `labeled` trigger: its run would post
 # skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
   pull_request:
@@ -73,9 +72,7 @@ concurrency:
 jobs:
   check:
     # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
-    if: >-
-      ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
     permissions:
       contents: read
       packages: read
@@ -472,7 +469,7 @@ jobs:
     name: test (browser, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' && github.event_name != 'pull_request' &&
+      ${{ !cancelled() && inputs.only != 'e2e' &&
       (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
     strategy:
       fail-fast: false
@@ -696,13 +693,9 @@ jobs:
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
-    # The Changesets PR's `github.ref` is refs/pull/N/merge, so only `github.head_ref` matches it.
     if: >-
-      (github.event_name == 'merge_group' || github.event_name == 'schedule' ||
-      startsWith(github.ref, 'refs/heads/changeset-release/') ||
-      startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.only == 'all') && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft)
+      ${{ (inputs.only == '' || inputs.only == 'all') && (
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
