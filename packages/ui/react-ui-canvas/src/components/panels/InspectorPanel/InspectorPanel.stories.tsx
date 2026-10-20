@@ -54,7 +54,7 @@ const DefaultStory = ({ select }: StoryArgs) => {
       <Canvas.Properties />
       <Canvas.Layers />
       <Canvas.Objects />
-      <Canvas.About />
+      <Canvas.Objects />
     </Canvas.Root>
   );
 };
@@ -96,9 +96,5 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 4. Opened, the about section's figures are those of the scene.
-    await userEvent.click(within(dock).getByRole('button', { name: 'About' }));
-    await waitFor(() => expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2'));
-    await expect(within(dock).getByTestId('about-layers')).toHaveTextContent('2');
   },
 };

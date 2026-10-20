@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type InstanceNode, type Node, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
@@ -17,6 +17,7 @@ import {
   libraryViews,
   promoted,
   promotedBy,
+  removeComposite,
   retargetInstance,
   ungroupInstance,
 } from './compose.ts';
@@ -32,6 +33,8 @@ const {
   ViewBuilder.link('line', 'a', 'b').id('ab'),
   ViewBuilder.link('line', 'b', 'c').id('bc'),
 ]).build();
+
+const nodeCenter = (node: Node | undefined) => node?.center ?? { x: 0, y: 0 };
 
 const counter = () => {
   let next = 0;
@@ -140,6 +143,31 @@ describe('compose and ungroup', () => {
     ).toBe(true);
   });
 
+  test("ungrouping brings the Object's animation back out, on the new nodes and where the Instance drew them", ({
+    expect,
+  }) => {
+    // `a` slides from where it stands to 100 right of it; Group carries the track into the Object.
+    const centre = nodeCenter(scene.nodes.a);
+    const keyed = setKey(setKey(createTimeline(2), 'a', 'center', { t: 0, value: centre }), 'a', 'center', {
+      t: 1,
+      value: { x: centre.x + 100, y: centre.y },
+    });
+    const animated = { ...scene, timeline: keyed };
+    const composition = composeSelection(animated, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
+    if (!composition) {
+      throw new Error('no composition');
+    }
+    expect(Object.keys(composition.composite.timeline?.tracks ?? {})).toEqual(['a:center']);
+    const parent = reduceIntent(animated, { kind: 'batch', intents: composition.intents });
+    const restored = reduceIntent(parent, {
+      kind: 'batch',
+      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
+    });
+    const first = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x)[0];
+    const track = restored.timeline?.tracks[`${first.id}:center`];
+    expect(track?.keys.map((key) => key.value)).toEqual([centre, { x: centre.x + 100, y: centre.y }]);
+  });
+
   test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {
     const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
@@ -195,5 +223,54 @@ describe('anonymous Objects', () => {
       return;
     }
     expect(copyComposite(group.composite, 'g2', counter()).composite.anonymous).toBeUndefined();
+  });
+});
+
+describe('removeComposite', () => {
+  const instance = (id: string, composite: string): InstanceNode => ({
+    type: 'instance',
+    id,
+    z: 'a',
+    center: { x: 0, y: 0 },
+    size: { width: 100, height: 50 },
+    composite,
+  });
+  const view = (id: string, nodes: View['nodes'], links: View['links'] = {}, extra: Partial<View> = {}): View => ({
+    id,
+    nodes,
+    links,
+    ...extra,
+  });
+  // The root places Card (linked to a box); Card places an anonymous Object; Logo is a named Object placed nowhere.
+  const views = {
+    'root': view(
+      'root',
+      {
+        card: instance('card', 'card-def'),
+        box: { type: 'rect', id: 'box', z: 'b', center: { x: 0, y: 0 }, size: { width: 10, height: 10 } },
+      },
+      { l: { type: 'line', id: 'l', z: 'a', source: { node: 'box' }, target: { node: 'card' } } },
+    ),
+    'card-def': view('card-def', { inner: instance('inner', 'anon') }, {}, { kind: 'composite', name: 'Card' }),
+    'anon': view('anon', {}, {}, { kind: 'composite', anonymous: true }),
+    'logo': view('logo', {}, {}, { kind: 'composite', name: 'Logo' }),
+  };
+
+  test('with its instances, the Object, its Instances and their links go, and so do records only they pointed at', ({
+    expect,
+  }) => {
+    const next = removeComposite(views, 'card-def', { instances: true, roots: ['root'] });
+    expect(Object.keys(next ?? {}).sort()).toEqual(['logo', 'root']);
+    expect(Object.keys(next?.root.nodes ?? {})).toEqual(['box']);
+    expect(next?.root.links).toEqual({});
+  });
+
+  test('without, a placed Object stays and an unplaced one goes alone', ({ expect }) => {
+    expect(removeComposite(views, 'card-def', { instances: false, roots: ['root'] })).toBeUndefined();
+    expect(Object.keys(removeComposite(views, 'logo', { instances: false, roots: ['root'] }) ?? {}).sort()).toEqual([
+      'anon',
+      'card-def',
+      'root',
+    ]);
   });
 });

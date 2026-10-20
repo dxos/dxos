@@ -49,8 +49,8 @@ describe('ImportTldraw', () => {
         expect(canvas.schema).toBe(Canvas.SCENE_SCHEMA);
         const root = rootOf(canvas.content) ?? '';
         const views = readViews(canvas.content);
-        expect(Object.keys(views[root].nodes).sort()).toEqual(['frame', 'outside']);
-        expect(views['frame-view'].links['inner-arrow']).toMatchObject({
+        expect(Object.keys(views[root].nodes).sort()).toEqual(['frame', 'inner-a', 'inner-b', 'outside']);
+        expect(views[root].links['inner-arrow']).toMatchObject({
           source: { node: 'inner-a' },
           target: { node: 'inner-b' },
         });

@@ -131,8 +131,8 @@ test QA-5: Copy a tldraw drawing as a canvas
       do: Open the tldraw drawing's object menu and choose "Copy as canvas".
       expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
     - name: Read the copy
-      do: Move the rectangle, then open the frame.
-      expect: the link follows the rectangle, and the frame opens onto a View holding the frame's shapes
+      do: Move the rectangle, then select a shape inside the frame.
+      expect: the link follows the rectangle; the frame is a labelled rectangle under its shapes, which sit on the drawing itself and select like any other
 ```
 
 ```mdl
