@@ -14,6 +14,7 @@ import {
   type DynamicOptions,
   type FreehandProjectionOptions,
   type GraphModel,
+  type LatticeSpec,
   type Node,
   type NodeViewProps,
   type Overlay,
@@ -92,9 +93,11 @@ const createRegistry = (open: (id: string) => void) =>
     defaultNodePrototypes,
   );
 
+/** One card per lattice cell; the cell and its gutters are whole major-grid cells, so the guides line up with the grid. */
+const LATTICE: LatticeSpec = { width: 320, height: 192, gutterX: 64, gutterY: 64 };
+
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
-  size: { width: 288, height: 192 },
-  pitch: { width: 336, height: 272 },
+  lattice: LATTICE,
   createNode: (_node, props) => createFeatureNode(props),
   link: { type: 'line', ends: { end: 'arrow' } },
 };
@@ -196,9 +199,10 @@ export const FeatureCanvas = ({
   );
 
   const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) =>
+    ({ registry, constrained }: FreehandProjectionOptions) =>
       createDynamicProjection({
         registry,
+        constrained,
         graph,
         overlay,
         options: { ...LAYOUT, nodes },
