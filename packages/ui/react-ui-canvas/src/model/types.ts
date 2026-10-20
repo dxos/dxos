@@ -125,12 +125,18 @@ export const lineStyleFields = {
   lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
 };
 
-/** A link's style: the common base, unset drawn neutral and solid. */
-export const LineStyle = Schema.Struct(lineStyleFields);
+/** Text size in scene units; unset is the element's own (stored values outside the editor's range are kept). */
+const fontSizeField = Schema.optional(Schema.Number.annotate({ title: 'Font size' }));
+
+/** A link's style: the common base and its caption's size, unset drawn neutral, solid and small. */
+export const LineStyle = Schema.Struct({ ...lineStyleFields, fontSize: fontSizeField });
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
 /** A shape's text size in scene units when its style sets none. */
 export const DEFAULT_FONT_SIZE = 24;
+
+/** A link caption's text size in scene units when its style sets none. */
+export const LINK_FONT_SIZE = 14;
 
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
@@ -156,8 +162,8 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** The face of the shape's text; unset is the theme's body face. */
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
-  /** Text size in scene units; unset is `DEFAULT_FONT_SIZE` (stored values outside the editor's range are kept). */
-  fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
+  /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
+  fontSize: fontSizeField,
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
   /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */

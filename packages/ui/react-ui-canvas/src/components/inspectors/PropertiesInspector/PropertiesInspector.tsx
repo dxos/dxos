@@ -73,7 +73,7 @@ import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
-import { FontField } from './FontField.tsx';
+import { FontField, FontSizeField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
@@ -260,6 +260,8 @@ export const PropertiesInspector = ({
       ...(viewOptions ? {} : { scene: { hidden: true } }),
       // The class is edited in the layer's row (`LayerClassField`).
       class: { hidden: true },
+      // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
+      ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
       ...overrides?.(elements),
     };
     for (const path of mixed) {
@@ -316,7 +318,7 @@ export const PropertiesInspector = ({
   const fieldMap = useMemo(
     () => ({
       ...DEFAULT_FIELDS,
-      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField } : {}),
+      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField, 'style.fontSize': FontSizeField } : {}),
       ...Object.assign(
         {},
         ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),

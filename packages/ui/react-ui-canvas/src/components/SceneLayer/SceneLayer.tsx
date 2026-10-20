@@ -32,6 +32,7 @@ import {
   type LineStyle,
   type LinkId,
   type LinkKind,
+  LINK_FONT_SIZE,
   MAJOR_GRID_RATIO,
   type Marker,
   NO_STYLES,
@@ -300,6 +301,7 @@ export const SceneLayer = memo(
                           text={link.text}
                           backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
                           textClass={CAPTION_TEXT[look.tone]}
+                          fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
                         />
                       )}
                     </g>
@@ -707,13 +709,13 @@ const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkSt
   );
 };
 
-type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string };
+type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string; fontSize: number };
 
 /** A caption's backdrop margin around its text, in scene units. */
 const LINK_TEXT_PAD = { x: 8, y: 2 };
 
 /** A link's caption at the middle of its route, over a halo of the canvas so it reads where it crosses lines. */
-const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
+const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) => {
   const ref = useRef<SVGPathElement>(null);
   const textRef = useRef<SVGTextElement>(null);
   // The full caption, laid out but invisible, so it can be measured however much of it is shown.
@@ -748,7 +750,7 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
       count--;
     }
     setShown(`${text.slice(0, count).trimEnd()}…`);
-  }, [at, text]);
+  }, [at, text, fontSize]);
   // The backdrop fits the text as set, so it is measured once the text is placed.
   useLayoutEffect(() => {
     const element = textRef.current;
@@ -761,7 +763,7 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
         height: height + LINK_TEXT_PAD.y * 2,
       });
     }
-  }, [at, shown]);
+  }, [at, shown, fontSize]);
   return (
     <>
       <path ref={ref} d={path} className='fill-none stroke-none' />
@@ -775,13 +777,14 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
             y={at.y}
             textAnchor='middle'
             dominantBaseline='central'
-            className={mx(textClass, 'text-sm')}
+            className={textClass}
+            style={{ fontSize }}
             data-link-text
           >
             {shown !== text && <title>{text}</title>}
             {shown}
           </text>
-          <text ref={measureRef} x={at.x} y={at.y} className='text-sm invisible' aria-hidden>
+          <text ref={measureRef} x={at.x} y={at.y} className='invisible' style={{ fontSize }} aria-hidden>
             {text}
           </text>
         </>
@@ -797,25 +800,33 @@ const LINK_TEXT_CLEARANCE = 12;
 const RUN_STEP = 2;
 
 /**
- * The length of the straight horizontal run through a path's midpoint, or undefined when the midpoint is on a vertical
- * run (a caption there is not bounded by the line it sits on).
+ * The horizontal extent of the straight run through a path's midpoint, or undefined when that run is steeper than
+ * level (a caption there is not bounded by the line it sits on).
  */
 const horizontalRun = (element: SVGPathElement, length: number): number | undefined => {
   const middle = length / 2;
-  const { y } = element.getPointAtLength(middle);
-  const level = (at: number) => Math.abs(element.getPointAtLength(at).y - y) < 0.5;
-  if (!level(Math.max(0, middle - RUN_STEP)) || !level(Math.min(length, middle + RUN_STEP))) {
+  const mid = element.getPointAtLength(middle);
+  const ahead = element.getPointAtLength(Math.min(length, middle + RUN_STEP));
+  const dx = ahead.x - mid.x;
+  const dy = ahead.y - mid.y;
+  const step = Math.hypot(dx, dy);
+  if (step === 0 || Math.abs(dy) > Math.abs(dx)) {
     return undefined;
   }
+  // A point is on the run while it stays on the line through the midpoint in the run's direction.
+  const straight = (at: number) => {
+    const { x, y } = element.getPointAtLength(at);
+    return Math.abs((x - mid.x) * dy - (y - mid.y) * dx) / step < 0.5;
+  };
   let start = middle;
-  while (start > 0 && level(Math.max(0, start - RUN_STEP))) {
+  while (start > 0 && straight(Math.max(0, start - RUN_STEP))) {
     start = Math.max(0, start - RUN_STEP);
   }
   let end = middle;
-  while (end < length && level(Math.min(length, end + RUN_STEP))) {
+  while (end < length && straight(Math.min(length, end + RUN_STEP))) {
     end = Math.min(length, end + RUN_STEP);
   }
-  return end - start;
+  return Math.abs(element.getPointAtLength(end).x - element.getPointAtLength(start).x);
 };
 
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
