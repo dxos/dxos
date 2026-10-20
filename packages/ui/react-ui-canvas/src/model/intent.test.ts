@@ -22,7 +22,7 @@ describe('isIntent', () => {
         kind: 'batch',
         intents: [
           { kind: 'delete', ids: ['a'] },
-          { kind: 'update', id: 'b', values: { label: 'B' } },
+          { kind: 'update', id: 'b', values: { label: 'B', locked: undefined } },
         ],
       }),
     ).toBe(true);
@@ -36,6 +36,7 @@ describe('isIntent', () => {
     expect(isIntent({ kind: 'create', node: { id: 'a' } })).toBe(false);
     expect(isIntent({ kind: 'update', id: 'a', values: { center: 'abc' } })).toBe(false);
     expect(isIntent({ kind: 'update', id: 'a', values: { type: 'ellipse' } })).toBe(false);
+    expect(isIntent({ kind: 'update', id: 'a', values: { center: undefined } })).toBe(false);
     expect(isIntent({ kind: 'batch', intents: [{ kind: 'delete', ids: ['a'] }, { kind: 'move' }] })).toBe(false);
   });
 });

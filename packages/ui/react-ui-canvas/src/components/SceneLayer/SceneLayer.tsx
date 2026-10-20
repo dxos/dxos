@@ -889,6 +889,9 @@ const NodeFrame = memo(
     const borderless =
       (def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade) ||
       silhouette !== undefined;
+    const circled = def?.bounds?.(drawn) === 'circle';
+    // A screen pixel at any zoom.
+    const hairline = 1 / Math.max(props.zoom, 0.05);
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
@@ -901,7 +904,7 @@ const NodeFrame = memo(
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       // An outline, so the frame's layout is untouched; a screen pixel at any zoom.
-      ...(framed ? { outlineWidth: 1 / Math.max(props.zoom, 0.05), outlineStyle: 'solid' } : {}),
+      ...(framed && !circled ? { outlineWidth: hairline, outlineStyle: 'solid' } : {}),
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
@@ -924,7 +927,7 @@ const NodeFrame = memo(
             drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
             ghost && 'opacity-50 border-dashed pointer-events-none',
-            framed && 'outline-focus/40',
+            framed && !circled && 'outline-focus/40',
           )}
           style={frameStyle}
           data-node-id={node.id}
@@ -963,6 +966,15 @@ const NodeFrame = memo(
           ) : (
             <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
           )}
+          {(framed || selected) &&
+            circled && (
+              // Inside the frame, which clips: the circle the shape fits, as wide as the frame's shorter side.
+              <div
+                aria-hidden
+                className='absolute top-1/2 left-1/2 -translate-1/2 aspect-square rounded-full border-solid border-focus/40 pointer-events-none'
+                style={{ height: Math.min(bounds.width, bounds.height), borderWidth: hairline }}
+              />
+            )}
           {debug && (
             <div
               className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'

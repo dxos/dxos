@@ -87,6 +87,8 @@ export type NodeDef = {
    * corners of its own to round.
    */
   silhouette?: (node: Node, inset: number, radius: number) => string;
+  /** The outline drawn while the node is moved or drawn: its frame unless the shape fits a `circle` inside it. */
+  bounds?: (node: Node) => 'frame' | 'circle';
   /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.

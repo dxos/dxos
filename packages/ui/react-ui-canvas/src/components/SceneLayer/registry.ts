@@ -111,6 +111,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
         fit: isPolygonNode(node) ? node.fit : undefined,
         radius: node.style?.rounded ? radius : 0,
       }),
+    bounds: (node) => (isPolygonNode(node) && node.fit === 'circle' ? 'circle' : 'frame'),
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,

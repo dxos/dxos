@@ -26,7 +26,8 @@ const isValues = (values: unknown): boolean =>
   isRecord(values) &&
   !('id' in values) &&
   !('type' in values) &&
-  Object.entries(values).every(([key, value]) => value === undefined || (sharedFields[key]?.(value) ?? true));
+  // A required field's schema refuses `undefined`, so an edit cannot clear it; an optional one's accepts it.
+  Object.entries(values).every(([key, value]) => sharedFields[key]?.(value) ?? true);
 
 /**
  * Whether a value is a well-formed `Intent`, its batches included: intents that arrive over an operation are
