@@ -226,6 +226,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Database, Ref, Relation } from '@dxos/echo';
+import { Blob, type Database, Ref, Relation } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
@@ -25,6 +25,8 @@ export const types = [
   Milestone.Milestone,
   Text.Text,
   File.File,
+  // A file's bytes are a `Blob` it refs; an unregistered schema fails when the ref resolves.
+  Blob.Blob,
   PullRequest.PullRequest,
 ];
 

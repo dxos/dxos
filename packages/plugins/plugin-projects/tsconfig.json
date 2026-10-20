@@ -124,6 +124,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-github"
     },
     {

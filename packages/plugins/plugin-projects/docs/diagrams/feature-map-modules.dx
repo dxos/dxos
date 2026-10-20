@@ -1,0 +1,41 @@
+diagram flow=down
+group caps "Capabilities" {
+  node Surface "react-surface" ref="packages/plugins/plugin-projects/src/capabilities/react-surface.ts"
+  node Create "create-object" ref="packages/plugins/plugin-projects/src/capabilities/create-object.ts"
+  node Schema "schema" ref="packages/plugins/plugin-projects/src/capabilities/schema.ts"
+}
+group model "Model" below ui {
+  node Types "types" ref="packages/plugins/plugin-projects/src/types/index.ts"
+  node Ops "operations/feature" ref="packages/plugins/plugin-projects/src/operations/feature/create.ts"
+  node Graph "useFeatureGraph" ref="packages/plugins/plugin-projects/src/hooks/useFeatureGraph.ts"
+}
+group ui "Components and containers" below caps {
+  node Card "FeatureCard" ref="packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx"
+  node Canvas "FeatureCanvas" ref="packages/plugins/plugin-projects/src/components/FeatureCanvas/FeatureCanvas.tsx"
+  node MapArticle "FeatureMapArticle" ref="packages/plugins/plugin-projects/src/containers/FeatureMapArticle/FeatureMapArticle.tsx"
+  node FeatureArticle "FeatureArticle" ref="packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.tsx"
+  node ShowcaseArticle "ShowcaseArticle" ref="packages/plugins/plugin-projects/src/containers/ShowcaseArticle/ShowcaseArticle.tsx"
+  node CardContents "card contents" ref="packages/plugins/plugin-projects/src/containers/FeatureCardContent/FeatureCardContent.tsx"
+}
+node SceneLib "react-ui-canvas" ref="packages/ui/react-ui-canvas/src/index.ts"
+node Markdown "plugin-markdown" ref="packages/plugins/plugin-markdown/src/capabilities/react-surface.tsx"
+node CardSurfaces "plugin-file, github" ref="packages/plugins/plugin-file/src/containers/FileCard/FileCard.tsx"
+edge Ops -> Types
+edge Graph -> Types
+edge Graph -> Card "buildFeatureModels"
+edge Canvas -> Card
+edge Canvas -> SceneLib "dynamic projection"
+edge MapArticle -> Canvas
+edge MapArticle -> Graph
+edge FeatureArticle -> Card
+edge FeatureArticle -> Graph
+edge CardContents -> Card
+edge CardContents -> Graph
+edge ShowcaseArticle -> Markdown "Section"
+edge ShowcaseArticle -> CardSurfaces "CardContent"
+edge Create -> Types
+edge Schema -> Types
+edge Surface -> MapArticle
+edge Surface -> FeatureArticle
+edge Surface -> ShowcaseArticle
+edge Surface -> CardContents
