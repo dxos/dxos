@@ -31,6 +31,8 @@ import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
+import { translations as searchTranslations } from '@dxos/plugin-search/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -41,7 +43,7 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { File, Message, Organization, Outline, Person, Task } from '@dxos/types';
 
-import { ChatDetailsSection } from '#components';
+import { ChatDetailsPanel, ChatDetailsSection } from '#components';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { ChatSurface } from '#types';
@@ -135,7 +137,7 @@ type StoryArgs = {
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
-  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the tray. */
+  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the context rail. */
   workspace?: boolean;
 } & Pick<ChatArticleProps, 'debug'>;
 
@@ -147,7 +149,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   const spec = db.add(
     Markdown.make({
       name: 'Prompt redesign spec',
-      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a tray above it.',
+      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a rail beside the thread.',
     }),
   );
   db.add(Markdown.make({ name: 'Q4 roadmap', content: '# Q4 roadmap\n\n- Ship the new prompt.' }));
@@ -164,14 +166,16 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   return [spec];
 };
 
-/** Stands in for a plugin adding its own section to the tray (here, the changes an agent made). */
+/** Stands in for a plugin adding its own panel to the context rail (here, a coding plugin's diff). */
 const changesSection = Surface.create({
   id: 'storyChanges',
   filter: Surface.makeFilter(ChatSurface.ChatDetails),
   component: () => (
-    <ChatDetailsSection title='Changes' count={3} defaultOpen={false}>
-      <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
-    </ChatDetailsSection>
+    <ChatDetailsPanel>
+      <ChatDetailsSection title='Changes' count={3}>
+        <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
+      </ChatDetailsSection>
+    </ChatDetailsPanel>
   ),
 });
 
@@ -268,6 +272,8 @@ const meta = {
           TasksPlugin.make(),
           // Handles `FileOperation.Create`: without it the "+" menu offers no files.
           ...(workspace ? [FilePlugin.make()] : []),
+          // Its dialog is the "+" menu's object picker (`SearchOperation.SelectObject`).
+          ...(workspace ? [SearchPlugin.make()] : []),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this
@@ -282,7 +288,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...searchTranslations],
   },
 } satisfies Meta<StoryArgs>;
 
@@ -297,11 +303,11 @@ export const Default: Story = {
 };
 
 /**
- * The article's working tasks, in the details tray, and the disclosure that shows it.
+ * The article's working tasks, and the disclosure that shows them.
  *
- * The tray is `Chat.Prompt`'s own collapsible region rather than a sibling the article places, so the
- * toggle in the composer's action bar is the only thing that opens and closes it — this is what
- * asserts that wiring, since the button is not the collapsible's own trigger.
+ * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
+ * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
+ * what asserts that wiring, since the button is not the collapsible's own trigger.
  */
 export const Tasks: Story = {
   args: {
@@ -323,7 +329,7 @@ export const Tasks: Story = {
     // the machine only stamps that once it has run a transition, so the region carries no state
     // attribute until the reader opens it.
     const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
-    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-details"]')!;
+    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
     await expect(region()).toHaveAttribute('hidden');
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
 
@@ -596,8 +602,8 @@ const clearPrompt = async (canvasElement: HTMLElement) => {
 
 /**
  * The whole prompt: agent and model pickers in the row, "+" for files, objects, commands and MCP
- * servers, `@` to mention an object, `/` for commands and skills, and the details tray above the prompt
- * (context, tasks, and a section another plugin contributes). Replies are scripted, so it runs offline.
+ * servers, `@` to mention an object, `/` for commands and skills, the checklist above the prompt, and the
+ * context rail beside the thread (context, skills, and a section another plugin contributes). Replies are scripted, so it runs offline.
  */
 export const FullExperience: Story = {
   args: {

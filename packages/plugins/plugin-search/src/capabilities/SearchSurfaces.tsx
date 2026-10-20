@@ -5,18 +5,24 @@
 import React, { type ComponentProps } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
 
 export type SearchDialogSurfaceProps = {
-  props: ComponentProps<typeof SearchDialog>;
+  /** Absent when `OpenSearch` opened the dialog, which passes none. */
+  props?: ComponentProps<typeof SearchDialog> & {
+    /** The space to search, when the caller names one (`SearchOperation.SelectObject`). */
+    spaceId?: string;
+  };
 };
 
-/** Search is scoped to the active space, so each surface resolves it before mounting the provider. */
-export const SearchDialogSurface = ({ props }: SearchDialogSurfaceProps) => {
-  const space = Hooks.useActiveSpace();
+/** Search is scoped to one space, so each surface resolves it before mounting the provider. */
+export const SearchDialogSurface = ({ props: { spaceId, ...props } = {} }: SearchDialogSurfaceProps) => {
+  const activeSpace = Hooks.useActiveSpace();
+  const namedSpace = useSpace(spaceId);
+  const space = spaceId ? namedSpace : activeSpace;
   if (!space) {
     return null;
   }

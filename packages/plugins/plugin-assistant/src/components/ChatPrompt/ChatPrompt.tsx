@@ -18,12 +18,14 @@ import React, {
   useState,
 } from 'react';
 
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj, type Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import * as SearchOperation from '@dxos/plugin-search/SearchOperation';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -50,7 +52,6 @@ import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatAddMenu } from './ChatAddMenu.tsx';
 import { ChatAgentPicker } from './ChatAgentPicker.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
-import { ChatObjectPicker } from './ChatObjectPicker.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
 /** Prompts that may wait behind a running turn, by default. */
@@ -73,8 +74,8 @@ export type ChatPromptProps = Merge<
     /** Skill registry for the context controls when there is no chat model. */
     registry?: Registry.Registry;
     event: Event<ChatEvent>;
-    /** Whether the details tray above the prompt is shown; the toggle renders only when provided. */
-    detailsVisible?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
     /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
@@ -108,7 +109,7 @@ export const ChatPrompt = ({
   context: draftContext,
   registry: draftRegistry,
   event,
-  detailsVisible,
+  tasksVisible,
   attendableId,
   customActions,
   nodeId,
@@ -226,7 +227,19 @@ export const ChatPrompt = ({
     [attachFiles, handleFiles],
   );
 
-  const [objectPickerOpen, setObjectPickerOpen] = useState(false);
+  // The app's search dialog, as a picker: the object it returns becomes a mention.
+  const { invokePromise } = AppHooks.useOperationInvoker();
+  const handleAddObject = useCallback(async () => {
+    const { data: object } = await invokePromise(SearchOperation.SelectObject, {
+      spaceId: db?.spaceId,
+      title: t('add-object.title'),
+    });
+    if (object) {
+      handleMention(object);
+      editorRef.current?.view?.focus();
+    }
+  }, [invokePromise, handleMention, db, t]);
+
   const [mcpServersOpen, setMcpServersOpen] = useState(false);
   const handleCommands = useCallback(() => {
     const view = editorRef.current?.view;
@@ -341,7 +354,7 @@ export const ChatPrompt = ({
               // and the reader still needs a way to stop it.
               processing={active}
               canSend={canSend}
-              detailsVisible={detailsVisible}
+              tasksVisible={tasksVisible}
               onSend={handleSend}
               onEvent={handleEvent}
               leading={
@@ -350,7 +363,7 @@ export const ChatPrompt = ({
                     db={db}
                     disabled={!context}
                     onAddFiles={attachFiles ? () => fileInputRef.current?.click() : undefined}
-                    onAddObject={() => setObjectPickerOpen(true)}
+                    onAddObject={() => void handleAddObject()}
                     onCommands={handleCommands}
                     onManageMcpServers={() => setMcpServersOpen(true)}
                   />
@@ -366,12 +379,6 @@ export const ChatPrompt = ({
               }
             />
             <input hidden type='file' multiple onChange={handleFileChange} ref={fileInputRef} />
-            <ChatObjectPicker
-              db={db}
-              open={objectPickerOpen}
-              onOpenChange={setObjectPickerOpen}
-              onSelect={handleMention}
-            />
             <McpServersDialog db={db} open={mcpServersOpen} onOpenChange={setMcpServersOpen} />
           </>
         )}

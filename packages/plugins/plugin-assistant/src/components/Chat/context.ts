@@ -44,6 +44,9 @@ export type ChatContextValue = {
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;
   setVisibleRange: (range: MessageRange | undefined) => void;
+  /** Whether the details panel (the tray above the prompt, or the rail beside the thread) is open. */
+  detailsOpen: boolean;
+  setDetailsOpen: (open: boolean) => void;
 };
 
 /** What the chat currently shows: the projected thread and the state that moves with it. */

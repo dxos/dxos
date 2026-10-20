@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
+import type * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Obj } from '@dxos/echo';
 import { Listbox } from '@dxos/react-ui-list';
@@ -12,12 +13,33 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
-import type * as Util from '@dxos/react-ui/Util';
+import * as Util from '@dxos/react-ui/Util';
 
 import { getSkillId, useActiveSkills, useContextObjects, useSkillHandlers } from '#hooks';
 import { meta } from '#meta';
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
+
+//
+// Panel
+//
+
+/**
+ * One panel of the chat's context rail: the prompt's surface and border, so the rail reads as part of the
+ * same chrome. Each contribution to `ChatSurface.ChatDetails` renders its own.
+ */
+export const ChatDetailsPanel = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
+  <div
+    {...Util.composableProps(props, {
+      classNames: 'flex flex-col gap-1 p-1 dx-group-surface rounded-sm border border-separator-subtle',
+    })}
+    ref={forwardedRef}
+  >
+    {children}
+  </div>
+));
+
+ChatDetailsPanel.displayName = 'ChatDetailsPanel';
 
 //
 // Section
@@ -67,7 +89,7 @@ export type ChatContextSectionProps = {
  * What the conversation has in context: the objects mentioned into it, then the skills it has loaded in a
  * section of their own. MCP servers are not listed: their switch is the space's, shown in the "+" menu,
  * and listing it here would read as something this chat holds. Skills are collapsed by default: every chat
- * starts with several bound, and listed open they would push the tasks below the fold. Objects and
+ * starts with several bound, and listed open they would push the rail's other panels below the fold. Objects and
  * skills come out with their x; the message that mentioned an object stays as written.
  */
 export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => {
@@ -135,6 +157,22 @@ export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => 
       </ChatDetailsSection>
     </>
   );
+};
+
+export type ChatContextPanelProps = {
+  chat: Chat.Chat;
+  /** Undefined while the chat model is still opening. */
+  context?: AiContext.Binder;
+};
+
+/** The rail's default panel: plugin-assistant's own contribution to `ChatSurface.ChatDetails`. */
+export const ChatContextPanel = ({ chat, context }: ChatContextPanelProps) => {
+  const db = Obj.getDatabase(chat);
+  return db && context ? (
+    <ChatDetailsPanel>
+      <ChatContextSection db={db} context={context} />
+    </ChatDetailsPanel>
+  ) : null;
 };
 
 type ContextRowProps = {

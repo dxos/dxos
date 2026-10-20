@@ -88,7 +88,7 @@ export type ChatEvent =
   | {
       type: 'thread-close';
     }
-  /** Show or hide the details tray above the prompt. */
+  /** Show or hide the checklist beside the prompt. */
   | {
-      type: 'toggle-details';
+      type: 'toggle-tasks';
     };

@@ -3,8 +3,8 @@
 //
 
 /**
- * The chat prompt: the details tray, the "+" menu, `@` mentions, `/` commands and skills, and the
- * agent picker.
+ * The chat prompt: the context rail, the task tray, the "+" menu, `@` mentions, `/` commands and
+ * skills, and the agent picker.
  *
  * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-3
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4183`
@@ -15,7 +15,9 @@
 
 const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-3';
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';
-const TRAY = '[data-testid="assistant.details"]';
+const RAIL = '[data-testid="assistant.details"]:visible';
+const RAIL_TOGGLE = '[data-testid="assistant.toggle-details"]:visible';
+const TASKS_TOGGLE = '[data-testid="assistant.toggle-tasks"]';
 const ADD_MENU = '[data-testid="assistant.add-menu"]';
 const AGENT_PICKER = '[data-testid="assistant.agent-picker"]';
 const COMPLETION = '.cm-tooltip-autocomplete';
@@ -32,9 +34,13 @@ const caption = async (demo, value) => {
   await demo.clearCaption();
 };
 
-/** Text inside the tray, read from the DOM rather than trusted from the gesture. */
-const trayHas = (page, text) =>
-  page.locator(TRAY).getByText(text, { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });
+/** Text inside the rail, read from the DOM rather than trusted from the gesture. */
+const railHas = (page, text) =>
+  page.locator(RAIL).getByText(text, { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });
+
+/** A task in the checklist above the prompt. */
+const taskShown = (page, text) =>
+  page.getByText(text, { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });
 
 /**
  * Puts the caret at the end of the prompt by clicking past its text, so the pointer rests on empty
@@ -74,7 +80,7 @@ export const steps = [
         await invoke('org.dxos.operation.markdown.create', {
           name: 'Prompt redesign spec',
           content:
-            '# Prompt redesign\n\nOne agent picker, a "+" menu by category, @ mentions, / commands and a details tray.',
+            '# Prompt redesign\n\nOne agent picker, a "+" menu by category, @ mentions, / commands, a context rail and a task tray.',
         });
         await invoke('org.dxos.operation.markdown.create', {
           name: 'Q4 roadmap',
@@ -126,19 +132,26 @@ export const steps = [
     },
   },
   {
-    name: 'Open the details tray',
+    name: 'Open the context rail and the task tray',
     run: async ({ demo, page }) => {
+      // The setup's last click leaves a deck tooltip open over the toolbar's far end.
+      await page.keyboard.press('Escape');
+      await page.mouse.move(900, 500);
       // Everything recorded so far is seeding and loading.
       await demo.cut();
       await demo.title({
-        value: 'The new prompt',
-        subtitle: 'Context, commands and the agent, in one place',
+        value: 'The chat prompt',
+        subtitle: 'Context, tasks, commands and the agent',
         hold: 3_600,
       });
-      await caption(demo, 'The details tray shows what the chat has in context, and its tasks');
-      await demo.click({ selector: '[data-testid="assistant.toggle-details"]', label: 'Details' });
-      await trayHas(page, 'Compare with the roadmap');
-      await demo.sleep({ ms: 2_500 });
+      await caption(demo, 'The toolbar opens a rail with what the chat has in context');
+      await demo.click({ selector: RAIL_TOGGLE, label: 'Context' });
+      await page.locator(RAIL).waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.sleep({ ms: 1_500 });
+      await caption(demo, "The chat's tasks open in a tray above the prompt");
+      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
+      await taskShown(page, 'Compare with the roadmap');
+      await demo.sleep({ ms: 2_000 });
     },
   },
   {
@@ -172,10 +185,10 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await demo.press({ key: 'Enter' });
       await page.getByText('Loaded the Web Search skill.').first().waitFor({ state: 'visible', timeout: 15_000 });
-      // Skills sit in their own section, collapsed so the tasks stay in view; opened here to show the new one.
+      // Skills sit in their own section, collapsed so the objects stay in view; opened here to show the new one.
       const skills = '[data-testid="assistant.details.skills"] [data-scope="collapsible"][data-part="trigger"]';
       await demo.click({ selector: skills, label: 'Skills' });
-      await trayHas(page, 'Web Search');
+      await railHas(page, 'Web Search');
       await demo.sleep({ ms: 2_500 });
       await demo.click({ selector: skills, label: 'Skills' });
       await demo.sleep({ ms: 800 });
@@ -191,8 +204,7 @@ export const steps = [
         .waitFor({ state: 'hidden', timeout: 5_000 })
         .catch(() => {});
       await demo.press({ key: 'Enter' });
-      await trayHas(page, 'Draft the launch note');
-      await page.locator(TRAY).getByText('Draft the launch note').first().scrollIntoViewIfNeeded();
+      await taskShown(page, 'Draft the launch note');
       await demo.sleep({ ms: 2_000 });
     },
   },
@@ -218,14 +230,14 @@ export const steps = [
   {
     name: 'Compose a message with mentions',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Objects go into the message as chips: from "+" by search, or with @');
+      await caption(demo, 'Objects go into the message as chips, from "+" or with @');
       await clearPrompt(page);
       await demo.type({ selector: PROMPT, value: 'For ', delay: 70 });
       await demo.click({ selector: ADD_MENU, label: 'Add' });
       await demo.click({ selector: '[data-testid="assistant.add-menu.object"]', label: 'Add an object…' });
-      await demo.type({ selector: '[data-testid="assistant.object-picker"] input', value: 'Rich' });
+      await demo.type({ selector: '[data-testid="search.dialog"] input', value: 'Rich' });
       await demo.click({
-        selector: '[data-testid="assistant.object-picker"] [role="option"]:has-text("Rich Burdon")',
+        selector: '[data-testid="search.dialog"] [role="option"]:has-text("Rich Burdon")',
         label: 'Rich Burdon',
       });
       await clickPromptEnd(page);
@@ -238,6 +250,7 @@ export const steps = [
         .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       await demo.press({ key: 'Enter' });
+      await clickPromptEnd(page);
       await demo.type({ selector: PROMPT, value: 'fit with @Q4', delay: 60 });
       await page
         .locator(MENTION_ITEM)
@@ -247,9 +260,11 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await demo.press({ key: 'Backspace', hud: false });
       await demo.type({ selector: PROMPT, value: '?', delay: 60 });
+      // Off the chips, whose hover preview would outlive the send and cover the reply.
+      await page.mouse.move(900, 300, { steps: 8 });
       // Nothing has joined the context yet: composing changes nothing until the message is sent.
       await page
-        .locator(`${TRAY} [data-testid="assistant.details.context.item"]`)
+        .locator(`${RAIL} [data-testid="assistant.details.context.item"]`)
         .filter({ hasText: 'Rich Burdon' })
         .waitFor({ state: 'detached', timeout: 2_000 });
       await demo.sleep({ ms: 1_500 });
@@ -258,11 +273,11 @@ export const steps = [
   {
     name: 'Send the message',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Sending adds what the message mentions to the context');
+      await caption(demo, 'Sending adds what the message mentions to the context rail');
       await demo.press({ key: 'Enter' });
-      await trayHas(page, 'Rich Burdon');
-      await trayHas(page, 'Q4 roadmap');
-      await trayHas(page, 'Prompt redesign spec');
+      await railHas(page, 'Rich Burdon');
+      await railHas(page, 'Q4 roadmap');
+      await railHas(page, 'Prompt redesign spec');
       await demo.speed({ factor: 4 });
       // Done when the status pill reports the finished turn.
       await page
@@ -299,10 +314,10 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 'x takes an object out of context; the message stays as written');
       const row = page
-        .locator(`${TRAY} [data-testid="assistant.details.context.item"]`)
+        .locator(`${RAIL} [data-testid="assistant.details.context.item"]`)
         .filter({ hasText: 'Rich Burdon' });
       await demo.click({
-        selector: `${TRAY} [data-testid="assistant.details.context.item"]:has-text("Rich Burdon") button`,
+        selector: `${RAIL} [data-testid="assistant.details.context.item"]:has-text("Rich Burdon") button`,
         label: 'Remove',
       });
       await row.waitFor({ state: 'detached', timeout: 10_000 });

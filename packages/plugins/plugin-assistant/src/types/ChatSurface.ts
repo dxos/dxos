@@ -3,6 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
+import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 
 /**
@@ -17,8 +18,10 @@ export const ChatSurface: Role.Role<{
 }> = Role.make('org.dxos.plugin.assistant.role.chatSurface');
 
 /**
- * Role token for sections of the details tray above a chat's prompt. The tray holds the chat's context
- * and tasks; a plugin adds a section (the changes an agent made, its worktree) by contributing a surface
- * on this role that renders a `ChatDetailsSection`.
+ * Role token for the panels of a chat's context rail. The rail renders every contribution, each in its
+ * own `ChatDetailsPanel`: plugin-assistant contributes the context panel (objects and skills), and a
+ * plugin adds its own (a coding plugin's diff, its worktree) by contributing a surface on this role.
  */
-export const ChatDetails: Role.Role<{ chat: Chat.Chat }> = Role.make('org.dxos.plugin.assistant.role.chatDetails');
+export const ChatDetails: Role.Role<{ chat: Chat.Chat; context?: AiContext.Binder }> = Role.make(
+  'org.dxos.plugin.assistant.role.chatDetails',
+);

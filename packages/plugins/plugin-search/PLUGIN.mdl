@@ -52,9 +52,12 @@ type SearchResult
 component SearchDialog
   desc: |
     Modal command-palette style dialog invoked globally via the OpenSearch operation.
-    Renders a search input at the top; results populate below in real time.
+    Renders a search input at the top; results populate below in real time. Picking a result opens
+    it, or, when SelectObject opened the dialog, hands the object back to its caller.
   props:
-    space: Space              # current active space to scope the search
+    space: Space              # the space to search: SelectObject's spaceId, else the active space
+    title?: string            # SelectObject's title, in place of "Search"
+    handle?: SelectHandle       # present when SelectObject opened the dialog
   state:
     query: string             # live query text
     results: SearchResult[]   # objects matching the current query
@@ -112,6 +115,19 @@ op OpenSearch
   output: void
   effects: [layout:dialog]
   note: Registered as SearchOperation.OpenSearch; triggered from the command palette.
+
+op SelectObject
+  key: org.dxos.operation.search.selectObject
+  desc: |
+    Opens the same SearchDialog as an object picker: the caller decides what the object is for (add it
+    to a chat's context, link it from a document), so picking a result returns it instead of opening
+    it. Settles with nothing when the dialog is dismissed.
+  input:
+    spaceId?: string          # the space to search; defaults to the active space
+    title?: string            # the dialog's title; defaults to "Search"
+  output: Obj | undefined
+  effects: [layout:dialog]
+  note: Registered as SearchOperation.SelectObject; the chat prompt's "+" > "Add an object…" uses it.
 ```
 
 ## Features
