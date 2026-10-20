@@ -221,8 +221,18 @@ export const make = (
       candidate.steps[0].operation.meta.key === event.operation.meta.key &&
       event.timestamp - candidate.updated <= mergeWindow
     ) {
-      // Keep the earliest inverse so one undo returns to before the first edit; take the latest forward for redo.
-      candidate.steps[0] = { ...candidate.steps[0], input: event.input, output: event.output };
+      const [earlier] = candidate.steps;
+      const merged = mapping.merge?.(
+        { input: earlier.input, output: earlier.output },
+        { input: event.input, output: event.output },
+      );
+      // A folded forward derives its own inverse; otherwise keep the earliest inverse so one undo returns to before
+      // the first edit, and take the latest forward for redo.
+      const inverseInput = merged && mapping.deriveContext(merged.input, merged.output);
+      candidate.steps[0] =
+        merged && inverseInput !== undefined
+          ? { ...earlier, input: merged.input, output: merged.output, inverseInput }
+          : { ...earlier, input: event.input, output: event.output };
       candidate.updated = event.timestamp;
       future.length = 0;
       log('history entry merged', { key: event.operation.meta.key, mergeKey });

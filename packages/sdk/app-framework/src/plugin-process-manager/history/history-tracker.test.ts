@@ -893,6 +893,56 @@ describe('HistoryTracker merging', () => {
     }),
   );
 
+  it.effect('a mapping with merge folds relative edits into one forward and derives its inverse from it', () =>
+    Effect.gen(function* () {
+      const AddField = Operation.make({
+        input: Schema.Struct({ field: Schema.String, delta: Schema.Number }),
+        output: Schema.Void,
+        meta: { key: DXN.make('com.example.operation.test.addField') },
+      });
+      const store = new Map<string, number>();
+      let processed = 0;
+      const addHandler = Operation.withHandler(AddField, ({ field, delta }) =>
+        Effect.sync(() => void store.set(field, (store.get(field) ?? 0) + delta)),
+      );
+      const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]), testRuntime);
+      const tracker = HistoryTracker.make(
+        invoker,
+        UndoRegistry.make(() => [
+          UndoMapping.make({
+            operation: AddField,
+            inverse: AddField,
+            deriveContext: (input) => {
+              processed++;
+              return { field: input.field, delta: -input.delta };
+            },
+            mergeKey: (input) => input.field,
+            merge: (earlier, later) => ({
+              input: { ...later.input, delta: earlier.input.delta + later.input.delta },
+              output: later.output,
+            }),
+          }),
+        ]),
+      );
+      const add = (delta: number) =>
+        Effect.gen(function* () {
+          const before = processed;
+          yield* invoker.invoke(AddField, { field: 'x', delta });
+          yield* waitUntil(() => processed > before);
+        });
+
+      yield* add(1);
+      vi.setSystemTime(100);
+      yield* add(2);
+
+      yield* tracker.undo();
+      expect(store.get('x')).toBe(0);
+      expect(tracker.canUndo()).toBe(false);
+      yield* tracker.redo();
+      expect(store.get('x')).toBe(3);
+    }),
+  );
+
   it.effect('does not fold into a transaction', () =>
     Effect.gen(function* () {
       const { invoker, tracker, get, set } = setup();

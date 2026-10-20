@@ -14,6 +14,7 @@ import {
   SkillDefinition,
   SpaceTemplates,
   Translations,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 
@@ -27,6 +28,7 @@ export const CanvasPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SpaceTemplates),
   Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

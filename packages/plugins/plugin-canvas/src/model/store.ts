@@ -114,7 +114,7 @@ const OWN = '';
 /** Heads read back recently; an undo reads many paths at the same two. */
 const HEADS_CACHE = 4;
 
-const isHeads = (value: unknown): value is CanvasHeads =>
+export const isCanvasHeads = (value: unknown): value is CanvasHeads =>
   typeof value === 'object' &&
   value !== null &&
   Object.values(value).every((heads) => Array.isArray(heads) && heads.every((head) => typeof head === 'string'));
@@ -123,6 +123,15 @@ const mapNodes = (scene: View, map: (node: Node) => Node): View => ({
   ...scene,
   nodes: Object.fromEntries(Object.entries(scene.nodes).map(([id, node]) => [id, map(node)])),
 });
+
+/** A binding and the registry its atoms live in. */
+export type LiveCanvasStore = { registry: Registry.AtomRegistry; bound: BoundCanvasStore };
+
+/** The bindings open now, by canvas id, so an operation patches the store a view shows rather than binding again. */
+const live = new Map<string, Set<LiveCanvasStore>>();
+
+/** The latest open binding of the canvas `id`, if a view has one. */
+export const liveCanvasStore = (id: string): LiveCanvasStore | undefined => [...(live.get(id) ?? [])].at(-1);
 
 export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing.Canvas): BoundCanvasStore => {
   const root = prepare(canvas);
@@ -234,7 +243,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   // A linked drawing's classes stay its own: its shapes show here without them.
   const memory = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
   const { styles } = memory;
-  const live = storeVersions(registry, memory);
+  const current = storeVersions(registry, memory);
   const headsOf = (target: Drawing.Canvas): readonly string[] => [...(Obj.version(target).automergeHeads ?? [])];
   const cache = new Map<string, ViewMap>();
   /** The store as it read at `heads`; a drawing bound since then reads as it is now. */
@@ -261,8 +270,8 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
           ...Object.fromEntries([...linked].map(([uri, link]) => [uri, headsOf(link.canvas)])),
         }),
         read: (path, heads) =>
-          heads === undefined ? live.read(path) : isHeads(heads) ? readPath(readAt(heads), path) : undefined,
-        write: live.write,
+          heads === undefined ? current.read(path) : isCanvasHeads(heads) ? readPath(readAt(heads), path) : undefined,
+        write: current.write,
       }
     : undefined;
 
@@ -387,11 +396,12 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
     }
   });
 
-  return {
+  const bound: BoundCanvasStore = {
     store,
     root,
     dispose: () => {
       disposed = true;
+      live.get(canvas.id)?.delete(entry);
       unsubscribeCanvas();
       unsubscribeStore();
       unsubscribeStyles();
@@ -400,6 +410,9 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       }
     },
   };
+  const entry: LiveCanvasStore = { registry, bound };
+  live.set(canvas.id, (live.get(canvas.id) ?? new Set()).add(entry));
+  return bound;
 };
 
 /** A fresh canvas for the variant: the root scene with the drawing's `settings`, and nothing else. */

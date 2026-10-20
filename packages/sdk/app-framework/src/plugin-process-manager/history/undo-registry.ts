@@ -22,6 +22,7 @@ export type UndoMappingResult = {
   scope?: (input: any, output: any) => string | undefined;
   mergeKey?: (input: any, output: any) => string | undefined;
   context?: (input: any, output: any) => unknown;
+  merge?: (earlier: { input: any; output: any }, later: { input: any; output: any }) => { input: any; output: any };
 };
 
 /**
@@ -53,6 +54,7 @@ export const make = (getMappings: () => UndoMapping.UndoMapping[]): UndoRegistry
       scope: mapping.scope,
       mergeKey: mapping.mergeKey,
       context: mapping.context,
+      merge: mapping.merge,
     };
   };
 

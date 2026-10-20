@@ -3,6 +3,7 @@
 //
 
 // React-free entry: plugin operations run in node and workerd, where the scene barrel's components cannot load.
+export * from './engine/projection.ts';
 export * from './generator/check.ts';
 export * from './generator/compile.ts';
 export * from './generator/types.ts';

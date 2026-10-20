@@ -38,3 +38,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 });
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));
