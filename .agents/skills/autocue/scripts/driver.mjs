@@ -855,7 +855,12 @@ const handlers = {
     if (options.captions !== 'off') {
       await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
     }
-    timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
+    timeline.push({
+      ms: Date.now() - started,
+      text: command.value,
+      subtitle: command.subtitle,
+      ...(command.hold ? { hold: command.hold } : {}),
+    });
     if (command.hold) {
       await page.waitForTimeout(command.hold);
     }

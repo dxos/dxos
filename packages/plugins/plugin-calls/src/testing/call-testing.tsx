@@ -31,7 +31,7 @@ const storyConfig = new Config({
  * Story decorator providing a live (but unconnected) `CallManager` via the real `CallsPlugin`.
  * Pair with `useSeedCallManager` to present deterministic participants without a swarm.
  */
-export const withCallManager = () =>
+export const withCallManager = ({ displayName }: { displayName?: string } = {}) =>
   withPluginManager({
     plugins: [
       ...CorePlugins.make(),
@@ -39,7 +39,7 @@ export const withCallManager = () =>
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            yield* initializeIdentity(client);
+            yield* initializeIdentity(client, { displayName });
           }),
       }),
       CallsPlugin(),

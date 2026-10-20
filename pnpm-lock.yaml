@@ -9257,6 +9257,9 @@ importers:
 
   packages/plugins/plugin-calls:
     dependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9360,6 +9363,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-experimental':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-experimental
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -23564,27 +23570,12 @@ importers:
 
   packages/ui/react-ui-experimental:
     dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@react-three/drei':
-        specifier: 'catalog:'
-        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0))(@types/react@19.2.17)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0)
-      '@react-three/fiber':
-        specifier: 'catalog:'
-        version: 9.5.0(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0)
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -23607,6 +23598,12 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../brand
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -23628,9 +23625,6 @@ importers:
       '@types/flubber':
         specifier: 'catalog:'
         version: 0.4.0
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -23646,9 +23640,6 @@ importers:
       leva:
         specifier: 'catalog:'
         version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
       ogl:
         specifier: 'catalog:'
         version: 1.0.11
@@ -25359,6 +25350,9 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
