@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type NodeBase, type ViewId, ViewNode, viewLinkFields } from '@dxos/react-ui-canvas/scene';
+import { type NodeBase, type ViewId, ViewNode, viewLinkFields } from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
 

@@ -35,7 +35,7 @@ import {
   readPath,
   storeVersions,
   withLegacyNodeType,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
 
