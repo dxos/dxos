@@ -105,6 +105,12 @@ export type ThemePanelProps = PanelProps & {
   /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
   guides?: boolean;
   onGuidesToggle?: () => void;
+  /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
+  snap?: boolean;
+  onSnapToggle?: () => void;
+  /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; the toggle shows only then. */
+  lattice?: boolean;
+  onLatticeToggle?: () => void;
 };
 
 /**
@@ -123,6 +129,10 @@ export const ThemePanel = ({
   onGridChange,
   guides,
   onGuidesToggle,
+  snap,
+  onSnapToggle,
+  lattice,
+  onLatticeToggle,
 }: ThemePanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
@@ -166,6 +176,31 @@ export const ThemePanel = ({
       </Menu.Content>
     </Menu.Root>
     <Toolbar.Separator variant='line' />
+    {/* Snapping is to the grid, so its toggles sit with the grid's. */}
+    {onSnapToggle && (
+      <Button.Toggle
+        variant='ghost'
+        iconOnly
+        icon='ph--grid-four--regular'
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
+        disabled={readonly}
+        pressed={snap === true}
+        data-testid='toolbar-snap'
+        onPressedChange={onSnapToggle}
+      />
+    )}
+    {onLatticeToggle && (
+      <Button.Toggle
+        variant='ghost'
+        iconOnly
+        icon='ph--squares-four--regular'
+        label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
+        disabled={readonly}
+        pressed={lattice === true}
+        data-testid='toolbar-lattice'
+        onPressedChange={onLatticeToggle}
+      />
+    )}
     {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
     {onGuidesToggle && (
       <Button.Toggle

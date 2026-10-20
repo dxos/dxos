@@ -82,8 +82,6 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
   const tools = useCanvasTools('Canvas.Actions');
   const selection = useCanvasSelection('Canvas.Actions');
   const editing = useCanvasEditing('Canvas.Actions');
-  const snap = useAtomValue(tools.atoms.snap);
-  const lattice = useAtomValue(tools.atoms.lattice);
   const debug = useAtomValue(tools.atoms.debug);
   const undo = useAtomValue(atoms.undo);
   const path = useAtomValue(atoms.path);
@@ -94,10 +92,6 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
   const canRedo = !readonly && undo.key === sceneId && undo.future.length > 0;
   const actions = useMemo<EditActions>(
     () => ({
-      snap,
-      toggleSnap: tools.commands.toggleSnap,
-      // Only a lattice scene has a lattice to snap to.
-      ...(projection.lattice ? { lattice, toggleLattice: tools.commands.toggleLattice } : {}),
       debug,
       toggleDebug: tools.commands.toggleDebug,
       canUndo,
@@ -114,14 +108,11 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
       layout: capabilities.layout ? document.layout : undefined,
     }),
     [
-      snap,
-      lattice,
       debug,
       canUndo,
       canRedo,
       hasSelection,
       hasClipboard,
-      projection.lattice,
       capabilities.layout,
       tools.commands,
       editing.commands,
@@ -129,13 +120,14 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
       document,
     ],
   );
-  // Every action here edits the scene or how edits snap.
+  // Every action here edits the scene.
   if (readonly) {
     return null;
   }
   return (
-    // Its natural width, never scrolled: the actions are few and fixed, and a scrolled bar hides its last ones.
-    <div className={mx(barFrame, 'max-w-none', classNames)}>
+    // Its natural width, never scrolled: the actions are few and fixed, and a scrolled bar hides its last ones. On a
+    // canvas too narrow for it between the corner bars it goes, as its commands all have keys and a context menu.
+    <div className={mx(barFrame, 'max-w-none hidden @min-[56rem]/canvas:block', classNames)}>
       <ActionToolbar actions={actions} nodes={nodeRegistry} capabilities={capabilities} />
     </div>
   );
@@ -175,7 +167,10 @@ CanvasDebug.displayName = 'Canvas.Debug';
 export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
   const { look, themes, themeOverride, themeGrid, setTheme, setBackgroundGrid } = useCanvasLook('Canvas.Theme');
   const { atoms, commands } = useCanvasTools('Canvas.Theme');
+  const { projection, readonly } = useCanvasDocument('Canvas.Theme');
   const guides = useAtomValue(atoms.guides);
+  const snap = useAtomValue(atoms.snap);
+  const lattice = useAtomValue(atoms.lattice);
   return (
     <div className={mx(barFrame, classNames)}>
       <ThemePanel
@@ -188,6 +183,11 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
         onGridChange={setBackgroundGrid}
         guides={guides}
         onGuidesToggle={commands.toggleGuides}
+        // Snap applies to edits, so a read-only canvas offers none; only a lattice scene has a lattice to snap to.
+        snap={snap}
+        onSnapToggle={readonly ? undefined : commands.toggleSnap}
+        lattice={lattice}
+        onLatticeToggle={readonly || !projection.lattice ? undefined : commands.toggleLattice}
       />
     </div>
   );

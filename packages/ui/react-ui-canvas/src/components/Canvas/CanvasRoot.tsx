@@ -512,7 +512,7 @@ export const CanvasRoot = ({
                       ref={rootRef}
                       tabIndex={0}
                       className={mx(
-                        'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
                         // A theme with a mode takes it over the app's, for everything over the canvas.
                         look.tone === 'dark' && 'dark',
                         tool.kind === 'hand' && 'cursor-grab',
