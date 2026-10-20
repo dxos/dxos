@@ -240,6 +240,34 @@ describe('HistoryTracker', () => {
     }),
   );
 
+  it.effect('a mapping with toast off marks its undoable events so the UI raises no toast', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
+      const tracker = HistoryTracker.make(
+        invoker,
+        UndoRegistry.make(() => [
+          UndoMapping.make({
+            operation: Compute,
+            inverse: HalveCompute,
+            deriveContext: (_input, output) => ({ value: output.value }),
+            toast: false,
+          }),
+        ]),
+      );
+
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const undoables = yield* PubSub.subscribe(tracker.undoable);
+          const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
+          yield* TestClock.adjust('20 millis');
+          yield* Fiber.join(fiber);
+          expect((yield* PubSub.take(undoables)).toast).toBe(false);
+        }),
+      );
+      expect(tracker.canUndo()).toBe(true);
+    }),
+  );
+
   it.effect('undo message can be derived from input and output', () =>
     Effect.gen(function* () {
       // Dynamic message that depends on input/output.

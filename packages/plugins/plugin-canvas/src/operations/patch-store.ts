@@ -13,7 +13,8 @@ import { type LiveCanvasStore, bindCanvasStore, liveCanvasStore } from '../model
 
 /**
  * Runs `use` over the canvas's store: the one a view has open, so the view shows the edit at once and its linked
- * drawings are already loaded, else one bound for the call.
+ * drawings are already loaded, else one bound for the call. The canvas is loaded through its ref, as the tracker
+ * invokes an inverse with no space to provide a database service from.
  */
 export const withCanvasStore = <A>(
   ref: Ref.Ref<Drawing.Canvas>,

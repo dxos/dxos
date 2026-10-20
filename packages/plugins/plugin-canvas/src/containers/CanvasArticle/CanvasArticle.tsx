@@ -3,8 +3,9 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -47,6 +48,7 @@ import {
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
+import { createTrackerHistory } from './tracker-history.ts';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -59,7 +61,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
   // scene until the object loads, so opening drills into that scene until then too.
-  const { invokePromise } = Hooks.useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
+  const { invokePromise } = invoker;
   const db = Obj.getDatabase(canvas);
   const openObject = useCallback(
     (node: Node) => {
@@ -72,6 +75,12 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       };
     },
     [invokePromise, db],
+  );
+  // In Composer the canvas's edits join the app's history, scoped to this canvas; without a tracker it keeps its own.
+  const tracker = Hooks.useOptionalCapability(Capabilities.HistoryTracker);
+  const history = useMemo(
+    () => (tracker ? createTrackerHistory({ tracker, invoker, canvas }) : undefined),
+    [tracker, invoker, canvas],
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
@@ -187,6 +196,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               root={bound.root}
               nodes={nodes}
               createProjection={lattice ? createLatticeProjection : undefined}
+              history={history}
               grid={record?.grid}
               theme={look.theme}
               defaultTheme={look.defaultTheme}

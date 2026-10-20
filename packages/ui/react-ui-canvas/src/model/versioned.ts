@@ -182,16 +182,15 @@ export const atomSource = <Value>(
 });
 
 /** A versioned source over several, each under its own key, for a projection whose model spans atoms. */
-export const combinedSource = (
-  sources: Readonly<Record<string, VersionedSource>>,
-): VersionedSource<Record<string, unknown>> => ({
+export const combinedSource = (sources: Readonly<Record<string, VersionedSource>>): VersionedSource => ({
   heads: () => Object.fromEntries(Object.entries(sources).map(([key, source]) => [key, source.heads()])),
   read: (path, heads) => {
+    const at = (key: string) => (heads === undefined ? undefined : readPath(heads, [key]));
     if (path.length === 0) {
-      return Object.fromEntries(Object.entries(sources).map(([key, source]) => [key, source.read([], heads?.[key])]));
+      return Object.fromEntries(Object.entries(sources).map(([key, source]) => [key, source.read([], at(key))]));
     }
     const [key, ...rest] = path;
-    return sources[key]?.read(rest, heads?.[key]);
+    return sources[key]?.read(rest, at(key));
   },
   write: (writes) => {
     for (const [key, source] of Object.entries(sources)) {

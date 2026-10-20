@@ -34,6 +34,8 @@ export type UndoableEvent = {
   message?: Label;
   /** Scope of the recorded entry, if any. */
   scope?: string;
+  /** False when the mapping asked for no undo toast. */
+  toast?: boolean;
 };
 
 /**
@@ -250,7 +252,7 @@ export const make = (
       updated: event.timestamp,
     });
 
-    return { message, scope };
+    return { message, scope, ...(mapping.toast === false ? { toast: false } : {}) };
   };
 
   const handleEvent = (event: OperationInvoker.InvocationEvent): UndoableEvent | undefined => {

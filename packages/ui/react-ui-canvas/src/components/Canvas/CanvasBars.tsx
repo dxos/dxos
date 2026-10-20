@@ -77,19 +77,16 @@ CanvasNavigation.displayName = 'Canvas.Navigation';
 
 /** Everything that changes the view or the scene. */
 export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: CanvasBarProps) => {
-  const { atoms } = useCanvasServices('Canvas.Actions');
   const { projection, nodeRegistry, capabilities, readonly, document } = useCanvasDocument('Canvas.Actions');
   const tools = useCanvasTools('Canvas.Actions');
   const selection = useCanvasSelection('Canvas.Actions');
   const editing = useCanvasEditing('Canvas.Actions');
   const debug = useAtomValue(tools.atoms.debug);
-  const undo = useAtomValue(atoms.undo);
-  const path = useAtomValue(atoms.path);
+  const history = useAtomValue(document.history);
   const hasSelection = useAtomValue(selection.atoms.selection).size > 0;
   const hasClipboard = useAtomValue(editing.atoms.clipboard) !== undefined;
-  const sceneId = path[path.length - 1];
-  const canUndo = !readonly && undo.key === sceneId && undo.past.length > 0;
-  const canRedo = !readonly && undo.key === sceneId && undo.future.length > 0;
+  const canUndo = !readonly && history.canUndo;
+  const canRedo = !readonly && history.canRedo;
   const actions = useMemo<EditActions>(
     () => ({
       debug,

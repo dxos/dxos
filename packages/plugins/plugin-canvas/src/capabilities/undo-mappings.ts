@@ -12,7 +12,8 @@ import { unionPaths } from '@dxos/react-ui-canvas/headless';
 import { CanvasOperation } from '#types';
 
 // Canvas edits undo by patch (VIEWS.md §8): an entry holds the heads either side and the paths written, and the inverse
-// patches them back, scoped to the canvas so a focused canvas undoes only its own edits.
+// patches them back, scoped to the canvas so a focused canvas undoes only its own edits; the canvas has undo keys and
+// buttons of its own, so its edits raise no undo toast.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.UndoMapping, [
@@ -24,6 +25,7 @@ export default Capability.makeModule(
             ? { canvas: input.canvas, from: output.after, to: output.before, paths: output.paths }
             : undefined,
         scope: (_input, output) => output.canvas,
+        toast: false,
       }),
       // A canvas view applies its edits itself, at once, and records them as a patch whose forward is already done.
       UndoMapping.make({
@@ -36,6 +38,7 @@ export default Capability.makeModule(
         scope: (_input, output) => output.canvas,
         mergeKey: (input) => input.mergeKey,
         context: (input) => input.context,
+        toast: false,
         // A run of patches is one patch from the first one's start to the last one's end over every path they wrote.
         merge: (earlier, later) => ({
           input: {

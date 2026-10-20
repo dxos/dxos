@@ -87,6 +87,12 @@ export interface UndoMapping<
    * (a delta, or a patch between versions).
    */
   readonly merge?: (earlier: Invocation<Op>, later: Invocation<Op>) => Invocation<Op>;
+
+  /**
+   * Whether recording an entry offers the undo toast; true when absent. An editor with undo keys of its own (a
+   * canvas) turns it off, since every gesture would raise one.
+   */
+  readonly toast?: boolean;
 }
 
 /**
@@ -136,6 +142,11 @@ export interface UndoMappingProps<
    * Optional fold of two merged invocations into one forward, from which the inverse is derived again.
    */
   merge?: (earlier: Invocation<Op>, later: Invocation<Op>) => Invocation<Op>;
+
+  /**
+   * Whether recording an entry offers the undo toast; true when absent.
+   */
+  toast?: boolean;
 }
 
 /**

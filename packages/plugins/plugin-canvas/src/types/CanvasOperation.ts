@@ -212,7 +212,6 @@ export const Apply = Operation.make({
     after: Heads,
     paths: Paths,
   }),
-  services: [Database.Service],
 });
 
 export const Patch = Operation.make({
@@ -241,5 +240,4 @@ export const Patch = Operation.make({
     unchanged: Schema.Number,
     skipped: Schema.Number.annotate({ description: 'Paths left alone because someone changed them since.' }),
   }),
-  services: [Database.Service],
 });
