@@ -47,6 +47,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `capability`| `org.dxos.mdl.capability@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -874,6 +875,52 @@ test QA-2: Provision a resumable Call without joining
 
 ---
 
+## Changelog
+
+```mdl
+decision D-1: A call can be filled with simulated participants played from video files, so a four-person meeting can be recorded as a demo with no live participants.
+  date: 2026-10-17
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-2: One simulated participant shares a screen: a recording of Composer, starting a few seconds into the conversation.
+  date: 2026-10-18
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-3: An agent can take a participant's seat in the call, shown as an abstract avatar that moves with, and speaks, that participant's voice.
+  date: 2026-10-19
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-4: `SetSimulatedParticipants` takes timed `transcript` lines and a per-participant `screenshare` (`src`, `start`), both timed by the participants' files. Fills in [D-1] and [D-2].
+  date: 2026-10-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: The files are the conversation's clock, so lines and the shared screen stay on the audio however the page stalls.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-5: A participant with `avatar` shows an abstract shape driven by its file's sound instead of its picture, so `src` may be audio only. Fills in [D-3].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: An agent's voice has no camera; analysing the track the call plays keeps picture and sound in step.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -965,4 +1012,22 @@ ext capability
     type: TypeRef
     events?: EventList
     multi?: boolean
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```
