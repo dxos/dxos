@@ -15,9 +15,9 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type Config, randomize } from '../params.ts';
 import { AudioProvider } from '../providers/AudioProvider.ts';
-import { type AgentVisualization, createAgentVisualization } from '../runtime.ts';
+import { type VisualizationRuntime, createAgentVisualization } from '../runtime.ts';
 import { type AnyVisualization } from '../visualization.ts';
-import { getVisualization, ink, inkLine, inkMorph, orb, spectrum, torus } from '../visualizations/index.ts';
+import { getVisualization, ink, inkLine, inkMorph, orb, spectrum, torusKnot } from '../visualizations/index.ts';
 import { levaControls, levaPaths, toConfig } from './tuner.ts';
 
 type StoryProps = {
@@ -30,7 +30,7 @@ type StoryProps = {
 const DEFAULT_PRESET = 'default';
 
 type Voice = {
-  runtime: AgentVisualization<AnyVisualization['defaults']>;
+  runtime: VisualizationRuntime<AnyVisualization['defaults']>;
   audio: HTMLAudioElement;
   context: AudioContext;
 };
@@ -168,7 +168,7 @@ const VisualizationStory = ({ visualization: id, src }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/agent-visualization/AgentVisualization',
+  title: 'ui/react-ui-experimental/AgentVisualization',
   render: VisualizationStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -190,7 +190,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Orb: Story = { args: { visualization: orb.id } };
 
-export const Torus: Story = { args: { visualization: torus.id } };
+export const TorusKnot: Story = { args: { visualization: torusKnot.id } };
 
 export const Spectrum: Story = { args: { visualization: spectrum.id } };
 

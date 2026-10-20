@@ -25,12 +25,12 @@ export type SimulatedParticipantProps = {
   avatar?: boolean | SimulatedAvatar;
 };
 
-/** An agent visualization (by id, from `@dxos/agent-visualization`) and overrides of its defaults. */
+/** An agent visualization (by id, from react-ui-experimental's `AgentVisualization`) and overrides of its defaults. */
 export type SimulatedAvatar = { visualization: string; config?: Record<string, number | string> };
 
 /**
- * Renders a participant's avatar from its voice track. The caller supplies it, so this published plugin does not
- * depend on the private `@dxos/agent-visualization` (stories pass one built on it).
+ * Renders a participant's avatar from its voice track. The caller supplies it, so this plugin does not depend on the
+ * experimental visualizations and their 3D libraries (stories pass one built on them).
  */
 export type SimulatedAvatarRenderer = (
   context: AudioContext,
@@ -309,7 +309,7 @@ export class CallSimulation extends Resource {
   }
 }
 
-const DEFAULT_AVATAR: SimulatedAvatar = { visualization: 'torus' };
+const DEFAULT_AVATAR: SimulatedAvatar = { visualization: 'orb' };
 
 /** Players that have reached their end and now loop their last frame. */
 const finished = new WeakSet<HTMLVideoElement>();

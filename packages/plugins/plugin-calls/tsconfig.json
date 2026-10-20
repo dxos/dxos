@@ -92,9 +92,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/agent-visualization"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -102,6 +99,9 @@
     },
     {
       "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-experimental"
     },
     {
       "path": "../../ui/ui-theme"

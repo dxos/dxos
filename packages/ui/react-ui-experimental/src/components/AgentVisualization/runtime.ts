@@ -19,7 +19,7 @@ export type AgentVisualizationOptions<C extends Config> = {
   frameRate?: number;
 };
 
-export type AgentVisualization<C extends Config> = {
+export type VisualizationRuntime<C extends Config> = {
   /** The picture, for mounting in the DOM. */
   canvas: HTMLCanvasElement;
   /** The picture as a camera track, for a call tile. */
@@ -44,7 +44,7 @@ export const createAgentVisualization = <C extends Config>({
   width = 640,
   height = 360,
   frameRate = 30,
-}: AgentVisualizationOptions<C>): AgentVisualization<C> => {
+}: AgentVisualizationOptions<C>): VisualizationRuntime<C> => {
   const config: C = { ...visualization.defaults, ...overrides };
 
   const canvas = document.createElement('canvas');

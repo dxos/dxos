@@ -7,19 +7,19 @@ import * as THREE from 'three';
 import { type Visualization } from '../visualization.ts';
 import { type GlowConfig, glowDefaults, glowParams, waveParams } from './common.ts';
 
-export type TorusConfig = GlowConfig & { waveSpeed: number };
+export type TorusKnotConfig = GlowConfig & { waveSpeed: number };
 
-/** A ring whose tube swells and ripples with the voice's loudness and its low and high bands. */
-export const torus: Visualization<TorusConfig> = {
-  id: 'torus',
-  title: 'Torus',
+/** A torus knot whose tube swells and ripples with the voice's loudness and its low and high bands. */
+export const torusKnot: Visualization<TorusKnotConfig> = {
+  id: 'torus-knot',
+  title: 'Torus knot',
   params: { waveSpeed: waveParams.waveSpeed, ...glowParams },
   defaults: { waveSpeed: 1, ...glowDefaults },
   presets: {},
   create: ({ scene }) => {
-    const geometry = new THREE.TorusGeometry(1, 0.38, 48, 128);
+    const geometry = new THREE.TorusKnotGeometry(0.7, 0.22, 256, 32);
     const base = Float32Array.from(geometry.attributes.position.array);
-    // Displacing along the tube's own normal swells the ring's surface rather than its whole radius.
+    // Displacing along the tube's own normal swells the knot's surface rather than its whole path.
     const normals = Float32Array.from(geometry.attributes.normal.array);
     const material = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.1 });
     const mesh = new THREE.Mesh(geometry, material);

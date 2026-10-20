@@ -943,6 +943,26 @@ decision D-7: plugin-calls draws an avatar only through a renderer its caller pa
   source: https://github.com/dxos/dxos/pull/14040
 ```
 
+```mdl
+decision D-8: The agent visualizations live in `@dxos/react-ui-experimental` (as its `AgentVisualization` namespace), not in a package of their own. Supersedes [D-6].
+  date: 2026-10-20
+  by: user:richburdon
+  supersedes: D-6
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-9: plugin-calls still draws avatars only through a renderer its caller passes to `CallManager.simulate`, now so that it does not depend on the experimental visualizations and their 3D libraries; the default look is the orb. Fills in [D-8]; supersedes [D-7].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-7
+  affects: [op:SetSimulatedParticipants]
+  why: With the visualizations in a published package the private-dependency rule no longer applies, but plugin-calls ships to every Composer user and needs none of three.js or React Three Fiber.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

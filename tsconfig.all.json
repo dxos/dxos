@@ -13,9 +13,6 @@
       "path": "packages/core/compute/agent-runtime/tsconfig.json"
     },
     {
-      "path": "packages/ui/agent-visualization/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {

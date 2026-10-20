@@ -6,15 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import {
-  AudioProvider,
-  createAgentVisualization,
-  getVisualization,
-  inkPresets,
-  torus,
-} from '@dxos/agent-visualization';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
+import { AgentVisualization } from '@dxos/react-ui-experimental';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
@@ -37,15 +31,15 @@ const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
 /** The agent as it appears standing in for a colleague. */
 const STAND_IN = {
   name: 'Composer',
-  avatar: { visualization: 'ink', config: inkPresets.navy },
+  avatar: { visualization: 'ink', config: AgentVisualization.inkPresets.navy },
 } satisfies Omit<Participant, 'track'>;
 
-/** Draws an avatar participant with `@dxos/agent-visualization`, driven by its voice track. */
+/** Draws an avatar participant with react-ui-experimental's agent visualizations, driven by its voice track. */
 const renderAvatar: SimulatedAvatarRenderer = async (context, track, { visualization, config }) =>
-  createAgentVisualization({
-    visualization: getVisualization(visualization) ?? torus,
+  AgentVisualization.createAgentVisualization({
+    visualization: AgentVisualization.getVisualization(visualization) ?? AgentVisualization.orb,
     config,
-    providers: [new AudioProvider(context, track)],
+    providers: [new AgentVisualization.AudioProvider(context, track)],
   });
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */

@@ -8,10 +8,10 @@ import { number } from '../params.ts';
 import { type Visualization } from '../visualization.ts';
 import { type GlowConfig, type WaveConfig, glowDefaults, glowParams, waveDefaults, waveParams } from './common.ts';
 
-export type OrbConfig = WaveConfig & GlowConfig & { glow: number };
+export type OrbConfig = WaveConfig & GlowConfig & { glow: number; ripple: number };
 
 /** Subdivisions of the icosphere; the GPU displaces every vertex, so a fine mesh costs little. */
-const DETAIL = 48;
+const DETAIL = 32;
 
 const VERTEX = /* glsl */ `
   uniform float uPhase;
@@ -21,39 +21,42 @@ const VERTEX = /* glsl */ `
   uniform float uHigh;
   uniform float uAmplitude;
   uniform float uJitter;
+  uniform float uRipple;
   varying vec3 vPosition;
   varying vec3 vNormal;
 
-  float hash(vec3 p) {
-    p = fract(p * 0.3183099 + 0.1);
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+  // Displacement as a sum of smooth sinusoids over the sphere: no lattice, so no creases at any scale.
+  float displacement(vec3 n) {
+    // Passive: a slow breathing swell that fades out as the voice takes over.
+    float idle = max(0.0, 1.0 - uLevel * 4.0);
+    float breathe = sin(n.x * 1.3 + uPhase * 0.7) * sin(n.y * 1.1 - uPhase * 0.5) * 0.08 * uAmplitude * idle;
+    // Speaking: broad lobes from loudness and the low band, on real time so the voice moves it at any passive speed.
+    float lobes =
+      (sin(n.x * 2.1 + uTime * 1.3) * sin(n.y * 1.7 - uTime * 1.1) +
+       sin(n.z * 2.3 + uTime * 0.9) * sin(n.x * 1.3 + uTime * 1.7)) * 0.5 *
+      (uLevel * 0.25 + uLow * 0.2);
+    // A gentle shimmer from the high band (sibilants), scaled by \`ripple\`; 0 keeps the lobes perfectly smooth.
+    float ripple =
+      sin(n.x * 6.0 + uTime * 3.0) * sin(n.y * 5.3 - uTime * 2.6) * sin(n.z * 5.7 + uTime * 3.4) *
+      uRipple * (uHigh * 0.06 + uJitter * 0.01);
+    return breathe + lobes + ripple + uLevel * 0.1;
   }
 
-  // Value noise, smoothly interpolated between hashed lattice points.
-  float noise(vec3 x) {
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(mix(hash(i), hash(i + vec3(1, 0, 0)), f.x), mix(hash(i + vec3(0, 1, 0)), hash(i + vec3(1, 1, 0)), f.x), f.y),
-      mix(mix(hash(i + vec3(0, 0, 1)), hash(i + vec3(1, 0, 1)), f.x), mix(hash(i + vec3(0, 1, 1)), hash(i + vec3(1, 1, 1)), f.x), f.y),
-      f.z
-    );
+  vec3 surface(vec3 n) {
+    return n * (1.0 + displacement(n));
   }
 
   void main() {
     vec3 n = normalize(position);
-    // Passive: a slow breathing swell. Speaking: broad lobes from the low band and loudness, fine ripples from the
-    // high band (sibilants), both on real time so the voice moves it whatever the passive speed.
-    float idle = max(0.0, 1.0 - uLevel * 4.0);
-    float breathe = (noise(n * 1.6 + uPhase * 0.35) - 0.5) * 0.12 * uAmplitude * idle;
-    float lobes = (noise(n * 2.2 + uTime * 1.3) - 0.5) * (uLevel * 0.45 + uLow * 0.35);
-    float ripple = (noise(n * 9.0 + uTime * 4.0) - 0.5) * (uHigh * 0.25 + uJitter * 0.02);
-    vec3 displaced = n * (1.0 + breathe + lobes + ripple + uLevel * 0.12);
-    vec4 world = modelViewMatrix * vec4(displaced, 1.0);
+    // The displaced surface's normal from two nearby points on it, so shading is smooth and follows the deformation.
+    vec3 tangent = normalize(cross(n, abs(n.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
+    vec3 bitangent = cross(n, tangent);
+    vec3 p = surface(n);
+    vec3 pa = surface(normalize(n + tangent * 0.01));
+    vec3 pb = surface(normalize(n + bitangent * 0.01));
+    vec4 world = modelViewMatrix * vec4(p, 1.0);
     vPosition = world.xyz;
-    vNormal = normalize(normalMatrix * n);
+    vNormal = normalize(normalMatrix * normalize(cross(pa - p, pb - p)));
     gl_Position = projectionMatrix * world;
   }
 `;
@@ -65,11 +68,10 @@ const FRAGMENT = /* glsl */ `
   varying vec3 vNormal;
 
   void main() {
-    // The displaced surface's own normal, from screen-space derivatives, so lighting follows the deformation.
-    vec3 normal = normalize(cross(dFdx(vPosition), dFdy(vPosition)));
+    vec3 normal = normalize(vNormal);
     vec3 view = normalize(-vPosition);
     float light = 0.35 + 0.65 * max(0.0, dot(normal, normalize(vec3(0.4, 0.6, 0.7))));
-    float rim = pow(1.0 - max(0.0, dot(normalize(vNormal), view)), 2.0);
+    float rim = pow(1.0 - max(0.0, dot(normal, view)), 2.0);
     gl_FragColor = vec4(uColor * light + uColor * rim * uGlow, 1.0);
   }
 `;
@@ -81,11 +83,11 @@ const FRAGMENT = /* glsl */ `
 export const orb: Visualization<OrbConfig> = {
   id: 'orb',
   title: 'Orb',
-  params: { ...waveParams, ...glowParams, glow: number(0, 2, 0.05, 'Glow') },
-  defaults: { ...waveDefaults, ...glowDefaults, glow: 0.8 },
+  params: { ...waveParams, ...glowParams, glow: number(0, 2, 0.05, 'Glow'), ripple: number(0, 1, 0.05, 'Ripple') },
+  defaults: { ...waveDefaults, ...glowDefaults, glow: 0.8, ripple: 0.3 },
   presets: {
-    calm: { waveAmplitude: 0.6, jitter: 0, waveSpeed: 0.5, glow: 0.5 },
-    lively: { waveAmplitude: 2, jitter: 2, waveSpeed: 2, glow: 1.4 },
+    calm: { waveAmplitude: 0.6, jitter: 0, waveSpeed: 0.5, glow: 0.5, ripple: 0 },
+    lively: { waveAmplitude: 2, jitter: 2, waveSpeed: 2, glow: 1.4, ripple: 0.8 },
   },
   create: ({ scene }) => {
     const geometry = new THREE.IcosahedronGeometry(1, DETAIL);
@@ -97,6 +99,7 @@ export const orb: Visualization<OrbConfig> = {
       uHigh: { value: 0 },
       uAmplitude: { value: 1 },
       uJitter: { value: 0 },
+      uRipple: { value: 0.3 },
       uColor: { value: new THREE.Color() },
       uGlow: { value: 0.8 },
     };
@@ -108,7 +111,7 @@ export const orb: Visualization<OrbConfig> = {
 
     let phase = 0;
     return {
-      update: ({ time, delta, signals }, { waveAmplitude, jitter, waveSpeed, color, speakingColor, glow }) => {
+      update: ({ time, delta, signals }, { waveAmplitude, jitter, waveSpeed, color, speakingColor, glow, ripple }) => {
         const { level, low, high } = signals.voice;
         // Accumulated, so speed 0 freezes the passive motion.
         phase += delta * waveSpeed;
@@ -120,6 +123,7 @@ export const orb: Visualization<OrbConfig> = {
         uniforms.uAmplitude.value = waveAmplitude;
         uniforms.uJitter.value = jitter;
         uniforms.uGlow.value = glow;
+        uniforms.uRipple.value = ripple;
         silent.set(color);
         loud.set(speakingColor);
         uniforms.uColor.value.copy(silent).lerp(loud, Math.min(1, level * 1.6));
