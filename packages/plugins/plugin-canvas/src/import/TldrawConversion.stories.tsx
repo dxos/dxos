@@ -42,7 +42,7 @@ const withConversion = (records: Record<string, unknown>, { snap }: { snap: bool
   });
 
 const meta: Meta<typeof ModuleContainer> = {
-  title: 'plugins/plugin-canvas/import/ImportTldraw',
+  title: 'plugins/plugin-canvas/import/TldrawConversion',
   render: ModuleContainer,
   parameters: {
     layout: 'fullscreen',

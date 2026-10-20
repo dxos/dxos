@@ -151,4 +151,30 @@ describe('canvas edit operations', () => {
     ),
     60_000,
   );
+
+  it.effect(
+    'apply refuses a malformed intent and writes nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* Database.add(createCanvas());
+        yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        yield* Database.flush();
+        const root = rootOf(canvas.content) ?? '';
+        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const exit = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [
+            { kind: 'create', node },
+            { kind: 'move', ids: ['n'] },
+          ],
+        }).pipe(Effect.exit);
+        expect(exit._tag).toBe('Failure');
+        expect(String(exit)).toContain('Intent 1 is not a valid canvas intent.');
+        expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
 });
