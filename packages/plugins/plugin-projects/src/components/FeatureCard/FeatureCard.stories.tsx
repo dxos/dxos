@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import * as Layout from '@dxos/react-ui/Layout';
+import { Masonry } from '@dxos/react-ui-masonry';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { makeFeatureLookup } from './feature.ts';
+import { type FeatureLookup, type FeatureModel, makeFeatureLookup } from './feature.ts';
 import { FeatureCard } from './FeatureCard.tsx';
 import { SAMPLE_FEATURES } from './testing.ts';
 
@@ -22,25 +22,29 @@ type StoryArgs = {
   onSelectDependency?: (id: string) => void;
 };
 
+type TileData = Pick<StoryArgs, 'expanded' | 'onSelectDependency'> & { feature: FeatureModel; lookup: FeatureLookup };
+
+const FeatureTile = ({ data: { feature, ...props } }: { data: TileData }) => (
+  <FeatureCard feature={feature} {...props} />
+);
+
 const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
   const lookup = useMemo(() => makeFeatureLookup(SAMPLE_FEATURES), []);
-  return (
-    <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]'>
-      {ids.flatMap((id) => {
+  const items = useMemo(
+    () =>
+      ids.flatMap((id): TileData[] => {
         const feature = lookup(id);
-        return feature
-          ? [
-              <FeatureCard
-                key={id}
-                feature={feature}
-                lookup={lookup}
-                expanded={expanded}
-                onSelectDependency={onSelectDependency}
-              />,
-            ]
-          : [];
-      })}
-    </Layout.Grid>
+        return feature ? [{ feature, lookup, expanded, onSelectDependency }] : [];
+      }),
+    [ids, lookup, expanded, onSelectDependency],
+  );
+
+  return (
+    <Masonry.Root Tile={FeatureTile} minColumnWidth={18}>
+      <Masonry.Content>
+        <Masonry.Viewport items={items} getId={({ feature }) => feature.id} />
+      </Masonry.Content>
+    </Masonry.Root>
   );
 };
 
