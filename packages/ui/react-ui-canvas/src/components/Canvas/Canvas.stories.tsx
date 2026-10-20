@@ -248,8 +248,9 @@ export const Floating: Story = {
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));
-    // The panel is split: the properties above the seam, the other sections below.
-    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
+    // Floating, every section is in one scrolling list: no seam, the properties first.
+    await expect(await canvas.findByTestId('dock-section-properties')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('dock-splitter')).toBeNull();
     const guide = await within(await canvas.findByTestId('properties')).findByText('Guide');
     guide.scrollIntoView();
     await userEvent.click(guide);
@@ -260,6 +261,8 @@ export const Floating: Story = {
     // Docked, the same sections: layers still closed until opened (only the properties start open).
     await expect(await canvas.findByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed');
     await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    // Docked, the panel splits: the properties above the seam, the other sections below.
+    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
   },
 };
 
