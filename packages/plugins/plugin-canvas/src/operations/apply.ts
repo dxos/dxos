@@ -10,7 +10,7 @@ import { createFreehandProjection, isIntent, pruneOrphaned, recordChanges } from
 import { CanvasOperation } from '#types';
 
 import { isCanvasHeads } from '../model/store.ts';
-import { InvalidIntentError } from './canvas.ts';
+import { InvalidIntentError, UnversionedCanvasError } from './canvas.ts';
 import { withCanvasStore } from './patch-store.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOperation.Apply.pipe(
@@ -25,6 +25,11 @@ const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOpera
       }
 
       return yield* withCanvasStore(ref, ({ registry, bound, canvas, versions }) => {
+        // Without heads the edit could not be undone, so a canvas outside a database is refused before it is changed.
+        if (!isCanvasHeads(versions.heads())) {
+          return Effect.fail(new UnversionedCanvasError({ message: `Canvas ${canvas.id} has no version history.` }));
+        }
+
         const projection = createFreehandProjection({ registry, store: bound.store, sceneId: view ?? bound.root });
         const [change] = recordChanges([versions], () => {
           const before = registry.get(bound.store.views);
@@ -37,11 +42,12 @@ const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOpera
             registry.set(bound.store.views, pruned);
           }
         });
-        // A canvas loaded from a database always has heads; without them nothing could be undone, so nothing is offered.
-        return change && isCanvasHeads(change.before) && isCanvasHeads(change.after)
-          ? { canvas: canvas.id, before: change.before, after: change.after, paths: change.paths }
-          : { canvas: canvas.id, before: {}, after: {}, paths: [] };
-      });
+        return Effect.succeed(
+          change && isCanvasHeads(change.before) && isCanvasHeads(change.after)
+            ? { canvas: canvas.id, before: change.before, after: change.after, paths: change.paths }
+            : { canvas: canvas.id, before: {}, after: {}, paths: [] },
+        );
+      }).pipe(Effect.flatten);
     }),
   ),
 );

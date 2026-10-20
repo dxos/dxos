@@ -171,6 +171,17 @@ describe('canvas edit operations', () => {
         expect(exit._tag).toBe('Failure');
         expect(String(exit)).toContain('Intent 1 is not a valid canvas intent.');
         expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
+
+        yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [{ kind: 'create', node }],
+        });
+        const update = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [{ kind: 'update', id: 'n', values: { center: 'abc' } }],
+        }).pipe(Effect.exit);
+        expect(update._tag).toBe('Failure');
+        expect(readViews(canvas.content)[root].nodes.n?.center).toEqual({ x: 0, y: 0 });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

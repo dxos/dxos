@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Bounds, type Intent, Layer, Link, NodeBase, Point, Timeline } from './types.ts';
+import { Bounds, type Intent, Layer, Link, NodeBase, Point, Timeline, nodeBase } from './types.ts';
 
 const isPoint = Schema.is(Point);
 const isBounds = Schema.is(Bounds);
@@ -16,6 +16,17 @@ const isTimeline = Schema.is(Timeline);
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isStrings = (value: unknown): value is string[] => Array.isArray(value) && value.every(isString);
+
+const sharedFields: Readonly<Record<string, (value: unknown) => boolean>> = Object.fromEntries(
+  Object.entries(nodeBase).map(([key, field]) => [key, Schema.is(field)]),
+);
+
+/** Edits never change `id` or `type`, and a shared field must keep its type; a type's own fields are its registry's to check. */
+const isValues = (values: unknown): boolean =>
+  isRecord(values) &&
+  !('id' in values) &&
+  !('type' in values) &&
+  Object.entries(values).every(([key, value]) => value === undefined || (sharedFields[key]?.(value) ?? true));
 
 /**
  * Whether a value is a well-formed `Intent`, its batches included: intents that arrive over an operation are
@@ -40,7 +51,7 @@ export const isIntent = (value: unknown): value is Intent => {
     case 'reorder':
       return isString(value.id) && isString(value.z);
     case 'update':
-      return isString(value.id) && isRecord(value.values);
+      return isString(value.id) && isValues(value.values);
     case 'layout':
       return value.ids === undefined || isStrings(value.ids);
     case 'layer':
