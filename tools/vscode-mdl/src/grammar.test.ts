@@ -133,7 +133,8 @@ describe('mdl grammar', () => {
     expect(scopesOf(grammar, source, 'tags', 'smoke')).toContain('variable.other.reference.mdl');
     expect(scopesOf(grammar, source, 'tags', '[')).toContain('punctuation.definition.list.begin.mdl');
     // Prose is not a type expression, so its capitalised words are left alone.
-    expect(scopesOf(grammar, source, 'desc', ' A Board holds Pieces')).not.toContain('entity.name.type.mdl');
+    expect(scopesOf(grammar, source, 'desc', 'Board')).not.toContain('entity.name.type.mdl');
+    expect(scopesOf(grammar, source, 'desc', 'Pieces')).not.toContain('entity.name.type.mdl');
   });
 
   test('comments, whole-line and trailing', ({ expect }) => {
