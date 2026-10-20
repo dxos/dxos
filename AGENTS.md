@@ -299,10 +299,10 @@ Deeper conventions:
   `gh run view <id> --log-failed`.
 - **Retry a failed Check job** with `gh run rerun <run-id> --failed`, or `--job <job-id>` for one.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **A draft PR runs only `check`** (lint, build, types); marking it ready runs every suite, browser,
-  storybook and e2e included, and the merge queue runs them again on top of `main`. Reproduce a browser
+- **A draft PR runs `check` and the node tests**; marking it ready adds the browser, storybook and e2e
+  suites, and the merge queue runs them again on top of `main`. Reproduce a browser
   or storybook failure with `moon run <project>:test-storybook` (or `:test-browser`).
-- **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
+- **Every push to a PR runs Check**, a draft included. Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`

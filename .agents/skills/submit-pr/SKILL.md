@@ -47,7 +47,7 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
 9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, then `gh pr ready`, which
-   starts the full Check: a draft runs only `check`, a ready PR every suite.
+   starts the full Check: a draft runs `check` and the node tests, a ready PR every suite.
    Every push after this runs Check, so batch fixes into one push rather than pushing each one, and merge
    `main` in only to resolve a conflict. To keep iterating, convert it back to a
    draft first (`gh pr ready --undo`). Drafts never run CI.

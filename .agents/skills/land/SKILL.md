@@ -30,7 +30,7 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 - Title, body, labels.
 
 If the PR is already merged or closed, tell the user and stop. If it is a draft,
-run `gh pr ready <number>`: a draft runs only `check` and the merge queue rejects it.
+run `gh pr ready <number>`: a draft skips the browser and e2e suites and the merge queue rejects it.
 
 Check whether the PR belongs to a stack (GitHub native stacked PRs): the stack
 map on the PR page is the test — `baseRefName` ≠ `main` is only a hint, and a

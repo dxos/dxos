@@ -1,8 +1,8 @@
 name: Check
 
-# A draft PR runs only `check`; marking it ready runs everything. Converting a PR to a draft, by hand or
-# by `draft-on-open.yml`, starts a run that keeps only `check`, and the concurrency group cancels the run
-# in flight. Every other PR-triggered job repeats the draft gate in its `if:` or inherits it from `plan`.
+# A draft PR runs `check`, `boot-budget` and the node tests; marking it ready adds the browser,
+# storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
+# hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
 # Where suites run: a ready PR and the merge queue run every job; e2e reports without gating. Pushes to
 # main run nothing: main moves to the exact commit the queue tested, so the queue's results are the ones
@@ -211,16 +211,13 @@ jobs:
   # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
   # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
   # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
-  # regression: `e2e` runs in the merge queue, after the PR, so there it never gated one.
+  # regression.
   # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
   # instead. A PR or merge group confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
-  # Not in the merge queue: the PR already measured the same change.
   boot-budget:
-    if: >-
-      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
     permissions:
       contents: read
       packages: read
@@ -355,12 +352,10 @@ jobs:
             }
 
   # Starts only the test and e2e cells whose targets the change affects (`.github/actions/plan/plan.mjs`),
-  # and lays out the e2e cells: which browsers (none on a PR, all three otherwise) and how many
-  # Playwright shards each gets.
+  # and lays out the e2e cells: which browsers and how many Playwright shards each gets. A draft gets the
+  # node tests only.
   plan:
-    if: >-
-      ${{ inputs.only != 'check' && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ inputs.only != 'check' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -389,6 +384,8 @@ jobs:
           all: ${{ github.event_name == 'workflow_dispatch' }}
 
       - id: plan
+        env:
+          DRAFT: ${{ github.event.pull_request.draft == true }}
         run: node .github/actions/plan/plan.mjs
 
   # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time; `browser`

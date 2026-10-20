@@ -9,7 +9,8 @@
 // MOON_BASE unset it is a full run and every cell starts. `--downstream deep` counts a task as affected
 // when anything it depends on changed. A change to CI, toolchain or root config is an input of no task
 // yet changes how every test runs, so it starts every cell too, as does any failure: skipping a suite
-// that should have run is the one outcome this must never produce. A draft PR starts none of them.
+// that should have run is the one outcome this must never produce. A draft PR starts only the node
+// cells.
 
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
@@ -31,12 +32,13 @@ const COMPOSER_SHARDS = {
 const REST_SHARDS = 2;
 
 const main = () => {
-  const browsers = ['chromium', 'firefox', 'webkit'];
+  const draft = process.env.DRAFT === 'true';
+  const browsers = draft ? [] : ['chromium', 'firefox', 'webkit'];
   const affected = readAffected();
   const plan = {
     browsers,
     node: affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true,
-    browser: affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true,
+    browser: !draft && (affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true),
     composer: affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true,
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
