@@ -13,7 +13,6 @@ import * as Schema from 'effect/Schema';
 import {
   type BuiltinNode,
   type CloudNode,
-  DEFAULT_GRID,
   DEFAULT_LAYER,
   type EllipseNode,
   Endpoint,
@@ -21,6 +20,7 @@ import {
   type Intent,
   type Layer,
   type LineStyle,
+  MAJOR_GRID,
   type Link,
   type LinkEnds,
   type Marker,
@@ -104,8 +104,8 @@ export type TldrawImportOptions = {
   /** The root View's id; the canvas's default root by default. */
   root?: ViewId;
   /**
-   * Snap every node's position and size, and every free link end, to the canvas's minor grid (`DEFAULT_GRID`), so the
-   * shapes line up as ones drawn on the canvas do; on by default.
+   * Snap every node's position and size, and every free link end, to the grid the canvas shows (`MAJOR_GRID`, the
+   * cell moves and resizes snap to), so the shapes line up as ones drawn on the canvas do; on by default.
    */
   snap?: boolean;
 };
@@ -475,7 +475,7 @@ export const tldrawToViews = (
             links: Object.fromEntries(Object.entries(links).map(([id, link]) => [id, layered(DEFAULT_LAYER.id)(link)])),
             layers: { [FRAMES_LAYER.id]: FRAMES_LAYER, [DEFAULT_LAYER.id]: DEFAULT_LAYER },
           };
-    views[draft.id] = snap ? snapView(view, DEFAULT_GRID) : view;
+    views[draft.id] = snap ? snapView(view, MAJOR_GRID) : view;
   }
 
   // A group becomes what the canvas's Group command makes: an anonymous Object, placed by one Instance.
@@ -501,18 +501,29 @@ export const tldrawToViews = (
   return { root, views, skipped, approximated };
 };
 
-/** `view` with its nodes' frames and its free link ends on a grid of `unit` px: a frame keeps at least one cell. */
+/**
+ * `view` with its nodes' frames and its free link ends on a grid of `unit` px, each frame keeping at least one cell. A
+ * tldraw frame grows out to the grid, so it still holds its shapes once they are snapped.
+ */
 const snapView = (view: View, unit: number): View => {
   const toGrid = (value: number) => Math.round(value / unit) * unit;
   const snapPoint = (point: Point): Point => ({ x: toGrid(point.x), y: toGrid(point.y) });
   const snapEnd = (end: Link['source']): Link['source'] => ('point' in end ? { point: snapPoint(end.point) } : end);
   const nodes = Object.fromEntries(
     Object.entries(view.nodes).map(([id, node]): [string, Node] => {
-      const width = Math.max(unit, toGrid(node.size.width));
-      const height = Math.max(unit, toGrid(node.size.height));
-      const left = toGrid(node.center.x - node.size.width / 2);
-      const top = toGrid(node.center.y - node.size.height / 2);
-      return [id, { ...node, center: { x: left + width / 2, y: top + height / 2 }, size: { width, height } }];
+      const left = node.center.x - node.size.width / 2;
+      const top = node.center.y - node.size.height / 2;
+      const outward = node.layer === FRAMES_LAYER.id;
+      const [x0, y0] = outward
+        ? [Math.floor(left / unit) * unit, Math.floor(top / unit) * unit]
+        : [toGrid(left), toGrid(top)];
+      const width = outward
+        ? Math.ceil((left + node.size.width) / unit) * unit - x0
+        : Math.max(unit, toGrid(node.size.width));
+      const height = outward
+        ? Math.ceil((top + node.size.height) / unit) * unit - y0
+        : Math.max(unit, toGrid(node.size.height));
+      return [id, { ...node, center: { x: x0 + width / 2, y: y0 + height / 2 }, size: { width, height } }];
     }),
   );
   const links = Object.fromEntries(

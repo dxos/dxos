@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_GRID, sortByZ } from '@dxos/react-ui-canvas/headless';
+import { MAJOR_GRID, sortByZ } from '@dxos/react-ui-canvas/headless';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
 import { nearestHue, tldrawToViews } from './tldraw.ts';
@@ -176,19 +176,45 @@ describe('nearestHue', () => {
     expect(nearestHue('unknown')).toBe('neutral');
   });
 
-  test('snaps every frame to the canvas grid by default, keeping at least one cell', ({ expect }) => {
+  test('snaps every frame to the grid the canvas shows by default, keeping at least one cell', ({ expect }) => {
     const { views } = tldrawToViews(shapesAndArrow());
     const exact = tldrawToViews(shapesAndArrow(), { snap: false }).views;
     for (const node of Object.values(views.root.nodes)) {
       const left = node.center.x - node.size.width / 2;
       const top = node.center.y - node.size.height / 2;
       for (const value of [left, top, node.size.width, node.size.height]) {
-        expect(value % DEFAULT_GRID).toBe(0);
+        expect(value % MAJOR_GRID).toBe(0);
       }
-      expect(node.size.width).toBeGreaterThanOrEqual(DEFAULT_GRID);
+      expect(node.size.width).toBeGreaterThanOrEqual(MAJOR_GRID);
       // Within half a cell of where tldraw drew it.
       const source = exact.root.nodes[node.id];
-      expect(Math.abs(left - (source.center.x - source.size.width / 2))).toBeLessThanOrEqual(DEFAULT_GRID / 2);
+      expect(Math.abs(left - (source.center.x - source.size.width / 2))).toBeLessThanOrEqual(MAJOR_GRID / 2);
     }
+  });
+
+  test('a snapped frame grows out to the grid, so it still holds its shapes', ({ expect }) => {
+    const { nodes } = tldrawToViews(frameWithChildren()).views.root;
+    const bounds = (id: string) => {
+      const { center, size } = nodes[id];
+      return {
+        left: center.x - size.width / 2,
+        top: center.y - size.height / 2,
+        right: center.x + size.width / 2,
+        bottom: center.y + size.height / 2,
+      };
+    };
+    const frame = bounds('frame');
+    for (const value of Object.values(frame)) {
+      expect(value % MAJOR_GRID).toBe(0);
+    }
+    for (const id of ['inner-a', 'inner-b']) {
+      const inner = bounds(id);
+      expect(inner.left).toBeGreaterThanOrEqual(frame.left);
+      expect(inner.top).toBeGreaterThanOrEqual(frame.top);
+      expect(inner.right).toBeLessThanOrEqual(frame.right);
+      expect(inner.bottom).toBeLessThanOrEqual(frame.bottom);
+    }
+    // Clear of the frame's corner, where its name is.
+    expect(bounds('inner-a').top).toBeGreaterThan(frame.top);
   });
 });
