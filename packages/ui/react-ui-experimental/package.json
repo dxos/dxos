@@ -36,7 +36,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "d3": "catalog:",
     "flubber": "catalog:",
     "glsl-curl-noise2": "catalog:",

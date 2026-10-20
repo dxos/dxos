@@ -23582,9 +23582,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       d3:
         specifier: 'catalog:'
         version: 7.9.0
