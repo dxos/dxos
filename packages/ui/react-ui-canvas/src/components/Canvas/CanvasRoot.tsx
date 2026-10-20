@@ -23,6 +23,7 @@ import {
   useCanvasHistory,
   useClock,
   useDocumentCommands,
+  useEditMode,
   useElementHandlers,
   useExposedClock,
   useGeneratorFrames,
@@ -296,6 +297,7 @@ export const CanvasRoot = ({
   });
 
   const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
+  const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
     onPointerMove,
@@ -313,6 +315,9 @@ export const CanvasRoot = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
+    deleteVertex,
     setDrag,
     toScene,
     removePoint,
@@ -348,6 +353,7 @@ export const CanvasRoot = ({
     snapMinor,
     isClick,
     moveDelta,
+    exitEdit,
   });
 
   // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
@@ -355,11 +361,12 @@ export const CanvasRoot = ({
   useEffect(() => {
     if (readonly) {
       cancelDrag();
+      exitEdit();
       if (registry.get(atoms.tool).kind !== 'hand') {
         setTool({ kind: 'select' });
       }
     }
-  }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
+  }, [readonly, cancelDrag, exitEdit, registry, atoms.tool, setTool]);
 
   const { copy, cut, paste } = controller.editing;
   const documentCommands = useDocumentCommands({
@@ -406,8 +413,11 @@ export const CanvasRoot = ({
     removePoint,
     finishVertices,
     removeVertex,
+    deleteVertex,
     setTool,
     timeline: timelineKeys,
+    editNode,
+    exitEdit,
   });
 
   // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
@@ -441,8 +451,8 @@ export const CanvasRoot = ({
     capabilities,
     navigation,
     scene,
-    select,
     toScene,
+    editNode,
     onNodePointerDown,
     onLinkPointerDown,
     onLinkDoubleClick,
@@ -523,6 +533,8 @@ export const CanvasRoot = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onVertexPointerDown={onVertexPointerDown}
+              onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}

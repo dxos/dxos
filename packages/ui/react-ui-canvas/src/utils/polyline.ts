@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Bounds, type Point, type Size } from '../model/index.ts';
+import { type Bounds, type Point, type PolylineNode, type Size } from '../model/index.ts';
 
 /** How near a placed vertex a press must be, in screen px, to land on it: on the first, it closes the line. */
 export const VERTEX_SNAP_PX = 8;
@@ -49,6 +49,78 @@ export const polylineFrame = (
     bounds: { x, y, width, height },
     points: points.map((point) => ({ x: unit(point.x, x, width), y: unit(point.y, y, height) })),
   };
+};
+
+/** `point` turned `degrees` clockwise about `center`. */
+const turn = (point: Point, center: Point, degrees: number): Point => {
+  if (degrees === 0) {
+    return point;
+  }
+  const angle = (degrees * Math.PI) / 180;
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  return {
+    x: center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+    y: center.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+  };
+};
+
+/** What a node edited by its vertices carries (`NodeDef.editor`): a frame and unit-space `points` in it. */
+export type VertexShape = Pick<PolylineNode, 'center' | 'size' | 'rotation' | 'points'>;
+
+/** Whether `node` carries unit-space `points` to edit as vertices. */
+export const hasVertices = <T extends object>(node: T): node is T & VertexShape => {
+  const points: unknown = Reflect.get(node, 'points');
+  return Array.isArray(points);
+};
+
+/** The fewest vertices a polyline keeps: one segment open, a triangle closed. */
+export const minPolylineVertices = (closed: boolean): number => (closed ? 3 : 2);
+
+/** A polyline's vertices in scene coordinates: its unit-space points placed in its frame and turned by its rotation. */
+export const polylineVertices = (node: VertexShape): Point[] => {
+  const { center, size } = node;
+  const left = center.x - size.width / 2;
+  const top = center.y - size.height / 2;
+  return node.points.map(({ x, y }) =>
+    turn({ x: left + x * size.width, y: top + y * size.height }, center, node.rotation ?? 0),
+  );
+};
+
+/**
+ * The `update` values that put a polyline's vertices at scene `vertices`: its frame refitted to them in its own axes
+ * (each side at least `minimum`) and turned as before, and its points renormalised to that frame.
+ */
+export const refitPolyline = (
+  node: VertexShape,
+  vertices: readonly Point[],
+  minimum = 0,
+): Pick<PolylineNode, 'center' | 'size' | 'points'> | undefined => {
+  const rotation = node.rotation ?? 0;
+  // Fitted unturned about the old centre, so a rotated line keeps its rotation rather than growing a tilted frame.
+  const frame = polylineFrame(
+    vertices.map((vertex) => turn(vertex, node.center, -rotation)),
+    minimum,
+  );
+  if (!frame) {
+    return undefined;
+  }
+  const { x, y, width, height } = frame.bounds;
+  return {
+    center: turn({ x: x + width / 2, y: y + height / 2 }, node.center, rotation),
+    size: { width, height },
+    points: frame.points,
+  };
+};
+
+/** Each segment's midpoint with the index a vertex inserted there takes; a closed line's closing segment too. */
+export const polylineMidpoints = (vertices: readonly Point[], closed: boolean): { index: number; point: Point }[] => {
+  const segments = closed && vertices.length >= 3 ? vertices.length : vertices.length - 1;
+  return Array.from({ length: Math.max(0, segments) }, (_, index) => {
+    const from = vertices[index];
+    const to = vertices[(index + 1) % vertices.length];
+    return { index: index + 1, point: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 } };
+  });
 };
 
 export type PolylinePathOptions = {

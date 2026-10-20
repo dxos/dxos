@@ -40,6 +40,7 @@ import {
   type ViewStore,
   endpointNode,
   isPointEndpoint,
+  isPolylineNode,
   isViewNode,
   nodeDef,
 } from '../../model/index.ts';
@@ -55,17 +56,21 @@ import {
   createLink,
   createNode,
   handlePoint,
+  hasVertices,
   hitTest,
   insertIndex,
   linkGeometry,
+  minPolylineVertices,
   nodeBounds,
   nodePorts,
   nodesIntersecting,
   nominalSize,
   panBy,
   polylineFrame,
+  polylineVertices,
   portAccepts,
   portPoint,
+  refitPolyline,
   resizeBounds,
   screenToScene,
   sideToward,
@@ -73,6 +78,7 @@ import {
 } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
+import { type EditMode } from './useEditMode.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -136,7 +142,8 @@ export type UsePointerMachineOptions = {
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
-  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'isClick' | 'moveDelta'>;
+  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'isClick' | 'moveDelta'> &
+  Pick<EditMode, 'exitEdit'>;
 
 export type PointerMachine = {
   /** Root element handlers. */
@@ -160,6 +167,12 @@ export type PointerMachine = {
   onPointPointerDown: (link: SplineLink, index: number, event: PointerEvent) => void;
   onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
   onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
+  /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
+  onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
+  /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
+  onVertexMidpointPointerDown: (node: Node, index: number, point: Point, event: PointerEvent) => void;
+  /** Removes a vertex of the node in vertex edit mode, unless the node would be left with too few to draw. */
+  deleteVertex: (id: NodeId, index: number) => void;
 
   setDrag: (next: Drag | undefined) => void;
   /** A pointer event's position in scene coordinates. */
@@ -210,6 +223,7 @@ export const usePointerMachine = ({
   snapMinor,
   isClick,
   moveDelta,
+  exitEdit,
 }: UsePointerMachineOptions): PointerMachine => {
   const toScene = useCallback(
     (event: { clientX: number; clientY: number }): Point => {
@@ -228,10 +242,14 @@ export const usePointerMachine = ({
       cancelAnimation();
       // A gesture has no hover: the pointer is captured, so the highlight would stick to where it began.
       registry.set(atoms.hover, undefined);
+      // Any gesture but a pan or a vertex's own is a press outside the node being edited.
+      if (next.kind !== 'pan' && next.kind !== 'vertex') {
+        exitEdit();
+      }
       setDrag(next);
       rootRef.current?.setPointerCapture(event.pointerId);
     },
-    [cancelAnimation, setDrag, interactedRef, rootRef, registry, atoms.hover],
+    [cancelAnimation, setDrag, interactedRef, rootRef, registry, atoms.hover, exitEdit],
   );
 
   /** Lands a vertex-by-vertex drawing as a node, framed by its vertices; fewer than two make nothing. */
@@ -285,7 +303,7 @@ export const usePointerMachine = ({
    * A press while drawing vertex by vertex: on the first vertex it closes the line, anywhere else but the last vertex
    * it places the next one. A press on the last is the second of a double-click, which ends the line open (`dblclick`).
    */
-  const onVertexPointerDown = useCallback(
+  const onDrawingPointerDown = useCallback(
     (drawing: Extract<Drag, { kind: 'vertices' }>, point: Point, event: PointerEvent) => {
       event.stopPropagation();
       if (event.button !== 0) {
@@ -314,7 +332,7 @@ export const usePointerMachine = ({
       if (drawing?.kind === 'vertices') {
         // A drawing in progress takes every press, over a shape as on the canvas, until it ends or its tool is put down.
         if (currentTool.kind === 'node' && currentTool.type === drawing.type) {
-          onVertexPointerDown(drawing, point, event);
+          onDrawingPointerDown(drawing, point, event);
           return;
         }
         setDrag(undefined);
@@ -363,7 +381,7 @@ export const usePointerMachine = ({
       snap,
       snapMinor,
       nodeRegistry,
-      onVertexPointerDown,
+      onDrawingPointerDown,
       setDrag,
     ],
   );
@@ -402,6 +420,12 @@ export const usePointerMachine = ({
         return;
       }
       event.stopPropagation();
+      exitEdit(node.id);
+      // A node in vertex edit mode holds still under a press: its vertices are what move.
+      const editing = registry.get(atoms.editing);
+      if (editing?.kind === 'vertices' && editing.id === node.id) {
+        return;
+      }
       // With a link tool the body is a source like a port is, so a link can be drawn between two shapes
       // without aiming at their dots; the endpoint carries no port and routing picks the side.
       if (currentTool.kind === 'link' && capabilities.link) {
@@ -434,6 +458,8 @@ export const usePointerMachine = ({
       registry,
       atoms.tool,
       atoms.active,
+      atoms.editing,
+      exitEdit,
       activate,
       clickSelect,
       capabilities.move,
@@ -451,9 +477,10 @@ export const usePointerMachine = ({
         return;
       }
       event.stopPropagation();
+      exitEdit();
       clickSelect(link.id, event);
     },
-    [registry, atoms.tool, clickSelect],
+    [registry, atoms.tool, clickSelect, exitEdit],
   );
 
   const onHandlePointerDown = useCallback(
@@ -526,6 +553,62 @@ export const usePointerMachine = ({
       startDrag({ kind: 'point', id: link.id, index, points }, event);
     },
     [capabilities.update, registry, atoms.point, startDrag],
+  );
+
+  const deleteVertex = useCallback(
+    (id: NodeId, index: number) => {
+      const node = scene.nodes[id];
+      if (!node || !hasVertices(node) || !capabilities.update) {
+        return;
+      }
+      const closed = isPolylineNode(node) && node.params?.closed === true;
+      const vertices = polylineVertices(node);
+      registry.set(atoms.editing, { id, kind: 'vertices' });
+      if (vertices.length <= minPolylineVertices(closed)) {
+        return;
+      }
+      const values = refitPolyline(
+        node,
+        vertices.filter((_, i) => i !== index),
+        minor,
+      );
+      if (values) {
+        projection.apply({ kind: 'update', id, values });
+      }
+    },
+    [scene.nodes, capabilities.update, registry, atoms.editing, minor, projection],
+  );
+
+  const onVertexPointerDown = useCallback(
+    (node: Node, index: number, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || !hasVertices(node)) {
+        return;
+      }
+      event.stopPropagation();
+      if (event.altKey) {
+        deleteVertex(node.id, index);
+        return;
+      }
+      registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
+      startDrag({ kind: 'vertex', id: node.id, index, points: polylineVertices(node) }, event);
+    },
+    [capabilities.update, deleteVertex, registry, atoms.editing, startDrag],
+  );
+
+  const onVertexMidpointPointerDown = useCallback(
+    (node: Node, index: number, point: Point, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || !hasVertices(node)) {
+        return;
+      }
+      event.stopPropagation();
+      const vertices = polylineVertices(node);
+      registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
+      startDrag(
+        { kind: 'vertex', id: node.id, index, points: [...vertices.slice(0, index), point, ...vertices.slice(index)] },
+        event,
+      );
+    },
+    [capabilities.update, registry, atoms.editing, startDrag],
   );
 
   // The right-click menu opens at the pointer, anchored to an empty element parked under the cursor
@@ -734,6 +817,14 @@ export const usePointerMachine = ({
           // The next segment follows the pointer to where a press would place its vertex.
           const point = toScene(event);
           setDrag({ ...current, to: { x: snapMinor(point.x), y: snapMinor(point.y) } });
+          break;
+        }
+        case 'vertex': {
+          // A vertex lands on the minor grid, as the polyline tool places one.
+          const point = toScene(event);
+          const points = [...current.points];
+          points[current.index] = { x: snapMinor(point.x), y: snapMinor(point.y) };
+          setDrag({ ...current, points });
           break;
         }
         case 'point': {
@@ -1003,6 +1094,22 @@ export const usePointerMachine = ({
           projection.apply({ kind: 'update', id: current.id, values: { points: current.points } });
           break;
         }
+        case 'vertex': {
+          // The frame refits to the vertices in the same update, so the edit is one undo step.
+          const node = scene.nodes[current.id];
+          if (!node || !hasVertices(node)) {
+            break;
+          }
+          const before = polylineVertices(node);
+          const moved =
+            before.length !== current.points.length ||
+            current.points.some((point, index) => point.x !== before[index].x || point.y !== before[index].y);
+          const values = moved ? refitPolyline(node, current.points, minor) : undefined;
+          if (values) {
+            projection.apply({ kind: 'update', id: current.id, values });
+          }
+          break;
+        }
         case 'end': {
           // Dropped on a node it attaches there; dropped on empty canvas it becomes a free end at that point.
           const end: Endpoint = current.target ?? { point: current.to };
@@ -1058,6 +1165,9 @@ export const usePointerMachine = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
+    deleteVertex,
 
     setDrag,
     toScene,

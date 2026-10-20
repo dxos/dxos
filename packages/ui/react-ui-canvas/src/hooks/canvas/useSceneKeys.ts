@@ -25,6 +25,7 @@ import {
 } from '../../model/index.ts';
 import { toolForKey } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
+import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -65,8 +66,9 @@ export type UseSceneKeysOptions = {
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
-  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'finishVertices' | 'removeVertex'> &
-  Pick<ToolsCommands, 'setTool'>;
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'finishVertices' | 'removeVertex' | 'deleteVertex'> &
+  Pick<ToolsCommands, 'setTool'> &
+  EditMode;
 
 /**
  * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this
@@ -102,8 +104,11 @@ export const useSceneKeys = ({
   removePoint,
   finishVertices,
   removeVertex,
+  deleteVertex,
   setTool,
   timeline,
+  editNode,
+  exitEdit,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
   return useCallback(
     (event: KeyboardEvent) => {
@@ -120,6 +125,23 @@ export const useSceneKeys = ({
         }
         if (action === 'delete') {
           removeVertex();
+          event.preventDefault();
+          return;
+        }
+      }
+      // A node in vertex edit mode: Enter or Escape leaves it, each drag having landed already, and Delete removes the
+      // vertex last pressed rather than the node.
+      const editing = registry.get(atoms.editing);
+      if (editing?.kind === 'vertices' && !registry.get(atoms.drag)) {
+        if (action === 'open' || action === 'cancel') {
+          exitEdit();
+          event.preventDefault();
+          return;
+        }
+        if (action === 'delete') {
+          if (editing.vertex !== undefined) {
+            deleteVertex(editing.id, editing.vertex);
+          }
           event.preventDefault();
           return;
         }
@@ -176,6 +198,9 @@ export const useSceneKeys = ({
           const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
           if (node && nodeDef(nodeRegistry, node)?.openable) {
             navigation.drillIn(node);
+          } else if (node && editNode(node)) {
+            // The Enter that entered edit mode must not reach the editor it opens.
+            event.preventDefault();
           }
           break;
         }
@@ -277,10 +302,14 @@ export const useSceneKeys = ({
       atoms.selection,
       atoms.drag,
       atoms.point,
+      atoms.editing,
       removePoint,
       cancelDrag,
       finishVertices,
       removeVertex,
+      deleteVertex,
+      editNode,
+      exitEdit,
       select,
       navigation,
       capabilities,

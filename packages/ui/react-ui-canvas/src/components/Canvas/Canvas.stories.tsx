@@ -38,6 +38,8 @@ import { Canvas } from './Canvas.tsx';
  * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating inspector (top right) edits the
  *    selected element.
+ * 7. Double-click (or Enter on) a shape to edit it: a box's label in place, a polyline's vertices as diamonds to drag
+ *    (a dot adds one, Backspace removes the last pressed). Enter, Escape or a press outside leaves edit mode.
  */
 /** The drawings a story opens, by name; only `elements` grows with `depth` (the others are fixed). */
 const FIXTURES = {
@@ -463,5 +465,146 @@ export const Polyline: Story = {
     await userEvent.keyboard('{Escape}');
     await expect(canvas.queryByTestId('vertex-band')).toBeNull();
     await expect(polylines(canvasElement)).toHaveLength(2);
+  },
+};
+
+/** The vertex handles of the polyline in vertex edit mode. */
+const vertexHandles = (root: HTMLElement) => [...root.querySelectorAll('[data-testid="vertex-handle"]')];
+
+/** The centre of an element on screen. */
+const centreOf = (element: Element) => {
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { clientX: left + width / 2, clientY: top + height / 2 };
+};
+
+/**
+ * Edit mode: a double-click on a polyline shows its vertices to drag, and on a box opens its label; Enter, Escape or a
+ * press outside the node leaves either.
+ */
+export const PolylineEdit: Story = {
+  args: { depth: 0, liveDepth: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    const rect = view.getBoundingClientRect();
+    const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const at = (dx: number, dy: number) => ({
+      clientX: center.x + dx,
+      clientY: center.y + dy,
+      button: 0,
+      pointerId: 1,
+    });
+    const click = async (dx: number, dy: number) => {
+      await fireEvent.pointerDown(view, at(dx, dy));
+      await fireEvent.pointerMove(view, at(dx, dy));
+      await fireEvent.pointerUp(view, at(dx, dy));
+    };
+    const doubleClick = async (element: Element) => {
+      const point = centreOf(element);
+      await fireEvent.pointerDown(element, { ...point, button: 0, pointerId: 1 });
+      await fireEvent.pointerUp(view, { ...point, button: 0, pointerId: 1 });
+      await fireEvent.dblClick(element, point);
+    };
+
+    // 1. Draw an open polyline; a double-click on it shows a handle per vertex and hides the resize handles.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, -120);
+    await click(-40, -40);
+    await click(-200, 40);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(1));
+    const [line] = polylines(canvasElement);
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await expect(canvasElement.querySelectorAll('svg rect[style*="resize"]')).toHaveLength(0);
+
+    // 2. Dragging a vertex moves it and refits the frame, as one undo step.
+    const before = line.getBoundingClientRect();
+    const handle = vertexHandles(canvasElement)[1];
+    await fireEvent.pointerDown(handle, { ...centreOf(handle), button: 0, pointerId: 1 });
+    await fireEvent.pointerMove(view, at(80, -40));
+    await fireEvent.pointerUp(view, at(80, -40));
+    await waitFor(() => expect(line.getBoundingClientRect().width).toBeGreaterThan(before.width + 60));
+    await expect(vertexHandles(canvasElement)).toHaveLength(3);
+
+    // 3. Escape leaves vertex edit mode; the line stays selected.
+    view.focus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+    await expect(canvasElement.querySelectorAll('svg rect[style*="resize"]').length).toBeGreaterThan(0);
+
+    // 4. Undo takes the vertex back in one step.
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+    await waitFor(() => expect(line.getBoundingClientRect().width).toBeCloseTo(before.width, 0));
+
+    // 5. A segment's midpoint adds a vertex, Backspace removes the one last pressed, and Enter leaves the mode.
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    const [midpoint] = canvas.getAllByTestId('vertex-midpoint');
+    await fireEvent.pointerDown(midpoint, { ...centreOf(midpoint), button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(midpoint), button: 0, pointerId: 1 });
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(4));
+    view.focus();
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await expect(polylines(canvasElement)).toHaveLength(1);
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+
+    // 6. So does a press outside the node; Enter on the line selected alone enters the mode again.
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await click(240, 200);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+    await fireEvent.pointerDown(line, { ...centreOf(line), button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(line), button: 0, pointerId: 1 });
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+
+    // 7. A double-click on a box still edits its label: Escape rejects, Enter commits, a click outside commits.
+    view.focus();
+    await userEvent.keyboard('r');
+    await fireEvent.pointerDown(view, at(80, -160));
+    await fireEvent.pointerMove(view, at(240, -40));
+    await fireEvent.pointerUp(view, at(240, -40));
+    const box = await waitFor(() => {
+      const node = canvasElement.querySelector('[data-testid="scene-view"] [data-node-id^="rect-"]');
+      if (!node) {
+        throw new Error('The box has not landed.');
+      }
+      return node;
+    });
+    await doubleClick(box);
+    await userEvent.keyboard('Draft');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await expect(box.textContent).not.toContain('Draft');
+
+    await doubleClick(box);
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard('Hello');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await waitFor(() => expect(box.textContent).toContain('Hello'));
+
+    await doubleClick(box);
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard(' world');
+    await userEvent.click(view);
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await waitFor(() => expect(box.textContent).toContain('Hello world'));
+
+    // 8. Enter on the box selected alone opens its label.
+    await click(160, -80);
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
   },
 };

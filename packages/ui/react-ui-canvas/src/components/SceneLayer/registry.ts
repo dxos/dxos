@@ -140,6 +140,8 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
           })
         : '',
     filled: (node) => isPolylineNode(node) && node.params?.closed === true,
+    // Its label is edited in the properties panel: a double-click shows the vertices to drag.
+    editor: 'vertices',
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,

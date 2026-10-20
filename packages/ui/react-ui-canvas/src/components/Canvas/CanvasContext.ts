@@ -172,7 +172,7 @@ export type CanvasTime = CanvasAspect<
 
 export const [CanvasTimeProvider, useCanvasTime] = createContext<CanvasTime>('Canvas.Root');
 
-/** Text editing and the clipboard; its own provider, as a host may mount a view that edits nothing. */
+/** Edit mode (a node's text or vertices) and the clipboard; its own provider, as a host may mount a view that edits nothing. */
 export type CanvasEditing = CanvasAspect<Pick<CanvasAtoms, 'editing' | 'active' | 'clipboard'>, EditingCommands>;
 
 export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEditing>('Canvas.Root');
@@ -206,6 +206,8 @@ export type CanvasGesture = {
     | 'onPointPointerDown'
     | 'onMidpointPointerDown'
     | 'onPointContextMenu'
+    | 'onVertexPointerDown'
+    | 'onVertexMidpointPointerDown'
     | 'removePoint'
     | 'menu'
     | 'closeMenu'

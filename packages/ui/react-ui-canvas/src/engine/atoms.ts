@@ -65,6 +65,8 @@ export type Drag =
    * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
    */
   | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
+  /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
+  | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
@@ -87,8 +89,11 @@ export type Isolation = { composite: ViewId; back: HistoryEntry };
 
 export type ControlPointRef = { link: LinkId; index: number };
 
-/** The text part being edited in place (`parts.ts`). */
-export type EditingPart = { id: NodeId; part: PartKey };
+/**
+ * The node in edit mode, one at a time (`NodeDef.editor`): a text part edited in place (`parts.ts`), or its vertices
+ * shown as points to drag, `vertex` the one last pressed. Enter, Escape or a press outside the node leaves it.
+ */
+export type Editing = { id: NodeId; kind: 'label'; part: PartKey } | { id: NodeId; kind: 'vertices'; vertex?: number };
 
 /** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
 export type InspectorMode = 'floating' | 'docked';
@@ -117,7 +122,7 @@ export type CanvasAtoms = {
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
-  editing: Atom.Writable<EditingPart | undefined>;
+  editing: Atom.Writable<Editing | undefined>;
   /**
    * The node whose embedded content takes input (an editor in a frame), entered by clicking the node; any other
    * node's embedded content is inert, so a press anywhere on it selects and moves it.
@@ -153,7 +158,7 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
-  editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  editing: Atom.keepAlive(Atom.make<Editing | undefined>(undefined)),
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),

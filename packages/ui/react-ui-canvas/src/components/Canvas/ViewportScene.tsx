@@ -52,6 +52,8 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
   } = useCanvasGesture('Canvas.Viewport');
   const tools = useCanvasTools('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
@@ -100,7 +102,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           hoveredLink={linkHover}
           opening={opening}
           focus={focus}
-          editing={editing}
+          editing={editing?.kind === 'label' ? editing : undefined}
           active={active}
           ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
           debug={debug}
@@ -134,6 +136,9 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           onPointPointerDown={onPointPointerDown}
           onMidpointPointerDown={onMidpointPointerDown}
           onPointContextMenu={onPointContextMenu}
+          vertexEditing={editing?.kind === 'vertices' ? editing : undefined}
+          onVertexPointerDown={onVertexPointerDown}
+          onVertexMidpointPointerDown={onVertexMidpointPointerDown}
         />
       )}
       {overlay}

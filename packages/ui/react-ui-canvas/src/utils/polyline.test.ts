@@ -4,7 +4,27 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { polylineFrame, polylinePath } from './polyline.ts';
+import { type PolylineNode } from '../model/index.ts';
+import { polylineFrame, polylineMidpoints, polylinePath, polylineVertices, refitPolyline } from './polyline.ts';
+
+const polyline = (rotation?: number): PolylineNode => ({
+  type: 'polyline',
+  id: 'polyline-1',
+  z: 'a0',
+  center: { x: 100, y: 50 },
+  size: { width: 200, height: 100 },
+  rotation,
+  points: [
+    { x: 0, y: 1 },
+    { x: 0.5, y: 0 },
+    { x: 1, y: 1 },
+  ],
+});
+
+const near = (point: { x: number; y: number }) => ({
+  x: Math.round(point.x * 1e6) / 1e6,
+  y: Math.round(point.y * 1e6) / 1e6,
+});
 
 describe('polylineFrame', () => {
   test('frames the points and puts them in its unit space', () => {
@@ -89,5 +109,95 @@ describe('polylinePath', () => {
       { x: 1, y: 0.5 },
     ];
     expect(polylinePath(size, line, { radius: 8 })).toBe('M 0 25 L 50 25 L 100 25');
+  });
+});
+
+describe('polylineVertices', () => {
+  test('places the unit points in the frame', () => {
+    expect(polylineVertices(polyline())).toEqual([
+      { x: 0, y: 100 },
+      { x: 100, y: 0 },
+      { x: 200, y: 100 },
+    ]);
+  });
+
+  test('turns them with the node', () => {
+    expect(polylineVertices(polyline(90)).map(near)).toEqual([
+      { x: 50, y: -50 },
+      { x: 150, y: 50 },
+      { x: 50, y: 150 },
+    ]);
+  });
+});
+
+describe('refitPolyline', () => {
+  test('moving a vertex out of the frame grows it and renormalises the points', () => {
+    const node = polyline();
+    const vertices = polylineVertices(node);
+    vertices[1] = { x: 100, y: -100 };
+    expect(refitPolyline(node, vertices)).toEqual({
+      center: { x: 100, y: 0 },
+      size: { width: 200, height: 200 },
+      points: [
+        { x: 0, y: 1 },
+        { x: 0.5, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    });
+  });
+
+  test('moving a vertex inward shrinks the frame', () => {
+    const node = polyline();
+    const vertices = polylineVertices(node);
+    vertices[2] = { x: 100, y: 100 };
+    expect(refitPolyline(node, vertices)).toEqual({
+      center: { x: 50, y: 50 },
+      size: { width: 100, height: 100 },
+      points: [
+        { x: 0, y: 1 },
+        { x: 1, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    });
+  });
+
+  test('a rotated line keeps its rotation and its vertices land where they were put', () => {
+    const node = polyline(30);
+    const vertices = polylineVertices(node);
+    vertices[0] = { x: vertices[0].x - 40, y: vertices[0].y + 10 };
+    const values = refitPolyline(node, vertices);
+    expect(values).toBeDefined();
+    if (values) {
+      expect(polylineVertices({ ...node, ...values }).map(near)).toEqual(vertices.map(near));
+    }
+  });
+
+  test('unchanged vertices give back the same frame', () => {
+    const node = polyline();
+    expect(refitPolyline(node, polylineVertices(node))).toEqual({
+      center: node.center,
+      size: node.size,
+      points: node.points,
+    });
+  });
+});
+
+describe('polylineMidpoints', () => {
+  const vertices = [
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+  ];
+
+  test('an open line has one per segment', () => {
+    expect(polylineMidpoints(vertices, false)).toEqual([
+      { index: 1, point: { x: 5, y: 0 } },
+      { index: 2, point: { x: 10, y: 5 } },
+    ]);
+  });
+
+  test('a closed line has its closing segment too', () => {
+    expect(polylineMidpoints(vertices, true)).toHaveLength(3);
+    expect(polylineMidpoints(vertices, true)[2]).toEqual({ index: 3, point: { x: 5, y: 5 } });
   });
 });
