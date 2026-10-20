@@ -10,6 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -81,6 +82,8 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   /** Opens the name field, as for a feature just created; reports when it closes. */
   editingName?: boolean;
   onEditingNameChange?: (editing: boolean) => void;
+  /** For a host of fixed height (a canvas box): the card fills it and the body scrolls under the header. */
+  scroll?: boolean;
 };
 
 type InlineTextProps = {
@@ -121,6 +124,8 @@ const InlineText = ({
     }}
     // The double-click's second press would otherwise toggle the card's selection back off.
     onClick={(event) => event.detail > 1 && event.stopPropagation()}
+    // A press on the pencil must open the field rather than start a canvas drag, which takes the click.
+    onPointerDown={(event) => isPencil(event.target) && event.stopPropagation()}
   >
     <Editable.Preview classNames='px-0' data-testid={`${testId}.preview`} />
     <Editable.Input
@@ -133,6 +138,9 @@ const InlineText = ({
     />
   </Editable.Root>
 );
+
+const isPencil = (target: EventTarget): boolean =>
+  target instanceof Element && target.closest('[data-testid="editable.edit"]') !== null;
 
 const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
@@ -148,6 +156,7 @@ export const FeatureCard = ({
   onRename,
   editingName,
   onEditingNameChange,
+  scroll,
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -156,6 +165,7 @@ export const FeatureCard = ({
   return (
     <Card.Root
       grid
+      classNames={scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]'}
       selected={selected}
       onClick={onSelect ? () => onSelect(feature) : undefined}
       data-testid='feature-card'
@@ -230,7 +240,17 @@ export const FeatureCard = ({
           </Layout.Block>
         )}
       </Card.Header>
-      <FeatureCardBody {...props} />
+      {scroll ? (
+        // A subgrid of the card, so rows keep its rails; containment would make it a standalone grid instead.
+        <ScrollArea.Root classNames='col-span-full grid-cols-subgrid [container-type:normal]'>
+          {/* Takes the wheel inside an inert canvas box; a press still bubbles to the box, so it drags as before. */}
+          <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start pointer-events-auto [&>.dx-card-body]:col-span-full'>
+            <FeatureCardBody {...props} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      ) : (
+        <FeatureCardBody {...props} />
+      )}
     </Card.Root>
   );
 };
@@ -298,7 +318,7 @@ export const FeatureCardBody = ({
       </Card.Row>
 
       {showFields && onDescribe && (
-        <Card.Row icon='ph--text-align-left--regular'>
+        <Card.Row icon='ph--text-align-left--regular' span='end'>
           <InlineText
             value={feature.description ?? ''}
             placeholder={t('feature-card.description.placeholder')}

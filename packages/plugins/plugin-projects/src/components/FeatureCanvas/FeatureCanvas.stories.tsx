@@ -16,10 +16,19 @@ import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
 const DefaultStory = () => {
+  const [features, setFeatures] = useState(SAMPLE_FEATURES);
   const [positions, setPositions] = useState<Record<string, Point>>({});
+  const update = (id: string, values: { name?: string; description?: string }) =>
+    setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
   return (
     <div className='dx-fill relative'>
-      <FeatureCanvas features={SAMPLE_FEATURES} positions={positions} onPositionsChange={setPositions} />
+      <FeatureCanvas
+        features={features}
+        positions={positions}
+        onPositionsChange={setPositions}
+        onRename={(id, name) => update(id, { name })}
+        onDescribe={(id, description) => update(id, { description })}
+      />
     </div>
   );
 };
@@ -33,7 +42,7 @@ const meta: Meta = {
 
 export default meta;
 
-/** Cards in boxes, ranked from dependents down to foundations, with a straight arrow per dependency. Drag a box. */
+/** Cards on the lattice, ranked from dependents down to foundations, with a smart arrow per dependency. Drag a box; a pencil edits a title. */
 export const Default: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

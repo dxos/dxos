@@ -19,6 +19,7 @@ import {
   type NodeViewProps,
   type Overlay,
   type Point,
+  SCENE_OVERLAY_ATTRIBUTE,
   createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
@@ -45,22 +46,32 @@ type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onRename' | 'onDescribe
 /** Node views get no host props, so the cards' data and edits reach them through context. */
 const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () => undefined });
 
+/** The card's body takes the wheel while it has more to scroll; otherwise the canvas pans. */
+const wheelOverlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
+
 const FeatureNodeView = ({ node }: NodeViewProps) => {
   const { lookup, onRename, onDescribe, editingId, onEditingChange } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
-    // Inert but for its text fields, so a press anywhere else on the card selects and drags the box.
-    <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
+    // Inert but for its text fields and body, so a press elsewhere selects and drags the box; one bounded row, so
+    // the card fits the box and its body scrolls.
+    <Layout.Grid
+      classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden pointer-events-none'
+      data-testid='feature-canvas-node'
+      {...wheelOverlay}
+    >
       {feature && (
         <FeatureCard
           feature={feature}
           lookup={lookup}
           showDependencies={false}
+          scroll
           // A double-click on a box opens the feature, so a field opens only from its pencil.
           editActivation='none'
           onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
           onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
-          editingName={feature.id === editingId}
+          // Controlled only for a host that tracks it; otherwise the pencil's open would be overridden back to closed.
+          editingName={onEditingChange ? feature.id === editingId : undefined}
           onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
         />
       )}
