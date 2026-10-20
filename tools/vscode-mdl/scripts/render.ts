@@ -7,7 +7,7 @@ import { basename } from 'node:path';
 import { type LanguageRegistration, createHighlighter } from 'shiki';
 
 import { mdlRules } from '../src/palette.ts';
-import { contributedGrammars, grammarPaths } from '../src/registry.ts';
+import { contributedGrammars, grammarPaths } from '../src/testing/registry.ts';
 
 /** Renders an `.mdl` file to standalone HTML with the extension's grammar, as VS Code would colour it. */
 const main = async () => {

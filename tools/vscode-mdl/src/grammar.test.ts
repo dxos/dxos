@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, test } from 'vitest';
 import textmate, { type IGrammar, type StateStack } from 'vscode-textmate';
 
-import { PACKAGE_ROOT, loadMdlGrammar } from './registry.ts';
+import { PACKAGE_ROOT, loadMdlGrammar } from './testing/registry.ts';
 
 const FIXTURES = join(PACKAGE_ROOT, 'src', '__fixtures__');
 

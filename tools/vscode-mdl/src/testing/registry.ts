@@ -15,7 +15,7 @@ const { Registry, parseRawGrammar } = textmate;
 
 const require = createRequire(import.meta.url);
 
-export const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+export const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 type GrammarContribution = { scopeName: string; path: string; injectTo?: string[] };
 
