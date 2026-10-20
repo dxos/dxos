@@ -91,12 +91,11 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     component: PolygonNodeView,
     create: (props) => createNode({ type: 'polygon', ...props }),
     defaultSize: NOMINAL_SIZES.polygon,
-    // Only a rounded polygon softens its corners, as a box's square corners stay square.
     silhouette: (node, inset, radius) =>
       polygonPath(node.size, {
         inset,
         ...(isPolygonNode(node) ? node.params : undefined),
-        radius: node.style?.rounded ? radius : 0,
+        radius,
       }),
     bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
     portsPerSide: 1,
@@ -137,7 +136,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
         ? polylinePath(node.size, node.points, {
             inset,
             closed: node.params?.closed,
-            radius: node.style?.rounded ? radius : 0,
+            radius,
           })
         : '',
     filled: (node) => isPolylineNode(node) && node.params?.closed === true,

@@ -54,7 +54,6 @@ import {
   showsContents,
 } from '../../../model/index.ts';
 import {
-  MAX_PORTS_PER_SIDE,
   type ViewOption,
   classedLink,
   classedNode,
@@ -74,6 +73,7 @@ import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField, FontSizeField } from './FontField.tsx';
+import { FrameField } from './FrameField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
@@ -130,6 +130,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
+  'rotation': FrameField,
   'params.fit': PolygonFitField,
   'scene': ViewField,
   'layer': LayerClassField,
@@ -183,7 +184,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.tone': { hidden: true },
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
-  'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
+  // Drawn beside the rotation by `FrameField`.
+  'portsPerSide': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };

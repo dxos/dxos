@@ -70,6 +70,7 @@ import {
   classedNode,
   compositeBounds,
   contentBounds,
+  cornerRadius,
   diagramLinkMarkup,
   diagramNodeMarkup,
   elementLayer,
@@ -960,7 +961,7 @@ const NodeFrame = memo(
                 filled={def?.filled?.(drawn) ?? true}
                 node={drawn}
                 border={border}
-                radius={RADIUS_PX[styleVariant(look.styleSet, drawn.style?.tone).roundedRadius]}
+                radius={RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))]}
               />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
