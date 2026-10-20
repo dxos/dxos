@@ -106,6 +106,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-canvas"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {

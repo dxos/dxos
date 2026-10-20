@@ -11,6 +11,7 @@ This package carries:
 - **The language spec** — see [`docs/DESIGN.md`](./docs/DESIGN.md).
 - **The idiom format** — [`docs/IDIOMS.md`](./docs/IDIOMS.md).
 - **The core dialect** — [`lang/core.mdl`](./lang/core.mdl).
+- **The changelog dialect** — [`lang/changelog.mdl`](./lang/changelog.mdl): attributed decision log.
 - **A document template** — [`lang/PLUGIN-.template.mdl`](./lang/PLUGIN-.template.mdl).
 - **Examples** — the chess trilogy under [`lang/examples/`](./lang/examples/).
 - **The CodeMirror extension** — `.mdl` grammar, syntax, lint, completion under [`src/extension/`](./src/extension/).
