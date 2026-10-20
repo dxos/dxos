@@ -84,6 +84,8 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   onEditingNameChange?: (editing: boolean) => void;
   /** For a host of fixed height (a canvas box): the card fills it and the body scrolls under the header. */
   scroll?: boolean;
+  /** False where the host marks the selected card itself, as a masonry grid's ring does. */
+  markSelected?: boolean;
 };
 
 type InlineTextProps = {
@@ -157,6 +159,7 @@ export const FeatureCard = ({
   editingName,
   onEditingNameChange,
   scroll,
+  markSelected = true,
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -166,7 +169,7 @@ export const FeatureCard = ({
     <Card.Root
       grid
       classNames={scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]'}
-      selected={selected}
+      selected={markSelected && selected}
       onClick={onSelect ? () => onSelect(feature) : undefined}
       data-testid='feature-card'
       data-feature={feature.id}

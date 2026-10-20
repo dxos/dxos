@@ -11,8 +11,8 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
+import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureBoard, type FeatureBoardProps } from './FeatureBoard.tsx';
-import { SAMPLE_FEATURES } from './testing.ts';
 
 const meta: Meta<FeatureBoardProps> = {
   title: 'plugins/plugin-projects/components/FeatureBoard',
