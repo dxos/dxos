@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { useControls } from 'leva';
-import React from 'react';
+import { levaStore, useControls } from 'leva';
+import React, { useEffect } from 'react';
 
 import { useAudioStream } from '@dxos/react-ui-audio';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { applyValues, levaControls, toConfig } from '../Avatar/stories/tuner.ts';
+import { applyValues, levaControls, levaPaths, toConfig } from '../Avatar/stories/tuner.ts';
 import { chaos } from '../Avatar/visualizations/chaos.ts';
 import { chaosPresets, defaultChaosOptions } from './chaos-presets.ts';
 import { Chaos, type ChaosProps } from './Chaos.tsx';
@@ -20,9 +20,13 @@ type StoryProps = ChaosProps & {
   preset?: string;
 };
 
+const FOLDER = 'Chaos';
+
 const DefaultStory = ({ microphone = false, preset, ...props }: StoryProps) => {
   const start = (preset && chaosPresets[preset]) || defaultChaosOptions;
-  const values = toConfig(useControls('Chaos', levaControls(chaos.params, start), [preset]));
+  const values = toConfig(useControls(FOLDER, levaControls(chaos.params, start)));
+  // Leva's store outlives a story, so each story writes its own starting values rather than inheriting the last one's.
+  useEffect(() => levaStore.set(levaPaths(FOLDER, start), false), [start]);
   const { getAverage } = useAudioStream(microphone);
 
   return (

@@ -56,6 +56,8 @@ const VisualizationStory = ({ visualization: id, src }: StoryProps) => {
   );
   // Presets and Randomize write through Leva's store, so its sliders follow.
   const setValues = (config: Config) => levaStore.set(levaPaths(visualization.title, config), false);
+  // Leva's store outlives a story (and shares folders with the component stories), so each starts from its defaults.
+  useEffect(() => setValues(visualization.defaults), [visualization.id]);
 
   useEffect(() => {
     const context = new AudioContext();

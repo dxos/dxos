@@ -19,8 +19,13 @@ export const ScopeComponent = ({ node: shape }: ComputeNodeViewProps<ScopeShape>
   const { getAverage } = useAudioStream(active);
 
   return (
-    <div className='flex w-full justify-center items-center bg-black'>
-      <Chaos active={active} getValue={getAverage} options={{ ...chaosPresets.heptapod, zoom: 1.2 }} />
+    <div className='flex w-full h-full justify-center items-center bg-black'>
+      <Chaos
+        classNames='grow self-stretch'
+        active={active}
+        getValue={getAverage}
+        options={{ ...chaosPresets.heptapod, zoom: 1.2 }}
+      />
     </div>
   );
 };

@@ -46,7 +46,7 @@ export const Chaos = ({
   return (
     <div
       ref={ref}
-      className={mx('relative grow transition-opacity duration-1000 opacity-0', ready && 'opacity-100', classNames)}
+      className={mx('relative transition-opacity duration-1000 opacity-0', ready && 'opacity-100', classNames)}
     />
   );
 };
