@@ -19,7 +19,7 @@ const TestLayer = TestDatabaseLayer({ types: [AccessToken.AccessToken] });
 const addToken = (source: string, token: string) => Database.add(Obj.make(AccessToken.AccessToken, { source, token }));
 
 describe('Claude Code (cloud) credentials', () => {
-  it.effect('lends the Claude subscription token before the API key', () =>
+  it.effect('lends the Claude subscription token', () =>
     Effect.gen(function* () {
       yield* addToken(ANTHROPIC_SOURCE, 'sk-ant-api03-key');
       yield* addToken(CLAUDE_CODE_TOKEN_SOURCE, 'sk-ant-oat01-subscription');
@@ -27,10 +27,18 @@ describe('Claude Code (cloud) credentials', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('falls back to the API key', () =>
+  it.effect('never lends an Anthropic API key', () =>
     Effect.gen(function* () {
       yield* addToken(ANTHROPIC_SOURCE, 'sk-ant-api03-key');
-      expect(yield* claudeCredentials).toEqual({ ANTHROPIC_API_KEY: 'sk-ant-api03-key' });
+      expect(yield* claudeCredentials).toEqual({});
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('lends an OAuth token stored as the Anthropic token, passing over an API key', () =>
+    Effect.gen(function* () {
+      yield* addToken(ANTHROPIC_SOURCE, 'sk-ant-api03-key');
+      yield* addToken(ANTHROPIC_SOURCE, 'sk-ant-oat01-stored');
+      expect(yield* claudeCredentials).toEqual({ CLAUDE_CODE_OAUTH_TOKEN: 'sk-ant-oat01-stored' });
     }).pipe(Effect.provide(TestLayer)),
   );
 

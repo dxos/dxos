@@ -17,7 +17,7 @@ import {
   createCanvasAtoms,
   createMemoryStore,
   useRegistry,
-  useSceneProjection,
+  useViewProjection,
 } from '@dxos/react-ui-canvas/scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import * as Select from '@dxos/react-ui/Select';
@@ -43,7 +43,7 @@ import {
 import { createStoryRuntime } from '../testing/services.ts';
 import { Bullets } from './Bullets.tsx';
 import { createComputeProjection } from './projection.ts';
-import { sceneFromCircuit } from './scene.ts';
+import { viewFromCircuit } from './scene.ts';
 
 //
 // The compute circuits on the scene engine (MIGRATION.md M3): the same controller, shapes and circuits
@@ -61,14 +61,14 @@ type StoryProps = {
 
 const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps) => {
   const registry = useRegistry();
-  const scene = useMemo(() => sceneFromCircuit(circuit), [circuit]);
+  const scene = useMemo(() => viewFromCircuit(circuit), [circuit]);
   const store = useMemo(() => createMemoryStore([scene]), [scene]);
   const atoms = useMemo(() => createCanvasAtoms(scene.id), [scene.id]);
   const createProjection = useCallback(
     (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
     [controller],
   );
-  const projection = useSceneProjection({ store, atoms, createProjection });
+  const projection = useViewProjection({ store, atoms, createProjection });
   // A function body opening grows its node through the model, so links re-route with it.
   const resize = useCallback(
     (id: string, delta: number) => {
@@ -143,7 +143,7 @@ const SidebarJson = ({
 }: {
   sidebar: Sidebar;
   controller: ComputeGraphController;
-  projection: ReturnType<typeof useSceneProjection>;
+  projection: ReturnType<typeof useViewProjection>;
   atoms: ReturnType<typeof createCanvasAtoms>;
 }) => {
   const scene = useAtomValue(projection.scene);

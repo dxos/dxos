@@ -6,8 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../../components/SceneLayer/index.ts';
-import { type Scene } from '../../model/index.ts';
+import { defaultNodeRegistry } from '../../components/index.ts';
+import { type View } from '../../model/index.ts';
 import { type GraphModel, type Overlay, createDynamicProjection, layoutGraph, pruneOverlay } from './dynamic.ts';
 
 const graph: GraphModel = {
@@ -19,7 +19,7 @@ const graph: GraphModel = {
   ],
 };
 
-const centerOf = (scene: Scene, id: string) => {
+const centerOf = (scene: View, id: string) => {
   const node = scene.nodes[id];
   if (!node) {
     throw new Error(`no node ${id}`);
@@ -50,6 +50,16 @@ describe('dynamic projection', () => {
     expect(scene.nodes.root).toMatchObject({ type: 'card', label: 'root' });
     expect(scene.links.e1).toMatchObject({ type: 'line', ends: { end: 'arrow' } });
 
+    const styled = layoutGraph(
+      {
+        ...graph,
+        edges: [{ id: 'e1', from: 'root', to: 'left', text: 'uses', ends: { start: 'arrow' }, style: { hue: 'red' } }],
+      },
+      { positions: {} },
+      { nodes: defaultNodeRegistry, link: { ends: { end: 'arrow' } } },
+    );
+    expect(styled.links.e1).toMatchObject({ text: 'uses', ends: { start: 'arrow' }, style: { hue: 'red' } });
+
     const registry = Registry.make();
     const projection = createDynamicProjection({
       registry,
@@ -59,6 +69,36 @@ describe('dynamic projection', () => {
       capabilities: { move: true },
     });
     expect(projection.capabilities).toEqual({ move: true });
+  });
+
+  test('a host intercepts link and delete intents and the graph is left to follow its model', ({ expect }) => {
+    const registry = Registry.make();
+    const model = Atom.make(graph);
+    const linked: { from: string; to: string }[] = [];
+    const deleted: (readonly string[])[] = [];
+    const projection = createDynamicProjection({
+      registry,
+      graph: model,
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry },
+      onLink: (edge) => linked.push(edge),
+      onDelete: (ids) => deleted.push(ids),
+    });
+    projection.apply({
+      kind: 'link',
+      link: { type: 'line', id: 'new', z: 'a0', source: { node: 'right' }, target: { node: 'leaf' } },
+    });
+    projection.apply({ kind: 'delete', ids: ['e1'] });
+    expect(linked).toEqual([{ from: 'right', to: 'leaf' }]);
+    expect(deleted).toEqual([['e1']]);
+    expect(registry.get(model)).toBe(graph);
+
+    // Undo restores the overrides but leaves the host's graph as its model last set it.
+    const before = projection.snapshot?.();
+    const hostGraph = { ...graph, edges: graph.edges.filter(({ id }) => id !== 'e1') };
+    registry.set(model, hostGraph);
+    projection.restore?.(before);
+    expect(registry.get(model)).toBe(hostGraph);
   });
 
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {

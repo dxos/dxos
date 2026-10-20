@@ -13,7 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { isGeneratorNode } from '@dxos/react-ui-canvas/headless';
 
-import { createCanvas, readScenes, rootOf } from '#model';
+import { createCanvas, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
 import { CanvasOperation, Generator } from '#types';
 
@@ -65,7 +65,7 @@ describe('canvas generator operations', () => {
         expect(keys).toBe(1);
 
         const root = rootOf(canvas.content) ?? '';
-        const scene = readScenes(canvas.content)[root];
+        const scene = readViews(canvas.content)[root];
         expect(scene.timeline?.duration).toBe(4);
         expect(Object.values(scene.nodes).filter(isGeneratorNode)).toHaveLength(1);
 

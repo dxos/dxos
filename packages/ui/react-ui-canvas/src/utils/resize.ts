@@ -75,3 +75,18 @@ const resizeAxis = (
 
 const clamp = (value: number, min: number, max: number | undefined): number =>
   Math.min(Math.max(value, min), max ?? Infinity);
+
+/** Where a handle sits on a frame: a corner, or the middle of an edge. */
+export const handlePoint = (bounds: Bounds, handle: Handle): Point => {
+  const x = handle.includes('w')
+    ? bounds.x
+    : handle.includes('e')
+      ? bounds.x + bounds.width
+      : bounds.x + bounds.width / 2;
+  const y = handle.includes('n')
+    ? bounds.y
+    : handle.includes('s')
+      ? bounds.y + bounds.height
+      : bounds.y + bounds.height / 2;
+  return { x, y };
+};
