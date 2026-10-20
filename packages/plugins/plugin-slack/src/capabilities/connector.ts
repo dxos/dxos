@@ -75,7 +75,7 @@ export default Capability.makeModule(
       {
         id: 'slack',
         source: SLACK_SOURCE,
-        label: 'Slack',
+        label: 'Slack App',
         kind: 'app',
         oauth: {
           provider: OAuthProvider.SLACK,

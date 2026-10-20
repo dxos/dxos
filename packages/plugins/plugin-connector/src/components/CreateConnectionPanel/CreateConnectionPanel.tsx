@@ -20,8 +20,8 @@ import { meta } from '#meta';
 
 import { Connector, type ConnectorEntry, type ConnectorKind } from '../../types/ConnectorSpec.ts';
 
-/** Picker order: connecting as yourself is the common case, then the app, then your own credentials. */
-const KIND_ORDER: readonly ConnectorKind[] = ['user', 'app', 'custom'];
+/** Picker order: connecting as Composer first, then as yourself, then your own credentials. */
+const KIND_ORDER: readonly ConnectorKind[] = ['app', 'user', 'custom'];
 
 const ConnectorSelection = Schema.Struct({ connectorId: Schema.String });
 
