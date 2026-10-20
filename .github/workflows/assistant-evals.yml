@@ -1,9 +1,9 @@
 name: Assistant evals
 
-# `DX_ANTHROPIC_API_KEY` is read from Depot's secret settings; restrict its variant to this workflow
-# file on `main` there, since any workflow that names it can read an unscoped variant. The same goes
-# for the optional `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which only a closed-hatch target such
-# as `prod` needs: the token is minted by hand and grants access to the space it names.
+# `DX_ANTHROPIC_API_KEY` lives in the `assistant-evals` environment, whose deployment branch policy
+# allows only `main`, so no other workflow or branch can read it. The same goes for the optional
+# `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which only a closed-hatch target such as `prod` needs:
+# the token is minted by hand and grants access to the space it names.
 
 # TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
 # that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
@@ -42,14 +42,9 @@ concurrency:
 
 jobs:
   evals:
-    # 4 vCPU: the run waits on model calls, averaging 6% of 8 vCPU and peaking at 9 GB.
-    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
-    runs-on:
-      size: 4x16
-      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
+    environment: assistant-evals
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
-    # No job-level `defaults.run.working-directory`: Depot applies it inside composite actions too,
-    # and Setup reads `.moon/workspace.yml` relative to the repository root.
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -58,24 +53,8 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      # `depot ci run` patches the caller's uncommitted changes in after checkout; nothing from the
-      # tree runs before this, so a patched Setup cannot pass it.
-      - name: Refuse a patched checkout
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
-            git status --short
-            exit 1
-          fi
-          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
-            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
-            exit 1
-          fi
-
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       # The MCP server eval drives the `claude` CLI as its client.
       - name: Install Claude Code
@@ -98,7 +77,7 @@ jobs:
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           if [ -z "$DX_ANTHROPIC_API_KEY" ]; then
-            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check its variant scoping in Depot's secret settings."
+            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check the `assistant-evals` environment's secrets and branch policy."
             exit 1
           fi
           moon run assistant-evals:evals

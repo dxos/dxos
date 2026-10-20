@@ -18,7 +18,18 @@ import { appendFileSync } from 'node:fs';
 const NODE_TASKS = new Set(['test', 'test-memory', 'test-workerd']);
 const BROWSER_TASKS = new Set(['test-browser', 'test-storybook']);
 // CI workflows and actions, moon and toolchain config, patches, and root files other than docs.
-const CONFIG_PATH = /^(?:\.depot|\.github|\.moon|patches)\/|^[^/]+$/;
+const CONFIG_PATH = /^(?:\.github|\.moon|patches)\/|^[^/]+$/;
+
+// Playwright shards per browser for composer e2e, sized for a 4 vCPU / 16 GB runner. One WebKit page
+// holds ~6 GB and two-peer specs open two, so WebKit runs a single worker on twice the shards.
+const COMPOSER_SHARDS = {
+  chromium: { shards: 2, workers: 2 },
+  firefox: { shards: 2, workers: 2 },
+  webkit: { shards: 4, workers: 1 },
+};
+
+// Target-list halves per browser for the rest of the e2e pool, one Playwright worker each.
+const REST_SHARDS = 2;
 
 const main = () => {
   const pullRequest = process.env.GITHUB_EVENT_NAME === 'pull_request';
@@ -34,8 +45,8 @@ const main = () => {
   const outputs = {
     'node': String(plan.node),
     'browser': String(plan.browser),
-    'composer-browsers': JSON.stringify(plan.composer ? browsers : []),
-    'rest-browsers': JSON.stringify(plan.rest ? browsers : []),
+    'composer-cells': JSON.stringify(plan.composer ? composerCells(browsers) : []),
+    'rest-cells': JSON.stringify(plan.rest ? restCells(browsers) : []),
   };
   for (const [key, value] of Object.entries(outputs)) {
     console.log(`${key}=${value}`);
@@ -49,6 +60,17 @@ const main = () => {
     );
   }
 };
+
+const composerCells = (browsers) =>
+  browsers.flatMap((browser) => {
+    const { shards, workers } = COMPOSER_SHARDS[browser];
+    return Array.from({ length: shards }, (_, index) => ({ browser, shard: index + 1, total: shards, workers }));
+  });
+
+const restCells = (browsers) =>
+  browsers.flatMap((browser) =>
+    Array.from({ length: REST_SHARDS }, (_, shard) => ({ browser, shard, total: REST_SHARDS })),
+  );
 
 /** Affected `[project, task]` pairs, or undefined for a full run. */
 const readAffected = () => {

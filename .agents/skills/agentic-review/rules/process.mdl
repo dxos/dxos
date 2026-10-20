@@ -129,7 +129,7 @@ rule repo-scripts-are-typescript-on-bun: New repo scripts are TypeScript run wit
     - packages/**/scripts/**
     - package.json
     - .github/workflows/*.yml
-    - .depot/workflows/*.yml
+    - .github/workflows/*.yml
   unit: pr
   context: diff
   system-one: on

@@ -5,7 +5,7 @@
 import { type Page, expect, test } from '@playwright/test';
 
 import { random } from '@dxos/random';
-import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl, warmStory } from '@dxos/test-utils/playwright';
 
 import { SheetManager } from './sheet-manager.ts';
 
@@ -17,13 +17,11 @@ test.describe('plugin-sheet', () => {
   let sheet: SheetManager;
   let close: () => Promise<void>;
 
-  // The first visit pays Storybook's on-demand compile (about 50 s on a 4 vCPU runner), so it runs
-  // once per worker outside any test's 60 s budget.
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(180_000);
-    const warmup = await setupPage(browser, { url, viewportSize });
-    await warmup.page.locator('dx-grid .dx-grid').waitFor({ state: 'visible', timeout: 150_000 });
-    await warmup.close();
+    await warmStory(browser, url, (warm) =>
+      warm.locator('dx-grid .dx-grid').waitFor({ state: 'visible', timeout: 150_000 }),
+    );
   });
 
   test.beforeEach(async ({ browser }) => {

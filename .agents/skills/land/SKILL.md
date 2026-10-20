@@ -158,7 +158,7 @@ MOON_BASE=origin/main moon run :test-browser :test-storybook --affected
 ```
 
 When the PR changes a shared UI package, whose dependents' stories that command leaves out, run every
-suite on the branch once in CI instead: `depot ci dispatch --workflow check.yml --ref <headRefName>`.
+suite on the branch once in CI instead: `gh workflow run check.yml --ref <headRefName>`.
 
 Once all required checks pass, these tests pass, and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 
@@ -228,7 +228,7 @@ On each wakeup (task-completion notification for the sleep):
 3. **If closed**: ask the user what happened.
 4. **If open and auto_merge is null** (was dequeued):
    a. Find out why. A failed merge-queue run is the usual cause: the browser and storybook tests
-   run only there. Read the failed `Check / …` run's logs (`depot-ci` skill), fix the
+   run only there. Read the failed `Check / …` run's logs (`gh run view <run-id> --log-failed`), fix the
    failure at its root, and push the fix before re-queueing; re-queueing an unfixed failure
    just fails again. Then sync with `main`:
    ```bash

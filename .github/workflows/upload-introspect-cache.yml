@@ -35,11 +35,7 @@ jobs:
     # `dxos/main/` is the canonical trunk cache: only schedule runs (default branch) and manual
     # dispatches of `main` itself may publish it — a dispatch from any other ref must not.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
-    # 4 vCPU: averages 14% of 8 vCPU and peaks at 5 GB.
-    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
-    runs-on:
-      size: 4x16
-      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -50,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Build introspect
         run: moon run introspect:build

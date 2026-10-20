@@ -74,11 +74,7 @@ jobs:
   # every object in it. Each joiner is timed separately and sequentially — in parallel they would
   # contend for the same connection budget and measure each other.
   join-latency:
-    # 4 vCPU: both jobs wait on EDGE, averaging under 10% of 8 vCPU and peaking at 6 GB.
-    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
-    runs-on:
-      size: 4x16
-      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     services:
       # The orchestrator talks to its replicants over Redis. The job runs on the host, not in a container,
@@ -99,7 +95,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       # `blade-runner:build` is a no-op that exists for its `^:build` dependency edge: it builds the
       # SDK packages a plan imports. Plans themselves are run from TypeScript via `node --import tsx`.
@@ -159,9 +155,7 @@ jobs:
   # An hour of randomized commands against a fleet of real peers, asserted against an in-memory
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
   soak:
-    runs-on:
-      size: 4x16
-      image: *ci-image
+    runs-on: ubuntu-24.04
     # Headroom over the run's own `maxRuntimeMs`, which stops issuing commands and proceeds to the
     # final assertion; hitting the job timeout instead cancels mid-flight and proves nothing.
     timeout-minutes: 90
@@ -182,7 +176,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Build
         run: moon run blade-runner:build

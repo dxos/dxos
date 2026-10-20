@@ -29,11 +29,29 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # A job on the `ci-image.yml` snapshot already has the cargo registry and moon's toolchains, so it
-    # skips restoring them.
-    - name: Detect the CI image
-      id: image
-      run: echo "baked=$([ -f /opt/dxos-ci/commit ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+    # A bare runner has neither node nor pnpm on PATH, and once moon's toolchain cache is restored
+    # `moon setup` skips installing them, so `pnpm store path` would come back empty. The
+    # `ghcr.io/dxos/gh-actions` container already ships both. Versions come from `.prototools`.
+    - name: Detect node and pnpm
+      id: bootstrap
+      run: |
+        version() { sed -n "s/^$1 = \"\(.*\)\"$/\1/p" .prototools; }
+        echo "node=$(version node)" >> "$GITHUB_OUTPUT"
+        echo "pnpm=$(version pnpm)" >> "$GITHUB_OUTPUT"
+        echo "missing=$(command -v pnpm >/dev/null && echo false || echo true)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Install node
+      if: ${{ steps.bootstrap.outputs.missing == 'true' }}
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ steps.bootstrap.outputs.node }}
+        # Otherwise v5 reads `packageManager` and wants pnpm for its cache before pnpm exists.
+        package-manager-cache: false
+
+    - name: Install pnpm
+      if: ${{ steps.bootstrap.outputs.missing == 'true' }}
+      run: npm install -g pnpm@${{ steps.bootstrap.outputs.pnpm }}
       shell: bash
 
     # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
@@ -149,7 +167,6 @@ runs:
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
       with:
-        cache: ${{ steps.image.outputs.baked != 'true' }}
         # IMPORTANT: Keep in-sync with .prototools
         moon-version: '2.5.2'
         proto-version: '0.60.2'
@@ -164,7 +181,7 @@ runs:
     # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
     # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
     - name: Cache cargo registry
-      if: ${{ inputs.rust == 'true' && steps.image.outputs.baked != 'true' }}
+      if: ${{ inputs.rust == 'true' }}
       uses: actions/cache@v4
       with:
         path: |

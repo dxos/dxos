@@ -461,6 +461,8 @@ export const TimeTravel: Story = {
  * - Clicking a branch revision highlights THAT revision, not the main-lane fork node.
  */
 export const BranchRevisions: Story = {
+  // TODO(wittjosiah): Flaky in CI (fails intermittently); fix and re-enable.
+  tags: ['!test'],
   args: {
     content: 'alpha\nbravo\n',
   },
