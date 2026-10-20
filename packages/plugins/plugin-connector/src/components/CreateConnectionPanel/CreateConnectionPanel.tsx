@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
@@ -93,9 +94,10 @@ export const CreateConnectionPanel = ({
   const members = useMembers(spaceId);
   const considered = connector ?? connectors.find(({ id }) => id === pickedId);
   const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
-    <p role='note' className='text-sm text-warning-text' data-testid='create-connection-panel.shared-account'>
-      {t('user-connection-shared.message')}
-    </p>
+    <Banner.Root valence='warning' data-testid='create-connection-panel.shared-account'>
+      <Banner.Title>{t('user-connection-shared.title')}</Banner.Title>
+      <Banner.Body>{t('user-connection-shared.message')}</Banner.Body>
+    </Banner.Root>
   );
 
   // Takes its connector as an argument: `connectorId` is not applied yet in the tick it is chosen.

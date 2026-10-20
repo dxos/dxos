@@ -82,8 +82,8 @@ export const translations = [
         'connector-kind.app.label': 'Connect as Composer',
         'connector-kind.custom.label': 'Use your own app or key',
         'connector-kind.user.label': 'Connect as you',
-        'user-connection-shared.message':
-          'This connection acts as you. Everyone in this space can use it, and what they do shows up as you.',
+        'user-connection-shared.title': 'This connection acts as you',
+        'user-connection-shared.message': 'Everyone in this space can use it, and what they do shows up as you.',
         'connect-service.label': 'Connect {{service}}',
         'continue.label': 'Continue',
         'custom-token-dialog.title': 'Add custom token',
