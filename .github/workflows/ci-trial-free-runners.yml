@@ -57,6 +57,14 @@ jobs:
       - name: Start resource monitor
         run: bash .github/ci-trial/monitor.sh start
 
+      # The Depot image ships node and pnpm on PATH (`.github/ci-packages.sh`). Without them a restored
+      # moon toolchain cache skips the install and `pnpm store path` comes back empty.
+      - name: Bootstrap node and pnpm
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.11.1'
+      - run: npm install -g pnpm@10.28.0
+
       - name: Setup
         uses: ./.depot/actions/setup
 
@@ -116,6 +124,14 @@ jobs:
       - name: Start resource monitor
         run: bash .github/ci-trial/monitor.sh start
 
+      # The Depot image ships node and pnpm on PATH (`.github/ci-packages.sh`). Without them a restored
+      # moon toolchain cache skips the install and `pnpm store path` comes back empty.
+      - name: Bootstrap node and pnpm
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.11.1'
+      - run: npm install -g pnpm@10.28.0
+
       - name: Setup
         uses: ./.depot/actions/setup
 
@@ -170,6 +186,14 @@ jobs:
 
       - name: Start resource monitor
         run: bash .github/ci-trial/monitor.sh start
+
+      # The Depot image ships node and pnpm on PATH (`.github/ci-packages.sh`). Without them a restored
+      # moon toolchain cache skips the install and `pnpm store path` comes back empty.
+      - name: Bootstrap node and pnpm
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.11.1'
+      - run: npm install -g pnpm@10.28.0
 
       - name: Setup
         uses: ./.depot/actions/setup
