@@ -2,6 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "DEUS MDL",
   "scopeName": "text.html.markdown.mdl",
-  "comment": "A .mdl file IS markdown — frontmatter, prose, tables — plus ```mdl fences the injection colours.",
+  "comment": "A .mdl file IS markdown: the builtin grammar supplies YAML frontmatter, prose and tables, and the injection colours the ```mdl fences.",
   "patterns": [{ "include": "text.html.markdown" }]
 }

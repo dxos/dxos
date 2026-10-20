@@ -1,0 +1,18 @@
+layer: tool
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+
+tasks:
+  # `dist/vscode-mdl.vsix`, installable with `code --install-extension`; see README.md.
+  package:
+    command: pnpm exec vsce package --no-dependencies --out dist/vscode-mdl.vsix
+    inputs:
+      - package.json
+      - README.md
+      - .vscodeignore
+      - language-configuration*.json
+      - syntaxes/**/*
+    outputs:
+      - dist/vscode-mdl.vsix

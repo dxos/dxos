@@ -1,0 +1,54 @@
+---
+id: org.dxos.spec.fixture
+name: Fixture
+version: 0.1.0
+extends:
+  - org.dxos.spec.core
+---
+
+Cases the real specs do not all exercise. Prose outside a fence stays markdown: [F-1] is a link
+reference here, not an MDL cross-reference.
+
+```mdl
+diagram-rule DR-1: An unknown, hyphenated block type is still a type
+  severity: warn | error   # a union with a trailing comment
+  tags: [smoke, nightly]
+  covers: []
+```
+
+```mdl
+type Piece
+  # a whole-line comment
+  kind: PieceKind
+  color?: Color
+  moves: Move[]
+  ref: Ref<Board>
+  active: true
+  weight: 1..10
+  label?: "pawn" | "rook"
+```
+
+```mdl
+feat F-1: Refers to [F-1.2] and [op:Move] in its title
+  Inline prose before the first field, with `code`, "a string" and $given.space.
+  req F-1.1: White moves first; see type:Board and op:Move.
+  req F-1.2: The rule in org.dxos.mdl.rule@1.0 applies. A # in a sentence is a comment.
+```
+
+```mdl
+decision D-7: Two deciders stay two entries. Fills in [D-1, D-2].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene, F-2.1]
+  desc: |
+    A block scalar: key: value lines in here are prose, not fields,
+    and user:bob is still an actor.
+  rejected:
+    - One entry with both deciders: hides who chose what.
+```
+
+~~~mdl
+op Move
+  key: org.dxos.operation.chess.move
+~~~
