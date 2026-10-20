@@ -49,6 +49,9 @@ export type FormFieldOverride = {
   min?: number;
   max?: number;
   step?: number;
+  /** A nested object's group: whether it is open, for a host that keeps the state (unset, it starts open). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**

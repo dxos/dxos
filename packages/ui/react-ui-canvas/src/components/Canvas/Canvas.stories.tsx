@@ -10,6 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { type ViewTree } from '../../builder/index.ts';
 import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
 import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
 import {
@@ -38,11 +39,24 @@ import { Canvas } from './Canvas.tsx';
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating inspector (top right) edits the
  *    selected element.
  */
+/** The drawings a story opens, by name; only `elements` grows with `depth` (the others are fixed). */
+const FIXTURES = {
+  elements: (depth: number) => createViewTree(depth),
+  model: () => createModelViewTree(),
+  basic: () => createSquareTree(),
+  lattice: () => createLatticeTree(),
+  deep: () => createNestedDeepTree(),
+  view: () => createNestedViewTree(),
+  nested: () => createNestedSimpleTree(),
+} satisfies Record<string, (depth: number) => ViewTree>;
+
+type Fixture = keyof typeof FIXTURES;
+
 type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'deep' | 'view' | 'nested';
+  fixture?: Fixture;
   inspectors?: InspectorMode;
 };
 
@@ -92,28 +106,13 @@ const Editor = ({
       <Canvas.Views />
       <Canvas.Layers />
       <Canvas.Objects />
-      <Canvas.About />
     </Canvas.Root>
   );
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture = 'elements', inspectors }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    // The model fixture is a fixed three levels, so `depth` does not apply to it.
-    const tree =
-      fixture === 'model'
-        ? createModelViewTree()
-        : fixture === 'square'
-          ? createSquareTree()
-          : fixture === 'lattice'
-            ? createLatticeTree()
-            : fixture === 'deep'
-              ? createNestedDeepTree()
-              : fixture === 'view'
-                ? createNestedViewTree()
-                : fixture === 'nested'
-                  ? createNestedSimpleTree()
-                  : createViewTree(depth);
+    const tree = FIXTURES[fixture](depth);
     return { store: createMemoryStore(tree.views, {}, { root: tree.root }), root: tree.root };
   }, [depth, fixture]);
 
@@ -158,9 +157,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A single square at the origin: select it to style it, or draw more nodes and link them. */
+/** A square at the origin between a circle and a polygon: select one to style it, or draw more nodes and link them. */
 export const Default: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic' },
 };
 
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
@@ -212,15 +211,16 @@ export const Lattice: Story = {
  * or closes its section, and the dock's close button floats the same column over the canvas.
  */
 export const Docked: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. With nothing selected the dock holds no properties; the layers section starts closed, and its header opens it.
+    // 1. With nothing selected the dock keeps its properties section, saying so; the layers section starts closed, and
+    //    its header opens it.
     const dock = await canvas.findByTestId('scene-view-dock');
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed'),
     );
-    await expect(within(dock).queryByTestId('dock-section-properties')).not.toBeInTheDocument();
+    await expect(await within(dock).findByTestId('properties-empty')).toBeVisible();
     await userEvent.click(
       within(within(dock).getByTestId('dock-section-layers')).getByRole('button', { name: 'Layers' }),
     );
@@ -234,24 +234,24 @@ export const Docked: Story = {
 
 /** Floating inspectors (the default): the panel over the canvas, with the same sections as docked; its toolbar docks them. */
 export const Floating: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
     // Floating, the panel holds the same sections it does docked.
-    await expect(await canvas.findByTestId('dock-section-about')).toBeInTheDocument();
-    await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    await expect(await canvas.findByTestId('dock-section-views')).toBeInTheDocument();
     await expect(
       [...canvasElement.querySelectorAll('[data-testid^="dock-section-"]')].map((section) =>
         section.getAttribute('data-testid'),
       ),
-    ).toEqual(['dock-section-views', 'dock-section-objects', 'dock-section-layers', 'dock-section-about']);
+    ).toEqual(['dock-section-views', 'dock-section-objects', 'dock-section-layers']);
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));
-    // The panel is split: the properties above the seam, the other sections below.
-    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
+    // Floating, every section is in one scrolling list: no seam, the properties first.
+    await expect(await canvas.findByTestId('dock-section-properties')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('dock-splitter')).toBeNull();
     const guide = await within(await canvas.findByTestId('properties')).findByText('Guide');
     guide.scrollIntoView();
     await userEvent.click(guide);
@@ -259,9 +259,11 @@ export const Floating: Story = {
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
-    // Docked, the same sections: about still closed until opened (only the properties start open).
-    await expect(await canvas.findByTestId('dock-section-about')).toHaveAttribute('data-state', 'closed');
+    // Docked, the same sections: layers still closed until opened (only the properties start open).
+    await expect(await canvas.findByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed');
     await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    // Docked, the panel splits: the properties above the seam, the other sections below.
+    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
   },
 };
 

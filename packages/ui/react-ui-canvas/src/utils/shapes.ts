@@ -113,9 +113,9 @@ export const createNode = ({
       return { type, id, z, center, size };
     // The count is set, so the panel shows the shape's own value rather than an empty field.
     case 'cloud':
-      return { type, id, z, center, size, bumps: DEFAULT_CLOUD_BUMPS };
+      return { type, id, z, center, size, params: { bumps: DEFAULT_CLOUD_BUMPS } };
     case 'polygon':
-      return { type, id, z, center, size, sides: DEFAULT_POLYGON_SIDES };
+      return { type, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'view':

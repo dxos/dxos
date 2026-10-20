@@ -8,6 +8,7 @@ import {
   type CameraMotion,
   type CanvasAtoms,
   type CanvasController,
+  type CanvasHistory,
   type ControllerGrid,
   type LookHandlers,
   type Projection,
@@ -30,6 +31,7 @@ export type CanvasControllerLive = {
   camera: CameraMotion;
   fit: ViewFit;
   look: LookHandlers;
+  history: CanvasHistory;
 };
 
 export type UseCanvasControllerOptions = {
@@ -61,6 +63,7 @@ export const useCanvasController = ({ registry, atoms, store, live }: UseCanvasC
         camera: () => liveRef.current.camera,
         fit: () => liveRef.current.fit,
         look: () => liveRef.current.look,
+        history: () => liveRef.current.history,
       }),
     [registry, atoms, store],
   );

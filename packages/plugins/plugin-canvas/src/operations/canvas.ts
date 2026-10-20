@@ -24,3 +24,11 @@ export class CanvasElementNotFoundError extends Data.TaggedError('CanvasElementN
 
 /** The drawing an operation was given is not of the dialect it reads. */
 export class DrawingDialectError extends Data.TaggedError('DrawingDialectError')<{ message: string }> {}
+
+/** An intent sent to the canvas that is not one the projection understands. */
+export class InvalidIntentError extends Data.TaggedError('InvalidIntentError')<{ message: string }> {}
+
+/** A canvas with no version history, whose edits could not be undone. */
+export class UnversionedCanvasError extends Data.TaggedError('UnversionedCanvasError')<{
+  message: string;
+}> {}

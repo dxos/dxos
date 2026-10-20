@@ -28,6 +28,8 @@ import {
   type Point,
   type Size,
   type View,
+  atomSource,
+  combinedSource,
   endpointNode,
 } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
@@ -145,10 +147,11 @@ export const pruneOverlay = (graph: GraphModel, overlay: Overlay): Overlay => {
   return Object.keys(positions).length === Object.keys(overlay.positions).length ? overlay : { positions };
 };
 
-type DynamicSnapshot = { graph: GraphModel; overlay: Overlay };
+const isGraphModel = (value: unknown): value is GraphModel =>
+  typeof value === 'object' && value !== null && 'nodes' in value && 'edges' in value;
 
-const isDynamicSnapshot = (value: unknown): value is DynamicSnapshot =>
-  typeof value === 'object' && value !== null && 'graph' in value && 'overlay' in value;
+const isOverlay = (value: unknown): value is Overlay =>
+  typeof value === 'object' && value !== null && 'positions' in value;
 
 export const dynamicCapabilities: Capabilities = { move: true, link: true, delete: true, update: true };
 
@@ -250,16 +253,11 @@ export const createDynamicProjection = ({
     scene,
     apply,
     capabilities,
-    // Both atoms in one value, so an undo restores the layout and the overrides together.
-    snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
-    restore: (snapshot) => {
-      if (isDynamicSnapshot(snapshot)) {
-        // A host that takes link and delete owns the graph, so an undo here must not revive what its model removed.
-        if (!onLink && !onDelete) {
-          registry.set(graph, snapshot.graph);
-        }
-        registry.set(overlay, snapshot.overlay);
-      }
-    },
+    // Both atoms in one model, so an undo restores the layout and the overrides together; a host that takes link and
+    // delete owns the graph, so an undo here must not revive what its model removed.
+    model: combinedSource({
+      ...(onLink || onDelete ? {} : { graph: atomSource(registry, graph, isGraphModel) }),
+      overlay: atomSource(registry, overlay, isOverlay),
+    }),
   };
 };

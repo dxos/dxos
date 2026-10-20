@@ -13,6 +13,9 @@
 // opens drawings to any depth; each is bound once by its URI, so a reference cycle shows a scene already bound
 // rather than binding again. Any other object is left to the frame's view.
 //
+// The store's versions (VIEWS.md §8.4) are its drawings' Automerge heads: undo reads a path back as the store showed it
+// at those heads, so an entry holds heads and paths, never values.
+//
 
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
@@ -21,6 +24,7 @@ import { type URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   type Node,
+  type VersionedSource,
   type View,
   type ViewId,
   type ViewMap,
@@ -28,8 +32,10 @@ import {
   type ViewStore,
   createMemoryStore,
   isViewNode,
+  readPath,
+  storeVersions,
   withLegacyNodeType,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas/headless';
 
 import { Canvas } from '#types';
 
@@ -100,10 +106,32 @@ const storedChild = (record: unknown): ViewId | undefined => {
   return isViewNode(node) ? node.scene : undefined;
 };
 
+/** Each bound drawing's Automerge heads, keyed by its URI (this drawing's under `''`). */
+export type CanvasHeads = Readonly<Record<string, readonly string[]>>;
+
+const OWN = '';
+
+/** Heads read back recently; an undo reads many paths at the same two. */
+const HEADS_CACHE = 4;
+
+export const isCanvasHeads = (value: unknown): value is CanvasHeads =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.values(value).every((heads) => Array.isArray(heads) && heads.every((head) => typeof head === 'string'));
+
 const mapNodes = (scene: View, map: (node: Node) => Node): View => ({
   ...scene,
   nodes: Object.fromEntries(Object.entries(scene.nodes).map(([id, node]) => [id, map(node)])),
 });
+
+/** A binding and the registry its atoms live in. */
+export type LiveCanvasStore = { registry: Registry.AtomRegistry; bound: BoundCanvasStore };
+
+/** The bindings open now, by canvas id, so an operation patches the store a view shows rather than binding again. */
+const live = new Map<string, Set<LiveCanvasStore>>();
+
+/** The latest open binding of the canvas `id`, if a view has one. */
+export const liveCanvasStore = (id: string): LiveCanvasStore | undefined => [...(live.get(id) ?? [])].at(-1);
 
 export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing.Canvas): BoundCanvasStore => {
   const root = prepare(canvas);
@@ -114,10 +142,16 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   const unlinked = new Set<string>();
   let disposed = false;
 
-  /** The store's scenes: this drawing's, with linked frames opening their drawing's root, plus each linked drawing's. */
-  const read = (): ViewMap => {
+  /**
+   * The store's scenes: this drawing's, with linked frames opening their drawing's root, plus each linked drawing's;
+   * `contentOf` reads a drawing's content now or at earlier heads.
+   */
+  const read = (
+    contentOf: (canvas: Drawing.Canvas, key: string) => Drawing.Canvas['content'] | undefined = (canvas) =>
+      canvas.content,
+  ): ViewMap => {
     const scenes: Record<ViewId, View> = {};
-    for (const scene of Object.values(readViews(clone(canvas.content)))) {
+    for (const scene of Object.values(readViews(clone(contentOf(canvas, OWN) ?? {})))) {
       scenes[scene.id] = mapNodes(scene, (node) => {
         const uri = isViewNode(node) ? objectUri(node) : undefined;
         if (!uri || !isViewNode(node)) {
@@ -134,7 +168,7 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       });
     }
     for (const [uri, link] of linked) {
-      for (const scene of Object.values(readViews(clone(link.canvas.content)))) {
+      for (const scene of Object.values(readViews(clone(contentOf(link.canvas, uri) ?? {})))) {
         const id = linkedViewId(uri, scene.id);
         scenes[id] = {
           ...mapNodes(scene, (node) => {
@@ -209,9 +243,42 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   // A linked drawing's classes stay its own: its shapes show here without them.
   const memory = createMemoryStore(Object.values(read()), readStyles(canvas.styles));
   const { styles } = memory;
+  const current = storeVersions(registry, memory);
+  const headsOf = (target: Drawing.Canvas): readonly string[] => [...(Obj.version(target).automergeHeads ?? [])];
+  const cache = new Map<string, ViewMap>();
+  /** The store as it read at `heads`; a drawing bound since then reads as it is now. */
+  const readAt = (heads: CanvasHeads): ViewMap => {
+    const key = JSON.stringify(heads);
+    let views = cache.get(key);
+    if (!views) {
+      views = read((target, uri) => {
+        const at = heads[uri];
+        return at && at.length > 0 ? Obj.getVersion(target, at).content : target.content;
+      });
+      cache.set(key, views);
+      if (cache.size > HEADS_CACHE) {
+        cache.delete(cache.keys().next().value ?? key);
+      }
+    }
+    return views;
+  };
+  // Without a database the canvas has no history, so the atom's snapshots stand in, as for the memory store.
+  const versions: VersionedSource | undefined = db
+    ? {
+        heads: (): CanvasHeads => ({
+          [OWN]: headsOf(canvas),
+          ...Object.fromEntries([...linked].map(([uri, link]) => [uri, headsOf(link.canvas)])),
+        }),
+        read: (path, heads) =>
+          heads === undefined ? current.read(path) : isCanvasHeads(heads) ? readPath(readAt(heads), path) : undefined,
+        write: current.write,
+      }
+    : undefined;
+
   // A linked drawing's root is kept with no frame opening it: deleting the frame here must not delete that drawing.
   const store: ViewStore = {
     ...memory,
+    ...(versions ? { versions } : {}),
     isRoot: (id) => {
       const parsed = parseLinkedViewId(id);
       return parsed !== undefined && linked.get(parsed.uri)?.root === parsed.scene;
@@ -329,11 +396,12 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
     }
   });
 
-  return {
+  const bound: BoundCanvasStore = {
     store,
     root,
     dispose: () => {
       disposed = true;
+      live.get(canvas.id)?.delete(entry);
       unsubscribeCanvas();
       unsubscribeStore();
       unsubscribeStyles();
@@ -342,6 +410,9 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       }
     },
   };
+  const entry: LiveCanvasStore = { registry, bound };
+  live.set(canvas.id, (live.get(canvas.id) ?? new Set()).add(entry));
+  return bound;
 };
 
 /** A fresh canvas for the variant: the root scene with the drawing's `settings`, and nothing else. */

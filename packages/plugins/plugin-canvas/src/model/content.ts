@@ -35,6 +35,7 @@ import {
   sortByZ,
   trackId,
   withLegacyNodeType,
+  withLegacyParams,
 } from '@dxos/react-ui-canvas/headless';
 
 /**
@@ -516,7 +517,7 @@ export const readViews = (content: ContentMap): ViewMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = withLegacyNode(withLegacyNodeType(clone(record.node)));
+      nodes[record.scene][record.node.id] = withLegacyNode(withLegacyParams(withLegacyNodeType(clone(record.node))));
     } else if (isLinkRecord(record) && links[record.scene]) {
       links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }

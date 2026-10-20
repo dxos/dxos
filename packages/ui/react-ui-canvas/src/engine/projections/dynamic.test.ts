@@ -7,7 +7,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../../components/index.ts';
-import { type View } from '../../model/index.ts';
+import { type View, patchSource, recordChanges } from '../../model/index.ts';
 import { type GraphModel, type Overlay, createDynamicProjection, layoutGraph, pruneOverlay } from './dynamic.ts';
 
 const graph: GraphModel = {
@@ -74,12 +74,13 @@ describe('dynamic projection', () => {
   test('a host intercepts link and delete intents and the graph is left to follow its model', ({ expect }) => {
     const registry = Registry.make();
     const model = Atom.make(graph);
+    const overlay = Atom.keepAlive(Atom.make<Overlay>({ positions: {} }));
     const linked: { from: string; to: string }[] = [];
     const deleted: (readonly string[])[] = [];
     const projection = createDynamicProjection({
       registry,
       graph: model,
-      overlay: Atom.make<Overlay>({ positions: {} }),
+      overlay,
       options: { nodes: defaultNodeRegistry },
       onLink: (edge) => linked.push(edge),
       onDelete: (ids) => deleted.push(ids),
@@ -93,11 +94,20 @@ describe('dynamic projection', () => {
     expect(deleted).toEqual([['e1']]);
     expect(registry.get(model)).toBe(graph);
 
-    // Undo restores the overrides but leaves the host's graph as its model last set it.
-    const before = projection.snapshot?.();
-    const hostGraph = { ...graph, edges: graph.edges.filter(({ id }) => id !== 'e1') };
-    registry.set(model, hostGraph);
-    projection.restore?.(before);
+    // Undo patches the overrides back but leaves the host's graph as its model last set it: the graph is not versioned.
+    const { model: versions } = projection;
+    const [change] = versions
+      ? recordChanges([versions], () => {
+          registry.set(model, { ...graph, edges: graph.edges.filter(({ id }) => id !== 'e1') });
+          projection.apply({ kind: 'move', ids: ['leaf'], delta: { x: 10, y: 0 } });
+        })
+      : [];
+    expect(change?.paths).toEqual([['overlay', 'positions', 'leaf']]);
+    const hostGraph = registry.get(model);
+    if (versions && change) {
+      patchSource(versions, { from: change.after, to: change.before, paths: change.paths });
+    }
+    expect(registry.get(overlay).positions).toEqual({});
     expect(registry.get(model)).toBe(hostGraph);
   });
 

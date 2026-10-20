@@ -6,6 +6,7 @@ import { type KeyboardEvent, useCallback } from 'react';
 
 import {
   type CanvasAtoms,
+  type CanvasHistory,
   type EditingCommands,
   type NavigationCommands,
   type Projection,
@@ -58,6 +59,8 @@ export type UseSceneKeysOptions = {
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
+  commit: CanvasHistory['commit'];
   timeline?: TimelineKeys;
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
@@ -87,6 +90,7 @@ export const useSceneKeys = ({
   toggleDebug,
   onUndo,
   onRedo,
+  commit,
   major,
   copy,
   cut,
@@ -186,7 +190,9 @@ export const useSceneKeys = ({
             x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
             y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
           };
-          projection.apply({ kind: 'move', ids: selectedNodes, delta });
+          commit(() => projection.apply({ kind: 'move', ids: selectedNodes, delta }), {
+            mergeKey: `nudge:${[...selectedNodes].sort().join(',')}`,
+          });
           event.preventDefault();
           break;
         }
@@ -274,6 +280,7 @@ export const useSceneKeys = ({
       toggleDebug,
       onUndo,
       onRedo,
+      commit,
       copy,
       cut,
       paste,
