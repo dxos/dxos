@@ -274,6 +274,9 @@ export class ChatModel {
   /** Last request (for retries). */
   #lastRequest: ChatRequest | undefined;
 
+  /** Set once a rename is scheduled, so a prompt sent before the name lands does not schedule another. */
+  #nameScheduled = false;
+
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
 
@@ -492,12 +495,8 @@ export class ChatModel {
         submission?.resolve();
         log('chat model submitPrompt returned, waiting for agent', {});
 
-        // On the first message (no name yet), schedule rename immediately so it
-        // runs concurrently with the AI response rather than waiting for completion. A synthetic
-        // turn is system-generated, so it would name the chat after a report nobody wrote.
-        if (!this._options.chat?.target?.name && requestProp.disposition !== 'synthetic') {
-          yield* this.#updateChatName(requestProp.message);
-        }
+        // Scheduled now rather than after the turn, so the name lands while the agent works.
+        yield* this.#nameAfter(requestProp);
 
         yield* session.waitForCompletion();
         log.info('session complete');
@@ -563,6 +562,8 @@ export class ChatModel {
         const session = yield* this.#getSession();
         yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
         markWork('chat.prompt-submitted');
+        // A chat whose first turn started elsewhere (a delegated agent) is first typed into here.
+        yield* this.#nameAfter(requestProp);
       }).pipe(Effect.provide(this._spaceLayer)),
     );
   }
@@ -893,12 +894,12 @@ export class ChatModel {
   }
 
   /**
-   * Schedule a chat name update as a detached (fire-and-forget) operation.
-   * Called automatically on the first message; can also be invoked manually via the toolbar.
+   * Schedules a detached rename of a chat that has no name yet, after a prompt a person sent. A
+   * synthetic prompt is system-generated, so it would name the chat after a report nobody wrote.
    */
-  #updateChatName(prompt?: string): Effect.Effect<void, never, Operation.Service> {
+  #nameAfter(request: ChatRequest): Effect.Effect<void, never, Operation.Service> {
     const chat = this._options.chat?.target;
-    if (!chat) {
+    if (!chat || chat.name || this.#nameScheduled || request.disposition === 'synthetic') {
       return Effect.void;
     }
 
@@ -907,8 +908,9 @@ export class ChatModel {
       return Effect.void;
     }
 
+    this.#nameScheduled = true;
     log.info('scheduling chat name update');
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt: request.message }, { spaceId });
   }
 }
 
