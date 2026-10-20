@@ -345,6 +345,7 @@ export class ChatModel {
         pendingMessages: get(this.messages),
         rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
         outbox: get(this.outbox),
+        sender: this._options.sender,
       }),
     );
     if (this._options.model && !this._options.system) {
