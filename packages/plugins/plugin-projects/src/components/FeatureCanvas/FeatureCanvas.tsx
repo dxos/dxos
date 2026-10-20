@@ -99,7 +99,8 @@ const LATTICE: LatticeSpec = { width: 320, height: 192, gutterX: 64, gutterY: 64
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
   lattice: LATTICE,
   createNode: (_node, props) => createFeatureNode(props),
-  link: { type: 'line', ends: { end: 'arrow' } },
+  // Smart links route through the lattice's gutters, so arrows never cross a card.
+  link: { type: 'smart', ends: { end: 'arrow' } },
 };
 
 const EDGE_SEPARATOR = '->';
@@ -143,7 +144,7 @@ export type FeatureCanvasProps = {
 
 /**
  * The canvas view of a feature map: each feature's card in a box, laid out by dependency rank with a
- * straight arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
+ * gutter-routed arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
  * each callback given, and change the model rather than the picture, so a refused edit never appears.
  */
 export const FeatureCanvas = ({
