@@ -56,6 +56,8 @@ const findCard = async (canvasElement: HTMLElement, name: string) => {
   if (!card) {
     throw new Error(`No card for ${name}`);
   }
+  // The board's masonry hides its tiles until they are measured, and a hidden card answers no role queries.
+  await waitFor(() => expect(card).toBeVisible(), { timeout: 10_000 });
   return card;
 };
 

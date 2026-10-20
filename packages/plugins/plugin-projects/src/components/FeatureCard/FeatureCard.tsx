@@ -299,6 +299,19 @@ export const FeatureCardBody = ({
 
   return (
     <Card.Body>
+      {/* Directly under the title, which it describes. */}
+      {showFields && onDescribe && (
+        <Card.Row icon='ph--text-align-left--regular' span='end'>
+          <InlineText
+            value={feature.description ?? ''}
+            placeholder={t('feature-card.description.placeholder')}
+            label={t('feature-card.description.label')}
+            testId='feature-card.description'
+            activation={editActivation}
+            onCommit={(description) => onDescribe(feature, description)}
+          />
+        </Card.Row>
+      )}
       <Card.Row>
         <Layout.Flex wrap gap='xs'>
           <Tag.Tag hue={status.hue}>{statusLabel}</Tag.Tag>
@@ -319,19 +332,6 @@ export const FeatureCardBody = ({
           )}
         </Layout.Flex>
       </Card.Row>
-
-      {showFields && onDescribe && (
-        <Card.Row icon='ph--text-align-left--regular' span='end'>
-          <InlineText
-            value={feature.description ?? ''}
-            placeholder={t('feature-card.description.placeholder')}
-            label={t('feature-card.description.label')}
-            testId='feature-card.description'
-            activation={editActivation}
-            onCommit={(description) => onDescribe(feature, description)}
-          />
-        </Card.Row>
-      )}
 
       {expanded && showFields && !onDescribe && feature.description && (
         <Card.Row span='full'>
