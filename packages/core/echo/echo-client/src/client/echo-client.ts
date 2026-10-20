@@ -21,7 +21,10 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 /** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
 const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
-export type EchoClientProps = {};
+export type EchoClientProps = {
+  /** Overrides the index query budget; tests drive it rather than waiting it out. */
+  queryTimeout?: number;
+};
 
 export type ConnectToServiceProps = {
   dataService: DataService.Client;
@@ -91,10 +94,19 @@ export class EchoClient extends Resource {
   /** Each index activity the host reports; see `DataService.IndexActivity`. */
   readonly indexActivityUpdated = new Event<DataService.IndexActivity>();
 
+  /**
+   * Each status or activity report: a catch-up after time offline moves only the activity, and a
+   * one-shot query waits on it as long as on a rebuild.
+   */
+  readonly #indexProgress = new Event<void>();
+
+  readonly #queryTimeout: number | undefined;
+
   #indexStatusCleanup: (() => void) | undefined;
 
-  constructor(_: EchoClientProps = {}) {
+  constructor({ queryTimeout }: EchoClientProps = {}) {
     super();
+    this.#queryTimeout = queryTimeout;
   }
 
   get graph(): HypergraphImpl {
@@ -142,11 +154,17 @@ export class EchoClient extends Resource {
       }
     };
     const status = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexStatus'](), {
-      onData: (status) => this.indexStatusUpdated.emit(status),
+      onData: (status) => {
+        this.indexStatusUpdated.emit(status);
+        this.#indexProgress.emit();
+      },
       onError,
     });
     const activity = subscribeStream(this._runtime, this._dataService['DataService.subscribeIndexActivity'](), {
-      onData: (activity) => this.indexActivityUpdated.emit(activity),
+      onData: (activity) => {
+        this.indexActivityUpdated.emit(activity);
+        this.#indexProgress.emit();
+      },
       onError,
     });
     this.#indexStatusCleanup = () => {
@@ -165,7 +183,8 @@ export class EchoClient extends Resource {
         subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
-      indexProgress: this.indexStatusUpdated,
+      queryTimeout: this.#queryTimeout,
+      indexProgress: this.#indexProgress,
     });
   }
 
