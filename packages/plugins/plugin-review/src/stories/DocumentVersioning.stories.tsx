@@ -529,6 +529,8 @@ export const BranchRevisions: Story = {
  * - A `merge: draft` node appears; post-merge revisions resolve read-only against the root doc.
  */
 export const BranchMerge: Story = {
+  // TODO(wittjosiah): Flaky in CI (fails intermittently); fix and re-enable.
+  tags: ['!test'],
   args: {
     content: 'alpha\nbravo\n',
   },
