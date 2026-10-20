@@ -5,8 +5,9 @@
 /**
  * Re-deals the clips of a drifting wall so no recording shows twice in one column. `layout.mjs` copies a run's few
  * recordings into many cells, so a column drifting past would otherwise show the same clip more than once. Tour
- * clips stay on their cells; every other recording keeps its overall count (so a clip placed once stays once), and
- * each cell takes the recording with the most copies left that its column does not hold yet.
+ * clips stay on their cells; every other recording keeps its overall count (so a clip placed once stays once). A cell
+ * keeps its own clip while its column does not hold that recording yet, so a pinned or once-only clip stays where
+ * `layout.mjs` put it; otherwise it takes the recording with the most copies left that its column does not hold.
  *
  * @param clips Each cell's current clip file, by cell id.
  * @param columns Each column's cell ids, top to bottom.
@@ -42,8 +43,12 @@ export const spreadClips = (
       if (fixed(clip)) {
         continue;
       }
+      const own = clip === undefined ? undefined : recordingOf(clip);
       const ranked = [...left].filter(([, count]) => count > 0).sort(([a, x], [b, y]) => y - x || a.localeCompare(b));
-      const [recording] = ranked.find(([candidate]) => !held.has(candidate)) ?? ranked[0] ?? [];
+      const [recording] =
+        own !== undefined && !held.has(own) && (left.get(own) ?? 0) > 0
+          ? [own]
+          : (ranked.find(([candidate]) => !held.has(candidate)) ?? ranked[0] ?? []);
       if (recording !== undefined) {
         left.set(recording, (left.get(recording) ?? 1) - 1);
         held.add(recording);
