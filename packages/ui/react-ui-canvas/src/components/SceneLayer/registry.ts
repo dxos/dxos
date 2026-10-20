@@ -20,14 +20,16 @@ import {
   NoteNode,
   PathNode,
   PolygonNode,
+  PolylineNode,
   RectNode,
   type Size,
   ViewNode,
   createNodeRegistry,
   isCloudNode,
   isPolygonNode,
+  isPolylineNode,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, cloudPath, createNode, polygonPath } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
 import {
   BoxNodeView,
   CloudNodeView,
@@ -38,6 +40,7 @@ import {
   NoteNodeView,
   PathNodeView,
   PolygonNodeView,
+  PolylineNodeView,
   ViewNodeView,
 } from './SceneLayer.tsx';
 
@@ -115,6 +118,33 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     parts: [{ field: 'label' }],
     resizable: true,
     minSize: MIN_SIZE,
+  },
+  polyline: {
+    name: 'Polyline',
+    icon: 'ph--line-segments--regular',
+    key: 'Y',
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    create: (props) => createNode({ type: 'polyline', ...props }),
+    createFromPoints: (props, points, closed) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      ...(closed ? { params: { closed } } : {}),
+    }),
+    defaultSize: NOMINAL_SIZES.polyline,
+    silhouette: (node, inset, radius) =>
+      isPolylineNode(node)
+        ? polylinePath(node.size, node.points, {
+            inset,
+            closed: node.params?.closed,
+            radius: node.style?.rounded ? radius : 0,
+          })
+        : '',
+    filled: (node) => isPolylineNode(node) && node.params?.closed === true,
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: { width: 16, height: 16 },
   },
   note: {
     name: 'Note',

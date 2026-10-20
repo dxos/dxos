@@ -32,6 +32,7 @@ import {
 } from '../../model/index.ts';
 import {
   type LatticeSpec,
+  VERTEX_SNAP_PX,
   boundsFromPoints,
   curvePath,
   handlePoint,
@@ -327,6 +328,7 @@ export const ControlFrame = memo(
             strokeWidth={portStroke}
           />
         )}
+        {drag?.kind === 'vertices' && <VertexBand drag={drag} unit={unit} />}
         {marquee && (
           <rect
             x={marquee.x}
@@ -369,3 +371,42 @@ export const ControlFrame = memo(
 );
 
 ControlFrame.displayName = 'ControlFrame';
+
+/**
+ * A line being drawn vertex by vertex: the segments placed, the next one following the pointer, and a dot per vertex;
+ * the first ringed while a press there would close the line.
+ */
+const VertexBand = ({ drag, unit }: { drag: Extract<Drag, { kind: 'vertices' }>; unit: number }) => {
+  const [first] = drag.points;
+  const last = drag.points[drag.points.length - 1];
+  const closing =
+    drag.points.length >= 3 && Math.hypot(drag.to.x - first.x, drag.to.y - first.y) <= VERTEX_SNAP_PX * unit;
+  return (
+    <g data-testid='vertex-band' className='pointer-events-none'>
+      <polyline
+        points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
+        className='fill-none stroke-focus'
+        strokeWidth={2 * unit}
+      />
+      <line
+        x1={last.x}
+        y1={last.y}
+        x2={closing ? first.x : drag.to.x}
+        y2={closing ? first.y : drag.to.y}
+        className='stroke-focus'
+        strokeWidth={2 * unit}
+        strokeDasharray={`${6 * unit} ${4 * unit}`}
+      />
+      {drag.points.map(({ x, y }, index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r={(index === 0 && closing ? 6 : 3) * unit}
+          className={index === 0 && closing ? 'fill-focus stroke-focus' : 'fill-base-surface stroke-focus'}
+          strokeWidth={unit}
+        />
+      ))}
+    </g>
+  );
+};

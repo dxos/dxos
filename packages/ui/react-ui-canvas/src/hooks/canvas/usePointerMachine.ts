@@ -46,6 +46,7 @@ import {
 import {
   DEFAULT_LAYER,
   NOMINAL_SIZES,
+  VERTEX_SNAP_PX,
   activeLayer,
   boundsCenter,
   boundsFromPoints,
@@ -62,6 +63,7 @@ import {
   nodesIntersecting,
   nominalSize,
   panBy,
+  polylineFrame,
   portAccepts,
   portPoint,
   resizeBounds,
@@ -164,6 +166,11 @@ export type PointerMachine = {
   toScene: (event: { clientX: number; clientY: number }) => Point;
   removePoint: (point: ControlPointRef) => void;
 
+  /** Ends a vertex-by-vertex drawing: with two vertices or more it lands as a node, `closed` or open; else it is dropped. */
+  finishVertices: (closed: boolean) => void;
+  /** Takes back the last vertex placed; with none left the drawing is dropped. */
+  removeVertex: () => void;
+
   /** The node a create drag would make; the ghost, the frame and the drop all read it. */
   createdNode: (drag: Extract<Drag, { kind: 'create' }>, id: NodeId) => Node | undefined;
   commitCreated: (node: Node) => void;
@@ -227,19 +234,104 @@ export const usePointerMachine = ({
     [cancelAnimation, setDrag, interactedRef, rootRef, registry, atoms.hover],
   );
 
+  /** Lands a vertex-by-vertex drawing as a node, framed by its vertices; fewer than two make nothing. */
+  const landVertices = useCallback(
+    (drawing: Extract<Drag, { kind: 'vertices' }>, closed: boolean) => {
+      const def = nodeRegistry[drawing.type];
+      // The frame needs some extent on each axis to scale the line by, so a straight run gets a minor cell.
+      const frame = drawing.points.length >= 2 ? polylineFrame(drawing.points, minor) : undefined;
+      if (!def?.createFromPoints || !frame) {
+        return;
+      }
+      const { bounds } = frame;
+      const node = def.createFromPoints(
+        {
+          id: createId(drawing.type),
+          z: topZ(Object.values(scene.nodes)),
+          center: boundsCenter(bounds),
+          size: { width: bounds.width, height: bounds.height },
+        },
+        frame.points,
+        closed && drawing.points.length >= 3,
+      );
+      projection.apply({ kind: 'create', node: { ...node, layer: activeLayer(scene, registry.get(atoms.layer)) } });
+      select([node.id]);
+      setTool({ kind: 'select' });
+    },
+    [nodeRegistry, minor, scene, projection, registry, atoms.layer, select, setTool],
+  );
+
+  const finishVertices = useCallback(
+    (closed: boolean) => {
+      const drawing = registry.get(atoms.drag);
+      if (drawing?.kind !== 'vertices') {
+        return;
+      }
+      setDrag(undefined);
+      landVertices(drawing, closed);
+    },
+    [registry, atoms.drag, setDrag, landVertices],
+  );
+
+  const removeVertex = useCallback(() => {
+    const drawing = registry.get(atoms.drag);
+    if (drawing?.kind !== 'vertices') {
+      return;
+    }
+    setDrag(drawing.points.length > 1 ? { ...drawing, points: drawing.points.slice(0, -1) } : undefined);
+  }, [registry, atoms.drag, setDrag]);
+
+  /**
+   * A press while drawing vertex by vertex: on the first vertex it closes the line, anywhere else but the last vertex
+   * it places the next one. A press on the last is the second of a double-click, which ends the line open (`dblclick`).
+   */
+  const onVertexPointerDown = useCallback(
+    (drawing: Extract<Drag, { kind: 'vertices' }>, point: Point, event: PointerEvent) => {
+      event.stopPropagation();
+      if (event.button !== 0) {
+        return;
+      }
+      const reach = VERTEX_SNAP_PX / registry.get(atoms.camera).zoom;
+      const vertex = { x: snapMinor(point.x), y: snapMinor(point.y) };
+      // Where the press would place a vertex counts too: with snap on, that is where the user sees it land.
+      const near = (placed: Point) =>
+        Math.hypot(...distance(placed, point)) <= reach || Math.hypot(...distance(placed, vertex)) <= reach;
+      const { points } = drawing;
+      if (points.length >= 3 && near(points[0])) {
+        finishVertices(true);
+      } else if (!near(points[points.length - 1])) {
+        startDrag({ ...drawing, points: [...points, vertex], to: vertex }, event);
+      }
+    },
+    [registry, atoms.camera, finishVertices, snapMinor, startDrag],
+  );
+
   const onBackgroundPointerDown = useCallback(
     (event: PointerEvent) => {
+      const currentTool = registry.get(atoms.tool);
+      const point = toScene(event);
+      const drawing = registry.get(atoms.drag);
+      if (drawing?.kind === 'vertices') {
+        // A drawing in progress takes every press, over a shape as on the canvas, until it ends or its tool is put down.
+        if (currentTool.kind === 'node' && currentTool.type === drawing.type) {
+          onVertexPointerDown(drawing, point, event);
+          return;
+        }
+        setDrag(undefined);
+      }
       if (event.target !== event.currentTarget) {
         return;
       }
-      const currentTool = registry.get(atoms.tool);
-      const point = toScene(event);
       if (event.button === 1 || currentTool.kind === 'hand') {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
       } else if (currentTool.kind === 'node') {
-        if (capabilities.create) {
+        if (capabilities.create && nodeRegistry[currentTool.type]?.createFromPoints) {
+          select([]);
+          const vertex = { x: snapMinor(point.x), y: snapMinor(point.y) };
+          startDrag({ kind: 'vertices', type: currentTool.type, points: [vertex], to: vertex }, event);
+        } else if (capabilities.create) {
           const from = { x: snap(point.x), y: snap(point.y) };
           startDrag({ kind: 'create', type: currentTool.type, from, to: from }, event);
         }
@@ -259,7 +351,21 @@ export const usePointerMachine = ({
         startDrag({ kind: 'marquee', from: point, to: point, mode }, event);
       }
     },
-    [registry, atoms.tool, toScene, startDrag, select, capabilities.create, capabilities.link, snap],
+    [
+      registry,
+      atoms.tool,
+      atoms.drag,
+      toScene,
+      startDrag,
+      select,
+      capabilities.create,
+      capabilities.link,
+      snap,
+      snapMinor,
+      nodeRegistry,
+      onVertexPointerDown,
+      setDrag,
+    ],
   );
 
   /** Click selection shared by nodes and links: shift toggles, a plain click on an unselected element replaces. */
@@ -624,6 +730,12 @@ export const usePointerMachine = ({
           setDrag({ ...current, to: point, fromSide, target });
           break;
         }
+        case 'vertices': {
+          // The next segment follows the pointer to where a press would place its vertex.
+          const point = toScene(event);
+          setDrag({ ...current, to: { x: snapMinor(point.x), y: snapMinor(point.y) } });
+          break;
+        }
         case 'point': {
           // A control point moves on the minor grid, finer than a node; the double-click that adds one is a
           // creation and stays on the major grid.
@@ -774,7 +886,8 @@ export const usePointerMachine = ({
   const onPointerUp = useCallback(
     (event?: { clientX: number; clientY: number }) => {
       const raw = registry.get(atoms.drag);
-      if (!raw) {
+      // A drawing placed vertex by vertex outlasts each press.
+      if (!raw || raw.kind === 'vertices') {
         return;
       }
       setDrag(undefined);
@@ -949,6 +1062,9 @@ export const usePointerMachine = ({
     setDrag,
     toScene,
     removePoint,
+
+    finishVertices,
+    removeVertex,
 
     createdNode,
     commitCreated,

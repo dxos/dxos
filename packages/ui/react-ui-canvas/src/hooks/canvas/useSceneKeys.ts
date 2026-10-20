@@ -65,7 +65,7 @@ export type UseSceneKeysOptions = {
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
-  Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'finishVertices' | 'removeVertex'> &
   Pick<ToolsCommands, 'setTool'>;
 
 /**
@@ -100,6 +100,8 @@ export const useSceneKeys = ({
   ungroup,
   cancelDrag,
   removePoint,
+  finishVertices,
+  removeVertex,
   setTool,
   timeline,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
@@ -109,6 +111,19 @@ export const useSceneKeys = ({
       const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
       const point = registry.get(atoms.point);
       const action = keyAction(event);
+      // A line drawn vertex by vertex: Enter ends it open, Delete takes back its last vertex, Escape drops it.
+      if (registry.get(atoms.drag)?.kind === 'vertices') {
+        if (action === 'open') {
+          finishVertices(false);
+          event.preventDefault();
+          return;
+        }
+        if (action === 'delete') {
+          removeVertex();
+          event.preventDefault();
+          return;
+        }
+      }
       // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
       if (timeline?.active) {
         switch (action) {
@@ -264,6 +279,8 @@ export const useSceneKeys = ({
       atoms.point,
       removePoint,
       cancelDrag,
+      finishVertices,
+      removeVertex,
       select,
       navigation,
       capabilities,

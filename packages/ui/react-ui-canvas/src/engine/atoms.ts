@@ -60,6 +60,11 @@ export type Drag =
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
    */
   | { kind: 'create'; type: NodeType; from: Point; to: Point; dropped?: boolean }
+  /**
+   * Drawing a node vertex by vertex (`NodeDef.createFromPoints`): `points` are those placed, in scene coordinates, and
+   * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
+   */
+  | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */

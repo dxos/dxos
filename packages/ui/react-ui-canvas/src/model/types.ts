@@ -284,6 +284,26 @@ export const PolygonNode = Schema.Struct({
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 
+/** A polyline's own settings, in its `params`. */
+export const PolylineParams = Schema.Struct({
+  /** Unset, the line is open: drawn as a stroke alone, with no fill. */
+  closed: Schema.optional(Schema.Boolean.annotate({ title: 'Closed' })),
+}).annotate({ title: 'Polyline' });
+export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
+
+/**
+ * An irregular line of straight segments through `points`, in the frame's unit space (0..1 of its size, origin
+ * top-left) so a resize scales it; closed, it is a filled outline like a polygon. Labelled like a box.
+ */
+export const PolylineNode = Schema.Struct({
+  type: Schema.Literal('polyline'),
+  ...nodeBase,
+  ...boxFields,
+  points: Schema.Array(Point),
+  params: Schema.optional(PolylineParams),
+});
+export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
+
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
@@ -397,6 +417,7 @@ export const BuiltinNode = Schema.Union([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  PolylineNode,
   NoteNode,
   ViewNode,
   InstanceNode,
@@ -411,6 +432,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'ellipse',
   'polygon',
   'cloud',
+  'polyline',
   'note',
   'view',
   'instance',
@@ -429,6 +451,7 @@ export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'r
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
+export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
@@ -686,6 +709,7 @@ export const View = createViewSchema([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  PolylineNode,
   NoteNode,
   ViewNode,
   InstanceNode,

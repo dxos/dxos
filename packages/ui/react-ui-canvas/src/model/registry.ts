@@ -87,6 +87,13 @@ export type NodeDef = {
    * corners of its own to round.
    */
   silhouette?: (node: Node, inset: number, radius: number) => string;
+  /** Whether the silhouette's fill is drawn; unset, it is. An open outline (a line of segments) is its border alone. */
+  filled?: (node: Node) => boolean;
+  /**
+   * Makes the type drawn vertex by vertex: its palette tool places points click by click, and this makes the node from
+   * them, `points` in the unit space of the frame `props` gives (0..1, origin top-left).
+   */
+  createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /** The outline drawn while the node is moved or drawn: its frame unless the shape fits a `circle` inside it. */
   bounds?: (node: Node) => 'frame' | 'circle';
   /**

@@ -11,7 +11,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -316,6 +316,8 @@ export const CanvasRoot = ({
     setDrag,
     toScene,
     removePoint,
+    finishVertices,
+    removeVertex,
     createdNode,
     commitCreated,
     menu,
@@ -402,6 +404,8 @@ export const CanvasRoot = ({
     ungroup: controller.selection.ungroup,
     cancelDrag,
     removePoint,
+    finishVertices,
+    removeVertex,
     setTool,
     timeline: timelineKeys,
   });
@@ -429,7 +433,7 @@ export const CanvasRoot = ({
     createdNode,
   });
 
-  const { handlers, onDoubleClick } = useElementHandlers({
+  const { handlers, onDoubleClick: onElementDoubleClick } = useElementHandlers({
     registry,
     atoms,
     nodeRegistry,
@@ -444,6 +448,18 @@ export const CanvasRoot = ({
     onLinkDoubleClick,
     onLinkContextMenu,
   });
+
+  // A double-click ends a line drawn vertex by vertex, rather than opening what lies under it.
+  const onDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      if (registry.get(atoms.drag)?.kind === 'vertices') {
+        finishVertices(false);
+      } else {
+        onElementDoubleClick(event);
+      }
+    },
+    [registry, atoms.drag, finishVertices, onElementDoubleClick],
+  );
 
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 

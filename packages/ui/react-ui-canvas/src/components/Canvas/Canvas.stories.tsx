@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -401,5 +401,67 @@ export const Group: Story = {
     await userEvent.click(await within(views).findByTestId(`views-row-${id}/a`));
     await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeDefined());
     await waitFor(() => expect(rowSelected(views, `${id}/a`)).toBe(true));
+  },
+};
+
+/** The polylines on the canvas, as drawn. */
+const polylines = (root: HTMLElement) => [
+  ...root.querySelectorAll('[data-testid="scene-view"] [data-node-id^="polyline-"]'),
+];
+
+/**
+ * The polyline tool (Y) draws an irregular line vertex by vertex: each click places one, Enter or a double-click ends
+ * it open, a click on the first vertex closes it, Backspace takes back the last vertex and Escape drops the drawing.
+ */
+export const Polyline: Story = {
+  args: { depth: 0, liveDepth: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    const rect = view.getBoundingClientRect();
+    const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const click = async (dx: number, dy: number) => {
+      const at = { clientX: center.x + dx, clientY: center.y + dy, button: 0, pointerId: 1 };
+      await fireEvent.pointerDown(view, at);
+      await fireEvent.pointerMove(view, at);
+      await fireEvent.pointerUp(view, at);
+    };
+
+    // 1. Three clicks and a click back on the first vertex draw a closed polyline, which is selected.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, -100);
+    await click(-40, -100);
+    await click(-120, 0);
+    await expect(await canvas.findByTestId('vertex-band')).toBeInTheDocument();
+    await click(-200, -100);
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(1));
+    await expect(canvas.queryByTestId('vertex-band')).toBeNull();
+    const closed = await canvas.findByRole('switch', { name: 'Closed' });
+    await waitFor(() => expect(closed).toBeChecked());
+
+    // 2. Enter ends a line open.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(40, 40);
+    await click(200, 120);
+    await click(120, 200);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(2));
+    await waitFor(() => expect(canvas.getByRole('switch', { name: 'Closed' })).not.toBeChecked());
+
+    // 3. The switch closes the open line.
+    await userEvent.click(canvas.getByRole('switch', { name: 'Closed' }));
+    await waitFor(() => expect(canvas.getByRole('switch', { name: 'Closed' })).toBeChecked());
+
+    // 4. Backspace takes back vertices and Escape drops the drawing: nothing lands.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, 120);
+    await click(-40, 200);
+    await userEvent.keyboard('{Backspace}');
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByTestId('vertex-band')).toBeNull();
+    await expect(polylines(canvasElement)).toHaveLength(2);
   },
 };

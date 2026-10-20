@@ -957,6 +957,7 @@ const NodeFrame = memo(
             <div className={mx('contents', ...frameLook)}>
               <Silhouette
                 outline={silhouette}
+                filled={def?.filled?.(drawn) ?? true}
                 node={drawn}
                 border={border}
                 radius={RADIUS_PX[styleVariant(look.styleSet, drawn.style?.tone).roundedRadius]}
@@ -1015,13 +1016,20 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; node: Node; border: number; radius: number };
+type SilhouetteProps = {
+  outline: NonNullable<NodeDef['silhouette']>;
+  /** False for an open outline, which has no inside to fill. */
+  filled: boolean;
+  node: Node;
+  border: number;
+  radius: number;
+};
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, node, border, radius }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, node, border, radius }: SilhouetteProps) => {
   const { width, height } = node.size;
   const masks = useMemo(() => {
     const path = outline(node, border / 2, radius);
@@ -1037,11 +1045,13 @@ const Silhouette = ({ outline, node, border, radius }: SilhouetteProps) => {
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
-      <div
-        aria-hidden
-        className='dx-cover pointer-events-none'
-        style={{ ...layer, backgroundColor: 'inherit', maskImage: masks.fill }}
-      />
+      {filled && (
+        <div
+          aria-hidden
+          className='dx-cover pointer-events-none'
+          style={{ ...layer, backgroundColor: 'inherit', maskImage: masks.fill }}
+        />
+      )}
       {/* Border all the way in, so the whole layer is the border colour. */}
       <div
         aria-hidden
@@ -1116,6 +1126,8 @@ export const EllipseNodeView = LabelNodeView;
 export const CloudNodeView = LabelNodeView;
 
 export const PolygonNodeView = LabelNodeView;
+
+export const PolylineNodeView = LabelNodeView;
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
