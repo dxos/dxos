@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { keyTimes, timelineFps } from '../../model/index.ts';
 import { NOMINAL_ZOOM } from '../../utils/index.ts';
-import { ThemePanel, TimelinePanel, ToolsPanel } from '../panels/index.ts';
+import { DisplayPanel, TimelinePanel, ToolsPanel } from '../panels/index.ts';
 import {
   ActionToolbar,
   type CameraActions,
@@ -170,7 +170,7 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
   const lattice = useAtomValue(atoms.lattice);
   return (
     <div className={mx(barFrame, classNames)}>
-      <ThemePanel
+      <DisplayPanel
         registry={themes}
         theme={look.theme}
         override={themeOverride}

@@ -88,7 +88,7 @@ const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: stri
 
 const barClasses = mx('w-full', FLOATING_BAR);
 
-export type ThemePanelProps = PanelProps & {
+export type DisplayPanelProps = PanelProps & {
   registry: ThemeRegistry;
   /** The theme drawn, override or default. */
   theme: Theme;
@@ -117,7 +117,7 @@ export type ThemePanelProps = PanelProps & {
  * The canvas's look: the snap and guides toggles, a switch between dots and lines over the background (pressing the one
  * drawn turns the grid off), and the theme selector last.
  */
-export const ThemePanel = ({
+export const DisplayPanel = ({
   classNames,
   readonly,
   registry,
@@ -133,7 +133,7 @@ export const ThemePanel = ({
   onSnapToggle,
   lattice,
   onLatticeToggle,
-}: ThemePanelProps) => (
+}: DisplayPanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
     {/* Snapping is to the grid, so its toggles sit with the grid's. */}
