@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { shareInFlight } from './shareInFlight.ts';
+import { shareInFlight } from './usePrivateChat.ts';
 
 /** An open that resolves when the test says so. */
 const deferredOpen = () => {

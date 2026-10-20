@@ -16,12 +16,29 @@ import { useIdentity } from '@dxos/halo-react';
 
 import { AgentOperation } from '#types';
 
-import { shareInFlight } from './shareInFlight.ts';
-
 type Opened = { data?: Operation.Definition.Output<typeof AgentOperation.OpenPrivateChat>; error?: Error };
 
 /** Each member's open of their chat with each agent while it runs, by the agent's URI and the member's DID. */
 const opening = new Map<string, Promise<Opened>>();
+
+/**
+ * Runs `open` for `key`, or returns the run already in flight for it, so an article that remounts while the member's
+ * chat is still being made shares that open rather than making a second chat.
+ */
+export const shareInFlight = <T>(
+  inFlight: Map<string, Promise<T>>,
+  key: string,
+  open: () => Promise<T>,
+): Promise<T> => {
+  const running = inFlight.get(key);
+  if (running) {
+    return running;
+  }
+
+  const started = open().finally(() => inFlight.delete(key));
+  inFlight.set(key, started);
+  return started;
+};
 
 export type PrivateChatState = {
   /** The viewer's chat with the agent, once opened. */
