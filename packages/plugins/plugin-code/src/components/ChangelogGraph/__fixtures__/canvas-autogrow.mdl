@@ -31,8 +31,6 @@ feat F-2: Grid and bounds
 decision D-1: The canvas grows to fit its content.
   date: 2026-10-02
   by: user:alice
-  quote: "canvas should just grow when stuff goes past the edge"
-  context: "The canvas" is the `Scene` surface; said in review of the M3 demo.
   affects: [Scene]
 ```
 
@@ -93,7 +91,6 @@ decision D-7: Approve [D-2], [D-5] and [D-6].
 decision D-8: Bounds grow to the minor grid while dragging and snap to the major grid on drop.
   date: 2026-10-05
   by: user:alice
-  quote: "major grid feels laggy, snap on drop instead"
   affects: [F-2.2]
   supersedes: D-3
 ```
@@ -102,7 +99,6 @@ decision D-8: Bounds grow to the minor grid while dragging and snap to the major
 decision D-9: The camera never auto-scrolls during a drag.
   date: 2026-10-05
   by: user:alice
-  quote: "no auto scroll, it fights the trackpad"
   affects: [F-2.3]
   supersedes: D-4
 ```

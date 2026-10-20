@@ -129,11 +129,11 @@ const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
             {entry.title}
           </Card.Text>
         </Card.Row>
-        {/* A person's own words, or an agent's reasoning: the two carry different authority, so they read differently. */}
-        {actor === 'user' && entry.quote && (
-          <Card.Row icon='ph--quotes--regular'>
+        {/* A person's stated reason, or an agent's: the two carry different authority, so they read differently. */}
+        {actor === 'user' && (entry.quote ?? entry.why) && (
+          <Card.Row icon={entry.quote ? 'ph--quotes--regular' : 'ph--chat-text--regular'}>
             <Card.Text variant='muted' lines={2} classNames='italic' data-testid='changelog-graph.quote'>
-              {entry.quote}
+              {entry.quote ?? entry.why}
             </Card.Text>
           </Card.Row>
         )}

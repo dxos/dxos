@@ -36,7 +36,6 @@ feat F-2: Browsing
 decision D-1: Any object can be bookmarked.
   date: 2026-09-01
   by: user:bob
-  quote: "I want to star things and find them later, docs, sheets, whatever"
   affects: [F-1.1]
 ```
 
@@ -52,7 +51,6 @@ decision D-2: A bookmark is a reference to the object, never a copy.
 decision D-3: Bookmarks live in the navigation tree, under their space.
   date: 2026-09-02
   by: user:bob
-  quote: "put them in the sidebar where everything else is"
   affects: [F-2.1]
 ```
 
@@ -75,7 +73,6 @@ decision D-5: Approve [D-4].
 decision D-6: Bookmarks are ordered by hand, newest at the top.
   date: 2026-09-04
   by: user:carol
-  quote: "alphabetical is useless once you have 30 of them"
   affects: [F-2.2]
 ```
 

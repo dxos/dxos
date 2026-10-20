@@ -30,7 +30,6 @@ feat F-1: Sync
 decision D-1: The inbox polls the provider every five minutes.
   date: 2026-08-01
   by: user:dana
-  quote: "just poll every 5 min for now"
   affects: [F-1.1]
 ```
 
@@ -46,7 +45,6 @@ decision D-2: A failed poll retries after one minute. Fills in [D-1].
 decision D-3: The inbox polls every minute.
   date: 2026-08-10
   by: user:dana
-  quote: "5 min is too slow, people notice"
   affects: [F-1.1]
   supersedes: D-1
 ```
@@ -65,7 +63,6 @@ decision D-4: A failed poll retries with exponential backoff, capped at one hour
 decision D-5: New mail arrives by push from the provider's watch API.
   date: 2026-08-20
   by: user:erin
-  quote: "we're getting rate limited, switch to push"
   affects: [F-1.1]
   supersedes: D-3
 ```
@@ -96,7 +93,6 @@ decision D-8: A full sync runs every hour to repair anything push missed. Fills 
 decision D-9: The repair sync runs once a day, not hourly.
   date: 2026-08-25
   by: user:erin
-  quote: "hourly full sync is burning quota, daily is fine"
   affects: [F-1.2]
   supersedes: D-8
 ```
