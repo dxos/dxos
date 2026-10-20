@@ -52,23 +52,6 @@ describe('AgentSpace', () => {
     ]);
   });
 
-  test('the readers of an agent space and the members removed from it are its former admins', ({ expect }) => {
-    const reader = PublicKey.random();
-    const kai = space(
-      [AppSpace.AGENT_SPACE_TAG],
-      [
-        member(agent, SpaceMember_Role.OWNER),
-        member(me, SpaceMember_Role.ADMIN),
-        member(other, SpaceMember_Role.REMOVED),
-        member(reader, SpaceMember_Role.READER),
-      ],
-    );
-    expect(AgentSpace.formerAdmins(kai).map((former) => former.identity?.identityKey)).toEqual([
-      fromPublicKey(other),
-      fromPublicKey(reader),
-    ]);
-  });
-
   test('an identity administers the agent spaces it may still write to', ({ expect }) => {
     const kai = space(
       [AppSpace.AGENT_SPACE_TAG],

@@ -42,9 +42,9 @@ export const AgentAdmission = Capability.lazyModule(
   },
   () => import('./agent-admission.ts'),
 );
-// Keeps EDGE's lists of the admins of the agents this identity administers in step with their spaces, which only the
-// app shows; a headless host administers no agent. plugin-client provides the EDGE HTTP client only once the client
-// initializes, so requiring it keeps the sync from activating before then and finding no EDGE to tell.
+// Makes the members who may write to the spaces of the agents this identity administers those agents' admins on EDGE,
+// which only the app shows; a headless host administers no agent. plugin-client provides the EDGE HTTP client only
+// once the client initializes, so requiring it keeps the sync from activating before then and finding no EDGE to ask.
 export const AgentAdminSync = Capability.lazyModule(
   'AgentAdminSync',
   {

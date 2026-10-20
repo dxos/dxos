@@ -73,7 +73,9 @@ describe('AgentAdminSync', () => {
   const run = (sync: ReturnType<typeof makeAdminSync>, spaces: AgentSpace.Space[]) =>
     EffectEx.runPromise(sync(spaces, me));
 
-  test("lists the space's admins and delists its readers, once, as its members change", async ({ expect }) => {
+  test("adds the space's admins and editors, once, as its members change, and never takes one off", async ({
+    expect,
+  }) => {
     const kai = agentSpace([
       member(agent, SpaceMember_Role.OWNER, did),
       member(me, SpaceMember_Role.ADMIN),
@@ -88,10 +90,9 @@ describe('AgentAdminSync', () => {
       `GET /compute/brain/${did}`,
       `POST /compute/brain/${did}/admins {"identityKey":"${me.toHex()}"}`,
       `POST /compute/brain/${did}/admins {"identityKey":"${editor.toHex()}"}`,
-      `DELETE /compute/brain/${did}/admins/${reader.toHex()}`,
     ]);
 
-    // Nothing changed, so nothing is told again; a member who joins is listed, and one removed is delisted.
+    // Nothing changed, so nothing is sent again; a member who joins is added, and one removed stays an admin.
     edge.calls.length = 0;
     await run(sync, [kai.space]);
     expect(edge.calls).toEqual([]);
@@ -103,17 +104,7 @@ describe('AgentAdminSync', () => {
       member(joining, SpaceMember_Role.EDITOR),
     ]);
     await run(sync, [kai.space]);
-    expect(edge.calls).toEqual([
-      `POST /compute/brain/${did}/admins {"identityKey":"${joining.toHex()}"}`,
-      `DELETE /compute/brain/${did}/admins/${editor.toHex()}`,
-    ]);
-  });
-
-  test("a member the space does not show is left on EDGE's list", async ({ expect }) => {
-    const kai = agentSpace([member(agent, SpaceMember_Role.OWNER, did), member(me, SpaceMember_Role.ADMIN)]);
-    const edge = fakeEdge({ [did]: { defaultSpaceId: kai.space.id } });
-    await run(makeAdminSync(edge.request), [kai.space]);
-    expect(edge.calls.filter((call) => call.startsWith('DELETE'))).toEqual([]);
+    expect(edge.calls).toEqual([`POST /compute/brain/${did}/admins {"identityKey":"${joining.toHex()}"}`]);
   });
 
   test('a space EDGE does not name as the agent’s own, or one whose agent EDGE does not count this identity an admin of, is not synced', async ({
@@ -138,20 +129,20 @@ describe('AgentAdminSync', () => {
     expect(unknown.calls).toEqual([`GET /compute/brain/${did}`]);
   });
 
-  test('a change EDGE settles is not told again, and one it could not take is, after asking for a retry', async ({
+  test('an add EDGE settles is not sent again, and one it could not take is, after asking for a retry', async ({
     expect,
   }) => {
     const kai = agentSpace([
       member(agent, SpaceMember_Role.OWNER, did),
       member(me, SpaceMember_Role.ADMIN),
       member(editor, SpaceMember_Role.EDITOR),
-      member(reader, SpaceMember_Role.REMOVED),
     ]);
     const edge = fakeEdge({ [did]: { defaultSpaceId: kai.space.id } });
+    const listMe = `POST /compute/brain/${did}/admins {"identityKey":"${me.toHex()}"}`;
     const listEditor = `POST /compute/brain/${did}/admins {"identityKey":"${editor.toHex()}"}`;
-    const delistReader = `DELETE /compute/brain/${did}/admins/${reader.toHex()}`;
+    // An EDGE without the admins route answers 404, as it does a caller with no role on the agent.
+    edge.failures.set(listMe, 404);
     edge.failures.set(listEditor, 503);
-    edge.failures.set(delistReader, 409);
     const sync = makeAdminSync(edge.request);
     expect(await run(sync, [kai.space])).toBe(true);
 

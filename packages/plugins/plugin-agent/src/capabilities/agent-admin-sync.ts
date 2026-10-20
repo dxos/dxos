@@ -21,7 +21,7 @@ import { AgentSpace } from '#types';
 /** A request to EDGE as the client's EDGE HTTP client makes it: it answers the envelope's data, or rejects. */
 export type EdgeRequest = (
   path: string,
-  init: { method: 'GET' | 'POST' | 'DELETE'; body?: Record<string, unknown> },
+  init: { method: 'GET' | 'POST'; body?: Record<string, unknown> },
 ) => Promise<unknown>;
 
 /** `GET /compute/brain/:agent`, as far as confirming the agent's space reads it. */
@@ -29,8 +29,6 @@ const BrainInfo = Schema.Struct({
   identity: Schema.Struct({ identityDid: Schema.String, defaultSpaceId: Schema.String }),
   role: Schema.String,
 });
-
-type Change = 'listed' | 'delisted';
 
 /**
  * How EDGE answered a request of the sync: it did what was asked or had already, it refused, or it was down (no answer,
@@ -48,11 +46,11 @@ class AdminSyncRequestError extends BaseError.extend(
 ) {}
 
 /**
- * EDGE answers 404 where it keeps no list (an EDGE from before `AgentAdmins`) or the caller is not the agent's admin, and
- * 409 for the agent's last admin: telling it again would get the same answer.
+ * EDGE answers 404 where it has no admins route (an EDGE from before `IdentityAdmin`) or the caller has no role on the
+ * agent: asking again this session would get the same answer.
  */
 const isSettled = (error: AdminSyncRequestError): boolean =>
-  error.cause instanceof EdgeCallFailedError && (error.cause.status === 404 || error.cause.status === 409);
+  error.cause instanceof EdgeCallFailedError && error.cause.status === 404;
 
 /**
  * A 4xx is EDGE refusing, and asking again gets the same answer. No answer, or a 5xx, is EDGE or the network being down,
@@ -64,16 +62,18 @@ const answerTo = (error: AdminSyncRequestError): Answer => {
 };
 
 /**
- * Keeps EDGE's list of each agent's admins, which EDGE checks the admin role against, in step with the agent's space as
- * this client sees it: the space's admins and editors are listed, and its readers and the members removed from it are
- * delisted. Each change is told once a session; one EDGE did not take is told again on the next pass. A pass answers
- * whether it could not reach EDGE for something, which is then worth a pass even if nothing changes (`runOnWake`).
+ * Makes the members who may write to each agent's space, as this client sees it, the agent's admins on EDGE, which
+ * issues each one an `IdentityAdmin` in the agent's HALO and checks the admin role against them. Admins are only
+ * added: a member made a reader or removed keeps the role, since space membership has no revocation yet. Each add is
+ * sent once a session; one EDGE did not take is sent again on the next pass, and EDGE appends no second credential for
+ * an admin. A pass answers whether it could not reach EDGE for something, which is then worth a pass even if nothing
+ * changes (`runOnWake`).
  */
 export const makeAdminSync = (request: EdgeRequest) => {
   /** Agent spaces EDGE confirmed are their agent's own, with this identity its admin. */
   const confirmed = new Set<SpaceId>();
-  /** What this client has told EDGE of each agent space's members, by identity key. */
-  const told = new Map<SpaceId, Map<string, Change>>();
+  /** The identity keys of each agent space's members EDGE took as the agent's admins this session. */
+  const added = new Map<SpaceId, Set<string>>();
 
   /** A space can claim to be any agent's: EDGE, which minted the agent's space, must name it. */
   const confirm = (space: AgentSpace.Space, did: IdentityDid): Effect.Effect<Answer> =>
@@ -88,20 +88,17 @@ export const makeAdminSync = (request: EdgeRequest) => {
       Effect.catch((error) => Effect.succeed(error instanceof AdminSyncRequestError ? answerTo(error) : 'refused')),
     );
 
-  /** Tells EDGE of a change to the agent's admins; a change EDGE settled already counts as done. */
-  const tell = (did: IdentityDid, identityKey: string, change: Change): Effect.Effect<Answer> =>
+  /** Asks EDGE to make a member the agent's admin; an add EDGE settled already counts as done. */
+  const add = (did: IdentityDid, identityKey: string): Effect.Effect<Answer> =>
     Effect.tryPromise({
-      try: () =>
-        change === 'listed'
-          ? request(`/compute/brain/${encodeURIComponent(did)}/admins`, { method: 'POST', body: { identityKey } })
-          : request(`/compute/brain/${encodeURIComponent(did)}/admins/${identityKey}`, { method: 'DELETE' }),
+      try: () => request(`/compute/brain/${encodeURIComponent(did)}/admins`, { method: 'POST', body: { identityKey } }),
       catch: (cause) => new AdminSyncRequestError({ cause }),
     }).pipe(
       Effect.as<Answer>('done'),
       Effect.catchIf(isSettled, () => Effect.succeed<Answer>('done')),
       Effect.catch((error) =>
         Effect.sync(() => {
-          log.warn('agent admin change not taken by EDGE', { did, change, error });
+          log.warn('agent admin not added by EDGE', { did, error });
           return answerTo(error);
         }),
       ),
@@ -123,21 +120,17 @@ export const makeAdminSync = (request: EdgeRequest) => {
         confirmed.add(space.id);
       }
 
-      const toldSpace = told.get(space.id) ?? new Map<string, Change>();
-      told.set(space.id, toldSpace);
-      const changes = [
-        ...AgentSpace.admins(space).map((member) => ({ member, change: 'listed' as const })),
-        ...AgentSpace.formerAdmins(space).map((member) => ({ member, change: 'delisted' as const })),
-      ];
-      for (const { member, change } of changes) {
+      const addedToSpace = added.get(space.id) ?? new Set<string>();
+      added.set(space.id, addedToSpace);
+      for (const member of AgentSpace.admins(space)) {
         const identityKey = toPublicKey(member.identity?.identityKey)?.toHex();
-        if (!identityKey || toldSpace.get(identityKey) === change) {
+        if (!identityKey || addedToSpace.has(identityKey)) {
           continue;
         }
-        const answer = yield* tell(did, identityKey, change);
+        const answer = yield* add(did, identityKey);
         retry ||= answer === 'unavailable';
         if (answer === 'done') {
-          toldSpace.set(identityKey, change);
+          addedToSpace.add(identityKey);
         }
       }
     }
@@ -147,7 +140,7 @@ export const makeAdminSync = (request: EdgeRequest) => {
 
 /**
  * Runs `pass` each time `wake` is offered to and, while the last pass could not reach EDGE for something, again after
- * `RETRY_DELAY` without a wake: a removal EDGE did not take must not wait for some other change to be told again.
+ * `RETRY_DELAY` without a wake: an add EDGE did not take must not wait for some other change to be sent again.
  */
 export const runOnWake = (wake: Queue.Dequeue<void>, pass: Effect.Effect<boolean>): Effect.Effect<never> =>
   Effect.gen(function* () {
@@ -184,7 +177,7 @@ export default Capability.makeModule(
       watched.clear();
     };
     // The client replaces its space list when its services reconnect, so the subscriptions follow it. The services may
-    // hold another identity by then, so what EDGE confirmed and was told starts over.
+    // hold another identity by then, so what EDGE confirmed and took starts over.
     const unsubscribeReloaded = client.reloaded.on(() => {
       sync = makeAdminSync(request);
       unwatch();
