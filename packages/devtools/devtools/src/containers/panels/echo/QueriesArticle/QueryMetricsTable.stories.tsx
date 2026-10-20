@@ -37,7 +37,9 @@ export const Keyboard: Story = {
     await userEvent.click(first);
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(second).toHaveAttribute('data-highlighted'));
-    // Prism renders the key and its colon as separate tokens.
-    await waitFor(() => expect(canvas.getAllByText('"query"').length).toBeGreaterThan(0));
+    // The detail shows the second row's query (rows sort slowest first), not merely some query.
+    await waitFor(() =>
+      expect(canvas.getByText(/Query\.select\(Filter\.type\(org\.dxos\.type\.person\)\)/)).toBeVisible(),
+    );
   },
 };
