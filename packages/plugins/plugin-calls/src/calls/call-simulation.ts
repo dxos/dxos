@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AgentVisualization, type Config } from '@dxos/agent-visualization';
 import { Event } from '@dxos/async';
 import { SpeakingMonitor } from '@dxos/av';
 import { Resource } from '@dxos/context';
+import { log } from '@dxos/log';
 
 import { type CallState } from './call-swarm-synchronizer.ts';
 import { type MediaState } from './media-manager.ts';
@@ -26,7 +26,17 @@ export type SimulatedParticipantProps = {
 };
 
 /** An agent visualization (by id, from `@dxos/agent-visualization`) and overrides of its defaults. */
-export type SimulatedAvatar = { visualization: string; config?: Partial<Config> };
+export type SimulatedAvatar = { visualization: string; config?: Record<string, number | string> };
+
+/**
+ * Renders a participant's avatar from its voice track. The caller supplies it, so this published plugin does not
+ * depend on the private `@dxos/agent-visualization` (stories pass one built on it).
+ */
+export type SimulatedAvatarRenderer = (
+  context: AudioContext,
+  track: MediaStreamTrack,
+  avatar: SimulatedAvatar,
+) => Promise<{ stream: MediaStream; close: () => void }>;
 
 /** One spoken line of a scripted conversation, timed in seconds from the top of the participants' files. */
 export type SimulatedUtterance = {
@@ -44,7 +54,7 @@ type SimulatedParticipant = {
   stream: MediaStream;
   audioTrack: MediaStreamTrack;
   monitor: SpeakingMonitor;
-  avatar?: AgentVisualization<Config>;
+  avatar?: { stream: MediaStream; close: () => void };
   screenshare?: {
     start: number;
     trackName: EncodedTrackName;
@@ -72,16 +82,22 @@ export class CallSimulation extends Resource {
 
   readonly #props: SimulatedParticipantProps[];
   readonly #transcript: SimulatedUtterance[];
+  readonly #renderAvatar?: SimulatedAvatarRenderer;
   readonly #participants: SimulatedParticipant[] = [];
   readonly #audioContext = new AudioContext();
   /** Kept here rather than in the swarm synchronizer, whose joined state would announce this device to EDGE. */
   #joined = false;
   #clock?: ReturnType<typeof setInterval>;
 
-  constructor(participants: SimulatedParticipantProps[], transcript: SimulatedUtterance[] = []) {
+  constructor(
+    participants: SimulatedParticipantProps[],
+    transcript: SimulatedUtterance[] = [],
+    renderAvatar?: SimulatedAvatarRenderer,
+  ) {
     super();
     this.#props = participants;
     this.#transcript = [...transcript].sort((a, b) => a.start - b.start);
+    this.#renderAvatar = renderAvatar;
   }
 
   protected override async _open(): Promise<void> {
@@ -235,9 +251,17 @@ export class CallSimulation extends Resource {
   ): Promise<SimulatedParticipant> {
     const { video, videoTrack, audioTrack } = await loadMediaFile(this.#audioContext, src);
     holdLastFrame(video);
-    const avatar = avatarOptions
-      ? await createAvatar(this.#audioContext, audioTrack, avatarOptions === true ? DEFAULT_AVATAR : avatarOptions)
-      : undefined;
+    if (avatarOptions && !this.#renderAvatar) {
+      log.warn("no avatar renderer; showing the file's picture", { name });
+    }
+    const avatar =
+      avatarOptions && this.#renderAvatar
+        ? await this.#renderAvatar(
+            this.#audioContext,
+            audioTrack,
+            avatarOptions === true ? DEFAULT_AVATAR : avatarOptions,
+          )
+        : undefined;
     const stream = avatar?.stream ?? new MediaStream([videoTrack]);
 
     const monitor = new SpeakingMonitor(audioTrack);
@@ -286,21 +310,6 @@ export class CallSimulation extends Resource {
 }
 
 const DEFAULT_AVATAR: SimulatedAvatar = { visualization: 'torus' };
-
-/** An agent visualization driven by `track`; loaded on demand so three.js stays out of the app's boot bundle. */
-const createAvatar = async (
-  context: AudioContext,
-  track: MediaStreamTrack,
-  { visualization: id, config }: SimulatedAvatar,
-): Promise<AgentVisualization<Config>> => {
-  const { AudioProvider, createAgentVisualization, getVisualization, torus } =
-    await import('@dxos/agent-visualization');
-  return createAgentVisualization({
-    visualization: getVisualization(id) ?? torus,
-    config,
-    providers: [new AudioProvider(context, track)],
-  });
-};
 
 /** Players that have reached their end and now loop their last frame. */
 const finished = new WeakSet<HTMLVideoElement>();

@@ -6,14 +6,20 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { inkPresets } from '@dxos/agent-visualization';
+import {
+  AudioProvider,
+  createAgentVisualization,
+  getVisualization,
+  inkPresets,
+  torus,
+} from '@dxos/agent-visualization';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
 
-import { type SimulatedAvatar } from '../../calls/call-simulation.ts';
+import { type SimulatedAvatar, type SimulatedAvatarRenderer } from '../../calls/call-simulation.ts';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Lobby } from '../Lobby/index.ts';
 import { Call } from './Call.tsx';
@@ -33,6 +39,14 @@ const STAND_IN = {
   name: 'Composer',
   avatar: { visualization: 'ink', config: inkPresets.navy },
 } satisfies Omit<Participant, 'track'>;
+
+/** Draws an avatar participant with `@dxos/agent-visualization`, driven by its voice track. */
+const renderAvatar: SimulatedAvatarRenderer = async (context, track, { visualization, config }) =>
+  createAgentVisualization({
+    visualization: getVisualization(visualization) ?? torus,
+    config,
+    providers: [new AudioProvider(context, track)],
+  });
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */
 type Timeline = { screenshares?: { speaker: string; start: number; file: string }[] };
@@ -93,6 +107,8 @@ const SimulatedStory = ({ media, agent, standIn }: StoryProps) => {
             ...(share ? { screenshare: { src: `${media}/${share.file}`, start: share.start } } : {}),
           };
         }),
+        undefined,
+        renderAvatar,
       );
       live();
       callManager.setRoomId('story-room');

@@ -15,7 +15,12 @@ import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { CallSimulation, type SimulatedParticipantProps, type SimulatedUtterance } from './call-simulation.ts';
+import {
+  CallSimulation,
+  type SimulatedAvatarRenderer,
+  type SimulatedParticipantProps,
+  type SimulatedUtterance,
+} from './call-simulation.ts';
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
 import { MediaManager, type MediaState } from './media-manager.ts';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
@@ -254,16 +259,18 @@ export class CallManager extends Resource {
    * Test seam: replaces the network with participants played from video files (see `CallSimulation`).
    * While set, `join` stays local — no swarm, no SFU session — so a call renders with no EDGE reachable.
    * Pass `undefined` to remove them. `transcript` lines are emitted on `simulatedUtterance` as they play.
+   * `renderAvatar` draws participants with an `avatar`; without it they show their file's picture.
    */
   @synchronized
   async simulate(
     participants: SimulatedParticipantProps[] | undefined,
     transcript?: SimulatedUtterance[],
+    renderAvatar?: SimulatedAvatarRenderer,
   ): Promise<void> {
     await this.#simulation?.close();
     this.#simulation = undefined;
     if (participants) {
-      const simulation = new CallSimulation(participants, transcript);
+      const simulation = new CallSimulation(participants, transcript, renderAvatar);
       await simulation.open();
       simulation.changed.on(this._ctx, () => this._updateState());
       simulation.spoke.on(this._ctx, (utterance) => this.simulatedUtterance.emit(utterance));

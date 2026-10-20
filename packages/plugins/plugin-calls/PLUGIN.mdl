@@ -475,7 +475,7 @@ op SetSimulatedParticipants
     in; `transcript` lines are emitted as `CallManager.simulatedUtterance` when their `start` is
     reached, timed by the participants' files.
   input:
-    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean | { visualization: string, config?: Record<string, number | string> } }[]   # src is a video URL (WebM in Chromium); with avatar, an agent visualization driven by src's sound replaces its picture, so src may be audio only
+    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean | { visualization: string, config?: Record<string, number | string> } }[]   # src is a video URL (WebM in Chromium); with avatar, an agent visualization driven by src's sound replaces its picture, so src may be audio only, where the caller of CallManager.simulate supplies an avatar renderer
     transcript?: { speaker: string, start: number, text: string }[]   # speaker is a display name; start in seconds
   requires: [CallsCapabilities.Manager]
   effects: [device]
@@ -928,6 +928,18 @@ decision D-6: A simulated participant's `avatar` names a visualization from `@dx
   for: user:richburdon
   affects: [op:SetSimulatedParticipants]
   why: The visualizations moved into their own package, each with its own config, so a QA step or demo picks the look by id and preset.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-7: plugin-calls draws an avatar only through a renderer its caller passes to `CallManager.simulate`; without one, an avatar participant shows its file's picture. Fills in [D-6].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: plugin-calls is published and `@dxos/agent-visualization` is private, and a published package may not depend on a private one; stories pass a renderer built on it.
+  rejected:
+    - Publishing `@dxos/agent-visualization` now: new packages stay private until they have a trusted publisher.
   source: https://github.com/dxos/dxos/pull/14040
 ```
 

@@ -31,7 +31,8 @@ export const SetSimulatedParticipants = Operation.make({
         screenshare: Schema.optional(Schema.Struct({ src: Schema.String, start: Schema.Number })),
         /**
          * Shows an agent visualization driven by the file's sound instead of its picture, so `src` may be audio only:
-         * `true` for the default look, or a visualization id with config overrides.
+         * `true` for the default look, or a visualization id with config overrides. Drawn only where the caller of
+         * `CallManager.simulate` supplies an avatar renderer; otherwise the file's picture shows.
          */
         avatar: Schema.optional(
           Schema.Union([

@@ -9257,9 +9257,6 @@ importers:
 
   packages/plugins/plugin-calls:
     dependencies:
-      '@dxos/agent-visualization':
-        specifier: workspace:*
-        version: link:../../ui/agent-visualization
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -9357,6 +9354,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
+      '@dxos/agent-visualization':
+        specifier: workspace:*
+        version: link:../../ui/agent-visualization
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
