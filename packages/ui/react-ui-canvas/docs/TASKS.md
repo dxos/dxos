@@ -17,7 +17,7 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 4. ~~Phase 2 (groups are Objects).~~ Done 2026-10-19.
 5. ~~Phase 3b (orphans).~~ Done 2026-10-19.
    In parallel, as chips: react-ui-list Tree filter/reveal/range selection; tldraw import (plugin-canvas backlog).
-   Not attempted: Phases 3 and 4 (saved-data changes), Phase 6 (needs #14047 reviewed).
+   Not attempted: Phases 3 and 4 (saved-data changes).
 
 ## Phase 0 — Canvas core refactor
 
@@ -108,7 +108,8 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 
 ## Phase 6 — Undo (VIEWS.md §8)
 
-- [ ] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
+- [x] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
+  - Landed in dxos/dxos#14047: `redo`/`canRedo`, `undo(scope)`, `transaction(label, effect)`, merge keys inside a 500 ms window, per-entry `context`, and the `applied` stream (before/after each undo and redo).
 - [ ] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
 - [ ] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
 - [ ] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
