@@ -39,7 +39,7 @@ export const Settings = AppCapability.settings(() => import('./settings.ts'), {
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SubjectContext = Capability.lazyModule(

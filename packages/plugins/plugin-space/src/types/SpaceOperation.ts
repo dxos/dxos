@@ -37,6 +37,24 @@ export const Create = Operation.make({
   }),
 });
 
+/**
+ * Writes a space template's content into a space. Invoked with the space's id, so the template runs in
+ * that space's process.
+ */
+export const ApplyTemplate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.applyTemplate'),
+    name: 'Apply Space Template',
+    description: "Write a space template's content into a space.",
+  },
+  services: [Capability.Service, Plugin.Service],
+  input: Schema.Struct({
+    template: Schema.String,
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
 export const Join = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.join'),

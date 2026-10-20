@@ -110,7 +110,7 @@ const ScrollToolbar = ({
   index,
   setIndex,
 }: {
-  items: any[];
+  items: TestItem[];
   index: number;
   setIndex: (index: number) => void;
 }) => {

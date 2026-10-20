@@ -7,8 +7,7 @@
 // so every class is spelled out; the `theme` variant pairs the light classes with `dark:` ones so it follows the app.
 //
 
-import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/style-set.ts';
-import { type StyleHue } from '../model/types.ts';
+import { type LookTone, type NodeSurface, type Opacity, type Radius, type StyleHue } from '../model/index.ts';
 
 export type SurfaceClasses = { surface: string; text: string; border: string };
 
@@ -803,8 +802,8 @@ export const BORDER_CLASSES: Record<1 | 2 | 4, { border: string; padding: string
   4: { border: 'border-4', padding: 'p-1' },
 };
 
-/** The fill of a frame showing its child scene. */
-export const FRAME_FILLS: Record<Opacity, ByTone<string>> = {
+/** The fill of a view node showing its child View. */
+export const VIEW_FILLS: Record<Opacity, ByTone<string>> = {
   opaque: { theme: 'bg-base-surface', light: 'bg-white', dark: 'bg-neutral-900' },
   translucent: { theme: 'bg-base-surface/70', light: 'bg-white/70', dark: 'bg-neutral-900/70' },
 };

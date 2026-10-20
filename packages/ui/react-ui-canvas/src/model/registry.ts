@@ -6,7 +6,7 @@
 // Node and link type definitions (decision 12): what a type's schema is, what it renders, where its
 // ports are, how it may be manipulated, and how the palette presents it. Per type, not per instance, so
 // the data stays small and ports come for free; a node may still carry its own `ports`. A host composes
-// its own registry (and with `createSceneSchema` its scene schema) from the built-ins and its types.
+// its own registry (and with `createViewSchema` its scene schema) from the built-ins and its types.
 //
 // A type may be built on a prototype (`extends`): it inherits every definition field it leaves unset, so
 // shapes that look and behave alike share one definition and differ only where they say so. Prototypes
@@ -18,40 +18,23 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
+import { type PartEditing, type PartField } from '../utils/index.ts';
+import { type ViewStore } from './store.ts';
 import {
-  BoxNodeView,
-  EllipseNodeView,
-  FrameNodeView,
-  GeneratorNodeView,
-  InstanceNodeView,
-  NoteNodeView,
-  PathNodeView,
-} from '../components/SceneLayer/SceneLayer.tsx';
-import { type PartEditing, type PartField } from '../utils/parts.ts';
-import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
-import { type SceneStore } from './store.ts';
-import {
-  EllipseNode,
-  FrameNode,
-  GeneratorNode,
-  InstanceNode,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeType,
-  NoteNode,
-  PathNode,
   type Point,
   type Port,
-  RectNode,
-  type Scene,
   type Size,
+  type View,
 } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: Scene;
-  store: SceneStore;
+  scene: View;
+  store: ViewStore;
   registry: NodeRegistry;
   /** Effective screen zoom of the layer (camera zoom × portal scales), for level-of-detail choices. */
   zoom: number;
@@ -64,7 +47,7 @@ export type NodeViewProps = {
   opening?: boolean;
   /** The text part of this node being edited in place, with the editor's callbacks. */
   editing?: PartEditing;
-  /** The node's embedded content takes input (`SceneViewAtoms.active`); otherwise it should be inert. */
+  /** The node's embedded content takes input (`CanvasAtoms.active`); otherwise it should be inert. */
   active?: boolean;
   /** Opens the node (drills into a portal); absent where the layer is read-only. */
   onOpen?: () => void;
@@ -76,11 +59,11 @@ export type NodeDef = {
   type: NodeType;
   name: string;
   icon: string;
-  /** Palette shortcut; a registry of many types leaves most without one. */
+  /** Tools panel shortcut; a registry of many types leaves most without one. */
   key?: string;
-  /** Palette group; types without one share the default group. */
+  /** Tools panel group; types without one share the default group. */
   group?: string;
-  /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */
+  /** The type's schema; the host's scene schema is the union of its registry's (`createViewSchema`). */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
@@ -99,6 +82,11 @@ export type NodeDef = {
   /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
   ellipse?: boolean;
   /**
+   * The frame's fill and border take this outline (SVG path data in the frame's px, kept `inset` px inside it) rather
+   * than the box: a cloud is a box drawn as a cloud.
+   */
+  silhouette?: (node: Node, inset: number) => string;
+  /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.
    */
@@ -116,6 +104,8 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
+  unclipped?: boolean;
 };
 
 /**
@@ -172,119 +162,3 @@ export type LinkDef = {
 
 export type NodeRegistry = Readonly<Record<NodeType, NodeDef>>;
 export type LinkRegistry = Readonly<Record<LinkType, LinkDef>>;
-
-const MIN_SIZE: Size = { width: 64, height: 32 };
-
-/**
- * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
- * built-in rectangle and frame are both boxes; a host type can extend it too.
- */
-export const boxPrototype: NodeDefSpec = {
-  component: BoxNodeView,
-  parts: [{ field: 'label' }],
-  defaultSize: NOMINAL_SIZES.rect,
-  resizable: true,
-  minSize: MIN_SIZE,
-};
-
-export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = { box: boxPrototype };
-
-export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
-  rect: {
-    extends: 'box',
-    name: 'Rectangle',
-    icon: 'ph--rectangle--regular',
-    key: 'R',
-    schema: RectNode,
-    create: (props) => createNode({ type: 'rect', ...props }),
-  },
-  ellipse: {
-    name: 'Ellipse',
-    icon: 'ph--circle--regular',
-    key: 'E',
-    schema: EllipseNode,
-    component: EllipseNodeView,
-    create: (props) => createNode({ type: 'ellipse', ...props }),
-    defaultSize: NOMINAL_SIZES.ellipse,
-    // Only the side centres of the frame lie on the curve.
-    portsPerSide: 1,
-    parts: [{ field: 'label' }],
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-
-  note: {
-    name: 'Note',
-    icon: 'ph--text-t--regular',
-    key: 'T',
-    schema: NoteNode,
-    component: NoteNodeView,
-    parts: [{ field: 'text', multiline: true }],
-    create: (props) => createNode({ type: 'note', ...props }),
-    defaultSize: NOMINAL_SIZES.note,
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-  frame: {
-    extends: 'box',
-    name: 'Frame',
-    icon: 'ph--frame-corners--regular',
-    key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
-    minSize: { width: 96, height: 60 },
-    openable: true,
-  },
-  instance: {
-    name: 'Object',
-    icon: 'ph--cube--regular',
-    group: 'Objects',
-    schema: InstanceNode,
-    component: InstanceNodeView,
-    create: (props) => createNode({ type: 'instance', ...props }),
-    defaultSize: NOMINAL_SIZES.instance,
-    resizable: true,
-    minSize: { width: 16, height: 16 },
-    // Double-clicking opens the composite in isolation (ANIMATION.md §4.3).
-    openable: true,
-    palette: false,
-    bare: true,
-  },
-  generator: {
-    name: 'Generator',
-    icon: 'ph--sparkle--regular',
-    schema: GeneratorNode,
-    component: GeneratorNodeView,
-    create: (props) => createNode({ type: 'generator', ...props }),
-    defaultSize: NOMINAL_SIZES.generator,
-    resizable: true,
-    minSize: { width: 16, height: 16 },
-    // Placed by an agent (`canvas.addGenerator`) with its parameters and bindings, not drawn from the palette.
-    palette: false,
-    bare: true,
-  },
-  path: {
-    name: 'Path',
-    icon: 'ph--pen-nib--regular',
-    schema: PathNode,
-    component: PathNodeView,
-    create: (props) => createNode({ type: 'path', ...props }),
-    defaultSize: NOMINAL_SIZES.path,
-    resizable: true,
-    minSize: { width: 4, height: 4 },
-    palette: false,
-    bare: true,
-  },
-};
-
-export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
-
-// The palette lists link types in this order, so the default (smart) leads.
-export const defaultLinkRegistry: LinkRegistry = {
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
-  line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
-  curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
-  spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
-};

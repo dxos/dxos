@@ -175,7 +175,7 @@ const drawShape = async ({ demo, page }, centre, { tool: key, label, width = SIZ
 /** The data-node-ids of the top-level frames. */
 const frameIds = (page) =>
   page.evaluate(() =>
-    [...document.querySelectorAll('[data-testid="scene-view"] [data-node-id^="frame"]')]
+    [...document.querySelectorAll('[data-testid="scene-view"] [data-node-id^="view"]')]
       .filter((node) => !node.parentElement.closest('[data-node-id]'))
       .map((node) => node.getAttribute('data-node-id')),
   );
@@ -262,7 +262,7 @@ const openFrame = async ({ demo, page }, label) => {
   await page.locator(`[data-testid="scene-view"] [data-node-id]:has-text("${label}")`).first().hover();
   await demo.click({
     selector: `[data-testid="scene-view"] [data-node-id]:has-text("${label}") [data-testid="portal-open"] >> nth=0`,
-    label: 'Open scene',
+    label: 'Open view',
   });
   await page.waitForFunction(() => !document.querySelector('[data-testid="toolbar-up"]')?.disabled, null, {
     timeout: 10_000,
@@ -310,7 +310,7 @@ const showContents = async ({ demo, page }, frame, inner) => {
   await page.locator(toggle).waitFor({ state: 'visible', timeout: 5_000 });
   await demo.click({ selector: `${toggle} >> nth=0`, label: 'Show contents' });
   await page
-    .locator(`[data-testid="scene-view"] [data-node-id^="frame"] [data-node-id]:has-text("${inner}")`)
+    .locator(`[data-testid="scene-view"] [data-node-id^="view"] [data-node-id]:has-text("${inner}")`)
     .first()
     .waitFor({ state: 'visible', timeout: 10_000 });
 };

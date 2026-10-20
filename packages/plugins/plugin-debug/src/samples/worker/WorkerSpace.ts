@@ -11,6 +11,8 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { ProjectPartial } from './project.ts';
 import { Tasks } from './tasks.ts';
+
+export { ARCHITECTURE } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
 const partials = {

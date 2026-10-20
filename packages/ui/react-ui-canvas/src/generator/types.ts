@@ -7,7 +7,7 @@
 // generator never touches the DOM; it returns `Shape` lists, plain data the generator layer draws.
 //
 
-import { type Bounds, type Node, type Point, type Scene } from '../model/types.ts';
+import { type Bounds, type Node, type Point, type View } from '../model/index.ts';
 
 /** What a generator draws, in scene coordinates. A hue is a theme hue; `color` a CSS colour, which wins over it. */
 export type Shape =
@@ -48,7 +48,7 @@ export type GeneratorContext<P = Record<string, unknown>> = {
   /** Seeded per node and run: the only source of randomness a generator may use. */
   random: () => number;
   /** The scene sampled at `t`. */
-  scene: Scene;
+  scene: View;
   /** The generator node's own frame. */
   bounds: Bounds;
   /** Parameters marked as bindings (`x-binding` in the schema), resolved: node or link ids become their geometry. */

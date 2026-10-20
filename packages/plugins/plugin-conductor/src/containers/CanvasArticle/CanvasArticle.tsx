@@ -25,24 +25,24 @@ import {
   ComputeContext,
   ComputeGraphController,
   type ComputeServices,
-  boardSceneId,
+  boardViewId,
   computeNodeRegistry,
   createComputeProjection,
   createEchoStore,
 } from '@dxos/react-ui-canvas-compute';
 import {
+  Canvas,
   type FreehandProjectionOptions,
-  SceneView,
-  createSceneViewAtoms,
+  createCanvasAtoms,
   useRegistry,
-  useSceneProjection,
+  useViewProjection,
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
 
 export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
 
 /**
- * The board on the scene engine (MIGRATION.md M4): `SceneView` over an ECHO store of the board's own
+ * The board on the scene engine (MIGRATION.md M4): `Canvas` over an ECHO store of the board's own
  * layout, with the compute projection keeping the compute graph in step. The editor's own canvas,
  * graph model and monitor are gone — the store is the persistence and the projection is the mirror.
  */
@@ -63,13 +63,13 @@ type CanvasSceneProps = Pick<CanvasArticleProps, 'role' | 'subject'> & { control
 const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   const registry = useRegistry();
   const store = useMemo(() => createEchoStore(subject), [subject]);
-  const sceneId = useMemo(() => boardSceneId(subject), [subject]);
-  const atoms = useMemo(() => createSceneViewAtoms(sceneId), [sceneId]);
+  const sceneId = useMemo(() => boardViewId(subject), [subject]);
+  const atoms = useMemo(() => createCanvasAtoms(sceneId), [sceneId]);
   const createProjection = useCallback(
     (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
     [controller],
   );
-  const projection = useSceneProjection({ store, atoms, createProjection });
+  const projection = useViewProjection({ store, atoms, createProjection });
 
   // A function body opening grows its node through the model, so its links re-route with it.
   const resize = useCallback(
@@ -91,13 +91,13 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
   return (
     <ComputeContext.Provider value={{ controller, resize }}>
       <Root>
-        <SceneView.Root store={store} root={sceneId} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
-          <SceneView.Canvas overlay={<Bullets controller={controller} projection={projection} />} />
-          <SceneView.Navigation />
-          <SceneView.Actions />
-          <SceneView.Debug />
-          <SceneView.Palette />
-        </SceneView.Root>
+        <Canvas.Root store={store} root={sceneId} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
+          <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
+          <Canvas.Navigation />
+          <Canvas.Actions />
+          <Canvas.Debug />
+          <Canvas.Tools />
+        </Canvas.Root>
       </Root>
     </ComputeContext.Provider>
   );

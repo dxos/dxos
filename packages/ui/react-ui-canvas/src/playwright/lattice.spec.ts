@@ -9,11 +9,11 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
-const LATTICE_URL = storybookUrl('ui-react-ui-canvas-sceneview--lattice', PORT);
+const LATTICE_URL = storybookUrl('ui-react-ui-canvas-components-canvas--lattice', PORT);
 
 // The fixture, on the default 256x128 lattice with 128x64 gutters, columns and rows -1..1: A, B, C down
 // column -1; a free cell above D and E in column 0; F spanning all three rows of column 1.
-test.describe('SceneView lattice', () => {
+test.describe('Canvas lattice', () => {
   let page: Page;
   let scene: SceneManager;
   let close: (() => Promise<void>) | undefined;
@@ -34,6 +34,7 @@ test.describe('SceneView lattice', () => {
   });
 
   test('draws the lattice cells, and no grid, since the cells are what a shape lands on', async () => {
+    await page.getByTestId('theme-grid-lines').click();
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
     await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(0);
   });

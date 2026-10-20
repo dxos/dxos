@@ -1,5 +1,28 @@
 # @dxos/plugin-conductor
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4be32be]
+- Updated dependencies [67f3f9f]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui-canvas@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/react-ui-canvas-compute@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/conductor@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/ui-theme@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

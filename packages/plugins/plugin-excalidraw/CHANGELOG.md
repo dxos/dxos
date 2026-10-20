@@ -1,5 +1,25 @@
 # @dxos/plugin-excalidraw
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-illustrator@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/diagram@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

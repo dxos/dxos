@@ -4,6 +4,12 @@
 
 import { create } from 'storybook/theming';
 
+/**
+ * The preview area behind a story while it loads: Storybook defaults it to white even on a dark base, which flashes on
+ * every reload. Neutral-950, the dark story background (preview-head.html).
+ */
+const PREVIEW_BG = '#0a0a0a';
+
 export const dxosTheme = create({
   base: 'dark',
   brandTitle: 'DXOS',
@@ -11,6 +17,7 @@ export const dxosTheme = create({
   brandTarget: '_blank',
   brandUrl: 'https://github.com/dxos',
   appBg: '#1e1e1e',
+  appPreviewBg: PREVIEW_BG,
 });
 
 export const docsTheme = create({
@@ -20,4 +27,5 @@ export const docsTheme = create({
   colorPrimary: '#1EA7FD',
   textColor: '#ffffff',
   appBg: '#1e1e1e',
+  appPreviewBg: PREVIEW_BG,
 });

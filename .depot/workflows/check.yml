@@ -130,6 +130,11 @@ jobs:
               CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
             run: pnpm run check-changesets
 
+          - name: Check spec changelogs
+            env:
+              MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+            run: node packages/reflect/deus/scripts/check-changelog.ts
+
           - name: Check version files in sync
             run: node scripts/sync-versions.mjs --check
 

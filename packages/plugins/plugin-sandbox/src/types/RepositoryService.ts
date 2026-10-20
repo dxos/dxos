@@ -5,9 +5,10 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 
 import { BaseError } from '@dxos/errors';
+import { Repo } from '@dxos/types';
 
 import type {
   Branches,
@@ -56,3 +57,11 @@ export interface Backend {
 
 /** The repository backend, contributed to the process runtime by the plugin's layer spec. */
 export class Service extends Context.Service<Service, Backend>()('org.dxos.plugin.sandbox.RepositoryService') {}
+
+/** The id EDGE knows the repository by; a repository hosted elsewhere (GitHub) has none to use here. */
+export const edgeIdOf = (repository: Repo.Repo): Effect.Effect<string, RepositoryError> => {
+  const id = Repo.edgeId(repository);
+  return id
+    ? Effect.succeed(id)
+    : Effect.fail(new RepositoryError({ message: `Repository ${Repo.fullName(repository)} is not hosted by EDGE.` }));
+};

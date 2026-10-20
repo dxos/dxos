@@ -1,0 +1,93 @@
+---
+id: org.dxos.example.plugin-bookmarks
+name: Bookmarks
+version: 0.1.0
+---
+
+A synthetic spec modelled on the plugin specs under `packages/plugins/*/PLUGIN.mdl`, written almost
+entirely by two people in design review. Story fixture for `ChangelogGraph`; not a real spec.
+
+## Extensions
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+```mdl
+feat F-1: Saving
+  req F-1.1: Any object can be bookmarked from its menu or with Mod+D.
+  req F-1.2: A bookmark stores a reference to the object, never a copy.
+  req F-1.3: A bookmark whose object was deleted shows as broken until the user removes it.
+```
+
+```mdl
+feat F-2: Browsing
+  req F-2.1: Bookmarks list in the navigation tree under the space they belong to.
+  req F-2.2: Bookmarks are ordered by hand; new ones go to the top.
+  req F-2.3: Bookmarks are private to the person who made them.
+```
+
+## Changelog
+
+```mdl
+decision D-1: Any object can be bookmarked.
+  date: 2026-09-01
+  by: user:bob
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-2: A bookmark is a reference to the object, never a copy.
+  date: 2026-09-01
+  by: user:carol
+  why: A copy goes stale the moment the object is edited.
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-3: Bookmarks live in the navigation tree, under their space.
+  date: 2026-09-02
+  by: user:bob
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-4: Mod+D bookmarks the current object, as in a browser. Fills in [D-1].
+  date: 2026-09-02
+  by: agent:claude-code
+  for: user:bob
+  affects: [F-1.1]
+  why: The browser shortcut is the one people already know.
+```
+
+```mdl
+decision D-5: Approve [D-4].
+  date: 2026-09-03
+  by: user:bob
+```
+
+```mdl
+decision D-6: Bookmarks are ordered by hand, newest at the top.
+  date: 2026-09-04
+  by: user:carol
+  affects: [F-2.2]
+```
+
+```mdl
+decision D-7: Bookmarks are private; they are not shared with the space. Builds on [D-3].
+  date: 2026-09-04
+  by: user:bob
+  why: A shared list becomes everyone's clutter.
+  affects: [F-2.3]
+```
+
+```mdl
+decision D-8: A bookmark to a deleted object stays, marked broken, until the person removes it. Builds on [D-2].
+  date: 2026-09-05
+  by: user:carol
+  why: Silently dropping it hides that the object is gone.
+  affects: [F-1.3]
+```

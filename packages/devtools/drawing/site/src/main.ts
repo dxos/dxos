@@ -4,18 +4,25 @@
 
 const copy = document.getElementById('copy');
 const command = document.getElementById('install-command');
+let reset: number | undefined;
 copy?.addEventListener('click', () => {
+  const show = (state: 'copied' | 'failed') => {
+    copy.dataset.state = state;
+    window.clearTimeout(reset);
+    reset = window.setTimeout(() => {
+      copy.dataset.state = 'idle';
+    }, 1600);
+  };
   navigator.clipboard.writeText(command?.textContent ?? '').then(
+    () => show('copied'),
     () => {
-      copy.textContent = 'Copied';
-    },
-    () => {
-      copy.textContent = 'Select and copy';
+      // Leaves the command selected so it can be copied by hand.
+      if (command) {
+        window.getSelection()?.selectAllChildren(command);
+      }
+      show('failed');
     },
   );
-  window.setTimeout(() => {
-    copy.textContent = 'Copy';
-  }, 1600);
 });
 
 // The page is complete without the editor, so it loads after first paint and never blocks it.

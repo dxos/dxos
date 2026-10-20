@@ -86,8 +86,9 @@ so it joins the `tools/autocue` package from #14028 when that lands.
 - [ ] **Refine first-pass gestures** — sequencer, conductor, kanban, table, board, script, code, uml click across the
       plank; give each a gesture that shows the plugin working.
 - [ ] **excalidraw spec** — plugin-excalidraw has no `PLUGIN.mdl`, so its flow names no test.
-- [ ] **Template for magazine and trip** — a plugin-debug sample space seeding a feed with articles and an itinerary,
-      built on #14021's partials once it lands; then their flows.
+- [x] **Template for magazine** — Reading Room (`plugin-magazine/src/samples/reading-room`): 3 feeds × 10 posts with
+      Unsplash hero images and article bodies, and a curated Weekend Reading magazine; flow `autocue/showcase.mjs` (QA-3).
+- [ ] **Template for trip** — a sample space seeding an itinerary; then its flow.
 - [ ] **Calls and inbox from Alien Labs** — #14021's template seeds mail; add a meeting record for calls, then
       their flows.
 - [ ] **Grid timing** — the story assumes ~10s tour cells and 5s grid cells; clips are now 20s and 10s.

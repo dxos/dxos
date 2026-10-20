@@ -17,17 +17,15 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { shortcutFor } from '../../model/keys.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
-import { type Capabilities, type NodeType, type SceneId } from '../../model/types.ts';
-import { FLOATING_PANEL } from '../../utils/chrome.ts';
-import { Breadcrumbs } from '../Breadcrumbs/Breadcrumbs.tsx';
+import { type Capabilities, type NodeRegistry, type NodeType, type ViewId, shortcutFor } from '../../model/index.ts';
+import { FLOATING_BAR } from '../../utils/index.ts';
+import { Breadcrumbs } from '../Breadcrumbs/index.ts';
 
 /** What the toolbars can ask of the view; a missing action hides or disables its control. */
 export type ToolbarActions = {
   /** Navigation: the scene path, a name per scene, and drill-out by path index. */
-  path: SceneId[];
-  nameOf: (id: SceneId) => string;
+  path: ViewId[];
+  nameOf: (id: ViewId) => string;
   onPath: (index: number) => void;
   /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
@@ -60,14 +58,19 @@ export type ToolbarActions = {
   layout?: () => void;
 };
 
+/** What each bar reads, so a host builds only its bar's slice and the bar re-renders for that alone. */
+export type NavigationActions = Pick<ToolbarActions, 'path' | 'nameOf' | 'onPath'>;
+export type CameraActions = Pick<ToolbarActions, 'fit' | 'fitting' | 'zoomReset' | 'zoomIn' | 'zoomOut'>;
+export type EditActions = Omit<ToolbarActions, keyof NavigationActions | keyof CameraActions>;
+
 // A bar fills the frame its host floats it in and scrolls what does not fit; the toolbar's own layout
 // supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
-const barClasses = mx('w-full gap-1 px-2 py-1', FLOATING_PANEL);
+const barClasses = mx('w-full', FLOATING_BAR);
 
 const readoutClasses = 'text-fg-muted font-mono text-sm whitespace-nowrap';
 
 export type NavigationToolbarProps = Util.ThemedClassName<{
-  actions: ToolbarActions;
+  actions: NavigationActions;
   /** Trailing status, e.g. the depth readout. */
   children?: ReactNode;
 }>;
@@ -97,20 +100,20 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
   );
 };
 
-export type CameraToolbarProps = Util.ThemedClassName<{ actions: ToolbarActions; children?: ReactNode }>;
+export type CameraToolbarProps = Util.ThemedClassName<{ actions: CameraActions; children?: ReactNode }>;
 
 /** The camera: fit and zoom, beside its own numbers; nothing here changes the scene. */
 export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarProps) => {
   return (
     <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
         label={`Fit (${shortcutFor('fit')}): keep the scene framed until you pan or zoom`}
-        classNames={mx(actions.fitting && 'bg-primary-500/20')}
+        pressed={actions.fitting}
         data-testid='toolbar-fit'
-        onClick={actions.fit}
+        onPressedChange={actions.fit}
       />
       <Button.Root
         variant='ghost'
@@ -143,7 +146,7 @@ export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarPr
 };
 
 export type ActionToolbarProps = Util.ThemedClassName<{
-  actions: ToolbarActions;
+  actions: EditActions;
   nodes: NodeRegistry;
   capabilities: Capabilities;
 }>;
@@ -152,24 +155,24 @@ export type ActionToolbarProps = Util.ThemedClassName<{
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
     <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
         label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
-        classNames={mx(actions.snap && 'bg-primary-500/20')}
+        pressed={actions.snap}
         data-testid='toolbar-snap'
-        onClick={actions.toggleSnap}
+        onPressedChange={actions.toggleSnap}
       />
       {actions.toggleLattice && (
-        <Button.Root
+        <Button.Toggle
           variant='ghost'
           iconOnly
           icon='ph--squares-four--regular'
           label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
-          classNames={mx(actions.lattice && 'bg-primary-500/20')}
+          pressed={actions.lattice}
           data-testid='toolbar-lattice'
-          onClick={actions.toggleLattice}
+          onPressedChange={actions.toggleLattice}
         />
       )}
       <Toolbar.Separator variant='line' />
@@ -263,14 +266,14 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-layout'
         onClick={actions.layout}
       />
-      <Button.Root
+      <Button.Toggle
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'
         label={`Debug (${shortcutFor('debug')}): label every frame with its id, type and geometry`}
-        classNames={mx(actions.debug && 'bg-primary-500/20')}
+        pressed={actions.debug}
         data-testid='toolbar-debug'
-        onClick={actions.toggleDebug}
+        onPressedChange={actions.toggleDebug}
       />
     </Toolbar.Root>
   );

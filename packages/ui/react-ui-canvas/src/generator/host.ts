@@ -8,7 +8,7 @@
 // runs the same core in-process (a headless check; tests).
 //
 
-import { type NodeId, type Scene, isGeneratorNode } from '../model/types.ts';
+import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
 import { type GeneratorCompiler } from './compile.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
 import { type GeneratorFrame, type GeneratorSource } from './types.ts';
@@ -34,8 +34,8 @@ export class GeneratorHost {
   readonly #waiting = new Map<number, (response: CoreResponse) => void>();
   readonly #failing = new Map<number, (error: Error) => void>();
   readonly #compiled = new Map<string, Promise<string[] | undefined>>();
-  #scene: Scene | undefined;
-  #sentScene: Scene | undefined;
+  #scene: View | undefined;
+  #sentScene: View | undefined;
   #sources: Readonly<Record<string, GeneratorSource>> = {};
   #wanted: number | undefined;
   #busy = false;
@@ -78,7 +78,7 @@ export class GeneratorHost {
   }
 
   /** The scene (as stored, unsampled) and the generators its nodes reference. */
-  update(scene: Scene, sources: Readonly<Record<string, GeneratorSource>>): void {
+  update(scene: View, sources: Readonly<Record<string, GeneratorSource>>): void {
     this.#scene = scene;
     this.#sources = sources;
   }

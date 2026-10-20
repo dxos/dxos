@@ -19,16 +19,16 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type BackgroundGrid,
   type Camera,
+  Canvas,
+  type CanvasPropertiesProps,
   type Element,
   type InspectorMode,
   type Node,
   type SceneDisplay,
-  type SceneId,
-  SceneView,
-  type SceneViewPropertiesProps,
+  type ViewId,
   createLatticeProjection,
-  isFrameNode,
   isLink,
+  isViewNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -40,13 +40,13 @@ import {
   isCanvasDrawing,
   objectRef,
   objectUri,
-  parseLinkedSceneId,
+  parseLinkedViewId,
   resolveDrawingLook,
   updateCanvasRecord,
 } from '#model';
 import { CanvasCapabilities } from '#types';
 
-import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
+import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -64,7 +64,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const openObject = useCallback(
     (node: Node) => {
       const object = objectRef(node, db)?.target;
-      if (!object || !isFrameNode(node) || parseLinkedSceneId(node.scene) || isCanvasDrawing(object) !== false) {
+      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene) || isCanvasDrawing(object) !== false) {
         return undefined;
       }
       return () => {
@@ -129,11 +129,11 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   // A shape opens a scene of this drawing, never one bound from a linked drawing.
-  const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
+  const isLocalScene = useCallback((id: ViewId) => !parseLinkedViewId(id), []);
 
   // A frame may show any object listed in the navigator but this drawing itself.
   const { t } = UiHooks.useTranslation();
-  const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
+  const getOptions = useCallback<NonNullable<CanvasPropertiesProps['getOptions']>>(
     (results) =>
       ObjectCombobox.toOptions(results, {
         t,
@@ -145,10 +145,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
   // empty, so linking never hides what was drawn there.
   const overrides = useCallback(
-    (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
-      const scenes = bound ? registry.get(bound.store.scenes) : {};
+    (elements: readonly Element[]): ReturnType<NonNullable<CanvasPropertiesProps['overrides']>> => {
+      const scenes = bound ? registry.get(bound.store.views) : {};
       const locked = elements.some((element) => {
-        if (isLink(element) || !isFrameNode(element) || objectUri(element) || parseLinkedSceneId(element.scene)) {
+        if (isLink(element) || !isViewNode(element) || objectUri(element) || parseLinkedViewId(element.scene)) {
           return false;
         }
         const child = scenes[element.scene];
@@ -180,7 +180,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         {bound && (
           // An unset preference leaves the engine's own default in place.
           <CanvasDatabaseContext.Provider value={db}>
-            <SceneView.Root
+            <Canvas.Root
               key={bound.root}
               classNames={article ? 'border-t border-separator-subtle' : undefined}
               store={bound.store}
@@ -208,32 +208,27 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               compileGenerator={generatorCompiler}
               createGeneratorWorker={createGeneratorWorker}
             >
-              <SceneView.Canvas liveDepth={settings.liveDepth} />
+              <Canvas.Viewport liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
               {(settings.showToolbar ?? true) && (
                 <>
-                  <SceneView.Navigation />
-                  <SceneView.Actions />
-                  <SceneView.Debug />
-                  {!section && <SceneView.Theme />}
+                  <Canvas.Navigation />
+                  <Canvas.Actions />
+                  <Canvas.Debug />
+                  {!section && <Canvas.Theme />}
                 </>
               )}
               {!section && (
                 <>
-                  {(settings.showPalette ?? true) && <SceneView.Palette />}
-                  <SceneView.Properties
-                    db={db}
-                    getOptions={getOptions}
-                    overrides={overrides}
-                    sceneFilter={isLocalScene}
-                  />
-                  <SceneView.Timeline />
-                  <SceneView.Layers />
-                  <SceneView.Objects />
-                  <SceneView.About />
+                  {(settings.showPalette ?? true) && <Canvas.Tools />}
+                  <Canvas.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
+                  <Canvas.Timeline />
+                  <Canvas.Views />
+                  <Canvas.Layers />
+                  <Canvas.Objects />
                 </>
               )}
-            </SceneView.Root>
+            </Canvas.Root>
           </CanvasDatabaseContext.Provider>
         )}
       </Panel.Body>

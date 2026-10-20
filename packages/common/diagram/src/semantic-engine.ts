@@ -20,6 +20,7 @@ import * as Scene from './scene.ts';
 import * as Place from './semantic-place.ts';
 import * as Route from './semantic-route.ts';
 import * as Semantic from './semantic.ts';
+import * as SvgFile from './svg-file.ts';
 import { GRID, type Rect } from './uml-grid.ts';
 
 const FONT = Layout.FONT_METRICS.m;
@@ -498,21 +499,7 @@ const draw = (
     if (!headed) {
       elements.push({ kind: 'line', id, points, ...stroke, ...color });
     } else {
-      if (points.length > 2) {
-        elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1), ...stroke, ...color });
-      }
-      const tail = style?.tail;
-      elements.push({
-        kind: 'arrow',
-        id,
-        start: points[points.length - 2],
-        end: points[points.length - 1],
-        ...(style?.relation ? { relation: style.relation } : {}),
-        ...(style?.head ? { head: style.head } : {}),
-        ...(tail ? { tail } : {}),
-        ...stroke,
-        ...color,
-      });
+      elements.push(...SvgFile.connectorElements(id, points, style ?? {}));
     }
     const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : (edge?.label ?? orphaned.get(part));
     if (text) {

@@ -7,9 +7,8 @@
 // small helpers a generator may import. Pure and deterministic; a generator imports this module and nothing else.
 //
 
-import { ease } from '../model/timeline.ts';
-import { type Easing, type Point } from '../model/types.ts';
-import { type Polyline, flattenPath, measure, pointAlong } from '../utils/path.ts';
+import { type Easing, type Point, ease } from '../model/index.ts';
+import { type Polyline, flattenPath, measure, pointAlong } from '../utils/index.ts';
 import { type GeneratorModule } from './types.ts';
 
 export type { Easing, Point };

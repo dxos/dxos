@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Node, type RectNode, type Scene, initialKeys } from '@dxos/react-ui-canvas/scene';
+import { type Node, type RectNode, type View, initialKeys } from '@dxos/react-ui-canvas/scene';
 
 import { type Point } from './molecule.ts';
 
@@ -535,7 +535,7 @@ const LINE_PITCH = 16;
 /** How much of the width each text line fills, in turn, so the text reads ragged. */
 const LINE_LENGTHS = [0.95, 0.8, 0.9, 0.6, 0.85, 0.7, 0.92, 0.5];
 
-export const DATA_FLOW_SCENE_ID = 'data-flow';
+export const DATA_FLOW_VIEW_ID = 'data-flow';
 
 /** Labels read at the zoom that fits the whole diagram. */
 export const LABEL_FONT_SIZE = 26;
@@ -556,7 +556,7 @@ export const baseOf = (block: Block): Rect => ({
  * fits, selects and pans by. The overlay draws every container itself (base, frame, label and well), since the canvas's
  * shapes offer only one corner radius and the base, frame and well need concentric ones.
  */
-export const createDataFlowScene = (layout: DataFlowLayout, revealed = true): Scene => {
+export const createDataFlowView = (layout: DataFlowLayout, revealed = true): View => {
   // Before the monolithic agent is revealed, its blocks are left out, so the camera frames only the silos.
   const monolith = layout.monolith && revealed ? [layout.monolith.group] : [];
   const feed = layout.monolith && revealed ? [layout.monolith.feed] : [];
@@ -578,7 +578,7 @@ export const createDataFlowScene = (layout: DataFlowLayout, revealed = true): Sc
     };
     nodes[block.id] = node;
   });
-  return { id: DATA_FLOW_SCENE_ID, name: 'Data flow', nodes, links: {} };
+  return { id: DATA_FLOW_VIEW_ID, name: 'Data flow', nodes, links: {} };
 };
 
 /** A source's channel down to the hub's top. */
