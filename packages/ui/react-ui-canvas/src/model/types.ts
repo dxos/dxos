@@ -409,8 +409,8 @@ export type BuiltinNodeType = BuiltinNode['type'];
 export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'rect',
   'ellipse',
-  'cloud',
   'polygon',
+  'cloud',
   'note',
   'view',
   'instance',
