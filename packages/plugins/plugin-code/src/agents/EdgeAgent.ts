@@ -18,7 +18,7 @@ import type * as Scope from 'effect/Scope';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
-import { AiAssistantError, type Chat } from '@dxos/assistant';
+import { AiAssistantError, AiContext, type Chat } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
@@ -413,31 +413,40 @@ const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
 };
 
 /**
- * The repositories the chat's project names, as the process checks them out: the project's `repo`,
- * then its `repositories`, each once. Read when the process is spawned, so the sandbox's checkout
- * is the project's at the chat's start.
+ * The repositories the chat works on, as the process checks them out: its project's `repo`, then the
+ * project's `repositories`, then the repositories bound to the chat itself — the only source a chat
+ * outside a project has — each once. Read when the process is spawned, so the sandbox's checkout is
+ * the chat's at its start.
  */
 export const checkoutsOf = (
   chat: Chat.Chat,
 ): Effect.Effect<EdgeProtocol.RepositoryCheckout[], never, Database.Service> =>
   Effect.gen(function* () {
     const project = Workspace.projectOf(chat);
-    const refs = [...(project?.repo ? [project.repo] : []), ...(project?.repositories ?? [])];
-    const repos = yield* Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.option));
+    const feed = yield* Database.load(chat.feed).pipe(Effect.option);
+    const refs = [
+      ...(project?.repo ? [project.repo] : []),
+      ...(project?.repositories ?? []),
+      ...(Option.isSome(feed) ? yield* AiContext.boundObjects(feed.value) : []),
+    ];
+    const objects = yield* Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.option));
     const checkouts: EdgeProtocol.RepositoryCheckout[] = [];
-    for (const repo of repos) {
-      if (Option.isNone(repo)) {
+    for (const object of objects) {
+      if (Option.isNone(object) || !Repo.instanceOf(object.value)) {
         continue;
       }
-      const url = cloneUrl(repo.value);
-      if (checkouts.some((checkout) => checkout.url === url)) {
+      const repo = object.value;
+      const url = cloneUrl(repo);
+      if (!url || checkouts.some((checkout) => checkout.url === url)) {
         continue;
       }
       // Two repositories of the same name from different owners each get a directory of their own.
-      const name = checkouts.some((checkout) => checkout.name === repo.value.name)
-        ? `${repo.value.owner}-${repo.value.name}`
-        : repo.value.name;
-      checkouts.push({ name, url, ...(repo.value.defaultBranch && { branch: repo.value.defaultBranch }) });
+      const taken = new Set(checkouts.map((checkout) => checkout.name));
+      let name = taken.has(repo.name) ? `${repo.owner}-${repo.name}` : repo.name;
+      for (let index = 2; taken.has(name); index++) {
+        name = `${repo.owner}-${repo.name}-${index}`;
+      }
+      checkouts.push({ name, url, ...(repo.defaultBranch && { branch: repo.defaultBranch }) });
     }
     return checkouts;
   });
@@ -549,8 +558,14 @@ export const githubCredentials: Effect.Effect<
   ),
 );
 
-/** A repository's HTTPS clone URL: its own URL when it is hosted elsewhere, GitHub's otherwise. */
-const cloneUrl = (repo: Repo.Repo): string => {
+/**
+ * A repository's HTTPS clone URL: its own URL when it is hosted elsewhere, GitHub's otherwise; none for
+ * an EDGE repository, which the process holds no credential for.
+ */
+const cloneUrl = (repo: Repo.Repo): string | undefined => {
+  if (Repo.edgeId(repo) !== undefined) {
+    return undefined;
+  }
   const own = repo.url ? URL.parse(repo.url) : null;
   return own && own.hostname !== GITHUB_HOST ? own.href : `https://github.com/${Repo.fullName(repo)}.git`;
 };

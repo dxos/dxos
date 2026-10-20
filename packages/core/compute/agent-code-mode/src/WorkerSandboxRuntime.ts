@@ -22,6 +22,7 @@ import { log } from '@dxos/log';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { type Dialect, type SandboxOperation } from './Dialect.ts';
+import { formatPrinted } from './format.ts';
 import * as Wire from './Wire.ts';
 import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
@@ -148,9 +149,9 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       runtime,
       operations,
       // Sent as it happens rather than batched with the result, so output survives a worker that is
-      // killed for outrunning its budget.
+      // killed for outrunning its budget; sent formatted, since a live object cannot cross the port.
       print: (...values: unknown[]) => {
-        Effect.runFork(client['Sandbox.print']({ values }));
+        Effect.runFork(client['Sandbox.print']({ values: values.map(formatPrinted) }));
       },
     });
 
@@ -160,7 +161,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
     }).pipe(
       Effect.match({
-        onSuccess: (value: unknown) => ({ value, failure: null }),
+        // Formatted like printed output, which is all the host does with it.
+        onSuccess: (value: unknown) => ({
+          value: value === undefined ? undefined : formatPrinted(value),
+          failure: null,
+        }),
         onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
       }),
       // The turn carries on against the host's database, so it waits for what the code wrote.

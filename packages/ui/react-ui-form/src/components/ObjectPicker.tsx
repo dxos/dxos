@@ -170,8 +170,9 @@ export const ObjectPicker = ({
     <Combobox.Root
       items={items}
       loading={loading}
-      // Pinned to the field's width: object labels (or URIs) can be long enough to widen the popup past the form.
-      positioning={{ sameWidth: true }}
+      // Pinned to the field's width, since labels (or URIs) can widen the popup past the form; a custom trigger such as
+      // an icon button is too narrow to pin to.
+      positioning={trigger ? undefined : { sameWidth: true }}
       open={open}
       onOpenChange={handleOpenChange}
       value={value ? [value] : []}
