@@ -427,11 +427,19 @@ export const FeatureCardBody = ({
         </Card.Section>
       )}
 
-      {expanded && showFields && feature.specs.length > 0 && (
+      {/* Also beside the article's editable spec list, since there each row opens the imported spec. */}
+      {detailed && (showFields || onOpenObject) && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
-          {feature.specs.map((spec) => (
-            <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
-          ))}
+          {feature.specs.map((spec) => {
+            const specId = feature.specObjects?.[Feature.getSpecPath(spec)];
+            return specId && onOpenObject ? (
+              <Card.Row key={spec} icon='ph--file-code--regular' onClick={open(specId)}>
+                <Card.Text truncate>{spec}</Card.Text>
+              </Card.Row>
+            ) : (
+              <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
+            );
+          })}
         </Card.Section>
       )}
     </Card.Body>

@@ -118,7 +118,16 @@ export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
  * default branch, without the block anchor, which GitHub cannot resolve inside an `.mdl` file.
  */
 export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>
-  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${spec.replace(/#.*$/, '').replace(/^\/+/, '')}`;
+  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${getSpecPath(spec)}`;
+
+/** A repo spec path without its block anchor or leading slashes. */
+export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');
+
+/** Foreign-key source of a spec imported into a space, whose key id is its repo path. */
+export const SPEC_KEY_SOURCE = 'github.com/dxos/dxos';
+
+/** Type of an imported spec; named by URI because plugin-code owns the schema and projects must not depend on it. */
+export const SPEC_TYPE = DXN.make('org.dxos.type.spec');
 
 //
 // Relations

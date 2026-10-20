@@ -149,6 +149,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
               <FeatureBoard
                 features={features}
                 onOpen={handleOpen}
+                onOpenObject={handleOpen}
                 onSetStatus={editing.setStatus}
                 onRemove={editing.removeFromMap}
                 onRename={editing.rename}

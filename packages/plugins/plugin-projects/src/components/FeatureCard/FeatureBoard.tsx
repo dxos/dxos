@@ -23,6 +23,8 @@ export type FeatureBoardProps = {
   onSelect?: (id: string | undefined) => void;
   /** Each given action is offered in every card's menu. */
   onOpen?: (id: string) => void;
+  /** Opens a spec, task or showcase listed on a card. */
+  onOpenObject?: (id: string) => void;
   onSetStatus?: (id: string, status: FeatureStatus) => void;
   /** Takes a feature off the map; the feature itself is kept. */
   onRemove?: (id: string) => void;
@@ -44,6 +46,7 @@ export const FeatureBoard = ({
   selectedId: selectedIdProp,
   onSelect,
   onOpen,
+  onOpenObject,
   onSetStatus,
   onRemove,
   onRename,
@@ -93,6 +96,7 @@ export const FeatureBoard = ({
                 onSelect={(feature) => handleSelect(feature.id)}
                 onSelectDependency={handleSelect}
                 onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
+                onOpenObject={onOpenObject}
                 onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
                 onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
                 onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
