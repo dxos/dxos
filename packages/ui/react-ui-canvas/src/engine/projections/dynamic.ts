@@ -147,6 +147,13 @@ export type DynamicProjectionOptions = {
   options: DynamicOptions;
   /** What the user may do; by default move, link, delete and relabel. `{ move: true }` makes a drag-only view. */
   capabilities?: Capabilities;
+  /**
+   * Called for a drawn link between two nodes instead of adding the edge to `graph`, so a host that derives
+   * the graph from its own model writes the model and lets the graph follow (or refuses the edge).
+   */
+  onLink?: (edge: { from: string; to: string }) => void;
+  /** Called for deleted nodes and edges instead of removing them from `graph`, for the same reason as `onLink`. */
+  onDelete?: (ids: readonly string[]) => void;
 };
 
 export const createDynamicProjection = ({
@@ -155,6 +162,8 @@ export const createDynamicProjection = ({
   overlay,
   options,
   capabilities = dynamicCapabilities,
+  onLink,
+  onDelete,
 }: DynamicProjectionOptions): Projection => {
   const scene = Atom.keepAlive(
     Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
@@ -182,10 +191,18 @@ export const createDynamicProjection = ({
         if (from === undefined || to === undefined || model.edges.some((edge) => edge.id === link.id)) {
           return;
         }
+        if (onLink) {
+          onLink({ from, to });
+          return;
+        }
         registry.set(graph, { ...model, edges: [...model.edges, { id: link.id, from, to }] });
         break;
       }
       case 'delete': {
+        if (onDelete) {
+          onDelete(intent.ids);
+          return;
+        }
         const ids = new Set(intent.ids);
         const model = registry.get(graph);
         registry.set(graph, {
@@ -225,7 +242,10 @@ export const createDynamicProjection = ({
     snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
     restore: (snapshot) => {
       if (isDynamicSnapshot(snapshot)) {
-        registry.set(graph, snapshot.graph);
+        // A host that takes link and delete owns the graph, so an undo here must not revive what its model removed.
+        if (!onLink && !onDelete) {
+          registry.set(graph, snapshot.graph);
+        }
         registry.set(overlay, snapshot.overlay);
       }
     },

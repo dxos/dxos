@@ -61,6 +61,36 @@ describe('dynamic projection', () => {
     expect(projection.capabilities).toEqual({ move: true });
   });
 
+  test('a host intercepts link and delete intents and the graph is left to follow its model', ({ expect }) => {
+    const registry = Registry.make();
+    const model = Atom.make(graph);
+    const linked: { from: string; to: string }[] = [];
+    const deleted: (readonly string[])[] = [];
+    const projection = createDynamicProjection({
+      registry,
+      graph: model,
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry },
+      onLink: (edge) => linked.push(edge),
+      onDelete: (ids) => deleted.push(ids),
+    });
+    projection.apply({
+      kind: 'link',
+      link: { type: 'line', id: 'new', z: 'a0', source: { node: 'right' }, target: { node: 'leaf' } },
+    });
+    projection.apply({ kind: 'delete', ids: ['e1'] });
+    expect(linked).toEqual([{ from: 'right', to: 'leaf' }]);
+    expect(deleted).toEqual([['e1']]);
+    expect(registry.get(model)).toBe(graph);
+
+    // Undo restores the overrides but leaves the host's graph as its model last set it.
+    const before = projection.snapshot?.();
+    const hostGraph = { ...graph, edges: graph.edges.filter(({ id }) => id !== 'e1') };
+    registry.set(model, hostGraph);
+    projection.restore?.(before);
+    expect(registry.get(model)).toBe(hostGraph);
+  });
+
   test('an override wins over the engine and survives an unrelated graph change', ({ expect }) => {
     const registry = Registry.make();
     const graphAtom = Atom.keepAlive(Atom.make<GraphModel>(graph));
