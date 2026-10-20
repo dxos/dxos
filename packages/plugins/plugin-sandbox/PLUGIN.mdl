@@ -88,6 +88,7 @@ The following extension dialects are used in this document.
 |--------|---------------------------|
 | `test` | `org.dxos.mdl.test@1.0`   |
 | `op`   | `org.dxos.mdl.op@1.1`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -367,4 +368,34 @@ test QA-2: Build in a sandbox, push to a repository with git, pick it up in anot
     - name: Delete the sandbox and the repository
       do: Delete "QA Repo" (both) from the navtree.
       invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandbox.sandboxId }, { "/": $repository.repositoryId }], target: $given.space }
+```
+
+## Changelog
+
+```mdl
+decision D-1: An EDGE repository is a `Repo` from `@dxos/types`, marked as hosted by EDGE, not a type of its own, so GitHub and EDGE repositories are one type.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [Repo, Sandbox]
+  source: https://github.com/dxos/dxos/pull/14104
+```
+
+```mdl
+decision D-2: The EDGE mark is a foreign key with source `edge.dxos.network` whose id is the repository's id on EDGE; the space id stands in as the owner, and existing `org.dxos.type.repository` objects migrate in place, keeping their object id as that key. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Repo]
+  why: The object id was already the EDGE id, so carrying it into the key keeps every remote resolving without a request to EDGE.
+  rejected:
+    - A `host` field on `Repo`: the type says provenance belongs in foreign keys, which the GitHub connector already uses.
+```
+
+```mdl
+decision D-3: This plugin contributes no create entry for repositories; the `Repo` entry belongs to plugin-projects, and an EDGE repository is made with `createRepository`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Repo, createRepository]
+  why: Create entries are keyed by typename, so two plugins cannot both offer one for `Repo`.
 ```
