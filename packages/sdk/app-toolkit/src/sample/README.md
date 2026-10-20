@@ -11,6 +11,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 
 | Partial             | Spec                                                       | Code         |
 | ------------------- | ---------------------------------------------------------- | ------------ |
+| AI Briefing         | `plugin-magazine/src/samples/ai-briefing/CONTENT.md`       | `partial.ts` |
 | Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | `partial.ts` |
 | Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | `partial.ts` |
 | Alien Labs team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
@@ -24,6 +25,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 
 | Template          | Code                                                          | Partials                                      |
 | ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
+| AI Briefing       | `plugin-magazine/src/samples/ai-briefing/AiBriefingSpace.ts`  | AI Briefing                                   |
 | DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
 | Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
 | Alien Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, metrics, Architecture |
@@ -43,6 +45,10 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 1. Write a `CONTENT.md` in a new directory next to the plugin's other samples. Copy the header and
    sections from an existing spec. To build on another partial, list it under `Requires`.
 2. Ask an agent to generate the partial and a template that applies it.
+
+A template's `build` runs in the new space's process (`SpaceOperation.ApplyTemplate`), so it can
+schedule operations, such as a first feed sync. A test that builds such a template provides
+`Operation.Service` itself.
 
 A template may apply partials from other packages. The package that owns the partial exports it
 through a `samples` subpath and must be public.

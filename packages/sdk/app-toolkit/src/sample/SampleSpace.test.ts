@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { SpaceProperties } from '@dxos/client-protocol';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { DXN } from '@dxos/keys';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { buildArchive, histogram } from '../testing/index.ts';
@@ -197,6 +200,34 @@ describe('applyTo', () => {
       ),
     );
     expect(root.objects.map((ref) => ref.target?.id)).toContain(result.collection.id);
+  });
+
+  test("leaves the build's other services to the caller", async ({ expect }) => {
+    const Touch = Operation.make({
+      input: Schema.Struct({ id: Schema.String }),
+      output: Schema.Void,
+      meta: { key: DXN.make('com.example.operation.touch'), name: 'touch' },
+    });
+    const scheduled: unknown[] = [];
+    const operations = {
+      invoke: () => Effect.die('unused'),
+      schedule: (_op, ...args) => Effect.sync(() => void scheduled.push(args[0])),
+      invokePromise: () => Promise.resolve({}),
+    } satisfies Operation.OperationService;
+    const touching = SampleSpace.make({
+      space: definition.space,
+      partials: { work: Work },
+      build: (partials) =>
+        Effect.gen(function* () {
+          const { taskSet } = yield* partials.work();
+          yield* Operation.schedule(Touch, { id: taskSet.id });
+        }),
+    });
+
+    await EffectEx.runPromise(
+      SampleSpace.applyTo(touching, await createSpace()).pipe(Effect.provideService(Operation.Service, operations)),
+    );
+    expect(scheduled).toEqual([{ id: expect.any(String) }]);
   });
 
   test('drains queued feed appends after the build', async ({ expect }) => {
