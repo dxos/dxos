@@ -10,7 +10,6 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import {
   type AdmittedFeed,
-  type AgentAdmins,
   type Auth,
   type AuthorizedDevice,
   type Credential,
@@ -18,6 +17,7 @@ import {
   type DeviceProfile,
   type Epoch,
   type HaloSpace,
+  type IdentityController,
   type IdentityProfile,
   type IdentityRecovery,
   type IdentityRecoveryRevoked,
@@ -42,13 +42,13 @@ import {
  */
 export type CredentialAssertion =
   | AdmittedFeed
-  | AgentAdmins
   | Auth
   | AuthorizedDevice
   | DefaultSpace
   | DeviceProfile
   | Epoch
   | HaloSpace
+  | IdentityController
   | IdentityProfile
   | IdentityRecovery
   | IdentityRecoveryRevoked
