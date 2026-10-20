@@ -1,0 +1,218 @@
+---
+id: org.dxos.spec.deus
+name: Deus
+version: 0.1.0
+---
+
+The spec for `@dxos/deus` itself: the tooling around the `.mdl` language. The language is defined
+in `lang/` and motivated in `docs/DESIGN.md`. This document covers what the package must do, so far
+only for the spec changelog.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Features
+
+```mdl
+feat F-1: Attributed decision log
+  A spec carries a `## Changelog` of `decision` blocks (`lang/changelog.mdl`) that traces how it
+  came to say what it says, with decisions made by people kept apart from decisions made by agents.
+
+  req F-1.1: Each decision names exactly one decider in `by:`, typed `user:<handle>` (GitHub username or email) or `agent:<name>`.
+  req F-1.2: An agent is named by its harness, never by the model that served it.
+  req F-1.3: An `agent:` decision names the person it acted for in `for:`; a `user:` decision has no `for:`.
+  req F-1.4: A `user:` decision may carry the person's words verbatim in `quote:`; an `agent:` decision may not.
+  req F-1.5: The log is append-only. A reversal is a new decision with `supersedes: D-n`.
+  req F-1.6: Decision ids are `D-1`, `D-2`, … in the order appended, newest last.
+  req F-1.7: Approval of agent decisions is a new `user:` decision whose prose says what it approves.
+```
+
+```mdl
+feat F-2: Every spec change adds a decision
+  req F-2.1: A change to a spec outside `## Changelog` adds at least one new decision.
+  req F-2.2: A new spec starts with at least one decision.
+  req F-2.3: `scripts/check-changelog.ts` enforces F-1.5, F-1.6, F-2.1 and F-2.2 by comparing each changed `.mdl` file with the merge base, and runs in CI as "Check spec changelogs".
+  req F-2.4: Language definitions (`lang/`), review rules (`rules/`) and test fixtures are not specs and are exempt.
+  req F-2.5: Only `decision` blocks under `## Changelog` form the log; examples elsewhere are ignored.
+```
+
+```mdl
+feat F-3: Linting
+  req F-3.1: The editor linter and `scripts/lint-mdl.ts` report decisions that break F-1.1, F-1.3 or F-1.4.
+  req F-3.2: `lint-mdl.ts --only <source>` restricts output to one check, so the block-type check (which knows only built-in types) does not hide decision errors.
+```
+
+```mdl
+feat F-4: Agent guidance
+  req F-4.1: The repo has an `mdl` skill (`.agents/skills/mdl/SKILL.md`) for writing specs and recording decisions.
+  req F-4.2: The skill tells an agent to record a person's input first, faithfully — adding context, never assumptions — and its own additions as separate decisions.
+```
+
+## Changelog
+
+Backfilled on 2026-10-20 from the session that built the changelog,
+https://github.com/dxos/dxos/pull/14093.
+
+```mdl
+decision D-1: Specs have a changelog of authoritative decisions, each tagged with the person (username or email) or agent that made it, to trace how decisions were made and separate people from agents.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: |
+    I wanna add a changelog section to mdl specs
+    the sections has a log of authoritative decisions -- each one is tagged by person (username/email) or agent that made it
+    the goal is to trace how decissions were made and separate people and agents
+  affects: [F-1]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-2: The repo has an mdl skill.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: ensure there's an mdl skill in the repo
+  affects: [F-4.1]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-3: The changelog is a `decision` block type in a new dialect, `lang/changelog.mdl`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: Every other construct in the language is an `ext`-defined block in a dialect file; a dialect keeps the changelog opt-in per document.
+```
+
+```mdl
+decision D-4: A decider is `user:<handle>` or `agent:<name>`, and an agent is named by its harness, not its model. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  why: A typed prefix makes "which decisions did a person make" a filter, and the linter can reject untyped entries. Models change mid-session; the name must stay stable across the log.
+```
+
+```mdl
+decision D-5: An agent decision names the person it acted for in `for:`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: An agent decides within latitude a person gave it; the trace is incomplete without whose.
+```
+
+```mdl
+decision D-6: The log is append-only with monotonic `D-n` ids; reversals use `supersedes:`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5, F-1.6]
+  why: An edited entry erases the trace the log exists to keep.
+```
+
+```mdl
+decision D-7: A person endorsing an agent decision is recorded as `ratified-by:` on that entry, the only edit an entry admits. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-8: Only decisions that change what the spec requires are logged; edits, renames and reformatting are not. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: Read from "authoritative decisions" in [D-1]; git already records edits.
+```
+
+```mdl
+decision D-9: Decision attribution is linted in the editor and by `scripts/lint-mdl.ts`, whose `--only` flag isolates one check.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3]
+  why: The existing block-type check knows only built-in types and flags valid dialect blocks, so a CLI without a filter is unusable on real specs.
+```
+
+```mdl
+decision D-10: Specs are written by people and agents together; each source of knowledge gets its own decision. The agent first records the person's input faithfully, adding only context and no assumptions, then records its own additions as separate decisions. A person approving an agent's design is its own decision.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: |
+    Specs are usually collab between humans and agent, the human gives coarse ideas and agent fills in the gaps. its important that the knowledge is separated in different decision entries.
+
+    The agent first records faithful representation of what human wrote, only adding context, no assumptions. and then it could add its own edits as a separate decision.
+
+    person aprooving agent design is its own deicision as well.
+
+    1. put that into skill
+  affects: [F-1.7, F-4.2]
+  supersedes: D-7
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-11: Every change to a spec adds a decision, and this is enforced mechanically.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: |
+    2. all changes to spec must add a decision
+    3. lets see how we can enforce (2) mechanically
+  affects: [F-2]
+  supersedes: D-8
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-12: Approval is not a separate kind of entry; it is an ordinary decision whose prose says what it approves.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: they are the same entry -- approval is not entry kind, could be just a prose
+  context: Said in response to a proposed `approves:` field for approval entries, which was dropped before it landed.
+  affects: [F-1.7]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-13: A `user:` decision may carry `quote:` (verbatim words) and `context:` (added facts); an agent decision may not carry `quote:`. Fills in [D-10].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: Separate fields keep the person's words apart from what the recording agent added, so "faithful" can be checked by reading.
+```
+
+```mdl
+decision D-14: `scripts/check-changelog.ts` enforces [D-11] in CI by diffing each changed `.mdl` against the merge base, and also rejects edited, removed, reordered or out-of-sequence entries. Fills in [D-11].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, F-2.3]
+  why: A diff against the base is the only place "this change added no decision" is visible; the same diff checks append-only for free. Placed beside the changesets check, which works the same way.
+  rejected:
+    - A Claude Stop hook alone: only covers agent sessions on the Claude harness, not human edits or other harnesses.
+    - A husky pre-commit hook: skippable, and not run in the cloud sandbox.
+```
+
+```mdl
+decision D-15: Language definitions, review rules and test fixtures are exempt from [D-11], and only decisions under `## Changelog` count as the log. Fills in [D-11].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4, F-2.5]
+  why: These `.mdl` files are not specs of a component; `lang/changelog.mdl` itself shows example decisions that must not be read as its log.
+```
+
+```mdl
+decision D-16: Deus has a spec of its own, backfilled from the session that built the changelog.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: is there a spec for mdl/deus itself? lets backfill it from this session
+  source: https://github.com/dxos/dxos/pull/14093
+```

@@ -50,7 +50,7 @@ scenario T-1:
 
 ## Changelog
 
-Authoritative decisions, newest last. See `lang/changelog.mdl` for the attribution rules.
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
 
 ```mdl
 decision D-1: <what is now true>

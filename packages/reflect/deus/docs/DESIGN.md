@@ -431,11 +431,11 @@ Two consequences reach beyond the dialect:
 ## Changelog Dialect (Deus.Changelog)
 
 Defined in [`../lang/changelog.mdl`](../lang/changelog.mdl). Adds a `## Changelog` section: an
-append-only log of the authoritative decisions behind the spec, so a reader can trace how the
-current text came about and which parts a person chose versus an agent.
+append-only log of every decision that changed the spec. A reader can trace how the current text
+came about, and which parts a person chose and which an agent filled in.
 
 ```mdl
-decision D-2: Bounds grow to the major grid, not the minor one.
+decision D-2: Bounds grow to the major grid. Fills in [D-1].
   date: 2026-10-03
   by: agent:claude-code
   for: user:alice
@@ -443,12 +443,13 @@ decision D-2: Bounds grow to the major grid, not the minor one.
   why: Growing to the minor grid re-lays the canvas on every drag step.
 ```
 
-- **Every decision has exactly one typed decider.** `by:` is `user:<handle>` (GitHub username or
-  email) or `agent:<name>` (the harness, never the model). The linter rejects anything else.
-- **Agents act for someone.** An `agent:` entry names its principal in `for:`; a person who later
-  endorses it is added as `ratified-by:` without rewriting `by:`.
-- **Append-only.** A reversal is a new entry with `supersedes: D-n`; the old entry stays as the
-  trace. Only decisions that change what the spec requires are logged — edits live in git.
+- **Every change adds a decision.** `scripts/check-changelog.ts` enforces this in CI. It also
+  rejects edits to existing entries: a reversal is a new entry with `supersedes: D-n`.
+- **One typed decider per entry.** `by:` is `user:<handle>` or `agent:<name>` (the harness, never
+  the model), and an `agent:` entry names its principal in `for:`.
+- **The person's input is recorded faithfully, then the agent's additions.** The `user:` entry
+  carries what they said (`quote:`), with context but no assumptions. What the agent filled in is
+  in separate `agent:` entries. Approval of those entries is a later `user:` entry.
 
 ## Domain Dialects
 
