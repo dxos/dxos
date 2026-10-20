@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ReactElement, useMemo, useState } from 'react';
+import React, { type ReactElement, useMemo } from 'react';
 
 import { type Database, type Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -22,10 +22,11 @@ export type ObjectAddPickerProps = {
   onCreate?: (name: string) => unknown | Promise<unknown>;
 };
 
-/** A toolbar or row button that picks one object of a type to add; queries the space only while open. */
+/** A toolbar or row button that picks one object of a type to add. */
 export const ObjectAddPicker = ({ db, filter, exclude, trigger, onSelect, onCreate }: ObjectAddPickerProps) => {
-  const [open, setOpen] = useState(false);
-  const objects = useQuery(open ? db : undefined, filter);
+  // Queried while mounted rather than on open: results landing while the user types reset the popup's query, which
+  // drops the create row for what they typed.
+  const objects = useQuery(db, filter);
   const options = useMemo(() => {
     const excluded = new Set(exclude);
     return objects
@@ -38,7 +39,6 @@ export const ObjectAddPicker = ({ db, filter, exclude, trigger, onSelect, onCrea
     <ObjectPicker
       options={options}
       trigger={trigger}
-      onOpenChange={setOpen}
       onSelect={(id) => id && onSelect(id)}
       {...(onCreate && {
         createSchema: CreateSchema,
