@@ -28,6 +28,8 @@ export type FeatureBoardProps = {
   features: readonly FeatureModel[];
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
+  /** The card selected when the board opens, as for a link to one feature; the user can then select others. */
+  defaultSelectedId?: string;
   onSelect?: (id: string | undefined) => void;
   /** Each given action is offered in every card's menu. */
   onOpen?: (id: string) => void;
@@ -42,7 +44,7 @@ export type FeatureBoardProps = {
   onEditingChange?: (id: string | undefined) => void;
 };
 
-type FeatureTileContextValue = Omit<FeatureBoardProps, 'features' | 'selectedId' | 'onSelect'> & {
+type FeatureTileContextValue = Omit<FeatureBoardProps, 'features' | 'selectedId' | 'defaultSelectedId' | 'onSelect'> & {
   lookup: FeatureLookup;
   selectedId?: string;
   onSelect: (id: string | undefined) => void;
@@ -96,6 +98,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
 export const FeatureBoard = ({
   features,
   selectedId: selectedIdProp,
+  defaultSelectedId,
   onSelect,
   onOpen,
   onSetStatus,
@@ -106,7 +109,7 @@ export const FeatureBoard = ({
   onEditingChange,
 }: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const [selectedIdState, setSelectedIdState] = useState<string>();
+  const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);
   const selectedId = selectedIdProp ?? selectedIdState;
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
 

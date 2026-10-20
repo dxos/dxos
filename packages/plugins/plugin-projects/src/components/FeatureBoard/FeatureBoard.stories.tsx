@@ -52,7 +52,16 @@ export const Default: Story = {
   },
 };
 
-/** A map opened on a selected feature, as a link from a task would open it. */
+/** A map opened on a selected feature, as a link from a task would open it; another card can then be selected. */
 export const Selected: Story = {
-  args: { selectedId: 'triage' },
+  args: { defaultSelectedId: 'triage' },
+  play: async ({ canvasElement }) => {
+    const tile = (id: string) => card(canvasElement, id).closest('[role="listitem"]');
+    await waitFor(async () => expect(tile('triage')).toHaveAttribute('aria-selected', 'true'));
+    // Masonry reveals the tiles once measured; until then they are hidden from the accessibility tree.
+    const title = await within(card(canvasElement, 'sync')).findByRole('heading', { name: 'Provider sync' });
+    await userEvent.click(title);
+    await waitFor(async () => expect(tile('sync')).toHaveAttribute('aria-selected', 'true'));
+    await expect(tile('triage')).toHaveAttribute('aria-selected', 'false');
+  },
 };
