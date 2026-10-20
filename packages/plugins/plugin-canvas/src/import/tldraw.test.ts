@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { sortByZ } from '@dxos/react-ui-canvas/headless';
+import { DEFAULT_GRID, sortByZ } from '@dxos/react-ui-canvas/headless';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
 import { nearestHue, tldrawToViews } from './tldraw.ts';
 
 describe('tldrawToViews', () => {
   test('geo shapes map to rect and ellipse nodes, and a bound arrow to a link between them', ({ expect }) => {
-    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow());
+    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow(), { snap: false });
     expect(root).toBe('root');
     expect(skipped).toEqual({});
     expect(approximated).toEqual({});
@@ -48,7 +48,7 @@ describe('tldrawToViews', () => {
   });
 
   test('text becomes a note, a sticky a filled rect, and an unbound arrow a link with free ends', ({ expect }) => {
-    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow());
+    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow(), { snap: false });
     const { nodes, links } = views.root;
     expect(skipped).toEqual({ draw: 1 });
     expect(approximated).toEqual({ 'geo:star': 1, 'geo:hexagon': 1 });
@@ -79,7 +79,7 @@ describe('tldrawToViews', () => {
   });
 
   test('a frame becomes a View node over a child View; links bind only within a View', ({ expect }) => {
-    const { views } = tldrawToViews(frameWithChildren());
+    const { views } = tldrawToViews(frameWithChildren(), { snap: false });
     expect(Object.keys(views).sort()).toEqual(['frame-view', 'root']);
 
     const frame = views.root.nodes.frame;
@@ -107,7 +107,7 @@ describe('tldrawToViews', () => {
   });
 
   test('a group becomes an anonymous Object placed by an Instance; rotation carries over', ({ expect }) => {
-    const { views, approximated } = tldrawToViews(groupAndRotation());
+    const { views, approximated } = tldrawToViews(groupAndRotation(), { snap: false });
     const { nodes, links } = views.root;
     expect(approximated).toEqual({});
 
@@ -147,7 +147,7 @@ describe('tldrawToViews', () => {
   });
 
   test('only the first page is imported', ({ expect }) => {
-    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main' });
+    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main', snap: false });
     expect(Object.keys(views)).toEqual(['main']);
     expect(Object.keys(views.main.nodes)).toEqual(['first']);
     expect(skipped).toEqual({ page: 1 });
@@ -172,5 +172,21 @@ describe('nearestHue', () => {
     expect(nearestHue('red')).toBe('red');
     expect(nearestHue('violet')).toBe('violet');
     expect(nearestHue('unknown')).toBe('neutral');
+  });
+
+  test('snaps every frame to the canvas grid by default, keeping at least one cell', ({ expect }) => {
+    const { views } = tldrawToViews(shapesAndArrow());
+    const exact = tldrawToViews(shapesAndArrow(), { snap: false }).views;
+    for (const node of Object.values(views.root.nodes)) {
+      const left = node.center.x - node.size.width / 2;
+      const top = node.center.y - node.size.height / 2;
+      for (const value of [left, top, node.size.width, node.size.height]) {
+        expect(value % DEFAULT_GRID).toBe(0);
+      }
+      expect(node.size.width).toBeGreaterThanOrEqual(DEFAULT_GRID);
+      // Within half a cell of where tldraw drew it.
+      const source = exact.root.nodes[node.id];
+      expect(Math.abs(left - (source.center.x - source.size.width / 2))).toBeLessThanOrEqual(DEFAULT_GRID / 2);
+    }
   });
 });

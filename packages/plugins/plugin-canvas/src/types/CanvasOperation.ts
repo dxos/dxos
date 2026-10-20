@@ -162,6 +162,12 @@ export const ImportTldraw = Operation.make({
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'A tldraw drawing.' }),
     name: Schema.optional(Schema.String.annotate({ description: "The new drawing's name; the source's by default." })),
+    snap: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          "Snap shapes' positions and sizes to the canvas grid, so they line up as drawn shapes do; true by default.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing),

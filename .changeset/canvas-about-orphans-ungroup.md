@@ -1,5 +1,6 @@
 ---
 '@dxos/react-ui-canvas': minor
+'@dxos/plugin-canvas': minor
 ---
 
-`Canvas.About` and `AboutInspector` are removed; the Views panel's rows carry the counts. Deleting an Object with its instances (`removeComposite`) also deletes, in the same undo step, the records only those instances pointed at, and Ungroup brings an Object's animation tracks back out onto the new nodes, placed and sized as the Instance drew them.
+`Canvas.About` and `AboutInspector` are removed; the Views panel's rows carry the counts. Deleting an Object with its instances (`removeComposite`) also deletes, in the same undo step, the records only those instances pointed at, and Ungroup brings an Object's animation tracks back out onto the new nodes, placed and sized as the Instance drew them. The floating inspector panel is one scrolling list again; only the docked panel splits Properties from the other sections. In plugin-canvas, `CanvasOperation.ImportTldraw` takes `snap` (true by default), aligning the imported shapes' positions and sizes to the canvas grid.

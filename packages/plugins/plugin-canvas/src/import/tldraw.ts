@@ -13,6 +13,7 @@ import * as Schema from 'effect/Schema';
 import {
   type BuiltinNode,
   type CloudNode,
+  DEFAULT_GRID,
   type EllipseNode,
   Endpoint,
   type HorizontalAlign,
@@ -100,6 +101,11 @@ export type TldrawImport = {
 export type TldrawImportOptions = {
   /** The root View's id; the canvas's default root by default. */
   root?: ViewId;
+  /**
+   * Snap every node's position and size, and every free link end, to the canvas's minor grid (`DEFAULT_GRID`), so the
+   * shapes line up as ones drawn on the canvas do; on by default.
+   */
+  snap?: boolean;
 };
 
 //
@@ -172,7 +178,7 @@ const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
 /** Maps a tldraw document's records to canvas Views: the first page becomes the root View, each frame a View node over a View of its own. */
 export const tldrawToViews = (
   content: Readonly<Record<string, unknown>>,
-  { root = ROOT_VIEW_ID }: TldrawImportOptions = {},
+  { root = ROOT_VIEW_ID, snap = true }: TldrawImportOptions = {},
 ): TldrawImport => {
   const records = Object.values(content);
   const shapes = records.filter(isShapeRecord);
@@ -437,7 +443,8 @@ export const tldrawToViews = (
         nodes[element.id] = { ...element, z };
       }
     });
-    views[draft.id] = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
+    const view: View = { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links };
+    views[draft.id] = snap ? snapView(view, DEFAULT_GRID) : view;
   }
 
   // A group becomes what the canvas's Group command makes: an anonymous Object, placed by one Instance.
@@ -461,6 +468,29 @@ export const tldrawToViews = (
   }
 
   return { root, views, skipped, approximated };
+};
+
+/** `view` with its nodes' frames and its free link ends on a grid of `unit` px: a frame keeps at least one cell. */
+const snapView = (view: View, unit: number): View => {
+  const toGrid = (value: number) => Math.round(value / unit) * unit;
+  const snapPoint = (point: Point): Point => ({ x: toGrid(point.x), y: toGrid(point.y) });
+  const snapEnd = (end: Link['source']): Link['source'] => ('point' in end ? { point: snapPoint(end.point) } : end);
+  const nodes = Object.fromEntries(
+    Object.entries(view.nodes).map(([id, node]): [string, Node] => {
+      const width = Math.max(unit, toGrid(node.size.width));
+      const height = Math.max(unit, toGrid(node.size.height));
+      const left = toGrid(node.center.x - node.size.width / 2);
+      const top = toGrid(node.center.y - node.size.height / 2);
+      return [id, { ...node, center: { x: left + width / 2, y: top + height / 2 }, size: { width, height } }];
+    }),
+  );
+  const links = Object.fromEntries(
+    Object.entries(view.links).map(([id, link]): [string, Link] => [
+      id,
+      { ...link, source: snapEnd(link.source), target: snapEnd(link.target) },
+    ]),
+  );
+  return { ...view, nodes, links };
 };
 
 /** Applies the intents `composeSelection` returns: the Instance's creation, re-attached links, the moved members' removal. */

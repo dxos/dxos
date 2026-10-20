@@ -60,11 +60,13 @@ const geoProps = (props: Record<string, unknown>) => ({
   verticalAlign: 'middle',
   growY: 0,
   url: '',
+  scale: 1,
   ...props,
 });
 
 const arrowProps = (props: Record<string, unknown>) => ({
   color: 'black',
+  labelColor: 'black',
   fill: 'none',
   dash: 'draw',
   size: 'm',
@@ -76,6 +78,7 @@ const arrowProps = (props: Record<string, unknown>) => ({
   bend: 0,
   text: '',
   labelPosition: 0.5,
+  scale: 1,
   ...props,
 });
 
