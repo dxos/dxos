@@ -5,6 +5,7 @@
 import { assert, describe, it } from '@effect/vitest';
 import { render, waitFor } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 import { vi } from 'vitest';
 
@@ -151,6 +152,38 @@ describe('useApp startup failure reporting', () => {
 
       assert.strictEqual(reported[0].startupFailureKind, 'timeout');
       assert.include(reported[0].startupInFlightModules, 'NeverResolves');
+    }),
+  );
+});
+
+describe('useApp boot gate', () => {
+  it.effect('a pending gate keeps the shell unmounted past startup until it releases', () =>
+    Effect.gen(function* () {
+      const gate = Atom.make<Capabilities.BootGateState>({ pending: true }).pipe(Atom.keepAlive);
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Gate',
+          activatesOn: ActivationEvents.Startup,
+          provides: [Capabilities.BootGate, Capabilities.ReactRoot],
+          activate: () =>
+            Effect.succeed([
+              Capability.contribute(Capabilities.BootGate, { id: 'test', state: gate }),
+              Capability.contribute(Capabilities.ReactRoot, { id: 'root', root: () => <div>shell</div> }),
+            ]),
+        }),
+        Plugin.make,
+      )();
+      const manager = PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+
+      const view = render(<TestHost manager={manager} />);
+      yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
+      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 200)));
+      assert.isNull(view.queryByText('shell'));
+
+      manager.registry.set(gate, { pending: false });
+      yield* Effect.promise(() => waitFor(() => assert.isNotNull(view.queryByText('shell'))));
+      view.unmount();
+      yield* manager.shutdown();
     }),
   );
 });

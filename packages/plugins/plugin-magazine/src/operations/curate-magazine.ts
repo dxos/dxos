@@ -161,6 +161,8 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
  * references the Magazine skill, which RunInstructions resolves at run time. No instructions → no selection.
  * Tolerates agent/parse failures (logs → no selection).
  */
+// TODO(jdw): Select and extract with System One models (`AiService.decisionModel`) instead of a full agent run,
+//   which takes minutes on a few dozen candidates because the agent opens articles one by one.
 const selectPostIds = (
   magazine: Magazine.Magazine,
   candidates: ReadonlyArray<{ post: Subscription.Post; feed: Subscription.Subscription }>,

@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef } from 'react';
+import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -27,11 +28,21 @@ export type TimelinePanelProps = PanelProps & {
   onAddKey?: () => void;
   /** Removes the selection's keys at the playhead; offered while the playhead is on one. */
   onRemoveKey?: () => void;
+  /** Moves the selection's keys at `from` to `to`; offered, a diamond drags along the track. */
+  onMoveKey?: (from: number, to: number) => void;
 };
+
+/** The timeline's controls show no focus ring: focus is visible as the playhead and keys respond to the keyboard. */
+const NO_RING = 'focus-visible:ring-0';
 
 /** The key at time `t`, if one is within half a frame of it. */
 export const keyAt = (keys: readonly number[], t: number, fps: number): number | undefined =>
   keys.find((key) => Math.abs(key - t) < 0.5 / fps);
+
+/** Where ⌘ with an arrow goes from `t`: the next (or previous) key, else the end (or start) when there is none that way. */
+export const jumpTarget = (keys: readonly number[], t: number, fps: number, duration: number, back: boolean): number =>
+  (back ? [...keys].reverse().find((key) => key < t - 0.5 / fps) : keys.find((key) => key > t + 0.5 / fps)) ??
+  (back ? 0 : duration);
 
 /** `t` as `s.ff`, seconds and frames, as an editor's timecode reads. */
 export const formatTime = (t: number, fps: number): string => {
@@ -44,7 +55,8 @@ export const formatTime = (t: number, fps: number): string => {
  * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
- * previous or next key, and Delete removes the key under the playhead.
+ * previous or next key (the start or end when there is none that way), and Delete removes the key under the playhead. On the play button, Left and Right jump to the
+ * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Enter keys the playhead, Delete removes the key there and Space plays and pauses.
  */
 export const TimelinePanel = ({
   classNames,
@@ -60,8 +72,11 @@ export const TimelinePanel = ({
   onAutoKeyChange,
   onAddKey,
   onRemoveKey,
+  onMoveKey,
 }: TimelinePanelProps) => {
   const current = keyAt(keys, time, fps);
+  // The key being dragged and where it would land; a press that never moves stays a click that seeks.
+  const [dragging, setDragging] = useState<{ from: number; to: number }>();
   const trackRef = useRef<HTMLDivElement>(null);
   const timeAt = useCallback(
     (clientX: number) => {
@@ -99,12 +114,7 @@ export const TimelinePanel = ({
         event.stopPropagation();
         const back = event.key === 'ArrowLeft';
         if (event.metaKey || event.ctrlKey) {
-          const target = back
-            ? [...keys].reverse().find((key) => key < time - 0.5 / fps)
-            : keys.find((key) => key > time + 0.5 / fps);
-          if (target !== undefined) {
-            onTimeChange?.(target);
-          }
+          onTimeChange?.(jumpTarget(keys, time, fps, duration, back));
           return;
         }
         const step = event.shiftKey ? 1 : 1 / fps;
@@ -123,9 +133,38 @@ export const TimelinePanel = ({
       <Button.Root
         variant='ghost'
         iconOnly
+        classNames={NO_RING}
         icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
         label={playing ? 'Pause' : 'Play'}
         data-testid='timeline-play'
+        // Focused, the button drives the playhead and keys: Left and Right scrub a frame (Shift, a second), with ⌘ or
+        // Ctrl they jump to the next key, or the end when there is none; Enter keys the playhead (unless it is on a key)
+        // and Delete removes the key there. Space, the button's own key, plays and pauses.
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            event.stopPropagation();
+            onPlayingChange?.(false);
+            const back = event.key === 'ArrowLeft';
+            if (event.metaKey || event.ctrlKey) {
+              onTimeChange?.(jumpTarget(keys, time, fps, duration, back));
+            } else {
+              const step = event.shiftKey ? 1 : 1 / fps;
+              onTimeChange?.(Math.min(duration, Math.max(0, time + (back ? -step : step))));
+            }
+          } else if (event.key === 'Enter') {
+            // Enter keys rather than presses: preventing it here keeps the button from playing.
+            event.preventDefault();
+            event.stopPropagation();
+            if (current === undefined && onAddKey && !readonly) {
+              onAddKey();
+            }
+          } else if ((event.key === 'Delete' || event.key === 'Backspace') && current !== undefined && onRemoveKey) {
+            event.preventDefault();
+            event.stopPropagation();
+            onRemoveKey();
+          }
+        }}
         onClick={() => {
           // Played from the end, the timeline starts over.
           if (!playing && time >= duration) {
@@ -143,7 +182,7 @@ export const TimelinePanel = ({
         aria-valuemax={duration}
         aria-valuenow={time}
         aria-valuetext={`${formatTime(time, fps)} s`}
-        className='relative grow h-6 mx-2 cursor-pointer touch-none dx-focus-ring rounded-xs'
+        className='relative grow h-6 mx-2 cursor-pointer touch-none outline-none rounded-xs'
         data-testid='timeline-track'
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -154,24 +193,46 @@ export const TimelinePanel = ({
           className='absolute left-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-bg rounded-full'
           style={{ width: at(time) }}
         />
-        {keys.map((key) => (
-          <button
-            key={key}
-            type='button'
-            aria-label={`Key at ${formatTime(key, fps)} s`}
-            className={mx(
-              'absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-separator',
-              key === current ? 'bg-amber-300 ring-1 ring-amber-300' : 'bg-amber-500',
-            )}
-            style={{ left: at(key) }}
-            data-testid='timeline-key'
-            onPointerDown={(event) => {
-              event.stopPropagation();
-              onPlayingChange?.(false);
-              onTimeChange?.(key);
-            }}
-          />
-        ))}
+        {keys.map((key) => {
+          const shown = dragging?.from === key ? dragging.to : key;
+          return (
+            <button
+              key={key}
+              type='button'
+              aria-label={`Key at ${formatTime(key, fps)} s`}
+              className={mx(
+                'absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-separator',
+                onMoveKey && !readonly && 'cursor-ew-resize',
+                key === current || dragging?.from === key ? 'bg-amber-300 ring-1 ring-amber-300' : 'bg-amber-500',
+              )}
+              style={{ left: at(shown) }}
+              data-testid='timeline-key'
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                onPlayingChange?.(false);
+                onTimeChange?.(key);
+                if (onMoveKey && !readonly) {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  setDragging({ from: key, to: key });
+                }
+              }}
+              onPointerMove={(event) => {
+                if (dragging?.from === key) {
+                  const to = timeAt(event.clientX);
+                  setDragging({ from: key, to });
+                  onTimeChange?.(to);
+                }
+              }}
+              onPointerUp={() => {
+                if (dragging?.from === key && dragging.to !== key) {
+                  onMoveKey?.(key, dragging.to);
+                }
+                setDragging(undefined);
+              }}
+              onPointerCancel={() => setDragging(undefined)}
+            />
+          );
+        })}
         <div
           className='absolute top-0 bottom-0 w-0.5 -translate-x-1/2 bg-accent-bg pointer-events-none'
           style={{ left: at(time) }}
@@ -186,28 +247,40 @@ export const TimelinePanel = ({
       </span>
       {!readonly && (
         <>
-          {/* One control: on a key it removes the key, elsewhere it adds one. */}
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon={current !== undefined ? 'ph--diamond--fill' : 'ph--diamond--regular'}
-            label={current !== undefined ? 'Remove key (Delete)' : 'Add key (K)'}
-            disabled={current !== undefined ? !onRemoveKey : !onAddKey}
-            data-testid='timeline-toggle-key'
-            data-state={current !== undefined ? 'on' : 'off'}
-            onClick={current !== undefined ? onRemoveKey : onAddKey}
-          />
-          {/* The record dot says whether it is on; a pressed button's fill would shout over the bar. */}
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon={autoKey ? 'ph--record--fill' : 'ph--record--regular'}
-            label={autoKey ? 'Auto-key on: edits away from the start make keys' : 'Auto-key off'}
-            classNames={autoKey ? 'text-error-text' : 'text-fg-muted'}
-            data-testid='timeline-auto-key'
-            data-state={autoKey ? 'on' : 'off'}
-            onClick={() => onAutoKeyChange?.(!autoKey)}
-          />
+          {/* The less frequent actions, in one menu: the keyboard covers keying from the play button. */}
+          <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
+            <Menu.Trigger asChild>
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                classNames={NO_RING}
+                icon='ph--dots-three-vertical--regular'
+                label='Timeline actions'
+                data-testid='timeline-menu'
+              />
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item
+                item={{ value: 'add-key', label: 'Add key', shortcut: '↵' }}
+                disabled={current !== undefined || !onAddKey}
+                data-testid='timeline-add-key'
+                onSelect={() => onAddKey?.()}
+              />
+              <Menu.Item
+                item={{ value: 'remove-key', label: 'Delete key', shortcut: '⌫' }}
+                disabled={current === undefined || !onRemoveKey}
+                data-testid='timeline-remove-key'
+                onSelect={() => onRemoveKey?.()}
+              />
+              <Menu.Separator />
+              <Menu.CheckboxItem
+                item={{ value: 'auto-key', label: 'Auto-key' }}
+                checked={!!autoKey}
+                data-testid='timeline-auto-key'
+                onCheckedChange={(checked) => onAutoKeyChange?.(checked === true)}
+              />
+            </Menu.Content>
+          </Menu.Root>
         </>
       )}
     </Toolbar.Root>

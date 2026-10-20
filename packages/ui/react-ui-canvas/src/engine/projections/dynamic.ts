@@ -19,14 +19,15 @@ import {
   type Capabilities,
   type CreateProps,
   type Intent,
+  type LineStyle,
   type Link,
   type LinkEnds,
   type LinkType,
   type Node,
   type NodeRegistry,
   type Point,
-  type Scene,
   type Size,
+  type View,
   endpointNode,
 } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
@@ -34,7 +35,16 @@ import { type Projection } from '../projection.ts';
 import { labelOf } from './constrained.ts';
 
 export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
-export type GraphEdge = { id: string; from: string; to: string };
+export type GraphEdge = {
+  id: string;
+  from: string;
+  to: string;
+  /** A caption at the middle of the link. */
+  text?: string;
+  /** Overrides `DynamicOptions.link.ends` for this edge, so a graph can draw several kinds of edge. */
+  ends?: LinkEnds;
+  style?: LineStyle;
+};
 
 export type GraphModel = {
   nodes: GraphNode[];
@@ -68,10 +78,10 @@ const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
   size: { width: 192, height: 128 },
 };
 
-export const DYNAMIC_SCENE_ID = 'dynamic';
+export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): Scene => {
+export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
@@ -119,11 +129,13 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
         z: keys[index],
         source: { node: edge.from },
         target: { node: edge.to },
-        ...(options.link?.ends && { ends: options.link.ends }),
+        ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
+        ...(edge.text !== undefined && { text: edge.text }),
+        ...(edge.style && { style: edge.style }),
       };
     }
   });
-  return { id: DYNAMIC_SCENE_ID, name: 'Dynamic', nodes, links };
+  return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
 };
 
 /** Drop overrides whose nodes are gone. */
@@ -147,6 +159,13 @@ export type DynamicProjectionOptions = {
   options: DynamicOptions;
   /** What the user may do; by default move, link, delete and relabel. `{ move: true }` makes a drag-only view. */
   capabilities?: Capabilities;
+  /**
+   * Called for a drawn link between two nodes instead of adding the edge to `graph`, so a host that derives
+   * the graph from its own model writes the model and lets the graph follow (or refuses the edge).
+   */
+  onLink?: (edge: { from: string; to: string }) => void;
+  /** Called for deleted nodes and edges instead of removing them from `graph`, for the same reason as `onLink`. */
+  onDelete?: (ids: readonly string[]) => void;
 };
 
 export const createDynamicProjection = ({
@@ -155,6 +174,8 @@ export const createDynamicProjection = ({
   overlay,
   options,
   capabilities = dynamicCapabilities,
+  onLink,
+  onDelete,
 }: DynamicProjectionOptions): Projection => {
   const scene = Atom.keepAlive(
     Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
@@ -182,10 +203,18 @@ export const createDynamicProjection = ({
         if (from === undefined || to === undefined || model.edges.some((edge) => edge.id === link.id)) {
           return;
         }
+        if (onLink) {
+          onLink({ from, to });
+          return;
+        }
         registry.set(graph, { ...model, edges: [...model.edges, { id: link.id, from, to }] });
         break;
       }
       case 'delete': {
+        if (onDelete) {
+          onDelete(intent.ids);
+          return;
+        }
         const ids = new Set(intent.ids);
         const model = registry.get(graph);
         registry.set(graph, {
@@ -225,7 +254,10 @@ export const createDynamicProjection = ({
     snapshot: () => ({ graph: registry.get(graph), overlay: registry.get(overlay) }),
     restore: (snapshot) => {
       if (isDynamicSnapshot(snapshot)) {
-        registry.set(graph, snapshot.graph);
+        // A host that takes link and delete owns the graph, so an undo here must not revive what its model removed.
+        if (!onLink && !onDelete) {
+          registry.set(graph, snapshot.graph);
+        }
         registry.set(overlay, snapshot.overlay);
       }
     },

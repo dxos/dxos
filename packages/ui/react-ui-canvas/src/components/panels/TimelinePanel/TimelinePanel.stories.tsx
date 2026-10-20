@@ -39,6 +39,11 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
       onAutoKeyChange={setAutoKey}
       onAddKey={() => setKeys((keys) => [...new Set([...keys, time])].sort((left, right) => left - right))}
       onRemoveKey={() => setKeys((keys) => keys.filter((key) => key !== keyAt(keys, time, fps)))}
+      onMoveKey={(from, to) =>
+        setKeys((keys) =>
+          [...new Set(keys.map((key) => (key === from ? to : key)))].sort((left, right) => left - right),
+        )
+      }
     />
   );
 };
@@ -80,18 +85,39 @@ export const Test: Story = {
     // 2. Scrub to the middle.
     const track = canvas.getByTestId('timeline-track');
     const rect = track.getBoundingClientRect();
-    await fireEvent.pointerDown(track, { clientX: rect.left + rect.width / 2, clientY: rect.top + 4, pointerId: 1 });
+    await userEvent.pointer({
+      keys: '[MouseLeft]',
+      target: track,
+      coords: { clientX: rect.left + rect.width / 2, clientY: rect.top + 4 },
+    });
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('2.00 / 4.00'));
 
-    // 3. A key at the playhead, removed and added back by the same control.
-    const toggle = canvas.getByTestId('timeline-toggle-key');
-    await userEvent.click(toggle);
+    // 3. From the menu: a key at the playhead, deleted and added back; auto-key turns off and on.
+    const choose = async (testId: string) => {
+      await userEvent.click(canvas.getByTestId('timeline-menu'));
+      const item = await within(document.body).findByTestId(testId);
+      await waitFor(() => expect(item).toBeVisible());
+      // The menu ignores synthetic pointer events on its items, so the item is highlighted and chosen from the keyboard.
+      for (let step = 0; step < 4 && !item.hasAttribute('data-highlighted'); step++) {
+        await userEvent.keyboard('{ArrowDown}');
+      }
+      await expect(item).toHaveAttribute('data-highlighted');
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(item).not.toBeVisible());
+    };
+    await choose('timeline-add-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
-    await expect(toggle).toHaveAttribute('data-state', 'on');
-    await userEvent.click(toggle);
+    await choose('timeline-remove-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
-    await userEvent.click(toggle);
+    await choose('timeline-add-key');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(3));
+    await choose('timeline-auto-key');
+    await userEvent.click(canvas.getByTestId('timeline-menu'));
+    await expect(await within(document.body).findByTestId('timeline-auto-key')).toHaveAttribute(
+      'data-state',
+      'unchecked',
+    );
+    await userEvent.keyboard('{Escape}');
 
     // 4. Jump between keys from the track, and delete one.
     track.focus();
@@ -102,7 +128,57 @@ export const Test: Story = {
     await userEvent.keyboard('{Delete}');
     await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(2));
 
-    // 5. Play, then pause.
+    // 5. A diamond drags along the track: the key moves where it is dropped, and the playhead with it.
+    const [first] = canvas.getAllByTestId('timeline-key');
+    const from = first.getBoundingClientRect();
+    const quarter = rect.left + rect.width / 4;
+    await fireEvent.pointerDown(first, { clientX: from.left, clientY: from.top, pointerId: 1 });
+    await fireEvent.pointerMove(first, { clientX: quarter, clientY: from.top, pointerId: 1 });
+    await fireEvent.pointerUp(first, { clientX: quarter, clientY: from.top, pointerId: 1 });
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('1.00 / 4.00'));
+    await waitFor(() =>
+      expect(canvas.getAllByTestId('timeline-key').map((key) => key.getAttribute('aria-label'))).toContain(
+        'Key at 1.00 s',
+      ),
+    );
+
+    // 6. From the play button: ⌘ with an arrow walks the keys and then reaches the end (or the start), a plain arrow
+    // scrubs a frame, Enter keys the playhead once, Delete removes that key and Space plays and pauses.
+    const play = canvas.getByTestId('timeline-play');
+    play.focus();
+    const keyCount = canvas.getAllByTestId('timeline-key').length;
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    }
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('4.00 / 4.00'));
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    }
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('0.00 / 4.00'));
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(canvas.getByTestId('timeline-time')).toHaveTextContent('0.01 / 4.00'));
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    }
+    const count = canvas.getAllByTestId('timeline-key').length;
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1));
+    // Already on a key: Enter adds nothing, and it never presses the button (still paused).
+    await userEvent.keyboard('{Enter}');
+    await expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count + 1);
+    await expect(play).toHaveAccessibleName('Play');
+    await userEvent.keyboard('{Delete}');
+    await waitFor(() => expect(canvas.getAllByTestId('timeline-key')).toHaveLength(count));
+    await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    for (let step = 0; step <= keyCount; step++) {
+      await userEvent.keyboard('{Meta>}{ArrowLeft}{/Meta}');
+    }
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(play).toHaveAccessibleName('Pause'));
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(play).toHaveAccessibleName('Play'));
+
+    // 7. Play, then pause.
     await userEvent.click(canvas.getByTestId('timeline-play'));
     await waitFor(() => expect(canvas.getByTestId('timeline-time')).not.toHaveTextContent(/^2\.00/), {
       timeout: 5_000,
@@ -112,13 +188,12 @@ export const Test: Story = {
   },
 };
 
-/** Read-only: play and scrub stay, the key and auto-key controls go. */
+/** Read-only: play and scrub stay, the key and auto-key menu goes. */
 export const Readonly: Story = {
   args: { readonly: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('timeline-play')).toBeInTheDocument();
-    await expect(canvas.queryByTestId('timeline-toggle-key')).toBeNull();
-    await expect(canvas.queryByTestId('timeline-auto-key')).toBeNull();
+    await expect(canvas.queryByTestId('timeline-menu')).toBeNull();
   },
 };
