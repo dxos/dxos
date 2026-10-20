@@ -53,11 +53,12 @@ export default Capability.makeModule(
               data: () =>
                 Operation.invoke(
                   DrawingOperation.Convert,
+                  // Always a copy beside the source, which is left as it is.
                   { drawing: Ref.make(drawing), variant: variant.id },
                   { spaceId: Obj.getDatabase(drawing)?.spaceId },
                 ),
               properties: {
-                label: IllustratorCapabilities.editLabel(variant),
+                label: IllustratorCapabilities.copyLabel(variant),
                 icon: variant.icon ?? DrawingOperation.Convert.meta.icon,
                 disposition: 'list-item',
                 testId: `illustratorPlugin.convert.${slug}`,
