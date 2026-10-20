@@ -3,12 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { useControls } from 'leva';
 import React, { useEffect, useState } from 'react';
-import { useArgs } from 'storybook/preview-api';
 
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -27,11 +28,13 @@ import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
 type StoryProps = {
   /** Audio file the avatar speaks. */
   src: string;
-  variant?: VoiceAvatarVariant;
-  /** Paper and ink colours of the ink variants. */
-  background?: string;
-  ink?: string;
-} & Partial<VoiceAvatarTuning>;
+  variant: VoiceAvatarVariant;
+};
+
+/** Paper and ink of the ink variants, tuned beside the motion. */
+type Colors = { background: string; ink: string };
+
+const DEFAULT_COLORS: Colors = { background: '#e9e7e2', ink: '#151515' };
 
 /** Slider range of each tuning value; Randomize draws from the same ranges. */
 const RANGES: Record<keyof VoiceAvatarTuning, { min: number; max: number; step: number }> = {
@@ -44,27 +47,50 @@ const RANGES: Record<keyof VoiceAvatarTuning, { min: number; max: number; step: 
   thickness: { min: 0, max: 3, step: 0.1 },
 };
 
+/** The toolbar's presets: the default look, each tuning preset, and the navy stand-in look. */
+const PRESETS: Record<string, VoiceAvatarTuning & Partial<Colors>> = {
+  default: DEFAULT_TUNING,
+  ...Object.fromEntries(Object.entries(TUNING_PRESETS).map(([name, tuning]) => [name, tuning])),
+  navy: { ...TUNING_PRESETS.scribble, background: '#26406b', ink: '#f1ede4' },
+};
+
+const PRESET_ITEMS = Object.keys(PRESETS).map((name) => ({ value: name, label: name }));
+
 /** A value on the range's step grid, rounded so the slider and the log show it cleanly. */
 const randomIn = ({ min, max, step }: { min: number; max: number; step: number }) =>
   Number((min + Math.round((Math.random() * (max - min)) / step) * step).toFixed(3));
 
+const isInk = (variant: VoiceAvatarVariant) => variant.startsWith('ink');
+
 type Voice = { avatar: VoiceAvatar; audio: HTMLAudioElement; context: AudioContext };
 
-/** The abstract avatar on its own, moving with a voice file that plays through the speakers. */
-const VoiceAvatarStory = ({
-  src,
-  variant,
-  background,
-  ink,
-  onTune,
-  ...tuning
-}: StoryProps & {
-  /** Writes tuning back to the story's args, so the sliders follow. */
-  onTune?: (tuning: VoiceAvatarTuning) => void;
-}) => {
+/**
+ * One avatar type, moving with a voice file that plays through the speakers. Its parameters are tuned live in the
+ * Leva panel (a folder per type, since Leva's store is shared across stories); the toolbar picks a preset.
+ */
+const VoiceAvatarStory = ({ src, variant }: StoryProps) => {
   const [voice, setVoice] = useState<Voice>();
   const [playing, setPlaying] = useState(false);
+  const [preset, setPreset] = useState('default');
 
+  const [{ background, ink, ...tuning }, setValues] = useControls(
+    variant,
+    () => ({
+      waveAmplitude: { value: DEFAULT_TUNING.waveAmplitude, ...RANGES.waveAmplitude },
+      jitter: { value: DEFAULT_TUNING.jitter, ...RANGES.jitter },
+      waveSpeed: { value: DEFAULT_TUNING.waveSpeed, ...RANGES.waveSpeed },
+      particles: { value: DEFAULT_TUNING.particles, ...RANGES.particles },
+      strands: { value: DEFAULT_TUNING.strands, ...RANGES.strands },
+      separation: { value: DEFAULT_TUNING.separation, ...RANGES.separation },
+      thickness: { value: DEFAULT_TUNING.thickness, ...RANGES.thickness },
+      // Only the ink variants draw on paper.
+      background: { value: DEFAULT_COLORS.background, render: () => isInk(variant) },
+      ink: { value: DEFAULT_COLORS.ink, render: () => isInk(variant) },
+    }),
+    [variant],
+  );
+
+  // Colours are construction options, so changing one rebuilds the avatar; motion tuning does not.
   useEffect(() => {
     const context = new AudioContext();
     const audio = new Audio(src);
@@ -75,8 +101,8 @@ const VoiceAvatarStory = ({
     source.connect(context.destination);
     const avatar = createVoiceAvatar(context, destination.stream.getAudioTracks()[0], {
       variant,
-      ...(background ? { background } : {}),
-      ...(ink ? { ink } : {}),
+      background,
+      ink,
       width: 960,
       height: 540,
     });
@@ -96,13 +122,7 @@ const VoiceAvatarStory = ({
   // Tuning applies to the running avatar, so moving a slider does not restart it.
   const { waveAmplitude, jitter, waveSpeed, particles, strands, separation, thickness } = tuning;
   useEffect(() => {
-    voice?.avatar.tune(
-      Object.fromEntries(
-        Object.entries({ waveAmplitude, jitter, waveSpeed, particles, strands, separation, thickness }).filter(
-          ([, value]) => value !== undefined,
-        ),
-      ),
-    );
+    voice?.avatar.tune({ waveAmplitude, jitter, waveSpeed, particles, strands, separation, thickness });
   }, [voice, waveAmplitude, jitter, waveSpeed, particles, strands, separation, thickness]);
 
   const handlePlay = async () => {
@@ -117,9 +137,20 @@ const VoiceAvatarStory = ({
     setPlaying(true);
   };
 
+  const handleStop = () => {
+    voice?.audio.pause();
+    setPlaying(false);
+  };
+
+  const handlePreset = (name: string) => {
+    const { background: paper, ink: color, ...presetTuning } = PRESETS[name];
+    setPreset(name);
+    setValues({ ...presetTuning, background: paper ?? DEFAULT_COLORS.background, ink: color ?? DEFAULT_COLORS.ink });
+  };
+
   // Sets the sliders to random values, so a good combination can be read back from the console and kept.
   const handleRandomize = () => {
-    const values: VoiceAvatarTuning = {
+    const random: VoiceAvatarTuning = {
       waveAmplitude: randomIn(RANGES.waveAmplitude),
       jitter: randomIn(RANGES.jitter),
       waveSpeed: randomIn(RANGES.waveSpeed),
@@ -128,13 +159,8 @@ const VoiceAvatarStory = ({
       separation: randomIn(RANGES.separation),
       thickness: randomIn(RANGES.thickness),
     };
-    log.info('voice avatar tuning', values);
-    onTune?.(values);
-  };
-
-  const handleStop = () => {
-    voice?.audio.pause();
-    setPlaying(false);
+    log.info('voice avatar tuning', random);
+    setValues(random);
   };
 
   return (
@@ -146,7 +172,7 @@ const VoiceAvatarStory = ({
       </Layout.Grid>
       <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
         <Layout.Flex justify='center' classNames='z-20 m-8'>
-          <Toolbar.Root classNames='p-2 dx-modal-surface rounded-md shadow-md'>
+          <Toolbar.Root classNames='p-2 gap-1 dx-modal-surface rounded-md shadow-md'>
             {playing ? (
               <Button.Root icon='ph--stop--regular' label='Stop' onClick={handleStop} />
             ) : (
@@ -158,6 +184,18 @@ const VoiceAvatarStory = ({
                 onClick={() => void handlePlay().catch((err) => log.catch(err))}
               />
             )}
+            <Select.Root
+              items={PRESET_ITEMS}
+              value={[preset]}
+              onValueChange={({ value: [name] }) => name && handlePreset(name)}
+            >
+              <Select.Trigger classNames='text-sm' placeholder='Preset' data-testid='voice-avatar.preset' />
+              <Select.Content>
+                {PRESET_ITEMS.map((item) => (
+                  <Select.Item key={item.value} classNames='text-sm' item={item} />
+                ))}
+              </Select.Content>
+            </Select.Root>
             <Button.Root icon='ph--shuffle--regular' label='Randomize' onClick={handleRandomize} />
           </Toolbar.Root>
         </Layout.Flex>
@@ -168,59 +206,33 @@ const VoiceAvatarStory = ({
 
 const meta = {
   title: 'plugins/plugin-calls/components/VoiceAvatar',
-  // Storybook's hooks run only in the story function, not in the component it renders, so the args are wired here.
-  render: (args) => {
-    const [, updateArgs] = useArgs<StoryProps>();
-    return <VoiceAvatarStory {...args} onTune={updateArgs} />;
-  },
+  render: VoiceAvatarStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     docs: {
       description: {
         component:
-          "The shape a simulated participant with `avatar` shows. Serve the voice at `src`; the default is made with `say -v Daniel -r 150 -o voice.aiff \"I'm sorry, Dave. I'm afraid I can't do that.\"`, converted with `ffmpeg -i voice.aiff -c:a libopus agent-voice.webm` into `tools/storybook-react/static/simulated-call/`.",
+          "The shape a simulated participant with `avatar` shows, one story per type. Serve the voice at `src`; the default is made with `say -v Daniel -r 150 -o voice.aiff \"I'm sorry, Dave. I'm afraid I can't do that.\"`, converted with `ffmpeg -i voice.aiff -c:a libopus agent-voice.webm` into `tools/storybook-react/static/simulated-call/`.",
       },
     },
   },
   argTypes: {
-    variant: {
-      control: 'select',
-      options: ['torus', 'spectrum', 'ink', 'ink-line', 'ink-morph'] satisfies VoiceAvatarVariant[],
-    },
-    ...Object.fromEntries(
-      Object.entries(RANGES).map(([key, range]) => [key, { control: { type: 'range', ...range } }]),
-    ),
+    variant: { control: false },
   },
-  args: { src: '/simulated-call/agent-voice.webm', variant: 'ink', ...DEFAULT_TUNING },
+  args: { src: '/simulated-call/agent-voice.webm', variant: 'ink' },
 } satisfies Meta<typeof VoiceAvatarStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Torus: Story = { args: { variant: 'torus' } };
 
-export const Heptapod: Story = {
-  args: { variant: 'ink', ...TUNING_PRESETS.heptapod },
-};
+export const Spectrum: Story = { args: { variant: 'spectrum' } };
 
-export const Etching: Story = {
-  args: { variant: 'ink', ...TUNING_PRESETS.etching },
-};
+export const Ink: Story = { args: { variant: 'ink' } };
 
-export const Brush: Story = {
-  args: { variant: 'ink', ...TUNING_PRESETS.brush },
-};
+export const InkLine: Story = { args: { variant: 'ink-line' } };
 
-export const Orbits: Story = {
-  args: { variant: 'ink', ...TUNING_PRESETS.orbits },
-};
-
-export const Scribble: Story = {
-  args: { variant: 'ink', ...TUNING_PRESETS.scribble },
-};
-
-export const Navy: Story = {
-  args: { variant: 'ink', background: '#26406b', ink: '#f1ede4', ...TUNING_PRESETS.scribble },
-};
+export const InkMorph: Story = { args: { variant: 'ink-morph' } };

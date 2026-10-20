@@ -170,9 +170,9 @@
     "@types/react-dom": "catalog:",
     "@types/three": "catalog:",
     "effect": "catalog:",
+    "leva": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "storybook": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
