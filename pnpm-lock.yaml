@@ -2390,9 +2390,9 @@ importers:
       '@dxos/plugin-commerce':
         specifier: workspace:*
         version: link:../../plugins/plugin-commerce
-      '@dxos/plugin-computer':
+      '@dxos/plugin-dev-shell':
         specifier: workspace:*
-        version: link:../../plugins/plugin-computer
+        version: link:../../plugins/plugin-dev-shell
       '@dxos/plugin-conductor':
         specifier: workspace:*
         version: link:../../plugins/plugin-conductor
@@ -10257,7 +10257,7 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
 
-  packages/plugins/plugin-computer:
+  packages/plugins/plugin-dev-shell:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*

@@ -443,6 +443,6 @@ describe.skipIf(!HAS_CREDENTIAL)('Claude Code, end to end', { tags: ['manual'] }
     it.todo('remote: Composer MCP reaches the sandboxed agent with the credentials provisioned for it');
     it.todo('registry: a chat names its process by a dxn: reference, resolved through the operation registry');
     it.todo('shell: ShellService runs, streams and kills bash commands, through Tauri and the vite dev server');
-    it.todo("shell: plugin-computer's Bash and ApplyEdits run through ShellService");
+    it.todo("shell: plugin-dev-shell's Bash and ApplyEdits run through ShellService");
   });
 });
