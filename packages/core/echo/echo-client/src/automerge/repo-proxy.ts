@@ -5,6 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
+import * as Schema from 'effect/Schema';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
@@ -67,10 +68,13 @@ export class RepoProxy extends Resource {
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
-  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  /**
+   * Creations the host did not take; the handle stays unready until {@link flushCreations} lands one.
+   * An entry without `retry` was refused permanently: it is never requested again, and the next flush reports it.
+   */
   private readonly _failedCreations = new Map<
     string,
-    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+    { handle: DocHandleProxy<any>; error: Error; attempts: number; retry?: () => void }
   >();
 
   /**
@@ -371,6 +375,13 @@ export class RepoProxy extends Resource {
       if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
         return;
       }
+      // Reported to one flush only, since a document that can never be created would fail every later one.
+      const rejected = [...this._failedCreations].find(([, { retry }]) => retry === undefined);
+      if (rejected) {
+        this._failedCreations.delete(rejected[0]);
+        this._emitSaveStateEvent();
+        throw rejected[1].error;
+      }
       if (attempt >= FLUSH_ATTEMPTS) {
         throw failed.error;
       }
@@ -380,6 +391,9 @@ export class RepoProxy extends Resource {
 
   private _retryFailedCreations(): void {
     for (const [id, { retry }] of this._failedCreations) {
+      if (retry === undefined) {
+        continue;
+      }
       this._failedCreations.delete(id);
       retry();
     }
@@ -736,7 +750,7 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    const request = () => {
+    const request = (attempt: number) => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
         this._dataService,
@@ -771,14 +785,27 @@ export class RepoProxy extends Resource {
               cleanup();
               return;
             }
-            if (!(err instanceof RpcClosedError)) {
-              log.catch(err);
-            }
             if (deleted) {
               return;
             }
-            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
-            this._scheduleSendRetry();
+            // A payload the transport cannot encode is refused identically on every attempt.
+            const permanent = Schema.isSchemaError(err);
+            if (attempt === 1 && !(err instanceof RpcClosedError)) {
+              log.catch(err);
+            } else {
+              log('document creation failed again', { attempt, err });
+            }
+            this._failedCreations.set(handle._internalId, {
+              handle,
+              error: err,
+              attempts: attempt,
+              retry: permanent ? undefined : () => request(attempt + 1),
+            });
+            if (permanent) {
+              handle._failReady(err);
+            } else {
+              this._scheduleSendRetry();
+            }
             this._emitSaveStateEvent();
           },
         )
@@ -792,7 +819,7 @@ export class RepoProxy extends Resource {
       this._pendingCreations.set(handle._internalId, creation);
       this._emitSaveStateEvent();
     };
-    request();
+    request(1);
 
     return handle;
   }
@@ -1044,7 +1071,12 @@ export class RepoProxy extends Resource {
       return;
     }
     this._sendRetryScheduled = true;
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._sendRetryAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    // A successful update pass resets `_sendRetryAttempts`, so a creation the host keeps refusing backs off on its own count.
+    const creationAttempts = Math.max(0, ...Array.from(this._failedCreations.values(), ({ attempts }) => attempts));
+    const delay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** Math.max(this._sendRetryAttempts++, creationAttempts - 1),
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
     scheduleTask(
       this._ctx,
       () => {

@@ -7,6 +7,7 @@ import { type AutomergeUrl, generateAutomergeUrl } from '@automerge/automerge-re
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
 import { setFlagsFromString } from 'node:v8';
@@ -488,6 +489,40 @@ describe('RepoProxy', () => {
     refusing.refuse = false;
     await clientRepo.flush();
     expect(refusing.requests).toEqual(requests);
+  });
+
+  test('a document whose initial value is not JSON is refused once, not retried', { timeout: 5_000 }, async () => {
+    const { dataService } = await setup();
+    const { client, attempts } = withJsonEncodedCreations(dataService);
+    const [clientRepo] = createProxyRepos(client);
+    await openAndClose(clientRepo);
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    // Automerge's scalar string class, as a space root's `links` holds it, is not a JSON value.
+    const handle = clientRepo.create<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      links: { [EntityId.random()]: new A.RawString(generateAutomergeUrl()) },
+    });
+    await expect(handle.whenReady()).rejects.toThrow('Expected JSON value');
+    expect(states.at(-1)?.failing).toBe(true);
+    // The next flush reports the refusal; later ones are not blocked by it.
+    await expect(clientRepo.flush()).rejects.toThrow('Expected JSON value');
+    expect(states.at(-1)?.failing).toBe(false);
+
+    // Successful update passes reset the send backoff; they must not re-request the refused creation.
+    const other = clientRepo.create<{ count: number }>({ count: 0 });
+    await other.whenReady();
+    for (let count = 1; count <= 5; count++) {
+      other.change((doc: { count: number }) => {
+        doc.count = count;
+      });
+      await clientRepo.flush();
+    }
+    await sleep(500);
+    expect(attempts.count).toBe(2);
   });
 
   test('document mutation persists with `flush`', async () => {
@@ -1106,6 +1141,22 @@ class RefusingDataService extends DataServiceImpl {
       : super['DataService.createDocument'](request);
   }
 }
+
+/**
+ * Encodes each creation request as the worker transport's client does before sending it, so a payload that is
+ * not JSON fails on the client, and counts the attempts.
+ */
+const withJsonEncodedCreations = (dataService: DataService.Client) => {
+  const encode = Schema.encodeUnknownEffect(Schema.toCodecJson(DataService.CreateDocumentRequest));
+  const attempts = { count: 0 };
+  const client: DataService.Client = Object.assign(Object.create(dataService), {
+    'DataService.createDocument': (request: DataService.CreateDocumentRequest) => {
+      attempts.count++;
+      return encode(request).pipe(Effect.flatMap(() => dataService['DataService.createDocument'](request)));
+    },
+  });
+  return { client, attempts };
+};
 
 /**
  * Fails every update batch while {@link fail} is set, as a host that times out the call does; while
