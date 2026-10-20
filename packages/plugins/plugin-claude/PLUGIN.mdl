@@ -298,7 +298,7 @@ feat F-9: Claude Code (cloud)
       `CLAUDE_CODE_OAUTH_TOKEN`, never with an Anthropic API key, and with its
       GitHub token as `GITHUB_TOKEN`/`GH_TOKEN`, so `git` and `gh` can clone,
       push and open pull requests; a space holding only an API key lends no
-      Claude credential
+      Claude credential and logs a warning
 
   req F-9.3:
     when: the chat belongs to a project with repositories

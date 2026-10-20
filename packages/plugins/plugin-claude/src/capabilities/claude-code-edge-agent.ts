@@ -62,7 +62,7 @@ export const claudeCredentials = Effect.gen(function* () {
   if (token === undefined) {
     log.warn(
       anthropic.length > 0
-        ? 'only an Anthropic API key is connected; the agent needs a Claude subscription token'
+        ? 'no Claude subscription token is connected among the Anthropic tokens'
         : 'no Claude credential to lend the agent',
     );
   }
