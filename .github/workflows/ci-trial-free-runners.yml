@@ -63,6 +63,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24.11.1'
+          # v5 otherwise reads `packageManager` and wants pnpm for its cache before pnpm exists.
+          package-manager-cache: false
       - run: npm install -g pnpm@10.28.0
 
       - name: Setup
@@ -130,6 +132,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24.11.1'
+          # v5 otherwise reads `packageManager` and wants pnpm for its cache before pnpm exists.
+          package-manager-cache: false
       - run: npm install -g pnpm@10.28.0
 
       - name: Setup
@@ -193,6 +197,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24.11.1'
+          # v5 otherwise reads `packageManager` and wants pnpm for its cache before pnpm exists.
+          package-manager-cache: false
       - run: npm install -g pnpm@10.28.0
 
       - name: Setup
