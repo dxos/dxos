@@ -50,6 +50,7 @@ feat F-3: Linting
 feat F-4: Agent guidance
   req F-4.1: The repo has an `mdl` skill (`.agents/skills/mdl/SKILL.md`) for writing specs and recording decisions.
   req F-4.2: The skill tells an agent to record a person's input first, faithfully — adding context, never assumptions — and its own additions as separate decisions.
+  req F-4.3: The skill tells an agent where to read the person's handle from the environment, so it never asks or guesses.
 ```
 
 ## Changelog
@@ -215,4 +216,23 @@ decision D-16: Deus has a spec of its own, backfilled from the session that buil
   by: user:dmaretskyi
   quote: is there a spec for mdl/deus itself? lets backfill it from this session
   source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-17: The mdl skill says how to find the person's identity, so agents do not stumble on it.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  quote: put this into skill not to stumble next time
+  context: Said after asking "don't you know whose speaking to you from env?", once the agent had read the handle from the GitHub connector rather than the sandbox's git config.
+  affects: [F-4.3]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-18: Read the handle from the session's GitHub account first, then the harness's stated user, then local `git config`. Fills in [D-17].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3]
+  why: The GitHub login is the preferred handle form (F-1.1). In the cloud sandbox `git config` names the agent, not the person.
 ```
