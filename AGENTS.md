@@ -411,6 +411,8 @@ Do not paste real credential values into any shell command, and do not paste the
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog` of
+  decisions attributed to a `user:` or an `agent:` → `mdl` skill (`.agents/skills/mdl/SKILL.md`).
 - **SQLite schema changes** — adding a migration, creating a new SQLite-backed
   store, or anything under `src/migrations/` →
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).

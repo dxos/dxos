@@ -73,6 +73,9 @@ Per plugin, in order, with one subagent per plugin when more than three are sele
    - Leave `## Features` and `scenario` blocks as they are unless a requirement is now impossible
      (its operation or type is gone); then mark the `req`/`scenario` with a `status: stale` comment
      rather than rewriting intent you cannot verify.
+   - Reconciling structure to code is not a decision and gets no `## Changelog` entry. A judgement
+     you make about intent (keeping an op as unimplemented, marking a requirement stale) does: an
+     `agent:` entry per the `mdl` skill, named in the PR body for a person to ratify.
 6. In `## QA`, every `test` that references an operation whose key, input or output changed gets
    `status: unverified  # <date>, spec-sync: <what changed>`. Do not run tests here; that is the QA
    Routine's job.

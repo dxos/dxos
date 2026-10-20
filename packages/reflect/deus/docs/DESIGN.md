@@ -428,6 +428,28 @@ Two consequences reach beyond the dialect:
   services its downstream calls need, so a runner invokes everything through the operation invoker
   with an explicit `spaceId` rather than deciding per step.
 
+## Changelog Dialect (Deus.Changelog)
+
+Defined in [`../lang/changelog.mdl`](../lang/changelog.mdl). Adds a `## Changelog` section: an
+append-only log of the authoritative decisions behind the spec, so a reader can trace how the
+current text came about and which parts a person chose versus an agent.
+
+```mdl
+decision D-2: Bounds grow to the major grid, not the minor one.
+  date: 2026-10-03
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene, F-2.1]
+  why: Growing to the minor grid re-lays the canvas on every drag step.
+```
+
+- **Every decision has exactly one typed decider.** `by:` is `user:<handle>` (GitHub username or
+  email) or `agent:<name>` (the harness, never the model). The linter rejects anything else.
+- **Agents act for someone.** An `agent:` entry names its principal in `for:`; a person who later
+  endorses it is added as `ratified-by:` without rewriting `by:`.
+- **Append-only.** A reversal is a new entry with `supersedes: D-n`; the old entry stays as the
+  trace. Only decisions that change what the spec requires are logged — edits live in git.
+
 ## Domain Dialects
 
 ### Deus.DXOS

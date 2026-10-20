@@ -1,0 +1,107 @@
+---
+id: org.dxos.spec.changelog
+name: DSL.Changelog
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The changelog dialect. Adds a `## Changelog` section to a spec: an append-only log of the
+authoritative decisions that shaped it, each one attributed to the person or the agent that made
+it. The body of a spec says what is true now; the changelog says who decided it, when, and why.
+
+A spec is written by people and agents together, and the two carry different authority. A person
+can set direction; an agent decides within the latitude a person gave it. The log keeps the two
+apart by construction — every entry names exactly one decider, typed as `user:` or `agent:` — so
+"which parts of this spec did a human choose?" is a filter, not an archaeology project.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Actors
+
+Every actor reference carries one of two prefixes. The prefix is the point of the dialect: the
+linter rejects a `by:` without one.
+
+| Form              | Who                                                   | Example                       |
+| ----------------- | ----------------------------------------------------- | ----------------------------- |
+| `user:<handle>`   | A person, by GitHub username or email.                | `user:alice`, `user:a@b.org` |
+| `agent:<name>`    | An agent, by harness or product name — never a model. | `agent:claude-code`           |
+
+Name an agent by what ran it (`agent:claude-code`, `agent:composer-assistant`), not by the model
+that served it: models change mid-session and the name must stay stable across the log.
+
+## Rules
+
+1. **One decision per entry, one decider per decision.** A decision two people made together is
+   recorded as the one who made the call; the other goes in prose.
+2. **The decider is who chose, not who typed.** An agent that writes down a choice a person stated
+   records `by: user:<them>` and links where they said it in `source:`. An agent records
+   `by: agent:<name>` only for a choice it made itself.
+3. **An agent decision names its principal.** `for:` is the person whose instruction the agent was
+   acting under. It is required on `agent:` entries and forbidden on `user:` entries.
+4. **Ratification is a separate fact.** When a person later endorses an agent decision, add
+   `ratified-by: user:<them>` to that entry; do not rewrite `by:`. This is the only edit an
+   existing entry admits.
+5. **Append-only.** Never delete or reword a past entry. To reverse or refine one, append a new
+   entry with `supersedes: D-n`. The superseded entry stays — it is the trace.
+6. **Authoritative only.** Log decisions that changed what the spec requires: a type, a
+   requirement, a boundary, a rejected alternative that will be proposed again. Do not log edits,
+   typo fixes, or reformatting — git has those.
+7. **Identifiers are monotonic.** `D-1`, `D-2`, … in the order appended. Never reuse or renumber.
+8. **Newest last.** The section reads as a timeline.
+
+## Definitions
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One authoritative decision about the spec, attributed to exactly one actor. The inline prose
+    is the decision itself, stated as what is now true ("Bounds are derived, never stored."), not
+    as the change that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    ratified-by?: UserRef       # a person who later endorsed an agent decision
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the constraint or evidence that forced the choice
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
+```
+
+## Example
+
+```mdl
+decision D-1: Bounds are derived from content, never stored.
+  date: 2026-10-02
+  by: user:alice
+  affects: [Scene]
+  why: Stored bounds drift from the content whenever a node moves outside an edit path.
+  source: https://github.com/dxos/dxos/pull/<n>
+```
+
+```mdl
+decision D-2: Bounds grow to the major grid, not the minor one.
+  date: 2026-10-03
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene, F-2.1]
+  why: Growing to the minor grid re-lays the canvas on every drag step.
+  rejected:
+    - Fixed padding: clips large nodes at the edge.
+```
+
+```mdl
+decision D-3: Bounds grow to the minor grid while dragging and snap to the major grid on drop.
+  date: 2026-10-05
+  by: user:alice
+  supersedes: D-2
+  why: The major grid felt laggy in review; snapping on drop keeps layout stable.
+```
