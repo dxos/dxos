@@ -19,13 +19,13 @@ sources is fixed.
 - 5 `Subscription.Subscription` (`type: 'rss'`), each with its post feed, content feed, `StateMap`
   and `TagIndex`. No posts are seeded. The feeds fill when curation syncs them.
 
-  | Key      | Name                     | URL                                                                  | Format |
-  | -------- | ------------------------ | -------------------------------------------------------------------- | ------ |
-  | `verge`  | The Verge: AI            | `https://www.theverge.com/rss/ai-artificial-intelligence/index.xml`  | Atom   |
+  | Key      | Name                     | URL                                                                   | Format |
+  | -------- | ------------------------ | --------------------------------------------------------------------- | ------ |
+  | `verge`  | The Verge: AI            | `https://www.theverge.com/rss/ai-artificial-intelligence/index.xml`   | Atom   |
   | `mittr`  | MIT Technology Review AI | `https://www.technologyreview.com/topic/artificial-intelligence/feed` | RSS    |
-  | `latent` | Latent Space             | `https://www.latent.space/feed`                                      | RSS    |
-  | `wired`  | Wired: AI                | `https://www.wired.com/feed/tag/ai/latest/rss`                       | RSS    |
-  | `simon`  | Simon Willison's Weblog  | `https://simonwillison.net/atom/entries/`                            | Atom   |
+  | `latent` | Latent Space             | `https://www.latent.space/feed`                                       | RSS    |
+  | `wired`  | Wired: AI                | `https://www.wired.com/feed/tag/ai/latest/rss`                        | RSS    |
+  | `simon`  | Simon Willison's Weblog  | `https://simonwillison.net/atom/entries/`                             | Atom   |
 
 - 1 `Magazine.Magazine` **AI Briefing**, made with `Magazine.make`, with `feeds` → all 5
   subscriptions and no `posts`. Its curation `Instructions` compose the default methodology with
