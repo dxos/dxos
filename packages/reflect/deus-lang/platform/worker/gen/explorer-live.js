@@ -7527,14 +7527,7 @@ function Cli$vitestFact(cited) {
       }
       if (source.tag === 1) {
         const text_1 = source.fields[0];
-        const declares = ({ "Cli.vitestFact/\u03bb": (call) => lib$base$List$any(({ "Cli.vitestFact/\u03bb": (quote) => lib$base$Text$contains(rt.prims["append"](rt.prims["append"](rt.prims["append"]((call + "("), quote), testName), quote), text_1) })["Cli.vitestFact/\u03bb"], rt.cons("'", rt.cons("\"", rt.cons("`", rt.NIL)))) })["Cli.vitestFact/\u03bb"];
-        let r3;
-        if (declares("test")) {
-          r3 = true;
-        } else {
-          r3 = declares("it");
-        }
-        if (r3) {
+        if (Cli$declaresTest(text_1, testName)) {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 0, [rt.cons(new rt.Con("#Pair", 0, ["kind", "vitest"]), rt.cons(new rt.Con("#Pair", 0, ["verdict", "external"]), rt.cons(new rt.Con("#Pair", 0, ["file", file]), rt.NIL)))]);
         } else {
           return new rt.Con("8ef46ce3e7a2746d48a2617f02978ad7316155027647bf848a4d812c6b8f35ac", 1, [rt.prims["append"]((rt.prims["append"]((("vitest:" + cited) + ": "), file) + " declares no test named "), testName)]);
@@ -9012,6 +9005,41 @@ function Analytics$cellOf(s) {
   }
 }
 rt.named(Analytics$cellOf, "Analytics.cellOf");
+
+function Cli$declaresTest(text, name) {
+  return lib$base$List$any(({ "Cli.declaresTest/\u03bb": (quote) => {
+  const needle = rt.prims["append"](rt.prims["append"](quote, name), quote);
+  function from(at$) {
+    for (;;) {
+      const at = at$;
+      const i = rt.prims["Text.indexOf"](text, needle, at);
+      if ((i < 0)) {
+        return false;
+      } else {
+        const before = rt.prims["Text.trim"](lib$base$Text$take(i, text));
+        let r0;
+        if (lib$base$Text$endsWith("test(", before)) {
+          r0 = true;
+        } else {
+          if (lib$base$Text$endsWith("it(", before)) {
+            r0 = true;
+          } else {
+            r0 = lib$base$Text$endsWith(")(", before);
+          }
+        }
+        if (r0) {
+          return true;
+        } else {
+          at$ = ((i + 1) | 0);
+          continue;
+        }
+      }
+    }
+  }
+  return from(0);
+} })["Cli.declaresTest/\u03bb"], rt.cons("'", rt.cons("\"", rt.cons("`", rt.NIL))));
+}
+rt.named(Cli$declaresTest, "Cli.declaresTest");
 
 function Types$declaredScheme(sig) {
   const u = Types$newUnifier(undefined);

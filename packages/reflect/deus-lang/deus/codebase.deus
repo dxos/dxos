@@ -33,6 +33,13 @@ def objectCache : MutMap Text Sexp := MutMap.new ()
 /-- The key `objectCache` keeps `h` of store `dir` under. -/
 def cacheKey (dir : Text) (h : Text) : Text := dir ++ "\n" ++ h
 
+/-- Forgets what `objectCache` says the store at `dir` holds: a store created there holds nothing an earlier one at the
+  same path held, which simulated tests reusing one path in one process would otherwise read (D336). -/
+def forgetStore (dir : Text) : Unit :=
+  let prefix := dir ++ "\n"
+  let _ := List.map (fun k => if startsWith prefix k then MutMap.delete objectCache k else ()) (MutMap.keys objectCache)
+  ()
+
 def objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
 
 def isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
@@ -604,6 +611,7 @@ def checkFormat (dir : Text) : {IO, Throw Text} Unit :=
   else ()
 
 def init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then Throw.throw ("a codebase already exists at " ++ dir) else
+  forgetStore dir
   IO.mkdirp (dir ++ "/objects")
   writeFormat dir
   IO.mkdirp (dir ++ "/meta")

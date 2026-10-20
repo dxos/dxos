@@ -2043,6 +2043,18 @@ def featureFact (dir : Text) (documents : List Text) (tasks : Ref (Option (Map T
   | Option.none => Result.err (name ++ " is not in the codebase"))
 else if startsWith "spec:" name then Option.some (if any (fun doc => doc == Text.drop 5 name || unmount doc == Text.drop 5 name) documents then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")) else if startsWith "vitest:" name then Option.some (vitestFact (Text.drop 7 name)) else Option.none
 
+/-- Whether `text` calls `test(` or `it(` (or `test.skipIf(…)(`) with `name` quoted, whatever space a formatter puts
+  between the call and the name (D336). -/
+def declaresTest (text : Text) (name : Text) : Bool := List.any (fun quote =>
+  let needle := quote ++ name ++ quote
+  let rec from at :=
+    let i := Text.indexOf text needle at
+    if i < 0 then false
+    else
+      let before := Text.trim (Text.take i text)
+      if endsWith "test(" before || endsWith "it(" before || endsWith ")(" before then true else from (i + 1)
+  from 0) ["'", "\"", "`"]
+
 /-- `vitest:<file> > <test>` evidence: the file must declare that test; the suite runs it (Compile.Spec R-17). -/
 def vitestFact (cited : Text) : {IO} Result Text (List (Text, Text)) :=
   let i := Text.indexOf cited " > " 0
@@ -2057,8 +2069,7 @@ def vitestFact (cited : Text) : {IO} Result Text (List (Text, Text)) :=
     match source with
     | none => Result.err ("vitest:" ++ cited ++ ": no file " ++ file)
     | some text =>
-      let declares := fun call => List.any (fun quote => Text.contains (call ++ "(" ++ quote ++ testName ++ quote) text) ["'", "\"", "`"]
-      if declares "test" || declares "it" then Result.ok [("kind", "vitest"), ("verdict", "external"), ("file", file)]
+      if declaresTest text testName then Result.ok [("kind", "vitest"), ("verdict", "external"), ("file", file)]
       else Result.err ("vitest:" ++ cited ++ ": " ++ file ++ " declares no test named " ++ testName)
 
 /-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
@@ -2494,9 +2505,18 @@ def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result T
           "\n"
           ["import { raw } from './it.js';", "import { quote, DeusDefect } from './deus-runtime.mjs';", "try { process.stdout.write(quote(raw.it)); } catch (err) {", "  if (!(err instanceof DeusDefect)) throw err;", "  process.stdout.write('defect: ' + err.message); }"])
         let node := getOr (IO.getEnv "DEUS_NODE") "node"
-        match IO.exec node [out ++ "/run.mjs"] with
-        | (0, stdout, _) => (kernel, if startsWith "defect: " stdout then stdout else render stdout)
-        | (code, _, stderr) => Throw.throw ("node exited with " ++ Int.toText code ++ ": " ++ trim stderr)
+        -- What node printed is kept by the hash of the module it ran, so an unchanged block does not start node again.
+        let ran := out ++ "/ran-" ++ Text.take 16 (Text.sha256 (node ++ "\n" ++ getOr (IO.readFile (out ++ "/it.js")) "" ++ "\n" ++ getOr (IO.readFile (out ++ "/deus-runtime.mjs")) ""))
+        let stdout :=
+          match IO.readFile ran with
+          | Option.some kept => kept
+          | Option.none =>
+              match IO.exec node [out ++ "/run.mjs"] with
+              | (0, printed, _) =>
+                  IO.writeFile ran printed
+                  printed
+              | (code, _, stderr) => Throw.throw ("node exited with " ++ Int.toText code ++ ": " ++ trim stderr)
+        (kernel, if startsWith "defect: " stdout then stdout else render stdout)
     | _ => Throw.throw ("cannot compile " ++ source)) with
   | Result.ok pair => Result.ok pair
   | Result.err message => Result.err message

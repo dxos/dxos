@@ -368,5 +368,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 358 | 10-21 01:40 | 40m 00s | c392fb8830 | Whole-toolchain vitest tests keep their pass by the hash of their inputs: 17.4 s to 1.7 s (D333) |
 | 359 | 10-21 02:40 | 40m 00s | c7905c6ece | Kept vitest passes hash the test file; the native back-end tests keep theirs: 19.6 s to 2.4 s (D334) |
 | 360 | 10-21 03:40 | 40m 00s | 152fe0d3c9 | Every CLI vitest test keeps its pass by input hash: a full vitest run 63 s to 11.5 s when nothing changed (D335) |
+| 361 | 10-21 05:30 | 1h 50m | pending | `deus mdl` keeps js-block results (3.0 s to 1.2 s); stores at a reused path start clean; vitest citations survive formatting (D336) |
 
-Total from stage 1 to stage 360: 159h 20m.
+Total from stage 1 to stage 361: 161h 10m.
