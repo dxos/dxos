@@ -27,18 +27,19 @@ export const contributedGrammars = (): GrammarContribution[] => {
   return manifest.contributes.grammars;
 };
 
-/** VS Code's builtin markdown and YAML grammars, which the `.mdl` grammar includes but does not ship. */
+/**
+ * VS Code's builtin markdown and YAML grammars, which the `.mdl` grammar includes but does not ship.
+ * Literal `import.meta.resolve` specifiers, so knip sees the `tm-grammars` dependency.
+ */
 const BUILTIN_GRAMMARS: Record<string, string> = {
-  'text.html.markdown': 'tm-grammars/grammars/markdown.json',
-  'source.yaml': 'tm-grammars/grammars/yaml.json',
+  'text.html.markdown': fileURLToPath(import.meta.resolve('tm-grammars/grammars/markdown.json')),
+  'source.yaml': fileURLToPath(import.meta.resolve('tm-grammars/grammars/yaml.json')),
 };
 
 /** Path of every grammar file the `.mdl` grammar depends on, by scope. */
 export const grammarPaths = (): Record<string, string> => ({
   ...Object.fromEntries(contributedGrammars().map(({ scopeName, path }) => [scopeName, join(PACKAGE_ROOT, path)])),
-  ...Object.fromEntries(
-    Object.entries(BUILTIN_GRAMMARS).map(([scopeName, path]) => [scopeName, require.resolve(path)]),
-  ),
+  ...BUILTIN_GRAMMARS,
 });
 
 /** Scopes each injection grammar targets, as VS Code derives them from `injectTo`. */
