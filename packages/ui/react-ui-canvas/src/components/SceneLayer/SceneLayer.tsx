@@ -132,6 +132,8 @@ export type SceneLayerProps = {
   focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** A node in an edit mode of its own (its vertices), drawn translucent so its handles read over it. */
+  dimmed?: NodeId;
   /** The node whose embedded content takes input. */
   active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
@@ -163,6 +165,7 @@ export const SceneLayer = memo(
     opening,
     focus,
     editing,
+    dimmed,
     active,
     ghost,
     debug,
@@ -335,7 +338,7 @@ export const SceneLayer = memo(
                     selected={!plain && (selected?.has(node.id) ?? false)}
                     hovered={hover === node.id}
                     opening={opening === node.id}
-                    fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                    fade={focus && focus.id !== node.id ? fadeStyle : dimmed === node.id ? DIMMED : undefined}
                     chromeFade={focus?.id === node.id ? fadeStyle : undefined}
                     editingPart={editing?.id === node.id ? editing.part : undefined}
                     active={active === node.id}
@@ -962,6 +965,12 @@ const NodeFrame = memo(
                 node={drawn}
                 border={border}
                 radius={RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))]}
+                // A guide is dashed whatever its line style, as a box's border is.
+                lineStyle={
+                  drawn.style?.guide
+                    ? 'dashed'
+                    : (drawn.style?.lineStyle ?? styleVariant(look.styleSet, drawn.style?.tone).borderStyle)
+                }
               />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
@@ -1024,14 +1033,17 @@ type SilhouetteProps = {
   node: Node;
   border: number;
   radius: number;
+  /** Solid, dashed or dotted, as a box's border would draw. */
+  lineStyle?: LineStyle['lineStyle'];
 };
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, filled, node, border, radius }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: SilhouetteProps) => {
   const { width, height } = node.size;
+  const dash = dashArray(lineStyle, border);
   const masks = useMemo(() => {
     const path = outline(node, border / 2, radius);
     const image = (body: string) =>
@@ -1040,9 +1052,11 @@ const Silhouette = ({ outline, filled, node, border, radius }: SilhouetteProps) 
       )}")`;
     return {
       fill: image(`<path d='${path}' fill='white'/>`),
-      stroke: image(`<path d='${path}' fill='none' stroke='white' stroke-width='${border}'/>`),
+      stroke: image(
+        `<path d='${path}' fill='none' stroke='white' stroke-width='${border}'${dash ? ` stroke-dasharray='${dash}' stroke-linecap='round'` : ''}/>`,
+      ),
     };
-  }, [outline, node, width, height, border, radius]);
+  }, [outline, node, width, height, border, radius, dash]);
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
@@ -1069,6 +1083,8 @@ const Silhouette = ({ outline, filled, node, border, radius }: SilhouetteProps) 
 };
 
 /** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
+const DIMMED: CSSProperties = { opacity: 0.5 };
+
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
   const opacity = node.style?.opacity;
   if (opacity === undefined || opacity >= 1) {

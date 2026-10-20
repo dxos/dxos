@@ -103,6 +103,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           opening={opening}
           focus={focus}
           editing={editing?.kind === 'label' ? editing : undefined}
+          dimmed={editing?.kind === 'vertices' ? editing.id : undefined}
           active={active}
           ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
           debug={debug}

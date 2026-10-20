@@ -454,7 +454,7 @@ type VertexHandlesProps = Pick<ControlFrameProps, 'onVertexPointerDown' | 'onVer
   unit: number;
 };
 
-/** A node's vertices in vertex edit mode, drawn as a spline's control points are: a diamond to drag and a dot to add. */
+/** A node's vertices in vertex edit mode: a small square to drag at each vertex and a dot to add one mid-segment. */
 const VertexHandles = ({
   node,
   closed,
@@ -464,7 +464,7 @@ const VertexHandles = ({
   onVertexMidpointPointerDown,
 }: VertexHandlesProps) => {
   const vertices = polylineVertices(node);
-  const size = 8 * unit;
+  const size = 7 * unit;
   return (
     <g data-testid='vertex-handles'>
       {/* Midpoints first, so a vertex wins wherever the two land on each other. */}
@@ -475,7 +475,9 @@ const VertexHandles = ({
           cx={point.x}
           cy={point.y}
           r={4 * unit}
-          className='fill-focus/40 pointer-events-auto cursor-copy hover:fill-focus'
+          // Solid, ringed in the canvas colour, so it reads over the line's own stroke.
+          className='fill-focus stroke-base-surface pointer-events-auto cursor-copy hover:stroke-focus'
+          strokeWidth={1.5 * unit}
           onPointerDown={(event) => onVertexMidpointPointerDown?.(node, index, point, event)}
         />
       ))}
@@ -488,7 +490,6 @@ const VertexHandles = ({
           y={point.y - size / 2}
           width={size}
           height={size}
-          transform={`rotate(45 ${point.x} ${point.y})`}
           className={mx(
             'stroke-focus pointer-events-auto cursor-move hover:fill-focus',
             selected === index ? 'fill-focus' : 'fill-base-surface',
