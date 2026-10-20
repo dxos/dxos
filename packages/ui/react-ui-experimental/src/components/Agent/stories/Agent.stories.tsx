@@ -168,7 +168,7 @@ const VisualizationStory = ({ visualization: id, src }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-experimental/AgentVisualization',
+  title: 'ui/react-ui-experimental/Agent',
   render: VisualizationStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
