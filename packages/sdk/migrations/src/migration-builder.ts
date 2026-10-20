@@ -137,7 +137,7 @@ export class MigrationBuilder {
       const materialized = toJS(oldHandle.doc()!) as DatabaseDirectory;
       // Re-stamp access so documents that predate access.spaceId pick it up during compaction.
       materialized.access = this._makeAccess();
-      const newHandle = this._createDocument(materialized);
+      const newHandle = this._repo.create<DatabaseDirectory>(materialized);
       await newHandle.whenReady();
       invariant(newHandle.url, 'Compacted document URL not available after whenReady');
       this._newLinks[id] = newHandle.url;
@@ -193,8 +193,7 @@ export class MigrationBuilder {
   }
 
   private async _buildNewRoot(): Promise<void> {
-    const { objects, links: rootLinks } = toJS(this._rootDoc);
-    const links = { ...rootLinks };
+    const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
     }
@@ -203,10 +202,10 @@ export class MigrationBuilder {
       links[id] = new A.RawString(url);
     }
 
-    this._newRoot = this._createDocument({
+    this._newRoot = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: this._makeAccess(),
-      objects,
+      objects: this._rootDoc.objects,
       links,
     });
     await this._newRoot.whenReady();
@@ -229,7 +228,7 @@ export class MigrationBuilder {
 
     core.initNewObject(props);
     core.setType(EncodedReference.fromURI(getSchemaURI(schema)!));
-    const newHandle = this._createDocument({
+    const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: this._makeAccess(),
       objects: {
@@ -241,17 +240,6 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
 
     return core;
-  }
-
-  /**
-   * Creates the document from local Automerge bytes rather than an initial value, since its values (`RawString`
-   * links, long strings, bytes) are not the JSON the create RPC's transport accepts.
-   */
-  private _createDocument(value: DatabaseDirectory): DocHandleProxy<DatabaseDirectory> {
-    const doc = A.change(A.init<DatabaseDirectory>(), (draft) => {
-      Object.assign(draft, value);
-    });
-    return this._repo.import<DatabaseDirectory>(A.save(doc));
   }
 
   private _makeAccess(): NonNullable<DatabaseDirectory['access']> {

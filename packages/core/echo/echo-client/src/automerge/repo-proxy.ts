@@ -757,9 +757,9 @@ export class RepoProxy extends Resource {
         'DataService.createDocument',
         {
           spaceId: this._spaceId,
-          // A doc's declared type is an interface without an index signature, which the Struct
-          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
-          initialValue: initialValue as Record<string, unknown>,
+          // Bytes of the handle's own doc, so the host takes its history rather than building a second copy
+          // of the initial state, and Automerge values (`RawString`, bytes) need no JSON encoding.
+          ...(initialValue === undefined ? {} : { initialDocument: A.save(handle.doc()) }),
         },
         { timeout: RPC_TIMEOUT },
       )

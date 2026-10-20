@@ -491,9 +491,31 @@ describe('RepoProxy', () => {
     expect(refusing.requests).toEqual(requests);
   });
 
-  test('a document whose initial value is not JSON is refused once, not retried', { timeout: 5_000 }, async () => {
+  test('a document whose initial value holds Automerge values reaches the host intact', async () => {
+    const { dataService, host } = await setup();
+    const [clientRepo] = createProxyRepos(withJsonEncodedCreations(dataService));
+    await openAndClose(clientRepo);
+
+    // A space root's links are `RawString`s, which the transport's JSON codec rejects as an initial value.
+    const objectId = EntityId.random();
+    const url = generateAutomergeUrl();
+    const handle = clientRepo.create<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      links: { [objectId]: new A.RawString(url) },
+    });
+    await handle.whenReady();
+    invariant(handle.url);
+    const hostHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), handle.url);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    const link = hostHandle.doc()?.links?.[objectId];
+    expect(link).toBeInstanceOf(A.RawString);
+    expect(link?.toString()).toEqual(url);
+  });
+
+  test('a creation the transport refuses as invalid is reported once, not retried', { timeout: 5_000 }, async () => {
     const { dataService } = await setup();
-    const { client, attempts } = withJsonEncodedCreations(dataService);
+    const { client, attempts } = withRefusedCreations(dataService);
     const [clientRepo] = createProxyRepos(client);
     await openAndClose(clientRepo);
     const states: SaveStateChangedEvent[] = [];
@@ -501,18 +523,15 @@ describe('RepoProxy', () => {
       states.push(state);
     });
 
-    // Automerge's scalar string class, as a space root's `links` holds it, is not a JSON value.
-    const handle = clientRepo.create<DatabaseDirectory>({
-      version: SpaceDocVersion.CURRENT,
-      links: { [EntityId.random()]: new A.RawString(generateAutomergeUrl()) },
-    });
-    await expect(handle.whenReady()).rejects.toThrow('Expected JSON value');
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(handle.whenReady()).rejects.toThrow('Missing key');
     expect(states.at(-1)?.failing).toBe(true);
     // The next flush reports the refusal; later ones are not blocked by it.
-    await expect(clientRepo.flush()).rejects.toThrow('Expected JSON value');
+    await expect(clientRepo.flush()).rejects.toThrow('Missing key');
     expect(states.at(-1)?.failing).toBe(false);
 
     // Successful update passes reset the send backoff; they must not re-request the refused creation.
+    attempts.refuse = false;
     const other = clientRepo.create<{ count: number }>({ count: 0 });
     await other.whenReady();
     for (let count = 1; count <= 5; count++) {
@@ -1142,17 +1161,23 @@ class RefusingDataService extends DataServiceImpl {
   }
 }
 
-/**
- * Encodes each creation request as the worker transport's client does before sending it, so a payload that is
- * not JSON fails on the client, and counts the attempts.
- */
-const withJsonEncodedCreations = (dataService: DataService.Client) => {
+/** Encodes each creation request as the worker transport's client does before sending it. */
+const withJsonEncodedCreations = (dataService: DataService.Client): DataService.Client => {
   const encode = Schema.encodeUnknownEffect(Schema.toCodecJson(DataService.CreateDocumentRequest));
-  const attempts = { count: 0 };
+  return Object.assign(Object.create(dataService), {
+    'DataService.createDocument': (request: DataService.CreateDocumentRequest) =>
+      encode(request).pipe(Effect.flatMap(() => dataService['DataService.createDocument'](request))),
+  });
+};
+
+/** Fails each creation with a `SchemaError` while {@link refuse} is set, as a transport that cannot encode it does. */
+const withRefusedCreations = (dataService: DataService.Client) => {
+  const attempts = { count: 0, refuse: true };
+  const invalid = Schema.decodeUnknownEffect(DataService.CreateDocumentResponse)({});
   const client: DataService.Client = Object.assign(Object.create(dataService), {
     'DataService.createDocument': (request: DataService.CreateDocumentRequest) => {
       attempts.count++;
-      return encode(request).pipe(Effect.flatMap(() => dataService['DataService.createDocument'](request)));
+      return attempts.refuse ? invalid : dataService['DataService.createDocument'](request);
     },
   });
   return { client, attempts };
