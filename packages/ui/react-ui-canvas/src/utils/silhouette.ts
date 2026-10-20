@@ -48,9 +48,10 @@ export const cloudPath = (size: Size, inset = 0, bumps = DEFAULT_CLOUD_BUMPS): s
 
 /**
  * SVG path data for a regular polygon of `sides`, a vertex on top: as large as fits a frame of `size` kept `inset` px
- * inside it, and centred in the frame by its own bounds (an odd polygon is lower on top than across its base).
+ * inside it, and centred in the frame by its own bounds (an odd polygon is lower on top than across its base). Each
+ * corner is rounded by an arc of `radius` px, no larger than half of either edge allows.
  */
-export const polygonPath = (size: Size, inset = 0, sides = DEFAULT_POLYGON_SIDES): string => {
+export const polygonPath = (size: Size, inset = 0, sides = DEFAULT_POLYGON_SIDES, radius = 0): string => {
   const count = Math.max(3, Math.round(sides));
   const unit = ring({ width: 0, height: 0 }, 1, 1, count);
   const xs = unit.map(({ x }) => x);
@@ -63,5 +64,27 @@ export const polygonPath = (size: Size, inset = 0, sides = DEFAULT_POLYGON_SIDES
   );
   const dx = size.width / 2 - ((left + right) / 2) * scale;
   const dy = size.height / 2 - ((top + bottom) / 2) * scale;
-  return `M ${unit.map(({ x, y }) => `${round(dx + x * scale)} ${round(dy + y * scale)}`).join(' L ')} Z`;
+  const points = unit.map(({ x, y }) => ({ x: dx + x * scale, y: dy + y * scale }));
+  if (radius <= 0 || scale === 0) {
+    return `M ${points.map(({ x, y }) => `${round(x)} ${round(y)}`).join(' L ')} Z`;
+  }
+  // A corner of interior angle θ, rounded by radius r, starts r / tan(θ/2) back along each edge.
+  const edge = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+  const halfAngle = (Math.PI - (2 * Math.PI) / count) / 2;
+  const back = Math.min(radius / Math.tan(halfAngle), edge / 2);
+  const arc = back * Math.tan(halfAngle);
+  const toward = (from: { x: number; y: number }, to: { x: number; y: number }) => ({
+    x: from.x + ((to.x - from.x) * back) / edge,
+    y: from.y + ((to.y - from.y) * back) / edge,
+  });
+  const corners = points.map((point, index) => ({
+    start: toward(point, points[(index + count - 1) % count]),
+    end: toward(point, points[(index + 1) % count]),
+  }));
+  const segments = corners.map(
+    ({ start, end }) =>
+      `L ${round(start.x)} ${round(start.y)} A ${round(arc)} ${round(arc)} 0 0 1 ${round(end.x)} ${round(end.y)}`,
+  );
+  const { end: first } = corners[0];
+  return `M ${round(first.x)} ${round(first.y)} ${[...segments.slice(1), segments[0]].join(' ')} Z`;
 };

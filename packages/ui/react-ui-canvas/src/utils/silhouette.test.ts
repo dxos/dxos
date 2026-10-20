@@ -69,6 +69,18 @@ describe('polygonPath', () => {
     }
   });
 
+  test('rounded corners are an arc per vertex, the radius capped by half an edge', () => {
+    const d = polygonPath({ width: 100, height: 100 }, 0, 6, 8);
+    expect(d.match(/ A /g)).toHaveLength(6);
+    expect(d.match(/ L /g)).toHaveLength(6);
+    const radius = (path: string) => Number(path.split(' A ')[1].split(' ')[0]);
+    expect(radius(d)).toBeCloseTo(8, 1);
+    // A radius larger than the edges allow meets at each edge's midpoint instead.
+    const capped = polygonPath({ width: 100, height: 100 }, 0, 6, 1000);
+    expect(radius(capped)).toBeLessThan(1000);
+    expect(polygonPath({ width: 100, height: 100 }, 0, 6, 0)).not.toContain(' A ');
+  });
+
   test('a triangle at least', () => {
     expect(polygonPath({ width: 100, height: 100 }, 0, 2).split(' L ')).toHaveLength(3);
   });

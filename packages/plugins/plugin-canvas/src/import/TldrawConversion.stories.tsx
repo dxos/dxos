@@ -16,7 +16,7 @@ import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
-import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow } from './testing.ts';
+import { frameWithChildren, shapesAndArrow, textNoteAndFreeArrow } from './testing.ts';
 import { tldrawToViews } from './tldraw.ts';
 
 // The tldraw drawing as plugin-tldraw draws it, beside the canvas it converts to.
@@ -109,12 +109,4 @@ export const ShapesAndArrow: Story = {
  */
 export const TextNoteAndFreeArrow: Story = {
   decorators: withConversion(textNoteAndFreeArrow(), { snap: true }),
-};
-
-/**
- * A rotated group and a rotated rectangle: the group becomes an anonymous Object placed by one Instance (what the
- * canvas's Group command makes), and tldraw's rotation carries over in degrees.
- */
-export const GroupAndRotation: Story = {
-  decorators: withConversion(groupAndRotation(), { snap: true }),
 };

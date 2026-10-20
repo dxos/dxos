@@ -30,9 +30,9 @@ import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
+  LINK_FONT_SIZE,
   type LinkId,
   type LinkKind,
-  LINK_FONT_SIZE,
   MAJOR_GRID_RATIO,
   type Marker,
   NO_STYLES,
@@ -41,6 +41,7 @@ import {
   type NodeId,
   type NodeRegistry,
   type NodeViewProps,
+  RADIUS_PX,
   type StyleMap,
   type View,
   type ViewStore,
@@ -951,7 +952,12 @@ const NodeFrame = memo(
           {silhouette ? (
             // The look's classes on a box-less wrapper, so the silhouette's layers inherit its colours.
             <div className={mx('contents', ...frameLook)}>
-              <Silhouette outline={silhouette} node={drawn} border={border} />
+              <Silhouette
+                outline={silhouette}
+                node={drawn}
+                border={border}
+                radius={RADIUS_PX[styleVariant(look.styleSet, drawn.style?.tone).roundedRadius]}
+              />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
           ) : (
@@ -997,16 +1003,16 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; node: Node; border: number };
+type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; node: Node; border: number; radius: number };
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, node, border }: SilhouetteProps) => {
+const Silhouette = ({ outline, node, border, radius }: SilhouetteProps) => {
   const { width, height } = node.size;
   const masks = useMemo(() => {
-    const path = outline(node, border / 2);
+    const path = outline(node, border / 2, radius);
     const image = (body: string) =>
       `url("data:image/svg+xml,${encodeURIComponent(
         `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'>${body}</svg>`,
@@ -1015,7 +1021,7 @@ const Silhouette = ({ outline, node, border }: SilhouetteProps) => {
       fill: image(`<path d='${path}' fill='white'/>`),
       stroke: image(`<path d='${path}' fill='none' stroke='white' stroke-width='${border}'/>`),
     };
-  }, [outline, node, width, height, border]);
+  }, [outline, node, width, height, border, radius]);
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
