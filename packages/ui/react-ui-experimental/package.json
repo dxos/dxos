@@ -32,8 +32,6 @@
     "glsl:sim:vert": "pnpm glslify ./src/shaders/glsl/sim.vert > ./src/shaders/glsl/gen/sim.vert"
   },
   "dependencies": {
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "d3": "catalog:",
@@ -45,6 +43,8 @@
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
