@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import { WorkerDisplacedError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
@@ -931,6 +931,12 @@ class LeaderSession extends Resource {
           this.#startFailure = WorkerProtocol.decodeError(event.data.error);
           ready.throw(this.#startFailure);
           break;
+        case 'displaced': {
+          const error = new WorkerDisplacedError({ context: { leaderId: this.#leaderId } });
+          listening.throw(error);
+          ready.throw(error);
+          break;
+        }
         case 'session':
           this.#coordinator.sendMessage({
             type: 'provide-port',

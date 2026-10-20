@@ -738,6 +738,39 @@ describe('Worker displacement', () => {
     await asyncTimeout(stranded.closed, 5_000);
   }, 40_000);
 
+  test('a leader whose queued worker is displaced by a stray worker retries at once', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    // Holds the storage lock without serving the displacement channel, so the leader's worker stays queued.
+    const releaseHolder = new Trigger();
+    const holder = navigator.locks.request(keys.storageLockKey, () => releaseHolder.wait());
+    onTestFinished(() => {
+      releaseHolder.wake();
+    });
+    const pendingOnStorageLock = async () =>
+      ((await navigator.locks.query()).pending ?? []).filter((lock) => lock.name === keys.storageLockKey).length;
+
+    const { connection, connected } = makeConnection(hub, keys);
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    const opened = connection.open();
+    await waitForCondition({ condition: async () => (await pendingOnStorageLock()) === 1, timeout: 5_000 });
+
+    // A worker started by a tab that was not elected (Composer's prespawn raced another tab's
+    // election): it displaces the leader's worker before that worker ever reaches `ready`.
+    const stray = startBareWorker(keys.storageLockKey);
+    await waitForCondition({ condition: async () => (await pendingOnStorageLock()) === 2, timeout: 5_000 });
+    releaseHolder.wake();
+    await holder;
+
+    // Well inside `LOCK_OR_RPC_WAIT_TIMEOUT`: the leader must not wait out its handshake for a worker that stood down.
+    await asyncTimeout(opened, LOCK_OR_RPC_WAIT_TIMEOUT / 2);
+    expect((await asyncTimeout(connected, 5_000)).isOwner).toBe(true);
+    await asyncTimeout(stray.closed, 5_000);
+  }, 40_000);
+
   test('a wedged worker that ignores displacement is terminated by the tab that owns it', async () => {
     const hub = createHub();
     const keys = uniqueKeys();

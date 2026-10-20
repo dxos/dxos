@@ -72,6 +72,7 @@ import {
   startupMark,
   startupMeasure,
   startupProfiler,
+  startWorker,
   translations,
 } from './util/index.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
@@ -547,7 +548,7 @@ const main = async () => {
     config.values,
   );
   const services = await createClientServices(config, {
-    createDedicatedWorker: () => prespawnedWorker.take() ?? createDedicatedWorker(),
+    createDedicatedWorker: () => prespawnedWorker.take() ?? startWorker(createDedicatedWorker()),
     createCoordinatorWorker: () =>
       new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
