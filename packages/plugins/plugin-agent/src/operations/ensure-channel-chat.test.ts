@@ -171,6 +171,45 @@ describe('EnsureChannelChat', () => {
   );
 });
 
+describe('OpenSession', () => {
+  it.effect(
+    'opens a new chat per call, with the skills of every channel the agent is in',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const primary = yield* Agent.loadChat(agent);
+        const channel = yield* Database.add(
+          Channel.make({ backend: { kind: AgentEmail.BACKEND_KIND, config: AgentEmail.make({ handle: 'kai' }) } }),
+        );
+        yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
+        yield* Database.flush();
+
+        const first = yield* Operation.invoke(AgentOperation.OpenSession, { agent: agentRef, title: 'Ask' });
+        yield* Database.flush();
+        const second = yield* Operation.invoke(AgentOperation.OpenSession, { agent: agentRef });
+        expect(second.chat.uri).not.toBe(first.chat.uri);
+
+        const chat = yield* Database.load(first.chat);
+        expect(chat.name).toBe('Ask');
+        expect(Obj.getParent(chat)?.id).toBe(agent.id);
+        expect(chat.instructions?.uri).toBe(agent.instructions.uri);
+        // A session is no channel's conversation.
+        expect(AgentChannels.conversationOf(chat)).toBeUndefined();
+
+        const bindings = yield* Feed.query(yield* Database.load(first.feed), Filter.type(AiContext.Binding)).run;
+        const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
+        expect(skills).toContain(Skill.registryURI(AgentEmail.SKILL_KEY));
+
+        // A session never shadows the agent's primary chat.
+        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
 describe('AgentChannels', () => {
   it.effect(
     'is parented to its agent and resolves its channels',

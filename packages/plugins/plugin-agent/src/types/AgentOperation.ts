@@ -210,6 +210,28 @@ export const EnsureParticipantChat = Operation.make({
 });
 
 /**
+ * A new session with the agent: a chat of its own, with the agent's context and every skill its channels declare, so
+ * a caller outside any channel (an MCP client) can converse with it and act in those channels through it.
+ */
+export const OpenSession = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.openSession'),
+    name: 'Open session',
+    description: 'Creates a new chat with the agent that can use the tools of all its channels.',
+    icon: 'ph--chat-circle-dots--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent to talk to.' }),
+    title: Schema.optional(Schema.String.annotate({ description: 'Names the new chat.' })),
+  }),
+  output: Schema.Struct({
+    chat: Ref.Ref(Chat.Chat),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: "The chat's message feed." }),
+  }),
+});
+
+/**
  * The member's private chat with the agent: the person for their identity (found by DID, created with
  * their name on first use) and the participant chat with them, private to that identity.
  */
