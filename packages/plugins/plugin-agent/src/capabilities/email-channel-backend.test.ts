@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -18,7 +19,7 @@ import { Channel } from '@dxos/types';
 
 import { AgentChannels, AgentEmail, AgentMailbox } from '#types';
 
-import { makeEmailChannelBackend, toConnectionStatus } from './email-channel-backend.ts';
+import { UNAVAILABLE_STATUS, makeEmailChannelBackend, toConnectionStatus } from './email-channel-backend.ts';
 
 type Call = { op: 'claim' | 'release' | 'status'; handle: string; request?: AgentMailbox.ClaimRequest };
 
@@ -37,7 +38,7 @@ const fakeMailbox = (spaceId: () => string) => {
     },
     status: (handle) => {
       calls.push({ op: 'status', handle });
-      return answer(handle);
+      return answer(handle).pipe(Effect.map(Option.some));
     },
     send: () => Effect.die('Not sent by the channel backend.'),
   };
@@ -182,6 +183,30 @@ describe('email channel backend', () => {
         const error = yield* Effect.flip(connection.start(channel).pipe(withCapabilities));
         expect(error.message).toBe('Add the channel to an agent before connecting it.');
         expect(fake.calls).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a mailbox EDGE does not serve reads as unavailable, not as a failure',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const unserved: AgentMailbox.Service = {
+          claim: () => Effect.die('Not claimed in this test.'),
+          release: () => Effect.die('Not released in this test.'),
+          status: () => Effect.succeed(Option.none()),
+          send: () => Effect.die('Not sent by the channel backend.'),
+        };
+        const connection = makeEmailChannelBackend({
+          mailbox: () => Layer.succeed(AgentMailbox.AgentMailboxService, unserved),
+        }).connection;
+        if (!connection) {
+          return expect.unreachable('The email backend has a connection.');
+        }
+        const { channel } = yield* makeAgentChannel('kai');
+        expect(yield* connection.status(channel).pipe(withCapabilities)).toEqual(UNAVAILABLE_STATUS);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
