@@ -1,0 +1,199 @@
+# CI trial, not for main: can the merge queue's browser and e2e suites pass on GitHub's free standard
+# runners (4 vCPU / 16 GB for a public repo) instead of Depot's 8x32 sandboxes? Mirrors the `test-browser`,
+# `e2e` and `e2e-rest` jobs of `.depot/workflows/check.yml` with more shards and fewer workers per
+# shard, runs the full suites rather than the affected scope, and reports each job's peak RAM, load and
+# disk to the step summary. Skips Trunk and Codecov so trial results stay out of both.
+name: CI trial (free runners)
+
+on:
+  push:
+    branches:
+      - claude/ci-trial-free-runners
+
+permissions:
+  contents: read
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+  # Hash input of `test-browser` / `test-storybook` on this branch only: builds hydrate from the remote
+  # cache, tests execute instead of replaying main's merge-queue results.
+  DX_CI_TRIAL_RUN: ${{ github.run_id }}-${{ github.run_attempt }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Depot: 2 shards on 8x32, MOON_CONCURRENCY 4, peak 16-20 GB. Here: 4 shards, 2 targets at a time.
+  test-browser:
+    name: test (browser, shard=${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      JOB_LABEL: test (browser, shard=${{ matrix.shard }})
+      NODE_VERSION: '24.11.1'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      # Matches the merge queue, where Depot has CODECOV_TOKEN; coverage is collected but not uploaded.
+      VITEST_COVERAGE: 'true'
+      VITEST_XML_REPORT: 'true'
+      MOON_CONCURRENCY: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Start resource monitor
+        run: bash .github/ci-trial/monitor.sh start
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test
+        run: >-
+          moon exec --on-failure continue :test-browser :test-storybook
+          --job ${{ matrix.shard }} --job-total ${{ strategy.job-total }} -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-browser-${{ matrix.shard }}
+          path: test-results
+          retention-days: 7
+
+      - name: Resource report
+        if: always()
+        run: bash .github/ci-trial/monitor.sh report
+
+  # Depot: one 8x32 cell per browser, 3 workers, peak 11 GB (chromium), 17 GB (firefox), 28 GB (webkit).
+  # Here: Playwright shards with 2 workers each; WebKit gets a third shard for its memory.
+  e2e:
+    name: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { browser: chromium, shard: 1, total: 2 }
+          - { browser: chromium, shard: 2, total: 2 }
+          - { browser: firefox, shard: 1, total: 2 }
+          - { browser: firefox, shard: 2, total: 2 }
+          - { browser: webkit, shard: 1, total: 3 }
+          - { browser: webkit, shard: 2, total: 3 }
+          - { browser: webkit, shard: 3, total: 3 }
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      JOB_LABEL: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
+      DX_ENVIRONMENT: ci
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      # Forces the suite to execute rather than replay a cached green run.
+      DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Start resource monitor
+        run: bash .github/ci-trial/monitor.sh start
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      - name: Test
+        timeout-minutes: 40
+        run: >-
+          moon exec --on-failure continue composer-e2e:e2e --
+          --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=2
+
+      - name: Upload Traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-composer-${{ matrix.browser }}-${{ matrix.shard }}
+          path: test-results/playwright
+          retention-days: 7
+
+      - name: Resource report
+        if: always()
+        run: bash .github/ci-trial/monitor.sh report
+
+  # Depot: already 4x16 (peak 7-9 GB), so unchanged apart from the runner and image.
+  e2e-rest:
+    name: e2e (rest, ${{ matrix.browser }})
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      JOB_LABEL: e2e (rest, ${{ matrix.browser }})
+      DX_ENVIRONMENT: ci
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Start resource monitor
+        run: bash .github/ci-trial/monitor.sh start
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      # moon ignores MQL negation in `moon query tasks`, so composer-e2e is filtered in node.
+      - name: Select targets
+        id: shard
+        run: |
+          targets=$(moon query tasks "task=e2e" < /dev/null |
+            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().map((project)=>project+':e2e').join(' ')))")
+          [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        timeout-minutes: 40
+        run: moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
+      - name: Upload Traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-rest-${{ matrix.browser }}
+          path: test-results/playwright
+          retention-days: 7
+
+      - name: Resource report
+        if: always()
+        run: bash .github/ci-trial/monitor.sh report

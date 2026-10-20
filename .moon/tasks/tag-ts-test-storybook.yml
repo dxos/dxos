@@ -34,6 +34,8 @@ tasks:
       - $DX_RUN_MANUAL_TESTS
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
+      # Trial only: forces a re-run per CI attempt so builds hydrate but tests execute.
+      - $DX_CI_TRIAL_RUN
     outputs:
       - /coverage/$project/storybook/**
       - /test-results/$project/storybook/**
