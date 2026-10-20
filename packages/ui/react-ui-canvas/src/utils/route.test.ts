@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Link, type View } from '../model/index.ts';
+import { type Endpoint, type Link, type View } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 
@@ -138,5 +138,40 @@ describe('route', () => {
     // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
     const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
     expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
+  });
+
+  test('a plain line to a node with no port points at its centre and stops at its outline; a smart one takes ports', ({
+    expect,
+  }) => {
+    // A rect at (0, 0) and an ellipse up and to the right, 200 × 100 each.
+    const {
+      views: [view],
+    } = ViewBuilder.view('v', [
+      ViewBuilder.rect('a', { x: -100, y: -50, width: 200, height: 100 }),
+      ViewBuilder.ellipse('b', { x: 300, y: -350, width: 200, height: 100 }),
+    ]).build();
+    const geometry = (type: Link['type'], source: Endpoint = { node: 'a' }, target: Endpoint = { node: 'b' }) => {
+      const link: Link =
+        type === 'spline'
+          ? { type, id: 'l', z: 'z', source, target, points: [] }
+          : { type, id: 'l', z: 'z', source, target };
+      return linkGeometry(view, defaultNodeRegistry, link);
+    };
+    // The centres are (0, 0) and (400, -300): the line runs along that diagonal.
+    const line = geometry('line');
+    const onDiagonal = (point: { x: number; y: number }) => expect(point.x * -300 - point.y * 400).toBeCloseTo(0, 6);
+    onDiagonal(line?.source.point ?? { x: NaN, y: NaN });
+    // It leaves the rect where the diagonal crosses its top edge, and meets the ellipse on its outline.
+    expect(line?.source.point.y).toBeCloseTo(-50, 6);
+    const end = line?.target.point ?? { x: NaN, y: NaN };
+    onDiagonal(end);
+    expect(((end.x - 400) / 100) ** 2 + ((end.y + 300) / 50) ** 2).toBeCloseTo(1, 6);
+    // A named port is used as given.
+    const ported = geometry('line', { node: 'a', port: 'e2' });
+    expect(ported?.source.point).toEqual({ x: 100, y: 0 });
+    // A smart line attaches at ports, on the frame's sides.
+    const smart = geometry('smart');
+    expect([smart?.source.side, smart?.target.side].every((side) => side !== undefined)).toBe(true);
+    expect(Math.abs(smart?.source.point.x ?? 0) === 100 || Math.abs(smart?.source.point.y ?? 0) === 50).toBe(true);
   });
 });
