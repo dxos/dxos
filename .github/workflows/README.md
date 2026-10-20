@@ -1,8 +1,9 @@
 # GitHub Actions
 
 Every workflow runs here, on GitHub's free standard runners: `ubuntu-24.04` (4 vCPU / 16 GB for a
-public repository) and `macos-latest` for the desktop and iOS builds. Larger runners are billed even on a
-public repository, so no workflow asks for one. Composite actions live in [`../actions/`](../actions).
+public repository) and `macos-26` for the desktop and iOS builds. Images are pinned by version, never
+`-latest`, so an OS upgrade is a commit rather than GitHub moving the label. Larger runners are billed
+even on a public repository, so no workflow asks for one. Composite actions live in [`../actions/`](../actions).
 
 ## Check
 

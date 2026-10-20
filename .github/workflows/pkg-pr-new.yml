@@ -26,7 +26,7 @@ env:
 jobs:
   # The 06:00 schedule and the 07:00 preview deploy often land on the same commit.
   published:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       exists: ${{ steps.check.outputs.exists }}

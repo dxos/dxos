@@ -66,7 +66,7 @@ jobs:
   #   ios      — also build iOS (`dev` only — see the `ios` input on deploy-tauri.yaml).
   plan:
     if: github.repository == 'dxos/dxos'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       env: ${{ steps.plan.outputs.env }}
       app: ${{ steps.plan.outputs.app }}
@@ -185,7 +185,7 @@ jobs:
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
     permissions:
       contents: write # Claims the build-counter tag.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -468,7 +468,7 @@ jobs:
   notify-prep-failure:
     needs: [plan, release, version, build-bundle, packages]
     if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure' || needs.packages.result == 'failure') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env:
       DEPLOY_ENV: ${{ needs.plan.outputs.env }}

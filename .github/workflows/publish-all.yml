@@ -31,7 +31,7 @@ permissions:
 jobs:
   detect:
     if: github.repository == 'dxos/dxos'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       release: ${{ steps.release.outputs.release }}
     steps:
@@ -64,7 +64,7 @@ jobs:
   preflight:
     needs: detect
     if: needs.detect.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v5

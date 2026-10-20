@@ -325,7 +325,7 @@ jobs:
       ${{ !cancelled() && github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       needs.boot-budget.result != 'skipped' && needs.boot-budget.outputs.status != 'skipped' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -364,7 +364,7 @@ jobs:
     if: >-
       ${{ inputs.only != 'check' && (
       github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       node: ${{ steps.plan.outputs.node }}
@@ -745,7 +745,7 @@ jobs:
   cli-foreign:
     needs: cli
     if: ${{ !cancelled() && needs.cli.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Download packed CLI
@@ -814,7 +814,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
