@@ -51,7 +51,7 @@ macOS) via `@carderne/sandbox-runtime`:
 
 ## Repositories
 
-Sandboxes are ephemeral; a repository is durable. An EDGE repository is a `Repo` (from `@dxos/types`,
+Sandboxes are ephemeral; a repository is durable. An EDGE repository is a type:Repo (from `@dxos/types`,
 the same type a GitHub repository is) carrying an `edge.dxos.network` foreign key: a git repository
 hosted by EDGE on [Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), named after
 its space and that key's id, so the space is part of its identity and stands in as the `Repo`'s
@@ -337,7 +337,7 @@ test QA-2: Build in a sandbox, push to a repository with git, pick it up in anot
     - no Sandbox or Repository named "QA Repo" exists — ABORT rather than reusing one this test did not create
   steps:
     - name: Create the repository
-      do: From the create menu, add a Repository named "QA Repo".
+      do: Ask the assistant to create a repository named "QA Repo".
       invoke: [op:createRepository] { name: "QA Repo" }
       capture: repository
       expect: a Repository named "QA Repo" appears; opening it says nothing has been pushed yet
@@ -398,4 +398,12 @@ decision D-3: This plugin contributes no create entry for repositories; the `Rep
   for: user:dmaretskyi
   affects: [Repo, createRepository]
   why: Create entries are keyed by typename, so two plugins cannot both offer one for `Repo`.
+```
+
+```mdl
+decision D-4: QA-2 creates its repository through `createRepository`, asked of the assistant, since no create-menu entry offers one. Fills in [D-3].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2, createRepository]
 ```

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, type Ref } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import { type Repo } from '@dxos/types';
 
 import * as RepositoryService from '../types/RepositoryService.ts';
@@ -23,6 +23,12 @@ export const resolveAttachments = (spaceId: string, repositories: readonly Ref.R
     const attached: AttachedRepository[] = [];
     for (const ref of repositories) {
       const repository = yield* Database.load(ref);
+      // EDGE addresses a repository by space and id, so one held by another space would name a different repository here.
+      if (Obj.getDatabase(repository)?.spaceId !== spaceId) {
+        return yield* Effect.fail(
+          new RepositoryService.RepositoryError({ message: `Repository ${repository.name} belongs to another space.` }),
+        );
+      }
       const id = yield* RepositoryService.edgeIdOf(repository);
       // The same repository attached twice is one remote, whatever form its ref took.
       if (attached.some((attachment) => attachment.id === id)) {

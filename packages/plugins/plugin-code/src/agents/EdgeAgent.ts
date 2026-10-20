@@ -441,7 +441,11 @@ export const checkoutsOf = (
         continue;
       }
       // Two repositories of the same name from different owners each get a directory of their own.
-      const name = checkouts.some((checkout) => checkout.name === repo.name) ? `${repo.owner}-${repo.name}` : repo.name;
+      const taken = new Set(checkouts.map((checkout) => checkout.name));
+      let name = taken.has(repo.name) ? `${repo.owner}-${repo.name}` : repo.name;
+      for (let index = 2; taken.has(name); index++) {
+        name = `${repo.owner}-${repo.name}-${index}`;
+      }
       checkouts.push({ name, url, ...(repo.defaultBranch && { branch: repo.defaultBranch }) });
     }
     return checkouts;

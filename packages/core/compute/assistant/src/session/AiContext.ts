@@ -48,7 +48,7 @@ export class Bindings {
   readonly skills = new ComplexSet<Ref.Ref<Skill.Skill>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => entityIdOf(ref.uri));
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => entityIdOf(ref.uri) ?? ref.uri);
 
   toJSON(): { skills: URI.URI[]; objects: URI.URI[] } {
     return {

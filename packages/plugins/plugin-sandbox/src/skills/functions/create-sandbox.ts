@@ -29,15 +29,15 @@ export default SandboxOperation.CreateSandbox.pipe(
         );
       }
 
-      const sandbox = Sandbox.make({ name, baseImage, repositories: [...repositories] });
-      yield* Database.add(sandbox);
-
-      const sandboxId = sandbox.id;
       const spaceId = db.spaceId;
-
-      // Annotated: naming `Repo` here keeps the handler's emitted declaration portable (TS2883).
+      // Resolved before the sandbox is stored, so a repository EDGE does not host fails the call
+      // without leaving a sandbox behind. Annotated: naming `Repo` keeps the emitted d.ts portable (TS2883).
       const attachments: readonly Ref.Ref<Repo.Repo>[] = repositories;
       const attached = yield* resolveAttachments(spaceId, attachments).pipe(Effect.orDie);
+
+      const sandbox = Sandbox.make({ name, baseImage, repositories: [...repositories] });
+      yield* Database.add(sandbox);
+      const sandboxId = sandbox.id;
       const record = yield* sandboxService
         .create(spaceId, sandboxId, { name, baseImage, repositories: attached })
         .pipe(Effect.orDie);
