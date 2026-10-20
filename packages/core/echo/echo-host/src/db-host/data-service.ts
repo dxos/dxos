@@ -139,7 +139,14 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        const created = await this._automergeHost.createDoc(request.initialValue);
+        if (request.initialValue && !request.initialDocument) {
+          log.warn('document created from deprecated `initialValue`; send `initialDocument` bytes', {
+            spaceId: request.spaceId,
+          });
+        }
+        const created = request.initialDocument
+          ? await this._automergeHost.createDoc(request.initialDocument, { preserveHistory: true })
+          : await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
