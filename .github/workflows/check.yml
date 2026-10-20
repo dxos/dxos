@@ -242,9 +242,9 @@ jobs:
       # A diff that will not resolve counts as touching code, so the budget runs.
       - name: Scope
         id: scope
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: |
           if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
             echo 'docs-only=true' >> "$GITHUB_OUTPUT"
@@ -361,6 +361,7 @@ jobs:
     outputs:
       node: ${{ steps.plan.outputs.node }}
       browser: ${{ steps.plan.outputs.browser }}
+      browser-cells: ${{ steps.plan.outputs.browser-cells }}
       composer-cells: ${{ steps.plan.outputs.composer-cells }}
       rest-cells: ${{ steps.plan.outputs.rest-cells }}
     steps:
@@ -388,18 +389,18 @@ jobs:
           DRAFT: ${{ github.event.pull_request.draft == true }}
         run: node .github/actions/plan/plan.mjs
 
-  # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time; `browser`
-  # (`:test-browser`, `:test-storybook`) runs one, since each target drives its own Chromium and
-  # timing-sensitive stories fail when two share 4 vCPU. `moon exec --job N --job-total` splits the
-  # targets by count, not duration. File parallelism stays disabled: overloaded runners flake. A suite
-  # the change does not affect is skipped, which branch protection reads as passing, so a failed `plan`
-  # starts every cell rather than skipping them.
+  # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time, split by moon's
+  # `--job`. `browser` (`:test-browser`, `:test-storybook`) gets its cells from `plan`, each an explicit list
+  # of affected targets; a cell builds its targets' dependency closure at full concurrency, then runs one
+  # target at a time with nothing left to build: each target drives its own Chromium, and timing-sensitive
+  # stories fail when it shares 4 vCPU with another target or a build. File parallelism stays disabled:
+  # overloaded runners flake. Both need a successful `plan`; the `test` gate fails when it did not.
   test-node:
     name: test (node, shard=${{ matrix.shard }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' &&
-      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.node == 'true')) }}
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.node == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -463,18 +464,23 @@ jobs:
         uses: ./.github/actions/advisory
 
   test-browser:
-    name: test (browser, shard=${{ matrix.shard }})
+    name: test (browser, ${{ matrix.shard }}/${{ matrix.total }})
     needs: plan
     if: >-
-      ${{ !cancelled() && inputs.only != 'e2e' &&
-      (needs.plan.result == 'failure' || (needs.plan.result == 'success' && needs.plan.outputs.browser == 'true')) }}
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.browser == 'true' }}
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+        include: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
+    timeout-minutes: 90
     env:
+      # The test phase; the build step overrides it.
+      MOON_CONCURRENCY: 1
+      # The nightly's tests must execute, but its force flag stays on the build step.
+      DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
@@ -483,7 +489,6 @@ jobs:
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      MOON_CONCURRENCY: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -496,26 +501,59 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Resolve affected scope
-        uses: ./.github/actions/affected
+      # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
+      # scope: the list is the scope. The nightly forces this step only, so its tests run once.
+      - name: Build
+        env:
+          MOON_CONCURRENCY: 4
+          MOON_FORCE: ${{ github.event_name == 'schedule' }}
+          TARGETS: ${{ matrix.targets }}
+        run: |
+          builds=$(node .github/actions/plan/closure.mjs $TARGETS < /dev/null)
+          [ -z "$builds" ] || moon exec --on-failure continue $builds
 
       - name: Install Playwright
+        if: ${{ !cancelled() }}
         run: pnpm exec playwright install --with-deps chromium
 
+      # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
+        if: ${{ !cancelled() }}
         uses: ./.github/actions/vitest
         with:
           suite: browser
-          targets: ':test-browser :test-storybook'
+          targets: ${{ matrix.targets }}
           shard: ${{ matrix.shard }}
-          of: ${{ strategy.job-total }}
+
+  # One check per suite for branch protection to require, whatever the shard count: it fails if any cell
+  # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
+  # draft's browser cells.
+  test:
+    needs: [plan, test-node, test-browser]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
+    steps:
+      - name: Gate
+        id: gate
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          result=$(echo "$RESULTS" | jq -r '[.[].result] |
+            if any(. == "failure") then "failure" elif any(. == "cancelled") then "cancelled" else "success" end')
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          [ "$result" = success ]
 
   # Composer e2e dwarfs every other suite, so `plan` splits it into Playwright shards per browser
   # (`--shard` divides the tests by count); `e2e-rest` splits the rest of the pool's targets in two.
   # The jobs repeat their steps because a composite action cannot carry the `Test` step's own timeout.
   # `--on-failure continue` because moon's default bail drops a failing cell's remaining targets,
   # hiding what they cost.
-  e2e:
+  e2e-composer:
     name: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: plan
     if: ${{ needs.plan.outputs.composer-cells != '[]' && inputs.only != 'test' }}
@@ -567,6 +605,7 @@ jobs:
         run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
       - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
@@ -581,6 +620,14 @@ jobs:
           run: >-
             moon exec --on-failure continue composer-e2e:e2e --
             --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=${{ matrix.workers }}
+
+      # A fork PR gets no secrets, and the uploader cannot run without a token.
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
+        timeout-minutes: 35
+        run: >-
+          moon exec --on-failure continue composer-e2e:e2e --
+          --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=${{ matrix.workers }}
 
       # Trends every test's outcome in PostHog; the event contract and the gate are documented in
       # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
@@ -664,6 +711,7 @@ jobs:
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
@@ -678,6 +726,13 @@ jobs:
           run: >-
             moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
 
+      # A fork PR gets no secrets, and the uploader cannot run without a token.
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
+        timeout-minutes: 35
+        run: >-
+          moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
       - name: Upload Traces
         uses: actions/upload-artifact@v7
         if: always()
@@ -686,7 +741,29 @@ jobs:
           path: test-results/playwright
           retention-days: 7
 
-  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # The e2e suite's gate, as `test` is the tests'. Not required by branch protection: e2e reports without
+  # gating.
+  e2e:
+    needs: [plan, e2e-composer, e2e-rest]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
+    steps:
+      - name: Gate
+        id: gate
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          result=$(echo "$RESULTS" | jq -r '[.[].result] |
+            if any(. == "failure") then "failure" elif any(. == "cancelled") then "cancelled" else "success" end')
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          [ "$result" = success ]
+
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with the e2e cells. It used to ride along
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
   # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
   cli:
@@ -758,12 +835,11 @@ jobs:
       - name: Verify the install
         run: node cli-verify/verify-installed.mjs .
 
-  # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
-  # former in-job step used `success() || failure()`, which skips on cancellation) and so the test report
-  # can no longer go out green while e2e is still running. Each report takes the worst result across its
-  # jobs: one red cell makes the whole report red.
+  # Reports every nightly job from one place, through the `test` and `e2e` gates: each posts the worst
+  # result across its cells (one red cell makes the report red; a cancelled one reads as not completed),
+  # and a failed `plan` fails both.
   report:
-    needs: [test-node, test-browser, e2e, e2e-rest]
+    needs: [test, e2e]
     if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -781,19 +857,13 @@ jobs:
         uses: ./.github/actions/test-report
         with:
           name: test-24.11.1
-          result: >-
-            ${{ (needs.test-node.result == 'failure' || needs.test-browser.result == 'failure') && 'failure' ||
-            (needs.test-node.result == 'cancelled' || needs.test-browser.result == 'cancelled') && 'cancelled' ||
-            needs.test-node.result }}
+          result: ${{ needs.test.outputs.result }}
       - name: Send e2e report
         if: always()
         uses: ./.github/actions/test-report
         with:
           name: e2e
-          result: >-
-            ${{ (needs.e2e.result == 'failure' || needs.e2e-rest.result == 'failure') && 'failure' ||
-            (needs.e2e.result == 'cancelled' || needs.e2e-rest.result == 'cancelled') && 'cancelled' ||
-            needs.e2e.result }}
+          result: ${{ needs.e2e.outputs.result }}
 
   # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
   # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.

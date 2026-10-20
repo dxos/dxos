@@ -64,7 +64,8 @@ runs:
     # `.moon/workspace.yml` points the remote cache at a self-hosted bazel-remote behind mTLS.
     # moon degrades to local-cache-only when it cannot authenticate — silently, and green — so a
     # missing secret would cost every job its cache with no red build to notice it. Fail here
-    # instead, except on fork PRs, which cannot be given secrets at all.
+    # instead, except on fork PRs, which get no secrets, and Dependabot's, which get only Dependabot
+    # secrets.
     #
     # MOON_CACHE_* are read straight from the environment: a composite action cannot access the
     # `secrets` context, so each workflow binds them once in a workflow-level `env:` block rather
@@ -72,6 +73,7 @@ runs:
     - name: Install remote cache certificates
       env:
         IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        ACTOR: ${{ github.actor }}
         REMOTE_CACHE: ${{ inputs.remote-cache }}
       run: |
         if [ "$REMOTE_CACHE" != "true" ]; then
@@ -83,8 +85,8 @@ runs:
           exit 0
         fi
         if [ -z "$MOON_CACHE_CA_PEM" ] || [ -z "$MOON_CACHE_CLIENT_PEM" ] || [ -z "$MOON_CACHE_CLIENT_KEY" ]; then
-          if [ "$IS_FORK" = "true" ]; then
-            echo "::warning::Fork PR — no remote cache credentials, moon will use the local cache only."
+          if [ "$IS_FORK" = "true" ] || [ "$ACTOR" = "dependabot[bot]" ]; then
+            echo "::warning::Fork or Dependabot PR — no remote cache credentials, moon will use the local cache only."
             exit 0
           fi
           echo "::error::Remote cache certificates are missing. Bind MOON_CACHE_CA_PEM / MOON_CACHE_CLIENT_PEM / MOON_CACHE_CLIENT_KEY in the workflow's env block, or pass remote-cache: 'false'."

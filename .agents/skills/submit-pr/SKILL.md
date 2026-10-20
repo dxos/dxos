@@ -36,8 +36,8 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    exclusion with the user.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-8. **Open the PR as a draft** with `gh pr create --draft`. CI skips draft PRs,
-   so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
+8. **Open the PR as a draft** with `gh pr create --draft`. A draft runs only `check` and
+   the node tests, so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
    branch is converted to a draft anyway (`draft-on-open.yml`). Add the `preview` label only when the
    user asks for a preview deploy: each push to a labeled PR builds one. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
@@ -50,7 +50,7 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    starts the full Check: a draft runs `check` and the node tests, a ready PR every suite.
    Every push after this runs Check, so batch fixes into one push rather than pushing each one, and merge
    `main` in only to resolve a conflict. To keep iterating, convert it back to a
-   draft first (`gh pr ready --undo`). Drafts never run CI.
+   draft first (`gh pr ready --undo`).
 10. **Monitor CI every 5 minutes:**
     `gh run list --branch <branch> --limit 3 --workflow "Check"` and
     `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL

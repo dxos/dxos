@@ -77,7 +77,7 @@ jobs:
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           if [ -z "$DX_ANTHROPIC_API_KEY" ]; then
-            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check the `assistant-evals` environment's secrets and branch policy."
+            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check the assistant-evals environment's secrets and branch policy."
             exit 1
           fi
           moon run assistant-evals:evals
