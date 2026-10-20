@@ -105,7 +105,12 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     defaultSize: NOMINAL_SIZES.polygon,
     // Only a rounded polygon softens its corners, as a box's square corners stay square.
     silhouette: (node, inset, radius) =>
-      polygonPath(node.size, inset, isPolygonNode(node) ? node.sides : undefined, node.style?.rounded ? radius : 0),
+      polygonPath(node.size, {
+        inset,
+        sides: isPolygonNode(node) ? node.sides : undefined,
+        fit: isPolygonNode(node) ? node.fit : undefined,
+        radius: node.style?.rounded ? radius : 0,
+      }),
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,

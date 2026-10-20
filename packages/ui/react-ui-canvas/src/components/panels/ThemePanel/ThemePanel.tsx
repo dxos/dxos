@@ -114,8 +114,8 @@ export type ThemePanelProps = PanelProps & {
 };
 
 /**
- * The canvas's look: the theme selector, the guides toggle, and a switch between dots and lines over the background
- * (pressing the one drawn turns the grid off).
+ * The canvas's look: the snap and guides toggles, a switch between dots and lines over the background (pressing the one
+ * drawn turns the grid off), and the theme selector last.
  */
 export const ThemePanel = ({
   classNames,
@@ -136,46 +136,6 @@ export const ThemePanel = ({
 }: ThemePanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
-    <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
-      <Menu.Trigger asChild disabled={readonly || !onThemeChange}>
-        <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
-          <ThemeSwatch theme={theme} registry={registry} />
-          <span className='truncate'>{theme.name}</span>
-          <Icon.Icon icon='ph--caret-up-down--regular' size='xs' />
-        </Button.Root>
-      </Menu.Trigger>
-      <Menu.Content>
-        <Menu.RadioItemGroup
-          value={override ?? DEFAULT_VALUE}
-          onValueChange={({ value }) => onThemeChange?.(value === DEFAULT_VALUE ? undefined : value)}
-        >
-          <Menu.RadioItem item={{ value: DEFAULT_VALUE, label: 'Default' }} data-testid='theme-option-default'>
-            <span className='w-7 shrink-0' />
-            <Menu.ItemText />
-            <Menu.ItemIndicator />
-          </Menu.RadioItem>
-          {Object.values(registry.themes).map((option) => (
-            <Menu.RadioItem
-              key={option.id}
-              item={{ value: option.id, label: option.name }}
-              data-testid={`theme-option-${option.id}`}
-            >
-              <ThemeSwatch theme={option} registry={registry} />
-              <Menu.ItemText />
-              {option.mode && (
-                <Icon.Icon
-                  icon={option.mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'}
-                  size='sm'
-                  classNames='text-fg-muted'
-                />
-              )}
-              <Menu.ItemIndicator />
-            </Menu.RadioItem>
-          ))}
-        </Menu.RadioItemGroup>
-      </Menu.Content>
-    </Menu.Root>
-    <Toolbar.Separator variant='line' />
     {/* Snapping is to the grid, so its toggles sit with the grid's. */}
     {onSnapToggle && (
       <Button.Toggle
@@ -233,5 +193,45 @@ export const ThemePanel = ({
         />
       ))}
     </Button.Group>
+    <Toolbar.Separator variant='line' />
+    <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
+      <Menu.Trigger asChild disabled={readonly || !onThemeChange}>
+        <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
+          <ThemeSwatch theme={theme} registry={registry} />
+          <span className='truncate'>{theme.name}</span>
+          <Icon.Icon icon='ph--caret-up-down--regular' size='xs' />
+        </Button.Root>
+      </Menu.Trigger>
+      <Menu.Content>
+        <Menu.RadioItemGroup
+          value={override ?? DEFAULT_VALUE}
+          onValueChange={({ value }) => onThemeChange?.(value === DEFAULT_VALUE ? undefined : value)}
+        >
+          <Menu.RadioItem item={{ value: DEFAULT_VALUE, label: 'Default' }} data-testid='theme-option-default'>
+            <span className='w-7 shrink-0' />
+            <Menu.ItemText />
+            <Menu.ItemIndicator />
+          </Menu.RadioItem>
+          {Object.values(registry.themes).map((option) => (
+            <Menu.RadioItem
+              key={option.id}
+              item={{ value: option.id, label: option.name }}
+              data-testid={`theme-option-${option.id}`}
+            >
+              <ThemeSwatch theme={option} registry={registry} />
+              <Menu.ItemText />
+              {option.mode && (
+                <Icon.Icon
+                  icon={option.mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'}
+                  size='sm'
+                  classNames='text-fg-muted'
+                />
+              )}
+              <Menu.ItemIndicator />
+            </Menu.RadioItem>
+          ))}
+        </Menu.RadioItemGroup>
+      </Menu.Content>
+    </Menu.Root>
   </Toolbar.Root>
 );

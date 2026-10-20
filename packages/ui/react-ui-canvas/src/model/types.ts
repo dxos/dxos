@@ -252,6 +252,13 @@ export const CloudNode = Schema.Struct({
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
 
 /** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
+/**
+ * How a polygon sits in its frame: `frame` scales it to fill the frame, centred by its own bounds; `circle` puts its
+ * vertices on the circle that fits the frame, centred on it.
+ */
+export const POLYGON_FITS = ['frame', 'circle'] as const;
+export type PolygonFit = (typeof POLYGON_FITS)[number];
+
 export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,
@@ -260,6 +267,8 @@ export const PolygonNode = Schema.Struct({
   sides: Schema.optional(
     Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
   ),
+  /** Unset, `frame`. */
+  fit: Schema.optional(Schema.Literals(POLYGON_FITS).annotate({ title: 'Fit' })),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 

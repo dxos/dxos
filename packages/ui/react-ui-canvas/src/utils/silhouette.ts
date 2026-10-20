@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Size } from '../model/index.ts';
+import { type PolygonFit, type Size } from '../model/index.ts';
 
 /** Bumps around a cloud's outline when the node sets none. */
 export const DEFAULT_CLOUD_BUMPS = 9;
@@ -46,17 +46,30 @@ export const cloudPath = (size: Size, inset = 0, bumps = DEFAULT_CLOUD_BUMPS): s
   return `M ${round(points[0].x)} ${round(points[0].y)} ${arcs.join(' ')} Z`;
 };
 
+export type PolygonPathOptions = {
+  /** Px kept inside the frame, so a stroke twice that wide stays within it. */
+  inset?: number;
+  sides?: number;
+  /** Px each corner is rounded by, no larger than half of either edge allows. */
+  radius?: number;
+  fit?: PolygonFit;
+};
+
 /**
- * SVG path data for a regular polygon of `sides`, a vertex on top: as large as fits a frame of `size` kept `inset` px
- * inside it, and centred in the frame by its own bounds (an odd polygon is lower on top than across its base). Each
- * corner is rounded by an arc of `radius` px, no larger than half of either edge allows.
+ * SVG path data for a regular polygon, a vertex on top, in a frame of `size`: with `fit: 'frame'` as large as fits the
+ * frame and centred by its own bounds (an odd polygon is lower on top than across its base); with `fit: 'circle'` its
+ * vertices on the circle that fits the frame, centred on it.
  */
-export const polygonPath = (size: Size, inset = 0, sides = DEFAULT_POLYGON_SIDES, radius = 0): string => {
+export const polygonPath = (
+  size: Size,
+  { inset = 0, sides = DEFAULT_POLYGON_SIDES, radius = 0, fit = 'frame' }: PolygonPathOptions = {},
+): string => {
   const count = Math.max(3, Math.round(sides));
   const unit = ring({ width: 0, height: 0 }, 1, 1, count);
   const xs = unit.map(({ x }) => x);
   const ys = unit.map(({ y }) => y);
-  const [left, right, top, bottom] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const [left, right, top, bottom] =
+    fit === 'circle' ? [-1, 1, -1, 1] : [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   // Uniform, so the polygon stays regular in a frame of any aspect.
   const scale = Math.max(
     0,

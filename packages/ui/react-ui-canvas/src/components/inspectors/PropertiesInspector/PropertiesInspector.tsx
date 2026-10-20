@@ -76,6 +76,7 @@ import { StyleClassesContext } from './ClassField.tsx';
 import { FontField, FontSizeField } from './FontField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
+import { PolygonFitField } from './PolygonFitField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
@@ -129,6 +130,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
+  'fit': PolygonFitField,
   'scene': ViewField,
   'layer': LayerClassField,
 };
