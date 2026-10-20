@@ -53,6 +53,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -96,6 +99,9 @@
     },
     {
       "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-experimental"
     },
     {
       "path": "../../ui/ui-theme"
