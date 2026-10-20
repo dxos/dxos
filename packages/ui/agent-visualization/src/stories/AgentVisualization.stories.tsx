@@ -17,7 +17,7 @@ import { type Config, randomize } from '../params.ts';
 import { AudioProvider } from '../providers/AudioProvider.ts';
 import { type AgentVisualization, createAgentVisualization } from '../runtime.ts';
 import { type AnyVisualization } from '../visualization.ts';
-import { getVisualization, ink, inkLine, inkMorph, spectrum, torus } from '../visualizations/index.ts';
+import { getVisualization, ink, inkLine, inkMorph, orb, spectrum, torus } from '../visualizations/index.ts';
 import { levaControls, levaPaths, toConfig } from './tuner.ts';
 
 type StoryProps = {
@@ -187,6 +187,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Orb: Story = { args: { visualization: orb.id } };
 
 export const Torus: Story = { args: { visualization: torus.id } };
 
