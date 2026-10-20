@@ -60,11 +60,13 @@ const geoProps = (props: Record<string, unknown>) => ({
   verticalAlign: 'middle',
   growY: 0,
   url: '',
+  scale: 1,
   ...props,
 });
 
 const arrowProps = (props: Record<string, unknown>) => ({
   color: 'black',
+  labelColor: 'black',
   fill: 'none',
   dash: 'draw',
   size: 'm',
@@ -76,6 +78,7 @@ const arrowProps = (props: Record<string, unknown>) => ({
   bend: 0,
   text: '',
   labelPosition: 0.5,
+  scale: 1,
   ...props,
 });
 
@@ -150,6 +153,8 @@ export const textNoteAndFreeArrow = (): Records => ({
       growY: 0,
       text: 'Remember',
       url: '',
+      fontSizeAdjustment: 0,
+      scale: 1,
     },
   }),
   ...shape('free', 'arrow', {
@@ -165,7 +170,28 @@ export const textNoteAndFreeArrow = (): Records => ({
     }),
   }),
   ...shape('star', 'geo', { index: 'a4', x: 600, y: 0, props: geoProps({ geo: 'star' }) }),
-  ...shape('scribble', 'draw', { index: 'a5', props: { segments: [] } }),
+  ...shape('scribble', 'draw', {
+    index: 'a5',
+    props: {
+      color: 'black',
+      fill: 'none',
+      dash: 'draw',
+      size: 'm',
+      segments: [
+        {
+          type: 'free',
+          points: [
+            { x: 0, y: 0, z: 0.5 },
+            { x: 40, y: 20, z: 0.5 },
+          ],
+        },
+      ],
+      isComplete: true,
+      isClosed: false,
+      isPen: false,
+      scale: 1,
+    },
+  }),
   ...shape('cloud', 'geo', { index: 'a6', x: 600, y: 200, props: geoProps({ geo: 'cloud', text: 'Sky' }) }),
   ...shape('hexagon', 'geo', { index: 'a7', x: 800, y: 200, props: geoProps({ geo: 'hexagon' }) }),
 });
@@ -218,6 +244,7 @@ export const groupAndRotation = (): Records => ({
         a2: { id: 'a2', index: 'a2', x: 100, y: 0 },
         a3: { id: 'a3', index: 'a3', x: 100, y: 100 },
       },
+      scale: 1,
     },
   }),
   ...shape('tilted', 'geo', { index: 'a2', x: 0, y: 0, rotation: Math.PI, props: geoProps({ w: 100, h: 60 }) }),

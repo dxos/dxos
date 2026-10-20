@@ -19,7 +19,7 @@ import { DrawingDialectError } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.ImportTldraw> = CanvasOperation.ImportTldraw.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ drawing: sourceRef, name }) {
+    Effect.fn(function* ({ drawing: sourceRef, name, snap }) {
       const source = yield* Database.load(sourceRef);
       const sourceCanvas = yield* Database.load(source.canvas);
       if (sourceCanvas.schema !== Canvas.TLDRAW_SCHEMA) {
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.ImportTldraw> = Canv
 
       const content: ContentMap = {};
       const root = seedContent(content);
-      const { views, skipped, approximated } = tldrawToViews(sourceCanvas.content, { root });
+      const { views, skipped, approximated } = tldrawToViews(sourceCanvas.content, { root, snap });
       writeViews(content, views);
 
       const canvas = yield* Database.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));

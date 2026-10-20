@@ -104,7 +104,7 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [x] Views panel: drag rows to restack within a container. `controller.document.restack` → one `reorder` intent through the open View's projection; `canRestack`/`viewReorder` unit-tested.
   - Decisions (2026-10-19): the restack is the existing `reorder` intent rather than `update` with a `z`, as `reorder` is exactly that edit; a drop is accepted only among siblings in the open View, since the projection is the open View's (restacking another View would need its own projection or navigating there mid-drag); a View row's click selects its frame in the parent View, and only Open/Enter/double-click drill in; row selection navigates without animation so the selection lands in the View it names; `restackZ` now reports a move that changes nothing as undefined.
 - [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden. (Hidden since Phase 2, but for the selected one.)
-- [ ] Delete AboutInspector, its story and its Canvas part.
+- [x] Delete AboutInspector, its story and its Canvas part. (`Canvas.About` removed; the Views rows carry the counts.)
 
 ## Phase 6 — Undo (VIEWS.md §8)
 
@@ -120,5 +120,5 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
 - [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.
 - [ ] Docked inspectors: the bottom-left (navigation) and bottom-centre (actions) bars overlap when the canvas is narrow (seen in `Canvas › Docked` with the dock open).
-- [ ] Ungroup brings the Object's animation tracks back out (Group moves them in; Ungroup drops them).
-- [ ] The Objects panel's "Delete object and its instances" and host operations clean up orphans in the same intent, not on the next load.
+- [x] Ungroup brings the Object's animation tracks back out, renamed to the new nodes and mapped through the Instance's transform.
+- [x] The Objects panel's "Delete object and its instances" cleans up orphans in the same step (`removeComposite`). Host operations still clean up on load.

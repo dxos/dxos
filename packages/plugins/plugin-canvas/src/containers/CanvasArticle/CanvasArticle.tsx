@@ -226,7 +226,6 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   <Canvas.Views />
                   <Canvas.Layers />
                   <Canvas.Objects />
-                  <Canvas.About />
                 </>
               )}
             </Canvas.Root>
