@@ -1068,6 +1068,20 @@ describe('Reactive Object with ECHO database', () => {
     expect(dbObj.queue.uri).to.include(queueId!);
   });
 
+  test('ref with a malformed echo URI is unresolved', async () => {
+    const { db } = await builder.createDatabase();
+    const uri = URI.make(`echo://${SpaceId.random()}/${EntityId.random()}/${EntityId.random()}`);
+    const obj = db.add(Obj.make(TestSchema.Expando, { ref: Ref.fromURI(uri) }));
+    expect(obj.ref.target).to.be.undefined;
+  });
+
+  test('ref with a space-only echo URI is unresolved', async () => {
+    const { db } = await builder.createDatabase();
+    const uri = EID.make({ spaceId: SpaceId.random() });
+    const obj = db.add(Obj.make(TestSchema.Expando, { ref: Ref.fromURI(uri) }));
+    expect(obj.ref.target).to.be.undefined;
+  });
+
   test('Obj.getURI returns full DXN', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(Obj.make(TestSchema.Expando, { string: 'Object 1' }));
