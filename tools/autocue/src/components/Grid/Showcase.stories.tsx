@@ -19,6 +19,8 @@ type ShowcaseProps = {
   stepped?: boolean;
   /** Each of the three tour clips' close-up, in ms, from landing to the next landing. */
   slot?: number;
+  /** Each tour close-up's own slot in turn, in ms (its clip plus one transition); it overrides `slot`. */
+  slots?: number[];
   /** The closing drift of the zoomed-out wall, in ms. */
   driftMs?: number;
   /** The drift's speed, in cells per second. */
@@ -28,6 +30,7 @@ type ShowcaseProps = {
 /** The showcase's grid part: three tour close-ups, then the zoomed-out wall drifting down. */
 const ShowcaseGrid = ({
   slot = 10_000,
+  slots,
   driftMs = 12_000,
   drift = 0.2,
   controls,
@@ -49,6 +52,7 @@ const ShowcaseGrid = ({
     variant='shift'
     content='clips'
     tourSlot={slot}
+    tourSlots={slots}
     montage={[]}
     zoomMs={600}
     shiftMs={600}
@@ -64,7 +68,7 @@ const ShowcaseGrid = ({
  * The showcase cut: the Composer ident; the first tour clip close up, shifting to the second and the third; the wall
  * zooming out to drift down; then the end card, looped.
  */
-const ShowcaseStory = ({ slot = 10_000, driftMs = 12_000, drift = 0.2 }: ShowcaseProps) => {
+const ShowcaseStory = ({ slot = 10_000, slots, driftMs = 12_000, drift = 0.2 }: ShowcaseProps) => {
   const [phase, setPhase] = useState<'ident' | 'grid' | 'outro'>('ident');
   // The cards are drawn in the page's theme, as the Frame story's are.
   const { themeMode } = useThemeContext();
@@ -82,7 +86,9 @@ const ShowcaseStory = ({ slot = 10_000, driftMs = 12_000, drift = 0.2 }: Showcas
         />
       );
     case 'grid':
-      return <ShowcaseGrid slot={slot} driftMs={driftMs} drift={drift} onEnded={() => setPhase('outro')} />;
+      return (
+        <ShowcaseGrid slot={slot} slots={slots} driftMs={driftMs} drift={drift} onEnded={() => setPhase('outro')} />
+      );
     case 'outro':
       return (
         <IdentPlayer
@@ -102,6 +108,7 @@ const meta: Meta<ShowcaseProps> = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   argTypes: {
     slot: { type: { name: 'number' }, control: 'number' },
+    slots: { type: { name: 'array', value: { name: 'number' } }, control: 'object' },
     driftMs: { type: { name: 'number' }, control: 'number' },
     drift: { type: { name: 'number' }, control: { type: 'number', step: 0.05 } },
   },

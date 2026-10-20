@@ -80,6 +80,11 @@ export type GridProps = {
   content?: Content;
   /** Shift loop: each tour close-up's slot, landing to landing, in ms (its hold plus one transition). */
   tourSlot?: number;
+  /**
+   * Shift loop: each tour close-up's own slot in turn, in ms, so each holds for its clip's full length; it overrides
+   * `tourSlot`, which still applies to a tour cell without an entry.
+   */
+  tourSlots?: number[];
   /** Shift loop: each montage close-up's slot, in ms. */
   montageSlot?: number;
   /** Shift loop: the montage's close-ups after the tour, as row-major cell indices. */
@@ -274,6 +279,7 @@ export const Grid = ({
   variant = 'zoom',
   content = 'clips',
   tourSlot = 10_000,
+  tourSlots,
   montageSlot = 3_000,
   montage: montageProp,
   zoomMs = 600,
@@ -368,7 +374,10 @@ export const Grid = ({
       const options = {
         cells,
         sequence: [...tourCells, ...montage],
-        slots: [...tourCells.map(() => Number(tourSlot)), ...montage.map(() => Number(montageSlot))],
+        slots: [
+          ...tourCells.map((_, step) => Number(tourSlots?.[step] ?? tourSlot)),
+          ...montage.map(() => Number(montageSlot)),
+        ],
         viewport,
         gap,
         cols,
