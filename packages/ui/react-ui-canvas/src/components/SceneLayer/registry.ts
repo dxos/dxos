@@ -88,7 +88,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     component: CloudNodeView,
     create: (props) => createNode({ type: 'cloud', ...props }),
     defaultSize: NOMINAL_SIZES.cloud,
-    silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.bumps : undefined),
+    silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.params?.bumps : undefined),
     // Only the side centres of the frame lie near the outline.
     portsPerSide: 1,
     parts: [{ field: 'label' }],
@@ -107,11 +107,10 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     silhouette: (node, inset, radius) =>
       polygonPath(node.size, {
         inset,
-        sides: isPolygonNode(node) ? node.sides : undefined,
-        fit: isPolygonNode(node) ? node.fit : undefined,
+        ...(isPolygonNode(node) ? node.params : undefined),
         radius: node.style?.rounded ? radius : 0,
       }),
-    bounds: (node) => (isPolygonNode(node) && node.fit === 'circle' ? 'circle' : 'frame'),
+    bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,

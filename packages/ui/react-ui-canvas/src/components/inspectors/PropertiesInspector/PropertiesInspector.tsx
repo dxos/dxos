@@ -130,7 +130,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
-  'fit': PolygonFitField,
+  'params.fit': PolygonFitField,
   'scene': ViewField,
   'layer': LayerClassField,
 };

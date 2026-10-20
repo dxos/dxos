@@ -69,7 +69,7 @@ describe('tldrawToViews', () => {
     expect(nodes.sticky.style).not.toHaveProperty('tone');
     expect(nodes.star).toMatchObject({ type: 'rect' });
     expect(nodes.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
-    expect(nodes.hexagon).toMatchObject({ type: 'polygon', sides: 6 });
+    expect(nodes.hexagon).toMatchObject({ type: 'polygon', params: { sides: 6 } });
     expect(links.free).toMatchObject({
       type: 'curve',
       source: { point: { x: 10, y: 300 } },

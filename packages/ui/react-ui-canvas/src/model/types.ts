@@ -239,19 +239,24 @@ export const EllipseNode = Schema.Struct({
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
+/** A cloud's own settings, in its `params`. */
+export const CloudParams = Schema.Struct({
+  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
+  bumps: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
+  ),
+}).annotate({ title: 'Cloud' });
+export type CloudParams = Schema.Schema.Type<typeof CloudParams>;
+
 /** A cloud filling the frame, its outline a ring of bumps; labelled like a box. */
 export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
-  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
-  bumps: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
-  ),
+  params: Schema.optional(CloudParams),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
 
-/** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
 /**
  * How a polygon sits in its frame: `frame` scales it to fill the frame, centred by its own bounds; `circle` puts its
  * vertices on the circle that fits the frame, centred on it.
@@ -259,16 +264,23 @@ export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
 export const POLYGON_FITS = ['frame', 'circle'] as const;
 export type PolygonFit = (typeof POLYGON_FITS)[number];
 
-export const PolygonNode = Schema.Struct({
-  type: Schema.Literal('polygon'),
-  ...nodeBase,
-  ...boxFields,
+/** A polygon's own settings, in its `params`. */
+export const PolygonParams = Schema.Struct({
   /** Unset, `DEFAULT_POLYGON_SIDES`. */
   sides: Schema.optional(
     Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
   ),
   /** Unset, `frame`. */
   fit: Schema.optional(Schema.Literals(POLYGON_FITS).annotate({ title: 'Fit' })),
+}).annotate({ title: 'Polygon' });
+export type PolygonParams = Schema.Schema.Type<typeof PolygonParams>;
+
+/** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
+export const PolygonNode = Schema.Struct({
+  type: Schema.Literal('polygon'),
+  ...nodeBase,
+  ...boxFields,
+  params: Schema.optional(PolygonParams),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
 
@@ -436,6 +448,23 @@ const LEGACY_NODE_TYPES: ReadonlyMap<string, BuiltinNodeType> = new Map([['frame
 export const withLegacyNodeType = (node: NodeBase): NodeBase => {
   const type = LEGACY_NODE_TYPES.get(node.type);
   return type ? { ...node, type } : node;
+};
+
+/** The settings each type once stored beside the shared fields, which it now keeps in `params`. */
+const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = { cloud: ['bumps'], polygon: ['sides', 'fit'] };
+
+/** A node storing its type's settings beside the shared fields reads with them in `params`; any other is returned as it is. */
+export const withLegacyParams = (node: NodeBase): NodeBase => {
+  const keys = (LEGACY_PARAMS[node.type] ?? []).filter((key) => key in node);
+  if (keys.length === 0) {
+    return node;
+  }
+  const params: unknown = Reflect.get(node, 'params');
+  const lifted = Object.fromEntries(keys.map((key) => [key, Reflect.get(node, key)]));
+  const next = { ...node };
+  keys.forEach((key) => Reflect.deleteProperty(next, key));
+  // A value already in `params` was written later, so it wins over the stored one.
+  return Object.assign(next, { params: { ...lifted, ...(typeof params === 'object' ? params : {}) } });
 };
 
 //
@@ -678,12 +707,14 @@ export type View = {
   readonly timeline?: Timeline;
 };
 
-/** A View as stored before a rename, read in the current shape: its nodes' legacy type names mapped. */
+/** A View as stored before a rename, read in the current shape: its nodes' legacy type names and settings mapped. */
 export const withLegacyView = (view: View): View =>
-  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type))
+  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type) || withLegacyParams(node) !== node)
     ? {
         ...view,
-        nodes: Object.fromEntries(Object.entries(view.nodes).map(([id, node]) => [id, withLegacyNodeType(node)])),
+        nodes: Object.fromEntries(
+          Object.entries(view.nodes).map(([id, node]) => [id, withLegacyParams(withLegacyNodeType(node))]),
+        ),
       }
     : view;
 
