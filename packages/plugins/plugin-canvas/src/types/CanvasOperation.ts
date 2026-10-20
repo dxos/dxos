@@ -151,38 +151,6 @@ export const SetTimelineKey = Operation.make({
   services: [Database.Service],
 });
 
-export const ImportTldraw = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.canvas.importTldraw'),
-    name: 'Import tldraw drawing',
-    description:
-      'Creates a canvas drawing in the same space from a tldraw drawing: shapes become nodes, arrows links (bound ends attach to their nodes), frames labelled rectangles on a frames layer under their shapes, groups anonymous Objects. The tldraw drawing is left as it is.',
-    icon: 'ph--graph--regular',
-  },
-  input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'A tldraw drawing.' }),
-    name: Schema.optional(Schema.String.annotate({ description: "The new drawing's name; the source's by default." })),
-    snap: Schema.optional(
-      Schema.Boolean.annotate({
-        description:
-          "Snap shapes' positions and sizes to the canvas grid, so they line up as drawn shapes do; true by default.",
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing),
-    nodes: Schema.Number,
-    links: Schema.Number,
-    skipped: Schema.Record(Schema.String, Schema.Number).annotate({
-      description: 'Shapes left out, by tldraw shape type (`page` for shapes on any page after the first).',
-    }),
-    approximated: Schema.Record(Schema.String, Schema.Number).annotate({
-      description: 'Shapes carried over with a loss, by reason (`rotation`, `group`, `geo:<kind>`).',
-    }),
-  }),
-  services: [Database.Service],
-});
-
 /** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
 const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
   description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",

@@ -9,6 +9,8 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 
@@ -51,12 +53,18 @@ export default Capability.makeModule(
               id: `convert-${slug}`,
               // The handler runs against the drawing's own space, which the action context does not supply.
               data: () =>
-                Operation.invoke(
-                  DrawingOperation.Convert,
-                  // Always a copy beside the source, which is left as it is.
-                  { drawing: Ref.make(drawing), variant: variant.id },
-                  { spaceId: Obj.getDatabase(drawing)?.spaceId },
-                ),
+                Effect.gen(function* () {
+                  // Always a copy beside the source, which is left as it is; the copy is opened, as it is new.
+                  const result = yield* Operation.invoke(
+                    DrawingOperation.Convert,
+                    { drawing: Ref.make(drawing), variant: variant.id },
+                    { spaceId: Obj.getDatabase(drawing)?.spaceId },
+                  );
+                  const copy = yield* Effect.promise(() => result.drawing.load());
+                  yield* Operation.invoke(LayoutOperation.Open, {
+                    subject: [GraphPath.getObjectPathFromObject(copy)],
+                  });
+                }),
               properties: {
                 label: IllustratorCapabilities.copyLabel(variant),
                 icon: variant.icon ?? DrawingOperation.Convert.meta.icon,

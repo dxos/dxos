@@ -14,11 +14,11 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { SvgBuilder, makeBuilder } from '#model';
+import { SvgBuilder, bindArrowEnds, makeBuilder } from '#model';
 import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
 
 import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
-import convertHandler, { bindArrowEnds } from './convert.ts';
+import convertHandler from './convert.ts';
 
 const SOURCE = 'flowchart LR\n  A[Client] --> B[Server]';
 

@@ -117,8 +117,9 @@ test QA-4: Showcase clip
 
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
-    The "Copy as canvas" action plugin-canvas contributes to every tldraw drawing runs `ImportTldraw`: a new canvas
-    drawing beside the tldraw one, opened once it is filed.
+    The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
+    a drawing the scene DSL manages converts as every variant does, a hand-drawn one shape by shape. The copy is filed
+    beside the tldraw drawing and opened.
   actors: human
   covers: []
   status: unverified
@@ -128,7 +129,7 @@ test QA-5: Copy a tldraw drawing as a canvas
     - space: a tldraw drawing holding a labelled rectangle, an ellipse, an arrow bound between them and a frame
   steps:
     - name: Copy it
-      do: Open the tldraw drawing's object menu and choose "Copy as canvas".
+      do: Open the tldraw drawing's object menu and choose "Copy as Canvas".
       expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
     - name: Read the copy
       do: Move the rectangle, then select a shape inside the frame.

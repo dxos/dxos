@@ -13,6 +13,7 @@ import {
   Schema,
   SkillDefinition,
   SpaceTemplates,
+  TldrawConverter,
   Translations,
   UndoMappings,
 } from '#capabilities';
@@ -27,6 +28,7 @@ export const CanvasPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SpaceTemplates),
+  Plugin.addModule(TldrawConverter),
   Plugin.addModule(Translations),
   Plugin.addModule(UndoMappings),
   Plugin.make,
