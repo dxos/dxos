@@ -115,10 +115,89 @@ export const lintMdl = (text: string): Diagnostic[] => {
   return diagnostics;
 };
 
-type ChangelogEntry = { id: string; text: string; supersedes?: string };
+/** One `decision` block of a spec's `## Changelog`, with the fields of `lang/changelog.mdl` it carries. */
+export type ChangelogEntry = {
+  id: string;
+  /** The whole block body, for comparing entries. */
+  text: string;
+  /** The decision itself: the inline prose after `decision D-n:`. */
+  title: string;
+  date?: string;
+  /** The decider, `user:<handle>` or `agent:<name>`. */
+  by?: string;
+  /** The person an agent acted for. */
+  for?: string;
+  quote?: string;
+  context?: string;
+  why?: string;
+  source?: string;
+  supersedes?: string;
+  /** Block ids the decision constrains. */
+  affects: string[];
+  /** Other decisions the prose cites as `[D-n]`, in order of first mention. */
+  refs: string[];
+  rejected: string[];
+};
 
 const CHANGELOG_HEADING = /^## Changelog[ \t]*$/m;
 const DECISION_ID = /^D-(\d+)$/;
+const DECISION_REF = /\[(D-\d+)\]/g;
+
+const indentOf = (line: string): number => line.length - line.trimStart().length;
+
+/** A field's value as lines: the inline value, or the indented lines of a `|` block or a `- item` list. */
+const fieldLines = (body: string, field: string): string[] | undefined => {
+  const lines = body.split('\n');
+  const index = lines.findIndex((line) => new RegExp(`^\\s+${field}:`).test(line));
+  if (index === -1) {
+    return undefined;
+  }
+  const inline = fieldValue(lines[index], field);
+  if (inline && inline !== '|' && inline !== '>') {
+    return [inline];
+  }
+  const indent = indentOf(lines[index]);
+  const end = lines.findIndex((line, next) => next > index && line.trim() !== '' && indentOf(line) <= indent);
+  return lines.slice(index + 1, end === -1 ? undefined : end).map((line) => line.trim());
+};
+
+const fieldText = (body: string, field: string): string | undefined => fieldLines(body, field)?.join('\n').trim();
+
+const parseList = (value: string | undefined): string[] =>
+  value
+    ?.replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean) ?? [];
+
+const parseDecision = ({ id, body }: BlockHeader): ChangelogEntry => {
+  const title = body
+    .split('\n')[0]
+    .replace(/^\w+\s+[^:]*:\s*/, '')
+    .trim();
+  const supersedes = fieldValue(body, 'supersedes');
+  const why = fieldText(body, 'why');
+  const context = fieldText(body, 'context');
+  const refs = [title, why, context]
+    .flatMap((prose) => [...(prose ?? '').matchAll(DECISION_REF)].map((match) => match[1]))
+    .filter((ref, index, all) => ref !== id && all.indexOf(ref) === index);
+  return {
+    id,
+    text: body.trim(),
+    title,
+    date: fieldValue(body, 'date'),
+    by: fieldValue(body, 'by'),
+    for: fieldValue(body, 'for'),
+    quote: fieldText(body, 'quote'),
+    context,
+    why,
+    source: fieldValue(body, 'source'),
+    supersedes,
+    affects: parseList(fieldValue(body, 'affects')),
+    refs,
+    rejected: (fieldLines(body, 'rejected') ?? []).filter(Boolean).map((line) => line.replace(/^-\s*/, '')),
+  };
+};
 
 /**
  * Splits a spec into its `## Changelog` entries and everything else.
@@ -136,7 +215,7 @@ export const parseChangelog = (text: string): { entries: ChangelogEntry[]; rest:
   const section = text.slice(sectionStart, sectionEnd);
   const entries = parseBlockHeaders(section)
     .filter(({ type }) => type === 'decision')
-    .map(({ id, body }) => ({ id, text: body.trim(), supersedes: fieldValue(body, 'supersedes') }));
+    .map(parseDecision);
   return { entries, rest: text.slice(0, sectionStart) + text.slice(sectionEnd) };
 };
 

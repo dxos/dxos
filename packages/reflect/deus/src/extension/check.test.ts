@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { MISSING_DECISION, checkChangelogChange, isTrivialEdit, lintMdl } from './check.ts';
+import { MISSING_DECISION, checkChangelogChange, isTrivialEdit, lintMdl, parseChangelog } from './check.ts';
 
 const block = (body: string) => ['```mdl', body, '```', ''].join('\n');
 
@@ -179,6 +179,65 @@ describe('mdl lint', () => {
     test('ids and numbers', ({ expect }) => {
       expect(isTrivialEdit('see F-1.2', 'see F-1.3')).toBe(false);
       expect(isTrivialEdit('max 8', 'max 9')).toBe(false);
+    });
+  });
+
+  describe('parse changelog', () => {
+    test('reads the fields of each decision', ({ expect }) => {
+      const text = [
+        '# Spec',
+        '',
+        '## Changelog',
+        '',
+        block(
+          [
+            'decision D-1: The canvas grows.',
+            '  date: 2026-10-02',
+            '  by: user:alice',
+            '  quote: |',
+            '    canvas should grow',
+            '',
+            '    past the edge',
+            '  affects: [Scene, F-2.1]',
+          ].join('\n'),
+        ),
+        block(
+          [
+            'decision D-2: Bounds grow to the major grid. Fills in [D-1].',
+            '  date: 2026-10-02',
+            '  by: agent:claude-code',
+            '  for: user:alice',
+            '  why: Keeps [D-1] cheap; see [D-1] and [D-2].',
+            '  supersedes: D-1',
+            '  rejected:',
+            '    - Fixed padding: clips large nodes.',
+            '    - Minor grid: re-lays on every drag.',
+          ].join('\n'),
+        ),
+        '## Appendix',
+      ].join('\n');
+
+      const { entries } = parseChangelog(text);
+      expect(entries).toHaveLength(2);
+      expect(entries[0]).toMatchObject({
+        id: 'D-1',
+        title: 'The canvas grows.',
+        date: '2026-10-02',
+        by: 'user:alice',
+        quote: 'canvas should grow\n\npast the edge',
+        affects: ['Scene', 'F-2.1'],
+        refs: [],
+        rejected: [],
+      });
+      expect(entries[0].for).toBeUndefined();
+      expect(entries[1]).toMatchObject({
+        id: 'D-2',
+        by: 'agent:claude-code',
+        for: 'user:alice',
+        supersedes: 'D-1',
+        refs: ['D-1'],
+        rejected: ['Fixed padding: clips large nodes.', 'Minor grid: re-lays on every drag.'],
+      });
     });
   });
 });

@@ -50,6 +50,16 @@ describe('dynamic projection', () => {
     expect(scene.nodes.root).toMatchObject({ type: 'card', label: 'root' });
     expect(scene.links.e1).toMatchObject({ type: 'line', ends: { end: 'arrow' } });
 
+    const styled = layoutGraph(
+      {
+        ...graph,
+        edges: [{ id: 'e1', from: 'root', to: 'left', text: 'uses', ends: { start: 'arrow' }, style: { hue: 'red' } }],
+      },
+      { positions: {} },
+      { nodes: defaultNodeRegistry, link: { ends: { end: 'arrow' } } },
+    );
+    expect(styled.links.e1).toMatchObject({ text: 'uses', ends: { start: 'arrow' }, style: { hue: 'red' } });
+
     const registry = Registry.make();
     const projection = createDynamicProjection({
       registry,

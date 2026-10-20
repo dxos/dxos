@@ -19,6 +19,7 @@ import {
   type Capabilities,
   type CreateProps,
   type Intent,
+  type LineStyle,
   type Link,
   type LinkEnds,
   type LinkType,
@@ -34,7 +35,16 @@ import { type Projection } from '../projection.ts';
 import { labelOf } from './constrained.ts';
 
 export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
-export type GraphEdge = { id: string; from: string; to: string };
+export type GraphEdge = {
+  id: string;
+  from: string;
+  to: string;
+  /** A caption at the middle of the link. */
+  text?: string;
+  /** Overrides `DynamicOptions.link.ends` for this edge, so a graph can draw several kinds of edge. */
+  ends?: LinkEnds;
+  style?: LineStyle;
+};
 
 export type GraphModel = {
   nodes: GraphNode[];
@@ -119,7 +129,9 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
         z: keys[index],
         source: { node: edge.from },
         target: { node: edge.to },
-        ...(options.link?.ends && { ends: options.link.ends }),
+        ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
+        ...(edge.text !== undefined && { text: edge.text }),
+        ...(edge.style && { style: edge.style }),
       };
     }
   });
