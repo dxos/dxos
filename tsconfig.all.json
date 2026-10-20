@@ -157,6 +157,12 @@
       "path": "packages/devtools/drawing/tsconfig.json"
     },
     {
+      "path": "packages/apps/drawing-app/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/drawing/site/tsconfig.json"
+    },
+    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
@@ -353,6 +359,9 @@
     },
     {
       "path": "packages/e2e/perf-harness/tsconfig.json"
+    },
+    {
+      "path": "packages/common/permission/tsconfig.json"
     },
     {
       "path": "packages/common/phoenix/tsconfig.json"

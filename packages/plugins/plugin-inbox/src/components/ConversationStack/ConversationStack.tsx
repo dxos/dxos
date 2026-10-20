@@ -131,7 +131,7 @@ type ConversationStackContextValue = {
   getSenderActions?: (message: Mailbox.MessageLike) => ExtractorMenuItem[];
   /** Derived summaries keyed by message id (container-resolved from the mailbox's annotation feed). */
   summaries?: ReadonlyMap<string, string>;
-  /** Summary of the conversation as a whole, rendered as the last tile in the stack. */
+  /** Summary of the conversation as a whole, rendered as the first tile in the stack. */
   conversationSummary?: Mailbox.ConversationSummary;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
@@ -324,7 +324,10 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
           data-testid={testId}
           ref={forwardedRef}
         >
-          <ScrollArea.Viewport ref={viewportRef}>
+          <ScrollArea.Viewport classNames='px-2' ref={viewportRef}>
+            {/* Outside the stack, ahead of the first message: the summary describes the conversation, not a message,
+                so it must not be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
+            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
             <Mosaic.Stack
               Tile={ConversationMessageTile}
               classNames='dx-document gap-2 py-2'
@@ -332,9 +335,6 @@ const ConversationStackContent = Util.composable<HTMLDivElement, ConversationSta
               getId={getId}
               draggable={false}
             />
-            {/* Outside the stack: the summary describes the conversation, not a message, so it must not
-                be reorderable/selectable as a tile — but it shares the tile chrome and the document width. */}
-            {conversationSummary && <ConversationSummaryTile summary={conversationSummary} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
@@ -362,7 +362,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
   const { id, message } = data;
   return (
     <Mosaic.Tile {...tileProps} data={data} asChild>
-      <Card.Root grid classNames='dx-attention-surface overflow-hidden'>
+      <Card.Root grid border={false} classNames='dx-attention-surface overflow-hidden rounded-md'>
         {DraftMessage.instanceOf(message) ? (
           // The composer isn't rail-aligned; it spans the whole tile.
           <div className='col-span-full'>
@@ -395,7 +395,7 @@ type ConversationSummaryTileProps = {
 const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').replace(/\.default$/, '');
 
 /**
- * The conversation's derived summary, as the last tile under the messages. Rendered as markdown: the
+ * The conversation's derived summary, as the first tile above the messages. Rendered as markdown: the
  * summarization pipeline writes `text/markdown` blocks.
  *
  * The header carries the summary's provenance (model + when it was derived), which is what tells a
@@ -407,12 +407,13 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
   // and an age this coarse does not warrant a timer.
   const age = formatAge(new Date(summary.created), new Date());
   return (
-    // The same rail card as a message tile, so the heading and text line up with the senders and bodies above.
+    // The same rail card as a message tile, so the heading and text line up with the senders and bodies below.
     <Card.Root
       grid
+      border={false}
       role='complementary'
       aria-label={t('conversation-summary.title')}
-      classNames='dx-document dx-attention-surface overflow-hidden mt-2'
+      classNames='dx-document dx-attention-surface overflow-hidden rounded-md mt-2'
       data-testid='conversation.summary'
     >
       <Card.Row icon='ph--text-align-left--regular'>
@@ -567,7 +568,11 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           <h2 className='text-lg min-w-0'>
             {/* Caret after the name, as the chat's disclosures, so the name lines up with the line below. */}
             <Collapsible.Trigger
-              classNames='text-lg flex-row-reverse justify-end'
+              // A conversation of one has nothing to fold, so it shows no caret.
+              classNames={mx(
+                'text-lg flex-row-reverse justify-end',
+                !onExpandedChange && '[&>[data-part=indicator]]:hidden',
+              )}
               data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
             >
               <span className='line-clamp-2'>{sender}</span>

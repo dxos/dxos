@@ -103,7 +103,13 @@
       "path": "../plugin-mermaid"
     },
     {
+      "path": "../plugin-sheet"
+    },
+    {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

@@ -932,6 +932,7 @@ const handlers = {
       text: command.value,
       subtitle: command.subtitle,
       ...(flow.state === 'running' ? { narration: null } : {}),
+      ...(command.hold ? { hold: command.hold } : {}),
     });
     if (command.hold) {
       await page.waitForTimeout(command.hold);

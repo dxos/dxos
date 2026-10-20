@@ -37,6 +37,12 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

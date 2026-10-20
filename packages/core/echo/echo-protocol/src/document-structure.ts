@@ -139,11 +139,34 @@ export interface DatabaseDirectory {
   branches?: SpaceBranchRegistry;
 
   /**
+   * Documents this space replaced because they could not be loaded, keyed by document id. Synced, so every
+   * peer stops loading the document and wipes its copy without reading it; the space's own directory
+   * naming the document is what attributes it to the space.
+   */
+  retired?: { [documentId: string]: RetiredDocument };
+
+  /**
    * @deprecated
    * For backward compatibility.
    */
   experimental_spaceKey?: string;
 }
+
+/**
+ * @see DatabaseDirectory.retired
+ */
+export type RetiredDocument = {
+  /** Url of the document now holding the retired document's objects. */
+  replacedBy: string | RawString;
+  /**
+   * Why it was retired: `load-failed` (it ran Automerge out of memory) or `history` (its history outgrew its state).
+   * Written as a plain, non-CRDT string; readers treat an unknown or missing value as `load-failed`.
+   */
+  reason?: string | RawString;
+};
+
+/** Why a space directory retired a document; see {@link RetiredDocument.reason}. */
+export type RetirementReason = 'load-failed' | 'history';
 
 /**
  * @see DatabaseDirectory.branches
@@ -218,6 +241,26 @@ export const DatabaseDirectory = Object.freeze({
   getBranches: (doc: DatabaseDirectory, rootObjectId: EntityId): Record<string, BranchRecord> | undefined => {
     return doc.branches?.[rootObjectId];
   },
+
+  /**
+   * @returns The documents this space retired, each with the url of its replacement; see
+   * {@link DatabaseDirectory.retired}. An entry with no replacement is skipped, since any peer (or EDGE) may read a
+   * directory another peer wrote.
+   */
+  getRetiredDocuments: (
+    doc: DatabaseDirectory,
+  ): { documentId: string; replacedBy: string; reason: RetirementReason }[] =>
+    Object.entries(doc.retired ?? {}).flatMap(([documentId, entry]) =>
+      entry?.replacedBy == null
+        ? []
+        : [
+            {
+              documentId,
+              replacedBy: String(entry.replacedBy),
+              reason: String(entry.reason) === 'history' ? 'history' : 'load-failed',
+            },
+          ],
+    ),
 
   /**
    * @returns All branch document urls referenced anywhere in the registry. Used by the host to

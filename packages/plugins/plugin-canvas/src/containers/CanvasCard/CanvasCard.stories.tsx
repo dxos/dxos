@@ -73,12 +73,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The drawing alone: no palette, panels, toolbars or grid. */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-node-id]').length).toBe(3), { timeout: 10_000 });
-    for (const testId of ['palette', 'properties', 'layers', 'about', 'scene-view-dock']) {
+    for (const testId of ['palette', 'properties', 'layers', 'views', 'scene-view-dock']) {
       await expect(canvas.queryByTestId(testId)).not.toBeInTheDocument();
     }
     await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();

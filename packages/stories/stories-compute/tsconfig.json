@@ -25,7 +25,19 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/permission"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -40,6 +52,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -52,6 +70,12 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -62,6 +86,9 @@
     },
     {
       "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../storybook-testing"

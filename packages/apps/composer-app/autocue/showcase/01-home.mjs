@@ -6,7 +6,7 @@
  * Showcase scene 1: what Composer is. The space's Home page, then a sweep down the navtree across the objects
  * the space holds.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app bundled dev build against EDGE preview, served by `vite preview` (launch config
  *   `composer-showcase`, :4183)
  *

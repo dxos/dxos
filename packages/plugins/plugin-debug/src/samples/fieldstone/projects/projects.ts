@@ -71,7 +71,7 @@ const PROJECT_SEEDS: Record<ProjectKey, ProjectSeed> = {
           'size-aware edge tier, as written in "Remote cache v2 design".',
         ),
         paragraph(
-          'Code lives in fieldstone/cairn: the server is Go under internal/, the CLI is TypeScript under cli/. Open one',
+          'Code lives in alien-labs/cairn: the server is Go under internal/, the CLI is TypeScript under cli/. Open one',
           'pull request per task and name the task in its description. Omar Haddad owns the cache engine and reviews',
           'anything that touches the index; hand index changes to Reviewer before asking him.',
         ),
@@ -101,13 +101,13 @@ const PROJECT_SEEDS: Record<ProjectKey, ProjectSeed> = {
     ],
   },
   soc2: {
-    description: 'Policies, evidence and an auditor, so Fieldstone can pass a SOC 2 Type I audit.',
+    description: 'Policies, evidence and an auditor, so Alien Labs can pass a SOC 2 Type I audit.',
     repo: 'policies',
     artifacts: ['soc2Policies'],
     instructions: (links) =>
       [
         paragraph(
-          'This project gets Fieldstone ready for a SOC 2 Type I audit. Write policies from how the team works today,',
+          'This project gets Alien Labs ready for a SOC 2 Type I audit. Write policies from how the team works today,',
           'not from templates, into "SOC 2 policy set"; flag a gap instead of inventing a process to cover it.',
         ),
         paragraph(
@@ -146,46 +146,45 @@ export type ProjectsInput = {
 };
 
 /** The four projects, each owning its instructions and task set and naming its repository. */
-export const makeProjects = ({ team, taskSets, artifacts, inboxCrm }: ProjectsInput) =>
-  Effect.gen(function* () {
-    const repos = yield* SampleSpace.seed(REPO_SEEDS, (seed) =>
-      Database.add(
-        Repo.make({
-          name: seed.name,
-          owner: 'fieldstone',
-          url: `https://github.com/fieldstone/${seed.name}`,
-          description: seed.description,
-          defaultBranch: 'main',
-          organization: Ref.make(team.orgs.fieldstone),
-        }),
-      ),
-    );
-
-    const entries: Array<[ProjectKey, Project.Project]> = [];
-    for (const [key, seed] of Object.entries(PROJECT_SEEDS) as Array<[ProjectKey, ProjectSeed]>) {
-      const repo = repos[seed.repo];
-      const project = Project.make({
-        name: PROJECT_NAMES[key],
+export const makeProjects = Effect.fnUntraced(function* ({ team, taskSets, artifacts, inboxCrm }: ProjectsInput) {
+  const repos = yield* SampleSpace.seed(REPO_SEEDS, (seed) =>
+    Database.add(
+      Repo.make({
+        name: seed.name,
+        owner: 'alien-labs',
+        url: `https://github.com/alien-labs/${seed.name}`,
         description: seed.description,
-        status: 'active',
-        taskSet: Ref.make(taskSets[key]),
-        repo: Ref.make(repo),
-        repositories: [Ref.make(repo)],
-        artifacts: seed.artifacts.map((artifact) => Ref.make(artifacts[artifact])),
-      });
-      const instructions = Instructions.make({
-        name: 'Instructions',
-        text: seed.instructions(inboxCrm),
-        skills: skillRefs([...BASE_SKILLS, ...(inboxCrm ? [INBOX_SKILL] : [])]),
-        objects: seed.context(team, inboxCrm).map((object) => Ref.make(object)),
-      });
-      // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
-      Obj.update(project, (project) => {
-        project.instructions = Ref.make(instructions);
-      });
-      Obj.setParent(instructions, project);
-      entries.push([key, yield* Database.add(project)]);
-    }
+        defaultBranch: 'main',
+        organization: Ref.make(team.orgs.fieldstone),
+      }),
+    ),
+  );
 
-    return Object.fromEntries(entries) as Record<ProjectKey, Project.Project>;
-  });
+  const entries: Array<[ProjectKey, Project.Project]> = [];
+  for (const [key, seed] of Object.entries(PROJECT_SEEDS) as Array<[ProjectKey, ProjectSeed]>) {
+    const repo = repos[seed.repo];
+    const project = Project.make({
+      name: PROJECT_NAMES[key],
+      description: seed.description,
+      status: 'active',
+      taskSet: Ref.make(taskSets[key]),
+      repo: Ref.make(repo),
+      repositories: [Ref.make(repo)],
+      artifacts: seed.artifacts.map((artifact) => Ref.make(artifacts[artifact])),
+    });
+    const instructions = Instructions.make({
+      name: 'Instructions',
+      text: seed.instructions(inboxCrm),
+      skills: skillRefs([...BASE_SKILLS, ...(inboxCrm ? [INBOX_SKILL] : [])]),
+      objects: seed.context(team, inboxCrm).map((object) => Ref.make(object)),
+    });
+    // Ref before parent edge: the ref is what declares the edge (see `Obj.isDeclaredParentEdge`).
+    Obj.update(project, (project) => {
+      project.instructions = Ref.make(instructions);
+    });
+    Obj.setParent(instructions, project);
+    entries.push([key, yield* Database.add(project)]);
+  }
+
+  return Object.fromEntries(entries) as Record<ProjectKey, Project.Project>;
+});

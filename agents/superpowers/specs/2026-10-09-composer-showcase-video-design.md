@@ -12,9 +12,9 @@ stitched; the coding project is pre-run and shown finished; EDGE preview; no pro
 | #   | Scene                              | Time      | Flow (`packages/apps/composer-app/autocue/showcase/`) | Spec anchor                         |
 | --- | ---------------------------------- | --------- | ----------------------------------------------------- | ----------------------------------- |
 | 0   | Composer ident                     | 0:00–0:06 | `--ident composer` (trimmer)                          | —                                   |
-| 1   | What Composer is                   | 0:06–0:18 | `01-home.mjs`                                         | APP QA-13 step 1                    |
+| 1   | What Composer is                   | 0:06–0:18 | `01-home.mjs`                                         | APP QA-16 step 1                    |
 | 2   | Real-time collaboration            | 0:18–0:40 | `two-peer-collaboration.mjs` via `pair.mjs`           | APP QA-8                            |
-| 3   | The plugin gallery                 | 0:40–0:55 | `03-plugins.mjs`                                      | APP QA-13 step 3                    |
+| 3   | The plugin gallery                 | 0:40–0:55 | `03-plugins.mjs`                                      | APP QA-16 step 3                    |
 | 4   | SaaS objects on one ECHO graph     | 0:55–1:20 | `04-objects.mjs`                                      | table QA-1, kanban QA-1, sheet QA-1 |
 | 5   | Agents in the document             | 1:20–1:48 | `05-agent.mjs`                                        | APP QA-3, QA-4                      |
 | 6   | Projects: an agent writes a plugin | 1:48–2:13 | `06-project.mjs` (after `composer-plugin.mjs`)        | projects QA-2                       |

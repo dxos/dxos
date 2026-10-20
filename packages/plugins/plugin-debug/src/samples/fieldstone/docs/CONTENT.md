@@ -1,4 +1,4 @@
-# Fieldstone documents
+# Alien Labs documents
 
 The team's shared documents: handbook, architecture, incident write-ups, planning and customer
 notes, with the sheets and drawings they embed. Every document links people and other content inline,
@@ -17,7 +17,7 @@ so reading one leads to the next.
 - Clock: sync notes and the incident timeline use offsets from −60d to the reference date. The decision
   log reaches back to −120d, the hiring sheet's open dates to −80d, the vendor spend sheet over the 12
   months ending in the reference month, and the roadmap drawing over the reference date's quarter.
-- Used by: a Fieldstone Labs template, not written yet
+- Used by: a Alien Labs template, not written yet
 
 ## Contents
 
@@ -32,7 +32,7 @@ so reading one leads to the next.
   - `onboarding` Engineer onboarding: links Hana, Omar, Felix, Anika and `architecture`; embeds
     `architectureDiagram`. With projects, links `artifacts.cacheDesign`.
   - `runbook` On-call runbook: links Anika; embeds `escalation` and `cloudCost`. With inbox-crm,
-    links AWS and Cloudflare.
+    links Cloudflare.
   - `architecture` Cairn architecture: links Omar and Felix; embeds `architectureDiagram` and
     `requestFlow`; one mermaid sequence diagram of a cache lookup. A "Cairn on DXOS" section says
     the dashboard is a Composer plugin and the agents run on EDGE compute, and that Cairn's edge
@@ -68,7 +68,7 @@ so reading one leads to the next.
 - 5 `Sheet`, with formulas wherever a column is derived:
   - `pricing` Plans by tier and usage, 4 tiers × 6 columns, monthly price computed from usage
   - `vendorSpend` Monthly spend per vendor over 12 months, with row and column totals
-  - `cloudCost` AWS and Cloudflare cost forecast for the next 6 months, growth by formula
+  - `cloudCost` Cloudflare cost forecast (compute and S3, Workers and R2) for the next 6 months, growth by formula
   - `incidentTimeline` The Okapi incident, 20 timestamped rows from detection (−35d) to close (−25d),
     hours since detection by formula
   - `hiring` Open roles by stage, 5 roles, with days open computed from the open date: an "As of"
@@ -76,10 +76,12 @@ so reading one leads to the next.
 
 ### Drawings
 
-- 5 `Drawing.Drawing`, each a tldraw canvas (`Tldraw.TLDRAW_SCHEMA`) built with
-  `TldrawModel.RecordBuilder` from shapes and bound arrows. Canvas-renderer drawings, like the
-  architecture content, need plugin-canvas internals that are not exported:
-  - `orgChart` Fieldstone's 10 people and who reports to whom
+- 5 `Drawing.Drawing`, each a plugin-canvas canvas (`Canvas.SCENE_SCHEMA`) built with
+  `Architecture.addCanvasDrawing` from scene commands: boxes, ellipses, labels and arrows bound to
+  the boxes they join. They stay editable, off the lattice.
+  Every box is 256×128 (the Architecture diagrams' box), on a grid, so a label wraps to at most three
+  24px lines and a caption on a level link shows in full; roadmap bars keep the height but span their dates:
+  - `orgChart` Alien Labs' 10 people and who reports to whom
   - `architectureDiagram` Cairn's services and stores; the dashboard box is the Composer plugin
   - `requestFlow` One cache request, client to storage and back
   - `roadmap` Q4 on a timeline, one lane per project
@@ -92,7 +94,7 @@ so reading one leads to the next.
 - Planning: `roadmap`, `hiring`, `pricing`, `vendors`, the `roadmap` drawing, and the `pricing`,
   `vendorSpend`, `cloudCost` and `hiring` sheets
 - Incidents: `postmortem`, `incidentTimeline`
-- Customers: the 4 customer notes, with inbox-crm
+- Customers, with inbox-crm: the Sales pipeline Kanban (`inboxCrm.pipeline.kanban`), then the 4 customer notes
 - Meetings: `syncNotes`
 
 ## Flows

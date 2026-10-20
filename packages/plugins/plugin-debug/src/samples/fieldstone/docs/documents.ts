@@ -8,6 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import type * as Project from '@dxos/compute/Project';
 import { Database, EID, type Obj } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import type * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Event, type Message, type Organization, type Person, type Task, type TaskSet } from '@dxos/types';
 
@@ -19,7 +20,7 @@ import { type Sheets } from './sheets.ts';
 export type InboxCrmLinks = {
   readonly orgs: Readonly<
     Record<
-      'github' | 'stripe' | 'aws' | 'cloudflare' | 'northpine' | 'meridian' | 'okapi' | 'brightwater',
+      'github' | 'stripe' | 'cloudflare' | 'northpine' | 'meridian' | 'okapi' | 'brightwater',
       Organization.Organization
     >
   >;
@@ -43,6 +44,8 @@ export type InboxCrmLinks = {
     >
   >;
   readonly threads: Readonly<Record<'okapiIncident', ReadonlyArray<Message.Message>>>;
+  /** The Sales pipeline board, filed first under Customers. */
+  readonly pipeline: { readonly kanban: Kanban.Kanban };
   readonly events: Readonly<Record<'teamSync', ReadonlyArray<Event.Event>>>;
 };
 
@@ -139,7 +142,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '',
       '- **Cairn CLI** runs in CI and on laptops. It computes the action key: SHA-256 over the command line, the digest of every input file, the declared environment and the toolchain fingerprint. Since CLI 1.7.3 the toolchain variables (`CC`, `CXX`, `RUSTC`) are always in the key.',
       '- **Edge gateway**, Cloudflare Workers in front of everything. It checks the API token against Auth, asks the index, and presigns R2 URLs so blob bytes never pass through a worker.',
-      '- **Index service** maps an action key to a content digest, a size and an org. Postgres on AWS RDS. A commit is a compare-and-set on the digest: a second, different digest for a key is rejected.',
+      '- **Index service** maps an action key to a content digest, a size and an org. Postgres, reached from the edge through Hyperdrive. A commit is a compare-and-set on the digest: a second, different digest for a key is rejected.',
       '- **Blob store**: R2 holds hot blobs and serves them without egress fees. S3 is the origin and keeps every blob; R2 refills from it on a miss.',
       '- **Usage meter** counts GB-months stored and GB served per org and reports them to Stripe every hour.',
       '- **Dashboard**, a Composer plugin: tokens, usage, hit rates per repository.',
@@ -181,7 +184,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '',
       '## Cairn on DXOS',
       '',
-      "The cache path above runs on Cairn's own services on AWS and Cloudflare. The dashboard and the agents run on DXOS. The edge gateway is Cairn's own worker, not DXOS EDGE.",
+      "The cache path above runs on Cairn's own services on Cloudflare. The dashboard and the agents run on DXOS. The edge gateway is Cairn's own worker, not DXOS EDGE.",
       '',
       '### The dashboard is a Composer plugin',
       '',
@@ -269,7 +272,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '',
       '## The first 15 minutes',
       '',
-      '1. Ack in Datadog. An unacked page goes to the secondary after 15 minutes.',
+      '1. Ack the alert in PostHog. An unacked page goes to the secondary after 15 minutes.',
       '2. Check three graphs: edge 5xx, index lookup latency, R2 error rate.',
       `3. If bytes might be wrong, make the org read-only: \`cairn-admin org set-mode <org> read-only\`. That switch is what contained the ${link('Okapi incident', postmortem)}.`,
       '4. Open an incident channel and post status every 30 minutes, even when nothing changed.',
@@ -277,12 +280,11 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '',
       '## Vendors',
       '',
-      `- ${crm ? link('AWS', crm.orgs.aws) : 'AWS'}: RDS Postgres for the index and S3 for blobs. Business support; open a case from the console at "production system down" for a SEV1.`,
-      `- ${crm ? link('Cloudflare', crm.orgs.cloudflare) : 'Cloudflare'}: Workers for the edge and R2. Enterprise support line is in 1Password under "Cloudflare support".`,
+      `- ${crm ? link('Cloudflare', crm.orgs.cloudflare) : 'Cloudflare'}: Workers for the edge, R2, Hyperdrive to the Postgres index, and the cache-node fleet. Enterprise support line is in 1Password under "Cloudflare support".`,
       '',
       '## Cost',
       '',
-      'A cost spike is an incident. Datadog alerts when the daily AWS or Cloudflare bill runs 30% over the forecast below.',
+      'A cost spike is an incident. PostHog alerts when the daily Cloudflare bill runs 30% over the forecast below.',
       '',
       embed('Cloud cost forecast', sheets.cloudCost),
     ),
@@ -294,7 +296,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
     md(
       '# Vendors and spend',
       '',
-      `${who(p.anika)} owns the AWS and Cloudflare accounts and the monthly cost review. ${who(p.june)} owns Stripe. ${who(p.kofi)} runs the GitHub partnership. Spend is in USD.`,
+      `${who(p.anika)} owns the Cloudflare account and the monthly cost review. ${who(p.june)} owns Stripe. ${who(p.kofi)} runs the GitHub partnership. Spend is in USD.`,
       '',
       embed('Vendor spend', sheets.vendorSpend),
       '',
@@ -302,12 +304,11 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '',
       `- **${crm ? link('GitHub', crm.orgs.github) : 'GitHub'}**: the org plan and Actions minutes.${crm ? ` Partner contact: ${who(crm.people.sofia)}.` : ''}`,
       `- **${crm ? link('Stripe', crm.orgs.stripe) : 'Stripe'}**: payments and, from this quarter, metered billing. Fees grow with revenue.${crm ? ` Account executive: ${who(crm.people.dana)}.` : ''}`,
-      `- **${crm ? link('AWS', crm.orgs.aws) : 'AWS'}**: RDS, S3 and the index service's EC2 fleet. The biggest line by far.${crm ? ` Solutions architect: ${who(crm.people.elena)}.` : ''}`,
-      `- **${crm ? link('Cloudflare', crm.orgs.cloudflare) : 'Cloudflare'}**: Workers and R2.${crm ? ` Account executive: ${who(crm.people.ines)}.` : ''}`,
+      `- **${crm ? link('Cloudflare', crm.orgs.cloudflare) : 'Cloudflare'}**: Workers, R2, the cache-node fleet and Hyperdrive to the index. The biggest line by far.${crm ? ` Account executive: ${who(crm.people.ines)}. Solutions architect: ${who(crm.people.elena)}.` : ''}`,
       '',
       '## The R2 move',
       '',
-      'Three months ago hot blobs moved from S3 to R2. AWS dropped by $1,300 a month, almost all of it egress, and Cloudflare rose by $1,180. Hit traffic grows 8% a month, so the gap widens.',
+      'Three months ago hot blobs moved from S3 to R2. S3 costs dropped by $1,300 a month, almost all of it egress, and R2 added $1,180. Hit traffic grows 8% a month, so the gap widens.',
       '',
       '## Forecast',
       '',
@@ -417,7 +418,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
         `- First index pull request, reviewed by Omar · ${first(p.hana)}`,
       ]),
       ...syncSection(third, [
-        'Hana starts Wednesday. S3 still holds every blob forever, which is a third of the AWS bill.',
+        'Hana starts Wednesday. S3 still holds every blob forever, which is a third of the storage bill.',
         '',
         `- Accounts and laptop for Hana, buddy is Omar · ${first(p.astrid)}`,
         `- S3 lifecycle rule: delete blobs 30 days after their key expires · ${first(p.felix)}`,
@@ -488,7 +489,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       decision: 'Keep the index on Postgres, partitioned by tenant, with one read replica per region.',
       alternatives: [
         'FoundationDB: scales further, but nobody on the team has run it in production.',
-        'DynamoDB: no operations, but every lookup becomes a billed request and ties the index to AWS.',
+        'A managed key-value store: no operations, but every lookup becomes a billed request and ties the index to one vendor.',
       ],
       consequences:
         'Three of us can operate the index today. We revisit at 10× the current peak, or if one tenant passes a quarter of all rows.',
@@ -499,15 +500,15 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       deciders: [p.felix, p.anika, p.astrid],
       changed: [architecture, vendors],
       context:
-        'Egress was 60% of the AWS bill: CI runners in other clouds pulled the same hot blobs thousands of times a day.',
+        'Egress was 60% of the storage bill: CI runners in other clouds pulled the same hot blobs thousands of times a day.',
       decision:
         'Blobs read in the last 30 days are served from R2, which has no egress fees. S3 stays the origin, so nothing lives only in R2.',
       alternatives: [
-        'CloudFront in front of S3: cuts egress by about half and adds a second CDN bill.',
+        'A CDN in front of S3: cuts egress by about half and adds a second CDN bill.',
         'Move everything to R2: loses S3 lifecycle rules and the EU bucket enterprise trials ask for.',
       ],
       consequences:
-        'Two storage tiers to keep consistent, and a backfill job that copies on first read. AWS egress falls by about 90% at current traffic.',
+        'Two storage tiers to keep consistent, and a backfill job that copies on first read. S3 egress falls by about 90% at current traffic.',
     },
     {
       days: 82,
@@ -644,7 +645,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       `1. Read ${link('Cairn architecture', architecture)} top to bottom, then the ${link('decision log', decisions)} for why it looks that way.`,
       projects &&
         `2. Read ${link('Remote cache v2 design', projects.artifacts.cacheDesign)}; most of what you touch in your first month is in it.`,
-      `${projects ? 3 : 2}. Get access: GitHub org and Datadog from ${first(p.astrid)}, AWS SSO and Cloudflare from ${first(p.anika)}, Stripe test mode from ${first(p.june)}.`,
+      `${projects ? 3 : 2}. Get access: GitHub org and PostHog from ${first(p.astrid)}, Cloudflare Access and the Cloudflare dashboard from ${first(p.anika)}, Stripe test mode from ${first(p.june)}.`,
       `${projects ? 4 : 3}. Point Cairn at its own monorepo. The second \`cairn build\` should be all hits; if it is not, that is your first bug.`,
       `${projects ? 5 : 4}. Pair with ${first(p.felix)} on a storage ticket.`,
       '',
@@ -658,7 +659,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
       '## Local setup',
       '',
       `${FENCE}sh`,
-      'git clone git@github.com:fieldstone/cairn.git',
+      'git clone git@github.com:alien-labs/cairn.git',
       'cd cairn && make dev',
       'cairn --endpoint http://localhost:8787 build //...',
       FENCE,
@@ -673,7 +674,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
     [p.felix, 'Cache engine. Storage tiering across R2 and S3.'],
     [p.june, 'API and billing. The public API and Stripe metering.'],
     [p.tomas, 'Frontend. The dashboard.'],
-    [p.anika, 'SRE. The on-call rotation, the AWS and Cloudflare accounts, cost.'],
+    [p.anika, 'SRE. The on-call rotation, the Cloudflare account, cost.'],
     [p.ben, 'Product design. The dashboard and what the CLI prints.'],
     [p.lucia, 'Product. Roadmap, pricing, customer calls.'],
     [p.kofi, 'Developer relations. Docs, the GitHub Actions integration, the community forum.'],
@@ -681,11 +682,11 @@ export const makeDocuments = Effect.fnUntraced(function* ({
   ];
   doc(
     'handbook',
-    'Fieldstone handbook',
+    'Alien Labs handbook',
     md(
-      '# Fieldstone handbook',
+      '# Alien Labs handbook',
       '',
-      'Fieldstone Labs builds Cairn, a hosted build cache for monorepos. Ten people in Lisbon and Toronto. The shared hours are 14:00 to 17:00 UTC, and meetings stay inside them.',
+      'Alien Labs builds Cairn, a hosted build cache for monorepos. Ten people in Lisbon and Toronto. The shared hours are 14:00 to 17:00 UTC, and meetings stay inside them.',
       '',
       embed('Org chart', drawings.orgChart),
       '',
@@ -738,7 +739,7 @@ export const makeDocuments = Effect.fnUntraced(function* ({
         projects
           ? `- A SOC 2 Type I report. Tracked in ${link('SOC 2 Type I readiness', projects.projects.soc2)}.`
           : '- A SOC 2 Type I report.',
-        '- Blobs kept in the EU only. R2 jurisdiction restrictions cover it; S3 needs a second bucket in eu-west-1.',
+        '- Blobs kept in the EU only. R2 jurisdiction restrictions cover it; S3 needs a second bucket in the EU.',
         '- Customer-managed encryption keys. Not before next year.',
         '',
         '## Notes',

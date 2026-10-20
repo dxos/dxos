@@ -30,11 +30,13 @@
      *
      * Adjust a family by changing its factor, not by editing offsets — those are the dark contract.
      */
-    --dx-attenuate-state: 0.5;
+    --dx-attenuate-state: 0.9;
     --dx-attenuate-well: 0.5;
+    /* An input is a lighter well than a group in light mode, so a field reads as a place to type rather than a band. */
+    --dx-attenuate-input: 0.3;
     --dx-attenuate-separator: 0.75;
     --dx-attenuate-separator-line: 0.45;
-    --dx-attenuate-bar: 1;
+    --dx-attenuate-bar: 1.36;
     --dx-attenuate-placeholder: 1;
     --dx-attenuate-scrollbar: 1;
     touch-action: pan-x pan-y;
@@ -53,6 +55,7 @@
     /* Dark is the reference: every family runs at full strength. */
     --dx-attenuate-state: 1;
     --dx-attenuate-well: 1;
+    --dx-attenuate-input: 1;
     --dx-attenuate-separator: 1;
     --dx-attenuate-separator-line: 1;
     --dx-attenuate-bar: 1;

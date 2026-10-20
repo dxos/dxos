@@ -36,7 +36,7 @@ export const BackgroundChoice = Schema.Union([
 export type BackgroundChoice = Schema.Schema.Type<typeof BackgroundChoice>;
 
 /**
- * The canvas variant's user preferences. Each one maps to a `SceneView` prop, so a setting that is
+ * The canvas variant's user preferences. Each one maps to a `Canvas` prop, so a setting that is
  * not wired to anything cannot appear here; per-document state (the camera, the snap toggle) stays on
  * the view, where two windows of one drawing keep their own.
  */
@@ -49,14 +49,14 @@ export const Settings = Schema.Struct({
   ),
   showPalette: Schema.optional(
     Schema.Boolean.annotate({
-      title: 'Show palette',
+      title: 'Show tools',
       description: 'Display the node and link palette over the canvas.',
     }),
   ),
   liveDepth: Schema.optional(
     Schema.Number.annotate({
       title: 'Live depth',
-      description: 'How many nested scenes render live; deeper portals draw as previews.',
+      description: 'How many nested views render live; deeper views draw as previews.',
     }),
   ),
   theme: Schema.optional(

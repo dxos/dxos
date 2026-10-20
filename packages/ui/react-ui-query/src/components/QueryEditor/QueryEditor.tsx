@@ -36,6 +36,11 @@ export type QueryEditorProps = Util.ThemedClassName<
      * will not read.
      */
     onFilterChange?: (result: BuildResult) => void;
+    /**
+     * Show the "Press '#' for commands" hint in the empty, focused editor (default true). A caller with
+     * its own placeholder turns it off, since the two otherwise render run together.
+     */
+    commandHint?: boolean;
   } & (CompletionOptions & Omit<EditorViewProps, 'initialValue'> & Pick<EditorMenuProviderProps, 'numItems'>)
 >;
 
@@ -43,7 +48,10 @@ export type QueryEditorProps = Util.ThemedClassName<
  * Query editor with decorations and autocomplete.
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
-  ({ db, tags, value, readonly, numItems = 8, onChange, onFilterChange, ...props }, forwardedRef) => {
+  (
+    { db, tags, value, readonly, numItems = 8, commandHint = true, onChange, onFilterChange, ...props },
+    forwardedRef,
+  ) => {
     const { t } = Hooks.useTranslation(translationKey);
 
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
@@ -119,6 +127,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         // instead, since `:` is a completion delimiter so the word under the caret is the typename.
         // The explicit key stays, for re-opening a dismissed menu.
         trigger={['#']}
+        placeholder={commandHint ? undefined : false}
         // NOT `activateOnTyping`: that opens the menu on every word character, and the popover takes
         // focus each keystroke while returning nothing for most positions. `:` is the only delimiter
         // with a list behind it, so the typename menu opens there and nowhere else.

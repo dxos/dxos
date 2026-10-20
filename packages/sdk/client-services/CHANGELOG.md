@@ -1,5 +1,124 @@
 # @dxos/client-services
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-host@0.16.0
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/feed-store@0.16.0
+  - @dxos/hypercore@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/random-access-storage@0.16.0
+  - @dxos/sql-sqlite@0.16.0
+  - @dxos/timeframe@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/blob@0.16.0
+  - @dxos/feed@0.16.0
+  - @dxos/credentials@0.16.0
+  - @dxos/keyring@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/messaging@0.16.0
+  - @dxos/network-manager@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/teleport@0.16.0
+  - @dxos/teleport-extension-gossip@0.16.0
+  - @dxos/teleport-extension-replicator@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [ad1686c]
+- Updated dependencies [5490cbc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [0858217]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ed1039a]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [6d8c4ee]
+- Updated dependencies [7b47951]
+- Updated dependencies [d98e8b9]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo-host@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/teleport-extension-gossip@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/messaging@0.15.0
+  - @dxos/feed@0.15.0
+  - @dxos/credentials@0.15.0
+  - @dxos/keyring@0.15.0
+  - @dxos/network-manager@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/teleport-extension-replicator@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/feed-store@0.15.0
+  - @dxos/hypercore@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/random-access-storage@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/timeframe@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

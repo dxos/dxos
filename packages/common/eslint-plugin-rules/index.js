@@ -11,6 +11,7 @@ import dxosSubpathEntrypoints from './rules/dxos-subpath-entrypoints.js';
 import dxosSubpathExports from './rules/dxos-subpath-exports.js';
 import dxosSubpathImports from './rules/dxos-subpath-imports.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
+import folderBarrelImports from './rules/folder-barrel-imports.js';
 import header from './rules/header.js';
 import importAsNamespace from './rules/import-as-namespace.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
@@ -39,6 +40,7 @@ const plugin = {
     'dxos-subpath-exports': dxosSubpathExports,
     'dxos-subpath-imports': dxosSubpathImports,
     'effect-subpath-imports': effectSubpathImports,
+    'folder-barrel-imports': folderBarrelImports,
     header,
     'import-as-namespace': importAsNamespace,
     'no-bare-dot-imports': noBareDotImports,

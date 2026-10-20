@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/style-set.ts';
-import { type Node, type StyleMap } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { ViewBuilder } from '../builder/index.ts';
+import { CLASSIC_LOOK, type Node, type StyleMap, defaultThemeRegistry, resolveLook } from '../model/index.ts';
 import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
 
 describe('style classes', () => {
@@ -15,19 +14,21 @@ describe('style classes', () => {
   };
   const box = { x: 0, y: 0, width: 200, height: 100 };
   const {
-    scenes: [{ nodes, links }],
-  } = SceneBuilder.scene('s', [
-    SceneBuilder.rect('a', box).properties({ class: 'warn', style: { hue: 'blue' } }),
-    SceneBuilder.rect('b', { ...box, x: 400 }).properties({ class: 'gone' }),
-    SceneBuilder.link('line', 'a', 'b')
+    views: [{ nodes, links }],
+  } = ViewBuilder.view('s', [
+    ViewBuilder.rect('a', box).properties({ class: 'warn', style: { hue: 'blue' } }),
+    ViewBuilder.rect('b', { ...box, x: 400 }).properties({ class: 'gone' }),
+    ViewBuilder.link('line', 'a', 'b')
       .id('l')
       .properties({ class: 'warn', style: { lineStyle: 'solid' } }),
   ]).build();
 
   test('an element takes its class look under its own', ({ expect }) => {
     expect(classedNode(nodes.a, styles).style).toEqual({ hue: 'blue', lineStyle: 'dashed', rounded: true });
-    // A link takes only the common base of the class's style: its colour and line style.
+    // A link takes only what its style shares with the class's: its colour, line style and caption size.
     expect(classedLink(links.l, styles).style).toEqual({ hue: 'red', lineStyle: 'solid' });
+    const sized = { warn: { ...styles.warn, style: { ...styles.warn.style, fontSize: 18 } } };
+    expect(classedLink(links.l, sized).style).toEqual({ hue: 'red', lineStyle: 'solid', fontSize: 18 });
   });
 
   test("a node's line style draws its border", ({ expect }) => {
@@ -57,15 +58,15 @@ describe('style classes', () => {
 describe('style sets', () => {
   const box = { x: 0, y: 0, width: 200, height: 100 };
   const {
-    scenes: [{ nodes }],
-  } = SceneBuilder.scene('s', [
-    SceneBuilder.rect('plain', box),
-    SceneBuilder.rect('blue', box).properties({ style: { hue: 'blue' } }),
-    SceneBuilder.rect('strong', box).properties({ style: { hue: 'red', tone: 1, rounded: true } }),
-    SceneBuilder.rect('outline', box).properties({ style: { hue: 'teal', tone: 0, lineStyle: 'dotted' } }),
-    SceneBuilder.rect('bare', box).properties({ style: { hue: 'pink', fill: false, border: false } }),
-    SceneBuilder.rect('guide', box).properties({ style: { hue: 'green', guide: true } }),
-    SceneBuilder.ellipse('round', box).properties({ style: { hue: 'violet', tone: 3 } }),
+    views: [{ nodes }],
+  } = ViewBuilder.view('s', [
+    ViewBuilder.rect('plain', box),
+    ViewBuilder.rect('blue', box).properties({ style: { hue: 'blue' } }),
+    ViewBuilder.rect('strong', box).properties({ style: { hue: 'red', tone: 1, rounded: true } }),
+    ViewBuilder.rect('outline', box).properties({ style: { hue: 'teal', tone: 0, lineStyle: 'dotted' } }),
+    ViewBuilder.rect('bare', box).properties({ style: { hue: 'pink', fill: false, border: false } }),
+    ViewBuilder.rect('guide', box).properties({ style: { hue: 'green', guide: true } }),
+    ViewBuilder.ellipse('round', box).properties({ style: { hue: 'violet', tone: 3 } }),
   ]).build();
 
   // The classes every node drew before style sets, spelled out so a change to the classic look fails here.

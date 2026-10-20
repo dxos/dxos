@@ -11,12 +11,23 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { type Task } from '@dxos/types';
 
-import { MoveTaskDialog, ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle } from '#containers';
+import {
+  FeatureArticle,
+  FeatureCardContent,
+  FeatureMapArticle,
+  MoveTaskDialog,
+  ProjectArticle,
+  ProjectArtifactsArticle,
+  ProjectChatsArticle,
+  ShowcaseArticle,
+  ShowcaseCardContent,
+} from '#containers';
 import { MOVE_TASK_DIALOG } from '#meta';
+import { Feature, FeatureMap, Showcase } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
-/** React surfaces contributed by plugin-projects — the Project detail article. */
+/** React surfaces contributed by plugin-projects — articles and cards for projects, features, feature maps and showcases. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -25,6 +36,36 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Project.Project),
         component: ProjectArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'featureMap.article',
+        filter: AppSurface.object(AppSurface.Article, FeatureMap.FeatureMap),
+        component: FeatureMapArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'feature.article',
+        filter: AppSurface.object(AppSurface.Article, Feature.Feature),
+        component: FeatureArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'feature.card',
+        filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
+        component: FeatureCardContent,
+        props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'showcase.article',
+        filter: AppSurface.object(AppSurface.Article, Showcase.Showcase),
+        component: ShowcaseArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
+        id: 'showcase.card',
+        filter: AppSurface.object(AppSurface.CardContent, Showcase.Showcase),
+        component: ShowcaseCardContent,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.

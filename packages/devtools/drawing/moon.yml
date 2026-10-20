@@ -4,15 +4,14 @@ tags:
   - ts-compile
   - ts-test
 tasks:
-  # Renders the landing page's diagrams with this package's CLI and writes `site/dist/index.html`.
-  site:
-    command: node site/build.mjs
+  build:
     deps:
-      - ~:build
+      - ~:stage-skill
+  # The skill lives at the repo root, where `npx skills add dxos/dxos` finds it; a copy (not a symlink, which
+  # npm pack drops) puts it in the package for `files`.
+  stage-skill:
+    command: bash -c 'rm -rf skills && mkdir -p skills && cp -R ../../../skills/drawing skills/drawing'
     inputs:
-      - site/**/*
+      - /skills/drawing/**/*
     outputs:
-      - site/dist
-    options:
-      cache: false
-      runInCI: false
+      - skills/

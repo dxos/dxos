@@ -12,14 +12,14 @@ import { type SpaceId } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { EXPOSED_CLOCK_KEY, SceneView, createSceneViewAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { Canvas, EXPOSED_CLOCK_KEY, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 
-import { generatorCompiler, seedContent, updateCanvasRecord, writeScenes } from '#model';
+import { generatorCompiler, seedContent, updateCanvasRecord, writeViews } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Canvas, CanvasOperation, Generator } from '#types';
+import { CanvasOperation, Canvas as CanvasType, Generator } from '#types';
 
 import {
   createGeneratorWorker,
@@ -35,9 +35,9 @@ const END_CARD_NAME = 'End card';
 const seed = (db: Database.Database): Drawing.Drawing => {
   const content = {};
   seedContent(content, ROOT);
-  writeScenes(content, { [ROOT]: rootScene(), [logoComposite().id]: logoComposite() });
+  writeViews(content, { [ROOT]: rootScene(), [logoComposite().id]: logoComposite() });
   updateCanvasRecord(content, { theme: 'film' });
-  const canvas = db.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
+  const canvas = db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA, content }));
   return db.add(Drawing.make({ name: END_CARD_NAME, canvas }));
 };
 
@@ -111,7 +111,7 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
   const bound = useBoundCanvasStore(canvas);
   const nodes = useCanvasNodes();
   const generators = useCanvasGenerators(db);
-  const atoms = useMemo(() => (bound ? createSceneViewAtoms(bound.root) : undefined), [bound]);
+  const atoms = useMemo(() => (bound ? createCanvasAtoms(bound.root) : undefined), [bound]);
   // Plays once from the start; a frame renderer seeks instead, which pauses it.
   useEffect(() => {
     if (atoms) {
@@ -122,7 +122,7 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
     return <Loading />;
   }
   return (
-    <SceneView.Root
+    <Canvas.Root
       store={bound.store}
       root={bound.root}
       atoms={atoms}
@@ -137,19 +137,19 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
       createGeneratorWorker={createGeneratorWorker}
       initialDisplay={{ snap: false, fit: true }}
     >
-      <SceneView.Canvas />
+      <Canvas.Viewport />
       {chrome && (
         <>
-          <SceneView.Navigation />
-          <SceneView.Palette />
-          <SceneView.Actions />
-          <SceneView.Timeline />
-          <SceneView.Properties />
-          <SceneView.Layers />
-          <SceneView.Objects />
+          <Canvas.Navigation />
+          <Canvas.Tools />
+          <Canvas.Actions />
+          <Canvas.Timeline />
+          <Canvas.Properties />
+          <Canvas.Layers />
+          <Canvas.Objects />
         </>
       )}
-    </SceneView.Root>
+    </Canvas.Root>
   );
 };
 
@@ -176,7 +176,10 @@ type Story = StoryObj<typeof meta>;
  * 1. The operations author the card and the film view mounts, its clock exposed for export.
  * 2. Seeking to 2 s draws the scene at 2 s.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // 1. Authored and mounted (the first compile loads esbuild's binary).

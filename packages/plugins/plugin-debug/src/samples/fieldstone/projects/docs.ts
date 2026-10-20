@@ -87,7 +87,7 @@ const BILLING_PLAN = trim`
 const SOC2_POLICIES = trim`
   # SOC 2 policy set
 
-  Drafted by Scribe from how Fieldstone works today; each policy names its owner. Gaps are flagged where we found them rather than papered over.
+  Drafted by Scribe from how Alien Labs works today; each policy names its owner. Gaps are flagged where we found them rather than papered over.
 
   ## Access control (approved, owner Anika Rao)
 
@@ -103,7 +103,7 @@ const SOC2_POLICIES = trim`
 
   ## Vendor management (in review, owner Anika Rao)
 
-  Five vendors touch customer data: AWS, Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
+  Four vendors touch customer data: Cloudflare, GitHub, Stripe and Google Workspace. Each is reviewed once a year against its own SOC 2 report.
 
   ## Data retention (draft, owner Anika Rao)
 
@@ -170,17 +170,16 @@ const offsiteAgenda = (links: InboxCrmLinks | undefined) => {
 };
 
 /** The five project artifacts. The offsite agenda links its venue and contact when inbox-crm is present. */
-export const makeDocs = ({ inboxCrm }: { readonly inboxCrm?: InboxCrmLinks }) =>
-  Effect.gen(function* () {
-    const docs: Artifacts = {
-      cacheDesign: Markdown.make({ name: 'Remote cache v2 design', content: CACHE_DESIGN }),
-      billingPlan: Markdown.make({ name: 'Billing migration plan', content: BILLING_PLAN }),
-      soc2Policies: Markdown.make({ name: 'SOC 2 policy set', content: SOC2_POLICIES }),
-      offsiteAgenda: Markdown.make({ name: 'Offsite agenda', content: offsiteAgenda(inboxCrm) }),
-      releaseNotes: Markdown.make({ name: 'Cairn 1.8 release notes', content: RELEASE_NOTES }),
-    };
-    for (const doc of Object.values(docs)) {
-      yield* Database.add(doc);
-    }
-    return docs;
-  });
+export const makeDocs = Effect.fnUntraced(function* ({ inboxCrm }: { readonly inboxCrm?: InboxCrmLinks }) {
+  const docs: Artifacts = {
+    cacheDesign: Markdown.make({ name: 'Remote cache v2 design', content: CACHE_DESIGN }),
+    billingPlan: Markdown.make({ name: 'Billing migration plan', content: BILLING_PLAN }),
+    soc2Policies: Markdown.make({ name: 'SOC 2 policy set', content: SOC2_POLICIES }),
+    offsiteAgenda: Markdown.make({ name: 'Offsite agenda', content: offsiteAgenda(inboxCrm) }),
+    releaseNotes: Markdown.make({ name: 'Cairn 1.8 release notes', content: RELEASE_NOTES }),
+  };
+  for (const doc of Object.values(docs)) {
+    yield* Database.add(doc);
+  }
+  return docs;
+});

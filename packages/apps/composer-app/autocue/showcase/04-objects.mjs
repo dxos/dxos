@@ -6,7 +6,7 @@
  * Showcase scene 4: familiar SaaS objects over one ECHO graph. Create a table, add rows, then create a Kanban
  * board over the same type pivoted on status; drag a card to another column and the table row follows.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183)
  */
 

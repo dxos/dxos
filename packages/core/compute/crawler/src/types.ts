@@ -45,6 +45,8 @@ export type Target = {
   readonly threadId?: string;
   /** The message in the parent channel that spawned this thread. */
   readonly parentMessageId?: string;
+  /** The top-level channel a thread descends from, so dropping that channel drops its threads. */
+  readonly rootId?: string;
   /** Last message id processed; the resume point. */
   readonly cursor?: string;
   /** ISO-8601 of the most recent successful cursor advance. */

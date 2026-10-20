@@ -670,6 +670,10 @@ catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env
 the worktree or the primary checkout). A cue that runs into the next one
 is reported, so shorten its text rather than letting the voices overlap.
 
+A demo whose subject is a video call casts its participants as HeyGen avatars (`heygen.mjs`) and cuts them into
+call tracks (`conversation.mjs`, `align.py`); the runbook is
+[`plugin-meeting/autocue/README.md`](../../../packages/plugins/plugin-meeting/autocue/README.md).
+
 ### For a phone: `--mp4`
 
 iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an

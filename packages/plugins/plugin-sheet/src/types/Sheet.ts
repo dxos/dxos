@@ -37,10 +37,13 @@ export const Range = Schema.Struct({
 
 export type Range = Schema.Schema.Type<typeof Range>;
 
-export const ChartType = Schema.Literals(['bar', 'pie', 'xy']);
+export const ChartType = Schema.Literals(['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map']);
 export type ChartType = Schema.Schema.Type<typeof ChartType>;
 
-/** A chart of a 2D range; the first column is the category (bar, pie) or x axis (xy), each other column a series. */
+/**
+ * A chart of a 2D range. The first column is the category (bar, pie), x axis (xy, scatter), row (heatmap),
+ * spoke (radar) or country (map); each other column is a series.
+ */
 export const Chart = Schema.Struct({
   id: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
@@ -50,6 +53,11 @@ export const Chart = Schema.Struct({
   /** The first row holds the series names. */
   header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
   grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
+  /** Bars run along the x axis, categories down the y axis (bar). */
+  horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
+  stacked: Schema.optional(Schema.Boolean.annotate({ title: 'Stacked bars' })),
+  /** A least-squares line per series, plus one across all series (scatter). */
+  regression: Schema.optional(Schema.Boolean.annotate({ title: 'Regression lines' })),
 });
 
 export type Chart = Schema.Schema.Type<typeof Chart>;

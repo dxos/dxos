@@ -17,6 +17,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
 export type DataServiceProps = {
@@ -28,6 +29,7 @@ export type DataServiceProps = {
     spaceId: SpaceId,
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
+  indexStatus: IndexStatusTracker;
 };
 
 /**
@@ -50,6 +52,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
+  private readonly '_indexStatus': IndexStatusTracker;
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
@@ -63,6 +66,7 @@ export class DataServiceImpl implements DataService.Handlers {
     this._updateIndexes = params.updateIndexes;
     this._getSpaceStats = params.getSpaceStats;
     this._runGarbageCollection = params.runGarbageCollection;
+    this._indexStatus = params.indexStatus;
   }
 
   ['DataService.subscribe'](
@@ -135,7 +139,14 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        const created = await this._automergeHost.createDoc(request.initialValue);
+        if (request.initialValue && !request.initialDocument) {
+          log.warn('document created from deprecated `initialValue`; send `initialDocument` bytes', {
+            spaceId: request.spaceId,
+          });
+        }
+        const created = request.initialDocument
+          ? await this._automergeHost.createDoc(request.initialDocument, { preserveHistory: true })
+          : await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
@@ -251,6 +262,24 @@ export class DataServiceImpl implements DataService.Handlers {
     for (const synchronizer of this._subscriptions.values()) {
       synchronizer.setSendUpdatesPaused(paused);
     }
+  }
+
+  ['DataService.subscribeIndexStatus'](): EffectStream.Stream<DataService.IndexStatus, Error> {
+    return EffectEx.streamFromEmitter<DataService.IndexStatus, Error>((emit) => {
+      const ctx = Context.default();
+      this._indexStatus.updated.on(ctx, (status) => void emit.single(status));
+      void emit.single(this._indexStatus.current);
+      return Effect.promise(() => ctx.dispose());
+    });
+  }
+
+  ['DataService.subscribeIndexActivity'](): EffectStream.Stream<DataService.IndexActivity, Error> {
+    return EffectEx.streamFromEmitter<DataService.IndexActivity, Error>((emit) => {
+      const ctx = Context.default();
+      this._indexStatus.activityUpdated.on(ctx, (activity) => void emit.single(activity));
+      void emit.single(this._indexStatus.activity);
+      return Effect.promise(() => ctx.dispose());
+    });
   }
 
   ['DataService.subscribeSpaceSyncState'](

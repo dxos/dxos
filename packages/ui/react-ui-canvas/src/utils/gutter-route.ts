@@ -10,7 +10,7 @@
 // multi-cell shape spans is covered by the shape, so it is not a track.
 //
 
-import { type Bounds, type Node, type Point } from '../model/types.ts';
+import { type Bounds, type Node, type Point } from '../model/index.ts';
 import { type LatticeSpec, onLattice } from './lattice.ts';
 import { sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';

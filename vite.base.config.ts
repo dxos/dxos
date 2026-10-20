@@ -521,6 +521,8 @@ export type NodeOptions = {
   plugins?: Plugin[];
   /** Which JSX runtime to wire into the vitest node project. Defaults to `'react'`. */
   jsx?: 'react' | 'solid';
+  /** Globs to leave out, such as a nested workspace package that runs its own suite. */
+  exclude?: string[];
 };
 
 export type BrowserOptions = {
@@ -818,6 +820,7 @@ const createNodeProject = ({
   setupFiles = [],
   plugins = [],
   jsx = 'react',
+  exclude = [],
 }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
@@ -844,6 +847,7 @@ const createNodeProject = ({
         '!**/test/**/*.browser.test.{ts,tsx}',
         '!**/src/**/*.workerd.test.{ts,tsx}',
         '!**/test/**/*.workerd.test.{ts,tsx}',
+        ...exclude.map((glob) => `!${glob}`),
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [

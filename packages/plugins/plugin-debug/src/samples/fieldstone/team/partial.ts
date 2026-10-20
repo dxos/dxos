@@ -19,7 +19,7 @@ export type Provides = {
   readonly agents: Agents;
 };
 
-/** Fieldstone Labs' people and agents, which the other Fieldstone partials build on. Spec: `CONTENT.md`. */
+/** Alien Labs' people and agents, which the other Alien Labs partials build on. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('fieldstoneTeam', {
   schemas: [Organization.Organization, Person.Person, Agent.Agent, Instructions.Instructions],
   run: () =>

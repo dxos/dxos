@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../utils/builder.ts';
-import { reduceIntent } from './projection.ts';
+import { ViewBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
 import {
   BASE_ANIMATABLE,
   animatableProperties,
@@ -14,28 +14,29 @@ import {
   createTimeline,
   ease,
   keyTimes,
+  moveKeys,
   removeKey,
   sampleCamera,
-  sampleScene,
+  sampleView,
   setKey,
   trackValue,
 } from './timeline.ts';
-import { CAMERA_TARGET, InstanceNode, RectNode, type Scene } from './types.ts';
+import { CAMERA_TARGET, InstanceNode, RectNode, type View } from './types.ts';
 
 const {
-  scenes: [base],
-} = SceneBuilder.scene('s', [
-  SceneBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
-  SceneBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
+  views: [base],
+} = ViewBuilder.view('s', [
+  ViewBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
+  ViewBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
 ]).build();
 
 /** `a` moves from x 50 to 150 over two seconds, easing out, and fades in over the first second. */
-const animated = (): Scene => {
+const animated = (): View => {
   let timeline = createTimeline(4);
   timeline = setKey(timeline, 'a', 'center', { t: 0, value: { x: 50, y: 25 } });
   timeline = setKey(timeline, 'a', 'center', { t: 2, value: { x: 150, y: 25 }, easing: 'ease-out' });
-  timeline = setKey(timeline, 'a', 'opacity', { t: 0, value: 0 });
-  timeline = setKey(timeline, 'a', 'opacity', { t: 1, value: 1 });
+  timeline = setKey(timeline, 'a', 'style.opacity', { t: 0, value: 0 });
+  timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 1 });
   return { ...base, timeline };
 };
 
@@ -58,28 +59,28 @@ describe('easing', () => {
   });
 });
 
-describe('sampleScene', () => {
+describe('sampleView', () => {
   test('a scene without a timeline is returned as it is', ({ expect }) => {
-    expect(sampleScene(base, 1)).toBe(base);
+    expect(sampleView(base, 1)).toBe(base);
   });
 
   test('tracked properties take their eased value; others keep the base value', ({ expect }) => {
     const scene = animated();
-    const at = (t: number) => sampleScene(scene, t).nodes.a;
+    const at = (t: number) => sampleView(scene, t).nodes.a;
     expect(at(0).center).toEqual({ x: 50, y: 25 });
     expect(at(2).center).toEqual({ x: 150, y: 25 });
     // Ease-out covers more than half the distance by half the time.
     expect(at(1).center.x).toBeCloseTo(50 + 100 * (1 - 0.5 ** 3));
-    expect(at(0.5).opacity).toBeCloseTo(0.5);
+    expect(at(0.5).style?.opacity).toBeCloseTo(0.5);
     // Past the last key a track holds its end value.
     expect(at(3.5).center).toEqual({ x: 150, y: 25 });
-    expect(sampleScene(scene, 1).nodes.b).toBe(scene.nodes.b);
+    expect(sampleView(scene, 1).nodes.b).toBe(scene.nodes.b);
     expect(at(1).id).toBe('a');
   });
 
   test('the same time samples once', ({ expect }) => {
     const scene = animated();
-    expect(sampleScene(scene, 1.25)).toBe(sampleScene(scene, 1.25));
+    expect(sampleView(scene, 1.25)).toBe(sampleView(scene, 1.25));
   });
 
   test('a discrete value holds until the next key', ({ expect }) => {
@@ -95,10 +96,26 @@ describe('sampleScene', () => {
 
 describe('keys', () => {
   test('a key at an existing time replaces it; removing the last key removes the track', ({ expect }) => {
-    let timeline = setKey(createTimeline(), 'a', 'opacity', { t: 1, value: 0 });
-    timeline = setKey(timeline, 'a', 'opacity', { t: 1, value: 0.5 });
-    expect(timeline.tracks['a:opacity'].keys).toEqual([{ t: 1, value: 0.5 }]);
-    expect(removeKey(timeline, 'a', 'opacity', 1).tracks).toEqual({});
+    let timeline = setKey(createTimeline(), 'a', 'style.opacity', { t: 1, value: 0 });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 0.5 });
+    expect(timeline.tracks['a:style.opacity'].keys).toEqual([{ t: 1, value: 0.5 }]);
+    expect(removeKey(timeline, 'a', 'style.opacity', 1).tracks).toEqual({});
+  });
+
+  test('moving keys moves the selection keys at one time, keeping value and easing, and replaces a key there', ({
+    expect,
+  }) => {
+    let timeline = setKey(createTimeline(4), 'a', 'size', { t: 1, value: 'big', easing: 'ease-in' });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 0.5 });
+    timeline = setKey(timeline, 'a', 'style.opacity', { t: 2, value: 1 });
+    timeline = setKey(timeline, 'b', 'size', { t: 1, value: 'small' });
+    const moved = moveKeys(timeline, new Set(['a']), 1, 2);
+    expect(moved.tracks['a:size'].keys).toEqual([{ t: 2, value: 'big', easing: 'ease-in' }]);
+    // The key already at 2 is replaced by the one moved onto it.
+    expect(moved.tracks['a:style.opacity'].keys).toEqual([{ t: 2, value: 0.5 }]);
+    // Another node's keys stay.
+    expect(moved.tracks['b:size'].keys).toEqual([{ t: 1, value: 'small' }]);
+    expect(moveKeys(timeline, new Set(['a']), 3, 2)).toBe(timeline);
   });
 
   test('key times of the selection are sorted without repeats', ({ expect }) => {
@@ -116,6 +133,11 @@ describe('animatable properties', () => {
   test('read from the schema annotations of the shared fields', ({ expect }) => {
     expect(animatableProperties(RectNode)).toEqual(BASE_ANIMATABLE);
     expect(animatableProperties(InstanceNode)).toEqual(BASE_ANIMATABLE);
+  });
+
+  test('a struct property is searched for animatable fields, reported by dot path', ({ expect }) => {
+    expect(animatableProperties(RectNode)['style.opacity']).toBe('number');
+    expect(animatableProperties(RectNode).style).toBeUndefined();
   });
 });
 

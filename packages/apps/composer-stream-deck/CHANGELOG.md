@@ -1,5 +1,17 @@
 # @dxos/composer-stream-deck
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/plugin-stream-deck@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/plugin-stream-deck@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

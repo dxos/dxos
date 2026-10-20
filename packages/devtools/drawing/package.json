@@ -1,7 +1,6 @@
 {
   "name": "@dxos/drawing",
-  "version": "0.14.0",
-  "private": true,
+  "version": "0.16.0",
   "description": "Diagrams your coding agent can draw: lay out a semantic diagram (.dx) into an SVG.",
   "homepage": "https://drawing.sh",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,9 +31,13 @@
   "dependencies": {
     "@dxos/diagram": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

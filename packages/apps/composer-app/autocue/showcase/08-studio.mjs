@@ -6,7 +6,7 @@
  * Showcase scene 8: how this film was made. A Studio storyboard holds one frame per scene, each carrying its
  * narration as notes; open it, step through the frames, and play it.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183)
  *
  * Setup creates the storyboard through `org.dxos.operation.studio.createStoryboard` without generating media, so

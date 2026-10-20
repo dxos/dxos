@@ -190,6 +190,8 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
     pagination?: VirtualizerPaginationController;
     /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
     paginationThreshold?: number;
+    /** Pads the first and last item by `gap`; `false` when the scroll viewport already pads its content. @default true. */
+    inset?: boolean;
   };
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
@@ -206,6 +208,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       gap,
       pagination,
       paginationThreshold,
+      inset = true,
       onChange,
       draggable = true,
       debug,
@@ -232,12 +235,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       pagination,
       threshold: paginationThreshold,
     });
+    const wasScrollingRef = useRef(false);
     const handleChange = useCallback(
-      (nextVirtualizer: Virtualizer<any, any>, sync: boolean) => {
+      (nextVirtualizer: Virtualizer<HTMLElement, HTMLDivElement>, sync: boolean) => {
+        const settled = wasScrollingRef.current && !nextVirtualizer.isScrolling;
+        wasScrollingRef.current = nextVirtualizer.isScrolling;
+        if (settled) {
+          remeasureMounted(nextVirtualizer, orientation);
+        }
+
         handlePaginationChange(nextVirtualizer);
         onChange?.(nextVirtualizer, sync);
       },
-      [handlePaginationChange, onChange],
+      [handlePaginationChange, onChange, orientation],
     );
 
     const virtualizer = useVirtualizer({
@@ -246,8 +256,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       estimateSize: wrappedEstimateSize,
       gap,
       // Inset by `gap` (inter-item spacing) plus any pagination spacer; see `useVirtualizerPagination`.
-      paddingStart: (gap ?? 0) + leadingSpace,
-      paddingEnd: gap,
+      paddingStart: (inset ? (gap ?? 0) : 0) + leadingSpace,
+      paddingEnd: inset ? gap : 0,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
       getItemKey: draggable
@@ -375,6 +385,24 @@ const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
 ) => ReactElement;
 
 (MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
+
+/**
+ * Re-measures every mounted item from the DOM.
+ * During a smooth scroll virtual-core discards ResizeObserver measurements of items outside a window
+ * around the scroll target and never replays them, so a tile that mounted or resized mid-scroll keeps
+ * its estimated size (overlapping or gapping its neighbours) until it next changes size.
+ */
+const remeasureMounted = (virtualizer: Virtualizer<HTMLElement, HTMLDivElement>, orientation: Axis) => {
+  virtualizer.elementsCache.forEach((element) => {
+    if (element.isConnected) {
+      const rect = element.getBoundingClientRect();
+      virtualizer.resizeItem(
+        virtualizer.indexFromElement(element),
+        Math.round(orientation === 'horizontal' ? rect.width : rect.height),
+      );
+    }
+  });
+};
 
 //
 // InternalPlaceholder

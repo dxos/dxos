@@ -7,7 +7,9 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Entity, Filter, Obj } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type URI } from '@dxos/keys';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -38,14 +40,14 @@ type StoryArgs = {
   readonly?: boolean;
 };
 
-const template = ArchitectureSpace.makeTemplate();
+const definition = ArchitectureSpace.make();
 
-// The space is seeded by the template's own `apply`, exactly as Composer applies it when a space is created from it.
+// The space is seeded by the template's own definition, as `SpaceOperation.ApplyTemplate` applies it.
 const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
-  types: [...ArchitectureSpace.make().schemas],
+  types: [...definition.schemas],
   plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make(), MermaidPlugin.make()],
-  onInit: async ({ client, space }) => {
-    await template.apply({ client, space });
+  onInit: async ({ space }) => {
+    await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
     await space.db.flush();
     const documents = await space.db.query(Filter.type(Markdown.Document)).run();
     const document = documents.find((document) => Obj.getLabel(document) === args.document);
@@ -107,6 +109,12 @@ const documentArgs: Pick<Story, 'decorators' | 'argTypes'> = {
 
 /** The Composer document, which links DXOS and EDGE and embeds the Composer architecture. */
 export const Default: Story = {
+  ...documentArgs,
+  args: { document: 'Composer' },
+};
+
+/** The default story, driven: its steps run as a play test. */
+export const Test: Story = {
   ...documentArgs,
   args: { document: 'Composer' },
   // The editor draws headings as lines rather than heading elements, so the document is recognised by its text.

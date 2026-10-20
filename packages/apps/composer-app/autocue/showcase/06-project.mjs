@@ -7,7 +7,7 @@
  * open its tasks (all done), open one to see the agent's work, then open the plugin's Clocks page and flip the
  * map to a globe.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183), on a
  *   profile where `plugin-computer/autocue/composer-plugin.mjs` has run to the end (its dev server on :3967 must
  *   still be up), or against EDGE dev after `plugin-projects/autocue/composer-plugin-registry.mjs`, which builds

@@ -9,16 +9,13 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { SVG_SCHEMA } from '@dxos/diagram';
 import { Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
-
-/** Variant label as an id segment: variant ids carry `.` and `/`, which graph node ids reserve. */
-export const variantSlug = (variant: Pick<IllustratorCapabilities.DrawingVariant, 'label'>): string =>
-  variant.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -48,23 +45,28 @@ export default Capability.makeModule(
         if (!canvas) {
           return Effect.succeed([]);
         }
-        // The SVG variant is a read-only viewer, so it is never offered as a target.
-        const targets = get(variantsAtom).filter(({ id }) => id !== canvas.schema && id !== SVG_SCHEMA);
+        const targets = IllustratorCapabilities.editTargets(get(variantsAtom), canvas.schema);
         return Effect.succeed(
           targets.map((variant) => {
-            const slug = variantSlug(variant);
+            const slug = IllustratorCapabilities.variantSlug(variant);
             return AppGraphNode.makeAction({
               id: `convert-${slug}`,
               // The handler runs against the drawing's own space, which the action context does not supply.
               data: () =>
-                Operation.invoke(
-                  DrawingOperation.Convert,
-                  { drawing: Ref.make(drawing), variant: variant.id },
-                  { spaceId: Obj.getDatabase(drawing)?.spaceId },
-                ),
+                Effect.gen(function* () {
+                  // Always a copy beside the source, which is left as it is; the copy is opened, as it is new.
+                  const result = yield* Operation.invoke(
+                    DrawingOperation.Convert,
+                    { drawing: Ref.make(drawing), variant: variant.id },
+                    { spaceId: Obj.getDatabase(drawing)?.spaceId },
+                  );
+                  const copy = yield* Effect.promise(() => result.drawing.load());
+                  yield* Operation.invoke(LayoutOperation.Open, {
+                    subject: [GraphPath.getObjectPathFromObject(copy)],
+                  });
+                }),
               properties: {
-                // Keyed per variant so a known renderer gets a translated label; others fall back.
-                label: [`edit-in-${slug}.label`, { ns: meta.profile.key, defaultValue: `Edit in ${variant.label}` }],
+                label: IllustratorCapabilities.copyLabel(variant),
                 icon: variant.icon ?? DrawingOperation.Convert.meta.icon,
                 disposition: 'list-item',
                 testId: `illustratorPlugin.convert.${slug}`,

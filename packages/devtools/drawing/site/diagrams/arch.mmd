@@ -1,0 +1,13 @@
+flowchart LR
+  subgraph web [Web app]
+    Browser --> |HTTPS| Api[API server]
+  end
+  subgraph data [Storage]
+    Db[Postgres]
+    Cache[Redis]
+  end
+  Queue --> Worker[Job worker]
+  Api --> |reads, writes| Db
+  Api --> Cache
+  Api --> |enqueue| Queue
+  Worker --> Db
