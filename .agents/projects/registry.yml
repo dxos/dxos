@@ -74,8 +74,8 @@ projects:
     summary: 'Reconcile the canvas containers: scenes and frames become Views (the root included), groups become (anonymous) Objects, layers become Tags with drawing order taken from the tree; a Views panel shows the full hierarchy and an Objects panel the library, replacing AboutInspector.'
     tasks: packages/ui/react-ui-canvas/docs/TASKS.md
     design: packages/ui/react-ui-canvas/docs/VIEWS.md
-    prs: [14030]
-    resume: 'Designed (VIEWS.md, ontology §2, decisions §4). NEXT: phase 1, the View rename across react-ui-canvas and plugin-canvas.'
+    prs: [14030, 14049, 14050]
+    resume: 'PR #14049 (crossfade, text leading) MERGED. Draft PR #14050: Phase 0 (DESIGN.md §13) — context pruned, no pan re-renders (Renders story test), CanvasController with Selection/Editing/Tools/Time (unit-tested), folder-barrel-imports on (#14048 merged), Canvas.tsx split per part; ViewsInspector + Objects stories over shared src/testing fixtures. NEXT: controller Navigation and Look; aspect hooks and Time/Gesture/Editing providers; split Viewport; then Phase 1 (View rename). #14047 (HistoryTracker) is a draft awaiting review.'
   - name: plugin-canvas
     status: active
     user: burdon

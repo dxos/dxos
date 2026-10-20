@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { createSceneTree } from '../builder/testing.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type Link, type Scene, endpointNode } from '../model/index.ts';
+import { type Link, type View, endpointNode } from '../model/index.ts';
+import { createViewTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 
-const fixture = (): Scene => {
-  const { scenes, root } = createSceneTree(1, 'r');
-  const scene = scenes.find((scene) => scene.id === root);
+const fixture = (): View => {
+  const { views, root } = createViewTree(1, 'r');
+  const scene = views.find((scene) => scene.id === root);
   if (!scene) {
     throw new Error('fixture has no root scene');
   }

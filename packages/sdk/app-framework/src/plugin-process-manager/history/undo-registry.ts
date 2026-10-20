@@ -19,6 +19,9 @@ export type UndoMappingResult = {
   deriveContext: (input: any, output: any) => any | undefined;
   /** Message provider - may be a static Label or a function. */
   message?: UndoMapping.MessageProvider<Operation.Definition<any, any>>;
+  scope?: (input: any, output: any) => string | undefined;
+  mergeKey?: (input: any, output: any) => string | undefined;
+  context?: (input: any, output: any) => unknown;
 };
 
 /**
@@ -47,6 +50,9 @@ export const make = (getMappings: () => UndoMapping.UndoMapping[]): UndoRegistry
       inverse: mapping.inverse,
       deriveContext: mapping.deriveContext,
       message: mapping.message,
+      scope: mapping.scope,
+      mergeKey: mapping.mergeKey,
+      context: mapping.context,
     };
   };
 

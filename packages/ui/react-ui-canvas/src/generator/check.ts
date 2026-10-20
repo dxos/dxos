@@ -8,7 +8,7 @@
 // give the same shapes when reached in a different order (from different checkpoints), and draws a contact sheet.
 //
 
-import { type Bounds, type NodeId, type Scene } from '../model/index.ts';
+import { type Bounds, type NodeId, type View } from '../model/index.ts';
 import { nodeBounds, unionBounds } from '../utils/index.ts';
 import { type GeneratorCompiler, loadGenerator } from './compile.ts';
 import { hashSeed } from './motion.ts';
@@ -21,7 +21,7 @@ export type CheckOptions = {
   /** The parameter schema, for bindings. */
   schema?: Record<string, unknown>;
   /** The scene holding the generator node. */
-  scene: Scene;
+  scene: View;
   node: NodeId;
   /** The times to draw, in seconds. */
   times: readonly number[];

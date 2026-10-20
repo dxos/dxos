@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Repository from './Repository.ts';
+export * as LegacyRepository from './LegacyRepository.ts';
 export * as RepositoryOperation from './RepositoryOperation.ts';
 export * as RepositoryService from './RepositoryService.ts';
 export * as Sandbox from './Sandbox.ts';
