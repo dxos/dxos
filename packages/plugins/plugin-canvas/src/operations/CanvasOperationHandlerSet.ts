@@ -15,4 +15,5 @@ export const handlers = OperationHandlerSet.lazy([
   CanvasOperation.InspectGenerator.pipe(Operation.lazyHandler(() => import('./inspect-generator.ts'))),
   CanvasOperation.AddGenerator.pipe(Operation.lazyHandler(() => import('./add-generator.ts'))),
   CanvasOperation.SetTimelineKey.pipe(Operation.lazyHandler(() => import('./set-timeline-key.ts'))),
+  CanvasOperation.ImportTldraw.pipe(Operation.lazyHandler(() => import('./import-tldraw.ts'))),
 ]);

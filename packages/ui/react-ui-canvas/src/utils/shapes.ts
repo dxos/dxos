@@ -24,6 +24,7 @@ import {
   type Size,
 } from '../model/index.ts';
 import { type PartField } from './parts.ts';
+import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
 export const nodeBounds = (node: Node): Bounds => ({
@@ -58,8 +59,10 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 2, height: 1 },
   ellipse: { width: 2, height: 2 },
+  cloud: { width: 3, height: 2 },
+  polygon: { width: 2, height: 2 },
   note: { width: 4, height: 2 },
-  frame: { width: 4, height: 2 },
+  view: { width: 4, height: 2 },
   instance: { width: 4, height: 2 },
   path: { width: 2, height: 2 },
   generator: { width: 4, height: 4 },
@@ -70,8 +73,10 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
 export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 256, height: 256 },
   ellipse: { width: 256, height: 256 },
+  cloud: { width: 384, height: 256 },
+  polygon: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
-  frame: { width: 512, height: 256 },
+  view: { width: 512, height: 256 },
   instance: { width: 512, height: 256 },
   path: { width: 256, height: 256 },
   generator: { width: 512, height: 512 },
@@ -106,9 +111,14 @@ export const createNode = ({
       return { type, id, z, center, size };
     case 'ellipse':
       return { type, id, z, center, size };
+    // The count is set, so the panel shows the shape's own value rather than an empty field.
+    case 'cloud':
+      return { type, id, z, center, size, bumps: DEFAULT_CLOUD_BUMPS };
+    case 'polygon':
+      return { type, id, z, center, size, sides: DEFAULT_POLYGON_SIDES };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
-    case 'frame':
+    case 'view':
       return { type, id, z, center, size, scene: scene ?? id };
     case 'instance':
       return { type, id, z, center, size, composite: scene ?? '' };
@@ -180,3 +190,6 @@ export const flipLink = (link: Link): LinkValues => ({
   target: link.source,
   ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
 });
+
+/** A fresh element or scene id: `prefix` and a random suffix. */
+export const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;

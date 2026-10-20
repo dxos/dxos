@@ -12,9 +12,9 @@ import {
   type NodeRegistry,
   NoteNode,
   RectNode,
-  Scene,
+  View,
   createNodeRegistry,
-  createSceneSchema,
+  createViewSchema,
   isBuiltinNode,
   nodeBase,
   nodeDef,
@@ -46,7 +46,7 @@ const registry: NodeRegistry = { ...defaultNodeRegistry, function: functionDef }
 
 describe('registry', () => {
   test('a host composes the scene schema from its registry', ({ expect }) => {
-    const HostScene = createSceneSchema(Object.values(registry).map((def) => def.schema));
+    const HostView = createViewSchema(Object.values(registry).map((def) => def.schema));
     const fn = functionDef.create({
       id: 'f',
       z: 'a',
@@ -54,9 +54,9 @@ describe('registry', () => {
       size: nominalSize(functionDef.defaultSize),
     });
     const scene = { id: 's', nodes: { f: fn }, links: {} };
-    expect(Schema.is(HostScene)(scene)).toBe(true);
+    expect(Schema.is(HostView)(scene)).toBe(true);
     // The built-in schema rejects the host type; the engine still handles the node as a `NodeBase`.
-    expect(Schema.is(Scene)(scene)).toBe(false);
+    expect(Schema.is(View)(scene)).toBe(false);
     expect(isBuiltinNode(fn)).toBe(false);
     expect(nodeBounds(fn)).toEqual({ x: 0, y: 32, width: 128, height: 64 });
   });
@@ -82,13 +82,13 @@ describe('registry', () => {
 });
 
 describe('node registry', () => {
-  test('rectangle and frame share the box prototype and differ only where they say so', ({ expect }) => {
-    const { rect, frame } = defaultNodeRegistry;
+  test('rectangle and view share the box prototype and differ only where they say so', ({ expect }) => {
+    const { rect, view } = defaultNodeRegistry;
     expect(rect.component).toBe(boxPrototype.component);
     expect(rect.resizable).toBe(true);
-    expect(frame.resizable).toBe(rect.resizable);
-    expect(frame.portsPerSide).toBe(rect.portsPerSide);
-    expect(frame.openable).toBe(true);
+    expect(view.resizable).toBe(rect.resizable);
+    expect(view.portsPerSide).toBe(rect.portsPerSide);
+    expect(view.openable).toBe(true);
     expect(rect.openable).toBeUndefined();
     // A prototype is not a type: the palette and the scene schema never see it.
     expect(Object.keys(defaultNodeRegistry)).not.toContain('box');

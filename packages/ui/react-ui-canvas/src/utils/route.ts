@@ -21,8 +21,10 @@ import {
   type Point,
   type Port,
   type PortEndpoint,
-  type Scene,
   type Side,
+  type View,
+  isCloudNode,
+  isEllipseNode,
   isPointEndpoint,
 } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
@@ -177,7 +179,7 @@ const polylinePath = (points: readonly Point[]): string =>
   points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
 
 /** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
-const diagramGeometry = (scene: Scene, link: Link): LinkGeometry | undefined => {
+const diagramGeometry = (scene: View, link: Link): LinkGeometry | undefined => {
   if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
     return undefined;
   }
@@ -211,7 +213,7 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: Scene, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (scene: View, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
   return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
 };
@@ -254,7 +256,7 @@ const leastBends = (from: RouteEnd, to: RouteEnd): number => {
  * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
  */
 const latticeEnds = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   link: Link,
   route: LatticeRoute,
@@ -310,7 +312,7 @@ const latticeEnds = (
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
 export const linkGeometry = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
@@ -324,7 +326,7 @@ export const linkGeometry = (
   if (routed) {
     return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
   }
-  const ends = resolveEnds(scene, registry, link.source, link.target);
+  const ends = resolveEnds(scene, registry, link.source, link.target, link.type);
   if (!ends) {
     return undefined;
   }
@@ -332,12 +334,71 @@ export const linkGeometry = (
   return { link, path: linkPath(link, from, to, route), source: from, target: to };
 };
 
+/**
+ * Where a line aimed at `node`'s centre from `toward` meets its outline (an ellipse for ellipses and clouds, else its
+ * frame), and the side it crosses: a plain line to a node bound to no port points straight at the shape.
+ */
+const centredEnd = (node: Node, toward: Point): RouteEnd => {
+  const { center } = node;
+  const [halfWidth, halfHeight] = [node.size.width / 2, node.size.height / 2];
+  const [dx, dy] = [toward.x - center.x, toward.y - center.y];
+  if ((dx === 0 && dy === 0) || halfWidth === 0 || halfHeight === 0) {
+    return { point: center, side: 'e' };
+  }
+  const round = isEllipseNode(node) || isCloudNode(node);
+  const scale = round
+    ? 1 / Math.hypot(dx / halfWidth, dy / halfHeight)
+    : Math.min(dx === 0 ? Infinity : halfWidth / Math.abs(dx), dy === 0 ? Infinity : halfHeight / Math.abs(dy));
+  return {
+    point: { x: center.x + dx * scale, y: center.y + dy * scale },
+    side: sideToward(center, toward),
+  };
+};
+
+/**
+ * A plain (non-smart) link's ends: a free point stays where it is, a named port is used as given, and a node end with
+ * no port points at the node's centre, from the other end's centre (or port, or point), stopping at its outline.
+ */
+const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
+  const anchor = (end: Endpoint): Point | undefined => {
+    if (isPointEndpoint(end)) {
+      return end.point;
+    }
+    const terminal = terminalOf(scene, registry, end);
+    const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
+    return terminal && port ? portPoint(terminal.bounds, port) : scene.nodes[end.node]?.center;
+  };
+  const [from, to] = [anchor(source), anchor(target)];
+  if (!from || !to) {
+    return undefined;
+  }
+  const endOf = (end: Endpoint, other: Point): RouteEnd | undefined => {
+    if (isPointEndpoint(end)) {
+      return { point: end.point, side: sideToward(end.point, other), free: true };
+    }
+    const node = scene.nodes[end.node];
+    if (!node) {
+      return undefined;
+    }
+    const terminal = terminalOf(scene, registry, end);
+    const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
+    return terminal && port ? routeEnd(terminal, port) : centredEnd(node, other);
+  };
+  const sourceEnd = endOf(source, to);
+  const targetEnd = endOf(target, from);
+  return sourceEnd && targetEnd ? ([sourceEnd, targetEnd] as [RouteEnd, RouteEnd]) : undefined;
+};
+
 const resolveEnds = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
+  type?: Link['type'],
 ): [RouteEnd, RouteEnd] | undefined => {
+  if (type !== undefined && type !== 'smart') {
+    return centredEnds(scene, registry, source, target);
+  }
   if (isPointEndpoint(source)) {
     if (isPointEndpoint(target)) {
       return [
@@ -377,8 +438,8 @@ const resolveEnds = (
  * gutter run side by side in their own lanes, ordered so their turn-offs do not cross (DESIGN §8b).
  * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
  */
-export const sceneLinkGeometry = (
-  scene: Scene,
+export const viewLinkGeometry = (
+  scene: View,
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,
@@ -412,7 +473,7 @@ export const sceneLinkGeometry = (
       if (chosen) {
         return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
       }
-      const ends = resolveEnds(scene, registry, link.source, link.target);
+      const ends = resolveEnds(scene, registry, link.source, link.target, link.type);
       if (!ends) {
         return [];
       }

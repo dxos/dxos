@@ -10,29 +10,27 @@ import * as Editable from '@dxos/react-ui/Editable';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { type SceneId } from '../../../model/index.ts';
+import { type ViewId } from '../../../model/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { type InspectorProps } from '../types.ts';
 
-/** A composite as the panel lists it. */
-export type ObjectEntry = { id: SceneId; name: string; instances: number };
+/** A composite as the panel lists it; an anonymous one (a group not yet named) is listed only while selected. */
+export type ObjectEntry = { id: ViewId; name: string; instances: number; anonymous?: boolean };
 
 export type ObjectsInspectorProps = InspectorProps & {
   objects: readonly ObjectEntry[];
   /** The composite open in isolation, or the one whose instance is selected. */
-  selected?: SceneId;
+  selected?: ViewId;
   /** Opens a composite in isolation. */
-  onSelect?: (id: SceneId) => void;
-  onRename?: (id: SceneId, name: string) => void;
-  /** Groups the canvas selection as a new object; absent while nothing on the canvas is selected. */
-  onCompose?: () => void;
+  onSelect?: (id: ViewId) => void;
+  onRename?: (id: ViewId, name: string) => void;
   /** Places an instance of the selected composite on the canvas. */
-  onPlace?: (id: SceneId) => void;
-  onDuplicate?: (id: SceneId) => void;
+  onPlace?: (id: ViewId) => void;
+  onDuplicate?: (id: ViewId) => void;
   /** Removes a composite; with `instances`, the instances of it too. */
-  onDelete?: (id: SceneId, instances: boolean) => void;
+  onDelete?: (id: ViewId, instances: boolean) => void;
   /** A small picture of a composite, drawn after its name. */
-  thumbnail?: (id: SceneId) => ReactNode;
+  thumbnail?: (id: ViewId) => ReactNode;
   /** Gives the scene a timeline; absent while it has one or cannot be edited. */
   onAnimate?: () => void;
 };
@@ -40,7 +38,7 @@ export type ObjectsInspectorProps = InspectorProps & {
 /**
  * The drawing's composite objects (ANIMATION.md §4.3), built like `LayersInspector`: a row per composite with a drag handle,
  * its name (renamed in place on a double-click), a thumbnail and its number of instances. Selecting a row opens the composite in
- * isolation. The toolbar groups the canvas selection as an object, places, animates the scene, duplicates and deletes.
+ * isolation. The toolbar places, animates the scene, duplicates and deletes; Group on the canvas makes new objects.
  */
 export const ObjectsInspector = ({
   classNames,
@@ -49,27 +47,17 @@ export const ObjectsInspector = ({
   readonly,
   onSelect,
   onRename,
-  onCompose,
   onPlace,
   onDuplicate,
   onDelete,
   thumbnail,
   onAnimate,
 }: ObjectsInspectorProps) => {
-  const [editingId, setEditingId] = useState<SceneId>();
+  const [editingId, setEditingId] = useState<ViewId>();
   const current = objects.find((entry) => entry.id === selected);
   return (
     <>
       <Toolbar.Root data-testid='objects-toolbar'>
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--selection-plus--regular'
-          label='Group selection as object'
-          disabled={readonly || !onCompose}
-          data-testid='objects-compose'
-          onClick={onCompose}
-        />
         <Button.Root
           variant='ghost'
           iconOnly
@@ -147,7 +135,10 @@ export const ObjectsInspector = ({
                       }
                     }}
                   >
-                    <Editable.Preview classNames='px-0 cursor-pointer' data-testid={`object-name-${entry.id}`} />
+                    <Editable.Preview
+                      classNames={['px-0 cursor-pointer', entry.anonymous && 'italic text-fg-muted']}
+                      data-testid={`object-name-${entry.id}`}
+                    />
                     <Editable.Input
                       classNames='-ms-2 w-[calc(100%+0.5rem)] ps-2'
                       aria-label='Object name'

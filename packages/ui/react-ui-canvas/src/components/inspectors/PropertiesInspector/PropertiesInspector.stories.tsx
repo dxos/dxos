@@ -13,12 +13,12 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../../builder/index.ts';
+import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms } from '../../../engine/index.ts';
-import { useRegistry, useSceneProjection } from '../../../hooks/index.ts';
-import { type ElementId, type Layer, type Scene, createMemoryStore, getElement } from '../../../model/index.ts';
+import { useRegistry, useViewProjection } from '../../../hooks/index.ts';
+import { type ElementId, type Layer, type View, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
-import { InspectorFrame } from '../../panels/InspectorPanel/testing.tsx';
+import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
@@ -31,15 +31,15 @@ const LAYERS: Layer[] = (() => {
   return [background, notes, diagram];
 })();
 
-const SCENE: Scene = (() => {
+const VIEW: View = (() => {
   const {
-    scenes: [scene],
-  } = SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
-    SceneBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
-    SceneBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
-    SceneBuilder.scene('f').at(box(400, 200)).properties({ label: 'Frame', layer: 'diagram' }),
-    SceneBuilder.link('curve', 'a', 'b')
+    views: [scene],
+  } = ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
+    ViewBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
+    ViewBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
+    ViewBuilder.view('f').at(box(400, 200)).properties({ label: 'View', layer: 'diagram' }),
+    ViewBuilder.link('curve', 'a', 'b')
       .id('ab')
       .properties({ layer: 'diagram', style: { lineStyle: 'dashed' } }),
   ]).build();
@@ -54,9 +54,9 @@ type StoryArgs = {
 /** The panel alone, over an in-memory scene and a fixed selection: no canvas, so every field can be read in full. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
-  const store = useMemo(() => createMemoryStore([SCENE]), []);
-  const atoms = useMemo(() => createCanvasAtoms(SCENE.id), []);
-  const projection = useSceneProjection({ store, atoms });
+  const store = useMemo(() => createMemoryStore([VIEW]), []);
+  const atoms = useMemo(() => createCanvasAtoms(VIEW.id), []);
+  const projection = useViewProjection({ store, atoms });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);
@@ -82,7 +82,6 @@ const PROPERTIES = {
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',
   order: 0,
-  show: 'selection',
   defaultOpen: true,
 } as const;
 
@@ -110,15 +109,15 @@ export const Mixed: Story = { args: { select: ['a', 'ab'] } };
 /** A note on its own layer. */
 export const Note: Story = { args: { select: ['n'] } };
 
-/** A frame: its Link section, with how it shows what it links to. */
-export const Frame: Story = { args: { select: ['f'] } };
+/** A view node: its Link section, with how it shows what it links to. */
+export const ViewNode: Story = { args: { select: ['f'] } };
 
-/** A frame groups what it links to under one Link section. */
-export const FrameTest: Story = {
+/** A view node groups what it links to under one Link section. */
+export const ViewNodeTest: Story = {
   args: { select: ['f'] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. The Link section shows; a labelled frame reads as not showing its contents.
+    // 1. The Link section shows; a labelled view node reads as not showing its contents.
     await expect(await canvas.findByText('Link')).toBeInTheDocument();
     await expect(await canvas.findByLabelText('Show contents')).not.toBeChecked();
   },

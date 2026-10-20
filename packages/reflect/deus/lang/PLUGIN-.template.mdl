@@ -17,6 +17,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -45,6 +46,17 @@ feat F-1: <feature>
 scenario T-1: 
   given: 
   then:
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: <what is now true>
+  date: <YYYY-MM-DD>
+  by: user:<handle>
+  why: <the constraint that forced it>
 ```
 
 ---
@@ -99,3 +111,5 @@ ext component
     emits?: EventMap            # events the component raises to its parent
     layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
 ```
+
+`decision` is defined in [`changelog.mdl`](./changelog.mdl).

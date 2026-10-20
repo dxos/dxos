@@ -8,9 +8,9 @@
 //
 
 import {
+  CloudNode,
   DiagramNode,
   EllipseNode,
-  FrameNode,
   GeneratorNode,
   InstanceNode,
   type LinkRegistry,
@@ -19,20 +19,26 @@ import {
   type NodeType,
   NoteNode,
   PathNode,
+  PolygonNode,
   RectNode,
   type Size,
+  ViewNode,
   createNodeRegistry,
+  isCloudNode,
+  isPolygonNode,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, createNode } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode, polygonPath } from '../../utils/index.ts';
 import {
   BoxNodeView,
+  CloudNodeView,
   DiagramNodeView,
   EllipseNodeView,
-  FrameNodeView,
   GeneratorNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
+  PolygonNodeView,
+  ViewNodeView,
 } from './SceneLayer.tsx';
 
 const MIN_SIZE: Size = { width: 64, height: 32 };
@@ -74,7 +80,35 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-
+  cloud: {
+    name: 'Cloud',
+    icon: 'ph--cloud--regular',
+    key: 'C',
+    schema: CloudNode,
+    component: CloudNodeView,
+    create: (props) => createNode({ type: 'cloud', ...props }),
+    defaultSize: NOMINAL_SIZES.cloud,
+    silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.bumps : undefined),
+    // Only the side centres of the frame lie near the outline.
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
+  polygon: {
+    name: 'Polygon',
+    icon: 'ph--hexagon--regular',
+    key: 'N',
+    schema: PolygonNode,
+    component: PolygonNodeView,
+    create: (props) => createNode({ type: 'polygon', ...props }),
+    defaultSize: NOMINAL_SIZES.polygon,
+    silhouette: (node, inset) => polygonPath(node.size, inset, isPolygonNode(node) ? node.sides : undefined),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',
@@ -87,15 +121,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  frame: {
+  view: {
     extends: 'box',
-    name: 'Frame',
+    name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
+    schema: ViewNode,
+    component: ViewNodeView,
+    create: (props) => createNode({ type: 'view', ...props }),
+    defaultSize: NOMINAL_SIZES.view,
     minSize: { width: 96, height: 60 },
     openable: true,
   },
