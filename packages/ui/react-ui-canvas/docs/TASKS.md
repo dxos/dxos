@@ -110,7 +110,9 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 
 - [x] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
   - Landed in dxos/dxos#14047: `redo`/`canRedo`, `undo(scope)`, `transaction(label, effect)`, merge keys inside a 500 ms window, per-entry `context`, and the `applied` stream (before/after each undo and redo).
-- [ ] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
+- [x] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
+  - `model/versioned.ts` (`VersionedSource`, `recordChanges`, `patchSource`, `diffPaths`), exported from `headless`; `ViewStore.versions`, absent on the memory store, whose atom snapshots are its heads (`storeVersions`). plugin-canvas's `bindCanvasStore` reads each bound drawing's `Obj.version` heads and reads a path back through `Obj.getVersion`. Tests: `model/versioned.test.ts`, plugin-canvas `store.test.ts` › versions.
+  - Decisions: paths are leaf paths into the store's `ViewMap` (records walked key by key, arrays are leaves), so a move writes `center.x`/`center.y` and a concurrent edit to another field survives; a patch moves each path from one heads to another, writing it only while it still holds the `from` value (§8.3 Q4), so the same patch serves undo (after → before) and redo (before → after).
 - [ ] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
 - [ ] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
 - [ ] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
