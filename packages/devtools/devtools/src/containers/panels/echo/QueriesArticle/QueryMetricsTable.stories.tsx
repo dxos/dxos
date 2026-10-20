@@ -28,7 +28,7 @@ export const Empty: Story = {
   args: { queries: [] },
 };
 
-/** Arrow keys move through the rows, and the detail follows the highlighted query. */
+/** Arrow keys move through the rows; Enter selects the highlighted row, and the detail shows the selected query. */
 export const Keyboard: Story = {
   args: { queries },
   play: async ({ canvasElement }) => {
@@ -37,7 +37,9 @@ export const Keyboard: Story = {
     await userEvent.click(first);
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(second).toHaveAttribute('data-highlighted'));
-    // The detail shows the second row's query (rows sort slowest first), not merely some query.
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(second).toHaveAttribute('aria-selected', 'true'));
+    // The detail shows the selected (second) row's query (rows sort slowest first), not merely some query.
     await waitFor(() =>
       expect(canvas.getByText(/Query\.select\(Filter\.type\(org\.dxos\.type\.person\)\)/)).toBeVisible(),
     );

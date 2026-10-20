@@ -17,6 +17,10 @@
   .dx-scroll-root.dx-listbox-scroll {
     flex: 1 1 auto;
   }
+  /* An empty list's viewport would take the space ahead of the Empty message and push it to the bottom. */
+  .dx-listbox:has(> .dx-empty) > .dx-scroll-root.dx-listbox-scroll {
+    flex: 0 0 auto;
+  }
 
   /* Content without its own ScrollArea: the Root passes its host's rails through to the rows, as ScrollArea.Root does. */
   .dx-listbox:has(> .dx-container[data-gutter='inherit']) {

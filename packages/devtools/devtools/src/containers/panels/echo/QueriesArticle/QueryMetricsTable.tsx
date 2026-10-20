@@ -10,7 +10,6 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
@@ -117,7 +116,8 @@ export type QueryMetricsTableProps = {
 
 /**
  * Every query of this page's client, grouped by query text, sortable by any figure and slowest first. Rows are a
- * Listbox, so the arrow keys move the selection and the selected query's metrics show below the list.
+ * Listbox: the arrow keys move the current row, a click or Enter selects it, and the selected query's metrics show
+ * below the list.
  */
 export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) => {
   const [filter, setFilter] = useState('');
@@ -194,46 +194,41 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           </Tooltip.Trigger>
         ))}
       </Layout.Grid>
-      {rows.length === 0 ? (
-        <p className='p-2 text-xs text-fg-muted'>No queries.</p>
-      ) : (
-        <Listbox.Root
-          items={items}
-          columns={COLUMNS_TEMPLATE}
-          value={selected}
-          onValueChange={setSelected}
-          onDeselect={() => setSelected(undefined)}
-          // The detail follows the arrow keys, not only a click.
-          onHighlightChange={(value) => value && setSelected(value)}
-          classNames='dx-grow'
-        >
-          <Listbox.Viewport>
-            <Listbox.Content>
-              {rows.map((query) => (
-                <Listbox.Item
-                  key={query.query}
-                  id={queryKey(query.query)}
-                  classNames='font-mono text-xs tabular-nums text-end whitespace-nowrap'
-                  data-testid='query-metrics.row'
-                >
-                  <Tooltip.Trigger asChild content={query.query}>
-                    <span className='truncate text-start'>{shortQueryText(query.query)}</span>
-                  </Tooltip.Trigger>
-                  {COLUMNS.slice(1).map((column) => (
-                    <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
-                  ))}
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Viewport>
-        </Listbox.Root>
-      )}
+      {/* Always the Listbox, so the empty state sits in the same ScrollArea gutter as its rows. */}
+      <Listbox.Root
+        items={items}
+        columns={COLUMNS_TEMPLATE}
+        value={selected}
+        onValueChange={setSelected}
+        classNames='dx-grow'
+      >
+        <Listbox.Viewport>
+          <Listbox.Content>
+            {rows.map((query) => (
+              <Listbox.Item
+                key={query.query}
+                id={queryKey(query.query)}
+                classNames='font-mono text-xs tabular-nums text-end whitespace-nowrap'
+                data-testid='query-metrics.row'
+              >
+                <Tooltip.Trigger asChild content={query.query}>
+                  <span className='truncate text-start'>{shortQueryText(query.query)}</span>
+                </Tooltip.Trigger>
+                {COLUMNS.slice(1).map((column) => (
+                  <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
+                ))}
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
+        <Listbox.Empty>No queries.</Listbox.Empty>
+      </Listbox.Root>
       {current && (
-        <ScrollArea.Root orientation='vertical' classNames='max-h-48 shrink-0 border-t border-separator-subtle'>
-          <ScrollArea.Viewport classNames='px-2 py-1 text-xs'>
-            <JsonHighlighter data={{ ...current, avgTime: averageQueryTime(current) }} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        // The highlighter is its own ScrollArea; nested in another, its contained overscroll swallowed the wheel.
+        <JsonHighlighter
+          classNames='max-h-48 shrink-0 border-t border-separator-subtle text-xs'
+          data={{ ...current, avgTime: averageQueryTime(current) }}
+        />
       )}
     </div>
   );
