@@ -37,6 +37,7 @@ export const Keyboard: Story = {
     await userEvent.click(first);
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(second).toHaveAttribute('data-highlighted'));
-    await waitFor(() => expect(canvas.getByText(/"query":/)).toBeInTheDocument());
+    // Prism renders the key and its colon as separate tokens.
+    await waitFor(() => expect(canvas.getAllByText('"query"').length).toBeGreaterThan(0));
   },
 };
