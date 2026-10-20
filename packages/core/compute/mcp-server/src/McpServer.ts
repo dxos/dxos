@@ -24,7 +24,7 @@ import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export { ToolFailure, type ToolFailureCode, failure } from './internal/failure.ts';
+export { ToolFailure, type ToolFailureCode, failure, isCallerFault, parseFailure } from './internal/failure.ts';
 import { ToolFailure, failure } from './internal/failure.ts';
 import * as iconInternal from './internal/icon.ts';
 import * as identityInternal from './internal/identity.ts';
@@ -56,7 +56,15 @@ export class HostError extends Schema.TaggedError<HostError>('McpHostError')('Mc
 
 /** Builds a {@link HostError} from anything thrown, so hosts do not each unwrap causes their own way. */
 export const hostError = (cause: unknown): HostError =>
-  new HostError({ message: cause instanceof Error ? cause.message : String(cause) });
+  new HostError({ message: cause instanceof Error ? describeCause(cause) : String(cause) });
+
+/** Leads with the error's tag or class, since the message is all that reaches the caller and telemetry. */
+const describeCause = (cause: Error): string => {
+  const tag = '_tag' in cause && typeof cause._tag === 'string' ? cause._tag : cause.name;
+  return tag.length > 0 && tag !== 'Error' && !cause.message.startsWith(tag)
+    ? `${tag}: ${cause.message}`
+    : cause.message;
+};
 
 export type InvokeRequest = {
   /** Operation key without the `dxn:` prefix. */
@@ -531,8 +539,9 @@ export const invoke = (
       }
 
       // Refused before any input is examined: the skill is what says how the input should be built.
+      // A hook-invocable operation is exempt, since the hook calling it has no way to load a skill.
       const ownerKeys = owners.flatMap((name) => skills.find((candidate) => candidate.promptName === name)?.key ?? []);
-      if (!(yield* gate.verify(ownerKeys, skillToken))) {
+      if (!Operation.isHookInvocable(record) && !(yield* gate.verify(ownerKeys, skillToken))) {
         const options = owners.map((name) => `'${name}'`).join(' or ');
         const problem =
           skillToken === undefined

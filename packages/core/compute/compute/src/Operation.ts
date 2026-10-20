@@ -1117,6 +1117,26 @@ export const isVisible = (op: PersistentOperation): boolean =>
 export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
+ * Marks an operation as invoked by a harness hook: a fixed payload fired on every event it is bound
+ * to, with no model in between to load a skill. An MCP surface therefore dispatches it without the
+ * skill token it requires of the operations a skill governs.
+ */
+export const HookInvocableAnnotation = Annotation.make({
+  id: 'org.dxos.operation.hookInvocable',
+  schema: Schema$.Boolean,
+});
+
+/**
+ * Pipeable combinator that marks an operation hook-invocable — see {@link HookInvocableAnnotation}.
+ * Apply at the definition site: `Operation.make({ ... }).pipe(Operation.hookInvocable)`.
+ */
+export const hookInvocable = annotate(HookInvocableAnnotation, true);
+
+/** Returns true when an operation is annotated as hook-invocable. Reads from the persisted operation. */
+export const isHookInvocable = (op: PersistentOperation): boolean =>
+  Option.getOrElse(Annotation.get(op, HookInvocableAnnotation), () => false);
+
+/**
  * What an operation requires of the process that invokes it, in the vocabulary of the permission
  * system that interprets it (`@dxos/permission` requirements). Present ⇒ the runtime refuses the
  * call unless the invoking process holds a guard that admits it; absent ⇒ the operation is never
