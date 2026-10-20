@@ -16,6 +16,7 @@ import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { reactCompilerOptions } from '../../../react-compiler.config.ts';
+import { withRetry } from './indexers.ts';
 import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -371,6 +372,9 @@ export const createConfig = ({
     // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
     changeDetection: false,
   },
+  // A story file read mid-write (a checkout, a merge, a formatter) would otherwise fail every story until it changed again.
+  experimental_indexers: async (existing = []) =>
+    existing.map((indexer) => withRetry(indexer, { skipOnFailure: !isVitest })),
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,

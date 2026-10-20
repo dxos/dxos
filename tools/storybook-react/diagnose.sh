@@ -100,8 +100,22 @@ capture() {
     echo
 
     echo "--- responsive? ---"
-    curl -sf -m "${TIMEOUT}" -o /dev/null -w "index.json: HTTP %{http_code} in %{time_total}s\n" \
-      "http://localhost:${PORT}/index.json" || echo "index.json: NO RESPONSE within ${TIMEOUT}s"
+    local body
+    body="$(mktemp)"
+    local status
+    status="$(curl -s -m "${TIMEOUT}" -o "${body}" -w "%{http_code} %{time_total}" "http://localhost:${PORT}/index.json")"
+    if [ "${status%% *}" = "000" ] || [ -z "${status}" ]; then
+      echo "index.json: NO RESPONSE within ${TIMEOUT}s"
+    else
+      echo "index.json: HTTP ${status%% *} in ${status#* }s"
+    fi
+    # An answer other than 200 is the story index failing, not a hang: the body names the story file it could not index.
+    if [ "${status%% *}" != "200" ] && [ -s "${body}" ]; then
+      echo "--- index.json error ---"
+      head -c 2000 "${body}"
+      echo
+    fi
+    rm -f "${body}"
     echo
 
     echo "--- vite dep optimizer ---"
@@ -272,8 +286,12 @@ while true; do
   fi
 
   reason=""
-  if ! curl -sf -m "${TIMEOUT}" -o /dev/null "http://localhost:${PORT}/index.json"; then
+  code="$(curl -s -m "${TIMEOUT}" -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/index.json")"
+  if [ "${code}" = "000" ] || [ -z "${code}" ]; then
     reason="no response within ${TIMEOUT}s"
+  elif [ "${code}" != "200" ]; then
+    # The server answers, so this is a story file that failed to index rather than a wedge; the capture shows which.
+    reason="index.json HTTP ${code}"
   else
     # Answering while pegged is the more common shape: the module graph still serves, but the
     # optimizer or the watcher is burning a core, so every navigation crawls. Three in a row rules
