@@ -26,13 +26,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Depot: 2 shards on 8x32, MOON_CONCURRENCY 4, peak 16-20 GB. Here: 4 shards, 2 targets at a time.
+  # Depot: 2 shards on 8x32, MOON_CONCURRENCY 4, peak 16-20 GB. Round 1 here (4 shards, 2 targets at a
+  # time) peaked at 11 GB but took 13-39 min, and timing-sensitive stories failed under contention.
+  # Here: 8 shards, 1 target at a time.
   test-browser:
     name: test (browser, shard=${{ matrix.shard }})
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -43,7 +45,7 @@ jobs:
       # Matches the merge queue, where Depot has CODECOV_TOKEN; coverage is collected but not uploaded.
       VITEST_COVERAGE: 'true'
       VITEST_XML_REPORT: 'true'
-      MOON_CONCURRENCY: 2
+      MOON_CONCURRENCY: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -79,20 +81,22 @@ jobs:
         run: bash .github/ci-trial/monitor.sh report
 
   # Depot: one 8x32 cell per browser, 3 workers, peak 11 GB (chromium), 17 GB (firefox), 28 GB (webkit).
-  # Here: Playwright shards with 2 workers each; WebKit gets a third shard for its memory.
+  # Here: Playwright shards. WebKit at 2 workers swapped (load 20 on 4 vCPU) and lost pages, so it
+  # gets 4 shards of 1 worker.
   e2e:
     name: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { browser: chromium, shard: 1, total: 2 }
-          - { browser: chromium, shard: 2, total: 2 }
-          - { browser: firefox, shard: 1, total: 2 }
-          - { browser: firefox, shard: 2, total: 2 }
-          - { browser: webkit, shard: 1, total: 3 }
-          - { browser: webkit, shard: 2, total: 3 }
-          - { browser: webkit, shard: 3, total: 3 }
+          - { browser: chromium, shard: 1, total: 2, workers: 2 }
+          - { browser: chromium, shard: 2, total: 2, workers: 2 }
+          - { browser: firefox, shard: 1, total: 2, workers: 2 }
+          - { browser: firefox, shard: 2, total: 2, workers: 2 }
+          - { browser: webkit, shard: 1, total: 4, workers: 1 }
+          - { browser: webkit, shard: 2, total: 4, workers: 1 }
+          - { browser: webkit, shard: 3, total: 4, workers: 1 }
+          - { browser: webkit, shard: 4, total: 4, workers: 1 }
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -125,7 +129,7 @@ jobs:
         timeout-minutes: 40
         run: >-
           moon exec --on-failure continue composer-e2e:e2e --
-          --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=2
+          --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=${{ matrix.workers }}
 
       - name: Upload Traces
         if: always()
@@ -139,17 +143,20 @@ jobs:
         if: always()
         run: bash .github/ci-trial/monitor.sh report
 
-  # Depot: already 4x16 (peak 7-9 GB), so unchanged apart from the runner and image.
+  # Depot: 4x16 (peak 7-9 GB) in 6-9 min. Round 1 here, same shape: 14-19 min, and plugin-sheet's
+  # Storybook cold start lost module loads on Firefox and WebKit at load 12. Here: 2 shards of 1 worker.
   e2e-rest:
-    name: e2e (rest, ${{ matrix.browser }})
+    name: e2e (rest, ${{ matrix.browser }}, ${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
+        shard: [0, 1]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      JOB_LABEL: e2e (rest, ${{ matrix.browser }})
+      JOB_LABEL: e2e (rest, ${{ matrix.browser }}, ${{ matrix.shard }}/2)
+      PLAYWRIGHT_WORKERS: 1
       DX_ENVIRONMENT: ci
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
       DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -178,7 +185,7 @@ jobs:
         id: shard
         run: |
           targets=$(moon query tasks "task=e2e" < /dev/null |
-            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().map((project)=>project+':e2e').join(' ')))")
+            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().filter((_,i)=>i%2===${{ matrix.shard }}).map((project)=>project+':e2e').join(' ')))")
           [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
@@ -190,7 +197,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-rest-${{ matrix.browser }}
+          name: playwright-report-rest-${{ matrix.browser }}-${{ matrix.shard }}
           path: test-results/playwright
           retention-days: 7
 
