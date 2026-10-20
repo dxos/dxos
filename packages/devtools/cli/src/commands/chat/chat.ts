@@ -22,8 +22,6 @@ import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../components/index.ts';
-import { theme } from '../../theme.ts';
 import {
   type AiChatServices,
   Provider,
@@ -33,7 +31,6 @@ import {
   toolkits,
   types,
 } from '../../util/index.ts';
-import { Chat } from './components/index.ts';
 import { runNonInteractive } from './non-interactive.ts';
 import { ChatProcessor } from './processor.ts';
 
@@ -180,33 +177,19 @@ export const chat = Command.make(
         }
       });
 
-      // Render.
-      yield* render({
-        app: () => (
-          <App
-            debug={options.debug}
-            focusElements={['input', 'messages']}
-            logBuffer={logBuffer}
-            registry={registry}
-            theme={theme}
-          >
-            {conversation() && (
-              <Chat
-                db={space.db}
-                processor={processor}
-                conversation={conversation()!}
-                model={model}
-                verbose={verbose}
-                onChatSelect={(chat) => handleChatSelect(chat)}
-                onChatCreate={({ skills }) => handleChatCreate(skills)}
-              />
-            )}
-          </App>
-        ),
-        focusElements: ['input', 'messages'],
-        logBuffer,
+      // Render. The TUI is imported here so that other commands start without its JSX transform.
+      const { renderChatApp } = yield* Effect.promise(() => import('./app.tsx'));
+      yield* renderChatApp({
+        conversation,
         debug: options.debug,
-        theme,
+        logBuffer,
+        registry,
+        db: space.db,
+        processor,
+        model,
+        verbose,
+        onChatSelect: (chat) => handleChatSelect(chat),
+        onChatCreate: ({ skills }) => handleChatCreate(skills),
       });
     }),
 ).pipe(

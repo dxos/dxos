@@ -20,10 +20,7 @@ import { Database, Feed, Filter, type Key } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../../components/index.ts';
-import { theme } from '../../../theme.ts';
 import { createLogBuffer, triggerRuntimeLayer } from '../../../util/index.ts';
-import { Trace } from './components/Trace.tsx';
 
 // Defines the custom `trace` command for edge functions.
 export const trace = Command.make(
@@ -67,17 +64,13 @@ export const trace = Command.make(
       const triggerRuntime = triggerRuntimeResult?.runtime;
       const triggerRuntimeFiber = triggerRuntimeResult?.fiber;
 
-      // Render.
-      yield* render({
-        app: () => (
-          // TODO(wittjosiah): Rather than pass db and feedService probably should have some sort of context provider then introduce hooks for interacting with the db and feeds.
-          <App focusElements={['table']} logBuffer={logBuffer} theme={theme}>
-            <Trace db={db} feed={traceFeed ? Option.some(traceFeed) : Option.none()} functionId={functionId} />
-          </App>
-        ),
-        focusElements: ['table'],
+      // Render. The TUI is imported here so that other commands start without its JSX transform.
+      const { renderTraceApp } = yield* Effect.promise(() => import('./app.tsx'));
+      yield* renderTraceApp({
+        db,
+        feed: traceFeed ? Option.some(traceFeed) : Option.none(),
+        functionId,
         logBuffer,
-        theme,
         onDestroy:
           localTriggers && triggerRuntimeFiber && triggerRuntime
             ? () => {
