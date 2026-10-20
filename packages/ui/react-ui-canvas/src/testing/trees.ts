@@ -23,7 +23,7 @@ export const createSquareTree = () => {
     ...DEFAULT_SHAPE_SIZE,
   });
   return ViewBuilder.view(root, [
-    ViewBuilder.rect('square', at(0)).properties({ label: 'DXOS' }),
+    ViewBuilder.rect('square', at(0)).properties({ label: 'A' }),
     ViewBuilder.ellipse('circle', at(-step)),
     ViewBuilder.polygon('polygon', at(step)),
   ])
