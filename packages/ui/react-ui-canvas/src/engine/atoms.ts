@@ -26,7 +26,7 @@ import {
   type ViewId,
   createClock,
 } from '../model/index.ts';
-import { type Clipboard, type PartKey, type UndoState, emptyUndo } from '../utils/index.ts';
+import { type Clipboard, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -110,8 +110,6 @@ export type CanvasAtoms = {
   lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
-  /** Projection snapshots for undo and redo (`undo.ts`). */
-  undo: Atom.Writable<UndoState>;
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
   editing: Atom.Writable<EditingPart | undefined>;
@@ -149,7 +147,6 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
-  undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),

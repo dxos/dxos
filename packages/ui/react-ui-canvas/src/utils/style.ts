@@ -148,11 +148,16 @@ export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   return style ? { ...node, style: overlay(style, node.style) } : node;
 };
 
-/** A link as drawn: its class's colour and line style under its own. */
+/** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
-  // A link draws only the common base (`LineStyle`) of its class's style.
-  return style ? { ...link, style: overlay({ hue: style.hue, lineStyle: style.lineStyle }, link.style) } : link;
+  // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
+  return style
+    ? {
+        ...link,
+        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+      }
+    : link;
 };
 
 /**

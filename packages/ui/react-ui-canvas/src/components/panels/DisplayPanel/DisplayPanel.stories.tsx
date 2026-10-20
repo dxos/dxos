@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { type BackgroundGrid, defaultThemeRegistry, resolveLook } from '../../../model/index.ts';
-import { ThemePanel } from './ThemePanel.tsx';
+import { DisplayPanel } from './DisplayPanel.tsx';
 
 /** The bar over local state, as a canvas keeps its theme and grid overrides. */
 const DefaultStory = () => {
@@ -18,7 +18,7 @@ const DefaultStory = () => {
   const [guides, setGuides] = useState(false);
   const look = useMemo(() => resolveLook(defaultThemeRegistry, { theme }), [theme]);
   return (
-    <ThemePanel
+    <DisplayPanel
       registry={defaultThemeRegistry}
       theme={look.theme}
       override={theme}
@@ -38,7 +38,7 @@ const DefaultStory = () => {
  * 2. The grid buttons pick dots, lines or none; picking the theme's own grid again clears the override.
  */
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-canvas/components/panels/ThemePanel',
+  title: 'ui/react-ui-canvas/components/panels/DisplayPanel',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },

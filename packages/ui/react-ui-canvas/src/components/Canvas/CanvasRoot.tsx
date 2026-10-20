@@ -15,11 +15,12 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { animate, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
+import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
   useCanvasController,
+  useCanvasHistory,
   useClock,
   useDocumentCommands,
   useElementHandlers,
@@ -66,6 +67,7 @@ export const CanvasRoot = ({
   links: linkRegistry = defaultLinkRegistry,
   createProjection,
   projection: projectionProp,
+  history: historyProp,
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
@@ -103,7 +105,16 @@ export const CanvasRoot = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp });
+  // A host-owned projection given no history owns its side effects, so its edits are not undone here.
+  const ownHistory = useCanvasHistory({
+    registry,
+    atoms,
+    store,
+    history: typeof historyProp === 'function' ? historyProp : projectionProp ? noHistory : undefined,
+  });
+  const history = historyProp === undefined || typeof historyProp === 'function' ? ownHistory : historyProp;
+  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp, history });
+  history.view.projection = baseProjection;
   // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
   const projection = useMemo(
     () =>
@@ -213,9 +224,16 @@ export const CanvasRoot = ({
       camera: { animateTo, target: cameraTarget, setOpening },
       fit: { enterFit, exitFit, takeOver: () => (interactedRef.current = true) },
       look: { onThemeChange, onBackgroundGridChange },
+      history,
     },
   });
   const { navigation } = controller;
+  // Undo and redo return to the View the edit was made in and select what is left of its selection.
+  history.view.restore = ({ path, selection, isolate }) => {
+    const view = registry.get(store.views)[path.at(-1) ?? ''];
+    const select = selection.filter((id) => view?.nodes[id] !== undefined || view?.links[id] !== undefined);
+    navigation.openPlace({ path, isolate }, { animate: false, select });
+  };
 
   // Read-only, nothing is selected: a selection only exists to be edited.
   const select = controller.selection.select;
@@ -271,7 +289,7 @@ export const CanvasRoot = ({
     atoms,
     store,
     baseProjection,
-    root,
+    commit: history.commit,
     select,
     navigation,
     viewport,
@@ -345,11 +363,9 @@ export const CanvasRoot = ({
   const documentCommands = useDocumentCommands({
     registry,
     atoms,
-    store,
     projection,
+    history,
     readonly,
-    sceneId,
-    select,
     nodeRegistry,
     capabilities,
     cell,
@@ -376,6 +392,7 @@ export const CanvasRoot = ({
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
+    commit: history.commit,
     major,
     copy,
     cut,
@@ -512,7 +529,7 @@ export const CanvasRoot = ({
                       ref={rootRef}
                       tabIndex={0}
                       className={mx(
-                        'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
                         // A theme with a mode takes it over the app's, for everything over the canvas.
                         look.tone === 'dark' && 'dark',
                         tool.kind === 'hand' && 'cursor-grab',

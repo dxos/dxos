@@ -6,18 +6,26 @@
 // a labelled frame, and objects placed across views.
 
 import { type Box, ViewBuilder, type ViewTree } from '../builder/index.ts';
-import { type InstanceNode, type Node, type View, type ViewId } from '../model/index.ts';
+import { type InstanceNode, MAJOR_GRID, type Node, type View, type ViewId } from '../model/index.ts';
 import { DEFAULT_LATTICE, DEFAULT_SHAPE_SIZE, TONES, cellBounds } from '../utils/index.ts';
 
-/** One square centred on the origin: something to select and style straight away. */
+/**
+ * A square centred on the origin, with an unlabelled circle to its left and polygon to its right: something to
+ * select and style straight away.
+ */
 export const createSquareTree = () => {
   const root = 'scene:root';
+  // One major grid cell between neighbours.
+  const step = DEFAULT_SHAPE_SIZE.width + MAJOR_GRID;
+  const at = (offset: number) => ({
+    x: offset - DEFAULT_SHAPE_SIZE.width / 2,
+    y: -DEFAULT_SHAPE_SIZE.height / 2,
+    ...DEFAULT_SHAPE_SIZE,
+  });
   return ViewBuilder.view(root, [
-    ViewBuilder.rect('square', {
-      x: -DEFAULT_SHAPE_SIZE.width / 2,
-      y: -DEFAULT_SHAPE_SIZE.height / 2,
-      ...DEFAULT_SHAPE_SIZE,
-    }).properties({ label: 'DXOS' }),
+    ViewBuilder.rect('square', at(0)).properties({ label: 'A' }),
+    ViewBuilder.ellipse('circle', at(-step)),
+    ViewBuilder.polygon('polygon', at(step)),
   ])
     .name('root')
     .build();

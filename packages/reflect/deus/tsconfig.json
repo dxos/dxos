@@ -2,9 +2,9 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
+    "scripts/**/*.ts",
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "scripts/**/*.ts"
+    "src/**/*.tsx"
   ],
   "references": []
 }

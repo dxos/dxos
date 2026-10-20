@@ -316,9 +316,13 @@ const InspectorPanelContent = () => {
 
 InspectorPanelContent.displayName = 'InspectorPanel.Content';
 
+/** Whether the enclosing panel is docked; outside a panel, false. */
+const useInspectorPanelDocked = (): boolean => usePanelState(useContext(InspectorPanelContext))?.docked ?? false;
+
 export const InspectorPanel = {
   Root: InspectorPanelRoot,
   Content: InspectorPanelContent,
+  useDocked: useInspectorPanelDocked,
 };
 
 //

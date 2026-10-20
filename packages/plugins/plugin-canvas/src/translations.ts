@@ -14,7 +14,6 @@ export const translations = [
         'variant.label': 'Canvas',
         'lock-drawing.label': 'Read only',
         'unlock-drawing.label': 'Edit drawing',
-        'import-tldraw.label': 'Copy as canvas',
       },
     },
   },
