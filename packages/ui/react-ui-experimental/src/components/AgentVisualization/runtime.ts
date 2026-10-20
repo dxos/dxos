@@ -62,7 +62,7 @@ export const createAgentVisualization = <C extends Config>({
   key.position.set(2, 3, 4);
   scene.add(key);
 
-  const instance = visualization.create({ scene, camera });
+  const instance = visualization.create({ scene, camera, renderer });
   const bus = new SignalBus();
   const stops = providers.map((provider) => provider.start(bus));
 

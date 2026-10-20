@@ -17,7 +17,7 @@ import { type Config, randomize } from '../params.ts';
 import { AudioProvider } from '../providers/AudioProvider.ts';
 import { type VisualizationRuntime, createAgentVisualization } from '../runtime.ts';
 import { type AnyVisualization } from '../visualization.ts';
-import { getVisualization, ink, inkLine, inkMorph, orb, spectrum, torusKnot } from '../visualizations/index.ts';
+import { chaos, getVisualization, ink, inkLine, inkMorph, kube, orb, spectrum } from '../visualizations/index.ts';
 import { levaControls, levaPaths, toConfig } from './tuner.ts';
 
 type StoryProps = {
@@ -190,7 +190,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Orb: Story = { args: { visualization: orb.id } };
 
-export const TorusKnot: Story = { args: { visualization: torusKnot.id } };
+export const Chaos: Story = { args: { visualization: chaos.id } };
+
+export const Kube: Story = { args: { visualization: kube.id } };
 
 export const Spectrum: Story = { args: { visualization: spectrum.id } };
 
