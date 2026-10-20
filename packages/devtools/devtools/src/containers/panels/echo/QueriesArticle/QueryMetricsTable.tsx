@@ -84,10 +84,16 @@ const COLUMNS: Column[] = [
   },
 ];
 
-// Items is wider: it shows the latest count and, when larger, the most ever returned.
+// Items shows the latest count and, when larger, the most ever returned; the timing headers ("Avg ms") need the room too.
+const WIDE_COLUMNS: Record<string, Layout.GridTrack> = {
+  items: '5rem',
+  avg: '4.5rem',
+  max: '4.5rem',
+  update: '4.5rem',
+};
 const TRACKS: Layout.GridTrack[] = [
   'minmax(12rem,1fr)',
-  ...COLUMNS.slice(1).map(({ id }): Layout.GridTrack => (id === 'items' ? '5rem' : '3.75rem')),
+  ...COLUMNS.slice(1).map(({ id }): Layout.GridTrack => WIDE_COLUMNS[id] ?? '3.75rem'),
 ];
 
 /** The same tracks as one template, which the list's rows share as a subgrid. */

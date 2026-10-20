@@ -7,7 +7,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { queries } from '../../../cards/testing/fixtures.ts';
+import { manyQueries, queries } from '../../../cards/testing/fixtures.ts';
 import { QueryMetricsTable } from './QueryMetricsTable.tsx';
 
 const meta = {
@@ -21,7 +21,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { queries, onReset: () => {} },
+  args: { queries: [...queries, ...manyQueries], onReset: () => {} },
 };
 
 export const Empty: Story = {
