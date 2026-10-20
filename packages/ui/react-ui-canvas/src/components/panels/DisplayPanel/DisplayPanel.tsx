@@ -135,7 +135,7 @@ export const DisplayPanel = ({
   onLatticeToggle,
 }: DisplayPanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
-  <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-theme'>
+  <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-display'>
     {/* Snapping is to the grid, so its toggles sit with the grid's. */}
     {onSnapToggle && (
       <Button.Toggle
