@@ -61,22 +61,17 @@ Backfilled on 2026-10-20 from the session that built the changelog,
 https://github.com/dxos/dxos/pull/14093.
 
 ```mdl
-decision D-1: Specs have a changelog of authoritative decisions, each tagged with the person (username or email) or agent that made it, to trace how decisions were made and separate people from agents.
+decision D-1: `.mdl` specs get a changelog section: a log of authoritative decisions, each tagged with the person (by username or email) or the agent that made it. Its goal is to trace how decisions were made, and to keep decisions by people separate from decisions by agents.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: |
-    I wanna add a changelog section to mdl specs
-    the sections has a log of authoritative decisions -- each one is tagged by person (username/email) or agent that made it
-    the goal is to trace how decissions were made and separate people and agents
   affects: [F-1]
   source: https://github.com/dxos/dxos/pull/14093
 ```
 
 ```mdl
-decision D-2: The repo has an mdl skill.
+decision D-2: The repo has an `mdl` skill.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: ensure there's an mdl skill in the repo
   affects: [F-4.1]
   source: https://github.com/dxos/dxos/pull/14093
 ```
@@ -144,40 +139,27 @@ decision D-9: Decision attribution is linted in the editor and by `scripts/lint-
 ```
 
 ```mdl
-decision D-10: Specs are written by people and agents together; each source of knowledge gets its own decision. The agent first records the person's input faithfully, adding only context and no assumptions, then records its own additions as separate decisions. A person approving an agent's design is its own decision.
+decision D-10: Specs are usually written by people and agents together: the person gives coarse ideas and the agent fills in the gaps. Knowledge from each goes in separate decision entries. The agent first records a faithful representation of what the person wrote, adding only context and no assumptions, then records its own additions as separate decisions. A person approving an agent's design is a decision of its own. These rules go in the `mdl` skill.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: |
-    Specs are usually collab between humans and agent, the human gives coarse ideas and agent fills in the gaps. its important that the knowledge is separated in different decision entries.
-
-    The agent first records faithful representation of what human wrote, only adding context, no assumptions. and then it could add its own edits as a separate decision.
-
-    person aprooving agent design is its own deicision as well.
-
-    1. put that into skill
   affects: [F-1.7, F-4.2]
   supersedes: D-7
   source: https://github.com/dxos/dxos/pull/14093
 ```
 
 ```mdl
-decision D-11: Every change to a spec adds a decision, and this is enforced mechanically.
+decision D-11: Every change to a spec adds a decision. How to enforce this mechanically is to be worked out.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: |
-    2. all changes to spec must add a decision
-    3. lets see how we can enforce (2) mechanically
   affects: [F-2]
   supersedes: D-8
   source: https://github.com/dxos/dxos/pull/14093
 ```
 
 ```mdl
-decision D-12: Approval is not a separate kind of entry; it is an ordinary decision whose prose says what it approves.
+decision D-12: Approval is not a separate kind of entry, as the proposed `approves:` field would have made it; an approval is the same entry as any other decision, and its prose says what it approves.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: they are the same entry -- approval is not entry kind, could be just a prose
-  context: Said in response to a proposed `approves:` field for approval entries, which was dropped before it landed.
   affects: [F-1.7]
   source: https://github.com/dxos/dxos/pull/14093
 ```
@@ -213,19 +195,16 @@ decision D-15: Language definitions, review rules and test fixtures are exempt f
 ```
 
 ```mdl
-decision D-16: Deus has a spec of its own, backfilled from the session that built the changelog.
+decision D-16: If Deus has no spec of its own, it gets one, backfilled from the session that built the changelog.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: is there a spec for mdl/deus itself? lets backfill it from this session
   source: https://github.com/dxos/dxos/pull/14093
 ```
 
 ```mdl
-decision D-17: The mdl skill says how to find the person's identity, so agents do not stumble on it.
+decision D-17: An agent should know from the environment who it is speaking to. The `mdl` skill says how to find the person's identity, so the next agent does not stumble on it.
   date: 2026-10-20
   by: user:dmaretskyi
-  quote: put this into skill not to stumble next time
-  context: Said after asking "don't you know whose speaking to you from env?", once the agent had read the handle from the GitHub connector rather than the sandbox's git config.
   affects: [F-4.3]
   source: https://github.com/dxos/dxos/pull/14093
 ```
@@ -298,10 +277,18 @@ decision D-24: A person's input is not quoted verbatim, because prompts are mess
 ```
 
 ```mdl
-decision D-25: Drop the `quote:` and `context:` fields and their lint rule; the restatement lives in the entry's prose. Entries D-1 to D-18 keep their `quote:` fields as written. Fills in [D-24].
+decision D-25: Drop the `quote:` and `context:` fields and their lint rule; the restatement lives in the entry's prose. Fills in [D-24].
   date: 2026-10-20
   by: agent:claude-code
   for: user:dmaretskyi
   affects: [F-1.4, F-3.1]
-  why: With no verbatim quote, a separate context field only splits one restatement in two. The log is append-only, so earlier entries are not rewritten to the new shape.
+  why: With no verbatim quote, a separate context field only splits one restatement in two.
+```
+
+```mdl
+decision D-26: Just this once, the earlier decisions are cleaned up: D-1, D-2, D-10, D-11, D-12, D-16 and D-17 were rewritten to the restated form of [D-24], without `quote:` or `context:`. The log is append-only again from here.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.5]
+  source: https://github.com/dxos/dxos/pull/14093
 ```
