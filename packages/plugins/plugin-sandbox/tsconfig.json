@@ -91,9 +91,6 @@
       "path": "../plugin-projects"
     },
     {
-      "path": "../plugin-space"
-    },
-    {
       "path": "../plugin-testing"
     }
   ]
