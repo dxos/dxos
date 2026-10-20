@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -60,3 +61,16 @@ export const keptTest =
     await body(context);
     verdict.record();
   };
+
+/**
+ * `keptTest` for a CLI test: what any of them may read, the toolchain's sources, platforms and examples, the kernel,
+ * the harness and the seed, and the C compilers a back end calls.
+ */
+export const keptCliTest = (testFile: string) =>
+  keptTest(
+    testFile,
+    ['deus', 'platform', 'examples', 'src/kernel', 'src/cli-harness.ts', 'seed/deus.image'].map((path) =>
+      join(root, path),
+    ),
+    ['cc', 'clang'].map((cc) => spawnSync(cc, ['--version'], { encoding: 'utf8' }).stdout ?? '').join('\n'),
+  );

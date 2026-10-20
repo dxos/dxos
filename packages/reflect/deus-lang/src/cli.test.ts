@@ -9,79 +9,89 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
+import { keptCliTest } from './kept-verdict.ts';
 
 const { root, scratch, file, deus } = cliHarness('deus-cli-');
 
+const kept = keptCliTest(import.meta.filename);
+
 describe('deus CLI', () => {
-  test('proves the sorting example and refuses unsound claims', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'proofs')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'examples/soundness.deus'), ...c).code).toBe(0);
+  test(
+    'proves the sorting example and refuses unsound claims',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'proofs')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'examples/soundness.deus'), ...c).code).toBe(0);
 
-    const sort = deus('check', 'Sort', '--json', ...c);
-    const verdicts = Object.fromEntries(
-      JSON.parse(sort.stdout).map((row: { name: string; status: string; evidence?: string }) => [row.name, row]),
-    );
-    for (const name of ['insertSorted', 'isortSorted', 'insertCount', 'isortCount', 'insertLength', 'isortLength']) {
-      expect(verdicts[`Sort.${name}`]).toMatchObject({ status: 'pass', evidence: 'proof' });
-    }
-    expect(verdicts['Sort.agreesWithMergeSort']).toMatchObject({ status: 'pass', evidence: 'test' });
-    // A wrong claim marked @[expectFail] passes only because the prover refuses it.
-    expect(verdicts['Sort.wrongClaim']).toMatchObject({ status: 'pass', evidence: 'refused' });
-
-    const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
-    for (const row of probes) {
-      // A `wrong` probe is `@[expectFail]`: it passes because the prover refuses it.
-      expect([row.name, row.status, row.evidence]).toEqual([
-        row.name,
-        'pass',
-        row.name.startsWith('Unsound.wrong') ? 'refused' : row.evidence,
-      ]);
-    }
-    // Its kept verdict is a pass, but a proof may never stand on a claim the prover refused.
-    deus(
-      'add',
-      file('leans.deus', 'theorem Unsound.leansOnWrong (xs : List Int) : xs = [] := by simp [Unsound.wrongAllEmpty]\n'),
-      ...c,
-    );
-    const leaning = JSON.parse(deus('check', 'Unsound.leansOnWrong', '--json', ...c).stdout);
-    expect(leaning[0].status).toBe('fail');
-
-    // A test marked @[expectFail] passes while it returns false or throws, and fails the moment it holds;
-    // `@[refuted]`, the older spelling, still works on a theorem.
-    const expecting = [
-      'namespace Expect',
-      '@[expectFail]',
-      'test returnsFalse := 1 == 2',
-      '@[expectFail]',
-      'test throws := Throw.throw "no" == ()',
-      '@[expectFail]',
-      'test holds := 1 == 1',
-      '@[refuted]',
-      'theorem oldSpelling (xs : List Int) : xs = [] := by auto',
-      'end Expect',
-    ];
-    expect(deus('add', file('expect.deus', expecting.join('\n')), ...c).code).toBe(0);
-    const rows = (command: string) =>
-      Object.fromEntries(
-        JSON.parse(deus(command, 'Expect', '--json', ...c).stdout).map((row: { name: string; status: string }) => [
-          row.name,
-          row,
-        ]),
+      const sort = deus('check', 'Sort', '--json', ...c);
+      const verdicts = Object.fromEntries(
+        JSON.parse(sort.stdout).map((row: { name: string; status: string; evidence?: string }) => [row.name, row]),
       );
-    const tests = rows('test');
-    expect(tests['Expect.returnsFalse']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
-    expect(tests['Expect.throws']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
-    expect(tests['Expect.holds']).toMatchObject({ status: 'fail' });
-    expect(rows('check')['Expect.oldSpelling']).toMatchObject({ status: 'pass', evidence: 'refused' });
-    expect(deus('test', 'Expect.returnsFalse', ...c).stdout).toContain('failed, as expected');
-  });
+      for (const name of ['insertSorted', 'isortSorted', 'insertCount', 'isortCount', 'insertLength', 'isortLength']) {
+        expect(verdicts[`Sort.${name}`]).toMatchObject({ status: 'pass', evidence: 'proof' });
+      }
+      expect(verdicts['Sort.agreesWithMergeSort']).toMatchObject({ status: 'pass', evidence: 'test' });
+      // A wrong claim marked @[expectFail] passes only because the prover refuses it.
+      expect(verdicts['Sort.wrongClaim']).toMatchObject({ status: 'pass', evidence: 'refused' });
+
+      const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
+      for (const row of probes) {
+        // A `wrong` probe is `@[expectFail]`: it passes because the prover refuses it.
+        expect([row.name, row.status, row.evidence]).toEqual([
+          row.name,
+          'pass',
+          row.name.startsWith('Unsound.wrong') ? 'refused' : row.evidence,
+        ]);
+      }
+      // Its kept verdict is a pass, but a proof may never stand on a claim the prover refused.
+      deus(
+        'add',
+        file(
+          'leans.deus',
+          'theorem Unsound.leansOnWrong (xs : List Int) : xs = [] := by simp [Unsound.wrongAllEmpty]\n',
+        ),
+        ...c,
+      );
+      const leaning = JSON.parse(deus('check', 'Unsound.leansOnWrong', '--json', ...c).stdout);
+      expect(leaning[0].status).toBe('fail');
+
+      // A test marked @[expectFail] passes while it returns false or throws, and fails the moment it holds;
+      // `@[refuted]`, the older spelling, still works on a theorem.
+      const expecting = [
+        'namespace Expect',
+        '@[expectFail]',
+        'test returnsFalse := 1 == 2',
+        '@[expectFail]',
+        'test throws := Throw.throw "no" == ()',
+        '@[expectFail]',
+        'test holds := 1 == 1',
+        '@[refuted]',
+        'theorem oldSpelling (xs : List Int) : xs = [] := by auto',
+        'end Expect',
+      ];
+      expect(deus('add', file('expect.deus', expecting.join('\n')), ...c).code).toBe(0);
+      const rows = (command: string) =>
+        Object.fromEntries(
+          JSON.parse(deus(command, 'Expect', '--json', ...c).stdout).map((row: { name: string; status: string }) => [
+            row.name,
+            row,
+          ]),
+        );
+      const tests = rows('test');
+      expect(tests['Expect.returnsFalse']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
+      expect(tests['Expect.throws']).toMatchObject({ status: 'pass', evidence: 'expected failure' });
+      expect(tests['Expect.holds']).toMatchObject({ status: 'fail' });
+      expect(rows('check')['Expect.oldSpelling']).toMatchObject({ status: 'pass', evidence: 'refused' });
+      expect(deus('test', 'Expect.returnsFalse', ...c).stdout).toContain('failed, as expected');
+    }),
+  );
 
   test(
     'checks effect rows: a body may not perform what its signature leaves out',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'effects')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -138,45 +148,49 @@ describe('deus CLI', () => {
       ).toMatch(/unhandled ability Throw Text/);
       expect(add('runPoly', 'def runPoly (b : Box {r}) : {r} Int := b.run ()\n').code).toBe(0);
       expect(deus('view', 'runPoly', ...c).stdout).toContain('-- : Box {e} -> {e} Int');
-    },
+    }),
   );
 
-  test('export --files writes each embedded file back to the path it came from', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'files')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    const source = join(scratch, 'files-source');
-    for (const path of ['a/.gitignore', 'b/.gitignore', 'notes/read me.md']) {
-      mkdirSync(join(source, path, '..'), { recursive: true });
-      writeFileSync(join(source, path), path.endsWith('.md') ? '# Notes\n' : 'out/\n');
-    }
-    // `deus embed` records the path as given, so it runs from the folder the paths are relative to.
-    const embed = (path: string, name: string) =>
-      expect(
-        spawnSync('node', [join(root, 'bin/deus.mjs'), 'embed', path, '--as', name, '--quiet', ...c], {
-          cwd: source,
-          encoding: 'utf8',
-        }).status,
-      ).toBe(0);
-    embed('a/.gitignore', 'Repo.A.gitignore');
-    embed('b/.gitignore', 'Repo.B.gitignore');
-    embed('notes/read me.md', 'Repo.Notes.readMe');
-    embed(join(source, 'a/.gitignore'), 'Repo.absolute');
-    const out = join(scratch, 'files-out');
-    expect(deus('export', out, '--files', ...c)).toMatchObject({
-      code: 0,
-      stdout: `Exported 3 embedded files to ${out}.\n`,
-    });
-    // Two files with the same text share a hash, and each still lands at its own path; an absolute path is not written.
-    expect(readFileSync(join(out, 'a/.gitignore'), 'utf8')).toBe('out/\n');
-    expect(readFileSync(join(out, 'b/.gitignore'), 'utf8')).toBe('out/\n');
-    expect(readFileSync(join(out, 'notes/read me.md'), 'utf8')).toBe('# Notes\n');
-  });
+  test(
+    'export --files writes each embedded file back to the path it came from',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'files')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const source = join(scratch, 'files-source');
+      for (const path of ['a/.gitignore', 'b/.gitignore', 'notes/read me.md']) {
+        mkdirSync(join(source, path, '..'), { recursive: true });
+        writeFileSync(join(source, path), path.endsWith('.md') ? '# Notes\n' : 'out/\n');
+      }
+      // `deus embed` records the path as given, so it runs from the folder the paths are relative to.
+      const embed = (path: string, name: string) =>
+        expect(
+          spawnSync('node', [join(root, 'bin/deus.mjs'), 'embed', path, '--as', name, '--quiet', ...c], {
+            cwd: source,
+            encoding: 'utf8',
+          }).status,
+        ).toBe(0);
+      embed('a/.gitignore', 'Repo.A.gitignore');
+      embed('b/.gitignore', 'Repo.B.gitignore');
+      embed('notes/read me.md', 'Repo.Notes.readMe');
+      embed(join(source, 'a/.gitignore'), 'Repo.absolute');
+      const out = join(scratch, 'files-out');
+      expect(deus('export', out, '--files', ...c)).toMatchObject({
+        code: 0,
+        stdout: `Exported 3 embedded files to ${out}.\n`,
+      });
+      // Two files with the same text share a hash, and each still lands at its own path; an absolute path is not written.
+      expect(readFileSync(join(out, 'a/.gitignore'), 'utf8')).toBe('out/\n');
+      expect(readFileSync(join(out, 'b/.gitignore'), 'utf8')).toBe('out/\n');
+      expect(readFileSync(join(out, 'notes/read me.md'), 'utf8')).toBe('# Notes\n');
+    }),
+  );
 
   test(
     'checks performance requirements in an mdl document through a DEUS extension',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'mdl')];
       deus('init', '--empty', ...c);
       deus(
@@ -228,13 +242,13 @@ describe('deus CLI', () => {
         /cost grew x3\.\d\d from n=20 to n=40 \(\d+ -> \d+ steps\); order n allows x2\.50/,
       );
       expect(failing.stdout).toMatch(/took \d+ steps; the budget is 10/);
-    },
+    }),
   );
 
   test(
     'runs QA flows for a web app in simulation and reports the first failing step',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'qa')];
       deus('init', '--empty', ...c);
       deus(
@@ -266,135 +280,145 @@ describe('deus CLI', () => {
         "QA-1.3 (Follow the hello link; expect: The note's text is shown) failed: GET /notes/hello answered 200 hi there",
       );
       expect(failing.stdout).toContain('QA-2.2: send: DELETE notes is not VERB /path [payload]');
-    },
+    }),
   );
 
-  test('files objects by layer, stores spec blocks, and records provenance', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'layers')];
-    deus('init', '--empty', ...c);
-    deus(
-      'add',
-      join(root, 'deus/builtins.deus'),
-      join(root, 'deus/prelude.deus'),
-      join(root, 'deus/sexp.deus'),
-      join(root, 'deus/mdl.deus'),
-      ...c,
-    );
-    deus('add', join(root, 'examples/sort.deus'), join(root, 'platform/perf.deus'), ...c);
-    const prompt = join(scratch, 'prompt.txt');
-    writeFileSync(prompt, 'state the sort performance requirements\n');
-    expect(deus('add', join(root, 'examples/perf.mdl'), '--by', 'agent-x', '--prompt', prompt, ...c).code).toBe(0);
+  test(
+    'files objects by layer, stores spec blocks, and records provenance',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'layers')];
+      deus('init', '--empty', ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'deus/sexp.deus'),
+        join(root, 'deus/mdl.deus'),
+        ...c,
+      );
+      deus('add', join(root, 'examples/sort.deus'), join(root, 'platform/perf.deus'), ...c);
+      const prompt = join(scratch, 'prompt.txt');
+      writeFileSync(prompt, 'state the sort performance requirements\n');
+      expect(deus('add', join(root, 'examples/perf.mdl'), '--by', 'agent-x', '--prompt', prompt, ...c).code).toBe(0);
 
-    // With no files, `deus mdl` checks the specs the codebase names.
-    const specs = deus('mdl', '--json', ...c);
-    expect(JSON.parse(specs.stdout).map((row: { block: string; status: string }) => [row.block, row.status])).toEqual([
-      ['Sort.Perf.P-1', 'ok'],
-      ['Sort.Perf.P-2', 'ok'],
-      ['Sort.Perf.P-3', 'ok'],
-    ]);
-    expect(deus('view', 'Sort.Perf.P-3', ...c).stdout).toContain('perf P-3: sorting ten numbers\n  run: Sort.isort');
-    // Theorem verdicts go to the results layer.
-    deus('check', ...c);
+      // With no files, `deus mdl` checks the specs the codebase names.
+      const specs = deus('mdl', '--json', ...c);
+      expect(JSON.parse(specs.stdout).map((row: { block: string; status: string }) => [row.block, row.status])).toEqual(
+        [
+          ['Sort.Perf.P-1', 'ok'],
+          ['Sort.Perf.P-2', 'ok'],
+          ['Sort.Perf.P-3', 'ok'],
+        ],
+      );
+      expect(deus('view', 'Sort.Perf.P-3', ...c).stdout).toContain('perf P-3: sorting ten numbers\n  run: Sort.isort');
+      // Theorem verdicts go to the results layer.
+      deus('check', ...c);
 
-    const layers = Object.fromEntries(
-      JSON.parse(deus('layers', '--json', ...c).stdout).map((row: { layer: string; entries: number }) => [
-        row.layer,
-        row.entries,
-      ]),
-    );
-    expect([layers.spec, layers.proofs, layers.provenance, layers.cache]).toEqual([3, 8, 1, 0]);
-    expect(layers.results).toBeGreaterThan(0);
-    const log = JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout);
-    expect(log[0].by).toBe('agent-x');
-    // Prose is kept in the blocks' metadata, so an edit to it alone changes no hash but is reported.
-    const perf = readFileSync(join(root, 'examples/perf.mdl'), 'utf8');
-    expect(deus('update', file('perf.mdl', perf), ...c).stdout).toBe('Nothing changed.\n');
-    expect(
-      deus('update', file('perf.mdl', perf.replace('checked by `deus mdl`', 'checked by `deus mdl` alone')), ...c)
-        .stdout,
-    ).toBe('  * Sort.Perf.P-1 (prose)\n');
-  });
+      const layers = Object.fromEntries(
+        JSON.parse(deus('layers', '--json', ...c).stdout).map((row: { layer: string; entries: number }) => [
+          row.layer,
+          row.entries,
+        ]),
+      );
+      expect([layers.spec, layers.proofs, layers.provenance, layers.cache]).toEqual([3, 8, 1, 0]);
+      expect(layers.results).toBeGreaterThan(0);
+      const log = JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout);
+      expect(log[0].by).toBe('agent-x');
+      // Prose is kept in the blocks' metadata, so an edit to it alone changes no hash but is reported.
+      const perf = readFileSync(join(root, 'examples/perf.mdl'), 'utf8');
+      expect(deus('update', file('perf.mdl', perf), ...c).stdout).toBe('Nothing changed.\n');
+      expect(
+        deus('update', file('perf.mdl', perf.replace('checked by `deus mdl`', 'checked by `deus mdl` alone')), ...c)
+          .stdout,
+      ).toBe('  * Sort.Perf.P-1 (prose)\n');
+    }),
+  );
 
-  test('projects pin libraries, infer their subgraph, and guard library IRIs', { timeout: 120_000 }, ({ expect }) => {
-    const std = ['--codebase', join(scratch, 'std')];
-    const app = ['--codebase', join(scratch, 'app')];
-    deus('init', '--empty', ...std);
-    deus('project', 'init', 'https://dxos.org/deus/std', ...std);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...std);
-    deus(
-      'add',
-      file(
-        'shape.deus',
-        'inductive Shape @"https://dxos.org/deus/std/Shape" where\n  | circle (r : Int)\ndef area (s : Shape) : Int := match s with\n  | Shape.circle r => 3 * r * r\n',
-      ),
-      ...std,
-    );
+  test(
+    'projects pin libraries, infer their subgraph, and guard library IRIs',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const std = ['--codebase', join(scratch, 'std')];
+      const app = ['--codebase', join(scratch, 'app')];
+      deus('init', '--empty', ...std);
+      deus('project', 'init', 'https://dxos.org/deus/std', ...std);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...std);
+      deus(
+        'add',
+        file(
+          'shape.deus',
+          'inductive Shape @"https://dxos.org/deus/std/Shape" where\n  | circle (r : Int)\ndef area (s : Shape) : Int := match s with\n  | Shape.circle r => 3 * r * r\n',
+        ),
+        ...std,
+      );
 
-    deus('init', '--empty', ...app);
-    deus('project', 'init', 'https://example.org/app', ...app);
-    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
-    // Library names resolve by suffix, as in UCM.
-    expect(deus('add', file('app.deus', 'def twice (n : Int) : Int := area (Shape.circle n) * 2\n'), ...app).code).toBe(
-      0,
-    );
-    expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
-    // A primitive's type comes from the library's builtin, so `==` is still a Bool.
-    expect(deus('eval', '1 == 1', ...app).stdout).toBe('true\n');
-    // A bare constructor in a pattern finds the library's (`none` is `lib.std.Option.none`), not a fresh variable.
-    deus(
-      'add',
-      file('isnone.deus', 'def isNone (o : Option Int) : Bool := match o with\n  | none => true\n  | _ => false\n'),
-      ...app,
-    );
-    expect(deus('eval', 'isNone (some 1)', ...app).stdout).toBe('false\n');
+      deus('init', '--empty', ...app);
+      deus('project', 'init', 'https://example.org/app', ...app);
+      expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+      // Library names resolve by suffix, as in UCM.
+      expect(
+        deus('add', file('app.deus', 'def twice (n : Int) : Int := area (Shape.circle n) * 2\n'), ...app).code,
+      ).toBe(0);
+      expect(deus('eval', 'twice 2', ...app).stdout).toBe('24\n');
+      // A primitive's type comes from the library's builtin, so `==` is still a Bool.
+      expect(deus('eval', '1 == 1', ...app).stdout).toBe('true\n');
+      // A bare constructor in a pattern finds the library's (`none` is `lib.std.Option.none`), not a fresh variable.
+      deus(
+        'add',
+        file('isnone.deus', 'def isNone (o : Option Int) : Bool := match o with\n  | none => true\n  | _ => false\n'),
+        ...app,
+      );
+      expect(deus('eval', 'isNone (some 1)', ...app).stdout).toBe('false\n');
 
-    // Installing a newer release moves the project's code onto it, as `update` moves dependents (D206).
-    const area4 = 'def area (s : Shape) : Int := match s with\n  | Shape.circle r => 4 * r * r\n';
-    deus('update', file('shape2.deus', area4), ...std);
-    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
-    expect(deus('eval', 'twice 2', ...app).stdout).toBe('32\n');
+      // Installing a newer release moves the project's code onto it, as `update` moves dependents (D206).
+      const area4 = 'def area (s : Shape) : Int := match s with\n  | Shape.circle r => 4 * r * r\n';
+      deus('update', file('shape2.deus', area4), ...std);
+      expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+      expect(deus('eval', 'twice 2', ...app).stdout).toBe('32\n');
 
-    // The library's own source, updated into the project, stays the library's: deus/ holds both (D206).
-    expect(deus('update', file('shape3.deus', area4), ...app).code).toBe(0);
-    expect(JSON.parse(deus('project', '--json', ...app).stdout).owned).toBe(2);
-    // A suffix the project and a library share names the project's; a library's root name, the library's.
-    deus('update', file('size.deus', 'def Shape.size (s : Shape) : Int := 1\n'), ...std);
-    expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
-    deus('add', file('box.deus', 'def Box.size (n : Int) : Int := n\ndef Box.area (n : Int) : Int := n\n'), ...app);
-    expect(deus('eval', 'size 5', ...app).stdout).toBe('5\n');
-    expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
-    // Inside `Box`, a bare `area` is `Box.area`, so the library's prints in full and reads back the same.
-    deus('add', file('use.deus', 'def Box.useArea (s : Shape) : Int := lib.std.area s\n'), ...app);
-    const shown = deus('view', 'Box.useArea', ...app).stdout;
-    expect(shown).toContain(':= lib.std.area s');
-    expect(JSON.parse(deus('update', file('use2.deus', shown), '--json', ...app).stdout).updated).toEqual([]);
-    // Defining a name a library has needs --shadow (D284); then it is the project's to edit, even to the library's
-    // definition.
-    const unasked = deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), ...app);
-    expect([unasked.code, unasked.stderr]).toEqual([
-      1,
-      expect.stringContaining('area  (lib.std, https://dxos.org/deus/std)'),
-    ]);
-    deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), '--shadow', ...app);
-    expect(JSON.parse(deus('update', file('own2.deus', area4), '--json', ...app).stdout).updated).toHaveLength(1);
-    expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
+      // The library's own source, updated into the project, stays the library's: deus/ holds both (D206).
+      expect(deus('update', file('shape3.deus', area4), ...app).code).toBe(0);
+      expect(JSON.parse(deus('project', '--json', ...app).stdout).owned).toBe(2);
+      // A suffix the project and a library share names the project's; a library's root name, the library's.
+      deus('update', file('size.deus', 'def Shape.size (s : Shape) : Int := 1\n'), ...std);
+      expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
+      deus('add', file('box.deus', 'def Box.size (n : Int) : Int := n\ndef Box.area (n : Int) : Int := n\n'), ...app);
+      expect(deus('eval', 'size 5', ...app).stdout).toBe('5\n');
+      expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
+      // Inside `Box`, a bare `area` is `Box.area`, so the library's prints in full and reads back the same.
+      deus('add', file('use.deus', 'def Box.useArea (s : Shape) : Int := lib.std.area s\n'), ...app);
+      const shown = deus('view', 'Box.useArea', ...app).stdout;
+      expect(shown).toContain(':= lib.std.area s');
+      expect(JSON.parse(deus('update', file('use2.deus', shown), '--json', ...app).stdout).updated).toEqual([]);
+      // Defining a name a library has needs --shadow (D284); then it is the project's to edit, even to the library's
+      // definition.
+      const unasked = deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), ...app);
+      expect([unasked.code, unasked.stderr]).toEqual([
+        1,
+        expect.stringContaining('area  (lib.std, https://dxos.org/deus/std)'),
+      ]);
+      deus('add', file('own.deus', 'def area (s : Shape) : Int := 7\n'), '--shadow', ...app);
+      expect(JSON.parse(deus('update', file('own2.deus', area4), '--json', ...app).stdout).updated).toHaveLength(1);
+      expect(deus('eval', 'area (Shape.circle 1)', ...app).stdout).toBe('4\n');
 
-    const info = JSON.parse(deus('project', '--json', ...app).stdout);
-    expect([info.authority, info.libs[0].iri]).toEqual(['example.org', 'https://dxos.org/deus/std']);
+      const info = JSON.parse(deus('project', '--json', ...app).stdout);
+      expect([info.authority, info.libs[0].iri]).toEqual(['example.org', 'https://dxos.org/deus/std']);
 
-    const minted = deus(
-      'add',
-      file('fake.deus', 'inductive Fake @"https://dxos.org/deus/std/Fake" where\n  | fake\n'),
-      ...app,
-    );
-    expect(minted.code).toBe(1);
-    expect(minted.stderr).toContain('Fake has IRI https://dxos.org/deus/std/Fake, which belongs to lib.std');
-  });
+      const minted = deus(
+        'add',
+        file('fake.deus', 'inductive Fake @"https://dxos.org/deus/std/Fake" where\n  | fake\n'),
+        ...app,
+      );
+      expect(minted.code).toBe(1);
+      expect(minted.stderr).toContain('Fake has IRI https://dxos.org/deus/std/Fake, which belongs to lib.std');
+    }),
+  );
 
   test(
     'migrates flat snapshots to namespace trees, links and provenance included',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const dir = join(scratch, 'migrate');
       const c = ['--codebase', dir];
       deus('init', '--empty', ...c);
@@ -466,39 +490,43 @@ describe('deus CLI', () => {
       expect(deus('eval', 'A.x + A.w + z', ...c).stdout).toBe('17\n');
       expect(JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout)[0].by).toBe('agent-m');
       expect(JSON.parse(deus('task', 'show', bug.id, '--json', ...c).stdout).task.state).toBe('done');
-    },
+    }),
   );
 
-  test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'cloudflare')];
-    deus('init', '--empty', ...c);
-    const sources = [
-      'deus/builtins.deus',
-      'deus/prelude.deus',
-      'deus/time.deus',
-      'platform/web.deus',
-      'examples/counter.deus',
-      'examples/tally.deus',
-    ];
-    expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
-    const tests = deus('test', '--json', ...c);
-    const rows: { name: string; status: string }[] = JSON.parse(tests.stdout);
-    // `deus/time.deus` brings its own tests, which are not this one's subject.
-    const examples = rows.filter((row) => /^(Counter|Tally)\./.test(row.name));
-    expect(rows.every((row) => row.status === 'pass')).toBe(true);
-    expect(examples.map((row) => [row.name, row.status])).toEqual([
-      ['Counter.countsAcrossRequests', 'pass'],
-      ['Tally.alarmsFireInOrder', 'pass'],
-      ['Tally.objectsCallEachOther', 'pass'],
-    ]);
-  });
+  test(
+    'simulates Durable Objects that call each other and set alarms',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'cloudflare')];
+      deus('init', '--empty', ...c);
+      const sources = [
+        'deus/builtins.deus',
+        'deus/prelude.deus',
+        'deus/time.deus',
+        'platform/web.deus',
+        'examples/counter.deus',
+        'examples/tally.deus',
+      ];
+      expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
+      const tests = deus('test', '--json', ...c);
+      const rows: { name: string; status: string }[] = JSON.parse(tests.stdout);
+      // `deus/time.deus` brings its own tests, which are not this one's subject.
+      const examples = rows.filter((row) => /^(Counter|Tally)\./.test(row.name));
+      expect(rows.every((row) => row.status === 'pass')).toBe(true);
+      expect(examples.map((row) => [row.name, row.status])).toEqual([
+        ['Counter.countsAcrossRequests', 'pass'],
+        ['Tally.alarmsFireInOrder', 'pass'],
+        ['Tally.objectsCallEachOther', 'pass'],
+      ]);
+    }),
+  );
 
   // The first recipe in docs/GETTING_STARTED.md, as a reader would run it.
 
   test(
     'runs the getting-started tour and prints definitions with their effect rows',
     { timeout: 120_000 },
-    ({ expect, onTestFinished }) => {
+    kept(({ expect, onTestFinished }) => {
       const c = ['--codebase', join(scratch, 'tour')];
       // `deus run` hands every argument after the name to the program, so it finds the codebase in the environment.
       process.env.DEUS_CODEBASE = join(scratch, 'tour');
@@ -554,245 +582,257 @@ describe('deus CLI', () => {
         ...c,
       );
       expect(unhandled.stderr).toContain('unhandled ability Prices (calling Tour.total)');
-    },
+    }),
   );
 
-  test('keeps ordinary comments as metadata through view and export', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'comments')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    const source = [
-      '-- Shapes measured in whole units.',
-      '',
-      '-- Squares only, for now.',
-      'def area (side : Int) : Int :=',
-      '  -- Negative sides are measured as positive.',
-      '  let s := if side < 0 then 0 - side else side',
-      '  match s with',
-      '  -- A point has no area.',
-      '  | 0 => 0',
-      '  | n => n * n',
-      '',
-      'def plain (side : Int) : Int := side * side',
-      '',
-      "def quoted (c : Int) : Bool := c == '\"' || c == 0x60 || c == 1_000",
-    ].join('\n');
-    deus('add', file('comments.deus', source), ...c);
-    // Comments are metadata: the definition hashes as it does without them.
-    const bare = ['--codebase', join(scratch, 'comments-bare')];
-    deus('init', '--empty', ...bare);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...bare);
-    const uncommented = source
-      .split('\n')
-      .filter((line) => !line.trim().startsWith('--'))
-      .join('\n')
-      .replace(`'"'`, '34')
-      .replace('0x60', '96')
-      .replace('1_000', '1000');
-    deus('add', file('uncommented.deus', uncommented), ...bare);
-    expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
-    // So are number spellings (D88): `'"'` hashes as `34`, and view prints it as written.
-    expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
-    expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
-    const viewed = deus('view', 'area', ...c).stdout;
-    expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
-    expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
-    expect(viewed).toContain('-- A point has no area.');
+  test(
+    'keeps ordinary comments as metadata through view and export',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'comments')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const source = [
+        '-- Shapes measured in whole units.',
+        '',
+        '-- Squares only, for now.',
+        'def area (side : Int) : Int :=',
+        '  -- Negative sides are measured as positive.',
+        '  let s := if side < 0 then 0 - side else side',
+        '  match s with',
+        '  -- A point has no area.',
+        '  | 0 => 0',
+        '  | n => n * n',
+        '',
+        'def plain (side : Int) : Int := side * side',
+        '',
+        "def quoted (c : Int) : Bool := c == '\"' || c == 0x60 || c == 1_000",
+      ].join('\n');
+      deus('add', file('comments.deus', source), ...c);
+      // Comments are metadata: the definition hashes as it does without them.
+      const bare = ['--codebase', join(scratch, 'comments-bare')];
+      deus('init', '--empty', ...bare);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...bare);
+      const uncommented = source
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('--'))
+        .join('\n')
+        .replace(`'"'`, '34')
+        .replace('0x60', '96')
+        .replace('1_000', '1000');
+      deus('add', file('uncommented.deus', uncommented), ...bare);
+      expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+      // So are number spellings (D88): `'"'` hashes as `34`, and view prints it as written.
+      expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
+      expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
+      const viewed = deus('view', 'area', ...c).stdout;
+      expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
+      expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
+      expect(viewed).toContain('-- A point has no area.');
 
-    // An export restored into an empty codebase exports the same text again.
-    const first = join(scratch, 'comments-export');
-    deus('export', first, ...c);
-    const restored = ['--codebase', join(scratch, 'comments-restored')];
-    deus('init', '--empty', ...restored);
-    expect(deus('add', join(first, 'code'), ...restored).code).toBe(0);
-    const second = join(scratch, 'comments-export-2');
-    deus('export', second, ...restored);
-    const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
-    expect(text(second)).toBe(text(first));
-    expect(text(first)).toContain('-- A point has no area.');
-    expect(text(first)).toContain(`c == '"' || c == 0x60`);
-    const hashOf = (args: string[]) =>
-      JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
-    expect(hashOf(restored)).toBe(hashOf(c));
+      // An export restored into an empty codebase exports the same text again.
+      const first = join(scratch, 'comments-export');
+      deus('export', first, ...c);
+      const restored = ['--codebase', join(scratch, 'comments-restored')];
+      deus('init', '--empty', ...restored);
+      expect(deus('add', join(first, 'code'), ...restored).code).toBe(0);
+      const second = join(scratch, 'comments-export-2');
+      deus('export', second, ...restored);
+      const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
+      expect(text(second)).toBe(text(first));
+      expect(text(first)).toContain('-- A point has no area.');
+      expect(text(first)).toContain(`c == '"' || c == 0x60`);
+      const hashOf = (args: string[]) =>
+        JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
+      expect(hashOf(restored)).toBe(hashOf(c));
 
-    // A definition whose callee lost its name still exports as source the parser reads (D77).
-    const orphan = ['--codebase', join(scratch, 'orphan')];
-    deus('init', '--empty', ...orphan);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...orphan);
-    deus(
-      'add',
-      file('orphan.deus', 'def helper (x : Int) : Int := x + 1\n\ndef user (x : Int) : Int := helper x * 2\n'),
-      ...orphan,
-    );
-    deus('rm', 'helper', ...orphan);
-    const orphanExport = join(scratch, 'orphan-export');
-    deus('export', orphanExport, ...orphan);
-    const orphanRestored = ['--codebase', join(scratch, 'orphan-restored')];
-    deus('init', '--empty', ...orphanRestored);
-    expect(deus('add', join(orphanExport, 'code'), ...orphanRestored).code).toBe(0);
-    const userHash = (args: string[]) =>
-      JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'user').hash;
-    expect(userHash(orphanRestored)).toBe(userHash(orphan));
+      // A definition whose callee lost its name still exports as source the parser reads (D77).
+      const orphan = ['--codebase', join(scratch, 'orphan')];
+      deus('init', '--empty', ...orphan);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...orphan);
+      deus(
+        'add',
+        file('orphan.deus', 'def helper (x : Int) : Int := x + 1\n\ndef user (x : Int) : Int := helper x * 2\n'),
+        ...orphan,
+      );
+      deus('rm', 'helper', ...orphan);
+      const orphanExport = join(scratch, 'orphan-export');
+      deus('export', orphanExport, ...orphan);
+      const orphanRestored = ['--codebase', join(scratch, 'orphan-restored')];
+      deus('init', '--empty', ...orphanRestored);
+      expect(deus('add', join(orphanExport, 'code'), ...orphanRestored).code).toBe(0);
+      const userHash = (args: string[]) =>
+        JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'user').hash;
+      expect(userHash(orphanRestored)).toBe(userHash(orphan));
 
-    // The history comes back as a record under the restore's own changes.
-    expect(deus('history', 'import', join(first, 'history.sexp'), ...restored).code).toBe(0);
-    const messages = (args: string[]) =>
-      JSON.parse(deus('log', '--n', '100', '--json', ...args).stdout).map((row: { message: string }) => row.message);
-    const before = messages(c);
-    const after = messages(restored);
-    expect(after[0]).toMatch(/^history: import \d+ changes$/);
-    expect(after.slice(-before.length)).toEqual(before);
-    // The explorer lists the imported changes too; one with no causal node here is marked and gets no page.
-    process.env.DEUS_HOME = root;
-    const restoredSite = join(scratch, 'comments-restored-site');
-    expect(deus('explore', '--out', restoredSite, ...restored)).toMatchObject({ stderr: '', code: 0 });
-    const shown: { message: string; imported?: boolean }[] = JSON.parse(
-      readFileSync(join(restoredSite, 'meta.json'), 'utf8'),
-    ).history;
-    expect(shown.map((row) => row.message)).toEqual(after);
-    expect(shown[0].imported).toBeUndefined();
-    expect(shown.filter((row) => row.imported).length).toBeGreaterThan(0);
-    const third = join(scratch, 'comments-export-3');
-    deus('export', third, ...restored);
-    expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
-      readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
-    );
-  });
+      // The history comes back as a record under the restore's own changes.
+      expect(deus('history', 'import', join(first, 'history.sexp'), ...restored).code).toBe(0);
+      const messages = (args: string[]) =>
+        JSON.parse(deus('log', '--n', '100', '--json', ...args).stdout).map((row: { message: string }) => row.message);
+      const before = messages(c);
+      const after = messages(restored);
+      expect(after[0]).toMatch(/^history: import \d+ changes$/);
+      expect(after.slice(-before.length)).toEqual(before);
+      // The explorer lists the imported changes too; one with no causal node here is marked and gets no page.
+      process.env.DEUS_HOME = root;
+      const restoredSite = join(scratch, 'comments-restored-site');
+      expect(deus('explore', '--out', restoredSite, ...restored)).toMatchObject({ stderr: '', code: 0 });
+      const shown: { message: string; imported?: boolean }[] = JSON.parse(
+        readFileSync(join(restoredSite, 'meta.json'), 'utf8'),
+      ).history;
+      expect(shown.map((row) => row.message)).toEqual(after);
+      expect(shown[0].imported).toBeUndefined();
+      expect(shown.filter((row) => row.imported).length).toBeGreaterThan(0);
+      const third = join(scratch, 'comments-export-3');
+      deus('export', third, ...restored);
+      expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
+        readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
+      );
+    }),
+  );
 
   // The console is the toolchain itself on the wasm kernel: run here through the same files the page loads.
 
-  test('explore --console runs deus against a snapshot of the codebase', { timeout: 300_000 }, async ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'console')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    deus(
-      'add',
-      file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'),
-      ...c,
-    );
-    process.env.DEUS_HOME = root;
-    const out = join(scratch, 'console-site');
-    expect(deus('explore', '--out', out, '--console', ...c)).toMatchObject({ stderr: '', code: 0 });
-    const snapshot: Record<string, string> = JSON.parse(readFileSync(join(out, 'console', 'codebase.json'), 'utf8'));
-    expect(Object.keys(snapshot)).toContain('HEAD');
-    expect(Object.keys(snapshot).some((path) => path.startsWith('cache/'))).toBe(false);
-    expect(JSON.parse(readFileSync(join(out, 'console', 'info.json'), 'utf8'))).toEqual({
-      files: Object.keys(snapshot).length,
-      branch: 'main',
-    });
+  test(
+    'explore --console runs deus against a snapshot of the codebase',
+    { timeout: 300_000 },
+    kept(async ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'console')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus(
+        'add',
+        file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'),
+        ...c,
+      );
+      process.env.DEUS_HOME = root;
+      const out = join(scratch, 'console-site');
+      expect(deus('explore', '--out', out, '--console', ...c)).toMatchObject({ stderr: '', code: 0 });
+      const snapshot: Record<string, string> = JSON.parse(readFileSync(join(out, 'console', 'codebase.json'), 'utf8'));
+      expect(Object.keys(snapshot)).toContain('HEAD');
+      expect(Object.keys(snapshot).some((path) => path.startsWith('cache/'))).toBe(false);
+      expect(JSON.parse(readFileSync(join(out, 'console', 'info.json'), 'utf8'))).toEqual({
+        files: Object.keys(snapshot).length,
+        branch: 'main',
+      });
 
-    const host = await import(join(out, 'console', 'host.mjs'));
-    const wasm = Buffer.from(readFileSync(join(out, 'console', 'deus_kernel.wasm.b64'), 'utf8'), 'base64');
-    const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
-    const page = await host.createDeus({
-      wasm: new Uint8Array(wasm),
-      fs: host.createFiles(files),
-      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
-    });
-    const image = readFileSync(join(out, 'console', 'deus.image'), 'utf8');
-    expect(await page.run(image, { args: ['view', 'Shapes.square'], cwd: '/work' })).toMatchObject({
-      code: 0,
-      stdout: expect.stringContaining('side * side'),
-    });
-    expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({
-      code: 0,
-      stdout: '49\n',
-    });
+      const host = await import(join(out, 'console', 'host.mjs'));
+      const wasm = Buffer.from(readFileSync(join(out, 'console', 'deus_kernel.wasm.b64'), 'utf8'), 'base64');
+      const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
+      const page = await host.createDeus({
+        wasm: new Uint8Array(wasm),
+        fs: host.createFiles(files),
+        env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+      });
+      const image = readFileSync(join(out, 'console', 'deus.image'), 'utf8');
+      expect(await page.run(image, { args: ['view', 'Shapes.square'], cwd: '/work' })).toMatchObject({
+        code: 0,
+        stdout: expect.stringContaining('side * side'),
+      });
+      expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({
+        code: 0,
+        stdout: '49\n',
+      });
 
-    // A site that has a console keeps it, refreshed with the codebase each push.
-    deus('remote', 'add', 'origin', join(scratch, 'console-remote'), ...c);
-    deus('explore', '--out', out, '--publish', 'origin', ...c);
-    deus('add', file('console-more.deus', 'def Shapes.unit : Int := 1\n'), ...c);
-    expect(deus('push', 'origin', ...c).code).toBe(0);
-    const published = readFileSync(join(scratch, 'console-remote', 'site', 'console', 'codebase.json'), 'utf8');
-    expect(Object.keys(JSON.parse(published)).length).toBeGreaterThan(Object.keys(snapshot).length);
-  });
+      // A site that has a console keeps it, refreshed with the codebase each push.
+      deus('remote', 'add', 'origin', join(scratch, 'console-remote'), ...c);
+      deus('explore', '--out', out, '--publish', 'origin', ...c);
+      deus('add', file('console-more.deus', 'def Shapes.unit : Int := 1\n'), ...c);
+      expect(deus('push', 'origin', ...c).code).toBe(0);
+      const published = readFileSync(join(scratch, 'console-remote', 'site', 'console', 'codebase.json'), 'utf8');
+      expect(Object.keys(JSON.parse(published)).length).toBeGreaterThan(Object.keys(snapshot).length);
+    }),
+  );
 
-  test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
-    const c = ['--codebase', join(scratch, 'explore')];
-    deus('init', '--empty', ...c);
-    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    const shapes = [
-      'namespace Shapes',
-      'def square (side : Int) : Int := side * side',
-      '/-- The area of a square. -/',
-      'def area (side : Int) : Int := square side',
-      'end Shapes',
-    ];
-    deus('add', file('shapes.deus', shapes.join('\n')), ...c);
-    process.env.DEUS_HOME = root;
-    const out = join(scratch, 'explore-site');
-    const written = deus('explore', '--out', out, '--json', ...c);
-    expect(written.stderr).toBe('');
-    expect(JSON.parse(written.stdout).definitions).toBeGreaterThan(10);
+  test(
+    'writes the codebase explorer and publishes it beside a remote',
+    { timeout: 120_000 },
+    kept(({ expect }) => {
+      const c = ['--codebase', join(scratch, 'explore')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const shapes = [
+        'namespace Shapes',
+        'def square (side : Int) : Int := side * side',
+        '/-- The area of a square. -/',
+        'def area (side : Int) : Int := square side',
+        'end Shapes',
+      ];
+      deus('add', file('shapes.deus', shapes.join('\n')), ...c);
+      process.env.DEUS_HOME = root;
+      const out = join(scratch, 'explore-site');
+      const written = deus('explore', '--out', out, '--json', ...c);
+      expect(written.stderr).toBe('');
+      expect(JSON.parse(written.stdout).definitions).toBeGreaterThan(10);
 
-    const names: { name: string; kind: string; hash: string }[] = JSON.parse(
-      readFileSync(join(out, 'names.json'), 'utf8'),
-    );
-    const area = names.find((entry) => entry.name === 'Shapes.area');
-    const square = names.find((entry) => entry.name === 'Shapes.square');
-    const map = names.find((entry) => entry.name === 'List.map');
-    expect(area).toMatchObject({ kind: 'term', sig: 'Int -> Int', summary: 'The area of a square.', status: '' });
-    // Each definition is a JSON document: its source highlighted, with references opening their definitions.
-    const page = readFileSync(join(out, 'def', `${area?.hash}.json`), 'utf8');
-    const def = JSON.parse(page);
-    expect(def.html).toContain('<span class=cm>/-- The area of a square. -/</span>');
-    expect(def.html).toContain(`<a class=ref data-open="d:${square?.hash}">square</a>`);
-    // Types named only in a signature count as dependencies, so a type's page lists what uses it.
-    expect(def.deps).toEqual([
-      { name: 'Int', hash: '#Int' },
-      { name: 'Shapes.square', hash: square?.hash },
-    ]);
-    expect(JSON.parse(readFileSync(join(out, 'def', `${square?.hash}.json`), 'utf8')).users).toEqual([
-      { name: 'Shapes.area', hash: area?.hash },
-    ]);
-    // A builtin's page is named without its `#`, which a URL path cannot carry.
-    const int = JSON.parse(readFileSync(join(out, 'def', '_Int.json'), 'utf8'));
-    expect(int.users).toContainEqual({ name: 'Shapes.area', hash: area?.hash });
-    expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('<script type="module" src="app.js">');
-    // Each change in the history has a page with what it did.
-    const latest = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
-    const change = JSON.parse(readFileSync(join(out, 'change', `${latest}.json`), 'utf8'));
-    expect(change.added.map((ref: { name: string }) => ref.name).sort()).toEqual(['Shapes.area', 'Shapes.square']);
-    expect(map?.kind).toBe('term');
+      const names: { name: string; kind: string; hash: string }[] = JSON.parse(
+        readFileSync(join(out, 'names.json'), 'utf8'),
+      );
+      const area = names.find((entry) => entry.name === 'Shapes.area');
+      const square = names.find((entry) => entry.name === 'Shapes.square');
+      const map = names.find((entry) => entry.name === 'List.map');
+      expect(area).toMatchObject({ kind: 'term', sig: 'Int -> Int', summary: 'The area of a square.', status: '' });
+      // Each definition is a JSON document: its source highlighted, with references opening their definitions.
+      const page = readFileSync(join(out, 'def', `${area?.hash}.json`), 'utf8');
+      const def = JSON.parse(page);
+      expect(def.html).toContain('<span class=cm>/-- The area of a square. -/</span>');
+      expect(def.html).toContain(`<a class=ref data-open="d:${square?.hash}">square</a>`);
+      // Types named only in a signature count as dependencies, so a type's page lists what uses it.
+      expect(def.deps).toEqual([
+        { name: 'Int', hash: '#Int' },
+        { name: 'Shapes.square', hash: square?.hash },
+      ]);
+      expect(JSON.parse(readFileSync(join(out, 'def', `${square?.hash}.json`), 'utf8')).users).toEqual([
+        { name: 'Shapes.area', hash: area?.hash },
+      ]);
+      // A builtin's page is named without its `#`, which a URL path cannot carry.
+      const int = JSON.parse(readFileSync(join(out, 'def', '_Int.json'), 'utf8'));
+      expect(int.users).toContainEqual({ name: 'Shapes.area', hash: area?.hash });
+      expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('<script type="module" src="app.js">');
+      // Each change in the history has a page with what it did.
+      const latest = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
+      const change = JSON.parse(readFileSync(join(out, 'change', `${latest}.json`), 'utf8'));
+      expect(change.added.map((ref: { name: string }) => ref.name).sort()).toEqual(['Shapes.area', 'Shapes.square']);
+      expect(map?.kind).toBe('term');
 
-    const remote = join(scratch, 'explore-remote');
-    deus('remote', 'add', 'origin', remote, ...c);
-    const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    // The app's three files, meta, names, tasks, comments, events and features, and one file per definition and per change.
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 9);
-    expect(published.uploaded).toBe(published.files);
-    expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
-    // Republishing sends only what changed.
-    expect(JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout).uploaded).toBe(0);
-    // A push to a remote that hosts the explorer refreshes it: the new definition's page and the indexes.
-    deus('add', file('extra.deus', 'def Shapes.unit : Int := 1\n'), ...c);
-    const pushed = JSON.parse(deus('push', 'origin', '--json', ...c).stdout);
-    expect(pushed.site).toBeGreaterThanOrEqual(3);
-    // The indexes land under the version that site/HEAD names, which is written last (D166).
-    const version = readFileSync(join(remote, 'site', 'HEAD'), 'utf8');
-    expect(readFileSync(join(remote, 'site', 'v', version, 'names.json'), 'utf8')).toContain('Shapes.unit');
+      const remote = join(scratch, 'explore-remote');
+      deus('remote', 'add', 'origin', remote, ...c);
+      const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
+      // The app's three files, meta, names, tasks, comments, events and features, and one file per definition and per change.
+      expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 9);
+      expect(published.uploaded).toBe(published.files);
+      expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
+      // Republishing sends only what changed.
+      expect(JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout).uploaded).toBe(0);
+      // A push to a remote that hosts the explorer refreshes it: the new definition's page and the indexes.
+      deus('add', file('extra.deus', 'def Shapes.unit : Int := 1\n'), ...c);
+      const pushed = JSON.parse(deus('push', 'origin', '--json', ...c).stdout);
+      expect(pushed.site).toBeGreaterThanOrEqual(3);
+      // The indexes land under the version that site/HEAD names, which is written last (D166).
+      const version = readFileSync(join(remote, 'site', 'HEAD'), 'utf8');
+      expect(readFileSync(join(remote, 'site', 'v', version, 'names.json'), 'utf8')).toContain('Shapes.unit');
 
-    // A change that rebinds a name carries both sources, which the app shows as a diff.
-    deus('update', file('square.deus', 'def Shapes.square (side : Int) : Int := side * side + 0\n'), ...c);
-    deus('explore', '--out', out, ...c);
-    const rebound = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
-    const diff = JSON.parse(readFileSync(join(out, 'change', `${rebound}.json`), 'utf8'));
-    expect(diff.changed).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'Shapes.square',
-          before: expect.stringMatching(/side \* side$/),
-          after: expect.stringMatching(/side \* side \+ 0$/),
-        }),
-      ]),
-    );
-  });
+      // A change that rebinds a name carries both sources, which the app shows as a diff.
+      deus('update', file('square.deus', 'def Shapes.square (side : Int) : Int := side * side + 0\n'), ...c);
+      deus('explore', '--out', out, ...c);
+      const rebound = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
+      const diff = JSON.parse(readFileSync(join(out, 'change', `${rebound}.json`), 'utf8'));
+      expect(diff.changed).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Shapes.square',
+            before: expect.stringMatching(/side \* side$/),
+            after: expect.stringMatching(/side \* side \+ 0$/),
+          }),
+        ]),
+      );
+    }),
+  );
 
   test(
     'fetches a pinned tool by hash, caches it, and refuses a mismatch',
     { timeout: 120_000 },
-    ({ expect, onTestFinished }) => {
+    kept(({ expect, onTestFinished }) => {
       const c = ['--codebase', join(scratch, 'external')];
       deus('init', '--empty', ...c);
       deus(
@@ -865,13 +905,13 @@ describe('deus CLI', () => {
         ['ok', []],
         ['fail', ['image: postgres:16 has no @sha256: digest; a tag alone may move']],
       ]);
-    },
+    }),
   );
 
   test(
     'a field is picked by its receiver once the definition is inferred, in any compile order',
     { timeout: 120_000 },
-    ({ expect }) => {
+    kept(({ expect }) => {
       const c = ['--codebase', join(scratch, 'fields')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -898,13 +938,13 @@ describe('deus CLI', () => {
       const ambiguous = deus('add', file('ambiguous.deus', 'def tasksOf x := x.tasks\n'), ...c);
       expect(ambiguous.code).not.toBe(0);
       expect(ambiguous.stderr).toContain('ambiguous field tasks');
-    },
+    }),
   );
 
   test(
     'a theorem is checked again when the checker changes, a test is not (task 79f72c44)',
     { timeout: 120_000 },
-    ({ expect, onTestFinished }) => {
+    kept(({ expect, onTestFinished }) => {
       const c = ['--codebase', join(scratch, 'checker')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -923,6 +963,6 @@ describe('deus CLI', () => {
       process.env.DEUS_IMAGE_HASH = 'bbbbbbbbbbbbbbbb2222';
       expect(cached('check', 'plusZero')).toBe(false);
       expect(cached('test', 'plusOne')).toBe(true);
-    },
+    }),
   );
 });

@@ -9,19 +9,11 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
-import { keptTest } from './kept-verdict.ts';
-import { SEED_PATH } from './kernel/main.ts';
+import { keptCliTest } from './kept-verdict.ts';
 
 const { root, scratch, file, deus, deusNode } = cliHarness('cli-native-');
 
-/** A back end's result depends on the seed that builds, the sources and examples it builds, and the compilers. */
-const kept = keptTest(
-  import.meta.filename,
-  ['deus', 'platform', 'examples', 'src/kernel', 'src/cli-harness.ts']
-    .map((path) => join(root, path))
-    .concat(SEED_PATH),
-  ['cc', 'clang'].map((cc) => spawnSync(cc, ['--version'], { encoding: 'utf8' }).stdout ?? '').join('\n'),
-);
+const kept = keptCliTest(import.meta.filename);
 
 // The C, wasm and executable back ends: the slowest CLI tests, in a file of their own so they run in parallel with the rest.
 describe('deus CLI native back ends', () => {
