@@ -12,9 +12,20 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
+import { PullRequest } from '@dxos/types';
 
-import { GITHUB_APP_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
-import { githubToken, summarizeCheckRuns, summarizeReviews, toCheckRun } from './pull-request.ts';
+import { GITHUB_APP_PROVIDER_ID, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GitHubConnectionUnavailableError } from '../errors.ts';
+import { GitHubApi } from '../services/index.ts';
+import {
+  githubAccess,
+  githubReadCredentials,
+  githubWriteCredentials,
+  resolvePullRequest,
+  summarizeCheckRuns,
+  summarizeReviews,
+  toCheckRun,
+} from './pull-request.ts';
 
 describe('summarizeCheckRuns', () => {
   test('no runs is none', () => {
@@ -129,7 +140,7 @@ describe('summarizeReviews', () => {
   });
 });
 
-describe('githubToken', () => {
+describe('GitHub access', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -159,10 +170,105 @@ describe('githubToken', () => {
       }),
     });
 
-    const token = await EffectEx.runPromise(
-      githubToken().pipe(Effect.provide(Layer.merge(Database.layer(db), credentials))),
+    const access = await EffectEx.runPromise(
+      githubAccess().pipe(Effect.provide(Layer.merge(Database.layer(db), credentials))),
     );
 
-    expect(token).toEqual('ghs_live');
+    expect(access).toEqual({ token: 'ghs_live', connected: true });
+  });
+
+  /** A credentials service that can resolve nothing, as for an App EDGE will no longer mint for. */
+  const unresolvable = Layer.succeed(Credential.CredentialsService, {
+    queryCredentials: async () => [],
+    getCredential: async () => {
+      throw new Error('installation is gone');
+    },
+  });
+
+  /** A space holding GitHub connections with these tokens, in this order. */
+  const withConnections = async (...connections: Array<[token: string, connectorId: string]>) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, PullRequest.PullRequest]);
+    for (const [token, connectorId] of connections) {
+      const accessToken = db.add(Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token }));
+      db.add(Obj.make(Connection.Connection, { connectorId, accessToken: Ref.make(accessToken) }));
+    }
+    return db;
+  };
+  const DEAD_APP: [string, string] = [MANAGED_ACCESS_TOKEN, GITHUB_APP_PROVIDER_ID];
+
+  // The user's own token is on the object; only a custodied one needs the credentials service.
+  test("reads a user connection's token from the object", async () => {
+    const db = await withConnections(['gho_user', GITHUB_PROVIDER_ID]);
+
+    const access = await EffectEx.runPromise(
+      githubAccess().pipe(Effect.provide(Layer.merge(Database.layer(db), unresolvable))),
+    );
+
+    expect(access).toEqual({ token: 'gho_user', connected: true });
+  });
+
+  // An unmintable App token still reads as a connection, so callers can say to fix it rather than
+  // to connect GitHub.
+  test('reports a custodied token that cannot be resolved as a connection with no token', async () => {
+    const db = await withConnections(DEAD_APP);
+
+    const access = await EffectEx.runPromise(
+      githubAccess().pipe(Effect.provide(Layer.merge(Database.layer(db), unresolvable))),
+    );
+
+    expect(access).toEqual({ token: '', connected: true });
+  });
+
+  // The first connection is the one used; a broken one is reported, never silently replaced by
+  // another connection acting as someone else.
+  test('does not fall through to another connection', async () => {
+    const db = await withConnections(DEAD_APP, ['gho_user', GITHUB_PROVIDER_ID]);
+
+    const access = await EffectEx.runPromise(
+      githubAccess().pipe(Effect.provide(Layer.merge(Database.layer(db), unresolvable))),
+    );
+
+    expect(access).toEqual({ token: '', connected: true });
+  });
+
+  // A write has no anonymous fallback, so it fails, typed, in a way the UI maps to "fix your connection".
+  test('fails a write when the connection has no token', async () => {
+    const db = await withConnections(DEAD_APP);
+
+    const error = await EffectEx.runPromise(
+      githubWriteCredentials().pipe(Effect.flip, Effect.provide(Layer.merge(Database.layer(db), unresolvable))),
+    );
+
+    expect(GitHubConnectionUnavailableError.is(error)).toBe(true);
+  });
+
+  // A read goes anonymous, which reaches a public pull request as it would with no connection.
+  test('reads anonymously when the connection has no token', async () => {
+    const db = await withConnections(DEAD_APP);
+
+    const token = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        return (yield* GitHubApi.GitHubCredentials).token;
+      }).pipe(
+        Effect.provide(
+          Layer.unwrap(githubReadCredentials()).pipe(Layer.provide(Layer.merge(Database.layer(db), unresolvable))),
+        ),
+      ),
+    );
+
+    expect(token).toEqual('');
+  });
+
+  // Finding the pull request does not depend on its credentials: sync reads with its own fallback.
+  test('resolves a stored pull request without its credentials', async () => {
+    const db = await withConnections(DEAD_APP);
+    const pullRequest = db.add(
+      PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: '#1', state: 'open' }),
+    );
+
+    const resolved = await EffectEx.runPromise(resolvePullRequest(Ref.make(pullRequest)));
+
+    expect(resolved.pullRequest).toBe(pullRequest);
   });
 });

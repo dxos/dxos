@@ -14,7 +14,6 @@ import { Database, Filter } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { isManagedAccessToken } from '@dxos/protocols';
 import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { GitHubCapabilities } from '#types';
@@ -87,15 +86,20 @@ const fetchFromGitHub =
     );
 
 /**
- * The tokens of the space's GitHub connections, in query order. An app connection's token is
- * custodied by EDGE, so it is read through the space's credentials service, and skipped when there
- * is none to ask.
+ * The tokens of the space's GitHub connections, in query order, skipping one whose token cannot be
+ * resolved (an app connection EDGE will not mint for, or with no credentials service to ask).
  */
-const connectionTokens = (
+export const connectionTokens = (
   db: NonNullable<PreviewCapabilities.PreviewLinkContext['db']>,
   serviceResolver: ServiceResolver.ServiceResolver | undefined,
 ) =>
   Effect.gen(function* () {
+    const credentials = serviceResolver
+      ? ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+          Layer.catchCause(() => NO_CREDENTIALS),
+        )
+      : NO_CREDENTIALS;
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
     const tokens: string[] = [];
     for (const connection of connections) {
@@ -103,22 +107,29 @@ const connectionTokens = (
         continue;
       }
       const accessToken = yield* Database.load(connection.accessToken);
-      if (!isManagedAccessToken(accessToken.token)) {
-        tokens.push(accessToken.token);
-      } else if (serviceResolver) {
-        tokens.push(
-          yield* GitHubApi.resolveToken(accessToken).pipe(
-            Effect.provide(
-              ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
-                Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
-              ),
-            ),
-          ),
-        );
+      const token = yield* GitHubApi.resolveToken(accessToken).pipe(
+        Effect.provide(credentials),
+        Effect.catchTag('GitHubConnectionUnavailableError', (error) =>
+          Effect.sync(() => {
+            log.info('github preview skipping a connection with no usable token', { error });
+            return '';
+          }),
+        ),
+      );
+      if (token) {
+        tokens.push(token);
       }
     }
     return tokens;
   }).pipe(Effect.provide(Database.layer(db)));
+
+/** Answers no credential, so a custodied token cannot be resolved where no credentials service is reachable. */
+const NO_CREDENTIALS = Layer.succeed(Credential.CredentialsService, {
+  queryCredentials: async () => [],
+  getCredential: async () => {
+    throw new Error('No credentials service.');
+  },
+});
 
 const fetchLink = (link: GitHubLink) =>
   Effect.gen(function* () {

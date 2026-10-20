@@ -17,8 +17,10 @@ import * as Schema from 'effect/Schema';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
+import { isManagedAccessToken } from '@dxos/protocols';
 
 import { GITHUB_API_BASE } from '../constants.ts';
+import { type GitHubConnectionUnavailableError, connectionUnavailable } from '../errors.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
@@ -176,11 +178,19 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
 ) {}
 
 /**
- * The usable token behind an `AccessToken`. An app connection's token is custodied by EDGE and the
- * object holds only a placeholder, so it is always read through {@link Credential.CredentialsService}.
+ * The usable token behind an `AccessToken`: the user's own, as stored, or an app connection's, which
+ * EDGE custodies (the object holds a placeholder) and {@link Credential.CredentialsService} resolves.
+ * One that cannot be resolved (EDGE will not mint for an uninstalled App, or cannot be reached) fails
+ * as a connection to reauthenticate; a caller with an anonymous fallback catches it.
  */
-export const resolveToken = (accessToken: AccessToken.AccessToken) =>
-  Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+export const resolveToken = (
+  accessToken: AccessToken.AccessToken,
+): Effect.Effect<string, GitHubConnectionUnavailableError, Credential.CredentialsService> =>
+  isManagedAccessToken(accessToken.token)
+    ? Credential.getApiKeyValue({ accessTokenId: accessToken.id }).pipe(
+        Effect.catchDefect((defect) => Effect.fail(connectionUnavailable(defect))),
+      )
+    : Effect.succeed(accessToken.token);
 
 /** Creates a credentials layer from an AccessToken ref. */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>

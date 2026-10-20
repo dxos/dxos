@@ -18,7 +18,7 @@ import { GitHubPullRequestReferenceError, GitHubRepoInaccessibleError } from '..
 import { type PullRequestReference, parsePullRequestReference } from '../github-link.ts';
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
-import { githubToken } from './pull-request.ts';
+import { type GitHubAccess, githubAccess } from './pull-request.ts';
 import { ensureRefreshTrigger } from './refresh.ts';
 
 /**
@@ -50,7 +50,7 @@ const MAY_REFLECT_TOKEN_SCOPE = new Set([401, 403, 404]);
  */
 export const fetchPullRequestWithFallback = (
   { owner, repo, number }: PullRequestReference,
-  token: string,
+  { token, connected }: GitHubAccess,
   fetch: (
     owner: string,
     repo: string,
@@ -92,7 +92,9 @@ export const fetchPullRequestWithFallback = (
                 repo,
                 number,
                 status: GitHubApi.responseStatus(error),
-                connected: token !== '',
+                connected,
+                // A connection with no token to try, which reconnecting fixes like a rejected one.
+                tokenUnavailable: connected && token === '',
                 tokenStatus,
               },
             }),
@@ -124,7 +126,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         return { pullRequest: Ref.make(existing), imported: false };
       }
 
-      const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubToken());
+      const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubAccess());
 
       const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
         object: PullRequest.make(toPullRequestProps(parsed, pull)),

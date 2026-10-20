@@ -5,9 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import type * as Credential from '@dxos/compute/Credential';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type AccessToken, Connection } from '@dxos/link';
+import { log } from '@dxos/log';
 import { type PullRequest } from '@dxos/types';
 
 import { type GitHubOperation } from '#types';
@@ -41,16 +43,48 @@ export const githubConnection = (): Effect.Effect<
   });
 
 /**
- * The token of {@link githubConnection}, or empty for anonymous — which reaches any public pull
- * request, and is the only option in a space that has not connected GitHub.
+ * How a read reaches GitHub for the space: the token of {@link githubConnection}, empty for anonymous
+ * (which reaches any public pull request), and whether the space has a connection at all, since one
+ * whose token cannot be resolved is fixed by reconnecting, not connecting.
  */
-export const githubToken = () =>
+export type GitHubAccess = { token: string; connected: boolean };
+
+export const githubAccess = (): Effect.Effect<
+  GitHubAccess,
+  EntityNotFoundError,
+  Database.Service | Credential.CredentialsService
+> =>
   Effect.flatMap(githubConnection(), (selected) =>
-    selected ? GitHubApi.resolveToken(selected.accessToken) : Effect.succeed(''),
+    selected
+      ? GitHubApi.resolveToken(selected.accessToken).pipe(
+          Effect.map((token): GitHubAccess => ({ token, connected: true })),
+          Effect.catchTag('GitHubConnectionUnavailableError', (error) =>
+            Effect.sync((): GitHubAccess => {
+              log.info('github connection token unavailable; reading anonymously', { error });
+              return { token: '', connected: true };
+            }),
+          ),
+        )
+      : Effect.succeed<GitHubAccess>({ token: '', connected: false }),
+  );
+
+/** {@link githubAccess} as credentials for a read, which goes anonymous when the token cannot be resolved. */
+export const githubReadCredentials = () =>
+  Effect.map(githubAccess(), ({ token }) => Layer.succeed(GitHubApi.GitHubCredentials, { token }));
+
+/**
+ * The token of {@link githubConnection} as credentials for a write, which has no anonymous fallback:
+ * one that cannot be resolved fails it, in a way the UI names as the connection to fix.
+ */
+export const githubWriteCredentials = () =>
+  Effect.flatMap(githubConnection(), (selected) =>
+    (selected ? GitHubApi.resolveToken(selected.accessToken) : Effect.succeed('')).pipe(
+      Effect.map((token) => Layer.succeed(GitHubApi.GitHubCredentials, { token })),
+    ),
   );
 
 /**
- * The stored pull request behind an operation's input and credentials for its space.
+ * The stored pull request behind an operation's input, and its database.
  *
  * The invoker carries no database resolver, so handlers derive one from the pull request itself; a
  * preview card's in-memory pull request has none and cannot be acted on.
@@ -62,8 +96,7 @@ export const resolvePullRequest = (ref: Ref.Ref<PullRequest.PullRequest>) =>
     if (!pullRequest || !db) {
       return yield* Effect.die(new GitHubPullRequestUnstoredError());
     }
-    const token = yield* githubToken().pipe(Effect.provide(Database.layer(db)));
-    return { pullRequest, db, credentials: Layer.succeed(GitHubApi.GitHubCredentials, { token }) };
+    return { pullRequest, db };
   });
 
 // `stale` is a completed run GitHub never re-ran, which branch protection does not count as passing.

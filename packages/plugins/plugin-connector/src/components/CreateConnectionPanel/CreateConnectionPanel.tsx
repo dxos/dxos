@@ -87,10 +87,16 @@ export const CreateConnectionPanel = ({
   const credentialForm = connector?.credentialForm;
 
   // Every member of a space can use its connections, so a user-kind one lends the connecting
-  // person's account to all of them.
+  // person's account to all of them. Read from the highlighted row too: an OAuth connector starts
+  // its flow on Continue, so the warning has to show before it.
   const spaceId = Database.isDatabase(target) ? target.spaceId : Obj.getDatabase(target)?.spaceId;
   const members = useMembers(spaceId);
-  const sharesAccount = connector?.kind === 'user' && members.length > 1;
+  const considered = connector ?? connectors.find(({ id }) => id === pickedId);
+  const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
+    <p role='note' className='text-sm text-warning-text' data-testid='create-connection-panel.shared-account'>
+      {t('user-connection-shared.message')}
+    </p>
+  );
 
   // Takes its connector as an argument: `connectorId` is not applied yet in the tick it is chosen.
   const submit = useCallback(
@@ -166,6 +172,7 @@ export const CreateConnectionPanel = ({
               ))}
             </SearchList.Viewport>
           </SearchList.Root>
+          {sharedAccountNote}
           <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
         </Form.Content>
       </Form.Root>
@@ -176,11 +183,7 @@ export const CreateConnectionPanel = ({
   // second inset the whole form inside it.
   return (
     <>
-      {sharesAccount && (
-        <p role='note' className='text-sm text-warning-text' data-testid='create-connection-panel.shared-account'>
-          {t('user-connection-shared.message')}
-        </p>
-      )}
+      {sharedAccountNote}
       {credentialForm ? (
         <Form.Root
           autoFocus

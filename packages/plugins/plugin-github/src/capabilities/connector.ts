@@ -77,7 +77,7 @@ const onAppTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
 
 /** An uninstalled App, or a token EDGE can no longer mint, fails the installation's repository read. */
 const testAppConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
-  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+  Effect.flatMap(GitHubApi.resolveToken(accessToken), (token) =>
     GitHubApi.fetchInstallationAccount().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
   ).pipe(
     Effect.asVoid,
