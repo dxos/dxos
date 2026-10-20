@@ -9257,9 +9257,9 @@ importers:
 
   packages/plugins/plugin-calls:
     dependencies:
-      three:
-        specifier: 'catalog:'
-        version: 0.178.0
+      '@dxos/agent-visualization':
+        specifier: workspace:*
+        version: link:../../ui/agent-visualization
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -9357,12 +9357,6 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
-      leva:
-        specifier: 'catalog:'
-        version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@types/three':
-        specifier: 'catalog:'
-        version: 0.165.0
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -22328,6 +22322,43 @@ importers:
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
+  packages/ui/agent-visualization:
+    dependencies:
+      three:
+        specifier: 'catalog:'
+        version: 0.178.0
+    devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.165.0
+      leva:
+        specifier: 'catalog:'
+        version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.3.4'
+        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.2)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
 
   packages/ui/brand:
     devDependencies:

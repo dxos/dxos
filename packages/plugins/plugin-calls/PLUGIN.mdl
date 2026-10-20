@@ -475,7 +475,7 @@ op SetSimulatedParticipants
     in; `transcript` lines are emitted as `CallManager.simulatedUtterance` when their `start` is
     reached, timed by the participants' files.
   input:
-    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean }[]   # src is a video URL (WebM in Chromium); with avatar, an abstract shape that moves with src's sound replaces its picture, so src may be audio only
+    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean | { visualization: string, config?: Record<string, number | string> } }[]   # src is a video URL (WebM in Chromium); with avatar, an agent visualization driven by src's sound replaces its picture, so src may be audio only
     transcript?: { speaker: string, start: number, text: string }[]   # speaker is a display name; start in seconds
   requires: [CallsCapabilities.Manager]
   effects: [device]
@@ -918,6 +918,16 @@ decision D-5: A participant with `avatar` shows an abstract shape driven by its 
   for: user:richburdon
   affects: [op:SetSimulatedParticipants]
   why: An agent's voice has no camera; analysing the track the call plays keeps picture and sound in step.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-6: A simulated participant's `avatar` names a visualization from `@dxos/agent-visualization` and overrides of its config; `true` keeps the default look. Fills in [D-5].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: The visualizations moved into their own package, each with its own config, so a QA step or demo picks the look by id and preset.
   source: https://github.com/dxos/dxos/pull/14040
 ```
 

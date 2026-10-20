@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type AgentVisualization, type Config } from '@dxos/agent-visualization';
 import { Event } from '@dxos/async';
 import { SpeakingMonitor } from '@dxos/av';
 import { Resource } from '@dxos/context';
@@ -9,7 +10,6 @@ import { Resource } from '@dxos/context';
 import { type CallState } from './call-swarm-synchronizer.ts';
 import { type MediaState } from './media-manager.ts';
 import { type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
-import { type VoiceAvatar, type VoiceAvatarOptions } from './voice-avatar.ts';
 
 export type SimulatedParticipantProps = {
   /** Display name on the participant's tile. */
@@ -19,11 +19,14 @@ export type SimulatedParticipantProps = {
   /** A screen recording the participant shares from `start` seconds on the conversation clock. */
   screenshare?: { src: string; start: number };
   /**
-   * Shows an abstract shape that moves with the file's sound instead of its picture, so `src` can be audio only
-   * (an agent's synthesized voice).
+   * Shows an agent visualization driven by the file's sound instead of its picture, so `src` can be audio only (an
+   * agent's synthesized voice): `true` for the default look, or a visualization id and config overrides.
    */
-  avatar?: boolean | VoiceAvatarOptions;
+  avatar?: boolean | SimulatedAvatar;
 };
+
+/** An agent visualization (by id, from `@dxos/agent-visualization`) and overrides of its defaults. */
+export type SimulatedAvatar = { visualization: string; config?: Partial<Config> };
 
 /** One spoken line of a scripted conversation, timed in seconds from the top of the participants' files. */
 export type SimulatedUtterance = {
@@ -41,7 +44,7 @@ type SimulatedParticipant = {
   stream: MediaStream;
   audioTrack: MediaStreamTrack;
   monitor: SpeakingMonitor;
-  avatar?: VoiceAvatar;
+  avatar?: AgentVisualization<Config>;
   screenshare?: {
     start: number;
     trackName: EncodedTrackName;
@@ -232,13 +235,8 @@ export class CallSimulation extends Resource {
   ): Promise<SimulatedParticipant> {
     const { video, videoTrack, audioTrack } = await loadMediaFile(this.#audioContext, src);
     holdLastFrame(video);
-    // Loaded on demand so three.js stays out of the app's boot bundle.
     const avatar = avatarOptions
-      ? (await import('./voice-avatar.ts')).createVoiceAvatar(
-          this.#audioContext,
-          audioTrack,
-          avatarOptions === true ? {} : avatarOptions,
-        )
+      ? await createAvatar(this.#audioContext, audioTrack, avatarOptions === true ? DEFAULT_AVATAR : avatarOptions)
       : undefined;
     const stream = avatar?.stream ?? new MediaStream([videoTrack]);
 
@@ -286,6 +284,23 @@ export class CallSimulation extends Resource {
     return { user, videoTrackName, audioTrackName, video, stream, audioTrack, monitor, avatar, screenshare };
   }
 }
+
+const DEFAULT_AVATAR: SimulatedAvatar = { visualization: 'torus' };
+
+/** An agent visualization driven by `track`; loaded on demand so three.js stays out of the app's boot bundle. */
+const createAvatar = async (
+  context: AudioContext,
+  track: MediaStreamTrack,
+  { visualization: id, config }: SimulatedAvatar,
+): Promise<AgentVisualization<Config>> => {
+  const { AudioProvider, createAgentVisualization, getVisualization, torus } =
+    await import('@dxos/agent-visualization');
+  return createAgentVisualization({
+    visualization: getVisualization(id) ?? torus,
+    config,
+    providers: [new AudioProvider(context, track)],
+  });
+};
 
 /** Players that have reached their end and now loop their last frame. */
 const finished = new WeakSet<HTMLVideoElement>();

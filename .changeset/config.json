@@ -12,6 +12,7 @@
       "@dxos/agent-claude",
       "@dxos/agent-code-mode",
       "@dxos/agent-runtime",
+      "@dxos/agent-visualization",
       "@dxos/ai",
       "@dxos/app-framework",
       "@dxos/app-graph",

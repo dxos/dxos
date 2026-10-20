@@ -111,6 +111,11 @@ type Visualization<Config> = {
 };
 ```
 
+> **As built (phase 1):** each visualization declares its configuration as plain parameter specs
+> (`number(min, max, step)`, `color()`) beside an explicit config type, rather than an Effect Schema. A config typed
+> from a dynamically built `Schema.Struct` needs casts, which the repo forbids; the specs give the same single
+> definition for validation (`validate`), random tuning (`randomize`) and the Leva panel.
+
 Configuration fields carry their ranges as schema annotations, so a slider's bounds and the validator are one
 definition:
 

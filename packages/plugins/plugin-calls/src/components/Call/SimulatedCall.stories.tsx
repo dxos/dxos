@@ -6,19 +6,20 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { inkPresets } from '@dxos/agent-visualization';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
 
-import { TUNING_PRESETS, type VoiceAvatarOptions } from '../../calls/voice-avatar.ts';
+import { type SimulatedAvatar } from '../../calls/call-simulation.ts';
 import { fakeUserMedia, withCallManager } from '../../testing/index.ts';
 import { Lobby } from '../Lobby/index.ts';
 import { Call } from './Call.tsx';
 
 const LOCAL = 'Astrid Holm';
-type Participant = { name: string; track: string; avatar?: boolean | VoiceAvatarOptions };
+type Participant = { name: string; track: string; avatar?: boolean | SimulatedAvatar };
 
 const COLLEAGUES: Participant[] = [
   { name: 'Lucía Ferreira', track: 'lucia' },
@@ -28,11 +29,9 @@ const COLLEAGUES: Participant[] = [
 /** An agent with no camera: its tile is an abstract shape that moves with its synthesized voice. */
 const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
 /** The agent as it appears standing in for a colleague. */
-const NAVY = '#26406b';
-const NAVY_INK = '#f1ede4';
 const STAND_IN = {
   name: 'Composer',
-  avatar: { variant: 'ink', background: NAVY, ink: NAVY_INK, tuning: TUNING_PRESETS.scribble },
+  avatar: { visualization: 'ink', config: inkPresets.navy },
 } satisfies Omit<Participant, 'track'>;
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */

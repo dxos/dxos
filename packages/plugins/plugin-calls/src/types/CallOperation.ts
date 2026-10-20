@@ -29,8 +29,19 @@ export const SetSimulatedParticipants = Operation.make({
         src: Schema.String,
         /** A screen recording the participant shares from `start` seconds into the conversation. */
         screenshare: Schema.optional(Schema.Struct({ src: Schema.String, start: Schema.Number })),
-        /** Shows an abstract shape that moves with the file's sound instead of its picture; `src` may be audio only. */
-        avatar: Schema.optional(Schema.Boolean),
+        /**
+         * Shows an agent visualization driven by the file's sound instead of its picture, so `src` may be audio only:
+         * `true` for the default look, or a visualization id with config overrides.
+         */
+        avatar: Schema.optional(
+          Schema.Union([
+            Schema.Boolean,
+            Schema.Struct({
+              visualization: Schema.String,
+              config: Schema.optional(Schema.Record(Schema.String, Schema.Union([Schema.Number, Schema.String]))),
+            }),
+          ]),
+        ),
       }),
     ),
     /** The conversation's lines, local user's included, timed in seconds from the top of the files. */
