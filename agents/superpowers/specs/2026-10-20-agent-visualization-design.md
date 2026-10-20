@@ -206,7 +206,7 @@ Each phase is one PR, separate from #14040.
 ## Decisions
 
 1. ~~The package is `@dxos/agent-visualization` under `packages/ui`~~ — superseded: it lives in
-   `@dxos/react-ui-experimental` as the `AgentVisualization` namespace, with no new package (user, 2026-10-20).
+   `@dxos/react-ui-experimental` as the `Avatar` namespace (in `components/Avatar/`), with no new package (user, 2026-10-20).
 2. The work lands in #14040, not a separate PR (user, 2026-10-20).
 3. Prototype first in the `VoiceAvatar` story, which already hosts the avatar: one story per visualization, a Leva
    panel per visualization, presets in the story toolbar (user, 2026-10-20).

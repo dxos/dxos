@@ -25,7 +25,7 @@ export type SimulatedParticipantProps = {
   avatar?: boolean | SimulatedAvatar;
 };
 
-/** An agent visualization (by id, from react-ui-experimental's `AgentVisualization`) and overrides of its defaults. */
+/** An agent visualization (by id, from react-ui-experimental's `Avatar`) and overrides of its defaults. */
 export type SimulatedAvatar = { visualization: string; config?: Record<string, number | string> };
 
 /**

@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type Config, randomize } from '../params.ts';
-import { AudioProvider } from '../providers/AudioProvider.ts';
+import { AudioProvider } from '../providers/index.ts';
 import { type VisualizationRuntime, createAgentVisualization } from '../runtime.ts';
 import { type AnyVisualization } from '../visualization.ts';
 import { chaos, getVisualization, ink, inkLine, inkMorph, kube, orb, spectrum } from '../visualizations/index.ts';
@@ -168,7 +168,7 @@ const VisualizationStory = ({ visualization: id, src }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-experimental/Agent',
+  title: 'ui/react-ui-experimental/Avatar',
   render: VisualizationStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

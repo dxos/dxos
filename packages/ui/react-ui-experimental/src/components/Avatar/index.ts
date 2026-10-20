@@ -3,8 +3,7 @@
 //
 
 export * from './params.ts';
-export * from './providers/AudioProvider.ts';
-export * from './providers/ScriptedProvider.ts';
+export * from './providers/index.ts';
 export * from './runtime.ts';
 export * from './signals.ts';
 export * from './visualization.ts';

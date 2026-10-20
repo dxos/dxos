@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ScriptedProvider } from './providers/ScriptedProvider.ts';
+import { ScriptedProvider } from './providers/index.ts';
 import { SignalBus } from './signals.ts';
 
 describe('signals', () => {

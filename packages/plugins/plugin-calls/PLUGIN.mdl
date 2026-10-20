@@ -963,6 +963,14 @@ decision D-9: plugin-calls still draws avatars only through a renderer its calle
   source: https://github.com/dxos/dxos/pull/14040
 ```
 
+```mdl
+decision D-10: react-ui-experimental exports the agent visualizations as its `Avatar` namespace, from `components/Avatar/`. Fills in [D-8].
+  date: 2026-10-20
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

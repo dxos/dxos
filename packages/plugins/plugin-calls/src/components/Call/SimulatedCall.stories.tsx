@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
-import { AgentVisualization } from '@dxos/react-ui-experimental';
+import { Avatar } from '@dxos/react-ui-experimental';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { CallsCapabilities } from '#types';
@@ -31,15 +31,15 @@ const AGENT: Participant = { name: 'Composer', track: 'agent', avatar: true };
 /** The agent as it appears standing in for a colleague. */
 const STAND_IN = {
   name: 'Composer',
-  avatar: { visualization: 'ink', config: AgentVisualization.inkPresets.navy },
+  avatar: { visualization: 'ink', config: Avatar.inkPresets.navy },
 } satisfies Omit<Participant, 'track'>;
 
 /** Draws an avatar participant with react-ui-experimental's agent visualizations, driven by its voice track. */
 const renderAvatar: SimulatedAvatarRenderer = async (context, track, { visualization, config }) =>
-  AgentVisualization.createAgentVisualization({
-    visualization: AgentVisualization.getVisualization(visualization) ?? AgentVisualization.orb,
+  Avatar.createAgentVisualization({
+    visualization: Avatar.getVisualization(visualization) ?? Avatar.orb,
     config,
-    providers: [new AgentVisualization.AudioProvider(context, track)],
+    providers: [new Avatar.AudioProvider(context, track)],
   });
 
 /** The parts of `conversation.mjs`'s `timeline.json` the story reads. */

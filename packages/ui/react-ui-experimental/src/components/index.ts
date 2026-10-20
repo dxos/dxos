@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AgentVisualization from './Agent/index.ts';
+export * as Avatar from './Avatar/index.ts';
 export * from './Chaos/index.ts';
 export * from './Countdown/index.ts';
 export * from './Flock/index.ts';
