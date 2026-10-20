@@ -19,22 +19,6 @@ import { Canvas } from '#types';
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow } from './testing.ts';
 import { tldrawToViews } from './tldraw.ts';
 
-// Each story maps a tldraw sample and opens the result through the illustrator's article surface, as the app does.
-const withImport = (records: Record<string, unknown>) =>
-  createStoryDecorators({
-    types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
-    onInit: async ({ space }) => {
-      const canvas = space.db.add(createCanvas());
-      Obj.update(canvas, (canvas) => {
-        writeViews(canvas.content, tldrawToViews(records, { root: rootOf(canvas.content) }).views);
-      });
-      const drawing = space.db.add(Drawing.make({ name: 'Imported', canvas }));
-      await space.db.flush();
-      return [[Cell.article(drawing)]];
-    },
-  });
-
 // The tldraw drawing as plugin-tldraw draws it, beside the canvas it converts to.
 const withConversion = (records: Record<string, unknown>, { snap }: { snap: boolean }) =>
   createStoryDecorators({
@@ -70,27 +54,44 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Every story shows a tldraw sample (left, drawn by plugin-tldraw) beside the canvas it converts to (right). The
+// samples are in `testing.ts`; each covers part of the mapping.
+
 /**
- * The conversion side by side: the tldraw drawing (left) and the canvas made from it (right), with every shape snapped
- * to the canvas grid — the operation's default. Shapes become nodes, the bound arrows links (the one from outside the frame included), and the frame a labelled
- * rectangle on a layer under its shapes.
+ * A frame holding two linked shapes, and an arrow from outside bound to a shape inside it; snapped to the canvas grid,
+ * the operation's default. The frame becomes a labelled rectangle on a layer under its shapes, grown out to the grid so
+ * it still holds them; the shapes sit on the grid and stay on the drawing itself, so the arrow from outside stays bound.
+ *
+ * Test:
+ * 1. The frame and the shapes inside it render as nodes of the one View.
  */
-export const Conversion: Story = {
+export const FrameSnapToGrid: Story = {
   decorators: withConversion(frameWithChildren(), { snap: true }),
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 }),
+    ).toBeInTheDocument();
+    for (const id of ['frame', 'inner-a', 'inner-b', 'outside']) {
+      await waitFor(() => expect(canvasElement.querySelector(`[data-node-id="${id}"]`)).not.toBeNull());
+    }
+  },
 };
 
-/** As `Conversion`, without snapping: the canvas keeps tldraw's exact positions and sizes. */
-export const ConversionExact: Story = {
+/** The same frame without snapping (`snap: false`): the canvas keeps tldraw's exact positions and sizes. */
+export const FrameNoSnap: Story = {
   decorators: withConversion(frameWithChildren(), { snap: false }),
 };
 
 /**
+ * A labelled, coloured rectangle and ellipse joined by a bound, labelled arrow: geo shapes become rect and ellipse
+ * nodes with tldraw's colours, fill and dash, and the bound arrow a link that follows them.
+ *
  * Test:
  * 1. The rectangle and the ellipse render as nodes.
  * 2. The bound arrow renders as a link between them.
  */
 export const ShapesAndArrow: Story = {
-  decorators: withImport(shapesAndArrow()),
+  decorators: withConversion(shapesAndArrow(), { snap: true }),
   play: async ({ canvasElement }) => {
     await expect(
       await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 }),
@@ -101,24 +102,19 @@ export const ShapesAndArrow: Story = {
   },
 };
 
+/**
+ * The shapes with no direct counterpart: free text becomes a note, a sticky a filled rectangle, an unbound curved arrow
+ * a link with free ends, and a cloud the canvas cloud. A hexagon becomes a regular polygon and a star a rectangle, both
+ * approximations, and a freehand stroke is skipped; the operation's result counts each.
+ */
 export const TextNoteAndFreeArrow: Story = {
-  decorators: withImport(textNoteAndFreeArrow()),
+  decorators: withConversion(textNoteAndFreeArrow(), { snap: true }),
 };
 
 /**
- * Test:
- * 1. The frame renders as a rectangle, with the shapes inside it on the drawing beside it.
+ * A rotated group and a rotated rectangle: the group becomes an anonymous Object placed by one Instance (what the
+ * canvas's Group command makes), and tldraw's rotation carries over in degrees.
  */
-export const Frame: Story = {
-  decorators: withImport(frameWithChildren()),
-  play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 }),
-    ).toBeInTheDocument();
-    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).not.toBeNull());
-  },
-};
-
 export const GroupAndRotation: Story = {
-  decorators: withImport(groupAndRotation()),
+  decorators: withConversion(groupAndRotation(), { snap: true }),
 };
