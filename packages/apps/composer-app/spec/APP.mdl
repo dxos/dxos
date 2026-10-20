@@ -17,6 +17,7 @@ app-level test suites a Routine runs. The navigation and presentation structure 
 | `test`  | `org.dxos.mdl.test@1.0`   |
 | `step`  | `org.dxos.mdl.step@1.0`   |
 | `suite` | `org.dxos.mdl.suite@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl); the runner
 is the `composer-qa` skill, through `/dxos:qa`.
@@ -1047,4 +1048,42 @@ test QA-14: Bramble — Kai locks the Spring Blend
     - name: Close
       do: Return to the Inbox and hold.
       expect: the inbox, as the take began
+```
+
+## Changelog
+
+```mdl
+decision D-1: Composer has a three-minute showcase film, recorded with autocue, covering collaboration, the plugin gallery, SaaS-style objects on the ECHO graph, agents in documents, coding projects, Inbox and Studio.
+  date: 2026-10-09
+  by: user:richburdon
+  affects: [QA-16]
+```
+
+```mdl
+decision D-2: [QA-16] specifies the film as one test whose steps are its scenes, with collaboration recorded separately by [QA-8]. Fills in [D-1].
+  date: 2026-10-09
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-16]
+  why: One test keeps the film's order reviewable in one place; two identities cannot share one driver, so the two-peer scene reuses QA-8.
+  rejected:
+    - One test per scene — the order of the film would live only in the flow script.
+```
+
+```mdl
+decision D-3: The objects scene adds an Explorer graph after the kanban board.
+  date: 2026-10-10
+  by: user:richburdon
+  affects: [QA-16]
+```
+
+```mdl
+decision D-4: [QA-16] switches on Explorer and Cloudflare in the plugin gallery, so the graph in [D-3] uses a plugin the film has just enabled. Fills in [D-3].
+  date: 2026-10-10
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-16]
+  why: Explorer is off by default; enabling it on camera ties the gallery scene to the objects scene.
+  rejected:
+    - Maps — nothing later in the film uses it.
 ```
