@@ -21,14 +21,16 @@ import {
   type NodeId,
   type NodeType,
   type Point,
-  type SceneId,
   type Side,
   type Tool,
+  type ViewId,
   createClock,
 } from '../model/index.ts';
 import { type Clipboard, type PartKey, type UndoState, emptyUndo } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
+
+export type LinkEnd = 'source' | 'target';
 
 /**
  * The pointer machine's state. A node gesture (move, resize, create, a spline point) shows its geometry
@@ -61,7 +63,7 @@ export type Drag =
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
-  | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
+  | { kind: 'end'; id: LinkId; end: LinkEnd; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
 /**
  * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the
@@ -70,13 +72,13 @@ export type Drag =
 export const isMoving = (drag: Drag | undefined): boolean =>
   drag?.kind === 'move' && drag.raw !== undefined && (drag.raw.x !== 0 || drag.raw.y !== 0);
 
-export type HistoryEntry = { path: SceneId[]; camera: Camera };
+export type HistoryEntry = { path: ViewId[]; camera: Camera };
 
 /**
  * A composite open on its own (ANIMATION.md §4.3): the view shows its definition scene on a plain background, and
  * `back` is the scene path and camera to return to.
  */
-export type Isolation = { composite: SceneId; back: HistoryEntry };
+export type Isolation = { composite: ViewId; back: HistoryEntry };
 
 export type ControlPointRef = { link: LinkId; index: number };
 
@@ -88,7 +90,7 @@ export type InspectorMode = 'floating' | 'docked';
 
 export type CanvasAtoms = {
   camera: Atom.Writable<Camera>;
-  path: Atom.Writable<SceneId[]>;
+  path: Atom.Writable<ViewId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
   hover: Atom.Writable<NodeId | undefined>;
   /** The link under the pointer, which shows its end handles as a selected one does. */
@@ -132,9 +134,9 @@ export type CanvasAtoms = {
  * Fresh atoms for one view. Marked keepAlive so they survive React strict-mode remounts; the owner
  * decides their lifetime.
  */
-export const createCanvasAtoms = (root: SceneId): CanvasAtoms => ({
+export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   camera: Atom.keepAlive(Atom.make<Camera>({ x: 0, y: 0, zoom: 1 })),
-  path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
+  path: Atom.keepAlive(Atom.make<ViewId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   linkHover: Atom.keepAlive(Atom.make<LinkId | undefined>(undefined)),

@@ -4,16 +4,19 @@
 
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Scene, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type InstanceNode, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
   copyComposite,
   instanceCounts,
-  instanceScene,
   instanceTransform,
+  instanceView,
+  libraryViews,
+  promoted,
+  promotedBy,
   retargetInstance,
   ungroupInstance,
 } from './compose.ts';
@@ -21,13 +24,13 @@ import { nodeBounds } from './shapes.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 100, height: 50 });
 const {
-  scenes: [scene],
-} = SceneBuilder.scene('s', [
-  SceneBuilder.rect('a', box(0)),
-  SceneBuilder.rect('b', box(200)),
-  SceneBuilder.rect('c', box(400)),
-  SceneBuilder.link('line', 'a', 'b').id('ab'),
-  SceneBuilder.link('line', 'b', 'c').id('bc'),
+  views: [scene],
+} = ViewBuilder.view('s', [
+  ViewBuilder.rect('a', box(0)),
+  ViewBuilder.rect('b', box(200)),
+  ViewBuilder.rect('c', box(400)),
+  ViewBuilder.link('line', 'a', 'b').id('ab'),
+  ViewBuilder.link('line', 'b', 'c').id('bc'),
 ]).build();
 
 const counter = () => {
@@ -35,7 +38,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: Scene, id: string): InstanceNode => {
+const instanceOf = (parent: View, id: string): InstanceNode => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);
@@ -88,7 +91,7 @@ describe('instances', () => {
   });
 
   test('overrides apply per field, style per key', ({ expect }) => {
-    const composite: Scene = {
+    const composite: View = {
       id: 'obj',
       kind: 'composite',
       nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
@@ -103,7 +106,7 @@ describe('instances', () => {
       composite: 'obj',
       overrides: { a: { style: { hue: 'blue', opacity: 0.5 } } },
     };
-    expect(instanceScene(instance, composite).nodes.a).toMatchObject({
+    expect(instanceView(instance, composite).nodes.a).toMatchObject({
       style: { hue: 'blue', rounded: true, opacity: 0.5 },
     });
   });
@@ -151,5 +154,46 @@ describe('compose and ungroup', () => {
     expect(unique.overrides).toEqual({ 'node-0': { style: { opacity: 0.5 } } });
     expect(unique.ports?.map((port) => port.id)).toEqual(['node-1']);
     expect(instanceCounts({ s: { ...parent, nodes: { ...parent.nodes, j: unique } } })).toEqual({ obj: 1, obj2: 1 });
+  });
+});
+
+describe('anonymous Objects', () => {
+  const group = composeSelection(scene, ['a', 'b'], { compositeId: 'g', instanceId: 'i', anonymous: true });
+  const named = composeSelection(scene, ['c'], { compositeId: 'n', instanceId: 'j', name: 'Named' });
+
+  test('Group marks its Object anonymous, and the library leaves it out until it is named', ({ expect }) => {
+    expect(group?.composite.anonymous).toBe(true);
+    expect(named?.composite.anonymous).toBeUndefined();
+    if (!group || !named) {
+      return;
+    }
+    const scenes = { s: scene, g: group.composite, n: named.composite };
+    expect(libraryViews(scenes).map((view) => view.id)).toEqual(['n']);
+    const renamed = { ...promoted(group.composite), name: 'Pair' };
+    expect(renamed.anonymous).toBeUndefined();
+    expect(libraryViews({ ...scenes, g: renamed }).map((view) => view.id)).toEqual(['n', 'g']);
+    expect(promoted(named.composite)).toBe(named.composite);
+  });
+
+  test('placing an anonymous Object again promotes it; a named one needs nothing', ({ expect }) => {
+    if (!group || !named) {
+      return;
+    }
+    const parent = reduceIntent(reduceIntent(scene, { kind: 'batch', intents: group.intents }), {
+      kind: 'batch',
+      intents: named.intents,
+    });
+    const scenes = { s: parent, g: group.composite, n: named.composite };
+    const placed = promotedBy(scenes, [instanceOf(parent, 'i'), instanceOf(parent, 'j'), parent.nodes.i]);
+    expect(Object.keys(placed)).toEqual(['g']);
+    expect(placed.g.anonymous).toBeUndefined();
+    expect(promotedBy(scenes, [instanceOf(parent, 'j')])).toEqual({});
+  });
+
+  test('a copy of an anonymous Object is named, so it is in the library', ({ expect }) => {
+    if (!group) {
+      return;
+    }
+    expect(copyComposite(group.composite, 'g2', counter()).composite.anonymous).toBeUndefined();
   });
 });

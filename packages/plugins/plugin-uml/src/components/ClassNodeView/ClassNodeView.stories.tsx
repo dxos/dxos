@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import {
   Canvas,
   LinesField,
-  SceneBuilder,
+  ViewBuilder,
   createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
@@ -39,24 +39,24 @@ const box = (x: number, y: number) => ({ x, y, width: 256, height: 256 });
 
 /** A small class model: an employee is a person (inheritance) who works for an organization. */
 const createClassTree = () =>
-  SceneBuilder.scene('root', [
-    SceneBuilder.node('class', 'person', box(-384, -320)).properties({
+  ViewBuilder.view('root', [
+    ViewBuilder.node('class', 'person', box(-384, -320)).properties({
       label: 'Person',
       attributes: ['name: string'],
       methods: ['greet()'],
     }),
-    SceneBuilder.node('class', 'employee', box(-384, 64)).properties({
+    ViewBuilder.node('class', 'employee', box(-384, 64)).properties({
       label: 'Employee',
       attributes: ['title: string'],
       methods: ['work()'],
     }),
-    SceneBuilder.node('class', 'org', box(128, 64)).properties({
+    ViewBuilder.node('class', 'org', box(128, 64)).properties({
       label: 'Organization',
       attributes: ['name: string'],
       methods: ['hire(person)'],
     }),
-    SceneBuilder.link('smart', 'employee', 'person').properties({ ends: { end: 'triangle' } }),
-    SceneBuilder.link('smart', 'employee', 'org').properties({ ends: { start: 'circle', end: 'arrow' } }),
+    ViewBuilder.link('smart', 'employee', 'person').properties({ ends: { end: 'triangle' } }),
+    ViewBuilder.link('smart', 'employee', 'org').properties({ ends: { start: 'circle', end: 'arrow' } }),
   ])
     .name('Classes')
     .build(nodes);
@@ -64,7 +64,7 @@ const createClassTree = () =>
 const DefaultStory = () => {
   const { store, root } = useMemo(() => {
     const tree = createClassTree();
-    return { store: createMemoryStore(tree.scenes), root: tree.root };
+    return { store: createMemoryStore(tree.views), root: tree.root };
   }, []);
   return (
     <Canvas.Root store={store} root={root} nodes={nodes}>

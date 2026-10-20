@@ -5,23 +5,23 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createSceneTree } from '../builder/testing.ts';
-import { type Point, type Scene, createMemoryStore, isRectNode, updateScene } from '../model/index.ts';
+import { type Point, type View, createMemoryStore, isRectNode, updateView } from '../model/index.ts';
+import { createViewTree } from '../testing/index.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 
-const fixture = (): Scene => {
-  const { scenes, root } = createSceneTree(1, 'r');
-  const scene = scenes.find((scene) => scene.id === root);
+const fixture = (): View => {
+  const { views, root } = createViewTree(1, 'r');
+  const scene = views.find((scene) => scene.id === root);
   if (!scene) {
     throw new Error('fixture has no root scene');
   }
   return scene;
 };
 
-const centerOf = (scene: Scene, id: string) => scene.nodes[id]?.center;
+const centerOf = (scene: View, id: string) => scene.nodes[id]?.center;
 
 /** The centre of a node the fixture is known to hold; the throw names the id rather than asserting it away. */
-const originOf = (scene: Scene, id: string): Point => {
+const originOf = (scene: View, id: string): Point => {
   const center = centerOf(scene, id);
   if (!center) {
     throw new Error(`fixture has no node ${id}`);
@@ -114,18 +114,18 @@ describe('freehand projection', () => {
 
   test('the projection atom re-emits after apply and after an external store write', ({ expect }) => {
     const registry = Registry.make();
-    const { scenes, root } = createSceneTree(1, 'r');
-    const store = createMemoryStore(scenes);
+    const { views, root } = createViewTree(1, 'r');
+    const store = createMemoryStore(views);
     const projection = createFreehandProjection({ registry, store, sceneId: root });
     // Read the starting centre off the fixture, not the atom: a read of its own would count as an emission.
     const before = originOf(fixture(), 'scene:r/a');
-    const seen: Scene[] = [];
+    const seen: View[] = [];
     const unsubscribe = registry.subscribe(projection.scene, (scene) => seen.push(scene));
 
     projection.apply({ kind: 'move', ids: ['scene:r/a'], delta: { x: 5, y: 5 } });
     expect(centerOf(registry.get(projection.scene), 'scene:r/a')).toEqual({ x: before.x + 5, y: before.y + 5 });
 
-    updateScene(registry, store, root, (scene) => reduceIntent(scene, { kind: 'delete', ids: ['scene:r/t'] }));
+    updateView(registry, store, root, (scene) => reduceIntent(scene, { kind: 'delete', ids: ['scene:r/t'] }));
     expect(registry.get(projection.scene).nodes['scene:r/t']).toBeUndefined();
     expect(seen.length).toBe(2);
     unsubscribe();

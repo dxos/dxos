@@ -21,8 +21,17 @@ export type FeatureBoardProps = {
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
   onSelect?: (id: string | undefined) => void;
-  /** Adds an open button to each card. */
+  /** Each given action is offered in every card's menu. */
   onOpen?: (id: string) => void;
+  onSetStatus?: (id: string, status: FeatureStatus) => void;
+  /** Takes a feature off the map; the feature itself is kept. */
+  onRemove?: (id: string) => void;
+  /** Make each card's name and description editable in place. */
+  onRename?: (id: string, name: string) => void;
+  onDescribe?: (id: string, description: string) => void;
+  /** The card whose name field is open, as for a feature just created; cleared when it closes. */
+  editingId?: string;
+  onEditingChange?: (id: string | undefined) => void;
 };
 
 /**
@@ -30,7 +39,18 @@ export type FeatureBoardProps = {
  * Selecting a card labels the features it needs and the features that need it, and fades the rest,
  * so a dependency chain reads without drawing edges.
  */
-export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, onOpen }: FeatureBoardProps) => {
+export const FeatureBoard = ({
+  features,
+  selectedId: selectedIdProp,
+  onSelect,
+  onOpen,
+  onSetStatus,
+  onRemove,
+  onRename,
+  onDescribe,
+  editingId,
+  onEditingChange,
+}: FeatureBoardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string>();
   const selectedId = selectedIdProp ?? selectedIdState;
@@ -73,6 +93,12 @@ export const FeatureBoard = ({ features, selectedId: selectedIdProp, onSelect, o
                 onSelect={(feature) => handleSelect(feature.id)}
                 onSelectDependency={handleSelect}
                 onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
+                onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
+                onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
+                onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
+                onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+                editingName={feature.id === editingId}
+                onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
               />
             </div>
           );

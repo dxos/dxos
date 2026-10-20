@@ -32,10 +32,22 @@ import { SpaceId } from '@dxos/keys';
 import { EdgeService } from './edge/edge.js';
 
 /**
- * Opaque pagination cursor for feed queries.
+ * Pagination cursor for feed queries: a position in the feeds a server token names. Build and read it
+ * with {@link encodeFeedCursor} and {@link decodeFeedCursor}.
  */
 export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor'));
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
+
+/** The insertion id before the first block, where a read from the start resumes. */
+export const FEED_START = -1;
+
+export const encodeFeedCursor = (token: string, insertionId: number): FeedCursor =>
+  FeedCursor.make(`${token}|${insertionId}`);
+
+export const decodeFeedCursor = (cursor: FeedCursor): { token: string; insertionId: number } => {
+  const [token, insertionId] = cursor.split('|');
+  return { token, insertionId: Number(insertionId) };
+};
 
 /**
  * Natural key of a block: the tuple that names the same block in every store, whatever position

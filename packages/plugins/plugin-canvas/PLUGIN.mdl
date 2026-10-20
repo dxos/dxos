@@ -114,6 +114,25 @@ test QA-4: Showcase clip
     - name: Rename it
       do: Turn off read-only, double-click the box, and type React components.
       expect: the box shows its new label
+
+test QA-5: Copy a tldraw drawing as a canvas
+  desc: |
+    The "Copy as canvas" action plugin-canvas contributes to every tldraw drawing runs `ImportTldraw`: a new canvas
+    drawing beside the tldraw one, opened once it is filed.
+  actors: human
+  covers: []
+  status: unverified
+  given:
+    - an identity exists
+    - plugin: Canvas and tldraw are enabled
+    - space: a tldraw drawing holding a labelled rectangle, an ellipse, an arrow bound between them and a frame
+  steps:
+    - name: Copy it
+      do: Open the tldraw drawing's object menu and choose "Copy as canvas".
+      expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
+    - name: Read the copy
+      do: Move the rectangle, then open the frame.
+      expect: the link follows the rectangle, and the frame opens onto a View holding the frame's shapes
 ```
 
 ```mdl

@@ -6,8 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../../components/SceneLayer/index.ts';
-import { type EllipseNode, type NoteNode, type Scene, isEllipseNode, isNoteNode } from '../../model/index.ts';
+import { defaultNodeRegistry } from '../../components/index.ts';
+import { type EllipseNode, type NoteNode, type View, isEllipseNode, isNoteNode } from '../../model/index.ts';
 import { type ConstrainedModel, createConstrainedProjection, rewriteForDrop, solve } from './constrained.ts';
 
 const model: ConstrainedModel = {
@@ -21,7 +21,7 @@ const model: ConstrainedModel = {
   ],
 };
 
-const centerOf = (scene: Scene, id: string) => {
+const centerOf = (scene: View, id: string) => {
   const node = scene.nodes[id];
   if (!node) {
     throw new Error(`no node ${id}`);
