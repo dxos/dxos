@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { SandboxOperation, SandboxService } from '#types';
+import { RepositoryService, SandboxOperation, SandboxService } from '#types';
 
 import { resolveAttachments } from '../../services/attach-repositories.ts';
 
@@ -47,7 +47,8 @@ export default SandboxOperation.AttachRepository.pipe(
         });
       }
 
-      const remote = attached.find(({ id }) => id === loadedRepository.id)?.name ?? '';
+      const repositoryId = yield* RepositoryService.edgeIdOf(loadedRepository).pipe(Effect.orDie);
+      const remote = attached.find(({ id }) => id === repositoryId)?.name ?? '';
       return { remote };
     }),
   ),

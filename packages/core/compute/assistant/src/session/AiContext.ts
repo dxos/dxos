@@ -48,10 +48,7 @@ export class Bindings {
   readonly skills = new ComplexSet<Ref.Ref<Skill.Skill>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoUri = EID.tryParse(ref.uri);
-    return echoUri ? EID.getEntityId(echoUri) : undefined;
-  });
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => entityIdOf(ref.uri));
 
   toJSON(): { skills: URI.URI[]; objects: URI.URI[] } {
     return {
@@ -183,7 +180,7 @@ export class Binder extends Resource {
     }
     invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
     this.#pending = undefined;
-    const { skills, objects } = this._reduce(held);
+    const { skills, objects } = reduce(held);
     if (skills.size > 0 || objects.size > 0) {
       await this._append(
         Obj.make(Binding, {
@@ -249,7 +246,7 @@ export class Binder extends Resource {
       return;
     }
 
-    const bindings = this._reduce(inAppendOrder(items));
+    const bindings = reduce(inAppendOrder(items));
     this.#bound = {
       skills: new Set([...bindings.skills].map((ref) => refKey(ref.uri))),
       objects: new Set([...bindings.objects].map((ref) => refKey(ref.uri))),
@@ -393,7 +390,7 @@ export class Binder extends Resource {
   private async _resolveHeld(held: Binding[]): Promise<void> {
     const generation = ++this.#heldGeneration;
     const { db } = Context.get(this._runtime, Database.Service);
-    const { skills, objects } = this._reduce(held);
+    const { skills, objects } = reduce(held);
     const hydrate = <T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>): Ref.Ref<T>[] =>
       [...refs].map((ref) => (ref.isAvailable ? ref : db.makeRef<T>(ref.uri)));
     const [resolvedSkills, resolvedObjects] = await Promise.all([
@@ -449,38 +446,6 @@ export class Binder extends Resource {
   }
 
   /**
-   * Reduce results into sets of skills and objects.
-   *
-   * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
-   * in append order (see {@link inAppendOrder}).
-   */
-  private _reduce(items: Binding[]): Bindings {
-    return Function.pipe(
-      items,
-      EArray.reduce(new Bindings(), (context, { skills, objects }) => {
-        skills.added.forEach((ref) => context.skills.add(ref));
-        skills.removed.forEach((ref) => context.skills.delete(ref));
-
-        objects.added.forEach((ref) => context.objects.add(ref));
-        objects.removed.forEach((ref) => {
-          for (const obj of context.objects) {
-            if (
-              obj.uri === ref.uri ||
-              (EID.tryParse(obj.uri) &&
-                EID.tryParse(ref.uri) &&
-                EID.getEntityId(EID.tryParse(obj.uri)!) === EID.getEntityId(EID.tryParse(ref.uri)!))
-            ) {
-              context.objects.delete(obj);
-            }
-          }
-        });
-
-        return context;
-      }),
-    );
-  }
-
-  /**
    * Merge resolved items into the current set, adding only items not already present (by DXN).
    */
   private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
@@ -527,6 +492,46 @@ export class Binder extends Resource {
       .filter(isNonNullable);
   }
 }
+
+/**
+ * Reduces bindings into the sets of skills and objects they leave bound.
+ *
+ * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
+ * in append order (see {@link inAppendOrder}).
+ */
+const reduce = (items: Binding[]): Bindings =>
+  Function.pipe(
+    items,
+    EArray.reduce(new Bindings(), (context, { skills, objects }) => {
+      skills.added.forEach((ref) => context.skills.add(ref));
+      skills.removed.forEach((ref) => context.skills.delete(ref));
+
+      objects.added.forEach((ref) => context.objects.add(ref));
+      objects.removed.forEach((ref) => {
+        const removedId = entityIdOf(ref.uri);
+        for (const obj of context.objects) {
+          if (obj.uri === ref.uri || (removedId !== undefined && entityIdOf(obj.uri) === removedId)) {
+            context.objects.delete(obj);
+          }
+        }
+      });
+
+      return context;
+    }),
+  );
+
+/**
+ * The objects a conversation's feed currently binds, read once: for a reader that needs the bound
+ * set at one moment without holding a {@link Binder} open.
+ */
+export const boundObjects = (feed: Feed.Feed): Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service> =>
+  Feed.query(feed, Query.type(Binding)).run.pipe(Effect.map((items) => [...reduce(inAppendOrder(items)).objects]));
+
+/** The entity id an ECHO URI names; none for any other URI. */
+const entityIdOf = (uri: URI.URI): string | undefined => {
+  const echoUri = EID.tryParse(uri);
+  return echoUri ? EID.getEntityId(echoUri) : undefined;
+};
 
 /**
  * Identity of a bound ref: an ECHO URI compares in its local form, since some carry the space and some do not.

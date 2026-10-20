@@ -6,19 +6,21 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { Repo } from '@dxos/types';
 
-import { Repository, RepositoryOperation, RepositoryService } from '#types';
+import { RepositoryOperation, RepositoryService } from '#types';
 
 export default RepositoryOperation.CreateRepository.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, description, defaultBranch }) {
       const { db } = yield* Database.Service;
-      const repository = Repository.make({ name, description, defaultBranch });
+      const repository = Repo.makeEdge({ spaceId: db.spaceId, name, description, defaultBranch });
       yield* Database.add(repository);
 
       const repositoryService = yield* RepositoryService.Service;
+      const repositoryId = yield* RepositoryService.edgeIdOf(repository).pipe(Effect.orDie);
       const record = yield* repositoryService
-        .create(db.spaceId, repository.id, { description, defaultBranch })
+        .create(db.spaceId, repositoryId, { description, defaultBranch })
         .pipe(Effect.orDie);
 
       Obj.update(repository, (repository) => {

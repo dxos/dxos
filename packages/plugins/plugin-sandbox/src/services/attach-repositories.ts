@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, type Ref } from '@dxos/echo';
+import { type Repo } from '@dxos/types';
 
-import type * as Repository from '../types/Repository.ts';
 import * as RepositoryService from '../types/RepositoryService.ts';
 import { remoteName } from './remote-name.ts';
 import { type AttachedRepository } from './SandboxClient.ts';
@@ -16,21 +16,22 @@ import { type AttachedRepository } from './SandboxClient.ts';
  * sandbox. Each repository is backed on EDGE first: a token can only be minted for a repository that
  * exists there, and one created offline or on another device may not yet.
  */
-export const resolveAttachments = (spaceId: string, repositories: readonly Ref.Ref<Repository.Repository>[]) =>
+export const resolveAttachments = (spaceId: string, repositories: readonly Ref.Ref<Repo.Repo>[]) =>
   Effect.gen(function* () {
     const repositoryService = yield* RepositoryService.Service;
     const taken = new Set<string>();
     const attached: AttachedRepository[] = [];
     for (const ref of repositories) {
       const repository = yield* Database.load(ref);
+      const id = yield* RepositoryService.edgeIdOf(repository);
       // The same repository attached twice is one remote, whatever form its ref took.
-      if (attached.some(({ id }) => id === repository.id)) {
+      if (attached.some((attachment) => attachment.id === id)) {
         continue;
       }
-      yield* repositoryService.create(spaceId, repository.id);
-      const name = remoteName(repository, taken);
+      yield* repositoryService.create(spaceId, id);
+      const name = remoteName({ id, name: repository.name }, taken);
       taken.add(name);
-      attached.push({ id: repository.id, name });
+      attached.push({ id, name });
     }
     return attached;
   });
