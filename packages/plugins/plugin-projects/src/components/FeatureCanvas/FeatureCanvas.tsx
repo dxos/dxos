@@ -66,13 +66,11 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
           lookup={lookup}
           showDependencies={false}
           scroll
-          // A double-click on a box opens the feature, so a field opens only from its pencil.
-          editActivation='none'
           onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
           onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
-          // Controlled only for a host that tracks it; otherwise the pencil's open would be overridden back to closed.
-          editingName={onEditingChange ? feature.id === editingId : undefined}
-          onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+          // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
+          editing={onEditingChange ? feature.id === editingId : undefined}
+          onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
         />
       )}
     </Layout.Grid>
@@ -145,7 +143,7 @@ export type FeatureCanvasProps = {
   onUnlink?: (featureId: string, dependsOnId: string) => void;
   /** A selected box deleted: the feature leaves the map and is kept. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
-  /** Make each box's name and description editable from their pencils. */
+  /** Add each box's edit button, whose edit mode changes the name and description. */
   onRename?: (id: string, name: string) => void;
   onDescribe?: (id: string, description: string) => void;
   /** The box whose name field is open, as for a feature just created; cleared when it closes. */

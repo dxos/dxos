@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent } from 'react';
+import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, useState } from 'react';
 
 import * as Card from '@dxos/react-ui/Card';
-import * as Editable from '@dxos/react-ui/Editable';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -64,10 +65,10 @@ export type FeatureCardBodyProps = {
   onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
-  /** Makes the description editable in place, shown with a placeholder while empty. */
+  /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
-  /** How a text field opens: a double-click, or only its pencil where a press must stay the host's (a canvas box). */
-  editActivation?: InlineTextProps['activation'];
+  /** Edit mode: the description is a field, shown even while empty. */
+  editing?: boolean;
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
@@ -77,72 +78,62 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   onSetStatus?: (feature: FeatureModel, status: FeatureStatus) => void;
   /** Takes the feature off the map it is shown on; the feature itself is kept. */
   onRemove?: (feature: FeatureModel) => void;
-  /** Makes the name editable in place. */
+  /** Lets edit mode change the name; with `onDescribe`, either adds the header's edit button. */
   onRename?: (feature: FeatureModel, name: string) => void;
-  /** Opens the name field, as for a feature just created; reports when it closes. */
-  editingName?: boolean;
-  onEditingNameChange?: (editing: boolean) => void;
+  /** Controlled edit mode, as for a feature just created; uncontrolled when omitted. */
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
   /** For a host of fixed height (a canvas box): the card fills it and the body scrolls under the header. */
   scroll?: boolean;
   /** False where the host marks the selected card itself, as a masonry grid's ring does. */
   markSelected?: boolean;
 };
 
-type InlineTextProps = {
+type EditFieldProps = {
   value: string;
   placeholder: string;
   label: string;
   testId: string;
-  activation?: 'dblclick' | 'none';
-  editing?: boolean;
-  onEditingChange?: (editing: boolean) => void;
+  multiline?: boolean;
+  autoFocus?: boolean;
   onCommit: (value: string) => void;
 };
 
-/** A text field edited in place on a card, which keeps its keys and presses from the card and the canvas around it. */
-const InlineText = ({
-  value,
-  placeholder,
-  label,
-  testId,
-  activation = 'dblclick',
-  editing,
-  onEditingChange,
-  onCommit,
-}: InlineTextProps) => (
-  <Editable.Root
-    // Inert boxes on a canvas still let the field and its pencil take the pointer.
-    classNames='min-w-0 pointer-events-auto'
-    value={value}
-    placeholder={placeholder}
-    activation={activation}
-    editing={editing}
-    onEditingChange={onEditingChange}
-    onValueChange={(next) => {
-      const trimmed = next.trim();
-      if (trimmed !== value) {
-        onCommit(trimmed);
-      }
-    }}
-    // The double-click's second press would otherwise toggle the card's selection back off.
-    onClick={(event) => event.detail > 1 && event.stopPropagation()}
-    // A press on the pencil must open the field rather than start a canvas drag, which takes the click.
-    onPointerDown={(event) => isPencil(event.target) && event.stopPropagation()}
-  >
-    <Editable.Preview classNames='px-0' data-testid={`${testId}.preview`} />
-    <Editable.Input
-      aria-label={label}
-      data-testid={`${testId}.input`}
-      // Typing must not reach the card or the canvas, whose Delete and Backspace remove the box.
-      onKeyDown={(event) => event.stopPropagation()}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-    />
-  </Editable.Root>
-);
+const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
 
-const isPencil = (target: EventTarget): boolean =>
-  target instanceof Element && target.closest('[data-testid="editable.edit"]') !== null;
+/**
+ * A field of a card in edit mode, committed when it loses focus (Enter does that for a single line). Keys and presses
+ * stay in the field: the card would toggle its selection, and a canvas would delete the box on Backspace.
+ */
+const EditField = ({ value, placeholder, label, testId, multiline, autoFocus, onCommit }: EditFieldProps) => {
+  const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const next = event.currentTarget.value.trim();
+    if (next !== value) {
+      onCommit(next);
+    }
+  };
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    event.stopPropagation();
+    if (event.key === 'Enter' && !(multiline && event.shiftKey)) {
+      event.preventDefault();
+      event.currentTarget.blur();
+    }
+  };
+  const props = {
+    // Inert boxes on a canvas still let the field take the pointer.
+    'classNames': 'pointer-events-auto',
+    'defaultValue': value,
+    placeholder,
+    'aria-label': label,
+    'data-testid': testId,
+    autoFocus,
+    'onBlur': handleBlur,
+    'onKeyDown': handleKeyDown,
+    'onPointerDown': stopPropagation,
+    'onClick': stopPropagation,
+  };
+  return multiline ? <Input.Textarea {...props} rows={2} autoResize /> : <Input.Root {...props} />;
+};
 
 const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
@@ -156,15 +147,21 @@ export const FeatureCard = ({
   onSetStatus,
   onRemove,
   onRename,
-  editingName,
-  onEditingNameChange,
+  editing: editingProp,
+  onEditingChange,
   scroll,
   markSelected = true,
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, selected, relation, editActivation } = props;
+  const { feature, selected, relation, onDescribe } = props;
   const status = FEATURE_STATUS_STYLE[feature.status];
+  const [editingState, setEditingState] = useState(false);
+  const editing = editingProp ?? editingState;
+  const setEditing = (next: boolean) => {
+    setEditingState(next);
+    onEditingChange?.(next);
+  };
   return (
     <Card.Root
       grid
@@ -181,21 +178,45 @@ export const FeatureCard = ({
           <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
         <Card.Title lines={2}>
-          {onRename ? (
-            <InlineText
+          {editing && onRename ? (
+            <EditField
               value={feature.name}
               placeholder={t('feature-card.name.placeholder')}
               label={t('feature-card.name.label')}
-              testId='feature-card.name'
-              activation={editActivation}
-              editing={editingName}
-              onEditingChange={onEditingNameChange}
+              testId='feature-card.name.input'
+              autoFocus
               onCommit={(name) => onRename(feature, name)}
             />
           ) : (
             feature.name
           )}
         </Card.Title>
+        {(onRename || onDescribe) && (
+          <Layout.Block rail='end' classNames='pointer-events-auto'>
+            {editing ? (
+              <SystemButton.Save
+                variant='ghost'
+                data-testid='feature-card.done'
+                // Takes the press itself, so it neither selects the card nor drags a canvas box.
+                onPointerDown={stopPropagation}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setEditing(false);
+                }}
+              />
+            ) : (
+              <SystemButton.Edit
+                variant='ghost'
+                data-testid='feature-card.edit'
+                onPointerDown={stopPropagation}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setEditing(true);
+                }}
+              />
+            )}
+          </Layout.Block>
+        )}
         {(onOpen || onSetStatus || onRemove) && (
           <Layout.Block rail='end' data-testid='feature-card.menu'>
             <Card.Menu label={t('feature-card.menu.label')}>
@@ -248,11 +269,11 @@ export const FeatureCard = ({
         <ScrollArea.Root classNames='col-span-full grid-cols-subgrid [container-type:normal]'>
           {/* Takes the wheel inside an inert canvas box; a press still bubbles to the box, so it drags as before. */}
           <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start pointer-events-auto [&>.dx-card-body]:col-span-full'>
-            <FeatureCardBody {...props} />
+            <FeatureCardBody {...props} editing={editing} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       ) : (
-        <FeatureCardBody {...props} />
+        <FeatureCardBody {...props} editing={editing} />
       )}
     </Card.Root>
   );
@@ -276,7 +297,7 @@ export const FeatureCardBody = ({
   onRemoveDependency,
   onOpenObject,
   onDescribe,
-  editActivation,
+  editing,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const status = FEATURE_STATUS_STYLE[feature.status];
@@ -300,17 +321,26 @@ export const FeatureCardBody = ({
   return (
     <Card.Body>
       {/* Directly under the title, which it describes. */}
-      {showFields && onDescribe && (
-        <Card.Row icon='ph--text-align-left--regular' span='end'>
-          <InlineText
+      {showFields && editing && onDescribe ? (
+        <Card.Row span='end'>
+          <EditField
             value={feature.description ?? ''}
             placeholder={t('feature-card.description.placeholder')}
             label={t('feature-card.description.label')}
-            testId='feature-card.description'
-            activation={editActivation}
+            testId='feature-card.description.input'
+            multiline
             onCommit={(description) => onDescribe(feature, description)}
           />
         </Card.Row>
+      ) : (
+        showFields &&
+        feature.description && (
+          <Card.Row span='end' data-testid='feature-card.description'>
+            <Card.Text variant='muted' {...(expanded ? { lines: 3 } : { truncate: true })}>
+              {feature.description}
+            </Card.Text>
+          </Card.Row>
+        )
       )}
       <Card.Row>
         <Layout.Flex wrap gap='xs'>
@@ -332,14 +362,6 @@ export const FeatureCardBody = ({
           )}
         </Layout.Flex>
       </Card.Row>
-
-      {expanded && showFields && !onDescribe && feature.description && (
-        <Card.Row span='full'>
-          <Card.Text variant='muted' lines={3}>
-            {feature.description}
-          </Card.Text>
-        </Card.Row>
-      )}
 
       {!expanded && feature.subfeatures.length > 0 && (
         <Card.Row icon='ph--tree-view--regular'>

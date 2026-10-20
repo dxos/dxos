@@ -28,6 +28,7 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
   feature({
     id: 'tokens',
     name: 'OAuth tokens',
+    description: 'Sign-in grants are stored per account and refreshed before they expire.',
     status: 'operational',
     dependsOn: ['accounts'],
     specs: ['packages/plugins/plugin-connector/PLUGIN.mdl#F-2'],
@@ -61,6 +62,7 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
   feature({
     id: 'triage',
     name: 'Smart triage',
+    description: 'Incoming mail is sorted by what needs a reply, what can wait and what is noise.',
     status: 'planned',
     dependsOn: ['delegate', 'feature-map'],
   }),
@@ -73,6 +75,7 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
   feature({
     id: 'feature-map',
     name: 'Feature map',
+    description: 'Features, their dependencies and the evidence that they work, on a board or a canvas.',
     status: 'in-progress',
     dependsOn: ['tasks'],
     tasks: [{ id: 'task-5', title: 'Feature card stories', done: false, milestone: 'M3' }],
@@ -80,6 +83,7 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
   feature({
     id: 'delegate',
     name: 'Delegate a task to an agent',
+    description: 'An agent takes a task, does the work in its own identity and closes it with a summary.',
     status: 'failing',
     dependsOn: ['tasks', 'sync'],
     tasks: [{ id: 'task-6', title: 'Agent identity on EDGE', done: false, milestone: 'M2' }],

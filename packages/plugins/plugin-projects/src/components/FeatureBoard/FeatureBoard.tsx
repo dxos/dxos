@@ -83,8 +83,8 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
         onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
         onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
-        editingName={feature.id === editingId}
-        onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+        editing={feature.id === editingId}
+        onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
       />
     </div>
   );
