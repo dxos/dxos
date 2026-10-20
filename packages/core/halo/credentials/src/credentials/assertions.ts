@@ -17,7 +17,7 @@ import {
   type DeviceProfile,
   type Epoch,
   type HaloSpace,
-  type IdentityController,
+  type IdentityAdmin,
   type IdentityProfile,
   type IdentityRecovery,
   type IdentityRecoveryRevoked,
@@ -48,7 +48,7 @@ export type CredentialAssertion =
   | DeviceProfile
   | Epoch
   | HaloSpace
-  | IdentityController
+  | IdentityAdmin
   | IdentityProfile
   | IdentityRecovery
   | IdentityRecoveryRevoked
