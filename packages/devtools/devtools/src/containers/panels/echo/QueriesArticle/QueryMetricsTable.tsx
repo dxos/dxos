@@ -168,7 +168,11 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Layout.Grid cols={TRACKS} classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
+      {/* End cells take the same gap the list's rows give theirs, so the header lines up with them. */}
+      <Layout.Grid
+        cols={TRACKS}
+        classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted [&>*:first-child]:ps-2 [&>*:last-child]:pe-2'
+      >
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button

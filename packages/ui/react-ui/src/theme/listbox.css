@@ -65,6 +65,10 @@
     grid-column: auto;
     grid-row: 1 / -1;
   }
+  /* A Container packs its tracks to the start; a row of custom cells shorter than the block would sit at its top. */
+  .dx-listbox-item.dx-container {
+    align-content: center;
+  }
   .dx-listbox-item.dx-container > .dx-listbox-item-text {
     grid-column: var(--dx-item-text-column);
     grid-row: 1;
@@ -144,6 +148,17 @@
     grid-column: auto;
     grid-row: auto;
     align-self: center;
+  }
+  /* Custom end cells keep a gap from the row's edges, as the text part does, so its highlight ring frames them. */
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > :first-child:not(.dx-listbox-item-icon, .dx-listbox-item-text, .dx-button, .dx-block) {
+    padding-inline-start: var(--dx-gap-size);
+  }
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > :last-child:not(.dx-listbox-item-icon, .dx-listbox-item-indicator, .dx-button, .dx-block) {
+    padding-inline-end: var(--dx-gap-size);
   }
   /* A description here is a track on the title's line, not a line under it, so neither keeps the stacked padding. */
   :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
