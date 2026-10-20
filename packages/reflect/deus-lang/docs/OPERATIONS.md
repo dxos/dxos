@@ -79,6 +79,9 @@ with it.
   later (D318). Until then tests run the seed on node, as CI always does.
 - Run commands as `bin/deus` (alias it): it starts the cached native CLI without node, 10-60 ms a command where
   `bin/deus.mjs` takes 60-150 ms, and falls back to `bin/deus.mjs` when no native CLI is ready (D292).
+- The whole-toolchain vitest tests (`seed`, `dogfood`, `cli-native-self`) keep a pass by the hash of what they read
+  (`src/kept-verdict.ts`, in `~/.cache/deus/vitest`) and skip while it holds; `DEUS_TEST_FRESH=1` runs them anyway,
+  and CI always does (D333).
 - `DEUS_TEST_KERNEL=node` forces the seed on node, which is what CI tests. A test that checks a back end against the
   reference kernel uses the harness's `deusNode` (the native interpreter's `show` differs on data, task 7f42cca0).
 - DEUS tests carry coverage in the dev loop: `deus test <Prefix>` runs in about a second because verdicts are cached

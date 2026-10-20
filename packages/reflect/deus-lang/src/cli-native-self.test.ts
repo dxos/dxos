@@ -8,8 +8,18 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { cliHarness } from './cli-harness.ts';
+import { keptVerdict } from './kept-verdict.ts';
+import { SEED_PATH } from './kernel/main.ts';
 
 const { root, scratch, deus, deusNode } = cliHarness('cli-native-self-');
+
+/** What a native build's result depends on: the seed that runs the build, the sources, the kernel and the compiler. */
+const kept = (name: string, example: string) =>
+  keptVerdict(
+    name,
+    [SEED_PATH, join(root, 'deus'), join(root, 'src/kernel'), join(root, example)],
+    spawnSync('cc', ['--version'], { encoding: 'utf8' }).stdout ?? '',
+  );
 
 // The toolchain built natively from its own source: the two slowest native tests, in a file of their own so they run
 // in parallel with the other back ends.
@@ -17,7 +27,11 @@ describe('deus built natively', () => {
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'builds the compiler natively, and it writes the seed image',
     { timeout: 240_000 },
-    ({ expect }) => {
+    ({ expect, skip }) => {
+      const verdict = kept('native-compiler', 'examples/compiler.deus');
+      if (verdict.held) {
+        skip('the seed, deus/, the kernel and cc are as they were when this passed');
+      }
       const c = ['--codebase', join(scratch, 'compiler')];
       deus('init', '--empty', ...c);
       expect(deus('add', join(root, 'deus'), join(root, 'examples/compiler.deus'), ...c).code).toBe(0);
@@ -31,13 +45,18 @@ describe('deus built natively', () => {
       expect(run.status).toBe(0);
       expect(run.stderr).toContain(', 0 live,');
       expect(readFileSync(image, 'utf8')).toBe(readFileSync(join(root, 'seed/deus.image'), 'utf8'));
+      verdict.record();
     },
   );
 
   test.skipIf(spawnSync('cc', ['--version']).status !== 0)(
     'builds the deus CLI natively, which writes the same codebase',
     { timeout: 400_000 },
-    ({ expect }) => {
+    ({ expect, skip }) => {
+      const verdict = kept('native-cli', 'examples/structural.deus');
+      if (verdict.held) {
+        skip('the seed, deus/, the kernel and cc are as they were when this passed');
+      }
       const c = ['--codebase', join(scratch, 'cli-source')];
       deus('init', '--empty', ...c);
       expect(deus('add', join(root, 'deus'), ...c).code).toBe(0);
@@ -78,6 +97,7 @@ describe('deus built natively', () => {
       const cost = run('eval', 'Code.cost (fun _ => List.length [1, 2, 3])', ...target);
       expect(cost.status).toBe(0);
       expect(Number(cost.stdout)).toBeGreaterThan(0);
+      verdict.record();
     },
   );
 });

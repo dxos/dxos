@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
+import { keptVerdict } from './kept-verdict.ts';
 import { SEED_PATH } from './kernel/main.ts';
 import { runImage } from './kernel/run.ts';
 
@@ -37,10 +38,15 @@ const compileWithSeed = (sources: string) => {
 describe('seed', () => {
   // The compiler is written in DEUS; the seed is its compiled image. Compiling the sources with
   // the seed must reproduce the seed byte for byte, or the checked-in seed is stale.
-  test('compiles the compiler to itself (self-hosting fixpoint)', { timeout: 180_000 }, ({ expect }) => {
+  test('compiles the compiler to itself (self-hosting fixpoint)', { timeout: 180_000 }, ({ expect, skip }) => {
+    const kept = keptVerdict('seed-fixpoint', [SEED_PATH, join(root, 'deus'), join(root, 'src/kernel')]);
+    if (kept.held) {
+      skip('the seed, deus/ and the kernel are as they were when this passed');
+    }
     const { seed, out, err, code } = compileWithSeed('deus');
     expect(err).toBe('');
     expect(code).toBe(0);
     expect(out === seed).toBe(true);
+    kept.record();
   });
 });
