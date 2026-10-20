@@ -11,9 +11,16 @@ import { extractImageUrls, makeSnippet, stripHtml, stripMarkdown } from './text.
  * fetched {@link Subscription.PostContent} entry when present, else derived from `post.description`.
  */
 
-/** Plain-text snippet: the refined contentFeed value if loaded, else derived from `post.description`. */
-export const getSnippet = (post: { description?: string }, content?: Subscription.PostContent): string =>
-  content?.snippet ?? makeSnippet(stripMarkdown(stripHtml(post.description ?? '')));
+/**
+ * Plain-text snippet: the refined contentFeed value if loaded, else derived from `post.description`, else from
+ * `post.content` when the description has no text (e.g. only a Media RSS image).
+ */
+export const getSnippet = (
+  post: { description?: string; content?: string },
+  content?: Subscription.PostContent,
+): string => content?.snippet ?? (plainText(post.description) || plainText(post.content));
+
+const plainText = (markup: string | undefined): string => makeSnippet(stripMarkdown(stripHtml(markup ?? '')));
 
 /** Hero image url: the refined contentFeed value if loaded, else derived from `post.description`. */
 export const getImageUrl = (post: { description?: string }, content?: Subscription.PostContent): string | undefined =>

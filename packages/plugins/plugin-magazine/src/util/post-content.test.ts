@@ -27,6 +27,13 @@ describe('post content', () => {
     expect(getSnippet(post)).toBe('A short summary.');
   });
 
+  test('falls back to the body when the description is only an image', ({ expect }) => {
+    const post = { description: '![](https://example.com/hero.jpg)', content: 'The body of the post.' };
+
+    expect(getImageUrl(post)).toBe('https://example.com/hero.jpg');
+    expect(getSnippet(post)).toBe('The body of the post.');
+  });
+
   test('strips underscore emphasis but keeps underscores that join words', ({ expect }) => {
     expect(getSnippet({ description: 'An _important_ and __bold__ note.' })).toBe('An important and bold note.');
     expect(getSnippet({ description: 'Set snake_case_names in the config.' })).toBe(

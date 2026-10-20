@@ -103,7 +103,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
   }
 
   const imageUrl = getImageUrl(post);
-  const snippet = getSnippet({ description: post.description ?? post.content }) || undefined;
+  const snippet = getSnippet(post) || undefined;
   const published = formatDate(post.published);
   const title = post.title ?? t('post-title.placeholder');
 
