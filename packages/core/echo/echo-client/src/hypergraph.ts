@@ -545,15 +545,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | undefined {
-    // `Ref.target` reads land here from reactive getters, so a URI that names no object stays unresolved.
     const parsedEchoUri = EID.tryParse(uri);
-    const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-    if (parsedEchoUri === undefined || objectId === undefined) {
-      return undefined;
+    if (!parsedEchoUri) {
+      throw new Error('Unsupported URI kind');
     }
 
     const spaceId = EID.getSpaceId(parsedEchoUri) ?? context.space;
-    if (spaceId === undefined) {
+    const objectId = EID.getEntityId(parsedEchoUri);
+    if (spaceId === undefined || objectId === undefined) {
       throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
 

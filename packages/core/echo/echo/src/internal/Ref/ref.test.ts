@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN, EID, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import * as Type from '../../Type.ts';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity/index.ts';
@@ -87,6 +87,12 @@ describe('Ref', () => {
     const contact = Schema.decodeUnknownSync(Type.getSchema(Contact))(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
+  });
+
+  test('decode rejects a malformed echo URI', () => {
+    const uri = `echo://${SpaceId.random()}/${EntityId.random()}/${EntityId.random()}`;
+    const contactData = { id: EntityId.random(), name: 'John Doe', tasks: [{ '/': uri }] };
+    expect(() => Schema.decodeUnknownSync(Type.getSchema(Contact))(contactData)).toThrow(`Malformed ECHO URI: ${uri}`);
   });
 
   // A rejection message is what a remote caller gets back: `InvalidOperationInput` interpolates it

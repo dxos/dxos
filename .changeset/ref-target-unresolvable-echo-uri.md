@@ -2,4 +2,4 @@
 '@dxos/echo': patch
 ---
 
-Reading `Ref.target` on a ref whose `echo:` URI names no object (a space-only or malformed URI) now returns `undefined` instead of throwing `Unsupported URI kind`.
+Decoding a ref whose `{ '/': … }` envelope holds a malformed `echo:` URI now fails with `Malformed ECHO URI`, so operation inputs can no longer store a ref that throws on every resolve. `SpaceGraphModel` skips the edge of an already-stored unresolvable ref instead of abandoning the whole graph update.
