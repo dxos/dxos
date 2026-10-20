@@ -43,6 +43,7 @@ import {
   type DecisionModel,
   type SpecBlockModel,
   buildChangelogGraph,
+  githubAvatarUrl,
 } from './decision-model.ts';
 
 const DECISION_NODE_TYPE = 'decision';
@@ -53,10 +54,6 @@ export const ACTOR_STYLE: Record<DecisionActor, { icon: string; hue: Tag.TagHue;
   user: { icon: 'ph--user--regular', hue: 'sky', frame: 'border-2 border-sky-border' },
   agent: { icon: 'ph--robot--regular', hue: 'violet', frame: 'border-2 border-dashed border-violet-border' },
 };
-
-/** A GitHub username has a public avatar; an email handle (lang/changelog.mdl allows either) does not. */
-const githubAvatarUrl = (handle: string): string | undefined =>
-  /^[A-Za-z\d-]+$/.test(handle) ? `https://avatars.githubusercontent.com/${handle}?s=64` : undefined;
 
 type ActorAvatarProps = { actor?: DecisionActor; handle?: string; label?: string };
 

@@ -62,6 +62,10 @@ const parseActor = (ref: string | undefined): { actor?: DecisionActor; handle?: 
 
 export const SPEC_BLOCK_PREFIX = 'block:';
 
+/** A GitHub username has a public avatar; an email handle (lang/changelog.mdl allows either) does not. */
+export const githubAvatarUrl = (handle: string): string | undefined =>
+  /^[A-Za-z\d-]+$/.test(handle) ? `https://avatars.githubusercontent.com/${handle}?s=64` : undefined;
+
 /** Whether an entry approves the decisions it cites rather than building on them. */
 export const isApproval = (entry: ChangelogEntry): boolean =>
   parseActor(entry.by).actor === 'user' && APPROVAL.test(entry.title);

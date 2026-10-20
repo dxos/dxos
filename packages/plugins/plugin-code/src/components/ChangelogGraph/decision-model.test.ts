@@ -19,7 +19,7 @@ const decisionsOf = (content: string) =>
 describe('changelog graph', () => {
   test('attributes each decision to a person or an agent', ({ expect }) => {
     const decisions = decisionsOf(DEUS_SPEC);
-    expect(decisions.size).toBe(18);
+    expect(decisions.size).toBe(DEUS_SPEC.match(/^decision D-/gm)?.length);
     expect(decisions.get('D-1')).toMatchObject({ actor: 'user', handle: 'dmaretskyi', principal: undefined });
     expect(decisions.get('D-3')).toMatchObject({ actor: 'agent', handle: 'claude-code', principal: 'dmaretskyi' });
   });
