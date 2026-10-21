@@ -31,20 +31,25 @@ const COMPOSER_SHARDS = {
 // Target-list halves per browser for the rest of the e2e pool, one Playwright worker each.
 const REST_SHARDS = 2;
 
+// Most cells the browser and storybook targets are split across, by count.
+const BROWSER_SHARDS = 8;
+
 const main = () => {
   const draft = process.env.DRAFT === 'true';
   const browsers = draft ? [] : ['chromium', 'firefox', 'webkit'];
   const affected = readAffected();
+  const browserTargets = draft ? [] : (affected ?? queryTasks([])).filter(([, task]) => BROWSER_TASKS.has(task));
   const plan = {
     browsers,
     node: affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true,
-    browser: !draft && (affected?.some(([, task]) => BROWSER_TASKS.has(task)) ?? true),
+    browser: browserTargets.length > 0,
     composer: affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true,
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
   const outputs = {
     'node': String(plan.node),
     'browser': String(plan.browser),
+    'browser-cells': JSON.stringify(browserCells(browserTargets)),
     'composer-cells': JSON.stringify(plan.composer ? composerCells(browsers) : []),
     'rest-cells': JSON.stringify(plan.rest ? restCells(browsers) : []),
   };
@@ -67,6 +72,18 @@ const composerCells = (browsers) =>
     return Array.from({ length: shards }, (_, index) => ({ browser, shard: index + 1, total: shards, workers }));
   });
 
+// The test step gets an explicit list: moon counts a task whose env input is set as affected, and the
+// browser job sets `VITEST_*` inputs, so `moon exec --affected` there would select every target.
+const browserCells = (pairs) => {
+  const targets = pairs.map(([project, task]) => `${project}:${task}`).sort();
+  const total = Math.min(BROWSER_SHARDS, targets.length);
+  return Array.from({ length: total }, (_, shard) => ({
+    shard,
+    total,
+    targets: targets.filter((_, index) => index % total === shard).join(' '),
+  }));
+};
+
 const restCells = (browsers) =>
   browsers.flatMap((browser) =>
     Array.from({ length: REST_SHARDS }, (_, shard) => ({ browser, shard, total: REST_SHARDS })),
@@ -88,17 +105,7 @@ const readAffected = () => {
       console.error(`plan: config changed (${config.slice(0, 5).join(', ')}), every cell starts.`);
       return undefined;
     }
-    const { tasks } = JSON.parse(
-      execFileSync('moon', ['query', 'tasks', '--affected', '--downstream', 'deep'], {
-        encoding: 'utf8',
-        env,
-        maxBuffer: 64 * 1024 * 1024,
-        stdio: ['ignore', 'pipe', 'inherit'],
-      }),
-    );
-    const pairs = Object.entries(tasks).flatMap(([project, projectTasks]) =>
-      Object.keys(projectTasks).map((task) => [project, task]),
-    );
+    const pairs = queryTasks(['--affected', '--downstream', 'deep'], env);
     const count = (tasks) => pairs.filter(([, task]) => tasks.has(task)).length;
     const e2e = pairs.filter(([, task]) => task === 'e2e').map(([project]) => project);
     console.error(
@@ -109,6 +116,21 @@ const readAffected = () => {
     console.error(`::warning::plan: could not read the affected tasks (${err.message}); every cell starts.`);
     return undefined;
   }
+};
+
+/** `[project, task]` pairs from `moon query tasks`. */
+const queryTasks = (args, env = process.env) => {
+  const { tasks } = JSON.parse(
+    execFileSync('moon', ['query', 'tasks', ...args], {
+      encoding: 'utf8',
+      env,
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'inherit'],
+    }),
+  );
+  return Object.entries(tasks).flatMap(([project, projectTasks]) =>
+    Object.keys(projectTasks).map((task) => [project, task]),
+  );
 };
 
 const changedFiles = (base) =>

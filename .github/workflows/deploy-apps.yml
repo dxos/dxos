@@ -238,7 +238,8 @@ jobs:
           echo "Composer version: $version (env=$ENVIRONMENT)"
 
   # Publishes the triggering commit to pkg.pr.new, which the bundles' Composer Plugin template pins
-  # (`DX_PLUGIN_TOOLCHAIN_COMMIT` here and in deploy-tauri.yaml); `main` itself publishes only once a day.
+  # (`DX_PLUGIN_TOOLCHAIN_COMMIT` here and in deploy-tauri.yaml). A `main` commit's push already
+  # publishes it, so this skips in a minute there; a deploy from any other branch depends on it.
   # The deploy does not wait on it: a failed publish breaks that template in this build, and
   # notify-prep-failure reports it.
   packages:

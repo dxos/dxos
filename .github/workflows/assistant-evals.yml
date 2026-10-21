@@ -1,9 +1,8 @@
 name: Assistant evals
 
-# `DX_ANTHROPIC_API_KEY` lives in the `assistant-evals` environment, whose deployment branch policy
-# allows only `main`, so no other workflow or branch can read it. The same goes for the optional
-# `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which only a closed-hatch target such as `prod` needs:
-# the token is minted by hand and grants access to the space it names.
+# `DX_ANTHROPIC_API_KEY` is the org's `ANTHROPIC_API_KEY` secret. The optional `DX_EVAL_MCP_TOKEN` and
+# `DX_EVAL_SPACE_ID` secrets are read only for a closed-hatch target such as `prod`: the token is
+# minted by hand and grants access to the space it names.
 
 # TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
 # that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
@@ -42,7 +41,6 @@ concurrency:
 
 jobs:
   evals:
-    environment: assistant-evals
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -67,7 +65,7 @@ jobs:
         continue-on-error: true
         working-directory: packages/core/compute/assistant-evals
         env:
-          DX_ANTHROPIC_API_KEY: ${{ secrets.DX_ANTHROPIC_API_KEY }}
+          DX_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DX_EVAL_MODELS: ${{ inputs.models }}
           DX_EVAL_MCP_TARGET: ${{ inputs.mcp_target || 'preview' }}
           DX_EVAL_MCP_TOKEN: ${{ (inputs.mcp_target == 'prod' || inputs.mcp_target == 'production') && secrets.DX_EVAL_MCP_TOKEN || '' }}
@@ -77,7 +75,7 @@ jobs:
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           if [ -z "$DX_ANTHROPIC_API_KEY" ]; then
-            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check the `assistant-evals` environment's secrets and branch policy."
+            echo "::error::DX_ANTHROPIC_API_KEY is not available to this run. Check the org's ANTHROPIC_API_KEY secret is shared with this repository."
             exit 1
           fi
           moon run assistant-evals:evals

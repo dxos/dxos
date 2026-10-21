@@ -153,7 +153,7 @@ stays as it is. Rules for the body and bump level:
 A ready PR runs every suite, browser, storybook and e2e included, so its own Check run is the signal;
 the merge queue runs them again on top of `main` and drops the PR if they fail there.
 
-Once all required checks pass, these tests pass, and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
+Once all required checks pass and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 
 ```
 mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
@@ -220,8 +220,8 @@ On each wakeup (task-completion notification for the sleep):
 2. **If merged**: print success, unsubscribe, stop.
 3. **If closed**: ask the user what happened.
 4. **If open and auto_merge is null** (was dequeued):
-   a. Find out why. A failed merge-queue run is the usual cause: the browser and storybook tests
-   run only there. Read the failed `Check / …` run's logs (`gh run view <run-id> --log-failed`), fix the
+   a. Find out why. A failed merge-queue run is the usual cause: the queue tests the PR on top of
+   what landed on `main` since its own Check run. Read the failed `Check / …` run's logs (`gh run view <run-id> --log-failed`), fix the
    failure at its root, and push the fix before re-queueing; re-queueing an unfixed failure
    just fails again. Then sync with `main`:
    ```bash

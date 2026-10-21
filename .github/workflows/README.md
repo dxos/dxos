@@ -12,12 +12,17 @@ node tests and `boot-budget`. A ready PR and the merge queue add the browser and
 gate the merge, and e2e on Chromium, Firefox and WebKit, which reports without gating. Pushes to main run nothing: main
 moves to the commit the merge queue tested.
 
+Each suite reports through one check whatever its shard count: `test` gates the node and browser cells,
+`e2e` the e2e cells. A gate fails if any of its cells failed or was cancelled, or `plan` failed; a skipped
+cell passes. Branch protection requires `check` and `test`; `e2e` reports without gating. Changing the
+shard count never changes the required checks.
+
 ### Sizing for 4 vCPU / 16 GB
 
 | Job | Cells | Why |
 | :-- | :-- | :-- |
 | `test (node)` | 2 shards, 4 targets at a time | Peaks under 10 GB with no browser. |
-| `test (browser)` | 8 shards, 1 target at a time | Each target drives its own Chromium; two on one runner made timing-sensitive stories fail. |
+| `test (browser)` | Up to 8 cells of affected targets from `plan`: build the cell's closure at concurrency 4, then test 1 target at a time | Each target drives its own Chromium; sharing 4 vCPU with another target or a build made timing-sensitive stories fail. |
 | `e2e (composer)` | Chromium and Firefox 2 shards × 2 workers, WebKit 4 shards × 1 worker | One WebKit page holds ~6 GB and two-peer specs open two, so WebKit cannot run two tests at once. The cell table is in [`plan.mjs`](../actions/plan/plan.mjs). |
 | `e2e (rest)` | 2 target halves per browser, 1 worker | Storybook's cold start lost module loads with two workers. |
 
@@ -39,14 +44,14 @@ Nothing retries. A story or test that fails intermittently is skipped (`tags: ['
 
 ## Trunk
 
-[Trunk](https://trunk.io) ingests JUnit from Check for flaky-test detection and quarantine. The `test`
-and `e2e` jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`,
+[Trunk](https://trunk.io) ingests JUnit from Check for flaky-test detection and quarantine. The cell
+jobs (`test-node`, `test-browser`, `e2e-composer`, `e2e-rest`) wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`,
 `quarantine: true`, `TRUNK_TOKEN`).
 
 | Job | JUnit paths Trunk reads |
 | :-- | :-- |
 | `test-node`, `test-browser` | `test-results/**/results.xml` |
-| `e2e`, `e2e-rest` | `test-results/playwright/report/*.xml` |
+| `e2e-composer`, `e2e-rest` | `test-results/playwright/report/*.xml` |
 
 ### Flaky label vs quarantine vs code tags
 
@@ -54,7 +59,7 @@ and `e2e` jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`o
 | :-- | :-- | :-- | :-- |
 | Flaky in Trunk | Trunk UI, or automatically via Trunk's pass-on-rerun detection | None. Trunk metadata only | Tests still run; failures still fail the job unless quarantined |
 | Quarantine in Trunk | Trunk UI | None | Test still runs; its failure does not fail the job |
-| Vitest `tags: ['flaky']` | Code (per-suite/test option, declared in [`vitest.tags.ts`](../../vitest.tags.ts)) | Default `:test` task sets `VITEST_TAGS_FILTER='!flaky && …'` so gated suites skip on your machine | The `test` job sets `VITEST_TAGS_FILTER='!sync && !sync-e2e && !functions-e2e && !manual'`, so `flaky` tests run and Trunk keeps signal |
+| Vitest `tags: ['flaky']` | Code (per-suite/test option, declared in [`vitest.tags.ts`](../../vitest.tags.ts)) | Default `:test` task sets `VITEST_TAGS_FILTER='!flaky && …'` so gated suites skip on your machine | The `test-node` and `test-browser` jobs set `VITEST_TAGS_FILTER='!sync && !sync-e2e && !functions-e2e && !manual'`, so `flaky` tests run and Trunk keeps signal |
 
 The other tags (`sync`, `sync-e2e`, `functions-e2e`, `manual`) are declared in
 [`vitest.tags.ts`](../../vitest.tags.ts), and you opt in by overriding `VITEST_TAGS_FILTER` or passing
@@ -74,11 +79,11 @@ gh run rerun <run-id> --failed
 
 | Workflow | Trigger | What it does |
 | :-- | :-- | :-- |
-| [`assistant-evals.yml`](assistant-evals.yml) | nightly, dispatch | Every `@dxos/assistant-evals` scenario against the live model, traced to PostHog. `DX_ANTHROPIC_API_KEY` lives in the `assistant-evals` environment, limited to `main`. |
+| [`assistant-evals.yml`](assistant-evals.yml) | nightly, dispatch | Every `@dxos/assistant-evals` scenario against the live model, traced to PostHog. Reads the org's `ANTHROPIC_API_KEY` as `DX_ANTHROPIC_API_KEY`. |
 | [`perf-nightly.yml`](perf-nightly.yml), [`boot-trend.yml`](boot-trend.yml), [`edge-nightly.yml`](edge-nightly.yml) | schedule or push to main, dispatch | Perf, boot-graph and EDGE trends. |
 | [`pr-build.yml`](pr-build.yml) → [`pr-deploy.yml`](pr-deploy.yml) | `preview` label, `workflow_run` | Per-PR Worker preview; the build runs with no secrets, the deploy from the base branch. |
 | [`publish-all.yml`](publish-all.yml) | push to main, dispatch | npm releases. npm's trusted publisher is configured against this file name. |
-| [`pkg-pr-new.yml`](pkg-pr-new.yml) | schedule, dispatch, `workflow_call` | pkg.pr.new previews. |
+| [`pkg-pr-new.yml`](pkg-pr-new.yml) | push to main, dispatch, `workflow_call` | pkg.pr.new previews of every `main` commit. |
 | [`deploy-apps.yml`](deploy-apps.yml), [`deploy-tauri.yaml`](deploy-tauri.yaml), [`deploy-docs-daily.yml`](deploy-docs-daily.yml) | schedule, dispatch | App, desktop and docs deploys. |
 | [`docker-image.yml`](docker-image.yml) | push to main touching the image | `ghcr.io/dxos/gh-actions`, the container the release workflows run in. |
 | [`draft-on-open.yml`](draft-on-open.yml) | `pull_request` | Opens agent PRs as drafts so they skip the browser and e2e suites until ready. |

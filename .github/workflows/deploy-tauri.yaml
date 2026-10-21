@@ -131,9 +131,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    # A production build (no remote cache) already ran 27 min in the v0.10.2 release, close enough to the
-    # previous 45 that a slower runner would have been cut off mid-notarization.
-    timeout-minutes: 60
+    # A production build (no remote cache) ran 27 min in the v0.10.2 release on Depot's macOS runner. The
+    # standard `macos-26` runner has 3 cores and 7 GB, so the cap allows for a build several times slower.
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@v5
@@ -481,7 +481,8 @@ jobs:
 
     runs-on: macos-26
 
-    timeout-minutes: 90
+    # 90 min on Depot's macOS runner; doubled for the 3-core 7 GB `macos-26`, as `build_tauri` is.
+    timeout-minutes: 180
 
     continue-on-error: true
 
