@@ -171,6 +171,9 @@ const PROSE_SUGGESTION_ALICE = [
 // Play functions drive document edits through the data layer (exercising the editor's live
 // automerge binding) and all versioning actions through the UI. Captured per story run.
 let currentDoc: Markdown.Document | undefined;
+// The story that may set `currentDoc`: a story without a play ends while its client is still initializing,
+// and that initialization finishing during the next story must not hand it the previous story's document.
+let currentStory: string | undefined;
 
 const getDoc = (): Markdown.Document => {
   invariant(currentDoc, 'story document not initialized');
@@ -271,46 +274,51 @@ const mergeViaPanel = async (canvasElement: HTMLElement) => {
 
 const meta = {
   title: 'plugins/plugin-review/stories/DocumentVersioning',
-  // TODO(wittjosiah): Skipped by `test-storybook`: nine of these stories failed intermittently on 4 vCPU CI
-  //   runners (several wait on waitFor's default 1 s after a version or branch action). Fix, then re-enable.
-  tags: ['!test'],
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryArgs>((context) => ({
-      plugins: [
-        ...CorePlugins.make(),
-        StorybookPlugin.make({}),
-        MarkdownExtensionsPlugin(),
-        // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
-        ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
-        ClientPlugin.make({
-          types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
-              currentDoc = defaultSpace.db.add(
-                Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
-              );
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+    withPluginManager<StoryArgs>((context) => {
+      currentStory = context.id;
+      return {
+        plugins: [
+          ...CorePlugins.make(),
+          StorybookPlugin.make({}),
+          MarkdownExtensionsPlugin(),
+          // Ambient-review fixtures only for the AmbientReview story (keeps other stories untouched).
+          ...(context.parameters?.ambientReview ? [AmbientReviewPlugin()] : []),
+          ClientPlugin.make({
+            types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
+            onClientInitialized: ({ client }) =>
+              Effect.gen(function* () {
+                const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+                const doc = defaultSpace.db.add(
+                  Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
+                );
+                if (currentStory !== context.id) {
+                  return;
+                }
 
-              // Seeded before mount so a manual story opens already reviewable — the same state the
-              // play-driven stories build up step by step, without a play mutating it first.
-              for (const { creator, content } of context.args.suggestions ?? []) {
-                yield* Effect.promise(() => seedSuggestion(creator, content));
-              }
-              if (context.parameters?.ambientReview) {
-                const text = yield* Effect.promise(() => currentDoc!.content.load());
-                seedComments(defaultSpace, currentDoc!, text, [COMMENT_ANCHOR]);
-              }
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        ReviewPlugin(),
-        MarkdownPlugin.make(),
-      ],
-    })),
+                currentDoc = doc;
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+
+                // Seeded before mount so a manual story opens already reviewable — the same state the
+                // play-driven stories build up step by step, without a play mutating it first.
+                for (const { creator, content } of context.args.suggestions ?? []) {
+                  yield* Effect.promise(() => seedSuggestion(creator, content));
+                }
+                if (context.parameters?.ambientReview) {
+                  const text = yield* Effect.promise(() => currentDoc!.content.load());
+                  seedComments(defaultSpace, currentDoc!, text, [COMMENT_ANCHOR]);
+                }
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              }),
+          }),
+          SpacePlugin({}),
+          ReviewPlugin(),
+          MarkdownPlugin.make(),
+        ],
+      };
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
