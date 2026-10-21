@@ -103,8 +103,11 @@ const createRegistry = (open: (id: string) => void) =>
     defaultNodePrototypes,
   );
 
-/** One card per lattice cell; the cell and its gutters are whole major-grid cells, so the guides line up with the grid. */
-const LATTICE: LatticeSpec = { width: 320, height: 192, gutterX: 64, gutterY: 64 };
+/**
+ * One card per lattice cell. Cells are centred on whole pitches, so a card's edges sit half its size from a pitch
+ * point: both sizes are multiples of twice the major grid, so the edges land on the coarsest dots.
+ */
+const LATTICE: LatticeSpec = { width: 384, height: 256, gutterX: 64, gutterY: 64 };
 
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
   lattice: LATTICE,
