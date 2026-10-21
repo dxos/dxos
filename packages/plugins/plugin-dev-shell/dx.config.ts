@@ -30,6 +30,6 @@ export default Config2.make({
     icon: { key: 'ph--terminal-window--regular', hue: 'amber' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-dev-shell',
     spec: 'PLUGIN.mdl',
-    tags: ['labs'],
+    tags: ['system'],
   },
 });

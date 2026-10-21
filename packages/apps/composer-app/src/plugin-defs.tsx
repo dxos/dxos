@@ -31,7 +31,6 @@ import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
 import * as DeepSeekPlugin from '@dxos/plugin-deepseek/DeepSeekPlugin';
-import * as DevShellPlugin from '@dxos/plugin-dev-shell/DevShellPlugin';
 import * as DevtoolsPlugin from '@dxos/plugin-devtools/DevtoolsPlugin';
 import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
 import * as DoctorPlugin from '@dxos/plugin-doctor/DoctorPlugin';
@@ -272,9 +271,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CloudflarePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
-    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
-    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
-    isDev && DevShellPlugin.make(),
     ConductorPlugin.make(),
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),

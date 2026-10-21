@@ -71,9 +71,8 @@ test QA-1: Run a shell command and apply an edit
   status: unverified
   given:
     - an identity exists
-    - plugin-dev-shell is enabled — it is dev-only (gated on `isDev` for both availability and
-      default) and never appears in a production build; enable it via the plugin registry in a
-      dev environment, or confirm `isDev` is already on
+    - Composer is served by `vite dev`, where plugin-dev-shell is a core plugin (always enabled); no
+      build includes it
     - the vite dev server's harness route is reachable (this plugin only functions there — "Nothing
       is mounted outside a vite dev server")
     - a scratch file the harness root can write to, not otherwise used by this space's QA fixtures
@@ -228,4 +227,12 @@ decision D-2: The dev server also hosts plugin-claude's coding agents: a `/api/d
   why: Claude Code on this computer should work in Composer served from a dev server, not only in the desktop app.
   rejected:
     - Injecting the agent server from composer-app's vite config so dev-shell need not depend on plugin-claude: the runtime is Claude-specific and dev-shell is dev-only.
+```
+
+```mdl
+decision D-3: Under `vite dev` the plugin is core (tagged `system`, registered in `getCorePlugins` behind `import.meta.env.DEV`), so it is always enabled and cannot be turned off; no build includes it. Replaces the `isDev` gate, which a plain dev server does not set. Builds on [D-2].
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [DevShellPlugin]
+  why: Every tool it offers needs the dev server's routes, which exist exactly under `vite dev`, so availability follows the server rather than an environment flag.
 ```
