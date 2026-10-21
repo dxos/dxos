@@ -191,6 +191,7 @@ catalog:
   '@storybook/html-vite': ^10.6.0
   '@storybook/icons': ^2.1.0
   '@storybook/mdx2-csf': ^1.1.0
+  '@storybook/react-dom-shim': ^10.6.0
   '@storybook/react-vite': ^10.6.0
   '@storybook/web-components-vite': ^10.6.0
   '@svgr/cli': ^8.1.0
