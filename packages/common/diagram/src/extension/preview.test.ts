@@ -36,16 +36,34 @@ const stateOf = (doc: string) => {
 };
 
 describe('diagram preview', () => {
-  test('one block widget after each diagram fence and none after other fences', ({ expect }) => {
+  test('a fence the selection is outside of is replaced by its diagram', ({ expect }) => {
     const state = stateOf(DOCUMENT);
-    const positions: number[] = [];
+    const ranges: [number, number][] = [];
     buildDiagramPreviews(state).between(0, state.doc.length, (from, to, decoration) => {
-      expect(from).toEqual(to);
       expect(decoration.spec.block).toBe(true);
-      positions.push(from);
+      ranges.push([from, to]);
     });
-    const fenceEnds = [...DOCUMENT.matchAll(/```\n/g)].map((match) => match.index + 3);
-    expect(positions).toEqual([fenceEnds[0], fenceEnds[2]]);
+    const opens = [...DOCUMENT.matchAll(/```(diagram|dxd)\n/g)].map((match) => match.index);
+    const closes = [...DOCUMENT.matchAll(/```\n/g)].map((match) => match.index + 3);
+    expect(ranges).toEqual([
+      [opens[0], closes[0]],
+      [opens[1], closes[2]],
+    ]);
+  });
+
+  test('the fence holding the selection keeps its source and shows the diagram below it', ({ expect }) => {
+    const inside = DOCUMENT.indexOf('node A') + 2;
+    const state = stateOf(DOCUMENT).update({ selection: { anchor: inside } }).state;
+    const ranges: [number, number][] = [];
+    buildDiagramPreviews(state).between(0, state.doc.length, (from, to) => {
+      ranges.push([from, to]);
+    });
+    const closes = [...DOCUMENT.matchAll(/```\n/g)].map((match) => match.index + 3);
+    const secondOpen = DOCUMENT.indexOf('```dxd');
+    expect(ranges).toEqual([
+      [closes[0], closes[0]],
+      [secondOpen, closes[2]],
+    ]);
   });
 
   test('renders a standalone SVG for a valid source', async ({ expect }) => {

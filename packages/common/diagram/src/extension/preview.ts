@@ -67,6 +67,12 @@ class DiagramWidget extends WidgetType {
     const container = document.createElement('div');
     container.className = 'cm-diagram-preview';
     container.textContent = 'Rendering diagram…';
+    // A collapsed fence has no text to click into, so clicking the diagram moves the cursor into its source.
+    container.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      view.dispatch({ selection: { anchor: view.posAtDOM(container) } });
+      view.focus();
+    });
     void renderDiagram(this.source).then((result) => {
       if ('svg' in result) {
         // An <img> isolates the SVG's own stylesheet and marker ids from the page and from other diagrams.
@@ -89,7 +95,14 @@ class DiagramWidget extends WidgetType {
   }
 }
 
-/** One rendered-diagram block after every ```diagram fence the markdown tree holds. */
+/** Whether any selection range touches `[from, to]`, so the fence's source should show. */
+const isEditing = (state: EditorState, from: number, to: number): boolean =>
+  state.selection.ranges.some((range) => range.from <= to && range.to >= from);
+
+/**
+ * One rendered diagram per ```diagram fence the markdown tree holds: in place of the fence while the
+ * selection is elsewhere, and below its source while the selection is inside it.
+ */
 export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   syntaxTree(state).iterate({
@@ -101,7 +114,11 @@ export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
       const body = node.node.getChild('CodeText');
       if (info && body && FENCE_NAMES.has(state.doc.sliceString(info.from, info.to).trim())) {
         const widget = new DiagramWidget(state.doc.sliceString(body.from, body.to));
-        builder.add(node.to, node.to, Decoration.widget({ widget, block: true, side: 1 }));
+        if (isEditing(state, node.from, node.to)) {
+          builder.add(node.to, node.to, Decoration.widget({ widget, block: true, side: 1 }));
+        } else {
+          builder.add(node.from, node.to, Decoration.replace({ widget, block: true }));
+        }
       }
       return false;
     },
@@ -113,7 +130,9 @@ export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
 const previews = StateField.define<DecorationSet>({
   create: buildDiagramPreviews,
   update: (value, transaction) =>
-    transaction.docChanged || syntaxTree(transaction.state) !== syntaxTree(transaction.startState)
+    transaction.docChanged ||
+    transaction.selection ||
+    syntaxTree(transaction.state) !== syntaxTree(transaction.startState)
       ? buildDiagramPreviews(transaction.state)
       : value,
   provide: (field) => EditorView.decorations.from(field),
@@ -130,12 +149,14 @@ const theme = EditorView.baseTheme({
     overflowX: 'auto',
     fontSize: '12px',
   },
+  '.cm-diagram-preview:has(img)': { cursor: 'pointer' },
   '.cm-diagram-preview img': { display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto' },
   '.cm-diagram-preview-error': { color: '#dc2626' },
 });
 
 /**
- * Renders every ```diagram fence in a markdown document below its source. Pair it with
+ * Renders every ```diagram fence in a markdown document: in place of its source, which reappears
+ * (with the diagram below it) while the selection is inside the fence. Pair it with
  * `diagramBlockDescription` in `createMarkdownExtensions({ codeLanguages })` for highlighting.
  */
 export const diagramPreview = (): Extension => [previews, theme];
