@@ -14,6 +14,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
+import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
 
@@ -72,6 +73,14 @@ export const Templates = Capability.lazyModule(
   },
   () => import('./templates.ts'),
 );
+
+// Bundled so a feature that cites this plugin's spec opens it rendered in the app.
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: () => import('../../PLUGIN.mdl?raw'),
+  mimeType: 'application/x-mdl',
+});
 
 export const Tour = Capability.lazyModule(
   'Tour',

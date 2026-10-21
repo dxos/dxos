@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { type Database, EID, Filter, Query, Relation } from '@dxos/echo';
+import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Task } from '@dxos/types';
+import { Spec, Task } from '@dxos/types';
 
 import { Feature, Showcase } from '#types';
 
@@ -59,11 +61,9 @@ export const useFeatureGraph = (
   { neighbours = false }: FeatureGraphOptions = {},
 ): FeatureGraph => {
   const scope = useScope(ids);
-  const outgoing = useQuery(scope && db, (scope ?? Query.select(Filter.nothing())).sourceOf(Feature.DependsOn));
-  const incoming = useQuery(
-    neighbours && scope ? db : undefined,
-    (scope ?? Query.select(Filter.nothing())).targetOf(Feature.DependsOn),
-  );
+  const scopeQuery = scope ?? Query.select(Filter.nothing());
+  const outgoing = useQuery(scope && db, scopeQuery.sourceOf(Feature.DependsOn));
+  const incoming = useQuery(neighbours && scope ? db : undefined, scopeQuery.targetOf(Feature.DependsOn));
 
   const edges = useMemo(() => {
     const byId = new Map([...outgoing, ...incoming].map((relation) => [relation.id, relation]));
@@ -72,48 +72,99 @@ export const useFeatureGraph = (
     );
   }, [outgoing, incoming]);
 
-  const featureScope = useScope(neighbours ? [...ids, ...edges.flat()] : ids);
-  const featureQuery = featureScope ?? Query.select(Filter.nothing());
-  const features = useQuery(featureScope && db, featureQuery);
-  const implementsTasks = useQuery(featureScope && db, featureQuery.targetOf(Feature.Implements));
-  const demonstrates = useQuery(featureScope && db, featureQuery.targetOf(Showcase.Demonstrates));
+  // Neighbours are reached by traversal rather than by re-keying an id query from `edges`, so a dependency added
+  // while the view is open loads its target in the same update that delivers the edge.
+  const members = useQuery(scope && db, scopeQuery);
+  const dependencies = useQuery(neighbours && scope ? db : undefined, scopeQuery.sourceOf(Feature.DependsOn).target());
+  const dependents = useQuery(neighbours && scope ? db : undefined, scopeQuery.targetOf(Feature.DependsOn).source());
+  const features = useMemo(
+    () => [...new Map([...members, ...dependencies, ...dependents].map((feature) => [feature.id, feature])).values()],
+    [members, dependencies, dependents],
+  );
+  // Tasks and showcases matter only for the scope's own cards; a neighbour is shown by its name and status.
+  const implementsTasks = useQuery(scope && db, scopeQuery.targetOf(Feature.Implements));
+  const demonstrates = useQuery(scope && db, scopeQuery.targetOf(Showcase.Demonstrates));
 
-  return useMemo(() => {
-    const members = features.filter((feature) => Feature.instanceOf(feature));
-    const input: FeatureGraphInput = {
-      features: members.map((feature) => ({
-        id: feature.id,
-        name: feature.name,
-        description: feature.description,
-        status: feature.status,
-        specs: feature.specs,
-        subfeatures: feature.subfeatures ?? [],
-      })),
-      dependsOn: edges,
-      implementedBy: implementsTasks.flatMap((relation) => {
-        const task = sourceOf(relation);
-        return task
-          ? [
+  // Specs imported into the space are matched by the foreign key that records their repo path.
+  const specPaths = [
+    ...new Set(
+      members
+        .filter(Feature.instanceOf)
+        .flatMap((feature) => feature.specs ?? [])
+        .map(Feature.getSpecPath),
+    ),
+  ]
+    .sort()
+    .join('\n');
+  const specQuery = useMemo(
+    () =>
+      specPaths
+        ? Query.select(
+            Filter.foreignKeys(
+              Spec.Spec,
+              specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
+            ),
+          )
+        : Query.select(Filter.nothing()),
+    [specPaths],
+  );
+  const specs = useQuery(specPaths ? db : undefined, specQuery);
+  const specObjects = useMemo(
+    () =>
+      Object.fromEntries(
+        specs.flatMap((spec) =>
+          Obj.getMeta(spec)
+            .keys.filter((key) => key.source === Feature.SPEC_KEY_SOURCE)
+            .map((key) => [key.id, spec.id]),
+        ),
+      ),
+    [specs],
+  );
+
+  // An atom rather than a memo: query results keep their identity when a member's field changes, so each object is
+  // read through `Obj.atom` to re-derive the graph when a status, name or task changes.
+  const graphAtom = useMemo(
+    () =>
+      Atom.make((get): FeatureGraph => {
+        const input: FeatureGraphInput = {
+          features: features.filter(Feature.instanceOf).map((feature) => {
+            const { id, name, description, status, specs, subfeatures } = get(Obj.atom(feature));
+            return { id, name, description, status, specs, subfeatures: subfeatures ?? [] };
+          }),
+          dependsOn: edges,
+          implementedBy: implementsTasks.flatMap((relation) => {
+            const source = sourceOf(relation);
+            if (!source) {
+              return [];
+            }
+            const task = get(Obj.atom(source));
+            const milestone = task.milestone && get(Obj.atom(task.milestone));
+            return [
               [
                 {
                   id: task.id,
                   title: task.title,
                   done: task.status !== undefined && DONE.has(task.status),
-                  milestone: task.milestone?.target?.name,
+                  milestone: milestone?.name,
                 },
                 entityId(Relation.getTargetURI(relation)),
               ] as const,
-            ]
-          : [];
+            ];
+          }),
+          showcasedBy: demonstrates.flatMap((relation) => {
+            const source = sourceOf(relation);
+            if (!source) {
+              return [];
+            }
+            const showcase = get(Obj.atom(source));
+            return [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const];
+          }),
+          specObjects,
+        };
+        const models = buildFeatureModels(input);
+        return { features: models, lookup: makeFeatureLookup(models) };
       }),
-      showcasedBy: demonstrates.flatMap((relation) => {
-        const showcase = sourceOf(relation);
-        return showcase
-          ? [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const]
-          : [];
-      }),
-    };
-    const models = buildFeatureModels(input);
-    return { features: models, lookup: makeFeatureLookup(models) };
-  }, [features, edges, implementsTasks, demonstrates]);
+    [features, edges, implementsTasks, demonstrates, specObjects],
+  );
+  return useAtomValue(graphAtom);
 };

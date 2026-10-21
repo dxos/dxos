@@ -55,8 +55,8 @@ not know means the reporter changed, and a silent drop would show up as the suit
 ## What is published, and when
 
 **From the nightly, or an explicit dispatch.** The publish step is gated on
-`github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`: PRs never run e2e, and a
-merge-queue run would add a point per queued PR. A
+`github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`: a PR or merge-queue run
+would add a point per push or queued PR. A
 `workflow_dispatch` is a maintainer asking for this run's results — how the dashboard is seeded or
 backfilled off-schedule — and every row it publishes carries `ciBranch` and `ciTrigger`.
 

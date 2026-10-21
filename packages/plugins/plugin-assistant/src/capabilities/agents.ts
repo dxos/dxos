@@ -20,6 +20,7 @@ export default Capability.makeModule(
       id: SessionConfig.COMPOSER_HARNESS,
       label: 'Composer',
       icon: 'ph--sparkle--regular',
+      locations: ['local', 'edge'],
       availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
       makeTurnProducer: composerTurnProducer(manager, options?.codeModeTurnProducer?.(manager)),
     });

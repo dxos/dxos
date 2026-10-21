@@ -13,7 +13,8 @@ const columnName = (index: number): string => {
   return name;
 };
 
-const toNumber = (value: PlotValue): number | undefined => {
+/** A cell value as a finite number; strings may carry `$`, `,` and `%`. */
+export const toNumber = (value: PlotValue): number | undefined => {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : undefined;
   }

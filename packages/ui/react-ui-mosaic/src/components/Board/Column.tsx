@@ -160,12 +160,12 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
+type BoardColumnBodyProps<TItem = Obj.Unknown> = Pick<BoardColumnProps, 'data'> &
   Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
-    Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+    Tile?: MosaicStackProps<TItem>['Tile'];
   };
 
-const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
+const BoardColumnBodyInner = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -195,7 +195,12 @@ const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   },
 );
 
-BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
+BoardColumnBodyInner.displayName = BOARD_COLUMN_BODY_NAME;
+
+// Generic over the item, so a board of plain records (not ECHO objects) can pass a typed Tile.
+const BoardColumnBody = BoardColumnBodyInner as <TItem = Obj.Unknown>(
+  props: BoardColumnBodyProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
+) => ReactElement;
 
 //
 // Column Footer

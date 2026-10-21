@@ -5,13 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureSeed } from '@dxos/plugin-projects/testing';
+import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-projects/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -44,6 +46,16 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   );
 };
 
+/** Stands in for Inbox: a plugin whose profile says it bundles the spec the seeded feature cites. */
+const SpecSourcePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.inbox'),
+    name: 'Inbox',
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
+    spec: 'PLUGIN.mdl',
+  }),
+).pipe(Plugin.make);
+
 const meta = {
   title: 'plugins/plugin-projects/containers/FeatureArticle',
   render: DefaultStory,
@@ -64,6 +76,8 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        FeatureEditingPlugin.make(),
+        SpecSourcePlugin(),
       ],
     }),
     withTheme(),
@@ -90,5 +104,50 @@ export const Default: Story = {
     await expect(relations.getByText('Compose & send')).toBeInTheDocument();
     await expect(relations.getByText('Move sync to EDGE')).toBeInTheDocument();
     await expect(relations.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
+  },
+};
+
+const pick = async (canvasElement: HTMLElement, testId: string, label: string) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(await canvas.findByTestId(testId, undefined, { timeout: 10_000 }));
+  // The picker queries the space only once open, so its options arrive after the popup does.
+  await userEvent.click(await screen.findByRole('option', { name: new RegExp(label) }, { timeout: 5_000 }));
+};
+
+/** A dependency is added from the picker and removed from its row. */
+export const EditDependencies: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
+    await pick(canvasElement, 'feature-article.add-dependency', 'Accounts');
+    await expect(await relations.findByText('Accounts', undefined, { timeout: 5_000 })).toBeInTheDocument();
+    await userEvent.click(relations.getByRole('button', { name: 'Remove dependency on Accounts' }));
+    await waitFor(() => expect(relations.queryByText('Accounts')).toBeNull(), { timeout: 5_000 });
+  },
+};
+
+/** A dependency that would close a cycle is refused and names the features in it. */
+export const RefusedCycle: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
+    await pick(canvasElement, 'feature-article.add-dependency', 'Compose & send');
+    await expect(
+      await screen.findByText(/Provider sync → Compose & send → Provider sync/, undefined, { timeout: 5_000 }),
+    ).toBeInTheDocument();
+    await expect(relations.queryAllByRole('button', { name: 'Remove dependency on Compose & send' })).toHaveLength(0);
+  },
+};
+
+/** A spec a bundled plugin carries opens in the app; other specs keep their GitHub link. */
+export const OpenSpec: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('feature-card.spec')).toHaveLength(2), { timeout: 10_000 });
+    for (const row of canvas.getAllByTestId('feature-card.spec')) {
+      await expect(row.closest('a')).toBeNull();
+      await expect(row.textContent).toMatch(/plugin-inbox\/PLUGIN\.mdl/);
+    }
+    await userEvent.click(canvas.getAllByTestId('feature-card.spec')[0]);
   },
 };

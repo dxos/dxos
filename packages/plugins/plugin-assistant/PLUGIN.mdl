@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -454,6 +455,123 @@ test QA-2: Companion chat is provisioned and bound
       do: The companion chat is never persisted unless a message is sent, so nothing was written
         to the space.
       expect: the document still has no persisted companion chat
+```
+
+```mdl
+test QA-3: The prompt carries context, commands and the agent's settings
+  desc: |
+    The chat prompt: the task and context drawers above it, the "+" menu (objects and MCP servers),
+    `@` mentions, `/` commands and skills, and the agent picker (agent, where it runs, model).
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - documents "Prompt redesign spec", "Q4 roadmap" and "Meeting notes", a person "Rich Burdon",
+      and MCP servers "Linear" and "GitHub", both switched off
+    - chat: a chat "Prompt redesign" with two tasks, open in a plank
+  steps:
+    - name: Open the task and context drawers
+      do: Click the tasks button in the group before the microphone and Send, then the context button.
+      expect: the two tasks open in a drawer above the prompt; the context button swaps it for a drawer
+        with Context and a collapsed Skills section, and only one drawer is open at a time
+    - name: Switch on an MCP server from the + menu
+      do: Click "+", open "MCP servers", check "Linear", then uncheck it.
+      expect: Linear shows a check and the menu stays open for the next switch; MCP servers are not
+        listed in the context drawer, since the switch is the space's rather than the chat's
+    - name: Load a skill with a slash command
+      do: Type "/web", pick "/web-search", then press Enter.
+      expect: the thread shows "Loaded the Web Search skill." and Web Search appears under Skills
+    - name: Create a task with a slash command
+      do: Type "/task:create Draft the launch note" and press Enter.
+      expect: with the tasks drawer open, the task appears in it
+    - name: Change the model and where the agent runs
+      do: Open the agent picker; pick another model, then switch "Agent runs on" to EDGE and back.
+      expect: the trigger names the new model, and its icon is a cloud while the agent runs on EDGE
+    - name: Compose a message with mentions
+      do: Add "Rich Burdon" with "+" > "Add an object…", then mention "Prompt redesign spec" and
+        "Q4 roadmap" with "@".
+      expect: each object shows in the prompt as a chip; Context does not change while composing
+    - name: Attach a file
+      do: Add a file with "+" > "Add files…".
+      expect: the file is listed as attaching until it is stored, then shows as a chip where it was added
+    - name: Send the message
+      do: Press Enter.
+      expect: the three objects join Context, the sent question shows their names, and a reply
+        streams in
+    - name: Switch the thread view
+      do: Pick "Summary" from the toolbar's View menu, then type "/view normal".
+      expect: the thread switches to the summary view and back
+    - name: Remove an object from context
+      do: Click the x beside Rich Burdon in the context drawer.
+      expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+```
+
+## Changelog
+
+```mdl
+decision D-1: The chat prompt follows Claude Code: one picker chooses the agent, where it runs and its model; skills load as `/` commands; `@` inserts a mention of an object, which joins the chat's context when the message is sent; a "+" menu adds files, objects, commands and MCP servers.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-2: The chat's tasks and its context are two drawers above the prompt, opened from a group of buttons before the microphone and Send, one open at a time; other plugins add their own sections to the context drawer.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-3: The `@` menu runs a full-text search as the reader types, debounced, and is the same search the markdown editor's `@` menu uses.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-4: Enter in the `@` menu picks the row on screen and drops the search still running.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-5: MCP servers are switched on and off in the "+" menu and are not listed in the context drawer. Fills in [D-1] and [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: The switch is the space's, not the chat's; listed in a chat's context it would read as something that chat holds.
+  rejected:
+    - List enabled servers in the context drawer: switching one off there would change every chat in the space.
+```
+
+```mdl
+decision D-6: An attached file is stored in the space and mentioned where it was added; the prompt lists files still attaching and those that could not be stored, with why, and does not send while any is attaching. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: A message sent before its file is stored would name a file the agent cannot read, and a failure shown only in the thread is missed on the space-home prompt, which has none.
+  rejected:
+    - Report failures as the chat's error event: the space-home prompt renders no thread to show it.
+```
+
+```mdl
+decision D-7: The attaching list appears only once an upload has taken 400 ms, in a neutral banner, so a quick upload does not flash. Fills in [D-6].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: A local upload stores in a fraction of a second, which showed the banner for one frame.
+```
+
+```mdl
+decision D-8: Approve [D-7].
+  date: 2026-10-21
+  by: user:wittjosiah
 ```
 
 ---

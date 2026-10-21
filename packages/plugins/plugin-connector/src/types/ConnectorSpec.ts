@@ -250,6 +250,14 @@ export type CredentialForm<Values = any> = {
 };
 
 /**
+ * Whose identity a connection acts as, which decides whether a shared space should hold it:
+ * - `user`: the person who connected it. Every member of the space acts as them.
+ * - `app`: DXOS's own registered app or bot on the service.
+ * - `custom`: an app, bot, service account or API key the space brings.
+ */
+export type ConnectorKind = 'user' | 'app' | 'custom';
+
+/**
  * One Connector capability row — shape of entries contributed via {@link Connector}.
  * A connector is the reusable driver for a service: it knows how to authenticate
  * (oauth / credentialForm), discover and materialize sync targets, and sync them.
@@ -261,6 +269,7 @@ export type ConnectorEntry = {
   source: string;
   /** User-facing label; defaults to `id` when omitted. */
   label?: string;
+  kind: ConnectorKind;
   oauth?: ConnectorOAuthSpec;
   /** How this connector syncs; absent for a connector that only authenticates. */
   sync?: ConnectorSync;

@@ -13,77 +13,16 @@ import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
 import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } from '../../../model/index.ts';
-import { FLOATING_PANEL, nodeDragData } from '../../../utils/index.ts';
+import {
+  FLOATING_PANEL,
+  type ToolEntry,
+  type ToolGroup,
+  TOOLS_GROUP,
+  nodeDragData,
+  sameTool,
+  toolGroups,
+} from '../../../utils/index.ts';
 import { type PanelProps } from '../types.ts';
-
-type Entry = { tool: Tool; icon: string; label: string; key?: string };
-
-const BASE: Entry[] = [
-  { tool: { kind: 'select' }, icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
-  { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
-];
-
-const TOOLS_GROUP = 'Tools';
-
-/**
- * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
- * a `folded` group always does.
- */
-export type ToolGroup = { name: string; entries: Entry[]; collapsible: boolean; folded?: boolean };
-
-/** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
-const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
-  const groups = new Map<string, Entry[]>();
-  for (const def of Object.values(nodes).filter((def) => def.palette !== false)) {
-    const name = def.group ?? '';
-    groups.set(name, [
-      ...(groups.get(name) ?? []),
-      { tool: { kind: 'node' as const, type: def.type }, icon: def.icon, label: def.name, key: def.key },
-    ]);
-  }
-  return [...groups.entries()].map(([name, entries]) => ({ name, entries, collapsible: entries.length > 1 }));
-};
-
-/**
- * Tool groups: the fixed tools, then the node types by group, then a link per link type; a group the projection
- * cannot apply (`create`, `link`) is left out rather than offered and silently dropped. Node groups fold when the rail
- * runs out of room; the link types always share one flyout, since a drawing mostly uses one of them.
- */
-export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] =>
-  [
-    { name: TOOLS_GROUP, entries: BASE, collapsible: false },
-    ...(capabilities.create ? nodeGroups(nodes) : []),
-    {
-      name: 'Links',
-      entries: capabilities.link
-        ? Object.values(links).map((def) => ({
-            tool: { kind: 'link' as const, type: def.type },
-            icon: def.icon,
-            label: def.name,
-            key: def.key,
-          }))
-        : [],
-      collapsible: true,
-      folded: true,
-    },
-  ].filter((group) => group.entries.length > 0);
-
-/** Tool entries by group, flat within each. */
-export const toolEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): Entry[][] =>
-  toolGroups(nodes, links, capabilities).map((group) => group.entries);
-
-export const sameTool = (left: Tool, right: Tool): boolean =>
-  left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
-
-export const toolForKey = (
-  nodes: NodeRegistry,
-  links: LinkRegistry,
-  capabilities: Capabilities,
-  key: string,
-): Tool | undefined =>
-  toolEntries(nodes, links, capabilities)
-    .flat()
-    .find((entry) => entry.key !== undefined && entry.key === key.toUpperCase())?.tool;
 
 export type ToolsPanelProps = PanelProps & {
   tool: Tool;
@@ -246,7 +185,7 @@ const ToolsFlyout = ({ group, tool, layout, onToolChange }: ToolsFlyoutProps) =>
     setOpenState(next);
   }, []);
   const hover = useHoverOpen(setOpen);
-  const [lastUsed, setLastUsed] = useState<Entry>(group.entries[0]);
+  const [lastUsed, setLastUsed] = useState<ToolEntry>(group.entries[0]);
   const active = group.entries.find((entry) => sameTool(tool, entry.tool));
   // A tool picked from elsewhere (its key, the grid) becomes the group's face, so the rail shows what is in use.
   useEffect(() => {
@@ -317,7 +256,7 @@ const ToolButton = ({
   tooltip = true,
   onToolChange,
 }: {
-  entry: Entry;
+  entry: ToolEntry;
   active: boolean;
   /** Shows the label as a tooltip on an icon-only button. */
   tooltip?: boolean;

@@ -69,6 +69,7 @@
     "jsonata": "catalog:"
   },
   "devDependencies": {
+    "@dxos/permission": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
