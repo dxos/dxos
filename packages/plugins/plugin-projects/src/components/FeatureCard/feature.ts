@@ -30,6 +30,8 @@ export type FeatureModel = {
   status: FeatureStatus;
   /** Repo paths of the specs that describe the feature. */
   specs: readonly string[];
+  /** Ids of the specs imported into the space, by repo path without anchor; such a spec opens in place of GitHub. */
+  specObjects?: Readonly<Record<string, string>>;
   subfeatures: readonly Feature.Subfeature[];
   /** Ids of the features this one needs (`DependsOn` targets). */
   dependsOn: readonly string[];
@@ -114,6 +116,8 @@ export type FeatureGraphInput = {
   implementedBy: readonly (readonly [FeatureTask, string])[];
   /** `Demonstrates` edges as `[showcase, targetId]`. */
   showcasedBy: readonly (readonly [FeatureRef, string])[];
+  /** Imported spec ids by repo path. */
+  specObjects?: Readonly<Record<string, string>>;
 };
 
 /** Joins features with their relations into card models, keeping the order of `features`. */
@@ -122,6 +126,7 @@ export const buildFeatureModels = ({
   dependsOn,
   implementedBy,
   showcasedBy,
+  specObjects,
 }: FeatureGraphInput): FeatureModel[] => {
   const group = <T>(pairs: readonly (readonly [T, string])[], key: (pair: readonly [T, string]) => string) => {
     const map = new Map<string, T[]>();
@@ -139,6 +144,7 @@ export const buildFeatureModels = ({
   return features.map((feature) => ({
     ...feature,
     specs: feature.specs ?? [],
+    specObjects,
     dependsOn: dependencies.get(feature.id) ?? [],
     tasks: tasks.get(feature.id) ?? [],
     showcases: showcases.get(feature.id) ?? [],

@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { sortByZ } from '@dxos/react-ui-canvas/headless';
+import { MAJOR_GRID, sortByZ } from '@dxos/react-ui-canvas/headless';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
 import { nearestHue, tldrawToViews } from './tldraw.ts';
 
 describe('tldrawToViews', () => {
   test('geo shapes map to rect and ellipse nodes, and a bound arrow to a link between them', ({ expect }) => {
-    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow());
+    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow(), { snap: false });
     expect(root).toBe('root');
     expect(skipped).toEqual({});
     expect(approximated).toEqual({});
@@ -48,7 +48,7 @@ describe('tldrawToViews', () => {
   });
 
   test('text becomes a note, a sticky a filled rect, and an unbound arrow a link with free ends', ({ expect }) => {
-    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow());
+    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow(), { snap: false });
     const { nodes, links } = views.root;
     expect(skipped).toEqual({ draw: 1 });
     expect(approximated).toEqual({ 'geo:star': 1, 'geo:hexagon': 1 });
@@ -69,7 +69,7 @@ describe('tldrawToViews', () => {
     expect(nodes.sticky.style).not.toHaveProperty('tone');
     expect(nodes.star).toMatchObject({ type: 'rect' });
     expect(nodes.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
-    expect(nodes.hexagon).toMatchObject({ type: 'polygon', sides: 6 });
+    expect(nodes.hexagon).toMatchObject({ type: 'polygon', params: { sides: 6 } });
     expect(links.free).toMatchObject({
       type: 'curve',
       source: { point: { x: 10, y: 300 } },
@@ -78,36 +78,38 @@ describe('tldrawToViews', () => {
     });
   });
 
-  test('a frame becomes a View node over a child View; links bind only within a View', ({ expect }) => {
-    const { views } = tldrawToViews(frameWithChildren());
-    expect(Object.keys(views).sort()).toEqual(['frame-view', 'root']);
+  test('a frame becomes a labelled rectangle on the frames layer, its shapes beside it, arrows bound across it', ({
+    expect,
+  }) => {
+    const { views } = tldrawToViews(frameWithChildren(), { snap: false });
+    // tldraw has no nested scenes: everything stays in the root View.
+    expect(Object.keys(views)).toEqual(['root']);
+    const { nodes, links, layers } = views.root;
 
-    const frame = views.root.nodes.frame;
-    expect(frame).toMatchObject({
-      type: 'view',
-      scene: 'frame-view',
+    expect(nodes.frame).toMatchObject({
+      type: 'rect',
       label: 'Stage',
-      link: { contents: true },
+      layer: 'frames',
       center: { x: 300, y: 250 },
       size: { width: 400, height: 300 },
+      style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+    });
+    // The frames layer is under the content layer, which every other element names.
+    expect(layers?.frames?.z.localeCompare(layers?.layer?.z ?? '')).toBe(-1);
+    expect(nodes['inner-a']).toMatchObject({ center: { x: 170, y: 170 }, label: 'A', layer: 'layer' });
+    expect(nodes['inner-b']).toMatchObject({ center: { x: 400, y: 300 }, label: 'B', layer: 'layer' });
+    expect(links['inner-arrow']).toMatchObject({
+      source: { node: 'inner-a' },
+      target: { node: 'inner-b' },
+      layer: 'layer',
     });
 
-    const child = views['frame-view'];
-    expect(child.name).toBe('Stage');
-    // The child View is centred on the frame: its top-left corner is at (-200, -150).
-    expect(child.nodes['inner-a']).toMatchObject({ center: { x: -130, y: -80 }, label: 'A' });
-    expect(child.nodes['inner-b']).toMatchObject({ center: { x: 100, y: 50 }, label: 'B' });
-    expect(child.links['inner-arrow']).toMatchObject({ source: { node: 'inner-a' }, target: { node: 'inner-b' } });
-
-    // The arrow on the page is bound to a shape inside the frame, a different View, so that end is left free.
-    expect(views.root.links.cross).toMatchObject({
-      source: { node: 'outside' },
-      target: { point: { x: 300, y: 150 } },
-    });
+    // The arrow from outside the frame stays bound to the shape inside it.
+    expect(links.cross).toMatchObject({ source: { node: 'outside' }, target: { node: 'inner-a' } });
   });
 
   test('a group becomes an anonymous Object placed by an Instance; rotation carries over', ({ expect }) => {
-    const { views, approximated } = tldrawToViews(groupAndRotation());
+    const { views, approximated } = tldrawToViews(groupAndRotation(), { snap: false });
     const { nodes, links } = views.root;
     expect(approximated).toEqual({});
 
@@ -147,7 +149,7 @@ describe('tldrawToViews', () => {
   });
 
   test('only the first page is imported', ({ expect }) => {
-    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main' });
+    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main', snap: false });
     expect(Object.keys(views)).toEqual(['main']);
     expect(Object.keys(views.main.nodes)).toEqual(['first']);
     expect(skipped).toEqual({ page: 1 });
@@ -172,5 +174,47 @@ describe('nearestHue', () => {
     expect(nearestHue('red')).toBe('red');
     expect(nearestHue('violet')).toBe('violet');
     expect(nearestHue('unknown')).toBe('neutral');
+  });
+
+  test('snaps every frame to the grid the canvas shows by default, keeping at least one cell', ({ expect }) => {
+    const { views } = tldrawToViews(shapesAndArrow());
+    const exact = tldrawToViews(shapesAndArrow(), { snap: false }).views;
+    for (const node of Object.values(views.root.nodes)) {
+      const left = node.center.x - node.size.width / 2;
+      const top = node.center.y - node.size.height / 2;
+      for (const value of [left, top, node.size.width, node.size.height]) {
+        expect(value % MAJOR_GRID).toBe(0);
+      }
+      expect(node.size.width).toBeGreaterThanOrEqual(MAJOR_GRID);
+      // Within half a cell of where tldraw drew it.
+      const source = exact.root.nodes[node.id];
+      expect(Math.abs(left - (source.center.x - source.size.width / 2))).toBeLessThanOrEqual(MAJOR_GRID / 2);
+    }
+  });
+
+  test('a snapped frame grows out to the grid, so it still holds its shapes', ({ expect }) => {
+    const { nodes } = tldrawToViews(frameWithChildren()).views.root;
+    const bounds = (id: string) => {
+      const { center, size } = nodes[id];
+      return {
+        left: center.x - size.width / 2,
+        top: center.y - size.height / 2,
+        right: center.x + size.width / 2,
+        bottom: center.y + size.height / 2,
+      };
+    };
+    const frame = bounds('frame');
+    for (const value of Object.values(frame)) {
+      expect(value % MAJOR_GRID).toBe(0);
+    }
+    for (const id of ['inner-a', 'inner-b']) {
+      const inner = bounds(id);
+      expect(inner.left).toBeGreaterThanOrEqual(frame.left);
+      expect(inner.top).toBeGreaterThanOrEqual(frame.top);
+      expect(inner.right).toBeLessThanOrEqual(frame.right);
+      expect(inner.bottom).toBeLessThanOrEqual(frame.bottom);
+    }
+    // Clear of the frame's corner, where its name is.
+    expect(bounds('inner-a').top).toBeGreaterThan(frame.top);
   });
 });

@@ -196,6 +196,8 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);
         yield* Stream.fromPubSub(historyTracker.undoable).pipe(
+          // An editor with its own undo keys records its edits without a toast.
+          Stream.filter((event) => event.toast !== false),
           Stream.runForEach((event) =>
             Effect.sync(() => showUndoToast(event.message, () => void historyTracker.undoPromise())),
           ),

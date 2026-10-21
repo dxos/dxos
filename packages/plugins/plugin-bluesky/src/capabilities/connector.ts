@@ -95,6 +95,7 @@ export default Capability.makeModule(
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,
         label: 'Bluesky',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.ATPROTO,
           scopes: [...BSKY_OAUTH_SCOPES],

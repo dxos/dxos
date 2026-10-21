@@ -81,15 +81,23 @@ export const Convert = Operation.make({
     key: DXN.make('org.dxos.operation.illustrator.convert'),
     name: 'Convert Drawing',
     description:
-      'Moves a drawing onto another variant (renderer) by re-applying its scene to a fresh canvas of that variant, e.g. to make a read-only SVG drawing editable in Excalidraw. Shapes not managed by the scene DSL are not carried over.',
+      "Converts a drawing to another variant (renderer), e.g. to make a read-only SVG drawing editable in Excalidraw: by default into a new drawing beside it, leaving the source as it is; with `replace`, in place. A variant's own converter is used when one is registered; otherwise the drawing's scene is re-applied to a fresh canvas, which fails on shapes the scene DSL does not manage.",
     icon: 'ph--swap--regular',
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to convert.' }),
     variant: Schema.String.annotate({ description: 'Target variant id (canvas typename), e.g. `excalidraw.com/2`.' }),
+    replace: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Convert the drawing in place, dropping its old canvas, rather than into a new drawing beside it.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     ...SceneOutput,
+    drawing: Ref.Ref(Drawing.Drawing).annotate({
+      description: 'The converted drawing: the new copy, or the source when replaced.',
+    }),
     upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids written to the new canvas.' }),
   }),
   services: [Capability.Service, Database.Service],

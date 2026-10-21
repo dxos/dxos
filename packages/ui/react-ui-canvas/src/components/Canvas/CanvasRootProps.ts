@@ -8,6 +8,8 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import {
   type CanvasAtoms,
+  type CanvasHistory,
+  type CreateHistory,
   type FreehandProjectionOptions,
   type InspectorMode,
   type Projection,
@@ -33,8 +35,14 @@ export type CanvasRootProps = Util.ThemedClassName<{
   links?: LinkRegistry;
   /** Projection per scene; freehand (identity) by default. */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
-  /** A host-owned projection instead, shared with the host's panels (see `useViewProjection`). */
+  /** A host-owned projection instead, shared with the host's panels (see `useViewProjection`); its edits are not undone. */
   projection?: Projection;
+  /**
+   * The undo history (VIEWS.md §8): how to make one over the canvas's own atoms (a host with its own history, such as
+   * Composer's tracker), or one from `useCanvasHistory` that a host sharing `projection` with its panels shares too; by
+   * default the canvas keeps a local one, so undo and redo work standalone.
+   */
+  history?: CanvasHistory | CreateHistory;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: CanvasAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */

@@ -3,3 +3,4 @@
 //
 
 export * from './call-testing.tsx';
+export * from './fake-user-media.ts';

@@ -4,4 +4,3 @@
 
 export * from './feature.ts';
 export * from './FeatureCard.tsx';
-export * from './FeatureBoard.tsx';

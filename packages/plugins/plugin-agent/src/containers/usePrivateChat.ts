@@ -9,11 +9,36 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
+import type * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 
 import { AgentOperation } from '#types';
+
+type Opened = { data?: Operation.Definition.Output<typeof AgentOperation.OpenPrivateChat>; error?: Error };
+
+/** Each member's open of their chat with each agent while it runs, by the agent's URI and the member's DID. */
+const opening = new Map<string, Promise<Opened>>();
+
+/**
+ * Runs `open` for `key`, or returns the run already in flight for it, so an article that remounts while the member's
+ * chat is still being made shares that open rather than making a second chat.
+ */
+export const shareInFlight = <T>(
+  inFlight: Map<string, Promise<T>>,
+  key: string,
+  open: () => Promise<T>,
+): Promise<T> => {
+  const running = inFlight.get(key);
+  if (running) {
+    return running;
+  }
+
+  const started = open().finally(() => inFlight.delete(key));
+  inFlight.set(key, started);
+  return started;
+};
 
 export type PrivateChatState = {
   /** The viewer's chat with the agent, once opened. */
@@ -50,15 +75,17 @@ export const usePrivateChat = (agent: Agent.Agent | undefined): PrivateChatState
       if (cancelled) {
         return;
       }
-      const { data, error } = await invokePromise(
-        AgentOperation.OpenPrivateChat,
-        {
-          agent: Ref.make(agent),
-          identityDid: identity.did,
-          ...(identity.displayName ? { name: identity.displayName } : {}),
-          remote: true,
-        },
-        { spaceId: db.spaceId },
+      const { data, error } = await shareInFlight(opening, `${Obj.getURI(agent)} ${identity.did}`, () =>
+        invokePromise(
+          AgentOperation.OpenPrivateChat,
+          {
+            agent: Ref.make(agent),
+            identityDid: identity.did,
+            ...(identity.displayName ? { name: identity.displayName } : {}),
+            remote: true,
+          },
+          { spaceId: db.spaceId },
+        ),
       );
       if (cancelled) {
         return;

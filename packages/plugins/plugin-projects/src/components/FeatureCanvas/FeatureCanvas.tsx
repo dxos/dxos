@@ -8,16 +8,20 @@ import * as Schema from 'effect/Schema';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import {
+  type Arrangement,
   Canvas,
   type CreateProps,
   DYNAMIC_VIEW_ID,
   type DynamicOptions,
+  type ForceOptions,
   type FreehandProjectionOptions,
   type GraphModel,
+  type LatticeSpec,
   type Node,
   type NodeViewProps,
   type Overlay,
   type Point,
+  SCENE_OVERLAY_ATTRIBUTE,
   createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
@@ -44,23 +48,31 @@ type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onRename' | 'onDescribe
 /** Node views get no host props, so the cards' data and edits reach them through context. */
 const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () => undefined });
 
+/** The card's body takes the wheel while it has more to scroll; otherwise the canvas pans. */
+const wheelOverlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
+
 const FeatureNodeView = ({ node }: NodeViewProps) => {
   const { lookup, onRename, onDescribe, editingId, onEditingChange } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
-    // Inert but for its text fields, so a press anywhere else on the card selects and drags the box.
-    <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none' data-testid='feature-canvas-node'>
+    // One bounded row, so the card fits the box and its body scrolls; presses on the card bubble to the box, which
+    // selects and drags it.
+    <Layout.Grid
+      classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden'
+      data-testid='feature-canvas-node'
+      {...wheelOverlay}
+    >
       {feature && (
         <FeatureCard
           feature={feature}
           lookup={lookup}
           showDependencies={false}
-          // A double-click on a box opens the feature, so a field opens only from its pencil.
-          editActivation='none'
+          scroll
           onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
           onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
-          editingName={feature.id === editingId}
-          onEditingNameChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+          // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
+          editing={onEditingChange ? feature.id === editingId : undefined}
+          onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
         />
       )}
     </Layout.Grid>
@@ -92,11 +104,16 @@ const createRegistry = (open: (id: string) => void) =>
     defaultNodePrototypes,
   );
 
+/**
+ * One card per lattice cell. Cells are centred on whole pitches, so a card's edges sit half its size from a pitch
+ * point: both sizes are multiples of twice the major grid, so the edges land on the coarsest dots.
+ */
+const LATTICE: LatticeSpec = { width: 256, height: 256, gutterX: 64, gutterY: 64 };
+
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
-  size: { width: 288, height: 192 },
-  pitch: { width: 336, height: 272 },
   createNode: (_node, props) => createFeatureNode(props),
-  link: { type: 'line', ends: { end: 'arrow' } },
+  // Smart links route through the lattice's gutters (or round the boxes without one), so arrows never cross a card.
+  link: { type: 'smart', ends: { end: 'arrow' } },
 };
 
 const EDGE_SEPARATOR = '->';
@@ -128,19 +145,25 @@ export type FeatureCanvasProps = {
   onLink?: (featureId: string, dependsOnId: string) => void;
   /** A selected arrow deleted; without it, arrows cannot be deleted. */
   onUnlink?: (featureId: string, dependsOnId: string) => void;
-  /** A selected box deleted: the feature leaves the map and is kept. Without it, boxes cannot be deleted. */
+  /** A selected box deleted: the feature leaves its project and is kept. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
-  /** Make each box's name and description editable from their pencils. */
+  /** Add each box's edit button, whose edit mode changes the name and description. */
   onRename?: (id: string, name: string) => void;
   onDescribe?: (id: string, description: string) => void;
   /** The box whose name field is open, as for a feature just created; cleared when it closes. */
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
+  /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
+  arrange?: Arrangement;
+  /** Strengths of the force arrangements. */
+  force?: ForceOptions;
+  /** False lays the boxes out freely, with no lattice cells to snap to or guides to draw; on by default. */
+  lattice?: boolean;
 };
 
 /**
- * The canvas view of a feature map: each feature's card in a box, laid out by dependency rank with a
- * straight arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
+ * The canvas view of a project's features: each feature's card in a box, laid out by dependency rank with a
+ * gutter-routed arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
  * each callback given, and change the model rather than the picture, so a refused edit never appears.
  */
 export const FeatureCanvas = ({
@@ -155,6 +178,9 @@ export const FeatureCanvas = ({
   onDescribe,
   editingId,
   onEditingChange,
+  arrange = 'crossings',
+  force,
+  lattice = true,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
@@ -196,12 +222,25 @@ export const FeatureCanvas = ({
   );
 
   const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) =>
+    ({ registry, constrained }: FreehandProjectionOptions) =>
       createDynamicProjection({
         registry,
+        constrained,
         graph,
         overlay,
-        options: { ...LAYOUT, nodes },
+        options: {
+          ...LAYOUT,
+          // Without a lattice the same slot sizes apply, so a free layout compares cell for cell with a snapped one.
+          ...(lattice
+            ? { lattice: LATTICE }
+            : {
+                size: { width: LATTICE.width, height: LATTICE.height },
+                pitch: { width: LATTICE.width + LATTICE.gutterX, height: LATTICE.height + LATTICE.gutterY },
+              }),
+          nodes,
+          arrange,
+          force: { attraction: force?.attraction, repulsion: force?.repulsion, range: force?.range },
+        },
         capabilities: { move: true, ...editable },
         onLink: ({ from, to }) => callbacks.current.onLink?.(from, to),
         onDelete: (ids) => {
@@ -215,12 +254,31 @@ export const FeatureCanvas = ({
           }
         },
       }),
-    [graph, overlay, nodes, editable.link, editable.delete],
+    [
+      graph,
+      overlay,
+      nodes,
+      arrange,
+      force?.attraction,
+      force?.repulsion,
+      force?.range,
+      lattice,
+      editable.link,
+      editable.delete,
+    ],
   );
 
   return (
     <FeatureNodeContext.Provider value={nodeContext}>
-      <Canvas.Root store={store} root={DYNAMIC_VIEW_ID} atoms={atoms} nodes={nodes} createProjection={createProjection}>
+      <Canvas.Root
+        store={store}
+        root={DYNAMIC_VIEW_ID}
+        atoms={atoms}
+        nodes={nodes}
+        createProjection={createProjection}
+        // The lattice guides are the board's structure; dots between them would only add noise.
+        backgroundGrid='none'
+      >
         <Canvas.Viewport />
         <Canvas.Navigation />
       </Canvas.Root>

@@ -125,12 +125,18 @@ export const lineStyleFields = {
   lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
 };
 
-/** A link's style: the common base, unset drawn neutral and solid. */
-export const LineStyle = Schema.Struct(lineStyleFields);
+/** Text size in scene units; unset is the element's own (stored values outside the editor's range are kept). */
+const fontSizeField = Schema.optional(Schema.Number.annotate({ title: 'Font size' }));
+
+/** A link's style: the common base and its caption's size, unset drawn neutral, solid and small. */
+export const LineStyle = Schema.Struct({ ...lineStyleFields, fontSize: fontSizeField });
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
 /** A shape's text size in scene units when its style sets none. */
 export const DEFAULT_FONT_SIZE = 24;
+
+/** A link caption's text size in scene units when its style sets none. */
+export const LINK_FONT_SIZE = 14;
 
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
@@ -156,8 +162,8 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** The face of the shape's text; unset is the theme's body face. */
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
-  /** Text size in scene units; unset is `DEFAULT_FONT_SIZE` (stored values outside the editor's range are kept). */
-  fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
+  /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
+  fontSize: fontSizeField,
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
   /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
@@ -233,29 +239,72 @@ export const EllipseNode = Schema.Struct({
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
+/** A cloud's own settings, in its `params`. */
+export const CloudParams = Schema.Struct({
+  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
+  bumps: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
+  ),
+}).annotate({ title: 'Cloud' });
+export type CloudParams = Schema.Schema.Type<typeof CloudParams>;
+
 /** A cloud filling the frame, its outline a ring of bumps; labelled like a box. */
 export const CloudNode = Schema.Struct({
   type: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
-  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
-  bumps: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
-  ),
+  params: Schema.optional(CloudParams),
 });
 export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
+
+/**
+ * How a polygon sits in its frame: `frame` scales it to fill the frame, centred by its own bounds; `circle` puts its
+ * vertices on the circle that fits the frame, centred on it.
+ */
+export const POLYGON_FITS = ['frame', 'circle'] as const;
+export type PolygonFit = (typeof POLYGON_FITS)[number];
+
+/** A polygon's own settings, in its `params`. */
+export const PolygonParams = Schema.Struct({
+  /** Unset, `DEFAULT_POLYGON_SIDES`. */
+  sides: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
+  ),
+  /** Unset, `frame`. */
+  fit: Schema.optional(Schema.Literals(POLYGON_FITS).annotate({ title: 'Fit' })),
+})
+  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('sides', 'fit') }))
+  .annotate({ title: 'Polygon' });
+export type PolygonParams = Schema.Schema.Type<typeof PolygonParams>;
 
 /** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
 export const PolygonNode = Schema.Struct({
   type: Schema.Literal('polygon'),
   ...nodeBase,
   ...boxFields,
-  /** Unset, `DEFAULT_POLYGON_SIDES`. */
-  sides: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
-  ),
+  params: Schema.optional(PolygonParams),
 });
 export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
+
+/** A polyline's own settings, in its `params`. */
+export const PolylineParams = Schema.Struct({
+  /** Unset, the line is open: drawn as a stroke alone, with no fill. */
+  closed: Schema.optional(Schema.Boolean.annotate({ title: 'Closed' })),
+}).annotate({ title: 'Polyline' });
+export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
+
+/**
+ * An irregular line of straight segments through `points`, in the frame's unit space (0..1 of its size, origin
+ * top-left) so a resize scales it; closed, it is a filled outline like a polygon. Labelled like a box.
+ */
+export const PolylineNode = Schema.Struct({
+  type: Schema.Literal('polyline'),
+  ...nodeBase,
+  ...boxFields,
+  points: Schema.Array(Point),
+  params: Schema.optional(PolylineParams),
+});
+export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
 
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
@@ -370,6 +419,7 @@ export const BuiltinNode = Schema.Union([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  PolylineNode,
   NoteNode,
   ViewNode,
   InstanceNode,
@@ -382,8 +432,9 @@ export type BuiltinNodeType = BuiltinNode['type'];
 export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'rect',
   'ellipse',
-  'cloud',
   'polygon',
+  'cloud',
+  'polyline',
   'note',
   'view',
   'instance',
@@ -402,6 +453,7 @@ export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'r
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
+export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
@@ -421,6 +473,23 @@ const LEGACY_NODE_TYPES: ReadonlyMap<string, BuiltinNodeType> = new Map([['frame
 export const withLegacyNodeType = (node: NodeBase): NodeBase => {
   const type = LEGACY_NODE_TYPES.get(node.type);
   return type ? { ...node, type } : node;
+};
+
+/** The settings each type once stored beside the shared fields, which it now keeps in `params`. */
+const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = { cloud: ['bumps'], polygon: ['sides', 'fit'] };
+
+/** A node storing its type's settings beside the shared fields reads with them in `params`; any other is returned as it is. */
+export const withLegacyParams = (node: NodeBase): NodeBase => {
+  const keys = (LEGACY_PARAMS[node.type] ?? []).filter((key) => key in node);
+  if (keys.length === 0) {
+    return node;
+  }
+  const params: unknown = Reflect.get(node, 'params');
+  const lifted = Object.fromEntries(keys.map((key) => [key, Reflect.get(node, key)]));
+  const next = { ...node };
+  keys.forEach((key) => Reflect.deleteProperty(next, key));
+  // A value already in `params` was written later, so it wins over the stored one.
+  return Object.assign(next, { params: { ...lifted, ...(typeof params === 'object' ? params : {}) } });
 };
 
 //
@@ -642,6 +711,7 @@ export const View = createViewSchema([
   EllipseNode,
   CloudNode,
   PolygonNode,
+  PolylineNode,
   NoteNode,
   ViewNode,
   InstanceNode,
@@ -663,12 +733,14 @@ export type View = {
   readonly timeline?: Timeline;
 };
 
-/** A View as stored before a rename, read in the current shape: its nodes' legacy type names mapped. */
+/** A View as stored before a rename, read in the current shape: its nodes' legacy type names and settings mapped. */
 export const withLegacyView = (view: View): View =>
-  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type))
+  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type) || withLegacyParams(node) !== node)
     ? {
         ...view,
-        nodes: Object.fromEntries(Object.entries(view.nodes).map(([id, node]) => [id, withLegacyNodeType(node)])),
+        nodes: Object.fromEntries(
+          Object.entries(view.nodes).map(([id, node]) => [id, withLegacyParams(withLegacyNodeType(node))]),
+        ),
       }
     : view;
 

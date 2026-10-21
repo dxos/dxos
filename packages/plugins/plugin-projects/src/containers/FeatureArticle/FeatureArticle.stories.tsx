@@ -7,9 +7,11 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-projects/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -44,6 +46,16 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
   );
 };
 
+/** Stands in for Inbox: a plugin whose profile says it bundles the spec the seeded feature cites. */
+const SpecSourcePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.inbox'),
+    name: 'Inbox',
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
+    spec: 'PLUGIN.mdl',
+  }),
+).pipe(Plugin.make);
+
 const meta = {
   title: 'plugins/plugin-projects/containers/FeatureArticle',
   render: DefaultStory,
@@ -65,6 +77,7 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         FeatureEditingPlugin.make(),
+        SpecSourcePlugin(),
       ],
     }),
     withTheme(),
@@ -123,5 +136,18 @@ export const RefusedCycle: Story = {
       await screen.findByText(/Provider sync → Compose & send → Provider sync/, undefined, { timeout: 5_000 }),
     ).toBeInTheDocument();
     await expect(relations.queryAllByRole('button', { name: 'Remove dependency on Compose & send' })).toHaveLength(0);
+  },
+};
+
+/** A spec a bundled plugin carries opens in the app; other specs keep their GitHub link. */
+export const OpenSpec: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('feature-card.spec')).toHaveLength(2), { timeout: 10_000 });
+    for (const row of canvas.getAllByTestId('feature-card.spec')) {
+      await expect(row.closest('a')).toBeNull();
+      await expect(row.textContent).toMatch(/plugin-inbox\/PLUGIN\.mdl/);
+    }
+    await userEvent.click(canvas.getAllByTestId('feature-card.spec')[0]);
   },
 };

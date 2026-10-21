@@ -40,6 +40,7 @@ const makeConnector = (
 ): ConnectorSpec.ConnectorEntry => ({
   id,
   source: `${id}.example`,
+  kind: 'user',
   label: id.toUpperCase(),
   ...extra,
 });
