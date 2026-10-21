@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { type Arrangement, DEFAULT_FORCE, type ForceOptions, type Point } from '@dxos/react-ui-canvas/scene';
@@ -24,11 +24,14 @@ type StoryArgs = {
   force?: ForceOptions;
   lattice?: boolean;
   snap?: boolean;
+  /** Changing it drops the dragged positions, so the layout runs again from the arrangement alone. */
+  layoutKey?: number;
 };
 
-const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lattice }: StoryArgs) => {
+const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lattice, layoutKey }: StoryArgs) => {
   const [features, setFeatures] = useState(initial);
   const [positions, setPositions] = useState<Record<string, Point>>({});
+  useEffect(() => setPositions({}), [layoutKey]);
   const update = (id: string, values: { name?: string; description?: string }) =>
     setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
   return (
@@ -53,6 +56,7 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
   const [repulsion, setRepulsion] = useState(DEFAULT_FORCE.repulsion);
   const [range, setRange] = useState(DEFAULT_FORCE.range);
   const [snap, setSnap] = useState(initialSnap);
+  const [layoutKey, setLayoutKey] = useState(0);
   return (
     <div className='dx-fill relative'>
       <DefaultStory
@@ -60,6 +64,7 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
         features={features}
         force={{ attraction, repulsion, range }}
         lattice={snap}
+        layoutKey={layoutKey}
       />
       <div className='absolute top-2 right-2 w-64 p-3 flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
         <Input.Slider
@@ -86,7 +91,14 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
           step={0.5}
           onValueChange={([value]) => setRange(value)}
         />
-        <Button.Toggle pressed={snap} onPressedChange={setSnap} icon='ph--magnet--regular' label='Snap' />
+        <div className='flex gap-2'>
+          <Button.Toggle pressed={snap} onPressedChange={setSnap} icon='ph--magnet--regular' label='Snap' />
+          <Button.Root
+            icon='ph--arrows-clockwise--regular'
+            label='Re-layout'
+            onClick={() => setLayoutKey((key) => key + 1)}
+          />
+        </div>
       </div>
     </div>
   );
