@@ -268,7 +268,12 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
     }
   }
 
-  groupRuns(root);
+  groupRuns(
+    root,
+    options.now === undefined
+      ? undefined
+      : { now: options.now, spanTimeoutMs: options.spanTimeoutMs ?? DEFAULT_SPAN_TIMEOUT_MS },
+  );
 
   // Sort children chronologically for deterministic output.
   const sortChildren = (span: MutableSpan): void => {
@@ -290,8 +295,12 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
  * invocation's begin and closes with the end of the last invocation, unless that one yielded too: then the run
  * is still going. An invocation joins a run when it carries `runId`, when a continuation names it, or when it
  * yielded, which means a continuation is on its way.
+ *
+ * The continuation can also never come: the dispatcher stopped, the app reloaded, or the pending retry was
+ * dropped. So with `timeout`, a run whose last invocation yielded longer ago than the span timeout is closed
+ * the way an abandoned span is, rather than shown as running forever.
  */
-const groupRuns = (root: MutableSpan): void => {
+const groupRuns = (root: MutableSpan, timeout?: { now: number; spanTimeoutMs: number }): void => {
   const named = new Set<string>();
   for (const span of root.children) {
     const runId = span.events[0]?.meta.runId;
@@ -326,7 +335,11 @@ const groupRuns = (root: MutableSpan): void => {
 
   for (const [runId, invocations] of runs) {
     invocations.sort((left, right) => left.firstTimestamp - right.firstTimestamp);
-    const first = invocations[0]!;
+    const first = invocations[0];
+    const begin = first?.events[0];
+    if (!first || !begin) {
+      continue;
+    }
     const run = makeMutableSpan(`run:${runId}`, {
       processName: first.meta.processName,
       conversationId: first.meta.conversationId,
@@ -334,10 +347,12 @@ const groupRuns = (root: MutableSpan): void => {
       runtimeName: first.meta.runtimeName,
       run: true,
     });
-    run.events.push({ ...first.events[0]! });
-    const end = invocations.at(-1)!.events.at(-1);
+    run.events.push({ ...begin });
+    const end = invocations.at(-1)?.events.at(-1);
     if (end && isSpanEndEvent(end) && !isRunAgainEnd(end)) {
       run.events.push({ ...end });
+    } else if (end && isRunAgainEnd(end) && timeout && timeout.now >= end.timestamp + timeout.spanTimeoutMs) {
+      run.events.push(makeTimeoutEndEvent(run, end.timestamp + timeout.spanTimeoutMs));
     }
     run.children = invocations;
     run.firstTimestamp = first.firstTimestamp;

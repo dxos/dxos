@@ -276,6 +276,24 @@ describe('buildSpanTree', () => {
       expect(run.events.map((event) => event.type)).toEqual([Trace.OperationStart.key]);
     });
 
+    // The continuation can never come (the dispatcher stopped, the retry was dropped): past the span
+    // timeout the run is closed like any abandoned span instead of showing as running forever.
+    test('a run whose continuation never came is closed after the span timeout', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, yielded);
+        }),
+      );
+      // The last yield lands at timestamp 4.
+      const [open] = buildSpanTree(messages, { now: 4 + DEFAULT_SPAN_TIMEOUT_MS - 1 }).children;
+      expect(open.events.map((event) => event.type)).toEqual([Trace.OperationStart.key]);
+
+      const [closed] = buildSpanTree(messages, { now: 4 + DEFAULT_SPAN_TIMEOUT_MS }).children;
+      expect(closed.events.map((event) => event.type)).toEqual([Trace.OperationStart.key, Trace.OperationEnd.key]);
+      expect(closed.events[1].data).toMatchObject({ outcome: 'failure' });
+    });
+
     test('an invocation that yielded is a run before its continuation starts', ({ expect }) => {
       const [run] = buildSpanTree(collectTraceEvents(invocation({ pid: 'sync-1' }, yielded))).children;
       expect(run.meta.run).toBe(true);
