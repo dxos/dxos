@@ -42,6 +42,18 @@ export const AgentAdmission = Capability.lazyModule(
   },
   () => import('./agent-admission.ts'),
 );
+// Makes the members who may write to the spaces of the agents this identity administers those agents' admins on EDGE,
+// which only the app shows; a headless host administers no agent. plugin-client provides the EDGE HTTP client only
+// once the client initializes, so requiring it keeps the sync from activating before then and finding no EDGE to ask.
+export const AgentAdminSync = Capability.lazyModule(
+  'AgentAdminSync',
+  {
+    requires: [ClientCapabilities.Client, ClientCapabilities.EdgeHttpClient],
+    provides: [],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./agent-admin-sync.ts'),
+);
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

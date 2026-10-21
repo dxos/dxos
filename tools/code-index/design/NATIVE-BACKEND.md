@@ -197,7 +197,7 @@ with the `napi` feature, copied to `code-index-native.node`, which `internal/nat
 pinned by the crate's `rust-toolchain.toml` (kept equal to `rust` in `.prototools`); RocksDB is
 compiled from source, which needs a C++ compiler and libclang for its bindgen step.
 
-CI installs both in `.depot/actions/setup`: the pinned toolchain with rustup's minimal profile, and
+CI installs both in `.github/actions/setup`: the pinned toolchain with rustup's minimal profile, and
 libclang from apt where it is missing. The cargo registry is cached on `Cargo.lock`. The crate's
 `target/` is not: moon's remote cache already restores `code-index-native.node` and skips
 `cargo-test` when the crate's inputs are unchanged, so only a job whose crate inputs changed

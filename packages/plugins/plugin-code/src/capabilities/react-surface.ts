@@ -8,10 +8,11 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Spec } from '@dxos/types';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
-import { CodeProject, Spec } from '#types';
+import { CodeProject } from '#types';
 
 import { isPluginSpecSubject } from '../plugin-spec.ts';
 

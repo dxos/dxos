@@ -835,6 +835,21 @@ export class EchoHost extends Resource {
     todo();
   }
 
+  /**
+   * Runs `wipe`, which deletes this host's rows while it stays open, with indexing stopped and the feed
+   * store's caches dropped after it: either would otherwise write cursors under tokens the wipe deleted.
+   */
+  async wipeStorage(wipe: () => Promise<void>): Promise<void> {
+    // Closing drains the pass under way.
+    await this._indexScheduler.close();
+    try {
+      await wipe();
+    } finally {
+      this._feedStore.resetCaches();
+      await this._indexScheduler.open(this._ctx);
+    }
+  }
+
   async removeSpace(spaceId: SpaceId): Promise<void> {
     this._spaceDocumentIds.delete(spaceId);
     const root = this._spaceStateManager.getRootBySpaceId(spaceId);
@@ -1749,7 +1764,6 @@ export class EchoHost extends Resource {
       if (this._ctx.disposed || !this.isOpen) {
         return undefined;
       }
-      log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
       throw err;

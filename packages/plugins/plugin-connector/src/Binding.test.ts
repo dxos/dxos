@@ -258,6 +258,7 @@ describe('Binding.sync', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -560,6 +561,7 @@ describe('binding lifecycle', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'gmail',
     source: SOURCE,
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -1039,6 +1041,7 @@ describe('Binding.syncAll', () => {
   }): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: {
       operation: TestSync,
       ...(auto ? { auto: true } : {}),

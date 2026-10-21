@@ -15,9 +15,10 @@ import * as AgentPresence from './AgentPresence.ts';
 
 /**
  * An agent's default space: the space its own identity owns, minted with that identity on EDGE and tagged
- * `AppSpace.AGENT_SPACE_TAG`. Its members who may write to it are the agent's admins, as EDGE decides it. Every
- * membership carries the tag, and a client opens every space its HALO holds a membership of, so the agents an
- * identity administers are among its own spaces and finding them needs nothing from EDGE.
+ * `AppSpace.AGENT_SPACE_TAG`. Its members who may write to it are made the agent's admins: EDGE checks the role against
+ * the `IdentityAdmin` credentials the agent issues, one per admin, which its admins' clients ask EDGE for
+ * (`AgentAdminSync`). Every membership carries the tag, and a client opens every space its HALO holds a membership of,
+ * so the agents an identity administers are among its own spaces and finding them needs nothing from EDGE.
  */
 export type Space = {
   readonly id: SpaceId;

@@ -69,6 +69,7 @@ export default Capability.makeModule(
         id: CLOUDFLARE_PROVIDER_ID,
         source: CLOUDFLARE_SOURCE,
         label: 'Cloudflare',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.CLOUDFLARE,
           scopes: CLOUDFLARE_OAUTH_SCOPES,

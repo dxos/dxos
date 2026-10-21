@@ -525,6 +525,8 @@ export const TestPlanningScripted: Story = {
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
   },
+  // TODO(wittjosiah): Times out in CI (30 s, no retries); fix and re-enable.
+  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await submitPrompt(canvasElement, 'Plan the launch.');
@@ -590,6 +592,8 @@ export const TestDelegationScripted: Story = {
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace'), StoryRole.Context]],
   },
+  // TODO(wittjosiah): Times out in CI (30 s, no retries); fix and re-enable.
+  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

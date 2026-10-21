@@ -129,6 +129,7 @@ const runCodeModeTurn = ({
         sandbox,
         runtime,
         operations,
+        skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
         maxOutput: options.maxOutput,
         timeout: options.timeout,
       });

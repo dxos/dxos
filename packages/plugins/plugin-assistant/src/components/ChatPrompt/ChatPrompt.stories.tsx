@@ -74,12 +74,12 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} chatModel={chatModel}>
+        <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={initialTasksVisible ? 'tasks' : undefined}>
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. The
               checklist is the prompt's own disclosed region now, not a sibling the story places. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultTasksVisible={initialTasksVisible} />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </Chat.Root>
       </div>
     </div>

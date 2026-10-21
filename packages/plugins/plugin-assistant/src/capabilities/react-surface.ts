@@ -18,6 +18,7 @@ import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import * as Position from '@dxos/util/Position';
 
+import { ChatContextPanel } from '#components';
 import {
   AgentArticle,
   AgentProperties,
@@ -53,6 +54,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: AssistantSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'chatContext',
+        filter: Surface.makeFilter(ChatSurface.ChatDetails),
+        component: ChatContextPanel,
+        props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
+        position: Position.first,
       }),
       Surface.create({
         id: 'spaceHomePrompt',
