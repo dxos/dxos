@@ -460,15 +460,14 @@ test QA-2: Companion chat is provisioned and bound
 ```mdl
 test QA-3: The prompt carries context, commands and the agent's settings
   desc: |
-    The chat prompt: the task and context drawers above it, the "+" menu (objects and MCP servers),
+    The chat prompt: the task and context drawers above it, the "+" menu (objects and connectors),
     `@` mentions, `/` commands and skills, and the agent picker (agent, where it runs, model).
   actors: human
   status: unverified
   given:
     - an identity exists
     - space: a space is open
-    - documents "Prompt redesign spec", "Q4 roadmap" and "Meeting notes", a person "Rich Burdon",
-      and MCP servers "Linear" and "GitHub", both switched off
+    - documents "Prompt redesign spec", "Q4 roadmap" and "Meeting notes", and a person "Rich Burdon"
     - chat: a chat "Prompt redesign" with two tasks, open in a plank
   steps:
     - name: Open the task and context drawers
@@ -476,9 +475,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
       expect: the two tasks open in a drawer above the prompt; the context button swaps it for a drawer
         with Context and a collapsed Skills section, and only one drawer is open at a time
     - name: Switch on an MCP server from the + menu
-      do: Click "+", open "MCP servers", check "Linear", then uncheck it.
-      expect: Linear shows a check and the menu stays open for the next switch; MCP servers are not
-        listed in the context drawer, since the switch is the space's rather than the chat's
+      do: Click "+", open "Connectors", check "Browser", then uncheck it.
+      expect: Browser, a built-in server that starts off, shows a check and the menu stays open for
+        the next switch; unchecking it turns it off in this chat again
     - name: Load a skill with a slash command
       do: Type "/web", pick "/web-search", then press Enter.
       expect: the thread shows "Loaded the Web Search skill." and Web Search appears under Skills
@@ -505,7 +504,44 @@ test QA-3: The prompt carries context, commands and the agent's settings
     - name: Remove an object from context
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+
+test QA-4: A chat's MCP servers come from connections and built-in servers
+  desc: |
+    MCP tools reach a chat from two places: the built-in servers plugins ship (Browser), which start
+    off and are turned on as a skill needs them, and the space's connections, such as a Custom MCP
+    Server, which are on until a chat turns them off. The "+" menu's Connectors submenu switches both
+    for one chat, and "Manage connections…" opens the space's Connections beside the chat.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "MCP servers", open in a plank
+    - an MCP server that takes no credential answers at http://localhost:8931/open/mcp (the
+      repo's `@dxos/mcp-client` test server)
+  steps:
+    - name: The built-in servers start off
+      do: Click "+" and open "Connectors".
+      expect: Browser is listed and unchecked; no connection was created to list it
+    - name: The agent turns a built-in on when its skill needs it
+      do: Send "Open https://www.iana.org/help/example-domains in the browser and tell me the page heading."
+      expect: in one response the agent enables the Browser skill, turns the Browser server on with
+        set-mcp-connection and calls browser_navigate; the reply names "Example Domains", and Browser
+        is now checked under Connectors
+    - name: Manage connections opens beside the chat
+      do: Click "+" > "Connectors" > "Manage connections…".
+      expect: the space's Connections settings open next to the chat, which stays open
+    - name: Add a Custom MCP Server with no credential
+      do: Click Connect, pick "Custom MCP Server", enter http://localhost:8931/open/mcp, and save.
+      expect: the connection is created at once, with no sign-in, and is listed in Connections
+    - name: The chat uses the connection's tools
+      do: In the chat, send "What is the weather in Paris? Use the get_weather tool."
+      expect: the agent calls get_weather and reports the test server's forecast
+    - name: Turn the connection off for this chat
+      do: Click "+" > "Connectors" and uncheck "localhost:8931".
+      expect: it shows unchecked here, while it stays listed in the space's Connections
 ```
+
 
 ## Changelog
 

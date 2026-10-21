@@ -164,6 +164,9 @@ const navigateToNewConnection = (
     .invoke(LayoutOperation.Open, {
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
+      // Beside the plank the flow started from when the deck already holds several (Connections opened
+      // from a chat), so creating one does not close the chat; on its own, it navigates.
+      disposition: 'auto',
     })
     .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
