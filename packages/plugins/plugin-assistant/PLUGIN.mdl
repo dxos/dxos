@@ -459,8 +459,7 @@ test QA-2: Companion chat is provisioned and bound
 ```mdl
 test QA-3: The prompt carries context, commands and the agent's settings
   desc: |
-    The chat prompt: the context rail beside the thread, the task tray above the prompt, the "+" menu
-    (objects and MCP servers),
+    The chat prompt: the task and context drawers above it, the "+" menu (objects and MCP servers),
     `@` mentions, `/` commands and skills, and the agent picker (agent, where it runs, model).
   actors: human
   status: unverified
@@ -471,20 +470,20 @@ test QA-3: The prompt carries context, commands and the agent's settings
       and MCP servers "Linear" and "GitHub", both switched off
     - chat: a chat "Prompt redesign" with two tasks, open in a plank
   steps:
-    - name: Open the context rail and the task tray
-      do: Click the context button at the toolbar's far end, then the tasks button beside Send.
-      expect: a rail opens beside the thread with a context panel (Context and a collapsed Skills
-        section), and the two tasks open in a tray above the prompt
+    - name: Open the task and context drawers
+      do: Click the tasks button in the group before the microphone and Send, then the context button.
+      expect: the two tasks open in a drawer above the prompt; the context button swaps it for a drawer
+        with Context and a collapsed Skills section, and only one drawer is open at a time
     - name: Switch on an MCP server from the + menu
       do: Click "+", open "MCP servers", check "Linear", then uncheck it.
       expect: Linear shows a check and the menu stays open for the next switch; MCP servers are not
-        listed in the rail, since the switch is the space's rather than the chat's
+        listed in the context drawer, since the switch is the space's rather than the chat's
     - name: Load a skill with a slash command
       do: Type "/web", pick "/web-search", then press Enter.
       expect: the thread shows "Loaded the Web Search skill." and Web Search appears under Skills
     - name: Create a task with a slash command
       do: Type "/task:create Draft the launch note" and press Enter.
-      expect: the task appears in the task tray
+      expect: with the tasks drawer open, the task appears in it
     - name: Change the model and where the agent runs
       do: Open the agent picker; pick another model, then switch "Agent runs on" to EDGE and back.
       expect: the trigger names the new model, and its icon is a cloud while the agent runs on EDGE
@@ -500,7 +499,7 @@ test QA-3: The prompt carries context, commands and the agent's settings
       do: Pick "Summary" from the toolbar's View menu, then type "/view normal".
       expect: the thread switches to the summary view and back
     - name: Remove an object from context
-      do: Click the x beside Rich Burdon in the rail.
+      do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
 ```
 

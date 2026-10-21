@@ -19,11 +19,9 @@ import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 import { Merge } from '@dxos/util';
 
-import { Chat as ChatComponent, type ChatRootProps, useChatContext } from '#components';
+import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatModel, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
@@ -124,73 +122,54 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onEvent={onEvent}
         onSubmit={onSubmit}
       >
-        <Panel.Root role={role} ref={forwardedRef} classNames='@container'>
+        <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Header>
-            {/* Full width, so the rail's toggle sits at the far end above the rail it opens. */}
-            <ChatComponent.Toolbar
-              classNames='px-1'
-              attendableId={attendableId}
-              companionTo={companionTo}
-              detailsToggle={!mobile}
-            />
+            <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
           </Panel.Header>
           <Panel.Body asChild>
-            <ChatColumns>
-              <ChatComponent.Content>
-                <Layout.Flex classNames='dx-expand relative'>
-                  {/* Thread outline (Table of Contents). */}
-                  {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+            <ChatComponent.Content>
+              <Layout.Flex classNames='dx-expand relative'>
+                {/* Thread outline (Table of Contents). */}
+                {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
 
-                  {/* Main thread. */}
-                  <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
+                {/* Main thread. */}
+                <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
 
-                  {/** Floating info. */}
-                  {!mobile && (
-                    <Layout.Grid
-                      cols={['fill', 'auto']}
-                      gap='sm'
-                      classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
-                      data-testid='assistant.chat-status'
-                    >
-                      {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
-                      <ChatComponent.Activity classNames='col-start-1 self-center' />
-                      <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
-                    </Layout.Grid>
-                  )}
-                </Layout.Flex>
+                {/** Floating info. */}
+                {!mobile && (
+                  <Layout.Grid
+                    cols={['fill', 'auto']}
+                    gap='sm'
+                    classNames='absolute bottom-0 left-0 right-0 dx-document px-3 pb-2'
+                    data-testid='assistant.chat-status'
+                  >
+                    {/* Pinned to their columns: either renders nothing while idle, which would move the other over. */}
+                    <ChatComponent.Activity classNames='col-start-1 self-center' />
+                    <ChatComponent.Status classNames='col-start-2 justify-self-end bg-input-surface rounded-sm' />
+                  </Layout.Grid>
+                )}
+              </Layout.Flex>
 
-                <Layout.Flex column classNames='dx-document px-2 pb-2'>
-                  {mobile && (
-                    <Layout.Grid cols={2}>
-                      <ChatComponent.Activity />
-                    </Layout.Grid>
-                  )}
+              <Layout.Flex column classNames='dx-document px-2 pb-2'>
+                {mobile && (
+                  <Layout.Grid cols={2}>
+                    <ChatComponent.Activity />
+                  </Layout.Grid>
+                )}
 
-                  {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
-                  <ChatComponent.Prompt
-                    {...chatProps}
-                    outline
-                    autoFocus={!companionTo}
-                    attendableId={attendableId}
-                    companionTo={companionTo}
-                    customActions={customActions}
-                    nodeId={actionNodeId}
-                    preset={preset?.id}
-                  />
-                </Layout.Flex>
-              </ChatComponent.Content>
-
-              {!mobile && (
-                <ChatComponent.Details
-                  classNames={[
-                    'p-2 bg-base-surface',
-                    // Beside the thread when the panel has room for both; over it, from the right, when not.
-                    'absolute inset-y-0 right-0 z-20 w-[min(20rem,100%)] shadow-lg',
-                    '@min-[44rem]:static @min-[44rem]:w-auto @min-[44rem]:shadow-none',
-                  ]}
+                {/* Composer and drawers in one: `Chat.Prompt` owns the disclosure between them. */}
+                <ChatComponent.Prompt
+                  {...chatProps}
+                  outline
+                  autoFocus={!companionTo}
+                  attendableId={attendableId}
+                  companionTo={companionTo}
+                  customActions={customActions}
+                  nodeId={actionNodeId}
+                  preset={preset?.id}
                 />
-              )}
-            </ChatColumns>
+              </Layout.Flex>
+            </ChatComponent.Content>
           </Panel.Body>
         </Panel.Root>
       </ChatComponent.Root>
@@ -199,18 +178,3 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
 );
 
 ChatArticle.displayName = 'ChatArticle';
-
-/** The thread, and the details rail as a second column while it is open. */
-const ChatColumns = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { detailsOpen } = useChatContext('ChatColumns');
-  return (
-    <div
-      {...Util.composableProps(props, {
-        classNames: mx('relative grid', detailsOpen && '@min-[44rem]:grid-cols-[minmax(0,1fr)_20rem]'),
-      })}
-      ref={forwardedRef}
-    >
-      {children}
-    </div>
-  );
-});

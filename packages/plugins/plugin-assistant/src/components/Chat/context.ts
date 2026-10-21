@@ -12,7 +12,7 @@ import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
 import { type ChatModel } from '../../chat-model/index.ts';
-import { type ChatEvent } from './events.ts';
+import { type ChatDrawer, type ChatEvent } from './events.ts';
 
 /**
  * Wall-clock timestamps for the most-recent (or in-flight) request, lifted out of
@@ -44,9 +44,9 @@ export type ChatContextValue = {
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;
   setVisibleRange: (range: MessageRange | undefined) => void;
-  /** Whether the details panel (the tray above the prompt, or the rail beside the thread) is open. */
-  detailsOpen: boolean;
-  setDetailsOpen: (open: boolean) => void;
+  /** The drawer open above the prompt, if any. */
+  drawer?: ChatDrawer;
+  setDrawer: (drawer?: ChatDrawer) => void;
 };
 
 /** What the chat currently shows: the projected thread and the state that moves with it. */

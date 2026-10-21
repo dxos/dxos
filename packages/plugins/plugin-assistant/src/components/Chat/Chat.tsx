@@ -70,7 +70,7 @@ import {
   useChatContext,
   useChatThreadContext,
 } from './context.ts';
-import { type ChatEvent } from './events.ts';
+import { type ChatDrawer, type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -90,8 +90,8 @@ type ChatRootProps = PropsWithChildren<
     onSubmit?: (text: string) => Promise<void> | void;
     /** Called at submit time to capture ephemeral request context (e.g. companion selection). */
     getContext?: () => ChatRequestContext | undefined;
-    /** Whether the details panel is open on mount. */
-    defaultDetailsOpen?: boolean;
+    /** The drawer open above the prompt on mount. */
+    defaultDrawer?: ChatDrawer;
   }
 >;
 
@@ -104,13 +104,13 @@ const ChatRoot = ({
   onEvent,
   onSubmit,
   getContext,
-  defaultDetailsOpen = false,
+  defaultDrawer,
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
-  // Stays as the reader left it: new context or a new task does not open it. Per mount rather than
-  // persisted, since it is a glance, not a preference.
-  const [detailsOpen, setDetailsOpen] = useState(defaultDetailsOpen);
+  // Stays as the reader left it: new context or a new task does not open a drawer. Per mount rather
+  // than persisted, since it is a glance, not a preference.
+  const [drawer, setDrawer] = useState<ChatDrawer | undefined>(defaultDrawer);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = Hooks.useOperationInvoker();
   const chatModelState = getChatModelState(chatModel);
@@ -160,6 +160,11 @@ const ChatRoot = ({
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
+        case 'set-drawer': {
+          setDrawer(ev.drawer);
+          break;
+        }
+
         case 'toggle-debug': {
           setDebug((debug) => {
             if (debug) {
@@ -372,8 +377,8 @@ const ChatRoot = ({
       started={messages.length > 0 || queued > 0}
       setController={setController}
       setVisibleRange={setVisibleRange}
-      detailsOpen={detailsOpen}
-      setDetailsOpen={setDetailsOpen}
+      drawer={drawer}
+      setDrawer={setDrawer}
       {...props}
     >
       <ChatThreadContextProvider
@@ -417,14 +422,12 @@ type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'
     companionTo?: Obj.Unknown;
     /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
     switcher?: ChatSwitcher;
-    /** Add the toggle for `Chat.Details`, the rail beside the thread. */
-    detailsToggle?: boolean;
   }>;
 
 const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, switcher, detailsToggle, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo, switcher, detailsToggle });
+    const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
     return (
       <ActionToolbar
@@ -745,71 +748,74 @@ ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<
-  NaturalChatPromptProps,
-  'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible' | 'started'
-> & {
-  /** Whether the checklist is disclosed on mount. */
-  defaultTasksVisible?: boolean;
-};
+type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'chatModel' | 'event' | 'drawers' | 'started'>;
 
 /**
- * The composer with the chat's checklist disclosed above it.
+ * The composer with its drawers above it: the chat's checklist, and what it has in context (with any
+ * section a plugin contributes). One drawer is open at a time.
  *
- * One component rather than two siblings: they share a border and a rounded shell, and the control
- * that discloses the checklist lives in the composer's own action bar — so a host that placed them
- * side by side had to hold the disclosure state between them and coordinate the corner radius.
+ * One component rather than siblings: they share a border and a rounded shell, and the controls that
+ * open the drawers live in the composer's own action bar — so a host that placed them side by side
+ * had to hold the open state between them and coordinate the corner radius.
  *
  * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
- * trigger is not used: the toggle is a button inside the composer, which reports through the chat
- * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
+ * trigger is not used: the toggles are buttons inside the composer, which report through the chat
+ * event rather than being wrapped in a `Collapsible.Trigger` they cannot reach.
  */
-const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, chatModel, event, queueSize, started } = useChatContext(CHAT_PROMPT_NAME);
+const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
+  const { chat, db, chatModel, event, queueSize, started, drawer, setDrawer } = useChatContext(CHAT_PROMPT_NAME);
 
-  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
-  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
+  // A drawer with nothing to show withholds its toggle rather than pointing at nothing.
   const [tasks] = useObject(chat, 'tasks');
-  const hasTasks = tasks != null;
+  const available = useMemo(() => {
+    const drawers: ChatDrawer[] = [];
+    if (tasks != null) {
+      drawers.push('tasks');
+    }
+    if (chat && chatModel && db) {
+      drawers.push('context');
+    }
+    return drawers;
+  }, [chat, chatModel, db, tasks]);
+  const open = drawer && available.includes(drawer) ? drawer : undefined;
 
-  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
-  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
-  // it is a glance, not a preference.
-  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
-  useEffect(() => {
-    return event.on((ev) => {
-      if (ev.type === 'toggle-tasks') {
-        setTasksVisible((visible) => !visible);
-      }
-    });
-  }, [event]);
+  // The drawer that last opened keeps rendering while the region closes, so the content does not vanish
+  // before the ramp has hidden it.
+  const shownRef = useRef(open);
+  if (open) {
+    shownRef.current = open;
+  }
+  const shown = open ?? shownRef.current;
 
   return (
     <Collapsible.Root
-      open={tasksVisible}
-      onOpenChange={({ open }) => setTasksVisible(open)}
-      // Clipped rather than unmounted: the list holds its own subscriptions, and remounting it on
-      // every toggle would refetch the checklist to show what the reader just hid.
+      open={open !== undefined}
+      onOpenChange={({ open }) => !open && setDrawer(undefined)}
+      // Clipped rather than unmounted: the drawers hold their own subscriptions, and remounting them on
+      // every toggle would refetch what the reader just hid.
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      {hasTasks && (
+      {available.length > 0 && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
-          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
+          <div className='shrink-0 max-h-[40dvh] overflow-y-auto dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm'>
+            {shown === 'tasks' && <ChatTaskList classNames='text-fg-muted' />}
+            {shown === 'context' && <ChatContextDrawer />}
+          </div>
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
         {...props}
-        // Square where the checklist meets it, so the two read as one shell rather than two cards.
-        classNames={[tasksVisible && 'rounded-t-none', classNames]}
+        // Square where a drawer meets it, so the two read as one shell rather than two cards.
+        classNames={[open && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
         chatModel={chatModel}
         event={event}
         queueSize={queueSize}
         started={started}
-        tasksVisible={hasTasks ? tasksVisible : undefined}
+        drawers={{ available, open }}
       />
     </Collapsible.Root>
   );
@@ -818,34 +824,24 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
-// Details
+// ContextDrawer
 //
 
-const CHAT_DETAILS_NAME = 'Chat.Details';
+const CHAT_CONTEXT_DRAWER_NAME = 'Chat.ContextDrawer';
 
 /**
- * The context rail beside the thread, opened from the toolbar: the panels plugins contribute to
- * `ChatSurface.ChatDetails`, the chat's context among them. Renders nothing while closed.
+ * The context drawer: the sections plugins contribute to `ChatSurface.ChatDetails`, the chat's own
+ * context (objects and skills) first.
  */
-const ChatDetails = Util.composable<HTMLDivElement>((props, forwardedRef) => {
-  const { chat, chatModel, detailsOpen } = useChatContext(CHAT_DETAILS_NAME);
-  if (!detailsOpen) {
-    return null;
-  }
-
+const ChatContextDrawer = () => {
+  const { chat, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
   return (
-    <div
-      {...Util.composableProps(props, { classNames: 'flex flex-col gap-2 overflow-y-auto' })}
-      data-testid='assistant.details'
-      ref={forwardedRef}
-    >
-      {/* Unlimited: every plugin's panel is shown, the context panel first. */}
+    <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
+      {/* Unlimited: every plugin's section is shown. */}
       {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, context: chatModel?.context }} />}
     </div>
   );
-});
-
-ChatDetails.displayName = CHAT_DETAILS_NAME;
+};
 
 //
 // TaskList
@@ -1046,7 +1042,6 @@ export const Chat = {
   Root: ChatRoot,
   Toolbar: ChatToolbar,
   Content: ChatContent,
-  Details: ChatDetails,
   Prompt: ChatPrompt,
   Activity: ChatActivity,
   Status: ChatStatus,

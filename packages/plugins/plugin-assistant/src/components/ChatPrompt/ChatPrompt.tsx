@@ -74,8 +74,8 @@ export type ChatPromptProps = Merge<
     /** Skill registry for the context controls when there is no chat model. */
     registry?: Registry.Registry;
     event: Event<ChatEvent>;
-    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
-    tasksVisible?: boolean;
+    /** The drawers above the prompt and the one that is open (see `ChatActions`). */
+    drawers?: ChatActionsProps['drawers'];
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
     /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
@@ -109,7 +109,7 @@ export const ChatPrompt = ({
   context: draftContext,
   registry: draftRegistry,
   event,
-  tasksVisible,
+  drawers,
   attendableId,
   customActions,
   nodeId,
@@ -354,7 +354,7 @@ export const ChatPrompt = ({
               // and the reader still needs a way to stop it.
               processing={active}
               canSend={canSend}
-              tasksVisible={tasksVisible}
+              drawers={drawers}
               onSend={handleSend}
               onEvent={handleEvent}
               leading={

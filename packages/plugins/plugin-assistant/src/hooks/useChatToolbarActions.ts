@@ -32,13 +32,11 @@ export type ChatToolbarActionsProps = {
   chat?: Chat.Chat;
   companionTo?: Obj.Unknown;
   switcher?: ChatSwitcher;
-  /** Add the toggle for the context rail, at the toolbar's far end. */
-  detailsToggle?: boolean;
 };
 
-export const useChatToolbarActions = ({ chat, companionTo, switcher, detailsToggle }: ChatToolbarActionsProps) => {
+export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolbarActionsProps) => {
   const { invoke } = Hooks.useOperationInvoker();
-  const { db, detailsOpen, setDetailsOpen } = useChatContext('useChatToolbarActions');
+  const { db } = useChatContext('useChatToolbarActions');
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
 
   // Stable references in deps avoid circular reference issues.
@@ -176,26 +174,9 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher, detailsTogg
         );
       }
 
-      if (detailsToggle) {
-        builder.separator().action(
-          'details',
-          {
-            label: [detailsOpen ? 'hide-details.button' : 'show-details.button', { ns: meta.profile.key }],
-            icon: 'px--context-panel--regular',
-            variant: 'toggle',
-            checked: detailsOpen,
-            testId: 'assistant.toggle-details',
-          },
-          () => setDetailsOpen(!detailsOpen),
-        );
-      }
-
       return builder.build();
     },
     [
-      detailsToggle,
-      detailsOpen,
-      setDetailsOpen,
       db?.spaceId,
       companionTo?.id,
       chat?.id,

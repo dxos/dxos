@@ -8,6 +8,9 @@ import { type Obj } from '@dxos/echo';
  * The main `ChatRoot` manages the `ChatContextValue` which contains an `event` property that subcomponents
  * can subscribe to and submit events. Unhandled events are passed to the external `onEvent` callback.
  */
+/** The drawers above the prompt; one is open at a time, so together they never cover more of the thread than one does. */
+export type ChatDrawer = 'tasks' | 'context';
+
 export type ChatEvent =
   | {
       type: 'toggle-debug';
@@ -88,7 +91,8 @@ export type ChatEvent =
   | {
       type: 'thread-close';
     }
-  /** Show or hide the checklist beside the prompt. */
+  /** Open one of the drawers above the prompt, or close the one that is open. */
   | {
-      type: 'toggle-tasks';
+      type: 'set-drawer';
+      drawer?: ChatDrawer;
     };

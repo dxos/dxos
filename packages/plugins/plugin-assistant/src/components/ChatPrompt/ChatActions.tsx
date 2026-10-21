@@ -8,13 +8,14 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat/events.ts';
+import { type ChatDrawer, type ChatEvent } from '../Chat/events.ts';
 
 /**
  * 44px at the 16px (pointer: fine) root font-size, the iOS HIG minimum touch target; the density
@@ -39,8 +40,8 @@ export type ChatActionsProps = Util.ThemedClassName<
     debug?: boolean;
     /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
     canSend?: boolean;
-    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
-    tasksVisible?: boolean;
+    /** The drawers above the prompt that have something to show, and the one that is open. */
+    drawers?: { available: readonly ChatDrawer[]; open?: ChatDrawer };
     /** Submits the current prompt; the send control renders only when provided. */
     onSend?: () => void;
     onEvent?: (event: ChatEvent) => void;
@@ -56,7 +57,7 @@ export const ChatActions = ({
   processing,
   debug,
   canSend,
-  tasksVisible,
+  drawers,
   onSend,
   onEvent,
 }: ChatActionsProps) => {
@@ -74,19 +75,6 @@ export const ChatActions = ({
           iconOnly
           label={t('debug.button')}
           onClick={() => onEvent?.({ type: 'toggle-debug' })}
-        />
-      )}
-
-      {tasksVisible != null && (
-        <Button.Root
-          variant='ghost'
-          classNames={TOUCH_TARGET}
-          icon='ph--list-checks--regular'
-          iconOnly
-          aria-pressed={tasksVisible}
-          label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
-          data-testid='assistant.toggle-tasks'
-          onClick={() => onEvent?.({ type: 'toggle-tasks' })}
         />
       )}
 
@@ -111,16 +99,62 @@ export const ChatActions = ({
     </>
   );
 
+  // After the leading controls and before the contributed ones, so the row ends drawers, microphone, send.
+  const start = (
+    <>
+      {leading}
+      {drawers && drawers.available.length > 0 && <DrawerToggles {...drawers} onEvent={onEvent} />}
+    </>
+  );
+
   // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus.
   return customActions ? (
-    <ContributedActions actions={customActions} attendableId={attendableId} start={leading} classNames={classNames}>
+    <ContributedActions actions={customActions} attendableId={attendableId} start={start} classNames={classNames}>
       {controls}
     </ContributedActions>
   ) : (
     <Toolbar.Root classNames={classNames}>
-      {leading}
+      {start}
       {controls}
     </Toolbar.Root>
+  );
+};
+
+const DRAWER_ICONS: Record<ChatDrawer, string> = {
+  context: 'px--context-panel--regular',
+  tasks: 'ph--list-checks--regular',
+};
+
+/**
+ * The drawer toggles as one group. A `multiple` group rather than `single`, so each is a pressed
+ * button that closes its drawer on a second press; opening one closes the other.
+ */
+const DrawerToggles = ({
+  available,
+  open,
+  onEvent,
+}: NonNullable<ChatActionsProps['drawers']> & Pick<ChatActionsProps, 'onEvent'>) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Toolbar.ToggleGroup
+      type='multiple'
+      value={open ? [open] : []}
+      onValueChange={(value) =>
+        onEvent?.({ type: 'set-drawer', drawer: available.find((drawer) => drawer !== open && value.includes(drawer)) })
+      }
+    >
+      {available.map((drawer) => (
+        <ToggleGroup.Item
+          key={drawer}
+          value={drawer}
+          classNames={TOUCH_TARGET}
+          icon={DRAWER_ICONS[drawer]}
+          iconOnly
+          label={t(`${drawer}-drawer.label`)}
+          data-testid={`assistant.toggle-${drawer}`}
+        />
+      ))}
+    </Toolbar.ToggleGroup>
   );
 };
 

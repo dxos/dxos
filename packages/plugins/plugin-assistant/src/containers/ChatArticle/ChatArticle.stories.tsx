@@ -43,7 +43,7 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { File, Message, Organization, Outline, Person, Task } from '@dxos/types';
 
-import { ChatDetailsPanel, ChatDetailsSection } from '#components';
+import { ChatDetailsSection } from '#components';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { ChatSurface } from '#types';
@@ -137,7 +137,7 @@ type StoryArgs = {
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
-  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the context rail. */
+  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the context drawer. */
   workspace?: boolean;
 } & Pick<ChatArticleProps, 'debug'>;
 
@@ -149,7 +149,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   const spec = db.add(
     Markdown.make({
       name: 'Prompt redesign spec',
-      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a rail beside the thread.',
+      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a drawer above it.',
     }),
   );
   db.add(Markdown.make({ name: 'Q4 roadmap', content: '# Q4 roadmap\n\n- Ship the new prompt.' }));
@@ -166,16 +166,14 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   return [spec];
 };
 
-/** Stands in for a plugin adding its own panel to the context rail (here, a coding plugin's diff). */
+/** Stands in for a plugin adding its own section to the context drawer (here, a coding plugin's diff). */
 const changesSection = Surface.create({
   id: 'storyChanges',
   filter: Surface.makeFilter(ChatSurface.ChatDetails),
   component: () => (
-    <ChatDetailsPanel>
-      <ChatDetailsSection title='Changes' count={3}>
-        <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
-      </ChatDetailsSection>
-    </ChatDetailsPanel>
+    <ChatDetailsSection icon='ph--git-diff--regular' title='Changes' count={3}>
+      <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
+    </ChatDetailsSection>
   ),
 });
 
@@ -602,8 +600,8 @@ const clearPrompt = async (canvasElement: HTMLElement) => {
 
 /**
  * The whole prompt: agent and model pickers in the row, "+" for files, objects, commands and MCP
- * servers, `@` to mention an object, `/` for commands and skills, the checklist above the prompt, and the
- * context rail beside the thread (context, skills, and a section another plugin contributes). Replies are scripted, so it runs offline.
+ * servers, `@` to mention an object, `/` for commands and skills, and two drawers above the prompt: the checklist,
+ * and the context (objects, skills, and a section another plugin contributes). Replies are scripted, so it runs offline.
  */
 export const FullExperience: Story = {
   args: {
