@@ -142,6 +142,25 @@ describe('Skill Manager', () => {
   );
 
   it.effect(
+    'query-skills: finds the skill providing a tool by words describing it',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const result = yield* Operation.invoke(QuerySkills, { query: 'save a memory' }, { conversation });
+        expect(result.map((skill: Skill.Skill) => Obj.getMeta(skill).key)[0]).toBe('org.dxos.skill.memory');
+        // Each result names its tools, which is how the model tells it has found the right one.
+        expect(result[0].tools.length).toBeGreaterThan(0);
+
+        const none = yield* Operation.invoke(QuerySkills, { query: 'zzzz' }, { conversation });
+        expect(none).toHaveLength(0);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
     'enable-skills: enables skills with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {

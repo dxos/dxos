@@ -115,11 +115,6 @@
       "source": "./src/types/SourceFile.ts",
       "types": "./dist/types/src/types/SourceFile.d.ts",
       "import": "./dist/lib/SourceFile.mjs"
-    },
-    "./Spec": {
-      "source": "./src/types/Spec.ts",
-      "types": "./dist/types/src/types/Spec.d.ts",
-      "import": "./dist/lib/Spec.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -184,6 +179,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",

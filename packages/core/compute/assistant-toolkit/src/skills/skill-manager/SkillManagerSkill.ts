@@ -41,6 +41,10 @@ export const make = () =>
         conversation expose their tools to you directly — do not re-enable a skill whose tools you
         can already see.
 
+        When the task needs a tool you do not have, do not work around it with other tools: call
+        [query-skills] with a \`query\` describing the tool (e.g. "link task to feature"). Each skill it
+        returns lists the tools it provides; enable the one that has the tool you need.
+
         Connections to services can also give you their MCP servers' tools. They are on unless this
         conversation turned them off: use [query-mcp-connections] to see which are off, and
         [set-mcp-connection] to turn one on when you need its tools. To use an MCP server the space

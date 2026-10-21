@@ -14,11 +14,12 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Spec } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { CodePlugin } from '#plugin';
 import { translations } from '#translations';
-import { CodeProject, SourceFile, Spec } from '#types';
+import { CodeProject, SourceFile } from '#types';
 
 import { CodeArticle } from './CodeArticle.tsx';
 

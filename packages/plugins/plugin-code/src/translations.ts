@@ -4,9 +4,10 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
+import { Spec } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProject, SourceFile, Spec } from '#types';
+import { CodeProject, SourceFile } from '#types';
 
 export const translations = [
   {
