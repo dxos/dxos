@@ -254,6 +254,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             model: tenant.model,
           });
         }
+        // Prompts this process queued for itself (a hook or tool continuing its work): they run on the process's own
+        // agent whatever they say, so agents sharing the chat can never prompt one another and run off talking.
+        const selfQueued = new Set<string>();
+        const addressee = (message: Message.Message) =>
+          selfQueued.has(message.id) ? undefined : tenantOf(message, threading?.tenants);
         // Signals the lane scheduler that a prompt was queued while it runs; the alarm that also fires waits its turn.
         const wake = yield* Queue.sliding<void>(1);
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
@@ -567,6 +572,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             enqueueMessage: Effect.fn(function* ({ content }) {
               const message = Message.make({ sender: { role: 'user' }, blocks: [...content] });
               yield* sessionStore.enqueueMessage(feed, message);
+              selfQueued.add(message.id);
               unseenWriteIds.add(message.id);
               Queue.offerUnsafe(wake, undefined);
               yield* ctx.setAlarm(0);
@@ -652,7 +658,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                         pendingMessages.filter((pending) => !ackedEntries.includes(pending.id)),
                       ),
                       run: (pending, thread) => {
-                        const tenant = tenantOf(pending, threading.tenants);
+                        const tenant = addressee(pending);
                         return executeTurn({
                           prompt: [...pending.blocks],
                           dequeued: pending,
@@ -663,7 +669,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       open: (pending) => {
                         // Sharing the chat, the process's own lanes are named after the model they run on.
                         const owner =
-                          tenantOf(pending, threading.tenants)?.name ??
+                          addressee(pending)?.name ??
                           threading.owner ??
                           (threading.tenants?.length
                             ? (Model.byId(model ?? Model.claudeSonnet5.id)[0]?.label ?? 'Composer')

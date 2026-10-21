@@ -244,4 +244,60 @@ describe('light threads (scripted)', () => {
     ),
     { timeout: 30_000 },
   );
+
+  // Live clock: the check that nothing more runs is a wait in real time.
+  it.live(
+    'agents that address each other in their replies do not prompt each other',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('Plan the coffee launch.');
+        yield* session.submitPrompt('@claude Scaffold the launch folder.');
+        yield* session.waitForCompletion();
+
+        const turns = (events: readonly Trajectory.Event[]) =>
+          events.filter((event) => event.payload._tag === 'turnBegin').length;
+        const prompts = (events: readonly Trajectory.Event[]) =>
+          events.filter((event) => event.payload._tag === 'message' && event.sender.role === 'user').length;
+        const settled = yield* TrajectoryStore.read(session.feed);
+        expect(turns(settled)).toBe(2);
+        expect(prompts(settled)).toBe(2);
+
+        // Each reply names the other agent; neither becomes a prompt, so nothing more runs.
+        yield* Effect.sleep('3 seconds');
+        const later = yield* TrajectoryStore.read(session.feed);
+        expect([turns(later), prompts(later)]).toEqual([2, 2]);
+        const view = yield* read(session.feed, Reducer.thread);
+        expect(view.lanes.map((lane) => [lane.owner.name, lane.status])).toEqual([
+          ['deepseek', 'done'],
+          ['claude', 'done'],
+        ]);
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Alarm.Alarm],
+          agent: {
+            threading: () => ({
+              owner: 'deepseek',
+              tenants: [
+                {
+                  name: 'claude',
+                  makeTurnProducer: makeScriptedTenant({
+                    name: 'claude',
+                    reply: () => ({ text: '@deepseek I made the folder; can you check your plan against it?' }),
+                  }),
+                },
+              ],
+            }),
+          },
+          aiService: scriptedAiService(() => ({
+            delay: '500 millis',
+            parts: [text('Plan drafted. @claude, please confirm the folder matches it.')],
+          })),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
 });

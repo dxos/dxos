@@ -222,6 +222,11 @@ feat F-7: Agents sharing a chat (multi-tenancy)
     when: two agents share a chat
     then: every prompt runs in a light thread, so each lane has an owner, and each agent's snapshot shows the other's
       running work
+
+  req F-7.3:
+    when: an agent's reply names another agent (`@<agent id>`), or a prompt is queued by the agent process itself
+    then: nothing runs on the other agent; only a person's prompt routes to an agent, so agents never prompt each
+      other and the number of turns equals the number of prompts the person sent
 ```
 
 ## Scenarios
@@ -320,6 +325,36 @@ test QA-2: Two agents share one chat
     - name: Watch both agents finish
       do: Wait for Claude Code and the plan to finish.
       expect: Claude Code's answer names the files; the plan's three steps appear; each lane's header names its owner
+```
+
+```mdl
+test QA-3: A live assistant draws while live Claude Code edits files
+  desc: The story `stories-assistant/MultiTenantThreads` (Live) walked by a person, against real models: the chat's
+    agent runs DeepSeek V4 Flash through the remote EDGE AI service, and Claude Code runs through the ACP agent helper.
+  actors: human
+  covers: [F-1.1, F-4.1, F-7.1, F-7.2, F-7.3]
+  status: draft
+  given:
+    - the agent helper serving `claude-code` with an Anthropic key, and its port, token and a scratch folder holding
+      `notes.txt` passed to the story as `helperPort`, `helperToken` and `cwd`
+    - the story `stories/stories-assistant/MultiTenantThreads` Live, with the Drawing skill and an empty drawing
+      "Launch plan" beside the chat
+  steps:
+    - name: Ask the assistant for a diagram
+      do: Send "Draw the coffee blend launch as a flowchart in the Launch plan drawing — Source beans, Roast,
+        Package, Launch party, connected by arrows."
+      expect: a lane owned by DeepSeek V4 Flash starts drawing; shapes appear on the canvas
+    - name: Ask Claude Code to manage the files
+      do: While it draws, send "@claude In this folder, write README.md about the coffee blend launch, create
+        checklist.md with the four launch steps, rename notes.txt to beans.txt, then list the files."
+      expect: a second lane owned by claude runs shell commands beside the drawing lane
+    - name: Watch both finish
+      do: Wait for both lanes to finish.
+      expect: the canvas shows the four stages joined by arrows; Claude Code lists README.md, checklist.md and
+        beans.txt; the folder on disk holds exactly those files
+    - name: Check that nothing runs on
+      do: Wait ten seconds.
+      expect: no new lane opens and no new turn starts, although the replies may name the other agent
 ```
 
 ## Changelog
@@ -542,4 +577,49 @@ decision D-20: A lane goes to the background, for good, when a newer lane of the
   rejected:
     - Bringing a lane back inline when it becomes the newest running one; the demo showed it switch between
       representations.
+```
+
+```mdl
+decision D-21: Record a real demo of two agents in one chat: the assistant manages something visual (a project or a
+  diagram) while Claude Code does file manipulation, and make sure it does not run off with the agents talking to
+  one another.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [QA-3, F-7.3]
+```
+
+```mdl
+decision D-22: The live demo's visual work is a flowchart drawn by the Drawing skill on a tldraw canvas beside the
+  chat, run by DeepSeek V4 Flash through the remote EDGE AI service. Fills in [D-21].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-3]
+  why: A drawing changes visibly at every tool call, so the video shows the assistant working while Claude Code's
+    lane runs; it needs no other plugin's sample data.
+  rejected:
+    - A kanban project; its edits are small text changes that read poorly at video scale.
+```
+
+```mdl
+decision D-23: The Live story reaches real Claude Code through the ACP agent helper, whose port, token and working
+  folder arrive as story URL parameters (`AcpAgent.connectTo`). Fills in [D-21]; supersedes [D-18] for QA-3 only.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-3]
+  why: Storybook cannot spawn the adapter's process, and the helper is the same server the app uses; parameters
+    keep the token out of the source and the story inert when they are absent.
+```
+
+```mdl
+decision D-24: Only a person's prompt routes to an agent: a reply naming `@<agent>` is an assistant message and never
+  queues, and prompts the agent process queues itself are marked and never route to a tenant. Fills in [D-21].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.3]
+  why: Agent-to-agent prompting without a turn budget can loop forever; the scripted test pins turns to prompts.
+  rejected:
+    - A per-chat turn budget; it caps a loop rather than ruling one out.
 ```

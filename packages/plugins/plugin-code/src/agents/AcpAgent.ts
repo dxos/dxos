@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as acp from '@agentclientprotocol/sdk';
+import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
@@ -160,6 +161,19 @@ export type AgentOptions = {
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
   device?: () => string | undefined;
 };
+
+/**
+ * Connects to an agent helper the host started itself (a demo, a test harness) rather than the one Composer launches:
+ * its `port` and `token` are known up front.
+ */
+export const connectTo =
+  ({ port, token, agent }: { port: number; token: string; agent: string }): AgentOptions['connect'] =>
+  (cwd, toolsToken) =>
+    Effect.succeed(
+      createWebSocketStream(Protocol.acpUrl({ port, agent, cwd, ...(toolsToken ? { mcpToken: toolsToken } : {}) }), {
+        protocols: [Protocol.SUBPROTOCOL, Protocol.tokenProtocol(token)],
+      }),
+    );
 
 type TurnEvent =
   | { _tag: 'update'; update: acp.SessionUpdate }

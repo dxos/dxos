@@ -13,13 +13,24 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
+import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
+import { Cell } from '@dxos/storybook-testing';
 import { Message } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
-import { Calculate, CalculatorSkill, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  Calculate,
+  CalculatorSkill,
+  ModuleContainer,
+  addToRootCollection,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -210,5 +221,102 @@ export const Scripted: Story = {
 export const Demo: Story = {
   decorators: decorators(),
   args: { layout: [[StoryRole.Chat]] },
+  tags: ['!test'],
+};
+
+//
+// Live: both agents for real.
+//
+
+/**
+ * The agent helper the live story connects Claude Code through, from the iframe URL: `helperPort`, `helperToken` and
+ * `cwd` (the directory Claude Code works in). The helper is started outside the browser with the Anthropic key, since
+ * a page cannot spawn processes.
+ */
+const helperParams = () => {
+  const params = new URLSearchParams(globalThis.location?.search ?? '');
+  const port = Number(params.get('helperPort'));
+  const token = params.get('helperToken');
+  const cwd = params.get('cwd');
+  return Number.isInteger(port) && port > 0 && token && cwd ? { port, token, cwd } : undefined;
+};
+
+/** Claude Code over ACP, through the helper the URL names, editing files in its working directory. */
+const ClaudeCodeLive = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.story.claudeLive'), name: 'Claude Code' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('ClaudeAgent', { provides: [AssistantCapabilities.Agent] }, () =>
+      Effect.succeed([
+        Capability.contribute(AssistantCapabilities.Agent, {
+          id: 'claude',
+          label: 'Claude Code',
+          icon: 'ph--terminal--regular',
+          availability: Atom.make<AssistantCapabilities.AgentAvailability>(
+            helperParams() ? { available: true } : { available: false, reason: 'No agent helper in the story URL.' },
+          ),
+          makeTurnProducer: (context) => {
+            const helper = helperParams();
+            if (!helper) {
+              return Effect.die(new Error('Start the agent helper and pass helperPort, helperToken and cwd.'));
+            }
+            return Effect.flatMap(AcpAgent.Sessions.make(), (sessions) =>
+              AcpAgent.makeTurnProducer({
+                id: 'claude-code',
+                sessions,
+                connect: AcpAgent.connectTo({ port: helper.port, token: helper.token, agent: 'claude-code' }),
+                workspace: () => Effect.succeed(helper.cwd),
+                mode: () => 'acceptEdits',
+              })(context),
+            );
+          },
+        }),
+      ]),
+    ),
+  ),
+  Plugin.make,
+);
+
+/**
+ * Two real agents in one chat: Composer's assistant on DeepSeek V4 Flash draws on the canvas beside the chat, while a
+ * prompt starting with `@claude` runs Claude Code over ACP, editing files in its working directory. Needs the agent
+ * helper running with an Anthropic key (`helperPort`, `helperToken`, `cwd` in the URL) and the remote AI service.
+ */
+export const Live: Story = {
+  decorators: createDecorators({
+    plugins: [ClaudeCodeLive()],
+    lazyPlugins: async () => {
+      const [{ Drawing }, IllustratorPlugin, TldrawPlugin] = await Promise.all([
+        import('@dxos/plugin-illustrator'),
+        import('@dxos/plugin-illustrator/IllustratorPlugin'),
+        import('@dxos/plugin-tldraw/TldrawPlugin'),
+      ]);
+      return {
+        plugins: [IllustratorPlugin.make(), TldrawPlugin.make()],
+        types: [Drawing.Drawing, Drawing.Canvas],
+      };
+    },
+    onInit: async ({ space }) => {
+      const [{ Drawing }, { Tldraw }] = await Promise.all([
+        import('@dxos/plugin-illustrator'),
+        import('@dxos/plugin-tldraw'),
+      ]);
+      const drawing = space.db.add(
+        Drawing.make({ name: 'Launch plan', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
+      );
+      addToRootCollection(space, [drawing]);
+      return [[StoryRole.Chat], [Cell.article(drawing)]];
+    },
+    onChatCreated: async ({ db, chat, binder }) => {
+      const { Drawing } = await import('@dxos/plugin-illustrator');
+      const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
+      await binder.bind({ objects: drawings.map((drawing) => Ref.make(drawing)) });
+      Obj.update(chat, (chat) => {
+        chat.session = { ...chat.session, model: Model.deepseekV4Flash.id };
+      });
+    },
+    skills: [AssistantSkill.key, DrawingSkill.key],
+    assistantSettings: { parallelThreads: true, parallelThreadAgents: ['claude'] },
+  }),
   tags: ['!test'],
 };
