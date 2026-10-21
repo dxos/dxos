@@ -18,9 +18,9 @@ import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AccessToken } from '@dxos/link';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import { Message } from '@dxos/types';
 
+import * as AcpAgent from '../agents/AcpAgent.ts';
 import { CLAUDE_CODE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import * as ClaudeCodeProcess from './ClaudeCodeProcess.ts';
 
