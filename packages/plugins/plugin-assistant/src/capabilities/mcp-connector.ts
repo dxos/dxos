@@ -13,18 +13,29 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { MCP_PROVIDER_ID } from '../constants.ts';
 import { ConnectorKeyInvalidError, McpServerUnavailableError } from '../operations/errors.ts';
 
+// A plain string rather than `Format.URL`, whose pattern refuses a port or `localhost`, both common
+// for a self-hosted server; `validateUrl` checks it instead.
 const McpServerForm = Schema.Struct({
-  url: Format.URL.annotate({
-    title: 'Server URL',
-    description: 'The MCP server endpoint, e.g. https://mcp.example.com/mcp.',
-  }),
+  url: Schema.String.annotate({ title: 'Server URL', description: 'https://mcp.example.com/mcp' }),
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password), Schema.optional).annotate({
     title: 'API key',
-    description: 'Only for a server that takes a key. Leave empty to sign in, or for a server with no auth.',
+    description: 'Only if the server takes a key',
   }),
 });
 
 type McpServerValues = Schema.Schema.Type<typeof McpServerForm>;
+
+const validateUrl = ({ values }: { values: McpServerValues }): Effect.Effect<void, Error> =>
+  Effect.try({
+    try: () => new URL(values.url.trim()),
+    catch: () => new McpServerUnavailableError({ message: 'Enter the server URL, starting with https://.' }),
+  }).pipe(
+    Effect.flatMap((url) =>
+      url.protocol === 'https:' || url.protocol === 'http:'
+        ? Effect.void
+        : Effect.fail(new McpServerUnavailableError({ message: 'The server URL must start with https://.' })),
+    ),
+  );
 
 /**
  * Probes the server to decide how the connection authenticates: with the key given, with none, or by
@@ -76,6 +87,7 @@ export const McpServerConnector: ConnectorSpec.ConnectorEntry = {
   credentialForm: {
     schema: McpServerForm,
     defaultValues: { url: '' },
+    onValidate: validateUrl,
     onSubmit: submit,
   },
   mcp: (connection) => connection.mcp,
