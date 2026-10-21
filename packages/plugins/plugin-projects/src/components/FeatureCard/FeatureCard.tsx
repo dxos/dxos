@@ -120,9 +120,9 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, onCommit }: E
   };
   return (
     <Input.Root
-      // Inert boxes on a canvas still let the field take the pointer; pulled out by its padding and its height over a
-      // line, so the text stays where it was read and the card keeps its size.
-      classNames='pointer-events-auto -ms-2 -my-0.5'
+      // Pulled out by its padding and its height over a line, so the text stays where it was read and the card keeps
+      // its size.
+      classNames='-ms-2 -my-0.5'
       defaultValue={value}
       placeholder={placeholder}
       aria-label={label}
@@ -169,7 +169,8 @@ export const FeatureCard = ({
   return (
     <Card.Root
       grid
-      classNames={scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]'}
+      // A group, so the header's edit button is muted until the pointer is over the card.
+      classNames={['group/card', scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]']}
       selected={markSelected && selected}
       onClick={onSelect ? () => onSelect(feature) : undefined}
       data-testid='feature-card'
@@ -196,7 +197,7 @@ export const FeatureCard = ({
           )}
         </Card.Title>
         {(onRename || onDescribe) && (
-          <Layout.Block rail='end' classNames='pointer-events-auto'>
+          <Layout.Block rail='end'>
             {editing ? (
               <SystemButton.Save
                 variant='ghost'
@@ -211,6 +212,7 @@ export const FeatureCard = ({
             ) : (
               <SystemButton.Edit
                 variant='ghost'
+                classNames='text-fg-muted group-hover/card:text-inherit'
                 data-testid='feature-card.edit'
                 onPointerDown={stopPropagation}
                 onClick={(event) => {
@@ -271,8 +273,7 @@ export const FeatureCard = ({
       {scroll ? (
         // A subgrid of the card, so rows keep its rails; containment would make it a standalone grid instead.
         <ScrollArea.Root classNames='col-span-full grid-cols-subgrid [container-type:normal]'>
-          {/* Takes the wheel inside an inert canvas box; a press still bubbles to the box, so it drags as before. */}
-          <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start pointer-events-auto [&>.dx-card-body]:col-span-full'>
+          <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start [&>.dx-card-body]:col-span-full'>
             <FeatureCardBody {...props} editing={editing} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>

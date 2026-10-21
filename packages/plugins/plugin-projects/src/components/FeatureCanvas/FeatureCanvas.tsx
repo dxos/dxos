@@ -54,10 +54,10 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
   const { lookup, onRename, onDescribe, editingId, onEditingChange } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
-    // Inert but for its text fields and body, so a press elsewhere selects and drags the box; one bounded row, so
-    // the card fits the box and its body scrolls.
+    // One bounded row, so the card fits the box and its body scrolls; presses on the card bubble to the box, which
+    // selects and drags it.
     <Layout.Grid
-      classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden pointer-events-none'
+      classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden'
       data-testid='feature-canvas-node'
       {...wheelOverlay}
     >
