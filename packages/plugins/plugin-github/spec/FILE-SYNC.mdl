@@ -30,12 +30,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Diagram
 
-A plugin-illustrator render. The `dx` block is the source; regenerate the image with
+A plugin-illustrator render. The `diagram` block is the source; regenerate the image with
 `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p2-sync.dx`.
 
 ![The branch head differs from the marker's commit; compare lists changed paths; matching mappings invoke plugin-code's ImportSpec, which applies the change at the marker's heads; local edits since those heads go through ExportSpec to a commit on a branch.](diagrams/p2-sync.dx.svg)
 
-```dx
+```diagram
 diagram flow=right
 group api "api.github.com" {
   node Head "branch head sha"

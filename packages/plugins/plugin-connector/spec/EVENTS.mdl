@@ -31,12 +31,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Diagram
 
-A plugin-illustrator render, grouped by package and service. The `dx` block is the source;
+A plugin-illustrator render, grouped by package and service. The `diagram` block is the source;
 regenerate the image with `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p3-dispatch.dx`.
 
 ![Provider modules implement the Provider interface, which the webhook ingress (compute-service) and kms-service use; a signed webhook enters the ingress, the EventRouter pokes the space's TriggersDispatcher, which runs plugin-github's sync; the space's event trigger requests a grant from kms and registers with the router.](diagrams/p3-dispatch.dx.svg)
 
-```dx
+```diagram
 diagram flow=right
 group provider "edge-provider" {
   node Iface "Provider"

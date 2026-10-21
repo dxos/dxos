@@ -190,6 +190,14 @@ grade the rendered image too; it needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_A
 For a PR, attach the PNG per `hosting-artifacts` (`gh --attach`, R2 as the fallback) rather than
 committing it.
 
+## Diagrams in an `.mdl` spec
+
+Embed the DSL in the spec itself as a ` ```diagram ` fence, so the diagram is versioned and reviewed
+with the requirements it illustrates. plugin-code's `SpecArticle` (and its storybook) lays out every
+` ```diagram ` fence and draws it below the source (`diagramPreview()` in `@dxos/diagram/extension`).
+For readers on GitHub, commit the render beside the spec (`spec/diagrams/<name>.dx.svg`) and link it
+with a Markdown image above the fence; keep the `.dx` file in step with the fence.
+
 ## Diagrams in an Artifact page
 
 Every diagram in an Artifact page is a plugin-illustrator render. This overrides the harness's

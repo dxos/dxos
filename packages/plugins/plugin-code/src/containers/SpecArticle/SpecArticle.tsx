@@ -6,6 +6,7 @@ import React, { forwardRef, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
@@ -36,7 +37,8 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
 };
 
 /**
- * Renders MDL with react-ui-editor's compound primitives and the .mdl CodeMirror extensions.
+ * Renders MDL with react-ui-editor's compound primitives and the .mdl CodeMirror extensions;
+ * each ```diagram fence is drawn below its source.
  * With a `subject` it live-edits the bound ECHO `spec.content` (collaborative); without one it
  * renders the static `content` string read-only (e.g. a bundled plugin spec, no ECHO binding).
  */
@@ -54,10 +56,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       () =>
         [
           createBasicExtensions({ lineNumbers: true, readOnly }),
-          createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
+          createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(),
+          diagramPreview(),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&

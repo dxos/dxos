@@ -1,0 +1,141 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// The package compiles without DOM; this widget is its only browser-facing code.
+/// <reference lib="dom" />
+
+import { syntaxTree } from '@codemirror/language';
+import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+
+import * as EffectEx from '@dxos/effect/EffectEx';
+
+import { compile } from '../dsl/compile.ts';
+import * as SvgFile from '../svg-file.ts';
+
+/** Fence info strings that `diagramBlockDescription` parses as the diagram DSL. */
+const FENCE_NAMES = new Set(['diagram', 'dxd']);
+
+/** Renders kept by source text, so re-decorating after an unrelated edit does not lay the diagram out again. */
+const MAX_RENDERS = 32;
+
+export type DiagramRender = { readonly svg: string } | { readonly error: string };
+
+const renders = new Map<string, Promise<DiagramRender>>();
+
+/** Lays out one diagram DSL source and serializes it as a standalone SVG document. */
+export const renderDiagram = (source: string): Promise<DiagramRender> => {
+  const cached = renders.get(source);
+  if (cached) {
+    return cached;
+  }
+  const pending = EffectEx.runPromise(compile(source)).then(
+    ({ commands, problems }): DiagramRender => {
+      const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+      if (objects.length === 0) {
+        return { error: problems.find((problem) => problem.severity === 'error')?.message ?? 'The diagram is empty.' };
+      }
+      return { svg: SvgFile.toSvgFile(objects) };
+    },
+    (error: unknown): DiagramRender => ({ error: error instanceof Error ? error.message : String(error) }),
+  );
+  if (renders.size >= MAX_RENDERS) {
+    const oldest = renders.keys().next();
+    if (!oldest.done) {
+      renders.delete(oldest.value);
+    }
+  }
+  renders.set(source, pending);
+  return pending;
+};
+
+class DiagramWidget extends WidgetType {
+  constructor(readonly source: string) {
+    super();
+  }
+
+  override eq(other: DiagramWidget): boolean {
+    return other.source === this.source;
+  }
+
+  override get estimatedHeight(): number {
+    return 320;
+  }
+
+  override toDOM(view: EditorView): HTMLElement {
+    const container = document.createElement('div');
+    container.className = 'cm-diagram-preview';
+    container.textContent = 'Rendering diagram…';
+    void renderDiagram(this.source).then((result) => {
+      if ('svg' in result) {
+        // An <img> isolates the SVG's own stylesheet and marker ids from the page and from other diagrams.
+        const image = document.createElement('img');
+        image.alt = 'Diagram';
+        image.onload = () => view.requestMeasure();
+        image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(result.svg)}`;
+        container.replaceChildren(image);
+      } else {
+        container.classList.add('cm-diagram-preview-error');
+        container.textContent = result.error;
+      }
+      view.requestMeasure();
+    });
+    return container;
+  }
+
+  override ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+/** One rendered-diagram block after every ```diagram fence the markdown tree holds. */
+export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
+  const builder = new RangeSetBuilder<Decoration>();
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') {
+        return;
+      }
+      const info = node.node.getChild('CodeInfo');
+      const body = node.node.getChild('CodeText');
+      if (info && body && FENCE_NAMES.has(state.doc.sliceString(info.from, info.to).trim())) {
+        const widget = new DiagramWidget(state.doc.sliceString(body.from, body.to));
+        builder.add(node.to, node.to, Decoration.widget({ widget, block: true, side: 1 }));
+      }
+      return false;
+    },
+  });
+  return builder.finish();
+};
+
+/** Block decorations must come from state, not a view plugin, so the previews live in a field. */
+const previews = StateField.define<DecorationSet>({
+  create: buildDiagramPreviews,
+  update: (value, transaction) =>
+    transaction.docChanged || syntaxTree(transaction.state) !== syntaxTree(transaction.startState)
+      ? buildDiagramPreviews(transaction.state)
+      : value,
+  provide: (field) => EditorView.decorations.from(field),
+});
+
+// The render's colours are drawn for a white ground, so the frame stays white in both themes.
+const theme = EditorView.baseTheme({
+  '.cm-diagram-preview': {
+    margin: '8px 0',
+    padding: '12px',
+    borderRadius: '6px',
+    background: '#ffffff',
+    color: '#525252',
+    overflowX: 'auto',
+    fontSize: '12px',
+  },
+  '.cm-diagram-preview img': { display: 'block', maxWidth: '100%', height: 'auto', margin: '0 auto' },
+  '.cm-diagram-preview-error': { color: '#dc2626' },
+});
+
+/**
+ * Renders every ```diagram fence in a markdown document below its source. Pair it with
+ * `diagramBlockDescription` in `createMarkdownExtensions({ codeLanguages })` for highlighting.
+ */
+export const diagramPreview = (): Extension => [previews, theme];

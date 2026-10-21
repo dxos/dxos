@@ -13,6 +13,9 @@ import { translations } from '#translations';
 import { Spec } from '#types';
 
 import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
+import CONNECTOR_EVENTS_MDL from '../../../../plugin-connector/spec/EVENTS.mdl?raw';
+import GITHUB_FILE_SYNC_MDL from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
+import GITHUB_SYNC_MDL from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
 
 const DefaultStory = ({ content }: { content?: string }) => {
@@ -56,5 +59,23 @@ export const Default: Story = {};
 export const Chess: Story = {
   args: {
     content: CHESS_1_MDL,
+  },
+};
+
+export const GitHubSync: Story = {
+  args: {
+    content: GITHUB_SYNC_MDL,
+  },
+};
+
+export const GitHubFileSync: Story = {
+  args: {
+    content: GITHUB_FILE_SYNC_MDL,
+  },
+};
+
+export const ConnectorEvents: Story = {
+  args: {
+    content: CONNECTOR_EVENTS_MDL,
   },
 };

@@ -34,14 +34,14 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Diagrams
 
-Diagrams are plugin-illustrator renders. The `dx` block is the source; regenerate the image with
+Diagrams are plugin-illustrator renders. The `diagram` block is the source; regenerate the image with
 `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/<name>.dx`.
 
 ### Object model
 
 ![The binding's Cursor targets a Repo; PullRequest and TaskSet hold a Ref to the Repo; TaskSet composes issue Tasks and Milestones; a Walkthrough's subject is a PullRequest.](diagrams/p1-ontology.dx.svg)
 
-```dx
+```diagram
 diagram flow=down
 group link "@dxos/link" {
   node Connection "Connection" ref="packages/core/compute/link/src/Connection.ts"
@@ -73,7 +73,7 @@ edge Walkthrough -> PullRequest "subject"
 
 ![A timer trigger in compute-service runs plugin-github's sync per binding: one delta request with an ETag; a 304 ends the run; otherwise one GraphQL request for the changed pull requests, then upsert and advance the cursor.](diagrams/p1-poll.dx.svg)
 
-```dx
+```diagram
 diagram flow=right
 group compute "compute-service (EDGE)" {
   node Timer "timer trigger" ref="packages/core/compute/compute/src/types/Trigger.ts"
