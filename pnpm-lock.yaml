@@ -10086,6 +10086,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -10758,6 +10761,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-projects':
+        specifier: workspace:*
+        version: link:../plugin-projects
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../plugin-sheet
@@ -10843,9 +10849,6 @@ importers:
       '@dxos/plugin-progress':
         specifier: workspace:*
         version: link:../plugin-progress
-      '@dxos/plugin-projects':
-        specifier: workspace:*
-        version: link:../plugin-projects
       '@dxos/plugin-sandbox':
         specifier: workspace:*
         version: link:../plugin-sandbox

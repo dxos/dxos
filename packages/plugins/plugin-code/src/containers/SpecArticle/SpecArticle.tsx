@@ -14,6 +14,7 @@ import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
+import { Spec } from '@dxos/types';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -26,7 +27,6 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { ChangelogGraph, type DecisionModel, buildChangelogGraph, decisionGutter } from '#components';
-import { Spec } from '#types';
 
 export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */

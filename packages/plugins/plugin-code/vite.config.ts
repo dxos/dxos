@@ -22,7 +22,6 @@ export default defineConfig({
     CodeProject: 'src/types/CodeProject.ts',
     Settings: 'src/types/Settings.ts',
     SourceFile: 'src/types/SourceFile.ts',
-    Spec: 'src/types/Spec.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
