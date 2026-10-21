@@ -29,6 +29,9 @@ export class DrawingDialectError extends Data.TaggedError('DrawingDialectError')
 export class InvalidIntentError extends Data.TaggedError('InvalidIntentError')<{ message: string }> {}
 
 /** A canvas with no version history, whose edits could not be undone. */
+/** A canvas a newer plugin wrote, whose format this one must not write. */
+export class NewerCanvasError extends Data.TaggedError('NewerCanvasError')<{ message: string }> {}
+
 export class UnversionedCanvasError extends Data.TaggedError('UnversionedCanvasError')<{
   message: string;
 }> {}

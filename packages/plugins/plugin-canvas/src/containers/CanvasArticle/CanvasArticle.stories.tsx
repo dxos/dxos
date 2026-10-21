@@ -17,6 +17,7 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Canvas } from '#types';
 
 random.seed(1234);
 
@@ -103,6 +104,29 @@ export const Test: Story = {
     // The overlays are on by default: navigation, actions and debug each render a toolbar, beside the palette.
     await waitFor(() => expect(canvasElement.querySelectorAll('[role="toolbar"]').length).toBeGreaterThanOrEqual(3));
     await expect(await within(canvasElement).findByTestId('palette')).toBeInTheDocument();
+  },
+};
+
+/**
+ * A canvas a newer Canvas plugin saved (a later `dxos.org/scene/<n>`) opens read-only under a banner saying why.
+ *
+ * Test:
+ * 1. The banner shows and the palette offers only select and pan.
+ */
+export const NewerFormat: Story = {
+  decorators: withDrawing((db, canvas) => {
+    seedBasic(db, canvas);
+    Obj.update(canvas, (canvas) => {
+      canvas.schema = `dxos.org/scene/${Canvas.SCENE_REVISION + 1}`;
+    });
+  }),
+  play: async ({ canvasElement }) => {
+    const view = within(canvasElement);
+    await expect(await view.findByTestId('canvas.newer-format', undefined, { timeout: 30_000 })).toBeVisible();
+    await expect(await view.findByTestId('scene-view')).toBeInTheDocument();
+    // Read-only, the palette has no shape tools and no toggle to unlock it.
+    await waitFor(() => expect(view.queryByTestId('palette-R')).toBeNull());
+    await expect(view.queryByTestId('palette-readonly')).toBeNull();
   },
 };
 
