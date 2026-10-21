@@ -232,6 +232,25 @@ describe('describe', () => {
   );
 
   it.effect(
+    'an unsaved object does not spend the exploration budget',
+    Effect.fnUntraced(
+      function* (_) {
+        const { feature } = yield* seed();
+        const output = yield* run(
+          `const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');
+           for (let index = 0; index < 6; index++) { yield* print(Obj.make(Task, { title: 'Draft ' + index })); }
+           yield* print((yield* Database.query(Filter.id('${feature.id}')).run)[0]);`,
+          EffectDialect,
+        );
+        expect(output).not.toContain('relations not counted');
+        expect(output).toContain('  children: task ×12');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'marks counts as lower bounds once the exploration query hits its cap',
     Effect.fnUntraced(
       function* (_) {

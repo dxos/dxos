@@ -10,6 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { callTool } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -29,10 +30,13 @@ const PERSON_TYPENAME = 'com.example.type.person';
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 const PERSON_DXN = String(DXN.make(PERSON_TYPENAME, '0.1.0'));
 
+/** Declared on `Person`, so a printed person names it: the worker rebuilds types without it unless it is carried. */
+const PEOPLE_SKILL = 'com.example.skill.people';
+
 class Person extends Type.makeObject<Person>(DXN.make(PERSON_TYPENAME, '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
-  }),
+  }).pipe(Skill.SkillsAnnotation.set([PEOPLE_SKILL])),
 ) {}
 
 class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
@@ -288,6 +292,18 @@ describe('worker sandbox', () => {
       const [task] = await db.query(Filter.type(Task, { status: 'open' })).run();
       expect(task.priority).toEqual('Write the docs'.length);
       expect((await task.owner?.load())?.name).toEqual('Ada');
+    }, 60_000);
+
+    test('a printed object names the skills its type declares, though the worker rebuilt the type', async () => {
+      const { db, runWith } = await setup();
+      const ada = db.add(Obj.make(Person, { name: 'Ada' }));
+      await db.flush();
+
+      const output = await runWith(
+        EffectDialect,
+        `yield* print((yield* Database.query(Filter.id('${ada.id}')).run)[0]);`,
+      );
+      expect(output).toContain(`  skills for this type: ${PEOPLE_SKILL}`);
     }, 60_000);
 
     test('invokes a skill operation on the host through Operation.invoke', async () => {

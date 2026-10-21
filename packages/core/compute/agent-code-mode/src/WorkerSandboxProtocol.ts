@@ -74,6 +74,8 @@ export type SandboxInit = {
     readonly typename: string;
     readonly version: string;
     readonly jsonSchema: JsonSchema.JsonSchema;
+    /** The type's `Skill.SkillsAnnotation`, which the JSON-schema round trip drops. */
+    readonly skills?: readonly string[];
   }[];
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];

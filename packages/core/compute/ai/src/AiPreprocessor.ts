@@ -820,7 +820,7 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
   return Prompt.fromMessages(result);
 };
 
-/** Characters of a retired call's result kept in its text form; the head is what the model acts on. */
+/** Characters of a retired call's input or result kept in its text form; the head is what the model acts on. */
 const MAX_RETIRED_RESULT = 2_000;
 
 /**
@@ -845,7 +845,7 @@ const retireUnofferedToolCalls =
           block._tag === 'toolCall' && retired(block)
             ? {
                 _tag: 'text',
-                text: `[Earlier call to \`${block.name}\`, which is not a tool you can call now. Input: ${block.input || '{}'}]`,
+                text: `[Earlier call to \`${block.name}\`, which is not a tool you can call now. Input: ${capRetired(block.input || '{}')}]`,
               }
             : block,
         );
@@ -876,10 +876,13 @@ const retiredResult = (block: ContentBlock.ToolResult): string => {
         : block.result === undefined
           ? 'no result'
           : 'a non-text result, not shown';
-  return text.length > MAX_RETIRED_RESULT
+  return capRetired(text);
+};
+
+const capRetired = (text: string): string =>
+  text.length > MAX_RETIRED_RESULT
     ? `${text.slice(0, MAX_RETIRED_RESULT)}… [${text.length - MAX_RETIRED_RESULT} characters omitted]`
     : text;
-};
 
 /**
  * Groups consecutive assistant messages into a single message.

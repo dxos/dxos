@@ -113,8 +113,10 @@ export const describe = (value: unknown, context: DescribeContext): Effect.Effec
 export const makeDescriber = (context: DescribeContext) => {
   let explored = 0;
   return (value: unknown): Effect.Effect<string, never, Database.Service> => {
-    if (!isEntity(value) || explored < MAX_EXPLORED_OBJECTS) {
-      explored += isEntity(value) ? 1 : 0;
+    // Only a stored object is explored, so only a stored object spends the budget.
+    const explorable = isEntity(value) && EchoEntity.getDatabase(value) !== undefined;
+    if (!explorable || explored < MAX_EXPLORED_OBJECTS) {
+      explored += explorable ? 1 : 0;
       return describe(value, context);
     }
     return Effect.succeed(
