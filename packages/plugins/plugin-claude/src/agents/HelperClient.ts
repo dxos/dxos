@@ -16,8 +16,8 @@ import type * as ClaudeCapabilities from '../types/ClaudeCapabilities.ts';
 import * as McpRelay from './McpRelay.ts';
 import * as Protocol from './Protocol.ts';
 
-/** Where a running agent server answers, and the token every request to it carries. */
-export type Endpoint = { port: number; token: string };
+/** Where a running agent server answers, the token every request to it carries, and the host's default folder. */
+export type Endpoint = { port: number; token: string; folder?: string };
 
 export type HelperClient = {
   helper: ClaudeCapabilities.AgentHelper;
@@ -128,8 +128,10 @@ export const make = (start: () => Promise<Endpoint>): HelperClient => {
       ),
     );
 
+  const defaultFolder = endpoint.pipe(Effect.map(({ folder }) => folder));
+
   return {
-    helper: { agents, connect, worktrees, mcp },
+    helper: { agents, defaultFolder, connect, worktrees, mcp },
     reset: () => {
       current = undefined;
     },

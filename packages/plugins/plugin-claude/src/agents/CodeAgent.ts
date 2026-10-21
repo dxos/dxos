@@ -183,7 +183,9 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       workspace: (chat) =>
         Effect.gen(function* () {
           const project = Workspace.projectOf(chat);
-          const folder = project && state()?.repositories?.[project.id]?.trim();
+          const folder =
+            (project && state()?.repositories?.[project.id]?.trim()) ||
+            (yield* helper()?.defaultFolder ?? Effect.succeed(undefined));
           if (!folder) {
             return yield* Effect.fail(
               new AgentError({

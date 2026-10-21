@@ -11,7 +11,7 @@ import * as HelperClient from '@dxos/plugin-claude/HelperClient';
 
 import { Shell } from '#shell';
 
-const Endpoint = Schema.Struct({ port: Schema.Number, token: Schema.String });
+const Endpoint = Schema.Struct({ port: Schema.Number, token: Schema.String, folder: Schema.optional(Schema.String) });
 
 /**
  * Runs plugin-claude's coding agents through the dev server serving this page, which starts the agent server on the

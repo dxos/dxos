@@ -30,6 +30,7 @@ const state = Atom.make<State.State>({ repositories: { [project.id]: FOLDER } })
 const unused = Effect.fail(new AgentError({ message: 'not available in a story' }));
 const agentHelper: ClaudeCapabilities.AgentHelper = {
   agents: Effect.succeed([]),
+  defaultFolder: Effect.succeed(undefined),
   connect: () => unused,
   worktrees: { ensure: () => unused, remove: () => unused, list: Effect.succeed([]) },
   mcp: { serve: () => unused, close: () => Effect.void },

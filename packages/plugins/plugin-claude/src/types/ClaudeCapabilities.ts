@@ -33,6 +33,8 @@ export const State = Capability.makeSingleton<Atom.Writable<StateModule.State>>(
 export type AgentHelper = {
   /** The agents the helper can launch, and whether each can run on this machine. */
   readonly agents: Effect.Effect<readonly Protocol.AgentStatus[], AgentError>;
+  /** Where agents work when the chat's project names no folder: a dev server's own checkout; none in the desktop app. */
+  readonly defaultFolder: Effect.Effect<string | undefined, AgentError>;
   /** Starts an agent working in `cwd`, with `mcpToken` in its environment, and returns its ACP connection. */
   readonly connect: (agent: string, cwd: string, mcpToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** Git worktrees in the app's data folder, which delegated chats work in. */

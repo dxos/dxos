@@ -4,6 +4,7 @@
 
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createRequire } from 'node:module';
 import { homedir, tmpdir } from 'node:os';
@@ -25,6 +26,8 @@ export type MakeOptions = {
   worktrees?: string;
   /** Route to answer on; defaults to {@link Shell.AGENT_HOST_PATH}. */
   path?: string;
+  /** Where agents work when a chat's project names no folder; defaults to the checkout this dev server runs in. */
+  folder?: string;
 };
 
 type Endpoint = { port: number; token: string };
@@ -62,6 +65,7 @@ export const make = ({
   agents = defaultAgentsDir(),
   worktrees = join(tmpdir(), 'dx-agent-worktrees'),
   path = Shell.AGENT_HOST_PATH,
+  folder = checkoutOf(process.cwd()),
 }: MakeOptions = {}) => {
   let child: ChildProcessWithoutNullStreams | undefined;
   let running: Promise<Endpoint> | undefined;
@@ -143,7 +147,7 @@ export const make = ({
     try {
       const { port, token } = await endpoint();
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      res.end(JSON.stringify({ port, token }));
+      res.end(JSON.stringify({ port, token, folder }));
     } catch (error) {
       fail(res, 500, `agent host failed to start: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -156,6 +160,18 @@ export const make = ({
   };
 
   return { prepare, middleware, close };
+};
+
+/** The nearest directory holding `.git` (a checkout, or a worktree's `.git` file), or `dir` itself outside one. */
+const checkoutOf = (dir: string): string => {
+  for (let current = dir; ; current = dirname(current)) {
+    if (existsSync(join(current, '.git'))) {
+      return current;
+    }
+    if (dirname(current) === current) {
+      return dir;
+    }
+  }
 };
 
 /** The agents plugin-claude's `compile-agent` task writes beside its package. */
