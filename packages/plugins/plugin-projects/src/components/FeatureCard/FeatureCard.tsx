@@ -14,6 +14,7 @@ import React, {
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
@@ -102,6 +103,11 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   scroll?: boolean;
   /** False where the host marks the selected card itself, as a masonry grid's ring does. */
   markSelected?: boolean;
+  /**
+   * In a host's arrow-key grid (a kanban, a masonry): the card is a `Focus.Item`, so it is the grid's member and shows
+   * the focus ring when clicked, since that is where the arrow keys continue from.
+   */
+  focusItem?: boolean;
 };
 
 type EditFieldProps = {
@@ -348,6 +354,7 @@ export const FeatureCard = ({
   onEditingChange,
   scroll,
   markSelected = true,
+  focusItem,
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -358,7 +365,7 @@ export const FeatureCard = ({
     setEditingState(next);
     onEditingChange?.(next);
   };
-  return (
+  const card = (
     <Card.Root
       grid
       // A group, so the header's edit button is muted until the pointer is over the card.
@@ -366,6 +373,10 @@ export const FeatureCard = ({
       selected={markSelected && selected}
       // TODO(richburdon): Make click-to-open a pattern.
       onClick={(event) => {
+        if (focusItem) {
+          // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
+          event.currentTarget.focus();
+        }
         if (onOpen && (event.metaKey || event.ctrlKey)) {
           // Opening is the whole gesture: the host must not also treat it as selecting the card.
           event.stopPropagation();
@@ -476,6 +487,14 @@ export const FeatureCard = ({
         <FeatureCardBody {...props} editing={editing} />
       )}
     </Card.Root>
+  );
+
+  return focusItem ? (
+    <Focus.Item asChild data-focus-click>
+      {card}
+    </Focus.Item>
+  ) : (
+    card
   );
 };
 

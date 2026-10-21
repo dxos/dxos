@@ -31,8 +31,21 @@ export interface BoardModel<TColumn = any, TItem = any> {
 
 export const BOARD_NAME = 'Board';
 
+/**
+ * How the arrow keys move: `columns` (the default) steps between columns, `Enter` enters one and up and down step
+ * through its cards; `grid` moves between the cards themselves by position, across columns, as tabster's grid mode.
+ */
+export type BoardNavigation = 'columns' | 'grid';
+
+/**
+ * A board's cards, as a grid moves between them: the `Focus.Item` each card is (as `Board.Item`'s is). By its class,
+ * since a `Focus.Item` slotted onto a `Card.Root` takes the card's `data-scope` and `data-part`.
+ */
+export const BOARD_CARD_SELECTOR = '.dx-focus-item';
+
 export type BoardContextValue<TColumn = any, TItem = any> = {
   model: BoardModel<TColumn, TItem>;
+  navigation?: BoardNavigation;
 };
 
 export const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>(BOARD_NAME);

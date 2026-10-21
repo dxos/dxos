@@ -81,6 +81,7 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
         feature={feature}
         lookup={lookup}
         showDependencies={false}
+        focusItem
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
         onOpenObject={onOpenObject}
         openSpec={openSpec}
@@ -200,7 +201,7 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
           onEditingChange,
         }}
       >
-        <Board.Root model={model}>
+        <Board.Root model={model} navigation='grid'>
           <Board.Content
             {...Util.composableProps(props, { classNames: 'px-2' })}
             eventHandler={columnHandler}

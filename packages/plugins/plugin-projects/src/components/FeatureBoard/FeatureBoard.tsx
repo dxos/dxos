@@ -82,6 +82,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         lookup={lookup}
         selected={feature.id === selectedId}
         markSelected={false}
+        focusItem
         relation={relation}
         onSelectDependency={onSelect}
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}

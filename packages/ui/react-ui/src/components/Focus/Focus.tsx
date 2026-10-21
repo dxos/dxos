@@ -28,7 +28,10 @@ import { FocusContext, type FocusState } from './FocusContext.ts';
 //
 
 type FocusGroupProps = {
-  orientation?: Axis;
+  /** `grid` moves to the member on screen in the arrow's direction; `grid-linear` does so for up and down only. */
+  orientation?: Axis | 'grid' | 'grid-linear';
+  /** Names the members at any depth, instead of the group's top-level focusables (e.g. a board's cards). */
+  itemSelector?: string;
   /** A separator-coloured border while unfocused (e.g. a grid cell's edge). */
   border?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -39,14 +42,14 @@ type FocusGroupProps = {
  * leaves it. Members report a state (`useFocus().setFocus`) that colours the group's ring.
  */
 const FocusGroup = slottable<HTMLDivElement, FocusGroupProps>(
-  ({ children, asChild, orientation = 'vertical', border, onKeyDown, ...props }, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', itemSelector, border, onKeyDown, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const {
       ref: focusGroupRef,
       onKeyDown: onFocusGroupKeyDown,
       onFocus: onFocusGroupFocus,
       ...focusGroupAttrs
-    } = useFocusGroup({ axis: orientation, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
+    } = useFocusGroup({ axis: orientation, itemSelector, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
     const [state, setState] = useState<FocusState | undefined>();
     const [groupHasFocus, setGroupHasFocus] = useState(false);
     const context = useMemo(() => ({ setFocus: setState, groupHasFocus }), [groupHasFocus]);

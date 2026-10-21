@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -30,8 +30,6 @@ export type ProjectFeaturesProps = {
 
 type Point = NonNullable<Feature.Feature['position']>;
 
-const projectIdOf = (feature: Feature.Feature) => feature.project && EID.getEntityId(EID.parse(feature.project.uri));
-
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
   { mode: 'cards', icon: 'ph--cards--regular' },
   { mode: 'canvas', icon: 'ph--graph--regular' },
@@ -44,13 +42,11 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   const { mode } = useViewState(FeatureMapView.aspect, project.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
   const db = Obj.getDatabase(project);
-  // Queried, not read off the project: membership lives on each feature, so a move by an agent shows up here.
-  const allFeatures = useQuery(db, Filter.type(Feature.Feature));
-  const members = useMemo(
-    () =>
-      allFeatures.filter((feature) => projectIdOf(feature) === project.id).sort((a, b) => a.name.localeCompare(b.name)),
-    [allFeatures, project.id],
-  );
+  // Queried, not read off the project: membership lives on each feature, so a move by an agent shows up here. Filtered
+  // in the query rather than after it, since clearing a feature's `project` leaves the set of features unchanged and a
+  // filter over that set would never re-run.
+  const projectFeatures = useQuery(db, Filter.type(Feature.Feature, { project: Ref.make(project) }));
+  const members = useMemo(() => [...projectFeatures].sort((a, b) => a.name.localeCompare(b.name)), [projectFeatures]);
   const ids = useMemo(() => members.map((feature) => feature.id), [members]);
   const positions = useMemo(
     () => Object.fromEntries(members.flatMap((feature) => (feature.position ? [[feature.id, feature.position]] : []))),

@@ -260,10 +260,10 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
       return () => clearTimeout(deadline);
     }, []);
 
-    // Arrow-key navigation across tiles. The `both` axis moves focus through the items as flat
-    // next/previous in DOM order on all four arrows; `tabbable` keeps each tile its own tab stop.
+    // Arrow-key navigation across tiles by position: the layout puts each item in the shortest column, so DOM order
+    // jumps about the screen. `tabbable` keeps each tile its own tab stop.
     const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({
-      axis: 'both',
+      axis: 'grid',
       memorizeCurrent: true,
       tabbable: true,
       cyclic: true,

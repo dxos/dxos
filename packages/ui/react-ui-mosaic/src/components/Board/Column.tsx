@@ -53,7 +53,14 @@ type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TC
 
 const BoardColumnRootInner = Util.composable<HTMLDivElement, BoardColumnRootProps>(
   ({ classNames, children, location, data, debug, draggable, dragHandle, ...rest }, forwardedRef) => {
-    const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
+    const { model, navigation } = useBoard(BOARD_COLUMN_ROOT_NAME);
+    const className = mx(
+      'group/column',
+      // The cards' own surface, so a column reads as one raised panel holding them.
+      'dx-fill md:w-card-default-width snap-center rounded-md bg-card-surface',
+      'overflow-hidden',
+      classNames,
+    );
 
     return (
       <Mosaic.Tile
@@ -65,21 +72,22 @@ const BoardColumnRootInner = Util.composable<HTMLDivElement, BoardColumnRootProp
         draggable={draggable}
         dragHandle={dragHandle}
       >
-        <Focus.Group
-          {...rest}
-          data-testid='board-column'
-          border
-          classNames={mx(
-            'group/column',
-            // The cards' own surface, so a column reads as one raised panel holding them.
-            'dx-fill md:w-card-default-width snap-center rounded-md bg-card-surface',
-            'overflow-hidden',
-            classNames,
-          )}
-          ref={forwardedRef}
-        >
-          <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
-        </Focus.Group>
+        {navigation === 'grid' ? (
+          // A panel, not a stop: the board's grid moves between the cards themselves, so a column must not take the
+          // arrow keys for its own; the inset shadow is the separator edge `Focus.Group`'s `border` draws.
+          <div
+            {...rest}
+            data-testid='board-column'
+            className={mx(className, 'shadow-[inset_0_0_0_1px_var(--color-separator)]')}
+            ref={forwardedRef}
+          >
+            <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
+          </div>
+        ) : (
+          <Focus.Group {...rest} data-testid='board-column' border classNames={className} ref={forwardedRef}>
+            <BoardColumnProvider column={data}>{children}</BoardColumnProvider>
+          </Focus.Group>
+        )}
       </Mosaic.Tile>
     );
   },
