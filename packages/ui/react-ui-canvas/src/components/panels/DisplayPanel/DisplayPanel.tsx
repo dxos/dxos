@@ -141,7 +141,7 @@ export const DisplayPanel = ({
       <Button.Toggle
         variant='ghost'
         iconOnly
-        icon='ph--grid-four--regular'
+        icon='ph--magnet--regular'
         label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
         disabled={readonly}
         pressed={snap === true}
@@ -161,6 +161,8 @@ export const DisplayPanel = ({
         onPressedChange={onLatticeToggle}
       />
     )}
+    {/* Snapping is behaviour, the rest is what the canvas draws. */}
+    {(onSnapToggle || onLatticeToggle) && <Toolbar.Separator variant='line' />}
     {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
     {onGuidesToggle && (
       <Button.Toggle
