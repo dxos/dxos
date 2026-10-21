@@ -9,6 +9,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
+import { Obj } from '@dxos/echo';
 
 import { makeRegistry } from './progress-registry.ts';
 import { makeReporter, withReporter } from './progress-reporter.ts';
@@ -25,11 +26,13 @@ const setup = () => {
   const sink = makeTraceSink(progress, { stallTimeout: 0 });
   const writer: Trace.Writer = {
     write: (eventType, data) =>
-      sink.write({
-        meta: { pid: 'run-1' },
-        isEphemeral: true,
-        events: [{ type: eventType.key, timestamp: Date.now(), data }],
-      } as unknown as Trace.Message),
+      sink.write(
+        Obj.make(Trace.Message, {
+          meta: { pid: 'run-1' },
+          isEphemeral: true,
+          events: [{ type: eventType.key, timestamp: Date.now(), data }],
+        }),
+      ),
   };
   return { writer, task: () => registry.get(progress.monitorAtom(KEY)) };
 };

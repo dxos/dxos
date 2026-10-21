@@ -79,11 +79,10 @@ export const makeReporter = (
  * Runs `effect` with a meter: starts a {@link ProgressReporter} from the ambient `Trace.TraceService`, hands it
  * to `effect`, and ends it with the outcome.
  */
-export const withReporter = <A, E, R>(
+export const withReporter = Effect.fnUntraced(function* <A, E, R>(
   options: { key: string; label: string },
   effect: (reporter: ProgressReporter) => Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, R | Trace.TraceService> =>
-  Effect.gen(function* () {
-    const reporter = makeReporter(yield* Trace.TraceService, options);
-    return yield* effect(reporter).pipe(Effect.onExit((exit) => Effect.sync(() => reporter.end(exit))));
-  });
+) {
+  const reporter = makeReporter(yield* Trace.TraceService, options);
+  return yield* effect(reporter).pipe(Effect.onExit((exit) => Effect.sync(() => reporter.end(exit))));
+});
