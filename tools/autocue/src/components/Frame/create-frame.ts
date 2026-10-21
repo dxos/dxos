@@ -94,13 +94,13 @@ export const FRAME_STYLES = `
   .header.off { display: none; }
   /* Declared on the frame, so they win over the host's tokens and the page-theme inversion alike. */
   .frame.white-on-black { --autocue-caption-rgb: 0, 0, 0; --autocue-caption-fg: #fff;
-    --autocue-caption-muted: rgba(255, 255, 255, 0.75); --autocue-band-surface: rgba(0, 0, 0, 0.72);
-    --autocue-band-fg: #fff; --autocue-band-muted: rgba(255, 255, 255, 0.7); --autocue-panel-surface: rgba(0, 0, 0, 0.92);
-    --autocue-panel-fg: #fff; --autocue-panel-muted: rgba(255, 255, 255, 0.7); }
+    --autocue-caption-muted: #bfbfbf; --autocue-band-surface: rgba(0, 0, 0, 0.72);
+    --autocue-band-fg: #fff; --autocue-band-muted: #b3b3b3; --autocue-panel-surface: rgba(0, 0, 0, 0.92);
+    --autocue-panel-fg: #fff; --autocue-panel-muted: #b3b3b3; }
   .frame.black-on-white { --autocue-caption-rgb: 255, 255, 255; --autocue-caption-fg: #000;
-    --autocue-caption-muted: rgba(0, 0, 0, 0.65); --autocue-band-surface: rgba(255, 255, 255, 0.72);
-    --autocue-band-fg: #000; --autocue-band-muted: rgba(0, 0, 0, 0.65); --autocue-panel-surface: rgba(255, 255, 255, 0.95);
-    --autocue-panel-fg: #000; --autocue-panel-muted: rgba(0, 0, 0, 0.65); }
+    --autocue-caption-muted: #595959; --autocue-band-surface: rgba(255, 255, 255, 0.72);
+    --autocue-band-fg: #000; --autocue-band-muted: #595959; --autocue-panel-surface: rgba(255, 255, 255, 0.95);
+    --autocue-panel-fg: #000; --autocue-panel-muted: #595959; }
   /* Only the bands ignore the pointer: inherited through the slot, it would disable the content too. */
   .band { box-sizing: border-box; text-align: center; pointer-events: none; backdrop-filter: blur(6px);
     background: var(--autocue-band-surface); color: var(--autocue-band-fg); }
