@@ -136,6 +136,9 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, onCommit }: E
   );
 };
 
+/** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
+const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;
+
 const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
 /**
@@ -364,25 +367,25 @@ export const FeatureCardBody = ({
       </Card.Row>
 
       {!expanded && feature.subfeatures.length > 0 && (
-        <Card.Row icon='ph--tree-view--regular'>
+        <Card.Row leading={<RowIcon icon='ph--tree-view--regular' />}>
           <Card.Text truncate>{t('feature-card.subfeatures.label', { count: feature.subfeatures.length })}</Card.Text>
         </Card.Row>
       )}
       {openTasks.length > 0 && (
         <Card.Row
-          icon='ph--list-checks--regular'
+          leading={<RowIcon icon='ph--list-checks--regular' />}
           trailing={milestones.length > 0 && <Tag.Tag>{milestones.join(', ')}</Tag.Tag>}
         >
           <Card.Text truncate>{t('feature-card.open-tasks.label', { count: openTasks.length })}</Card.Text>
         </Card.Row>
       )}
       {!expanded && feature.showcases.length > 0 && (
-        <Card.Row icon='ph--presentation-chart--regular'>
+        <Card.Row leading={<RowIcon icon='ph--presentation-chart--regular' />}>
           <Card.Text truncate>{feature.showcases[0].name}</Card.Text>
         </Card.Row>
       )}
       {!detailed && dependencies.length > 0 && (
-        <Card.Row icon='ph--tree-structure--regular'>
+        <Card.Row leading={<RowIcon icon='ph--tree-structure--regular' />}>
           <Card.Text truncate>{t('feature-card.depends-on.label', { count: dependencies.length })}</Card.Text>
         </Card.Row>
       )}
@@ -392,7 +395,7 @@ export const FeatureCardBody = ({
           {dependencies.map((dependency) => (
             <Card.Row
               key={dependency.id}
-              icon={FEATURE_STATUS_STYLE[dependency.status].icon}
+              leading={<RowIcon icon={FEATURE_STATUS_STYLE[dependency.status].icon} />}
               trailing={
                 onRemoveDependency && (
                   <Card.Action
@@ -424,7 +427,7 @@ export const FeatureCardBody = ({
           {dependents.map((dependent) => (
             <Card.Row
               key={dependent.id}
-              icon={FEATURE_STATUS_STYLE[dependent.status].icon}
+              leading={<RowIcon icon={FEATURE_STATUS_STYLE[dependent.status].icon} />}
               onClick={onSelectDependency ? () => onSelectDependency(dependent.id) : undefined}
             >
               <Card.Text truncate>{dependent.name}</Card.Text>
@@ -438,7 +441,7 @@ export const FeatureCardBody = ({
           {feature.subfeatures.map((subfeature, index) => (
             <Card.Row
               key={index}
-              icon={FEATURE_STATUS_STYLE[subfeature.status].icon}
+              leading={<RowIcon icon={FEATURE_STATUS_STYLE[subfeature.status].icon} />}
               trailing={<Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>}
             >
               <Card.Text truncate>{subfeature.name}</Card.Text>
@@ -452,7 +455,7 @@ export const FeatureCardBody = ({
           {feature.tasks.map((task) => (
             <Card.Row
               key={task.id}
-              icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'}
+              leading={<RowIcon icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'} />}
               trailing={task.milestone && <Tag.Tag>{task.milestone}</Tag.Tag>}
               onClick={open(task.id)}
             >
@@ -465,7 +468,11 @@ export const FeatureCardBody = ({
       {expanded && feature.showcases.length > 0 && (
         <Card.Section title={t('feature-card.showcases.title')}>
           {feature.showcases.map((showcase) => (
-            <Card.Row key={showcase.id} icon='ph--presentation-chart--regular' onClick={open(showcase.id)}>
+            <Card.Row
+              key={showcase.id}
+              leading={<RowIcon icon='ph--presentation-chart--regular' />}
+              onClick={open(showcase.id)}
+            >
               <Card.Text truncate>{showcase.name}</Card.Text>
             </Card.Row>
           ))}
