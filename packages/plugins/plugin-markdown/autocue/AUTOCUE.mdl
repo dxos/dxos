@@ -10,9 +10,10 @@ tests stay in [PLUGIN.mdl](../PLUGIN.mdl) `## QA`; the `covers` ids refer to its
 
 ## Extensions
 
-| Term   | URI                     |
-|--------|-------------------------|
-| `test` | `org.dxos.mdl.test@1.0` |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Flows
 
@@ -71,4 +72,13 @@ test QA-5: Showcase clip
     - name: Zoom into the drawing
       do: Click the inline drawing's zoom-in button a few times.
       expect: the drawing zooms in
+```
+
+## Changelog
+
+```mdl
+decision D-1: This spec holds plugin-markdown's recorded demo flows, QA-4 and QA-5, moved from PLUGIN.mdl; see PLUGIN.mdl [D-1] and [D-2].
+  date: 2026-10-19
+  by: user:richburdon
+  affects: [QA-4, QA-5]
 ```
