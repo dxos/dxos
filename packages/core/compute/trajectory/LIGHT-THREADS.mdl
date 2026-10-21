@@ -623,3 +623,17 @@ decision D-24: Only a person's prompt routes to an agent: a reply naming `@<agen
   rejected:
     - A per-chat turn budget; it caps a loop rather than ruling one out.
 ```
+
+```mdl
+decision D-25: The trace draws each lane as a branch of its own. Every event a turn writes carries its lane in
+  `Trace.Meta.thread` (the light thread, or the prompt a turn on main answers), and every process it spawns carries
+  `parentThread`; the span tree keys open spans by pid and thread, and a finished lane stays expanded.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: Lanes of one agent share its pid, so a span tree keyed by pid alone let the second turn supersede the first and
+    closed the wrong span; the reader asked for the trace panel to show the lanes as a tree.
+  rejected:
+    - A process per lane; a lane is a turn of the chat's one agent process, and its tools are that process's children.
+```

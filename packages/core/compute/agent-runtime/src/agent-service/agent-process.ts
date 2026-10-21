@@ -659,12 +659,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       ),
                       run: (pending, thread) => {
                         const tenant = addressee(pending);
+                        // A turn on main has no light thread yet runs beside the others, so the trace names its lane
+                        // after the prompt it answers.
                         return executeTurn({
                           prompt: [...pending.blocks],
                           dequeued: pending,
                           thread,
                           tenant: tenant ? tenants.get(tenant.name) : undefined,
-                        }).pipe(Effect.orDie);
+                        }).pipe(Effect.provideService(Trace.CurrentThread, thread ?? pending.id), Effect.orDie);
                       },
                       open: (pending) => {
                         // Sharing the chat, the process's own lanes are named after the model they run on.

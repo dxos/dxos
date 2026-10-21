@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 
 import { StoryRole } from '../modules/index.ts';
@@ -189,7 +190,8 @@ export const Live: Story = {
   tags: ['!test'],
 };
 
-/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself. */
+/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself; the trace
+ * panel beside the chat draws each thread as a lane of its own. */
 export const Demo: Story = {
   decorators: createDecorators({
     skills: [CalculatorSkill.key],
@@ -197,7 +199,7 @@ export const Demo: Story = {
     assistantSettings: { parallelThreads: true },
   }),
   args: {
-    layout: [[StoryRole.Chat]],
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
   },
   tags: ['!test'],
 };
