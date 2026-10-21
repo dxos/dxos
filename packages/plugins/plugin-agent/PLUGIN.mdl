@@ -1148,6 +1148,25 @@ decision D-1: A member has one private chat with an agent in a space. An open th
   source: https://github.com/dxos/dxos/pull/14082
 ```
 
+```mdl
+decision D-2: A member who sees the same conversation with an agent in each space the agent is in has hit a bug, which is to be reproduced and fixed.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [F-8.4]
+```
+
+```mdl
+decision D-3: Opening an agent in a space opens the member's private chat with it in that space, a conversation the agent's other spaces do not show, and what the agent knows stays shared through its one brain. Fills in [D-2].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-8.4]
+  why: The article opened the private chat of the agent's home whichever space it was opened from. A chat per space removes the shared conversation, and the brain every presence names keeps the agent's knowledge whole across spaces (F-6.1).
+  rejected:
+    - One conversation per member, shown in every space the agent is in: the behaviour reported as the bug.
+  source: https://github.com/dxos/dxos/pull/14074
+```
+
 ---
 
 ## Appendix: Extension Definitions
