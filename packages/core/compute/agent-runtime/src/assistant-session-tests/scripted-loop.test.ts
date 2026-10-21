@@ -197,6 +197,9 @@ describe('AiRequest loop (scripted model)', () => {
     ),
   );
 
+  /** Every request the scripted model received in the test below, which asserts on what the model was shown. */
+  const seen: ScriptedLanguageModel.ScriptedRequest[] = [];
+
   // Seen live: a chat switched to code mode kept its earlier turns' calls to `space-query-objects`, and the model
   // read them as a tool it could still call. A call to a tool the turn does not offer reaches it as text instead.
   it.effect(
@@ -280,9 +283,6 @@ describe('AiRequest loop (scripted model)', () => {
     ),
   );
 });
-
-/** Every request the scripted model received, for a test that asserts on what the model was shown. */
-const seen: ScriptedLanguageModel.ScriptedRequest[] = [];
 
 /** An earlier turn's call to a tool no longer in the toolkit, and its result. */
 const retiredHistory = (): Message.Message[] => [

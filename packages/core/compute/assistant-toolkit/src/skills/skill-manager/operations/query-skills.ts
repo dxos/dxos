@@ -12,7 +12,8 @@ import { QuerySkills } from './definitions.ts';
 
 export default QuerySkills.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ query }) {
+    // The skill's own prompt template invokes this with no input at all.
+    Effect.fnUntraced(function* ({ query } = {}) {
       const skills = yield* Registry.runQuery(Filter.type(Skill.Skill));
       const sorted = skills.slice().sort(({ name: a }, { name: b }) => a.localeCompare(b));
       return query === undefined || words(query).length === 0 ? sorted : search(sorted, words(query));
