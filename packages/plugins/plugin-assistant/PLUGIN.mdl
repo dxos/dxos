@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -491,6 +492,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
       do: Add "Rich Burdon" with "+" > "Add an object…", then mention "Prompt redesign spec" and
         "Q4 roadmap" with "@".
       expect: each object shows in the prompt as a chip; Context does not change while composing
+    - name: Attach a file
+      do: Add a file with "+" > "Add files…".
+      expect: the file is listed as attaching until it is stored, then shows as a chip where it was added
     - name: Send the message
       do: Press Enter.
       expect: the three objects join Context, the sent question shows their names, and a reply
@@ -501,6 +505,73 @@ test QA-3: The prompt carries context, commands and the agent's settings
     - name: Remove an object from context
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+```
+
+## Changelog
+
+```mdl
+decision D-1: The chat prompt follows Claude Code: one picker chooses the agent, where it runs and its model; skills load as `/` commands; `@` inserts a mention of an object, which joins the chat's context when the message is sent; a "+" menu adds files, objects, commands and MCP servers.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-2: The chat's tasks and its context are two drawers above the prompt, opened from a group of buttons before the microphone and Send, one open at a time; other plugins add their own sections to the context drawer.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-3: The `@` menu runs a full-text search as the reader types, debounced, and is the same search the markdown editor's `@` menu uses.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-4: Enter in the `@` menu picks the row on screen and drops the search still running.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3]
+```
+
+```mdl
+decision D-5: MCP servers are switched on and off in the "+" menu and are not listed in the context drawer. Fills in [D-1] and [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: The switch is the space's, not the chat's; listed in a chat's context it would read as something that chat holds.
+  rejected:
+    - List enabled servers in the context drawer: switching one off there would change every chat in the space.
+```
+
+```mdl
+decision D-6: An attached file is stored in the space and mentioned where it was added; the prompt lists files still attaching and those that could not be stored, with why, and does not send while any is attaching. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: A message sent before its file is stored would name a file the agent cannot read, and a failure shown only in the thread is missed on the space-home prompt, which has none.
+  rejected:
+    - Report failures as the chat's error event: the space-home prompt renders no thread to show it.
+```
+
+```mdl
+decision D-7: The attaching list appears only once an upload has taken 400 ms, in a neutral banner, so a quick upload does not flash. Fills in [D-6].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3]
+  why: A local upload stores in a fraction of a second, which showed the banner for one frame.
+```
+
+```mdl
+decision D-8: Approve [D-7].
+  date: 2026-10-21
+  by: user:wittjosiah
 ```
 
 ---

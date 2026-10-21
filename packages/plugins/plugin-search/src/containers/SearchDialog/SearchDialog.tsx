@@ -9,6 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SearchList, type SearchResult } from '@dxos/react-ui-search';
@@ -16,20 +17,17 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
+import { toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
 
 import { type SelectHandle } from '../../select-handle.ts';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
-  /** Overrides the dialog's title, for a picker that says what the object is for. */
   title?: string;
-  /** Present when the dialog picks an object for `SearchOperation.SelectObject` rather than opening it. */
   handle?: SelectHandle;
 }>;
 
-/** Global search: picking a result opens it, or, given a `handle`, hands it back to the caller. */
 export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: SearchDialogProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -39,8 +37,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: Sea
   const [query, setQuery] = useState<string>();
 
   // Scope the FTS query to user-facing types so results match what the app can render.
-  const typeUris = useSearchableTypeUris(space);
-  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
+  const typeUris = ObjectCombobox.useListedTypeUris(space?.db);
+  ObjectCombobox.useDrainedSearchIndex(space?.db);
+  const objects = useQuery(space?.db, ObjectCombobox.searchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 

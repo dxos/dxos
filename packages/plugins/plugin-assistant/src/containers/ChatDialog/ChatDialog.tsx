@@ -31,7 +31,6 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();
   const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
-  // Subscribe via `useObject` so the thread re-renders when the View menu or `/view` changes the view type.
   const [chatViewType] = useObject(chat, 'viewType');
 
   // TODO(burdon): Refocus when open.

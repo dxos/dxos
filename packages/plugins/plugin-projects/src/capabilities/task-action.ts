@@ -90,10 +90,6 @@ const OTHERS: TasksCapabilities.TaskAction[] = [
   },
 ];
 
-/**
- * A variant registration shares its agent's name (one Claude Code, run in two places), so the menu says
- * where it runs to keep the two entries apart.
- */
 const agentLabel = (agent: AssistantCapabilities.Agent): string =>
   agent.variantOf !== undefined && agent.locations?.length === 1
     ? `${agent.label} (${agent.locations[0] === 'edge' ? 'EDGE' : 'this device'})`

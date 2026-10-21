@@ -3,6 +3,7 @@
 //
 
 import { type Alarm } from '@dxos/assistant';
+import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
@@ -44,6 +45,8 @@ export type ChatContextValue = {
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;
   setVisibleRange: (range: MessageRange | undefined) => void;
+  /** The `/` commands submit runs: what plugins contribute, then one per skill. */
+  slashCommands: readonly SlashCommand.SlashCommand[];
   /** The drawer open above the prompt, if any. */
   drawer?: ChatDrawer;
   setDrawer: (drawer?: ChatDrawer) => void;

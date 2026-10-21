@@ -108,8 +108,6 @@ const ChatRoot = ({
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
-  // Stays as the reader left it: new context or a new task does not open a drawer. Per mount rather
-  // than persisted, since it is a glance, not a preference.
   const [drawer, setDrawer] = useState<ChatDrawer | undefined>(defaultDrawer);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -123,8 +121,8 @@ const ChatRoot = ({
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
-  // Read at submit, so the handler does not resubscribe whenever a skill is added to the registry.
-  const slashCommands = UiHooks.useDynamicRef(useSlashCommands({ registry: chatModel?.registry, db }));
+  const commands = useSlashCommands({ registry: chatModel?.registry, db });
+  const slashCommands = UiHooks.useDynamicRef(commands);
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
@@ -240,6 +238,26 @@ const ChatRoot = ({
       return;
     }
 
+    const sendPrompt = (text: string) => {
+      if (active && queued >= DEFAULT_MAX_QUEUE) {
+        return;
+      }
+      markWork('chat.submit');
+      lastPrompt.current = text;
+      chatModel.send(
+        { message: text, context: getContext?.() },
+        {
+          prepare: async () => {
+            await onSubmit?.(text);
+            const currentDb = (chat && Obj.getDatabase(chat)) || db;
+            if (currentDb) {
+              await bindMentions(chatModel.context, currentDb, text);
+            }
+          },
+        },
+      );
+    };
+
     return event.on((ev) => {
       switch (ev.type) {
         case 'submit': {
@@ -258,7 +276,9 @@ const ChatRoot = ({
               // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
               // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
               void (async () => {
-                await Promise.resolve(onSubmit?.(text));
+                if (!resolved.command.chatOnly) {
+                  await Promise.resolve(onSubmit?.(text));
+                }
                 // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
                 // began without a database has one only now.
                 const currentDb = (chat && Obj.getDatabase(chat)) || db;
@@ -281,8 +301,9 @@ const ChatRoot = ({
                 // because `onSubmit` is what persists a transient chat, creating it.
                 const currentFeed = feed ?? chat.feed?.target;
                 if (currentFeed && result.summary) {
+                  const ran = result.prompt ? resolved.command.command : text;
                   await currentDb.appendToFeed(currentFeed, [
-                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: ran }] }),
                     Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
                   ]);
                 }
@@ -291,6 +312,9 @@ const ChatRoot = ({
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
                   void chatModel.request({ message: result.followUp });
+                }
+                if (result.prompt) {
+                  sendPrompt(result.prompt);
                 }
               })()
                 .catch((error) => {
@@ -301,29 +325,7 @@ const ChatRoot = ({
                 });
               break;
             }
-            // The prompt's own guard does not cover submits emitted elsewhere (a checklist's execute action).
-            if (active && queued >= DEFAULT_MAX_QUEUE) {
-              break;
-            }
-            markWork('chat.submit');
-            lastPrompt.current = ev.text;
-            // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
-            // transient chat and before the agent acknowledges it. The chat model requests it when the
-            // agent is idle and queues it behind a running turn otherwise.
-            // The objects the prompt mentions join the context as it is sent, after `onSubmit` has persisted
-            // a transient chat and before the request reads its bindings.
-            chatModel.send(
-              { message: text, context: getContext?.() },
-              {
-                prepare: async () => {
-                  await onSubmit?.(text);
-                  const currentDb = (chat && Obj.getDatabase(chat)) || db;
-                  if (currentDb) {
-                    await bindMentions(chatModel.context, currentDb, text);
-                  }
-                },
-              },
-            );
+            sendPrompt(text);
           }
           break;
         }
@@ -377,6 +379,7 @@ const ChatRoot = ({
       started={messages.length > 0 || queued > 0}
       setController={setController}
       setVisibleRange={setVisibleRange}
+      slashCommands={commands}
       drawer={drawer}
       setDrawer={setDrawer}
       {...props}
@@ -769,24 +772,19 @@ ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'chatModel' | 'event' | 'drawers' | 'started'>;
+type ChatPromptProps = Omit<
+  NaturalChatPromptProps,
+  'chat' | 'db' | 'chatModel' | 'event' | 'drawers' | 'started' | 'slashCommands'
+>;
 
 /**
  * The composer with its drawers above it: the chat's checklist, and what it has in context (with any
  * section a plugin contributes). One drawer is open at a time.
- *
- * One component rather than siblings: they share a border and a rounded shell, and the controls that
- * open the drawers live in the composer's own action bar — so a host that placed them side by side
- * had to hold the open state between them and coordinate the corner radius.
- *
- * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
- * trigger is not used: the toggles are buttons inside the composer, which report through the chat
- * event rather than being wrapped in a `Collapsible.Trigger` they cannot reach.
  */
 const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
-  const { chat, db, chatModel, event, queueSize, started, drawer, setDrawer } = useChatContext(CHAT_PROMPT_NAME);
+  const { chat, db, chatModel, event, queueSize, started, slashCommands, drawer, setDrawer } =
+    useChatContext(CHAT_PROMPT_NAME);
 
-  // A drawer with nothing to show withholds its toggle rather than pointing at nothing.
   const [tasks] = useObject(chat, 'tasks');
   const available = useMemo(() => {
     const drawers: ChatDrawer[] = [];
@@ -800,20 +798,21 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
   }, [chat, chatModel, db, tasks]);
   const open = drawer && available.includes(drawer) ? drawer : undefined;
 
-  // The drawer that last opened keeps rendering while the region closes, so the content does not vanish
-  // before the ramp has hidden it.
   const shownRef = useRef(open);
   if (open) {
     shownRef.current = open;
   }
-  const shown = open ?? shownRef.current;
+  const shown = open ?? shownRef.current ?? available[0];
+
+  const contextOpenedRef = useRef(false);
+  if (open === 'context') {
+    contextOpenedRef.current = true;
+  }
 
   return (
     <Collapsible.Root
       open={open !== undefined}
       onOpenChange={({ open }) => !open && setDrawer(undefined)}
-      // Clipped rather than unmounted: the drawers hold their own subscriptions, and remounting them on
-      // every toggle would refetch what the reader just hid.
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
@@ -821,14 +820,21 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
           <div className='shrink-0 max-h-[40dvh] overflow-y-auto dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm'>
-            {shown === 'tasks' && <ChatTaskList classNames='text-fg-muted' />}
-            {shown === 'context' && <ChatContextDrawer />}
+            {available.includes('tasks') && (
+              <div hidden={shown !== 'tasks'}>
+                <ChatTaskList classNames='text-fg-muted' />
+              </div>
+            )}
+            {available.includes('context') && contextOpenedRef.current && (
+              <div hidden={shown !== 'context'}>
+                <ChatContextDrawer />
+              </div>
+            )}
           </div>
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
         {...props}
-        // Square where a drawer meets it, so the two read as one shell rather than two cards.
         classNames={[open && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
@@ -836,6 +842,7 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
         event={event}
         queueSize={queueSize}
         started={started}
+        slashCommands={slashCommands}
         drawers={{ available, open }}
       />
     </Collapsible.Root>
@@ -844,22 +851,13 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
-//
-// ContextDrawer
-//
-
 const CHAT_CONTEXT_DRAWER_NAME = 'Chat.ContextDrawer';
 
-/**
- * The context drawer: the sections plugins contribute to `ChatSurface.ChatDetails`, the chat's own
- * context (objects and skills) first.
- */
 const ChatContextDrawer = () => {
-  const { chat, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
+  const { chat, db, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
   return (
     <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
-      {/* Unlimited: every plugin's section is shown. */}
-      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, context: chatModel?.context }} />}
+      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
     </div>
   );
 };

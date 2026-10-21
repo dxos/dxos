@@ -11,14 +11,11 @@ import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
 
 export type SearchDialogSurfaceProps = {
-  /** Absent when `OpenSearch` opened the dialog, which passes none. */
   props?: ComponentProps<typeof SearchDialog> & {
-    /** The space to search, when the caller names one (`SearchOperation.SelectObject`). */
     spaceId?: string;
   };
 };
 
-/** Search is scoped to one space, so each surface resolves it before mounting the provider. */
 export const SearchDialogSurface = ({ props: { spaceId, ...props } = {} }: SearchDialogSurfaceProps) => {
   const activeSpace = Hooks.useActiveSpace();
   const namedSpace = useSpace(spaceId);

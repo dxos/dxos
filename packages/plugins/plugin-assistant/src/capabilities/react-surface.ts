@@ -59,7 +59,7 @@ export default Capability.makeModule(() =>
         id: 'chatContext',
         filter: Surface.makeFilter(ChatSurface.ChatDetails),
         component: ChatContextPanel,
-        props: ({ data: { chat, context } }) => ({ chat, context }),
+        props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
         position: Position.first,
       }),
       Surface.create({

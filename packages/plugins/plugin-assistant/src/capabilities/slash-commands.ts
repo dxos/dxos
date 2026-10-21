@@ -10,7 +10,6 @@ import { AssistantCapabilities } from '#types';
 
 import { TaskSlashCommands, ViewSlashCommands } from '../commands/index.ts';
 
-/** The chat's own commands; skills are offered beside them by the prompt. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(AssistantCapabilities.SlashCommands, [...TaskSlashCommands, ...ViewSlashCommands]);

@@ -16,17 +16,12 @@ import { meta } from '#meta';
 export type ChatAddMenuProps = {
   db: Database.Database;
   disabled?: boolean;
-  /** Opens the file picker; the entry is withheld when no plugin can store a file. */
   onAddFiles?: () => void;
   onAddObject: () => void;
   onCommands: () => void;
   onManageMcpServers: () => void;
 };
 
-/**
- * The prompt's "+": the kinds of thing a message can carry, not the things themselves. Objects are
- * found by name with `@`; this is where a reader discovers that, and where the fuller pickers live.
- */
 export const ChatAddMenu = ({
   db,
   disabled,
@@ -38,9 +33,8 @@ export const ChatAddMenu = ({
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
 
-  // Run once the menu has closed: an action that moves focus (the editor's completion list, a dialog)
-  // would otherwise lose it to the menu returning focus to its trigger, and the completion list would
-  // open under the pointer that is still finishing the click.
+  // Run once the menu has closed: Ark's menu returns focus to its trigger on close, which would take it
+  // from an action that moves focus (the editor's completion list, a dialog).
   const pending = useRef<(() => void) | undefined>(undefined);
   const handleSelect = useCallback(
     ({ value }: { value: string }) => {
@@ -119,7 +113,6 @@ export const ChatAddMenu = ({
   );
 };
 
-/** Subscribed per server: the query re-renders only when the set of servers changes, not their switches. */
 const McpServerItem = ({ server }: { server: McpServer.McpServer }) => {
   const [enabled, setEnabled] = useObject(server, 'enabled');
   const [name] = useObject(server, 'name');
@@ -128,7 +121,6 @@ const McpServerItem = ({ server }: { server: McpServer.McpServer }) => {
       item={{ value: `mcp-server-${server.id}`, label: name ?? server.id }}
       checked={enabled !== false}
       onCheckedChange={(checked) => setEnabled(!!checked)}
-      // Toggling several servers in a row is the common case, so the menu stays open.
       closeOnSelect={false}
       data-testid='assistant.add-menu.mcp-server'
     />

@@ -10,7 +10,6 @@ export type AiPreset = {
   local?: boolean;
 };
 
-/** Props shared between the prompt's agent picker and the usePresets hook. */
 export type ChatPresetProps = {
   presets?: AiPreset[];
   preset?: string;

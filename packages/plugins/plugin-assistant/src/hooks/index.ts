@@ -4,7 +4,7 @@
 // TODO(wittjosiah): Factor hooks out of plugin-assistant into a standalone package.
 
 export * from './useSkillRegistry.ts';
-export * from './useAttachFiles.ts';
+export * from './useAttachFile.ts';
 export * from './useChatAgent.ts';
 export * from './useChatKeymap.ts';
 export * from './useChatModel.ts';

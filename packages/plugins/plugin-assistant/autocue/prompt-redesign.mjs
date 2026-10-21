@@ -8,10 +8,7 @@
  *
  * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-3
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4183`
- * @driver `--caption-position middle`, so the captions do not cover the prompt
- *
- * Setup seeds the space through `composer.invoke` and opens the chat by URL (`/w/<space>/db/<type>+<id>`).
- * The reply in "Send a prompt with mentions" comes from the real model through EDGE.
+ * @driver `--caption-position middle --caption-background 0.45`
  */
 
 const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-3';
@@ -25,24 +22,17 @@ const COMPLETION = '.cm-tooltip-autocomplete';
 const VIEW_MENU = 'button:has([data-icon="ph--eye--regular"])';
 const MENTION_ITEM = 'li.dx-menu-item';
 
-/** Each caption is read before the gestures it describes; it stays up, centred and see-through, until the next. */
 const caption = async (demo, value) => {
   await demo.caption({ value, subtitle: SUBTITLE });
   await demo.sleep({ ms: 1_800 });
 };
 
-/** Text inside the context drawer, read from the DOM rather than trusted from the gesture. */
 const contextHas = (page, text) =>
   page.locator(CONTEXT).getByText(text, { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });
 
-/** A task in the task drawer. */
 const taskShown = (page, text) =>
   page.getByText(text, { exact: true }).first().waitFor({ state: 'visible', timeout: 10_000 });
 
-/**
- * Puts the caret at the end of the prompt by clicking past its text, so the pointer rests on empty
- * prompt rather than on an object chip, whose hover preview would cover the take.
- */
 const clickPromptEnd = async (page) => {
   const prompt = page.locator(PROMPT);
   const box = await prompt.boundingBox();
@@ -115,7 +105,6 @@ export const steps = [
       });
       await page.goto(url);
       await page.locator(PROMPT).waitFor({ state: 'visible', timeout: 30_000 });
-      // Off camera: the privacy notice and the help companion would cover the prompt and its drawers.
       for (const selector of [
         'li[role="status"]:has-text("Privacy Notice") button:has-text("Close")',
         'button[aria-label="Close companion"]',
@@ -131,10 +120,8 @@ export const steps = [
   {
     name: 'Open the task and context drawers',
     run: async ({ demo, page }) => {
-      // The setup's last click leaves a deck tooltip open over the toolbar's far end.
       await page.keyboard.press('Escape');
       await page.mouse.move(900, 500);
-      // Everything recorded so far is seeding and loading.
       await demo.cut();
       await demo.title({
         value: 'The chat prompt',
@@ -158,10 +145,8 @@ export const steps = [
       await demo.hover({ selector: '[data-testid="assistant.add-menu.mcp-servers"]', label: 'MCP servers' });
       const linear = '[data-testid="assistant.add-menu.mcp-server"]:has-text("Linear")';
       await demo.click({ selector: linear, label: 'Linear' });
-      // The menu stays open, so the check is what shows the server is on.
       await page.locator(`${linear}[data-state="checked"]`).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.sleep({ ms: 1_800 });
-      // And off again: with no sign-in, a turn would report it unavailable.
       await demo.click({ selector: linear, label: 'Linear' });
       await page.locator(`${linear}[data-state="unchecked"]`).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.sleep({ ms: 1_000 });
@@ -181,7 +166,6 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await demo.press({ key: 'Enter' });
       await page.getByText('Loaded the Web Search skill.').first().waitFor({ state: 'visible', timeout: 15_000 });
-      // Skills sit in their own section, collapsed so the objects stay in view; opened here to show the new one.
       const skills = '[data-testid="assistant.details.skills"] [data-scope="accordion"][data-part="item-trigger"]';
       await demo.click({ selector: skills, label: 'Skills' });
       await contextHas(page, 'Web Search');
@@ -239,32 +223,43 @@ export const steps = [
         label: 'Rich Burdon',
       });
       await clickPromptEnd(page);
-      // The chip leaves a space after itself; the comma belongs against it.
       await demo.press({ key: 'Backspace', hud: false });
       await demo.type({ selector: PROMPT, value: ', in two sentences: how does @Prompt', delay: 60 });
       await page
-        .locator(MENTION_ITEM)
+        .locator(`${MENTION_ITEM}[data-highlighted]`)
         .filter({ hasText: 'Prompt redesign spec' })
-        .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       await demo.press({ key: 'Enter' });
       await clickPromptEnd(page);
       await demo.type({ selector: PROMPT, value: 'fit with @Q4', delay: 60 });
       await page
-        .locator(MENTION_ITEM)
+        .locator(`${MENTION_ITEM}[data-highlighted]`)
         .filter({ hasText: 'Q4 roadmap' })
-        .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       await demo.press({ key: 'Enter' });
       await demo.press({ key: 'Backspace', hud: false });
       await demo.type({ selector: PROMPT, value: '?', delay: 60 });
-      // Off the chips, whose hover preview would outlive the send and cover the reply.
       await page.mouse.move(900, 300, { steps: 8 });
-      // Nothing has joined the context yet: composing changes nothing until the message is sent.
       await page
         .locator(`${CONTEXT} [data-testid="assistant.details.context.item"]`)
         .filter({ hasText: 'Rich Burdon' })
         .waitFor({ state: 'detached', timeout: 2_000 });
+      await demo.sleep({ ms: 1_500 });
+    },
+  },
+  {
+    name: 'Attach a file',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'A file is stored in the space and mentioned where it was added');
+      await page.locator('[data-testid="assistant.prompt"] input[type="file"]').setInputFiles({
+        name: 'launch-checklist.md',
+        mimeType: 'text/markdown',
+        buffer: Buffer.from('# Launch checklist\n\n- Docs\n- Changelog\n'),
+      });
+      await page
+        .locator(`${PROMPT} :text("launch-checklist.md")`)
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 1_500 });
     },
   },
@@ -277,7 +272,6 @@ export const steps = [
       await contextHas(page, 'Q4 roadmap');
       await contextHas(page, 'Prompt redesign spec');
       await demo.speed({ factor: 4 });
-      // Done when the status pill reports the finished turn.
       await page
         .locator('[data-testid="assistant.chat-status"]')
         .getByText(/\d+s/)
@@ -292,7 +286,6 @@ export const steps = [
     name: 'Switch the thread view',
     run: async ({ demo, page }) => {
       await caption(demo, 'The thread view is in the toolbar, and in /view');
-      // The menu's button is named for the current view (`applyActive`), so it is found by its icon.
       await demo.click({ selector: VIEW_MENU, label: 'View' });
       await demo.click({ selector: '[role^="menuitem"]:has-text("Summary")', label: 'Summary' });
       await demo.sleep({ ms: 2_500 });

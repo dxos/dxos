@@ -4,13 +4,12 @@
 
 import { type Obj } from '@dxos/echo';
 
+export type ChatDrawer = 'tasks' | 'context';
+
 /**
  * The main `ChatRoot` manages the `ChatContextValue` which contains an `event` property that subcomponents
  * can subscribe to and submit events. Unhandled events are passed to the external `onEvent` callback.
  */
-/** The drawers above the prompt; one is open at a time, so together they never cover more of the thread than one does. */
-export type ChatDrawer = 'tasks' | 'context';
-
 export type ChatEvent =
   | {
       type: 'toggle-debug';

@@ -19,11 +19,13 @@ import React, {
 } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
+import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
-import { type Database, Obj, type Registry } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SearchOperation from '@dxos/plugin-search/SearchOperation';
 import {
@@ -41,16 +43,18 @@ import type * as Util from '@dxos/react-ui/Util';
 import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
 
-import { insertMention, useAttachFiles, useChatKeymapExtensions, useObjectMentions, useSlashCommands } from '#hooks';
+import { insertMention, mentionText, useAttachFile, useChatKeymapExtensions, useObjectMentions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { McpServersDialog } from '../McpServers/index.ts';
+import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatAddMenu } from './ChatAddMenu.tsx';
 import { ChatAgentPicker } from './ChatAgentPicker.tsx';
+import { type Attachment, ChatAttachments } from './ChatAttachments.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
@@ -71,10 +75,8 @@ export type ChatPromptProps = Merge<
      * controls and lets the prompt send.
      */
     context?: AiContext.Binder;
-    /** Skill registry for the context controls when there is no chat model. */
-    registry?: Registry.Registry;
+    slashCommands?: readonly SlashCommand.SlashCommand[];
     event: Event<ChatEvent>;
-    /** The drawers above the prompt and the one that is open (see `ChatActions`). */
     drawers?: ChatActionsProps['drawers'];
     /** The prompt's graph node, which is what contributed actions are filed under. */
     attendableId?: string;
@@ -100,6 +102,8 @@ export type ChatPromptProps = Merge<
   AssistantPreset.ChatPresetProps
 >;
 
+const NO_COMMANDS: readonly SlashCommand.SlashCommand[] = [];
+
 export const ChatPrompt = ({
   classNames,
   outline,
@@ -107,7 +111,7 @@ export const ChatPrompt = ({
   chat,
   chatModel,
   context: draftContext,
-  registry: draftRegistry,
+  slashCommands = NO_COMMANDS,
   event,
   drawers,
   attendableId,
@@ -130,7 +134,6 @@ export const ChatPrompt = ({
   const streaming = useAtomValue(chatModelState.streaming);
   const active = useAtomValue(chatModelState.active);
   const context = chatModel?.context ?? draftContext;
-  const registry = chatModel?.registry ?? draftRegistry;
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -151,83 +154,124 @@ export const ChatPrompt = ({
 
   const keymapExtensions = useChatKeymapExtensions({ event });
 
-  // Command completion: `$` sentinels come from the bound project's instructions; `/` commands are
-  // what plugins contribute plus one per skill, run without the model (see `Chat.Root`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
-  const slashCommands = useSlashCommands({ registry, db });
   const commandsRef = Hooks.useDynamicRef([
     ...(instructions?.commands ?? []).map(({ sentinel, description }) => ({ sentinel, description })),
     ...slashCommands.map(({ command, description }) => ({ sentinel: command, description })),
   ]);
   const commandsExtension = useMemo(() => commands({ getCommands: () => commandsRef.current }), [commandsRef]);
 
-  // `@` mentions: picking an object inserts a link to it and binds it into the context.
   const mentions = useObjectMentions({ db });
 
   const handleMention = useCallback(
     (object: Obj.Unknown) => {
       const view = editorRef.current?.view;
       if (view) {
-        insertMention(view, object, Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id);
+        insertMention(view, object, ObjectCombobox.objectLabel(object, t));
       }
     },
-    [context],
+    [t],
   );
 
-  // Files become objects in the space, then mentions like any other object.
-  const attachFiles = useAttachFiles(db);
+  const attachFile = useAttachFile(db);
+  const [pending, setPending] = useState<readonly Attachment[]>([]);
+  const [failed, setFailed] = useState<readonly Attachment[]>([]);
+  const nextAttachment = useRef(0);
+  const attaching = useRef(new Map<number, AbortController>());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleFiles = useCallback(
-    async (files: readonly globalThis.File[]) => {
-      for (const object of (await attachFiles?.(files)) ?? []) {
-        handleMention(object);
+    async (files: readonly globalThis.File[], pos?: number) => {
+      const view = editorRef.current?.view;
+      if (!attachFile || !view) {
+        return;
       }
+      const attachments = files.map((file) => ({ id: nextAttachment.current++, name: file.name, file }));
+      for (const { id } of attachments) {
+        placeAnchor(view, id, pos);
+      }
+      setPending((current) => [...current, ...attachments.map(({ id, name }) => ({ id, name }))]);
+      await Promise.all(
+        attachments.map(async ({ id, name, file }) => {
+          const controller = new AbortController();
+          attaching.current.set(id, controller);
+          try {
+            const object = await attachFile(file, controller.signal);
+            insertAtAnchor(view, id, mentionText(object, ObjectCombobox.objectLabel(object, t)));
+          } catch (error) {
+            dropAnchor(view, id);
+            if (!controller.signal.aborted) {
+              setFailed((current) => [
+                ...current,
+                { id, name, error: error instanceof Error ? error : new Error(String(error)) },
+              ]);
+            }
+          } finally {
+            attaching.current.delete(id);
+            setPending((current) => current.filter((attachment) => attachment.id !== id));
+          }
+        }),
+      );
     },
-    [attachFiles, handleMention],
+    [attachFile, t],
   );
+  const handleCancelPending = useCallback(() => {
+    const view = editorRef.current?.view;
+    for (const [id, controller] of attaching.current) {
+      controller.abort();
+      if (view) {
+        dropAnchor(view, id);
+      }
+    }
+    setPending([]);
+  }, []);
   const handleFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       void handleFiles(Array.from(event.target.files ?? []));
       event.target.value = '';
+      editorRef.current?.view?.focus();
     },
     [handleFiles],
   );
   const handleDragOver = useCallback(
     (event: DragEvent) => {
-      if (attachFiles && event.dataTransfer.types.includes('Files')) {
+      if (attachFile && event.dataTransfer.types.includes('Files')) {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'copy';
       }
     },
-    [attachFiles],
+    [attachFile],
   );
   const handleDrop = useCallback(
     (event: DragEvent) => {
       const files = Array.from(event.dataTransfer.files);
-      if (attachFiles && files.length > 0) {
-        // Captured, so the editor does not insert the file's bytes as text.
+      if (attachFile && files.length > 0) {
+        // Captured, so CodeMirror's own drop handler does not read the file in as text.
         event.preventDefault();
         event.stopPropagation();
-        void handleFiles(files);
+        const view = editorRef.current?.view;
+        const onText = view && event.target instanceof Node && view.contentDOM.contains(event.target);
+        void handleFiles(
+          files,
+          onText ? (view.posAtCoords({ x: event.clientX, y: event.clientY }) ?? undefined) : undefined,
+        );
+        view?.focus();
       }
     },
-    [attachFiles, handleFiles],
+    [attachFile, handleFiles],
   );
-  // Only a paste that is nothing but files: a paste carrying text as well belongs to the editor.
   const handlePaste = useCallback(
     (event: ClipboardEvent) => {
       const files = Array.from(event.clipboardData.files);
-      if (attachFiles && files.length > 0 && !event.clipboardData.types.includes('text/plain')) {
+      if (attachFile && files.length > 0 && !event.clipboardData.types.includes('text/plain')) {
         event.preventDefault();
         event.stopPropagation();
         void handleFiles(files);
       }
     },
-    [attachFiles, handleFiles],
+    [attachFile, handleFiles],
   );
 
-  // The app's search dialog, as a picker: the object it returns becomes a mention.
   const { invokePromise } = AppHooks.useOperationInvoker();
   const handleAddObject = useCallback(async () => {
     const { data: object } = await invokePromise(SearchOperation.SelectObject, {
@@ -266,11 +310,10 @@ export const ChatPrompt = ({
 
   // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
   const queueFull = active && queueSize >= maxQueue;
-  const canSend = hasText && context != null && !queueFull;
+  const canSend = hasText && context != null && !queueFull && pending.length === 0;
 
-  // Object links show as the same chips the markdown editor draws, not as their link markup.
   const extensions = useMemo(
-    () => [keymapExtensions, pendingText(), objectLinks(), commandsExtension, emptinessExtension],
+    () => [keymapExtensions, pendingText(), objectLinks(), attachmentAnchors(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
@@ -279,13 +322,13 @@ export const ChatPrompt = ({
   // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!context || queueFull) {
+      if (!context || queueFull || pending.length > 0) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, context, queueFull],
+    [event, context, queueFull, pending],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -318,7 +361,6 @@ export const ChatPrompt = ({
         classNames,
       ]}
     >
-      {/* A plain element: the drop and paste handlers are captured here, ahead of the editor. */}
       <div
         data-testid='assistant.prompt'
         role='group'
@@ -327,6 +369,12 @@ export const ChatPrompt = ({
         onPasteCapture={handlePaste}
       >
         {chatModel && <ChatMcpErrors chatModel={chatModel} />}
+        <ChatAttachments
+          pending={pending}
+          failed={failed}
+          onCancel={handleCancelPending}
+          onDismiss={() => setFailed([])}
+        />
 
         <Layout.Flex gap='sm' classNames='p-2'>
           <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
@@ -345,13 +393,10 @@ export const ChatPrompt = ({
 
         {db && settings && (
           <>
-            {/* One toolbar for the row: what can go into the message and who answers it lead, the actions end it. */}
             <ChatActions
               classNames='p-1.5'
               attendableId={attendableId}
               customActions={customActions}
-              // `active`, not `streaming`: a turn parked in a tool call streams nothing,
-              // and the reader still needs a way to stop it.
               processing={active}
               canSend={canSend}
               drawers={drawers}
@@ -362,7 +407,7 @@ export const ChatPrompt = ({
                   <ChatAddMenu
                     db={db}
                     disabled={!context}
-                    onAddFiles={attachFiles ? () => fileInputRef.current?.click() : undefined}
+                    onAddFiles={attachFile ? () => fileInputRef.current?.click() : undefined}
                     onAddObject={() => void handleAddObject()}
                     onCommands={handleCommands}
                     onManageMcpServers={() => setMcpServersOpen(true)}

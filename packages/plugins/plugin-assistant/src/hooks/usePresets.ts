@@ -48,42 +48,36 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // `built-in` provider (rather than an external Ollama server) is available.
   const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
 
-  // The local runtime settings name, if any: its models are offered beside EDGE's, and its default
-  // model is the chat's fallback. Settings stay the switch for local models because listing them means
-  // starting the sidecar or probing a server, which the app does not do unasked on every launch.
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
   const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];
 
   // Installed models reported by the bundled sidecar; used to offer only models actually present.
   const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
 
-  // When the bundled sidecar is the configured runtime, list installed models in the background so the
-  // picker offers them without first opening settings. Idempotent: kicks off only from the idle state.
   useEffect(() => {
     if (provider === Provider.builtIn.id && ollamaManager && localModels.kind === 'idle') {
       void EffectEx.runPromise(ollamaManager.refresh);
     }
   }, [provider, ollamaManager, localModels.kind]);
 
-  // Probe the external LM Studio server only when that runtime is configured on desktop.
   const lmStudioProbeUrl =
     provider === Provider.lmStudio.id && ollamaManager ? `${Provider.lmStudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
-  const presets = useMemo(() => {
+  const { presets, fallbackPresets } = useMemo(() => {
     const edge = presetsForProvider(Provider.edge.id);
     if (provider === Provider.edge.id) {
-      return edge;
+      return { presets: edge, fallbackPresets: edge };
     }
     let local = presetsForProvider(provider);
     if (provider === Provider.lmStudio.id && ollamaManager && !lmStudioReachable) {
       local = [];
     } else if (provider === Provider.builtIn.id && ollamaManager) {
-      // Bundled sidecar: only models actually installed (matched by back-end pull tag).
       const installed = new Set(localModels.models.map((model) => model.name));
       local = local.filter((preset) => installed.has(preset.backend));
     }
-    return [...edge, ...local.map((preset) => ({ ...preset, local: true }))];
+    const runtime = local.map((preset) => ({ ...preset, local: true }));
+    return { presets: [...edge, ...runtime], fallbackPresets: runtime };
   }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
   // The chat's selection when the active provider serves it, else the provider's configured model.
@@ -91,7 +85,8 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // still what the process will run, so it is shown as an unavailable entry rather than silently
   // displayed as the fallback — the picker and the request must agree.
   const unavailable = useMemo<AiServicePreset | undefined>(() => {
-    if (!chatModel || presets.length === 0 || presets.some((preset) => preset.model === chatModel)) {
+    const unlisted = provider !== Provider.edge.id && fallbackPresets.length === 0;
+    if (!chatModel || unlisted || presets.some((preset) => preset.model === chatModel)) {
       return undefined;
     }
     // Carries the provider that actually serves the model rather than the active one, which by
@@ -104,11 +99,12 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
       backend: catalog?.backend ?? '',
       label: t('model-unavailable.label', { label: catalog?.label ?? DXN.getName(chatModel) }),
     };
-  }, [chatModel, presets, provider, t]);
+  }, [chatModel, presets, fallbackPresets, provider, t]);
 
   const preset = useMemo(
-    () => presets.find((preset) => preset.model === chatModel) ?? unavailable ?? pickPreset(presets, defaultModel),
-    [presets, chatModel, unavailable, defaultModel],
+    () =>
+      presets.find((preset) => preset.model === chatModel) ?? unavailable ?? pickPreset(fallbackPresets, defaultModel),
+    [presets, fallbackPresets, chatModel, unavailable, defaultModel],
   );
 
   const presetOptions = useMemo(

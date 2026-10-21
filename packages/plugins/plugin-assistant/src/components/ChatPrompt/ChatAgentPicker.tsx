@@ -27,34 +27,25 @@ const LOCATION_ICONS: Record<AssistantCapabilities.AgentLocation, string> = {
 
 export type ChatAgentPickerProps = AssistantPreset.ChatPresetProps & {
   chat?: Chat.Chat;
-  /** Whether the conversation has begun; its agent is fixed from then on. */
   started?: boolean;
 };
 
-/**
- * Who answers, where it runs, and on which model: one control, ordered by how fixed each choice is. The
- * agent is fixed at the first message; where it runs can change between turns (the next prompt restarts
- * it there); the model can change at any time. Each choice narrows the next, and an option the others
- * rule out is disabled rather than hidden. The trigger's icon says where the agent runs.
- */
 export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange }: ChatAgentPickerProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { current: harness, options } = useChatAgent(chat);
   const option = optionForHarness(options, harness);
-  const { placements, location, select } = usePlacement(chat, option, harness);
+  const { placements, location, offered, select } = usePlacement(chat, option, harness);
   const model = presets?.find(({ id }) => id === preset);
 
   const handleAgentChange = useCallback(
     (value: string) => {
       const next = options.find((option) => option.value === value);
-      const placement =
-        next?.placements.find((placement) => placement.available && placement.location === location) ??
-        next?.placements.find(({ available }) => available);
+      const placement = next && choosePlacement(next, offered(next), location, model);
       if (next && placement) {
-        select(placement, next);
+        select(next, placement);
       }
     },
-    [options, location, select],
+    [options, location, offered, select, model],
   );
 
   const handleLocationChange = useCallback(
@@ -63,7 +54,7 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
         placements.find((placement) => placement.location === value && placement.harness === harness) ??
         placements.find((placement) => placement.location === value);
       if (option && placement) {
-        select(placement, option);
+        select(option, placement);
       }
     },
     [placements, harness, option, select],
@@ -77,17 +68,18 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
       <Menu.Trigger asChild>
         <Button.Root
           variant='ghost'
+          classNames='min-w-0 shrink'
           icon={LOCATION_ICONS[location]}
-          label={label}
           caretDown
           disabled={!chat}
           data-testid='assistant.agent-picker'
           data-location={location}
-        />
+        >
+          <span className='truncate'>{label}</span>
+        </Button.Root>
       </Menu.Trigger>
       <Menu.Content>
         <Menu.RadioItemGroup value={option?.value ?? harness} onValueChange={({ value }) => handleAgentChange(value)}>
-          {/* Locked rather than hidden once the chat starts: the reader still sees who answers, and why. */}
           <Menu.ItemGroupLabel>{started ? t('agent-locked.message') : t('agent-picker.label')}</Menu.ItemGroupLabel>
           {options.map(({ value, label, icon, disabled, description }) => (
             <Menu.RadioItem
@@ -116,11 +108,9 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
                     label: t(`chat-environment.${placement.location}.label`),
                     icon: LOCATION_ICONS[placement.location],
                     disabled:
-                      !placement.available ||
-                      // A different runtime is a different agent, and the agent is fixed once the chat starts.
-                      (started === true && placement.harness !== harness) ||
-                      // EDGE cannot reach a model served on this device.
-                      (placement.location === 'edge' && !option?.ownModel && model?.local === true),
+                      !option ||
+                      !runnable(option, placement, model) ||
+                      (started === true && placement.harness !== harness),
                   }}
                   data-testid={`assistant.environment.${placement.location}`}
                 />
@@ -149,54 +139,59 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
   );
 };
 
-/**
- * Where the chat's agent runs, and the places it could run instead. A registration that runs in several
- * places runs where `chat.remote` says; one that runs in one place is chosen by picking its harness.
- *
- * EDGE is offered for a several-place agent only where an edge service is configured: against the noop
- * manager a spawn has nowhere to go, so `remote` would persist a flag the next prompt cannot honour. An
- * agent's own chat runs on EDGE unless explicitly kept local, so there local is no choice.
- */
-const usePlacement = (chat: Chat.Chat | undefined, option: AgentOption | undefined, harness: string) => {
+const runnable = (option: AgentOption, placement: AgentPlacement, model: AssistantPreset.AiPreset | undefined) =>
+  placement.available && !(placement.location === 'edge' && !option.ownModel && model?.local === true);
+
+export const choosePlacement = (
+  option: AgentOption,
+  placements: readonly AgentPlacement[],
+  location: AssistantCapabilities.AgentLocation,
+  model: AssistantPreset.AiPreset | undefined,
+): AgentPlacement | undefined => {
+  const candidates = placements.filter((placement) => runnable(option, placement, model));
+  return candidates.find((placement) => placement.location === location) ?? candidates[0];
+};
+
+export const usePlacement = (chat: Chat.Chat | undefined, option: AgentOption | undefined, harness: string) => {
   const [remote] = useObject(chat, 'remote');
   const client = Hooks.useOptionalCapability(ClientCapabilities.Client);
   const edgeConfigured = Boolean(client?.config.values.runtime?.services?.edge?.url);
   const agentOnEdge = chat !== undefined && Agent.isAgentChat(chat) && chat.remote !== false;
 
-  const placements = useMemo(() => {
-    const all = option?.placements ?? [];
-    return all.filter((placement) => {
-      if (!runsInSeveralPlaces(all, placement.harness)) {
-        return true;
-      }
-      return placement.location === 'edge' ? edgeConfigured || agentOnEdge : !(agentOnEdge && edgeConfigured);
-    });
-  }, [option, edgeConfigured, agentOnEdge]);
+  const offered = useCallback(
+    (option: AgentOption | undefined): AgentPlacement[] => {
+      const all = option?.placements ?? [];
+      return all.filter((placement) => {
+        if (!runsInSeveralPlaces(all, placement.harness)) {
+          return true;
+        }
+        const edgeOffered = edgeConfigured || agentOnEdge;
+        const localOffered = !(agentOnEdge && edgeConfigured);
+        return placement.location === 'edge' ? edgeOffered : localOffered;
+      });
+    },
+    [edgeConfigured, agentOnEdge],
+  );
+  const placements = useMemo(() => offered(option), [offered, option]);
 
   const own = placements.filter((placement) => placement.harness === harness);
   const location: AssistantCapabilities.AgentLocation =
     own.length === 1 ? own[0].location : remote || agentOnEdge ? 'edge' : 'local';
 
   const select = useCallback(
-    (placement: AgentPlacement, next: AgentOption) => {
+    (owner: AgentOption, placement: AgentPlacement) => {
       if (!chat) {
         return;
       }
-      const several = runsInSeveralPlaces(next.placements, placement.harness);
       Obj.update(chat, (chat) => {
         chat.session = { ...chat.session, harness: placement.harness };
-        // Only an agent that runs in several places reads `remote`; a one-place registration runs where it is.
-        if (several) {
-          chat.remote = placement.location === 'edge';
-        } else if (chat.remote) {
-          chat.remote = false;
-        }
+        chat.remote = runsInSeveralPlaces(owner.placements, placement.harness) ? placement.location === 'edge' : false;
       });
     },
     [chat],
   );
 
-  return { placements, location, select };
+  return { placements, location, offered, select };
 };
 
 const runsInSeveralPlaces = (placements: readonly AgentPlacement[], harness: string): boolean =>

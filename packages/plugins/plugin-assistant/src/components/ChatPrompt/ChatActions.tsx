@@ -40,7 +40,6 @@ export type ChatActionsProps = Util.ThemedClassName<
     debug?: boolean;
     /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
     canSend?: boolean;
-    /** The drawers above the prompt that have something to show, and the one that is open. */
     drawers?: { available: readonly ChatDrawer[]; open?: ChatDrawer };
     /** Submits the current prompt; the send control renders only when provided. */
     onSend?: () => void;
@@ -99,7 +98,6 @@ export const ChatActions = ({
     </>
   );
 
-  // After the leading controls and before the contributed ones, so the row ends drawers, microphone, send.
   const start = (
     <>
       {leading}
@@ -125,10 +123,6 @@ const DRAWER_ICONS: Record<ChatDrawer, string> = {
   tasks: 'ph--list-checks--regular',
 };
 
-/**
- * The drawer toggles as one group. A `multiple` group rather than `single`, so each is a pressed
- * button that closes its drawer on a second press; opening one closes the other.
- */
 const DrawerToggles = ({
   available,
   open,

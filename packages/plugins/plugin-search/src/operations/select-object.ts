@@ -17,7 +17,6 @@ import { makeSelectHandle } from '../select-handle.ts';
 const handler: Operation.WithHandler<typeof SearchOperation.SelectObject> = SearchOperation.SelectObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ spaceId, title }) {
-      // The operation's result is the dialog's, so the handler stays suspended while the dialog is up.
       const result = yield* Deferred.make<Obj.Unknown | undefined>();
       const handle = makeSelectHandle((object) => {
         Deferred.doneUnsafe(result, Effect.succeed(object));

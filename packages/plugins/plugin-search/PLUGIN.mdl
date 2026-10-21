@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -276,6 +277,26 @@ test QA-1: Open search and find an object
     - name: Close the dialog if still open
       do: Press Escape.
       expect: SearchDialog is closed
+```
+
+## Changelog
+
+```mdl
+decision D-1: The search dialog is also a generic object picker: a caller opens it to choose an object, and the choice goes back to the caller, which decides what it is for, instead of opening the object.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [SelectObject, SearchDialog]
+```
+
+```mdl
+decision D-2: The picker is its own operation, `SelectObject`, which settles with the chosen object, or with nothing when the dialog is dismissed. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SelectObject]
+  why: A picker has a result, so its caller can await it; plain search keeps navigating unchanged.
+  rejected:
+    - A mode of `OpenSearch`: every existing caller would have to opt out of a result it never reads.
 ```
 
 ---

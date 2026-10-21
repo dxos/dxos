@@ -8,25 +8,27 @@ import { useCallback, useMemo } from 'react';
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Entity, Filter, Obj, Query, type URI } from '@dxos/echo';
+import { type Database, EID, Obj, type Ref, type URI } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 import { parseMentions } from '@dxos/react-ui-assistant';
 import { type EditorMenuGroup, type UseEditorMenuProps } from '@dxos/react-ui-editor';
-import * as UiHooks from '@dxos/react-ui/Hooks';
 import { insertAtCursor } from '@dxos/ui-editor';
 import { hues } from '@dxos/ui-types';
 import { isNonNullable } from '@dxos/util';
 
-/** Rows the `@` menu lists before the query narrows it. */
 const MAX_MENTIONS = 20;
 
-const everything = Query.select(Filter.everything());
+const notChat = (object: Obj.Unknown) => !Obj.instanceOf(Chat.Chat, object);
 
-// Object names are free text, so an unescaped "]" or newline would end the link early.
-const escapeLinkLabel = (label: string): string => label.replace(/[[\]]/g, '\\$&').replace(/\s*\r?\n\s*/g, ' ');
+const escapeLinkLabel = (label: string): string => label.replace(/[[\]\\]/g, '\\$&').replace(/\s*\r?\n\s*/g, ' ');
+
+/** The markup of a mention: a link to `object`, and the space after it. */
+export const mentionText = (object: Obj.Unknown, label: string): string =>
+  `[${escapeLinkLabel(label)}](${Obj.getURI(object)}) `;
 
 /** Inserts a link to `object` at the cursor; sending the message is what adds it to the context. */
 export const insertMention = (view: EditorView, object: Obj.Unknown, label: string) => {
-  insertAtCursor(view, view.state.selection.main.head, `[${escapeLinkLabel(label)}](${Obj.getURI(object)}) `);
+  insertAtCursor(view, view.state.selection.main.head, mentionText(object, label));
 };
 
 /**
@@ -34,16 +36,30 @@ export const insertMention = (view: EditorView, object: Obj.Unknown, label: stri
  * context changes when the reader sends, not while they are still composing.
  */
 export const bindMentions = async (context: AiContext.Binder, db: Database.Database, text: string): Promise<void> => {
-  const objects = await Promise.all(
-    parseMentions(text).map(async ({ uri }) => {
-      const ref = db.makeRef<Obj.Unknown>(uri as URI.URI);
-      return (await ref.tryLoad()) ? ref : undefined;
-    }),
-  );
-  const refs = objects.filter(isNonNullable);
+  const refs = await resolveMentions(db, text);
   if (refs.length > 0) {
     await context.bind({ objects: refs });
   }
+};
+
+const isMention = (db: Database.Database, uri: string): boolean => {
+  const eid = EID.tryParse(uri);
+  const id = eid && EID.getEntityId(eid);
+  const spaceId = eid && EID.getSpaceId(eid);
+  return id !== undefined && EntityId.isValid(id) && (spaceId === undefined || spaceId === db.spaceId);
+};
+
+/** The objects of `db` a message's links name. */
+export const resolveMentions = async (db: Database.Database, text: string): Promise<Ref.Ref<Obj.Unknown>[]> => {
+  const objects = await Promise.all(
+    parseMentions(text)
+      .filter(({ uri }) => isMention(db, uri))
+      .map(async ({ uri }) => {
+        const ref = db.makeRef<Obj.Unknown>(uri as URI.URI);
+        return (await ref.tryLoad()) ? ref : undefined;
+      }),
+  );
+  return objects.filter(isNonNullable);
 };
 
 export type UseObjectMentionsProps = {
@@ -56,41 +72,20 @@ export type UseObjectMentionsProps = {
  * and the agent has what it names.
  */
 export const useObjectMentions = ({ db }: UseObjectMentionsProps): UseEditorMenuProps | undefined => {
-  const { t } = UiHooks.useTranslation();
-
+  const search = ObjectCombobox.useSearch(db, { filter: notChat, limit: MAX_MENTIONS });
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text }): Promise<EditorMenuGroup[]> => {
-      if (!db) {
-        return [];
-      }
-
-      const name = text.trim().toLowerCase();
-      const objects = await db.query(everything).run();
-      const byUri = new Map<string, Entity.Any>(
-        objects.map((object) => [String(Entity.getURI(object, { prefer: 'named' })), object]),
-      );
-      // The conversation itself is in context already and never something to mention.
-      const items = ObjectCombobox.toOptions(objects, { t, filter: (object) => !Obj.instanceOf(Chat.Chat, object) })
-        .filter(({ label }) => label.toLowerCase().includes(name))
-        .slice(0, MAX_MENTIONS)
-        .flatMap(({ id, label, icon, iconHue }) => {
-          const object = byUri.get(id);
-          return object && Obj.isObject(object)
-            ? [
-                {
-                  id,
-                  label,
-                  icon,
-                  iconHue: hues.find((hue) => hue === iconHue),
-                  onSelect: ({ view }: { view: EditorView }) => insertMention(view, object, label),
-                },
-              ]
-            : [];
-        });
-
+      const options = (await search(text)) ?? [];
+      const items = options.map(({ id, label, icon, iconHue, object }) => ({
+        id,
+        label,
+        icon,
+        iconHue: hues.find((hue) => hue === iconHue),
+        onSelect: ({ view }: { view: EditorView }) => insertMention(view, object, label),
+      }));
       return [{ id: 'objects', items }];
     },
-    [db, t],
+    [search],
   );
 
   return useMemo(

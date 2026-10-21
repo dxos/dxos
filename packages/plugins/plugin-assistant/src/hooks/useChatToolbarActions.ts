@@ -100,7 +100,6 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
             }).pipe(EffectEx.runAndForwardErrors),
         );
 
-      // How the thread renders; the same choice as `/view`.
       if (chat) {
         const viewType = get(Obj.atomProperty(chat, 'viewType')) ?? settings.chatView;
         builder.group(

@@ -8,7 +8,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -137,14 +137,9 @@ type StoryArgs = {
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
-  /** Seeds a space worth mentioning from (documents, people, MCP servers) and a section contributed to the context drawer. */
   workspace?: boolean;
-} & Pick<ChatArticleProps, 'debug'>;
+} & Pick<ChatArticleProps, 'debug' | 'onSubmit'>;
 
-/**
- * Objects worth mentioning, and two MCP servers left off so the "+" menu has something to switch on.
- * Returns what the conversation starts with in context.
- */
 const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   const spec = db.add(
     Markdown.make({
@@ -166,7 +161,6 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
   return [spec];
 };
 
-/** Stands in for a plugin adding its own section to the context drawer (here, a coding plugin's diff). */
 const changesSection = Surface.create({
   id: 'storyChanges',
   filter: Surface.makeFilter(ChatSurface.ChatDetails),
@@ -177,14 +171,14 @@ const changesSection = Surface.create({
   ),
 });
 
-const DefaultStory = ({ debug }: StoryArgs) => {
+const DefaultStory = ({ debug, onSubmit }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
   if (!chat) {
     return <Loading />;
   }
 
-  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} />;
+  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} onSubmit={onSubmit} />;
 };
 
 const meta = {
@@ -242,8 +236,6 @@ const meta = {
                   yield* Effect.promise(() =>
                     binder.use((binder: AiContext.Binder) =>
                       binder.bind({
-                        // The workspace binds a skill that ends its turn when it replies: planning's
-                        // checklist reminder would spend every scripted reply on one prompt.
                         skills: [Ref.fromURI(Skill.registryURI(workspace ? MemorySkill.key : PlanningSkill.key))],
                         objects: [Ref.make(chat), ...mentioned.map((object) => Ref.make(object))],
                       }),
@@ -268,9 +260,7 @@ const meta = {
           SpacePlugin({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
-          // Handles `FileOperation.Create`: without it the "+" menu offers no files.
           ...(workspace ? [FilePlugin.make()] : []),
-          // Its dialog is the "+" menu's object picker (`SearchOperation.SelectObject`).
           ...(workspace ? [SearchPlugin.make()] : []),
           StorybookPlugin.make({}),
         ],
@@ -341,6 +331,11 @@ export const Tasks: Story = {
     await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
     await expect(region().textContent ?? '').toContain('Gather the requirements');
+
+    const contextDrawer = () => canvasElement.querySelector('[data-testid="assistant.details"]');
+    await expect(contextDrawer()).toBeNull();
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-context"]')!);
+    await waitFor(() => void expect(contextDrawer()).not.toBeNull(), { timeout: 10_000 });
   },
 };
 
@@ -501,6 +496,13 @@ export const MobilePlatform: Story = {
     platform: 'mobile',
     messages: TWO_TURNS,
   },
+  decorators: [
+    (Story) => (
+      <div className='w-[375px] h-[700px] flex flex-col'>
+        <Story />
+      </div>
+    ),
+  ],
   play: async ({ canvasElement, args: { messages = [] } }) => {
     await driveTurns(canvasElement, messages);
 
@@ -508,7 +510,24 @@ export const MobilePlatform: Story = {
     await expect(outlineRail).toBeNull();
     await expect(statusPill).toBeNull();
 
-    await expect(sendButton(canvasElement)).toBeTruthy();
+    const send = sendButton(canvasElement).getBoundingClientRect();
+    const prompt = canvasElement.querySelector('[data-testid="assistant.prompt"]')!.getBoundingClientRect();
+    await expect(send.right).toBeLessThanOrEqual(prompt.right);
+  },
+};
+
+export const SkillCommandWithText: Story = {
+  args: {
+    messages: [{ prompt: 'find the roadmap', reply: 'Here is the roadmap.' }],
+  },
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, '/planning find the roadmap');
+    await waitFor(() => void expect(threadText(canvasElement)).toContain('Here is the roadmap.'), {
+      timeout: 15_000,
+      interval: 200,
+    });
+    await expect(threadText(canvasElement)).toContain('Loaded the Planning skill.');
+    await expect(threadText(canvasElement).split('find the roadmap').length - 1).toBe(1);
   },
 };
 
@@ -598,11 +617,6 @@ const clearPrompt = async (canvasElement: HTMLElement) => {
   }
 };
 
-/**
- * The whole prompt: agent and model pickers in the row, "+" for files, objects, commands and MCP
- * servers, `@` to mention an object, `/` for commands and skills, and two drawers above the prompt: the checklist,
- * and the context (objects, skills, and a section another plugin contributes). Replies are scripted, so it runs offline.
- */
 export const FullExperience: Story = {
   args: {
     workspace: true,
@@ -618,5 +632,104 @@ export const FullExperience: Story = {
       { prompt: 'fourth', reply: 'Anything else?' },
       { prompt: 'fifth', reply: 'That is the end of the scripted replies.' },
     ],
+  },
+};
+
+class UnreadableFile extends globalThis.File {
+  override arrayBuffer(): Promise<ArrayBuffer> {
+    return Promise.reject(new Error('The file could not be read.'));
+  }
+}
+
+class HeldFile extends globalThis.File {
+  #release!: () => void;
+  readonly #released = new Promise<void>((resolve) => (this.#release = resolve));
+  release() {
+    this.#release();
+  }
+  override async arrayBuffer(): Promise<ArrayBuffer> {
+    await this.#released;
+    return super.arrayBuffer();
+  }
+}
+
+export const AttachFiles: Story = {
+  args: {
+    workspace: true,
+  },
+  play: async ({ canvasElement }) => {
+    const input = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<HTMLInputElement>('input[type="file"]');
+        if (!element) {
+          throw new Error('File input not found.');
+        }
+        return element;
+      },
+      { timeout: 15_000, interval: 300 },
+    );
+    const banner = (state: string) =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="assistant.attachments.${state}"]`);
+
+    await typePrompt(canvasElement, 'Summarise ');
+    const agenda = new HeldFile(['Agenda for Thursday.'], 'agenda.txt', { type: 'text/plain' });
+    await userEvent.upload(input, agenda);
+    await waitFor(() => void expect(banner('pending')?.textContent).toContain('agenda.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(sendButton(canvasElement)).toBeDisabled();
+
+    await userEvent.keyboard('and compare it{Enter}');
+    await expect(threadText(canvasElement)).not.toContain('Summarise');
+
+    agenda.release();
+    await waitFor(() => void expect(composerText(canvasElement)).toMatch(/Summarise\s*agenda\.txt\s*and compare it/), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(banner('pending')).toBeNull();
+    await expect(sendButton(canvasElement)).toBeEnabled();
+
+    const stuck = new HeldFile(['Draft.'], 'draft.txt', { type: 'text/plain' });
+    await userEvent.upload(input, stuck);
+    await waitFor(() => void expect(banner('pending')?.textContent).toContain('draft.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="assistant.attachments.cancel"]')!);
+    await expect(banner('pending')).toBeNull();
+    await expect(sendButton(canvasElement)).toBeEnabled();
+    stuck.release();
+    await userEvent.upload(input, new globalThis.File(['Notes.'], 'notes.txt', { type: 'text/plain' }));
+    await waitFor(() => void expect(composerText(canvasElement)).toContain('notes.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(composerText(canvasElement)).not.toContain('draft.txt');
+    await expect(banner('failed')).toBeNull();
+
+    await userEvent.upload(input, new UnreadableFile([], 'archive.bin'));
+    await waitFor(() => void expect(banner('failed')?.textContent).toContain('archive.bin'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(composerText(canvasElement)).not.toContain('archive.bin');
+  },
+};
+
+export const ViewCommandLeavesChatUnsent: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    await submitPrompt(canvasElement, '/view normal');
+    await submitPrompt(canvasElement, '/planning');
+    await waitFor(() => void expect(threadText(canvasElement)).toContain('Loaded the Planning skill.'), {
+      timeout: 15_000,
+      interval: 200,
+    });
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await expect(args.onSubmit).toHaveBeenCalledWith('/planning');
   },
 };

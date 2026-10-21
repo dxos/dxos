@@ -85,4 +85,17 @@ describe('agentOptions', () => {
     });
     expect(options.at(-1)).toMatchObject({ value: 'claude-code-edge', disabled: true, description: NOT_INSTALLED });
   });
+
+  test('keeps an agent the chat names in its variant row when only the variant is registered', ({ expect }) => {
+    const options = agentOptions({
+      agents: [composer, cloud],
+      availability: [{ available: true }, { available: true }],
+      current: local.id,
+    });
+    expect(options.map(({ value }) => value)).toEqual([composer.id, local.id]);
+    expect(options[1].placements).toEqual([
+      { location: 'edge', harness: cloud.id, available: true },
+      { location: 'local', harness: local.id, available: false, reason: NOT_INSTALLED },
+    ]);
+  });
 });

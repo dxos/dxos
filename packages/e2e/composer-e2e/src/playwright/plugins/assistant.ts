@@ -56,15 +56,11 @@ export class Assistant {
     return (await this.thread.locator('.cm-content').allInnerTexts()).join('\n');
   }
 
-  /**
-   * Selects the chat's model in the prompt row's agent picker; picking a row closes the menu, so the
-   * prompt is reachable again. `model` is the model's full DXN (`dxn:…`), which is the id of its row.
-   */
-  async selectModel(model: string): Promise<void> {
+  async selectModel(modelDxn: string): Promise<void> {
     const page = this.#locator.page();
     await this.#locator.getByTestId('assistant.agent-picker').click();
-    await page.getByTestId(`assistant.models.${model}`).click();
-    await expect(page.getByTestId(`assistant.models.${model}`)).toBeHidden();
+    await page.getByTestId(`assistant.models.${modelDxn}`).click();
+    await expect(page.getByTestId(`assistant.models.${modelDxn}`)).toBeHidden();
   }
 
   /**

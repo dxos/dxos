@@ -37,7 +37,6 @@ export default Capability.makeModule(
       credentials,
       mode,
     });
-    // The same agent as the desktop registration, run elsewhere: pickers show one Claude Code that runs in two places.
     return Capability.contribute(AssistantCapabilities.Agent, {
       ...agent,
       locations: ['edge'],

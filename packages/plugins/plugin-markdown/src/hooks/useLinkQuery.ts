@@ -9,7 +9,7 @@ import { useCallback } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
@@ -45,11 +45,11 @@ const insertLink = (view: EditorView, head: number, label: string, uri: string, 
   }
 };
 
-const everything = Query.select(Filter.everything());
-
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const notCurrent = useCallback((object: Obj.Unknown) => object.id !== current?.id, [current?.id]);
+  const search = ObjectCombobox.useSearch(db, { filter: notCurrent });
 
   const handleLinkQuery = useCallback(
     (query?: string): Promise<EditorMenuGroup[]> => {
@@ -62,27 +62,23 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
       const block = raw.startsWith('@');
       // The query may end in the space before the next word.
       const text = (block ? raw.slice(1) : raw).trim();
-      const name = text.toLowerCase();
 
       return Effect.gen(function* () {
         const [results, containing] = yield* Effect.all(
           [
-            Database.query(everything).run,
+            Effect.promise(() => search(text)),
             current ? Database.query(ContainerModel.containing(current)).run : Effect.succeed([]),
           ],
           { concurrency: 'unbounded' },
         );
 
-        // The current document cannot link to itself.
-        const items = ObjectCombobox.toOptions(results, { t, filter: (object) => object.id !== current?.id })
-          .filter(({ label }) => label.toLowerCase().includes(name))
-          .map(({ id, label, icon, iconHue }): EditorMenuItem => ({
-            id,
-            label,
-            icon,
-            iconHue: hues.find((hue) => hue === iconHue),
-            onSelect: ({ view, head }) => insertLink(view, head, label, id, block),
-          }));
+        const items = (results ?? []).map(({ id, label, icon, iconHue }): EditorMenuItem => ({
+          id,
+          label,
+          icon,
+          iconHue: hues.find((hue) => hue === iconHue),
+          onSelect: ({ view, head }) => insertLink(view, head, label, id, block),
+        }));
 
         // File new objects in the current document's collection; with no containing collection
         // `OpenObjectForm` falls back to the space's own default placement.
@@ -115,7 +111,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         ];
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     },
-    [db, t, current, invokePromise],
+    [db, t, current, invokePromise, search],
   );
 
   return handleLinkQuery;

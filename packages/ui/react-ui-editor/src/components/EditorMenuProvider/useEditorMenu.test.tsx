@@ -19,8 +19,18 @@ const getMenu: UseEditorMenuProps['getMenu'] = ({ text }): EditorMenuGroup[] => 
 
 type Menu = { view: EditorView; labels: () => EditorMenuItem['label'][]; cancel: () => void };
 
-const MenuEditor = ({ onReady }: { onReady: (menu: Menu) => void }) => {
-  const { groupsRef, extension, onCancel } = useEditorMenu({ trigger: '@', multiWordTriggers: ['@'], getMenu });
+const MenuEditor = ({
+  onReady,
+  getMenu: getMenuProp = getMenu,
+}: {
+  onReady: (menu: Menu) => void;
+  getMenu?: UseEditorMenuProps['getMenu'];
+}) => {
+  const { groupsRef, extension, onCancel } = useEditorMenu({
+    trigger: '@',
+    multiWordTriggers: ['@'],
+    getMenu: getMenuProp,
+  });
   const { parentRef, view } = useTextEditor({ extensions: [extension] });
   useEffect(() => {
     if (view) {
@@ -35,12 +45,12 @@ const MenuEditor = ({ onReady }: { onReady: (menu: Menu) => void }) => {
   return <div ref={parentRef} />;
 };
 
-const mountMenuEditor = async (): Promise<Menu> => {
+const mountMenuEditor = async (menuProvider?: UseEditorMenuProps['getMenu']): Promise<Menu> => {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
   let menu: Menu | undefined;
-  await act(async () => root.render(<MenuEditor onReady={(ready) => (menu = ready)} />));
+  await act(async () => root.render(<MenuEditor onReady={(ready) => (menu = ready)} getMenu={menuProvider} />));
   onTestFinished(() => {
     act(() => root.unmount());
     container.remove();
@@ -121,5 +131,27 @@ describe('useEditorMenu', () => {
     await act(async () => type(view, '@hello world'));
     cancel();
     expect(view.state.doc.toString()).toBe('@hello world');
+  });
+
+  test('Enter while a search is pending picks the row on screen', async ({ expect }) => {
+    let landed = 0;
+    const slowMenu: UseEditorMenuProps['getMenu'] = async ({ text }) => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      landed++;
+      return [createMenuGroup({ id: 'test', filter: text, items: ['Hello world', 'Goodbye world'] })];
+    };
+    const { view, labels } = await mountMenuEditor(slowMenu);
+    await act(async () => type(view, '@'));
+    await vi.waitFor(() => expect(labels()).toEqual(['Hello world', 'Goodbye world']));
+
+    const before = landed;
+    await act(async () => {
+      type(view, 'good');
+      press(view, 'Enter');
+    });
+    expect(view.state.doc.toString()).toBe('Hello world');
+    await vi.waitFor(() => expect(landed).toBeGreaterThan(before));
+    expect(view.state.doc.toString()).toBe('Hello world');
+    expect(labels()).toEqual([]);
   });
 });

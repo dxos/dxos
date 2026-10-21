@@ -279,7 +279,6 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
       >
         <Button.Root
           variant='ghost'
-          // Unset, the glyph is the button's only content, so it is icon-only and named by its label.
           iconOnly={estimate === undefined}
           label={t('task-estimate.label')}
           data-testid={testId}

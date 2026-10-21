@@ -3,12 +3,14 @@
 //
 
 import {
+  type Completion,
   type CompletionContext,
   type CompletionResult,
   acceptCompletion,
   autocompletion,
   completionStatus,
   currentCompletions,
+  pickedCompletion,
   selectedCompletionIndex,
   setSelectedCompletion,
   startCompletion,
@@ -22,7 +24,37 @@ export type CommandData = { sentinel: string; description?: string };
 export const matchCommands = (all: CommandData[], token: string): CommandData[] =>
   token.startsWith('$') || token.startsWith('/') ? all.filter(({ sentinel }) => sentinel.startsWith(token)) : [];
 
+const leadingCommand = (text: string, all: CommandData[]): string | undefined => {
+  const token = /^[$/][\w:-]+(?=\s|$)/.exec(text)?.[0];
+  return all.some(({ sentinel }) => sentinel === token) ? token : undefined;
+};
+
 export type CommandsOptions = { getCommands: () => CommandData[] };
+
+const applyAtStart =
+  (all: CommandData[], sentinel: string) =>
+  (view: EditorView, completion: Completion, from: number, to: number): void => {
+    const rest = view.state.sliceDoc(to);
+    const word = /^[$/][\w:-]*(?=\s|$)/.exec(rest)?.[0];
+    const replaces =
+      word !== undefined &&
+      (all.some((command) => command.sentinel === word) ||
+        (rest.trim() === word && matchCommands(all, word).length > 0));
+    const end = replaces ? to + word.length : to;
+    const next = view.state.sliceDoc(end, end + 1);
+    const separated = /^\s/.test(next);
+    // Past the space before the arguments; at a line break, the end of the command.
+    const argumentsAt = from + sentinel.length + (separated && next !== ' ' ? 0 : 1);
+    view.dispatch({
+      changes: { from, to: end, insert: separated ? sentinel : `${sentinel} ` },
+      selection: { anchor: argumentsAt },
+      annotations: pickedCompletion.of(completion),
+      userEvent: 'input.complete',
+    });
+  };
+
+const narrowCommands = (all: CommandData[], typed: string): CommandData[] =>
+  all.filter(({ sentinel }) => sentinel.startsWith(typed) || sentinel.slice(1).startsWith(typed));
 
 /**
  * Command completion: typing `$` offers the bound context's instruction sentinels anywhere;
@@ -43,10 +75,8 @@ const commandMark = Decoration.mark({
 /** Decorates a prompt-leading registered command token as a tag. */
 const commandDecorations = (getCommands: () => CommandData[]) => {
   const build = (view: EditorView): DecorationSet => {
-    const match = /^[$/][\w:-]+/.exec(view.state.doc.line(1).text);
-    return match && getCommands().some(({ sentinel }) => sentinel === match[0])
-      ? Decoration.set([commandMark.range(0, match[0].length)])
-      : Decoration.none;
+    const command = leadingCommand(view.state.doc.line(1).text, getCommands());
+    return command ? Decoration.set([commandMark.range(0, command.length)]) : Decoration.none;
   };
   return ViewPlugin.fromClass(
     class {
@@ -99,6 +129,30 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
     aboveCursor: true,
     override: [
       (context: CompletionContext): CompletionResult | null => {
+        const toOption = ({ sentinel, description }: CommandData) => ({
+          label: sentinel,
+          detail: description,
+          apply: /^\s/.test(context.state.sliceDoc(context.pos, context.pos + 1)) ? sentinel : `${sentinel} `,
+        });
+
+        if (context.explicit && context.pos === 0) {
+          const all = getCommands();
+          const narrowed = (typed: string): CompletionResult | null =>
+            /^[$/]?[\w:-]*$/.test(typed)
+              ? {
+                  from: 0,
+                  filter: false,
+                  options: narrowCommands(all, typed).map(({ sentinel, description }) => ({
+                    label: sentinel,
+                    detail: description,
+                    apply: applyAtStart(all, sentinel),
+                  })),
+                  update: (_current, from, to, { state }) => narrowed(state.sliceDoc(from, to)),
+                }
+              : null;
+          return narrowed('');
+        }
+
         const word = context.matchBefore(/[$/][\w:-]*/);
         if (!word || (word.from === word.to && !context.explicit)) {
           return null;
@@ -111,15 +165,7 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
         if (options.length === 0) {
           return null;
         }
-        return {
-          from: word.from,
-          // Accepting appends the separator space, so the arguments can be typed immediately.
-          options: options.map(({ sentinel, description }) => ({
-            label: sentinel,
-            detail: description,
-            apply: `${sentinel} `,
-          })),
-        };
+        return { from: word.from, options: options.map(toOption) };
       },
     ],
   }),
@@ -177,19 +223,11 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
 ];
 
 /**
- * Starts a slash command and opens the completion list on it, as a reader typing `/` at the start of
- * an empty prompt would. Text already in the prompt is kept after the command.
- *
- * Uses this module's own `startCompletion`, for the same reason the Enter binding above does: the
- * completion state it opens has to be the one `commands()` reads.
+ * Opens the completion list on every command at the start of the prompt without editing it; typing narrows the list,
+ * and dismissing it leaves the prompt as it was.
  */
 export const openCommandCompletion = (view: EditorView): void => {
-  const text = view.state.doc.toString();
-  if (!text.startsWith('/')) {
-    view.dispatch({ changes: { from: 0, insert: text.length ? '/ ' : '/' }, selection: { anchor: 1 } });
-  } else {
-    view.dispatch({ selection: { anchor: 1 } });
-  }
+  view.dispatch({ selection: { anchor: 0 } });
   view.focus();
   startCompletion(view);
 };

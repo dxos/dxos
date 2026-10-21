@@ -7,11 +7,11 @@ import { Obj } from '@dxos/echo';
 
 import { Assistant } from '#types';
 
-/** `/view <mode>` sets how the thread renders; the same choice as the chat toolbar's View menu. */
 export const ViewSlashCommands: SlashCommand.SlashCommand[] = [
   {
     command: '/view',
     description: `Show the thread as ${Assistant.ChatViews.join(', ')}`,
+    chatOnly: true,
     execute: async (args, { chat }) => {
       const mode = Assistant.ChatViews.find((view) => view === args.trim().toLowerCase());
       if (!mode) {
@@ -20,7 +20,6 @@ export const ViewSlashCommands: SlashCommand.SlashCommand[] = [
       Obj.update(chat, (chat) => {
         chat.viewType = mode;
       });
-      // No summary: the thread changing is the feedback, and a transcript line would be noise in every view.
       return {};
     },
   },

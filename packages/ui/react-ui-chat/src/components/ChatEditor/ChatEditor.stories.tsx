@@ -76,7 +76,6 @@ const objects = [
   { id: 'echo:///CCCCCCCC', label: 'Meeting Plan', icon: 'ph--calendar--regular' },
 ];
 
-/** `@` opens a menu of objects; picking one inserts a markdown link to it. */
 export const WithMentions: Story = {
   args: {
     classNames,

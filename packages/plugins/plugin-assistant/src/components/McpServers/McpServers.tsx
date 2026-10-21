@@ -27,12 +27,10 @@ export type McpServersDialogProps = McpServersPanelProps & {
   onOpenChange: (open: boolean) => void;
 };
 
-/** The space's MCP servers: add, sign in, retry, remove, and switch each on or off. */
 export const McpServersDialog = ({ db, open, onOpenChange }: McpServersDialogProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
     <Dialog.Root open={open} onOpenChange={({ open }) => onOpenChange(open)}>
-      {/* Hung from the top: adding a server or a status line changes its height, and a centred dialog would move. */}
       <Dialog.Content placement='start'>
         <Dialog.Header>
           <Dialog.Title>{t('options.mcp.title')}</Dialog.Title>

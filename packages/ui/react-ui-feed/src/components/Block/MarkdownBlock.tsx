@@ -99,7 +99,8 @@ export const MarkdownBlock = memo(
     const dispatchedRef = useRef(text);
     const dripRaf = useRef(0);
 
-    const initialTextRef = useRef(text);
+    const latestTextRef = useRef(text);
+    latestTextRef.current = text;
     useLayoutEffect(() => {
       const parent = rootRef.current;
       if (!parent) {
@@ -109,14 +110,11 @@ export const MarkdownBlock = memo(
       // Built detached and attached once: given a `parent`, the view writes its attributes on a live
       // element, and each write invalidates the document's style for every row that mounts.
       const instance = new EditorView({
-        state: EditorState.create({ doc: initialTextRef.current, extensions }),
+        state: EditorState.create({ doc: latestTextRef.current, extensions }),
       });
-      // A rebuilt view (its extensions changed, e.g. on a view-type switch) starts from this text, so
-      // that is what the document now holds; a cursor left at the old view's length would append past
-      // the end of this one.
       cancelAnimationFrame(dripRaf.current);
       dripRaf.current = 0;
-      dispatchedRef.current = initialTextRef.current;
+      dispatchedRef.current = latestTextRef.current;
       parent.appendChild(instance.dom);
       const unregister = selectionGroupRef.current.register(instance);
       setView(instance);
@@ -134,7 +132,6 @@ export const MarkdownBlock = memo(
       }
 
       targetRef.current = text;
-      initialTextRef.current = text;
       if (dispatchedRef.current === text) {
         return;
       }

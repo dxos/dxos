@@ -23,7 +23,6 @@ type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'debug' | 'cu
 };
 
 const DefaultStory = ({ drawer: initialDrawer, ...args }: StoryArgs) => {
-  // Held here rather than fixed by args so the toggles can be clicked and seen to change.
   const [drawer, setDrawer] = useState(initialDrawer);
   const handleEvent = (event: ChatEvent) => {
     if (event.type === 'set-drawer') {
@@ -113,7 +112,6 @@ export const SendWhileProcessingWithText: Story = {
   },
 };
 
-/** One drawer at a time: opening context closes tasks, and a second press closes the open one. */
 export const DrawerTogglesAreExclusive: Story = {
   args: { canSend: true, drawer: 'tasks' },
   play: async ({ canvasElement, userEvent }) => {

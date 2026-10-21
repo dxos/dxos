@@ -17,6 +17,8 @@ export type SlashCommand = {
   command: string;
   /** Description surfaced in the prompt's completion list. */
   description: string;
+  /** Changes only the chat object itself, so it runs on a chat not yet stored (a companion's) and leaves it unstored. */
+  chatOnly?: boolean;
   /** Runs the command; an Error describes correct usage, and is shown rather than thrown. */
   execute: (args: string, context: SlashCommandContext) => Promise<SlashCommandResult | Error>;
 };
@@ -42,6 +44,11 @@ export type SlashCommandResult = {
    * conversation; omitted when the result is already visible.
    */
   followUp?: string;
+  /**
+   * The reader's own message, sent after the command the way a typed prompt is: queued behind a
+   * running turn, its mentions bound (e.g. the text after a skill command).
+   */
+  prompt?: string;
 };
 
 /** A task named by its 1-based position in the set, or by its exact title. */
@@ -80,7 +87,7 @@ export const resolveSlashCommand = (
   if (!text.startsWith('/')) {
     return undefined;
   }
-  const [name, ...rest] = text.split(/\s+/);
+  const [name] = text.split(/\s/, 1);
   const command = commands.find((candidate) => candidate.command === name);
-  return command ? { command, args: rest.join(' ') } : undefined;
+  return command ? { command, args: text.slice(name.length).trim() } : undefined;
 };

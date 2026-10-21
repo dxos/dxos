@@ -282,7 +282,6 @@ const tag = (
 const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeAttribute = (raw: string): string => escapeXml(raw).replace(/"/g, '&quot;');
 
-/** A markdown link to an object, as the prompt's `@` menu inserts it: `[label](echo://…)`. */
 const MENTION = /\[((?:\\.|[^\]\\\n])*)\]\(((?:echo|dxn):[^)\s]+)\)/g;
 
 const unescapeLabel = (label: string): string => label.replace(/\\(.)/g, '$1');
@@ -291,11 +290,6 @@ const unescapeLabel = (label: string): string => label.replace(/\\(.)/g, '$1');
 export const parseMentions = (text: string): { label: string; uri: string }[] =>
   [...text.matchAll(MENTION)].map(([, label, uri]) => ({ label: unescapeLabel(label), uri }));
 
-/**
- * Escapes a prompt for its tag, showing each object mention as its name rather than as the link markup
- * the reader never typed. The prompt's text stays document text (tags inside it are not rendered), so
- * the name is plain; the stored message keeps the link the model reads.
- */
 const mentionNames = (raw: string): string =>
   escapeXml(raw.replace(MENTION, (_whole, label: string) => unescapeLabel(label)));
 

@@ -44,8 +44,12 @@ describe('syncChange', () => {
   });
 
   test('resyncs a document that has drifted, rather than appending past its end', ({ expect }) => {
-    // The caller believed the document held "a\r\nb" (4 characters); it holds "a\nb" (3).
-    expect(syncChange(doc('a\nb'), 'a\nbc')).toEqual({ from: 3, to: 3, insert: 'c' });
     expect(syncChange(doc('a\nb!'), 'a\nbc')).toEqual({ from: 3, to: 4, insert: 'c' });
+    expect(syncChange(doc('a\nbcd'), 'a\nbc')).toEqual({ from: 4, to: 5, insert: '' });
+  });
+
+  test('resyncs a document that differs before its tail', ({ expect }) => {
+    const tail = 'x'.repeat(64);
+    expect(syncChange(doc(`A${tail}`), `B${tail}!`)).toEqual({ from: 0, to: 65, insert: `B${tail}!` });
   });
 });

@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, useMemo } from 'react';
 
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
@@ -20,27 +21,16 @@ import { meta } from '#meta';
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 
-//
-// Section
-//
-
 export type ChatDetailsSectionProps = Util.ThemedClassName<
   PropsWithChildren<{
     title: string;
-    /** Leading icon, in the same column as the rows' icons. */
     icon?: string;
-    /** Shown beside the title, so a collapsed section still says how much it holds. */
     count?: string | number;
     defaultOpen?: boolean;
     testId?: string;
   }>
 >;
 
-/**
- * One collapsible section of the context drawer. Plugins render their own contributed section with it,
- * so every section opens, closes and labels itself the same way. An accordion item, so its icon and
- * caret sit in the same columns as the rows' icons and trailing controls.
- */
 export const ChatDetailsSection = ({
   classNames,
   icon,
@@ -50,7 +40,6 @@ export const ChatDetailsSection = ({
   testId,
   children,
 }: ChatDetailsSectionProps) => (
-  // One item per root: each section opens on its own, and a contributed one needs no shared parent.
   <Accordion.Root border={false} defaultValue={defaultOpen ? [SECTION] : []} classNames={classNames}>
     <Accordion.Item value={SECTION} data-testid={testId}>
       <Accordion.ItemTrigger icon={icon} classNames='text-sm text-fg-muted'>
@@ -64,22 +53,11 @@ export const ChatDetailsSection = ({
 
 const SECTION = 'section';
 
-//
-// Context
-//
-
 export type ChatContextSectionProps = {
   db: Database.Database;
   context: AiContext.Binder;
 };
 
-/**
- * What the conversation has in context: the objects mentioned into it, then the skills it has loaded in a
- * section of their own. MCP servers are not listed: their switch is the space's, shown in the "+" menu,
- * and listing it here would read as something this chat holds. Skills are collapsed by default: every chat
- * starts with several bound, and listed open they would push the drawer's other sections out of view. Objects and
- * skills come out with their x; the message that mentioned an object stays as written.
- */
 export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { objects, onUpdateObject } = useContextObjects({ db, context });
@@ -91,11 +69,11 @@ export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => 
     () => [
       ...objects.map((object) => ({
         value: `object:${object.id}`,
-        label: Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
+        label: ObjectCombobox.objectLabel(object, t),
         icon: Obj.getIcon(object)?.icon ?? DEFAULT_OBJECT_ICON,
       })),
     ],
-    [objects],
+    [objects, t],
   );
 
   const skillItems = useMemo(
@@ -151,15 +129,12 @@ export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => 
 
 export type ChatContextPanelProps = {
   chat: Chat.Chat;
-  /** Undefined while the chat model is still opening. */
+  db?: Database.Database;
   context?: AiContext.Binder;
 };
 
-/** The context drawer's first sections: plugin-assistant's own contribution to `ChatSurface.ChatDetails`. */
-export const ChatContextPanel = ({ chat, context }: ChatContextPanelProps) => {
-  const db = Obj.getDatabase(chat);
-  return db && context ? <ChatContextSection db={db} context={context} /> : null;
-};
+export const ChatContextPanel = ({ chat, db = Obj.getDatabase(chat), context }: ChatContextPanelProps) =>
+  db && context ? <ChatContextSection db={db} context={context} /> : null;
 
 type ContextRowProps = {
   id: string;
