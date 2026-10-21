@@ -117,6 +117,10 @@ type EditFieldProps = {
 
 const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
 
+/** Presses on the card's own buttons and fields are theirs, not the card's. */
+const isControl = (target: EventTarget): boolean =>
+  target instanceof Element && target.closest('button, input, textarea, [role="menu"]') !== null;
+
 type StatusItemsProps = {
   value: FeatureStatus;
   onChange: (status: FeatureStatus) => void;
@@ -358,7 +362,21 @@ export const FeatureCard = ({
       // A group, so the header's edit button is muted until the pointer is over the card.
       classNames={['group/card', scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]']}
       selected={markSelected && selected}
-      onClick={onSelect ? () => onSelect(feature) : undefined}
+      // TODO(richburdon): Make click-to-open a pattern.
+      onClick={(event) => {
+        if (onOpen && (event.metaKey || event.ctrlKey)) {
+          // Opening is the whole gesture: the host must not also treat it as selecting the card.
+          event.stopPropagation();
+          onOpen(feature);
+          return;
+        }
+        onSelect?.(feature);
+      }}
+      onDoubleClick={(event) => {
+        if (onOpen && !editing && !isControl(event.target)) {
+          onOpen(feature);
+        }
+      }}
       data-testid='feature-card'
       data-feature={feature.id}
       data-status={feature.status}
