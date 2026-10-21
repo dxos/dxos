@@ -9,6 +9,7 @@ import * as Scope from 'effect/Scope';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -87,6 +88,43 @@ describe('wrapFunctionHandler', () => {
     const result = await wrapFunctionHandler(ReadsGraph).handler({ data: {}, context: { services: {} } });
 
     expect(result).toEqual({ resolved: true });
+  });
+});
+
+describe('ECHO flush on exit', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  const WritesThenRunsAgain = Operation.make({
+    meta: { key: DXN.make('com.example.operation.writesThenRunsAgain'), name: 'Writes Then Runs Again' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id }) {
+        yield* Database.add(Obj.make(Note, { id, title: 'checkpoint' }));
+        return yield* Operation.runAgain();
+      }),
+    ),
+  );
+
+  test('persists writes made before Operation.runAgain', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const id = EntityId.random();
+
+    const error = await wrapFunctionHandler(WritesThenRunsAgain, { types: [Note] })
+      .handler({
+        data: { id },
+        context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+      })
+      .then(
+        () => undefined,
+        (err: unknown) => err,
+      );
+
+    expect(Process.RunAgainError.is(error)).toBe(true);
+    await expect.poll(() => db.getObjectById(id), { timeout: 2_000 }).toBeDefined();
   });
 });
 
