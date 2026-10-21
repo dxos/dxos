@@ -54,7 +54,12 @@ const startSidecar = (env: NodeJS.ProcessEnv) =>
           const token = randomBytes(32).toString('hex');
           const child = spawn(SIDECAR, [], { env, stdio: ['pipe', 'pipe', 'pipe'] });
           child.on('error', reject);
-          child.on('exit', (code) => reject(new Error(`dx-agent exited with ${code} before reporting a port`)));
+          // Kept for the error: a sidecar that dies before reporting a port explains why only on stderr.
+          let stderr = '';
+          child.stderr.on('data', (chunk) => (stderr += chunk));
+          child.on('exit', (code) =>
+            reject(new Error(`dx-agent exited with ${code} before reporting a port: ${stderr.trim()}`)),
+          );
           createInterface({ input: child.stdout }).once('line', (line) => {
             const { port } = JSON.parse(line);
             resolve({ child, endpoint: { port, token } });

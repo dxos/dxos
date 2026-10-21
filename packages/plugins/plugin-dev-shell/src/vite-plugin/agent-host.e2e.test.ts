@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, beforeAll, describe, test } from 'vitest';
+import { afterAll, beforeAll, describe, test, vi } from 'vitest';
 
 import { Chat } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
@@ -52,19 +52,21 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY))('dev shell agent host with C
     work = path.join(root, 'work');
     fs.mkdirSync(work);
     execFileSync('git', ['init', '-q'], { cwd: work });
-    // The agent server inherits the dev server's environment, so the credential reaches `claude` from here.
-    Object.assign(process.env, {
+    // The agent server inherits the dev server's environment, so the credential reaches `claude` from here; stubbed so
+    // the worker's environment is restored for the files that run after this one.
+    Object.entries({
       // Claude Code prefers a key to a token, so only one is set.
       ...(OAUTH_TOKEN ? { CLAUDE_CODE_OAUTH_TOKEN: OAUTH_TOKEN } : { ANTHROPIC_API_KEY: API_KEY }),
       ANTHROPIC_MODEL: MODEL,
       CLAUDE_CONFIG_DIR: path.join(root, 'claude'),
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-    });
+    }).forEach(([key, value]) => vi.stubEnv(key, value));
     host = await startAgentHost({ worktrees: path.join(root, 'worktrees'), folder: work });
   });
 
   afterAll(async () => {
     await host?.close();
+    vi.unstubAllEnvs();
     // Retried: Claude Code's own processes may still be writing their config as they wind down.
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   });
