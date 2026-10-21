@@ -348,7 +348,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const { db, binding } = await seedGmailBinding(builder);
 
     const runOnce = async () => {
-      const messages: string[] = [];
+      const messages: (string | undefined)[] = [];
       const traceLayer = Trace.testTraceService().pipe(
         Layer.provide(
           Layer.succeed(Trace.TraceSink, {
