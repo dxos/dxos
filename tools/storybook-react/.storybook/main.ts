@@ -373,8 +373,9 @@ export const createConfig = ({
     changeDetection: false,
   },
   // A story file read mid-write (a checkout, a merge, a formatter) would otherwise fail every story until it changed again.
-  experimental_indexers: async (existing = []) =>
-    existing.map((indexer) => withRetry(indexer, { skipOnFailure: !isVitest })),
+  // Skipping applies to the dev server only: a build or a test run must still fail on a story that cannot be indexed.
+  experimental_indexers: async (existing = [], options) =>
+    existing.map((indexer) => withRetry(indexer, { skipOnFailure: options.configType === 'DEVELOPMENT' && !isVitest })),
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,

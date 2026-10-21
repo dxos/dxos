@@ -103,7 +103,9 @@ capture() {
     local body
     body="$(mktemp)"
     local status
-    status="$(curl -s -m "${TIMEOUT}" -o "${body}" -w "%{http_code} %{time_total}" "http://localhost:${PORT}/index.json")"
+    # A body that stalls after the headers times out with the code already read, so a failed transfer is no answer.
+    status="$(curl -s -m "${TIMEOUT}" -o "${body}" -w "%{http_code} %{time_total}" "http://localhost:${PORT}/index.json")" ||
+      status="000"
     if [ "${status%% *}" = "000" ] || [ -z "${status}" ]; then
       echo "index.json: NO RESPONSE within ${TIMEOUT}s"
     else
@@ -286,7 +288,8 @@ while true; do
   fi
 
   reason=""
-  code="$(curl -s -m "${TIMEOUT}" -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/index.json")"
+  # As in `capture`: a transfer that did not complete is no answer, whatever status line arrived first.
+  code="$(curl -s -m "${TIMEOUT}" -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/index.json")" || code="000"
   if [ "${code}" = "000" ] || [ -z "${code}" ]; then
     reason="no response within ${TIMEOUT}s"
   elif [ "${code}" != "200" ]; then
