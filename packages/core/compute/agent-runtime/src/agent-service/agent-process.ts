@@ -49,8 +49,8 @@ import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { loadSpaceMcpServers } from './mcp-servers.ts';
-import { type ThreadingOptions, runLanes } from './thread-scheduler.ts';
-import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
+import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts';
+import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
@@ -241,6 +241,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         });
         const sessionStore = new SessionStore();
         const threading = options.threading?.();
+        // Agents sharing the chat, each with its own producer; built up front so their teardown joins the process scope.
+        const tenants = new Map<string, { producer: TurnProducer; model?: DXN.DXN }>();
+        for (const tenant of threading?.tenants ?? []) {
+          tenants.set(tenant.name, {
+            producer: yield* tenant.makeTurnProducer({
+              chat,
+              feed,
+              runtime,
+              instructions: instructions ? [instructions] : [],
+            }),
+            model: tenant.model,
+          });
+        }
         // Signals the lane scheduler that a prompt was queued while it runs; the alarm that also fires waits its turn.
         const wake = yield* Queue.sliding<void>(1);
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
@@ -453,10 +466,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           prompt,
           dequeued,
           thread,
+          tenant,
         }: {
           prompt: ContentBlock.Any[];
           dequeued: Message.Message | Alarm.Alarm | undefined;
           thread?: Trajectory.EventId;
+          /** Another agent sharing the chat that runs this turn; the process's own when absent. */
+          tenant?: { producer: TurnProducer; model?: DXN.DXN };
         }) {
           // The MCP servers are read concurrently with the writes below: neither depends on the
           // other, and each is a round trip to the database that the turn would otherwise wait on in series.
@@ -472,7 +488,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             { concurrency: 'unbounded' },
           );
           markWork('agent.turn-begin');
-          yield* session
+          yield* (tenant?.producer ?? session)
             .runTurn({
               prompt,
               // The turn rewrites the queued message as its own, so the sender has to travel with it.
@@ -487,7 +503,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   : Obj.instanceOf(Message.Message, dequeued)
                     ? { message: dequeued.id }
                     : { alarm: dequeued.id },
-              model,
+              model: tenant?.model ?? model,
               thread,
             })
             .pipe(
@@ -635,9 +651,28 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       pending: Effect.map(sessionStore.loadPending(feed), ({ pendingMessages }) =>
                         pendingMessages.filter((pending) => !ackedEntries.includes(pending.id)),
                       ),
-                      run: (pending, thread) =>
-                        executeTurn({ prompt: [...pending.blocks], dequeued: pending, thread }).pipe(Effect.orDie),
-                      open: (pending) => TrajectoryStore.openLightThread(feed, { purpose: purposeOf(pending) }),
+                      run: (pending, thread) => {
+                        const tenant = tenantOf(pending, threading.tenants);
+                        return executeTurn({
+                          prompt: [...pending.blocks],
+                          dequeued: pending,
+                          thread,
+                          tenant: tenant ? tenants.get(tenant.name) : undefined,
+                        }).pipe(Effect.orDie);
+                      },
+                      open: (pending) => {
+                        // Sharing the chat, the process's own lanes are named after the model they run on.
+                        const owner =
+                          tenantOf(pending, threading.tenants)?.name ??
+                          threading.owner ??
+                          (threading.tenants?.length
+                            ? (Model.byId(model ?? Model.claudeSonnet5.id)[0]?.label ?? 'Composer')
+                            : undefined);
+                        return TrajectoryStore.openLightThread(feed, {
+                          purpose: purposeOf(pending),
+                          ...(owner !== undefined ? { owner: { role: 'assistant', name: owner } } : {}),
+                        });
+                      },
                       merge: (thread) => TrajectoryStore.mergeThread(feed, thread),
                       interrupted: (pending) => TrajectoryStore.interruptedThread(feed, pending.id),
                       started: (pending) =>

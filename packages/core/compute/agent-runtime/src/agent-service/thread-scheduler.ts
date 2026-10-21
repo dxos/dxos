@@ -7,9 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Queue from 'effect/Queue';
 
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Trajectory } from '@dxos/trajectory';
 import { type Message } from '@dxos/types';
+
+import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Light threads that run at once by default, besides the turn on main. */
 export const DEFAULT_THREAD_LIMIT = 3;
@@ -21,9 +24,34 @@ const POLL_MS = 1_000;
 const START_POLL_MS = 25;
 const START_TIMEOUT_MS = 10_000;
 
+/**
+ * Another agent sharing the chat (multi-tenancy): a prompt that starts with `@<name>` runs on its producer, and the
+ * lanes it runs show it as their owner.
+ */
+export type Tenant = {
+  readonly name: string;
+  readonly makeTurnProducer: MakeTurnProducer;
+  /** Model its turns run on; the chat's when absent. */
+  readonly model?: DXN.DXN;
+};
+
 export type ThreadingOptions = {
   /** Light threads that run at once, besides the turn on main. */
   readonly limit?: number;
+  /** Other agents sharing the chat; with any, every prompt runs in a light thread, so each lane has an owner. */
+  readonly tenants?: readonly Tenant[];
+  /** Owner the process's own lanes show when it shares the chat with tenants. */
+  readonly owner?: string;
+};
+
+/** The tenant a prompt addresses with a leading `@<name>`; none means the process's own agent. */
+export const tenantOf = (message: Message.Message, tenants: readonly Tenant[] = []): Tenant | undefined => {
+  const text = message.blocks
+    .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .trimStart()
+    .toLowerCase();
+  return tenants.find((tenant) => text.startsWith(`@${tenant.name.toLowerCase()}`));
 };
 
 /**
@@ -54,7 +82,7 @@ type Finished = { readonly id: string; readonly thread?: Trajectory.EventId; rea
  */
 export const runLanes = <R>(
   runner: LaneRunner<R>,
-  { limit = DEFAULT_THREAD_LIMIT, wake }: ThreadingOptions & { wake: Queue.Dequeue<void> },
+  { limit = DEFAULT_THREAD_LIMIT, tenants = [], wake }: ThreadingOptions & { wake: Queue.Dequeue<void> },
 ): Effect.Effect<void, never, R> =>
   Effect.gen(function* () {
     const finished = yield* Queue.unbounded<Finished>();
@@ -120,7 +148,7 @@ export const runLanes = <R>(
           const lights = [...running.values()].filter((thread) => thread !== undefined).length;
           if (resumed !== undefined) {
             yield* start(message, resumed);
-          } else if (running.size === 0) {
+          } else if (running.size === 0 && tenants.length === 0) {
             yield* start(message, undefined);
           } else if (lights < limit) {
             yield* awaitStarted;

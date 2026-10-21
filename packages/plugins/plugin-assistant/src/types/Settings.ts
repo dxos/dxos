@@ -87,6 +87,13 @@ export const Settings = Schema.Struct({
       description: 'How many parallel threads run at once; further prompts wait their turn. Defaults to 3.',
     }),
   ),
+  parallelThreadAgents: Schema.optional(
+    Schema.mutable(Schema.Array(Schema.String)).annotate({
+      title: 'Agents sharing parallel threads',
+      description:
+        'Other installed agents (by id, e.g. claude-code) that work in the same chat: a prompt starting with @<id> runs on that agent in its own thread. Requires parallel threads.',
+    }),
+  ),
   defaultAgent: Schema.optional(
     Schema.String.annotate({
       title: 'Default agent',

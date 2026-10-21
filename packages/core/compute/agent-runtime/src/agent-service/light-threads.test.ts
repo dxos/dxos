@@ -20,7 +20,7 @@ import { DXN } from '@dxos/keys';
 import { Reducer, type Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing/index.ts';
+import { AssistantTestLayer, makeScriptedTenant } from '../testing/index.ts';
 import * as AgentService from './AgentService.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
@@ -187,6 +187,59 @@ describe('light threads (scripted)', () => {
         expect(JSON.stringify(resumed?.prompt.content.at(-1))).toContain('The sea is wide.');
       },
       Effect.provide(layer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'a prompt addressed to another agent runs in a lane that agent owns, beside the default agent',
+    Effect.fnUntraced(
+      function* (_) {
+        requests.length = 0;
+        gateStarted = yield* Deferred.make<void>();
+        gateRelease = yield* Deferred.make<void>();
+        const session = yield* AgentService.createSession({ skills: [GateSkill] });
+        yield* session.submitPrompt('Write a poem about the sea.');
+        yield* Deferred.await(gateStarted);
+
+        yield* session.submitPrompt('@claude What is 17 times 23?');
+        yield* waitFor(session.feed, (view) => view.lanes.length === 2 && view.lanes[1].status === 'done');
+        const during = yield* read(session.feed, Reducer.thread);
+        // Every lane is a light thread owned by the agent that runs it.
+        expect(during.lanes.map((lane) => [lane.kind, lane.owner.name, lane.status])).toEqual([
+          ['light', 'deepseek', 'running'],
+          ['light', 'claude', 'done'],
+        ]);
+        expect(itemTexts(during, during.lanes[1].id).at(-1)).toEqual('391, from claude.');
+
+        yield* Deferred.succeed(gateRelease, undefined);
+        yield* session.waitForCompletion();
+        const done = yield* read(session.feed, Reducer.thread);
+        expect(done.lanes.map((lane) => lane.status)).toEqual(['done', 'done']);
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Alarm.Alarm],
+          operationHandlers: [handlers],
+          skills: [GateSkill],
+          agent: {
+            threading: () => ({
+              owner: 'deepseek',
+              tenants: [
+                {
+                  name: 'claude',
+                  makeTurnProducer: makeScriptedTenant({
+                    name: 'claude',
+                    reply: () => ({ text: '391, from claude.' }),
+                  }),
+                },
+              ],
+            }),
+          },
+          aiService: scriptedAiService(script),
+        }),
+      ),
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },

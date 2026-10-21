@@ -204,6 +204,21 @@ feat F-6: Compaction
       threads keep their buffers and see the summary in place of the entries they saw
 ```
 
+```mdl
+feat F-7: Agents sharing a chat (multi-tenancy)
+
+  req F-7.1:
+    when: Parallel threads is on, another installed agent is listed in **Agents sharing parallel threads**, and a
+      prompt starts with `@<agent id>`
+    then: the prompt runs on that agent in a light thread it owns; every other prompt runs on the chat's own agent,
+      whose lanes are named after its model
+
+  req F-7.2:
+    when: two agents share a chat
+    then: every prompt runs in a light thread, so each lane has an owner, and each agent's snapshot shows the other's
+      running work
+```
+
 ## Scenarios
 
 ```mdl
@@ -277,6 +292,29 @@ test QA-1: Three prompts sent while the agent researches
     - name: Watch the research finish
       do: Wait for the research to finish.
       expect: the research summary is echoed at the end of the transcript; the waiting lane continues and answers in French
+```
+
+```mdl
+test QA-2: Two agents share one chat
+  desc: The scripted story `stories-assistant/MultiTenantThreads` (Demo) walked by a person; both agents are scripted stand-ins.
+  actors: human
+  covers: [F-1.1, F-2.1, F-4.1, F-4.2, F-4.3, F-7.1, F-7.2]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/MultiTenantThreads` Demo, with Parallel threads on and the agent `claude` sharing the chat
+  steps:
+    - name: Ask the default agent for a plan
+      do: Send "Draft a three-step plan for migrating the chat store to events."
+      expect: a lane owned by DeepSeek V4 Flash starts working out the plan one step at a time
+    - name: Address Claude Code
+      do: While it works, send "@claude Find where TrajectoryStore folds the prompt and list the files."
+      expect: a second lane, in its own colour and owned by claude, starts; the plan collapses into a background card
+    - name: Ask the default agent something quick
+      do: Send "Meanwhile, how many events does a turn write at least?"
+      expect: a third lane, owned by DeepSeek V4 Flash, answers at once
+    - name: Watch both agents finish
+      do: Wait for Claude Code and the plan to finish.
+      expect: Claude Code's answer names the files; the plan's three steps appear; each lane's header names its owner
 ```
 
 ## Changelog
@@ -424,4 +462,52 @@ decision D-14: `test QA-1` walks the scripted LightThreads story, which is what 
   for: user:dmaretskyi
   affects: [F-4]
   why: The user asked for a story and recorded demos; autocue flows bind to a QA test.
+```
+
+```mdl
+decision D-15: Rows keep feed order; lanes interleave and are told apart by their gutters. A background lane still
+  collapses into its card at its first row, and completion notices show only while a lane is still running.
+  Supersedes the ordering in [D-10].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-10
+  affects: [F-4.2, F-4.3]
+  why: Grouping rows by lane moved rows the virtual list had already placed, and it re-anchored without end
+    (React "Maximum update depth exceeded" once two lanes streamed). Once every lane has finished, each answer is in
+    view where its lane is, so echoes only repeated them.
+  rejected:
+    - Grouping rows by lane; needs the virtual list to accept moved rows (`ListModel.replace` infers only prepends).
+```
+
+```mdl
+decision D-16: Demo agent multi-tenancy on the same threading: Claude Code through the ACP adapter and Composer's
+  assistant running DeepSeek Flash work in one chat, in a separate story with the same UX, recorded as a video.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-7, QA-2]
+```
+
+```mdl
+decision D-17: A tenant is another installed agent named in the assistant settings; a prompt starting with
+  `@<agent id>` runs on it in a light thread it owns, and with any tenant every prompt runs in a light thread. The
+  chat's own lanes are owned by its model's label. Fills in [D-16] and [D-6].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.1, F-7.2]
+  why: The `AssistantCapabilities.Agent` registry already lists Claude Code and other agents with their turn
+    producers, and a light thread's owner is already its opener's sender ([D-13]), so routing needs no new event.
+  rejected:
+    - Routing by a model classifier; adds a model call before every prompt and is opaque to the person.
+```
+
+```mdl
+decision D-18: The multi-tenant story runs both agents as scripted stand-ins, labelled as such. Fills in [D-16].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: The sandbox that recorded it has no Claude Code credentials and storybook cannot host the ACP adapter's
+    process; the runtime routing and the ACP and EDGE producers' thread wiring are the real code paths.
 ```

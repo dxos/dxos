@@ -241,7 +241,7 @@ export const runTurn = (
 
     // A picked-up turn is already open in the feed, under the same id; a new one opens and takes its prompt in.
     if (!pending) {
-      yield* TrajectoryStore.beginTurn(feed, { id: turnId, model: request.model });
+      yield* TrajectoryStore.beginTurn(feed, { id: turnId, model: request.model, thread: request.thread });
       const prompt = Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) });
       produced.push(prompt);
       yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turnId, request.source));

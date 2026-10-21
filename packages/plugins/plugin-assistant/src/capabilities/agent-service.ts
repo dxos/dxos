@@ -48,7 +48,15 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
               const [settings] = manager.getAll(AssistantCapabilities.Settings);
               const [registry] = manager.getAll(Capabilities.AtomRegistry);
               const values = settings && registry?.get(settings);
-              return values?.parallelThreads ? { limit: values.parallelThreadLimit } : undefined;
+              if (!values?.parallelThreads) {
+                return undefined;
+              }
+              const shared = new Set(values.parallelThreadAgents ?? []);
+              const tenants = manager
+                .getAll(AssistantCapabilities.Agent)
+                .filter((agent) => shared.has(agent.id))
+                .map((agent) => ({ name: agent.id, makeTurnProducer: agent.makeTurnProducer }));
+              return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
           });
         }),

@@ -209,7 +209,7 @@ export const runTurn = (
     const resume = sessionIdOf(chat, options.id);
     const produced: Message.Message[] = [];
     const resumed = yield* TrajectoryStore.resumeInterrupted(feed, request.source);
-    const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model });
+    const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model, thread: request.thread });
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
         if (messages.length === 0) {
