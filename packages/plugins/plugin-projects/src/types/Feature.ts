@@ -137,6 +137,24 @@ export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): 
 /** A repo spec path without its block anchor or leading slashes. */
 export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');
 
+/** The parts of a plugin's profile that say where its bundled spec comes from. */
+export type SpecSource = { key: string; source?: string; spec?: string };
+
+/**
+ * The key of the plugin that bundles the spec a repo path names: the path is the plugin's source directory joined
+ * with its spec file (`packages/plugins/plugin-inbox/PLUGIN.mdl`), so the app can open the spec without GitHub.
+ */
+export const findSpecPlugin = (spec: string, plugins: readonly SpecSource[]): string | undefined => {
+  if (/^https?:\/\//.test(spec)) {
+    return undefined;
+  }
+  const path = getSpecPath(spec);
+  return plugins.find(({ source, spec: file }) => {
+    const directory = source?.match(/\/tree\/[^/]+\/(.+?)\/?$/)?.[1];
+    return !!directory && !!file && path === `${directory}/${file}`;
+  })?.key;
+};
+
 /** Foreign-key source of a spec imported into a space, whose key id is its repo path. */
 export const SPEC_KEY_SOURCE = 'github.com/dxos/dxos';
 

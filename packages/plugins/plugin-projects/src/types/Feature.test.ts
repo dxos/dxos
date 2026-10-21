@@ -60,6 +60,25 @@ describe('Feature', () => {
     expect(Feature.getSpecUrl('https://example.com/spec.md')).toBe('https://example.com/spec.md');
   });
 
+  test('a plugin spec path names the plugin that bundles it', ({ expect }) => {
+    const plugins: Feature.SpecSource[] = [
+      {
+        key: 'org.dxos.plugin.inbox',
+        source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
+        spec: 'PLUGIN.mdl',
+      },
+      { key: 'org.dxos.plugin.noSpec', source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-x' },
+    ];
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-inbox/PLUGIN.mdl#F-3', plugins)).toBe(
+      'org.dxos.plugin.inbox',
+    );
+    expect(Feature.findSpecPlugin('/packages/plugins/plugin-inbox/PLUGIN.mdl', plugins)).toBe('org.dxos.plugin.inbox');
+    // Only the bundled file: another spec in the same directory still opens on GitHub.
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-inbox/docs/SYNC.mdl', plugins)).toBeUndefined();
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-x/PLUGIN.mdl', plugins)).toBeUndefined();
+    expect(Feature.findSpecPlugin('https://example.com/PLUGIN.mdl', plugins)).toBeUndefined();
+  });
+
   test('dependencies, implementing tasks and showcases are relations', async ({ expect }) => {
     const { db } = await open();
     const compose = db.add(Feature.make({ name: 'Compose & send', status: 'prototype' }));

@@ -78,6 +78,8 @@ export type FeatureCardBodyProps = {
   onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
+  /** How a listed spec opens in the app; a spec it gives no way to open links to GitHub. */
+  openSpec?: (spec: string) => (() => void) | undefined;
   /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
   /** Edit mode: the description is a field, shown even while empty. */
@@ -495,6 +497,7 @@ export const FeatureCardBody = ({
   onSelectDependency,
   onRemoveDependency,
   onOpenObject,
+  openSpec,
   onDescribe,
   editing,
 }: FeatureCardBodyProps) => {
@@ -677,12 +680,22 @@ export const FeatureCardBody = ({
       )}
 
       {/* Also beside the article's editable spec list, since there each row opens the imported spec. */}
-      {detailed && (showFields || onOpenObject) && feature.specs.length > 0 && (
+      {detailed && (showFields || onOpenObject || openSpec) && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
           {feature.specs.map((spec) => {
+            // An imported spec is the space's own copy, so it wins over the one a plugin bundles.
             const specId = feature.specObjects?.[Feature.getSpecPath(spec)];
-            return specId && onOpenObject ? (
-              <Card.Row key={spec} icon='ph--file-code--regular' onClick={open(specId)}>
+            const openBundled = openSpec?.(spec);
+            const onClick =
+              specId && onOpenObject
+                ? open(specId)
+                : openBundled &&
+                  ((event: MouseEvent) => {
+                    event.stopPropagation();
+                    openBundled();
+                  });
+            return onClick ? (
+              <Card.Row key={spec} icon='ph--file-code--regular' onClick={onClick} data-testid='feature-card.spec'>
                 <Card.Text truncate>{spec}</Card.Text>
               </Card.Row>
             ) : (

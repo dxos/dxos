@@ -21,7 +21,7 @@ import { Feature, FeatureMapView } from '#types';
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenObject, useOpenSpec } from '../../hooks/index.ts';
 
 export type ProjectFeaturesProps = {
   project: Project.Project;
@@ -59,6 +59,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   const graph = useFeatureGraph(db, ids);
   const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
   const openObject = useOpenObject(db, attendableId);
+  const openSpec = useOpenSpec();
   const editing = useFeatureEditing(db, project);
   const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
   // The card whose name field is open: a feature created from the toolbar is named in place on the map.
@@ -171,6 +172,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               onSetStatus={editing.setStatus}
               onOpen={handleOpen}
               onOpenObject={handleOpen}
+              openSpec={openSpec}
               onRemove={editing.removeFromProject}
               onRename={editing.rename}
               onDescribe={editing.describe}
@@ -185,6 +187,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
                 features={features}
                 onOpen={handleOpen}
                 onOpenObject={handleOpen}
+                openSpec={openSpec}
                 onSetStatus={editing.setStatus}
                 onRemove={editing.removeFromProject}
                 onRename={editing.rename}

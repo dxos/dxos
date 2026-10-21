@@ -23,7 +23,7 @@ import { Feature } from '#types';
 
 import { FeatureCardBody, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenObject, useOpenSpec } from '../../hooks/index.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -60,6 +60,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
     [subject.id, graph],
   );
   const openObject = useOpenObject(db, attendableId);
+  const openSpec = useOpenSpec();
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
@@ -128,6 +129,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       onSelectDependency={(id) => void openObject(id)}
                       onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
                       onOpenObject={(id) => void openObject(id)}
+                      openSpec={openSpec}
                     />
                   </Card.Root>
                   {canFileTask && (

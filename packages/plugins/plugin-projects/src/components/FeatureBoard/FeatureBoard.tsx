@@ -35,6 +35,8 @@ export type FeatureBoardProps = {
   onOpen?: (id: string) => void;
   /** Opens a spec, task or showcase listed on a card. */
   onOpenObject?: (id: string) => void;
+  /** How a spec listed on a card opens in the app; specs it cannot open link to GitHub. */
+  openSpec?: (spec: string) => (() => void) | undefined;
   onSetStatus?: (id: string, status: FeatureStatus) => void;
   /** Takes a feature off its project; the feature itself is kept. */
   onRemove?: (id: string) => void;
@@ -62,6 +64,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
     onSelect,
     onOpen,
     onOpenObject,
+    openSpec,
     onSetStatus,
     onRemove,
     onRename,
@@ -83,6 +86,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         onSelectDependency={onSelect}
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
         onOpenObject={onOpenObject}
+        openSpec={openSpec}
         onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
         onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
@@ -107,6 +111,7 @@ export const FeatureBoard = ({
   onSelect,
   onOpen,
   onOpenObject,
+  openSpec,
   onSetStatus,
   onRemove,
   onRename,
@@ -131,6 +136,7 @@ export const FeatureBoard = ({
     onSelect: handleSelect,
     onOpen,
     onOpenObject,
+    openSpec,
     onSetStatus,
     onRemove,
     onRename,
