@@ -10,7 +10,6 @@ import { expect } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
-import * as McpServer from '@dxos/compute/McpServer';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -95,45 +94,11 @@ describe('MCP servers', () => {
   );
 
   it.effect(
-    'connects enabled space servers at URLs no connection covers, with the credentials stored on them',
+    'a connection added to the space is callable by the agent on its next turn',
     Effect.fnUntraced(
       function* (_) {
         const server = yield* withTestServer;
-        const feed = yield* Database.add(Feed.make());
         yield* Database.add(Connection.make({ connectorId: 'mcp', mcp: { url: server.urls.open, protocol: 'http' } }));
-        yield* Database.add(Obj.make(McpServer.McpServer, { name: 'open', url: server.urls.open, protocol: 'http' }));
-        yield* Database.add(
-          Obj.make(McpServer.McpServer, { name: 'off', url: server.urls.key, protocol: 'http', enabled: false }),
-        );
-        yield* Database.add(
-          Obj.make(McpServer.McpServer, {
-            name: 'oauth',
-            url: server.urls.oauth,
-            protocol: 'http',
-            oauth: { clientId: 'client', tokens: { accessToken: 'token', tokenType: 'Bearer' } },
-          }),
-        );
-
-        const options = yield* loadMcpServers({ feed });
-        expect(options.map(({ url }) => url)).toEqual([server.urls.open, server.urls.oauth]);
-        expect(options[0].authProvider).toBeUndefined();
-        expect(options[1].authProvider).toBeDefined();
-      },
-      Effect.provide(
-        AssistantTestLayer({ types: [AccessToken.AccessToken, Connection.Connection, McpServer.McpServer] }),
-      ),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'a server added to the space is callable by the agent on its next turn',
-    Effect.fnUntraced(
-      function* (_) {
-        const server = yield* withTestServer;
-        yield* Database.add(
-          Obj.make(McpServer.McpServer, { name: 'weather', url: server.urls.open, protocol: 'http', enabled: true }),
-        );
 
         const session = yield* AgentService.createSession();
         yield* session.submitPrompt('What is the weather in Paris?');
@@ -144,7 +109,7 @@ describe('MCP servers', () => {
       },
       Effect.provide(
         AssistantTestLayer({
-          types: [McpServer.McpServer],
+          types: [AccessToken.AccessToken, Connection.Connection],
           aiService: scriptedAiService([
             { parts: [toolCall('get_weather', { city: 'Paris' })] },
             { parts: [text('It is sunny in Paris.')] },

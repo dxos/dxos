@@ -11,14 +11,21 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext, Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
-import { Connection } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
+import { startTestServer } from '@dxos/mcp-client/testing';
 
 import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
-import { EnableSkills, QueryMcpConnections, QuerySkills, SetMcpConnection } from './operations/definitions.ts';
+import {
+  AddMcpConnection,
+  EnableSkills,
+  QueryMcpConnections,
+  QuerySkills,
+  SetMcpConnection,
+} from './operations/definitions.ts';
 import { SkillManagerHandlers } from './operations/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -26,7 +33,7 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: SkillManagerHandlers,
-  types: [Connection.Connection, Skill.Skill],
+  types: [AccessToken.AccessToken, Connection.Connection, Skill.Skill],
   skills: [ChatContextSkill.make(), MemorySkill.make(), AutomationSkill.make()],
   tracing: 'pretty',
 });
@@ -76,6 +83,39 @@ describe('Skill Manager', () => {
 
         expect(before.map(({ enabled }) => enabled)).toEqual([true]);
         expect(after.map(({ enabled }) => enabled)).toEqual([false]);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'add-mcp-connection: adds a server that answers, and refuses one that needs sign-in',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const server = yield* Effect.acquireRelease(
+          Effect.promise(() => startTestServer()),
+          (server) => Effect.promise(() => server.close()),
+        );
+
+        const open = yield* Operation.invoke(AddMcpConnection, { url: server.urls.open }, { conversation });
+        const keyed = yield* Operation.invoke(
+          AddMcpConnection,
+          { url: server.urls.key, key: server.apiKey },
+          { conversation },
+        );
+        const refused = yield* Operation.invoke(AddMcpConnection, { url: server.urls.oauth }, { conversation }).pipe(
+          Effect.exit,
+        );
+
+        expect(open.tools).toContain('get_weather');
+        expect(keyed.problem).toBeUndefined();
+        expect(refused._tag).toBe('Failure');
+        const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+        expect(connections.map(({ mcp }) => mcp?.url)).toEqual([server.urls.open, server.urls.key]);
+        expect(connections[1].accessToken).toBeDefined();
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

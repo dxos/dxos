@@ -82,6 +82,9 @@
     },
     {
       "path": "../link"
+    },
+    {
+      "path": "../mcp-client"
     }
   ]
 }

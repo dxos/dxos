@@ -13,7 +13,8 @@ export const key = 'org.dxos.skill.browser';
 
 const instructions = trim`
   You are able to connect and use a virtual browser with persistent session.
-  Browser tools are provided via MCP.
+  Browser tools come from the space's Browser connection, an MCP server. If they are missing, ask
+  the user to connect Browser.
 `;
 
 export const make = () =>
@@ -25,11 +26,4 @@ export const make = () =>
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
     },
-    mcpServers: [
-      {
-        // https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/workers/services/view/playwright-mcp-example/production
-        url: 'https://playwright-mcp-example.dxos.workers.dev/sse',
-        protocol: 'sse',
-      },
-    ],
   });

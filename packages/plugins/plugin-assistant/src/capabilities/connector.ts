@@ -12,7 +12,14 @@ import { Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import {
+  ANTHROPIC_PROVIDER_ID,
+  ANTHROPIC_SOURCE,
+  BROWSER_MCP_ENDPOINT,
+  BROWSER_PROVIDER_ID,
+  DEEPSEEK_PROVIDER_ID,
+  DEEPSEEK_SOURCE,
+} from '../constants.ts';
 import { ConnectorKeyInvalidError } from '../operations/errors.ts';
 import { McpServerConnector } from './mcp-connector.ts';
 
@@ -127,6 +134,14 @@ export default Capability.makeModule(
           label: 'DeepSeek',
           validate: validateDeepSeekKey,
         }),
+      },
+      {
+        id: BROWSER_PROVIDER_ID,
+        source: new URL(BROWSER_MCP_ENDPOINT.url).host,
+        label: 'Browser',
+        kind: 'app',
+        noCredential: true,
+        mcp: () => BROWSER_MCP_ENDPOINT,
       },
       McpServerConnector,
     ]);

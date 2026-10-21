@@ -291,7 +291,7 @@ feat F-5: Tool Execution
 ```mdl
 feat F-6: ECHO Integration
 
-  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
+  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
     when: a new space is created
     then: op:OnCreateSpace provisions default assistant objects

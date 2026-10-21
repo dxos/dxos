@@ -5,7 +5,6 @@
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -69,12 +68,6 @@ export const translations: Theme.Resource[] = [
         'rename-object.label': 'Rename session',
         'delete-object.label': 'Delete session',
         'object-deleted.label': 'Session deleted',
-      },
-      [Type.getTypename(McpServer.McpServer)]: {
-        'typename.label': 'MCP Server',
-        'typename.label_zero': 'MCP Servers',
-        'typename.label_one': 'MCP Server',
-        'typename.label_other': 'MCP Servers',
       },
       [Type.getTypename(Agent.Agent)]: {
         'typename.label': 'Agent',
@@ -203,16 +196,8 @@ export const translations: Theme.Resource[] = [
         'chat-view.debug.label': 'Debug',
         'chat-environment.local.label': 'Local',
         'chat-environment.remote.label': 'EDGE',
-        'mcp-server-remove.label': 'Remove MCP server',
-        'mcp-server-status.checking': 'Connecting…',
-        'mcp-server-status.connected_one': '{{count}} tool',
-        'mcp-server-status.connected_other': '{{count}} tools',
-        'mcp-server-status.unauthorized': 'Sign-in required',
-        'mcp-server-status.disabled': 'Disabled',
-        'mcp-server-sign-in.label': 'Sign in',
-        'mcp-server-retry.label': 'Retry connection',
         'mcp-server-error.label': 'MCP server unavailable',
-        'mcp-server-error.unauthorized': 'Sign-in required — sign in from the MCP tab of the chat options.',
+        'mcp-server-error.unauthorized': 'Sign-in required — the connection needs signing in again.',
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 

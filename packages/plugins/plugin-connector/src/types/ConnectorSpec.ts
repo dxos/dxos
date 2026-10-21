@@ -274,6 +274,8 @@ export type ConnectorEntry = {
   label?: string;
   kind: ConnectorKind;
   oauth?: ConnectorOAuthSpec;
+  /** The service takes no credential, such as an open MCP server: connecting stores the connection alone. */
+  noCredential?: boolean;
   /** How this connector syncs; absent for a connector that only authenticates. */
   sync?: ConnectorSync;
   /**

@@ -477,6 +477,21 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
 
+        if (connector.noCredential) {
+          const connection = Obj.make(Connection.Connection, {
+            name: connector.label ?? connector.id,
+            connectorId: connector.id,
+          });
+          yield* finalizePendingEntry(invoker, pluginContext, serviceResolver, {
+            mode: 'create',
+            connection,
+            db,
+            connector,
+            existingTarget,
+          });
+          return { kind: 'connection-created', connectionId: connection.id } as const;
+        }
+
         // ConnectorSpec.Connector has a pre-flight form (atproto handle, IMAP creds, custom
         // token, …) — show it and let the form's submit re-enter via
         // `submitCredentialForm`. OAuth connectors re-enter here with

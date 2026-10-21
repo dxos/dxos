@@ -9,7 +9,13 @@ import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { EnableSkills, QueryMcpConnections, QuerySkills, SetMcpConnection } from './operations/definitions.ts';
+import {
+  AddMcpConnection,
+  EnableSkills,
+  QueryMcpConnections,
+  QuerySkills,
+  SetMcpConnection,
+} from './operations/definitions.ts';
 
 export const key = 'org.dxos.skill.skillManager';
 
@@ -37,7 +43,8 @@ export const make = () =>
 
         Connections to services can also give you their MCP servers' tools. They are on unless this
         conversation turned them off: use [query-mcp-connections] to see which are off, and
-        [set-mcp-connection] to turn one on when you need its tools.
+        [set-mcp-connection] to turn one on when you need its tools. To use an MCP server the space
+        has no connection for, add it with [add-mcp-connection].
       `,
       inputs: [
         {
@@ -47,7 +54,9 @@ export const make = () =>
         },
       ],
     }),
-    tools: Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills, QueryMcpConnections, SetMcpConnection] }),
+    tools: Skill.toolDefinitions({
+      operations: [QuerySkills, EnableSkills, AddMcpConnection, QueryMcpConnections, SetMcpConnection],
+    }),
   });
 
 export { SkillManagerHandlers as Handlers } from './operations/index.ts';

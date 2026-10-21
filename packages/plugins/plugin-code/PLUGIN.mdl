@@ -381,10 +381,9 @@ type CoderSkill
       - op:resetProject
       - op:buildProject
       - op:runBuild
-    mcpServers:
-      - introspect-mcp        # remote MCP, http; tools: list_packages,
-                              # get_package, list_symbols, find_symbol,
-                              # get_symbol
+    # The introspect-mcp tools (list_packages, get_package, list_symbols,
+    # find_symbol, get_symbol) come from the DXOS Introspect connection
+    # (connector dxos-introspect, no credential), not from the skill.
     instructions: prose
 ```
 

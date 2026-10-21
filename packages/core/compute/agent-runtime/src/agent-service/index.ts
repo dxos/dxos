@@ -14,5 +14,5 @@ export {
   makeInputMessage,
 } from './agent-process.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
-export { type McpEndpointOf } from './mcp-servers.ts';
+export { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 export * from './turn-producer.ts';

@@ -38,7 +38,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Configure the server for this space',
     description:
-      "Set the Worker URL on the Weather MCP skill's `mcpServers` as `{ name: 'weather', url, protocol: 'http' }` through the Database skill's update tool. The skill is already bound to this chat and servers are connected at the start of every turn, so `get_weather` appears on your next turn — no restart.",
+      "Add the Worker URL as an MCP connection named `weather` with the Skill Manager's `add-mcp-connection` tool. The connection is on in this chat and servers are connected at the start of every turn, so `get_weather` appears on your next turn — no restart.",
     estimate: 'xs',
   },
   {

@@ -83,3 +83,35 @@ export const SetMcpConnection = Operation.make({
   output: McpConnection,
   services: [Database.Service, Harness.HarnessService],
 });
+
+export const AddMcpConnection = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.addMcpConnection'),
+    name: 'Add MCP connection',
+    description:
+      "Adds an MCP server to the space as a connection, with no credential or with an API key. It is on in this conversation, so its tools appear on the next turn. A server that needs sign-in can't be added this way: ask the user to connect it.",
+    icon: 'ph--plugs-connected--regular',
+  },
+  input: Schema.Struct({
+    url: Schema.String.annotate({
+      description: "The server's MCP endpoint.",
+      examples: ['https://mcp.example.com/mcp'],
+    }),
+    name: Schema.optional(Schema.String).annotate({ description: 'Defaults to the URL host.' }),
+    protocol: Schema.optional(Schema.Literals(['http', 'sse'])).annotate({
+      description: 'Streamable HTTP unless the server only speaks the deprecated SSE transport.',
+    }),
+    key: Schema.optional(Schema.String).annotate({
+      description:
+        'An API key the server takes as a Bearer token. It is stored in the space, readable by every member.',
+    }),
+  }),
+  output: Schema.Struct({
+    ...McpConnection.fields,
+    tools: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'The tools the server listed.' }),
+    problem: Schema.optional(Schema.String).annotate({
+      description: 'Why the server could not be reached just now; the connection is still added.',
+    }),
+  }),
+  services: [Database.Service],
+});

@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   BuildRunState,
+  Connector,
   CreateObject,
   NavigationTargetResolver,
   OperationHandler,
@@ -22,6 +23,7 @@ import { meta } from '#meta';
 export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(BuildRunState),
+  Plugin.addModule(Connector),
   Plugin.addModule(CreateObject),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),

@@ -5,6 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -24,6 +26,11 @@ export const BuildRunState = Capability.lazyModule(
   'BuildRunState',
   { provides: [CodeCapabilities.BuildRun], activatesOn: CodeEvents.Start },
   () => import('./build-run-state.ts'),
+);
+export const Connector = Capability.lazyModule(
+  'IntrospectConnector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+  () => import('./connector.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const NavigationTargetResolver = AppCapability.navigationResolver(

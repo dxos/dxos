@@ -28,7 +28,7 @@ import * as Binding from './Binding.ts';
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
 
-/** Connectors from `connectorIds` that expose an auth flow (oauth or credentialForm). */
+/** Connectors from `connectorIds` that can be connected: through oauth, a credentialForm, or with no credential. */
 const offeredConnectors = (
   allConnectors: readonly ConnectorSpec.ConnectorEntry[],
   connectorIds: readonly string[],
@@ -37,7 +37,7 @@ const offeredConnectors = (
     .map((id) => allConnectors.find((connector) => connector.id === id))
     .filter(
       (connector): connector is ConnectorSpec.ConnectorEntry =>
-        !!connector && (!!connector.oauth || !!connector.credentialForm),
+        !!connector && (!!connector.oauth || !!connector.credentialForm || !!connector.noCredential),
     );
 
 /** Existing connections for any of `connectorIds`, offered for reuse (binding a new target to them). */

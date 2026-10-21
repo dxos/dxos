@@ -11,7 +11,6 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
-import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
@@ -30,23 +29,13 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as Select from '@dxos/react-ui/Select';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
-import {
-  getSkillId,
-  useActiveSkills,
-  useContextObjects,
-  useFilteredTypes,
-  useMcpServerSignIn,
-  useMcpServerStatus,
-  useSkillHandlers,
-  useSkills,
-} from '#hooks';
+import { getSkillId, useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
 import { resolveProvider } from '../../chat-model/index.ts';
-import { MCP_PROVIDER_ID } from '../../constants.ts';
 import { agentOptions } from '../../util/agent-options.ts';
 import { ConnectorAuthMenu } from '../ConnectorAuthMenu/index.ts';
 
@@ -447,32 +436,31 @@ const useConnectionStates = (context: AiContext.Binder | undefined): ReadonlyMap
 
 const McpServersPanel = ({ db, context }: McpServersPanelProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
-  const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const connections = useQuery(db, Filter.type(Connection.Connection));
+  // Every connector that declares an MCP server, so Connect offers the built-in servers alongside a custom
+  // one. A connector that takes no credential is offered once: a second connection would add the same tools.
+  const mcpConnectorIds = useMemo(
+    () =>
+      connectors
+        .filter(
+          (connector) =>
+            connector.mcp &&
+            !(connector.noCredential && connections.some(({ connectorId }) => connectorId === connector.id)),
+        )
+        .map((connector) => connector.id),
+    [connectors, connections],
+  );
   const mcpConnections = useMemo(
     () => connections.filter((connection) => ConnectorSpec.mcpEndpoint(connectors, connection)),
     [connectors, connections],
   );
   const connectionStates = useConnectionStates(context);
-  const handleRemove = useCallback(
-    (server: McpServer.McpServer) => {
-      const accessToken = server.accessToken?.peek();
-      db.remove(server);
-      if (accessToken) {
-        db.remove(accessToken);
-      }
-    },
-    [db],
-  );
 
   return (
     <Layout.Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root
-        items={[
-          ...mcpConnections.map((connection) => ({ value: connection.id, label: connection.name ?? connection.id })),
-          ...servers.map((server) => ({ value: server.id, label: server.name ?? server.id })),
-        ]}
+        items={mcpConnections.map((connection) => ({ value: connection.id, label: connection.name ?? connection.id }))}
       >
         <Listbox.Viewport>
           <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
@@ -487,15 +475,11 @@ const McpServersPanel = ({ db, context }: McpServersPanelProps) => {
                 }
               />
             ))}
-            {servers.map((server) => (
-              <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-            ))}
           </Listbox.Content>
         </Listbox.Viewport>
       </Listbox.Root>
-      {/* A new server is a connection; existing `McpServer` objects are listed above until migrated. */}
       <Layout.Flex classNames='p-1'>
-        <ConnectorAuthMenu connectorIds={[MCP_PROVIDER_ID]} db={db} />
+        <ConnectorAuthMenu connectorIds={mcpConnectorIds} db={db} />
       </Layout.Flex>
     </Layout.Flex>
   );
@@ -532,91 +516,6 @@ const McpConnectionRow = ({ connection, endpoint, enabled, onEnabledChange }: Mc
           <span className='truncate text-xs text-fg-muted'>{endpoint?.url}</span>
         </Layout.Flex>
       </Layout.Flex>
-    </Listbox.Item>
-  );
-};
-
-type McpServerRowProps = {
-  server: McpServer.McpServer;
-  onRemove: (server: McpServer.McpServer) => void;
-};
-
-/**
- * `useQuery` returns live objects but only re-renders on result-identity changes,
- * so we must subscribe to the per-server `enabled`/`oauth`/`name`/`url` fields via `useObject`
- * to keep the row in sync with mutations made through the returned setters (or elsewhere).
- */
-const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const [enabled, setEnabled] = useObject(server, 'enabled');
-  // Subscribed so the status re-checks once a sign-in stores tokens.
-  useObject(server, 'oauth');
-  const [name] = useObject(server, 'name');
-  const [url] = useObject(server, 'url');
-  const [revision, setRevision] = useState(0);
-  const status = useMcpServerStatus(server, { enabled: enabled !== false, revision });
-  const { signIn, pending, error } = useMcpServerSignIn(server);
-  const handleSignIn = useCallback(() => {
-    void signIn().then(() => setRevision((revision) => revision + 1));
-  }, [signIn]);
-
-  const statusLabel =
-    status.state === 'connected'
-      ? t('mcp-server-status.connected', { count: status.tools.length })
-      : status.state === 'error'
-        ? status.message
-        : t(`mcp-server-status.${status.state}`);
-
-  return (
-    <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
-      <Layout.Flex align='center' gap='sm'>
-        <Field.Root>
-          <Field.Label srOnly>{name}</Field.Label>
-          <Input.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
-        </Field.Root>
-        <Layout.Flex column grow classNames='min-w-0'>
-          <span className='truncate text-sm'>{name}</span>
-          <span className='truncate text-xs text-fg-muted'>{url}</span>
-        </Layout.Flex>
-        {status.state === 'unauthorized' && (
-          <Button.Root
-            variant='primary'
-            icon='ph--sign-in--regular'
-            label={t('mcp-server-sign-in.label')}
-            disabled={pending}
-            onClick={handleSignIn}
-            data-testid='assistant.mcp-server.sign-in'
-          />
-        )}
-        {(status.state === 'error' || status.state === 'unauthorized') && (
-          <Button.Root
-            variant='ghost'
-            icon='ph--arrow-clockwise--regular'
-            iconOnly
-            label={t('mcp-server-retry.label')}
-            onClick={() => setRevision((revision) => revision + 1)}
-          />
-        )}
-        <Button.Root
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('mcp-server-remove.label')}
-          onClick={() => onRemove(server)}
-        />
-      </Layout.Flex>
-      <span
-        className={mx(
-          'text-xs truncate',
-          status.state === 'connected' && 'text-success-text',
-          (status.state === 'error' || status.state === 'unauthorized' || error) && 'text-error-text',
-        )}
-        title={error ?? statusLabel}
-        data-testid='assistant.mcp-server.status'
-        data-state={status.state}
-      >
-        {error ?? statusLabel}
-      </span>
     </Listbox.Item>
   );
 };

@@ -48,9 +48,10 @@ export type RunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 
   /**
-   * Space-level MCP servers to connect alongside skill-defined ones.
+   * The MCP servers to connect, read at the start of every iteration so a server added during the
+   * request connects on the model's next turn.
    */
-  mcpServers?: readonly McpToolkit.Options[];
+  mcpServers?: Effect.Effect<readonly McpToolkit.Options[]>;
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -293,7 +294,7 @@ export class Session extends Resource {
         yield* Effect.promise(() => this.context.sync());
         markWork('session.context-synced');
         const currentSkills = this.context.getSkills();
-        const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
+        const mcps = yield* connectMcpServers(params.mcpServers ? yield* params.mcpServers : []);
         yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
@@ -357,22 +358,15 @@ export class Session extends Resource {
 }
 
 const connectMcpServers = (
-  skills: readonly Skill.Skill[],
-  spaceServers: readonly McpToolkit.Options[] = [],
+  servers: readonly McpToolkit.Options[],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
-  const skillServers: McpToolkit.Options[] = pipe(
-    skills,
-    Array.flatMap((_) => _.mcpServers ?? []),
-    Array.map(({ url, protocol, apiKey }) => ({ url, protocol, apiKey })),
-  );
-  const allServers = [...skillServers, ...spaceServers];
-  if (allServers.length === 0) {
+  if (servers.length === 0) {
     // Naming a phase that has nothing to do would misreport where the wait actually is.
     return Effect.succeed([]);
   }
 
   const connect = pipe(
-    allServers,
+    servers,
     Effect.forEach((options) =>
       McpToolkit.make(options).pipe(
         // NOTE: Type-inference fails here without explicit void return.
@@ -425,7 +419,7 @@ const connectMcpServers = (
 
   return Effect.gen(function* () {
     // Reported before the connections are opened, since opening them is the wait being reported.
-    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(servers.length) });
     return yield* connect;
   });
 };
