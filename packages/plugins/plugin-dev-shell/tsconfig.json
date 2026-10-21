@@ -54,6 +54,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../plugin-claude"
+    },
+    {
       "path": "../plugin-projects"
     }
   ]

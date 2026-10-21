@@ -11,23 +11,26 @@ import { log } from '@dxos/log';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
+import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CodeCapabilities } from '#types';
+import { ClaudeCapabilities } from '#types';
 
 export type ProjectFolderProps = { project: Project.Project };
 
 /**
  * The project's repository folder on this device, which coding agents work in. Kept in this plugin's
  * local state rather than on the project or in its settings, both of which sync: a path means nothing on
- * another device.
+ * another device. Shown only where an agent host exists; a page without the desktop app's picker takes a typed path.
  */
 export const ProjectFolder = ({ project }: ProjectFolderProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
-  const stateAtom = Hooks.useCapability(CodeCapabilities.State);
-  const folder = Hooks.useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
+  const stateAtom = Hooks.useCapability(ClaudeCapabilities.State);
+  const folder = Hooks.useAtomCapability(ClaudeCapabilities.State).repositories?.[project.id];
+  const hosts = Hooks.useCapabilities(ClaudeCapabilities.AgentHelper);
 
   const setFolder = useCallback(
     (folder: string | undefined) =>
@@ -49,13 +52,33 @@ export const ProjectFolder = ({ project }: ProjectFolderProps) => {
       .catch((error) => log.warn('folder picker failed', { error }));
   }, [folder, setFolder]);
 
+  if (hosts.length === 0) {
+    return null;
+  }
+
   return (
     <Form.FieldSet label={t('project-folder.label')} description={t('project-folder.description')}>
       <Layout.Flex align='center' gap='sm' data-testid='codePlugin.projectFolder'>
-        <span className='grow min-w-0 truncate font-mono text-sm' title={folder}>
-          {folder ?? t('project-folder.empty.label')}
-        </span>
-        <Button.Root onClick={handleChoose}>{t('project-folder.choose.label')}</Button.Root>
+        {isTauri() ? (
+          <>
+            <span className='grow min-w-0 truncate font-mono text-sm' title={folder}>
+              {folder ?? t('project-folder.empty.label')}
+            </span>
+            <Button.Root onClick={handleChoose}>{t('project-folder.choose.label')}</Button.Root>
+          </>
+        ) : (
+          <Input.Root
+            // Keyed by the folder, so a cleared or replaced value resets the uncontrolled field.
+            key={folder ?? ''}
+            defaultValue={folder}
+            placeholder={t('project-folder.path.placeholder')}
+            aria-label={t('project-folder.label')}
+            classNames='grow min-w-0 font-mono'
+            data-testid='codePlugin.projectFolder.path'
+            onBlur={(event) => setFolder(event.currentTarget.value.trim() || undefined)}
+            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+          />
+        )}
         {folder && (
           <Button.Root variant='ghost' onClick={() => setFolder(undefined)}>
             {t('project-folder.clear.label')}

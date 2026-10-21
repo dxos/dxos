@@ -12,6 +12,9 @@ import { DevShellError } from './errors.ts';
  */
 export const PATH = '/api/dev-shell/exec';
 
+/** Route that starts the dev server's coding-agent host and reports where it listens (`{ port, token }`). */
+export const AGENT_HOST_PATH = '/api/dev-shell/agent-host';
+
 /**
  * Env var naming the directory the middleware materializes its prebaked scripts into. Exported as a
  * name rather than a path because the value is decided by the host at mount time, and the script is

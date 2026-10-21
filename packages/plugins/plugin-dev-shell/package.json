@@ -105,6 +105,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-claude": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

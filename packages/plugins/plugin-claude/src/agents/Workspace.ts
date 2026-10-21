@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { AGENT_KEY_PREFIX } from '../constants.ts';
 
 const SEPARATOR = '_';
 const MAX_SLUG = 40;
@@ -34,7 +34,7 @@ export const parseWorktreeKey = (key: string): { spaceId: SpaceId; chatId: strin
 };
 
 /** Foreign-key source under which a chat records the branch its worktree is on. */
-const BRANCH_KEY = `${meta.profile.key}.git-branch`;
+const BRANCH_KEY = `${AGENT_KEY_PREFIX}.git-branch`;
 
 /**
  * The branch a delegated chat works on: the one it recorded, else a new name readable from the chat's

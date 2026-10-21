@@ -138,7 +138,7 @@ export const isLoopback = (address: string | undefined): boolean =>
   address !== undefined && (address === '::1' || /^127\./.test(address) || /^::ffff:127\./.test(address));
 
 /** An opaque origin — `null`, from a sandboxed frame — has no host, so it can never match. */
-const hostOf = (origin: string): string | undefined => {
+export const hostOf = (origin: string): string | undefined => {
   try {
     return new URL(origin).host;
   } catch {
@@ -156,12 +156,12 @@ const hostOf = (origin: string): string | undefined => {
 const clampTimeout = (requested: number | undefined, fallback: number, max: number): number =>
   typeof requested === 'number' && Number.isFinite(requested) && requested > 0 ? Math.min(requested, max) : fallback;
 
-const fail = (res: ServerResponse, status: number, error: string): void => {
+export const fail = (res: ServerResponse, status: number, error: string): void => {
   res.writeHead(status, { 'content-type': 'application/json' });
   res.end(JSON.stringify({ error }));
 };
 
-const readBody = (req: IncomingMessage): Promise<string> =>
+export const readBody = (req: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
     // Chunks are concatenated as bytes and decoded once: appending them as strings decodes each
     // independently, so a multi-byte character split across two packets arrives as replacement

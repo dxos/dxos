@@ -25,7 +25,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { isTauri } from '@dxos/util';
 
 import { AgentError } from '../errors.ts';
-import * as CodeCapabilities from '../types/CodeCapabilities.ts';
+import * as ClaudeCapabilities from '../types/ClaudeCapabilities.ts';
 import * as Settings from '../types/Settings.ts';
 import * as State from '../types/State.ts';
 import * as AcpAgent from './AcpAgent.ts';
@@ -35,6 +35,9 @@ import * as Workspace from './Workspace.ts';
 
 /** How long to wait for the agent helper to appear before reporting the agent unavailable. */
 const HELPER_WAIT = { attempts: 30, interval: '1 second' } as const;
+
+/** Why an agent is unavailable where nothing can start it: a deployed web app. */
+const NO_HOST = 'needs the Composer desktop app or a dev server';
 
 /** How often finished delegations' worktrees are looked for. */
 const SWEEP_INTERVAL = Duration.minutes(10);
@@ -77,41 +80,39 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
   Effect.gen(function* () {
     const manager = yield* Capability.Service;
     const sessions = yield* AcpAgent.Sessions.make();
+    const helper = () => manager.getAll(ClaudeCapabilities.AgentHelper).at(0);
     // Kept alive: the probe sets it once, possibly while nothing is subscribed to it.
     const availability = Atom.make<AssistantCapabilities.AgentAvailability>(
-      isTauri()
+      isTauri() || helper()
         ? { available: false, reason: 'looking for it on this computer' }
-        : { available: false, reason: 'needs the Composer desktop app' },
+        : { available: false, reason: NO_HOST },
     ).pipe(Atom.keepAlive);
-
-    const helper = () => manager.getAll(CodeCapabilities.AgentHelper).at(0);
     const settings = (): Settings.Settings | undefined => {
-      const [atom] = manager.getAll(CodeCapabilities.Settings);
+      const [atom] = manager.getAll(ClaudeCapabilities.Settings);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
       return atom && registry ? registry.get(atom) : undefined;
     };
     const state = (): State.State | undefined => {
-      const [atom] = manager.getAll(CodeCapabilities.State);
+      const [atom] = manager.getAll(ClaudeCapabilities.State);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
       return atom && registry ? registry.get(atom) : undefined;
     };
 
-    if (isTauri()) {
-      yield* probe(definition.id, helper, (value) =>
-        manager.getAll(Capabilities.AtomRegistry).at(0)?.set(availability, value),
-      ).pipe(Effect.forkScoped);
-      yield* sweepWorktrees({
-        agent: definition.id,
-        sessions,
-        helper,
-        client: () => manager.getAll(ClientCapabilities.Client).at(0),
-      }).pipe(Effect.repeat(Schedule.spaced(SWEEP_INTERVAL)), Effect.forkScoped);
-    }
+    // An agent host is the desktop app's sidecar or a dev server's route, which may register after this.
+    yield* probe(definition.id, helper, (value) =>
+      manager.getAll(Capabilities.AtomRegistry).at(0)?.set(availability, value),
+    ).pipe(Effect.forkScoped);
+    yield* sweepWorktrees({
+      agent: definition.id,
+      sessions,
+      helper,
+      client: () => manager.getAll(ClientCapabilities.Client).at(0),
+    }).pipe(Effect.repeat(Schedule.spaced(SWEEP_INTERVAL)), Effect.forkScoped);
 
     // One MCP server per chat, scoped to the chat's space, built on first use and kept while the app runs.
     const served = new Map<
       string,
-      { server: string; handle: CodeCapabilities.McpHandle; dispose: () => Promise<void> }
+      { server: string; handle: ClaudeCapabilities.McpHandle; dispose: () => Promise<void> }
     >();
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
@@ -177,7 +178,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
         const current = helper();
         return current
           ? current.connect(definition.id, cwd, toolsToken)
-          : Effect.fail(new AgentError({ message: `${definition.label} needs the Composer desktop app.` }));
+          : Effect.fail(new AgentError({ message: `${definition.label} ${NO_HOST}.` }));
       },
       workspace: (chat) =>
         Effect.gen(function* () {
@@ -261,7 +262,7 @@ const sweepWorktrees = ({
 }: {
   agent: string;
   sessions: AcpAgent.Sessions;
-  helper: () => CodeCapabilities.AgentHelper | undefined;
+  helper: () => ClaudeCapabilities.AgentHelper | undefined;
   client: () => Client | undefined;
 }): Effect.Effect<void> =>
   Effect.gen(function* () {
@@ -288,7 +289,7 @@ const sweepOne = ({
   key: string;
   agent: string;
   sessions: AcpAgent.Sessions;
-  agentHelper: CodeCapabilities.AgentHelper;
+  agentHelper: ClaudeCapabilities.AgentHelper;
   spaces: Client['spaces'];
 }): Effect.Effect<void, unknown> =>
   Effect.gen(function* () {
@@ -320,7 +321,7 @@ const isAbsolutePath = (path: string): boolean => path.startsWith('/') || /^[A-Z
 /** Asks the helper whether the agent's tool is installed, waiting for the helper to start first. */
 const probe = (
   id: string,
-  helper: () => CodeCapabilities.AgentHelper | undefined,
+  helper: () => ClaudeCapabilities.AgentHelper | undefined,
   set: (value: AssistantCapabilities.AgentAvailability) => void,
 ): Effect.Effect<void> =>
   Effect.gen(function* () {
@@ -338,7 +339,7 @@ const probe = (
                 const status = statuses.find((status) => status.id === id);
                 return status?.available
                   ? { available: true }
-                  : { available: false, reason: status?.reason ?? 'not included in this desktop app' };
+                  : { available: false, reason: status?.reason ?? 'not included in this agent host' };
               },
             }),
           ),
@@ -347,5 +348,5 @@ const probe = (
       }
       yield* Effect.sleep(HELPER_WAIT.interval);
     }
-    set({ available: false, reason: 'the agent helper did not start' });
+    set({ available: false, reason: isTauri() ? 'the agent helper did not start' : NO_HOST });
   });

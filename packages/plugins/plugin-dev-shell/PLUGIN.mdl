@@ -219,3 +219,13 @@ decision D-1: The plugin is `@dxos/plugin-dev-shell` (`org.dxos.plugin.devShell`
   rejected:
     - Keeping the old `org.dxos.operation.computer.*` keys: the plugin is private and dev-only, so no deployed space holds a reference to them.
 ```
+
+```mdl
+decision D-2: The dev server also hosts plugin-claude's coding agents: a `/api/dev-shell/agent-host` route starts plugin-claude's agent server in the Vite process and hands its port and token to the page, which contributes an `AgentHelper` over it. Builds on [D-1].
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [DevShellVitePlugin]
+  why: Claude Code on this computer should work in Composer served from a dev server, not only in the desktop app.
+  rejected:
+    - Injecting the agent server from composer-app's vite config so dev-shell need not depend on plugin-claude: the runtime is Claude-specific and dev-shell is dev-only.
+```

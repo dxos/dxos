@@ -4,10 +4,11 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { OperationHandler, PluginAsset, ProjectTemplates, SkillDefinition } from '#capabilities';
+import { AgentHost, OperationHandler, PluginAsset, ProjectTemplates, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 
 export const DevShellPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AgentHost),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(OperationHandler),

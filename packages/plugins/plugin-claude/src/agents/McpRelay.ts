@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import type * as CodeCapabilities from '../types/CodeCapabilities.ts';
+import type * as ClaudeCapabilities from '../types/ClaudeCapabilities.ts';
 import * as Protocol from './Protocol.ts';
 
 /**
@@ -18,7 +18,7 @@ import * as Protocol from './Protocol.ts';
  */
 export class Relay {
   /** Server id to its handler and the token an agent presents for it. */
-  readonly #handles = new Map<string, { handle: CodeCapabilities.McpHandle; token: string }>();
+  readonly #handles = new Map<string, { handle: ClaudeCapabilities.McpHandle; token: string }>();
   /** Callers waiting for the helper to confirm a registration change, by server, in the order they asked. */
   readonly #acks = new Map<string, ((registered: boolean) => void)[]>();
   #socket: Promise<WebSocket> | undefined;
@@ -29,7 +29,7 @@ export class Relay {
    * Serves `handle` as `server` to an agent presenting `token`, connecting first if need be. Resolves once the helper
    * has the registration, so an agent given the server's URL can reach it straight away.
    */
-  async serve(server: string, handle: CodeCapabilities.McpHandle, token: string): Promise<void> {
+  async serve(server: string, handle: ClaudeCapabilities.McpHandle, token: string): Promise<void> {
     this.#handles.set(server, { handle, token });
     const socket = await (this.#socket ??= this.#connect().catch((error) => {
       this.#socket = undefined;
@@ -111,7 +111,7 @@ const send = (socket: WebSocket, frame: Protocol.McpHostFrame): void => socket.s
 /** Runs one relayed request through the handler serving it; a server nobody serves any more is gone. */
 const answer = async (
   frame: Protocol.McpRequestFrame,
-  handle: CodeCapabilities.McpHandle | undefined,
+  handle: ClaudeCapabilities.McpHandle | undefined,
 ): Promise<Protocol.McpHostFrame> => {
   if (!handle) {
     return { _tag: 'response', id: frame.id, status: 404, headers: [], body: '' };

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import React from 'react';
@@ -15,8 +16,9 @@ import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { CodeCapabilities, type State } from '#types';
+import { ClaudeCapabilities, type State } from '#types';
 
+import { AgentError } from '../../errors.ts';
 import { ProjectFolder } from './ProjectFolder.tsx';
 
 const FOLDER = '/Users/me/code/voyage';
@@ -24,8 +26,17 @@ const FOLDER = '/Users/me/code/voyage';
 const project = Project.make({ name: 'Voyage' });
 const state = Atom.make<State.State>({ repositories: { [project.id]: FOLDER } }).pipe(Atom.keepAlive);
 
+/** The folder is offered only where an agent host exists; this one is never asked to start anything. */
+const unused = Effect.fail(new AgentError({ message: 'not available in a story' }));
+const agentHelper: ClaudeCapabilities.AgentHelper = {
+  agents: Effect.succeed([]),
+  connect: () => unused,
+  worktrees: { ensure: () => unused, remove: () => unused, list: Effect.succeed([]) },
+  mcp: { serve: () => unused, close: () => Effect.void },
+};
+
 const meta = {
-  title: 'plugins/plugin-code/containers/ProjectFolder',
+  title: 'plugins/plugin-claude/containers/ProjectFolder',
   // The project overview renders its settings inside its own form, as here.
   render: () => (
     <Form.Root schema={Schema.Struct({})} values={{}}>
@@ -37,7 +48,12 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
-    withPluginManager({ capabilities: [Capability.contribute(CodeCapabilities.State, state)] }),
+    withPluginManager({
+      capabilities: [
+        Capability.contribute(ClaudeCapabilities.State, state),
+        Capability.contribute(ClaudeCapabilities.AgentHelper, agentHelper),
+      ],
+    }),
   ],
   parameters: {
     translations,
@@ -51,12 +67,13 @@ type Story = StoryObj;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText(FOLDER)).toBeInTheDocument();
-    await expect(canvas.getByText('Choose folder…')).toBeInTheDocument();
+    // Outside the desktop app there is no folder picker, so the path is typed.
+    const field = await canvas.findByTestId('codePlugin.projectFolder.path');
+    await expect(field).toHaveValue(FOLDER);
 
     // Clearing forgets the folder for this project only, leaving the choice to be made again.
     await userEvent.click(canvas.getByText('Clear'));
-    await waitFor(async () => expect(canvas.getByText('Not set')).toBeInTheDocument());
+    await waitFor(async () => expect(canvas.getByTestId('codePlugin.projectFolder.path')).toHaveValue(''));
     await expect(canvas.queryByText('Clear')).toBeNull();
   },
 };

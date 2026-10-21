@@ -19,8 +19,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { AGENT_KEY_PREFIX } from '../constants.ts';
 import { AgentError } from '../errors.ts';
 import * as AcpSession from './AcpSession.ts';
 import * as Projection from './Projection.ts';
@@ -35,7 +34,7 @@ export const TOOLS_TOKEN_ENV = Protocol.MCP_TOKEN_ENV;
 export const IDLE_TIMEOUT = Duration.minutes(30);
 
 /** Foreign-key source under which a chat records an agent's own session id. */
-export const sessionKeySource = (agent: string): string => `${meta.profile.key}.acp-session.${agent}`;
+export const sessionKeySource = (agent: string): string => `${AGENT_KEY_PREFIX}.acp-session.${agent}`;
 
 /** The agent's session id recorded on the chat, to continue it after a restart. */
 export const sessionIdOf = (chat: Chat.Chat, agent: string): string | undefined =>
