@@ -17,7 +17,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -37,7 +37,7 @@ import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork, defaultMap } from '@dxos/util';
@@ -62,6 +62,7 @@ import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
+import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
@@ -123,6 +124,9 @@ export type EchoHostProps = {
 
   /** Overrides the bounds on one index write transaction; see {@link IndexTransactionLimits}. */
   indexTransactionLimits?: Partial<IndexTransactionLimits>;
+
+  /** Overrides how often index progress is counted, once a second by default. */
+  indexRecountInterval?: number;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -195,12 +199,17 @@ export class EchoHost extends Resource {
 
   private readonly _indexScheduler: IndexScheduler;
 
+  /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
+  readonly indexStatus: IndexStatusTracker;
+
   private _feedService: FeedService.Handlers;
 
   readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
+
+  readonly #secondaryIndexLock = new Mutex();
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
   #ftsFlushDeadline: number | undefined;
@@ -231,11 +240,13 @@ export class EchoHost extends Resource {
     queryExecutor,
     queryDebounce,
     indexTransactionLimits,
+    indexRecountInterval,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
     super();
     this.#indexTransactionLimits = indexTransactionLimits;
+    this.indexStatus = new IndexStatusTracker({ recountInterval: indexRecountInterval });
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -295,7 +306,8 @@ export class EchoHost extends Resource {
         invariant(this._sql, 'EchoHost is not open.');
         return this._sql;
       },
-      hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      hasCompleteSnapshots: (scope) =>
+        RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots(scope)),
       holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
     });
 
@@ -306,6 +318,7 @@ export class EchoHost extends Resource {
       // cooperative loop apply uniformly to the RPC handler path.
       updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
+      indexStatus: this.indexStatus,
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
 
@@ -405,8 +418,16 @@ export class EchoHost extends Resource {
       yieldBetweenTransactions: yieldBehindQueuedTasks,
     });
 
-    log('echo-host: running index engine migration...');
-    await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
+    const pendingMigrations = await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.pendingMigrations());
+    log('echo-host: running index engine migration...', { pending: pendingMigrations });
+    if (pendingMigrations > 0) {
+      this.indexStatus.setMigrating(0, pendingMigrations);
+    }
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.migrate({
+        onProgress: (applied) => this.indexStatus.setMigrating(applied, pendingMigrations),
+      }),
+    );
     log('echo-host: index engine migration done');
 
     log('echo-host: running feed store migration...');
@@ -426,6 +447,14 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
+
+    const pin = await RuntimeProvider.runPromise(this._runtime)(readFeedPin()).catch((err) => {
+      log.warn('index feed pin read failed', { err });
+      return FeedProtocol.FEED_START;
+    });
+    await this.indexStatus.opened(() =>
+      RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
+    );
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const previous = this._spaceDocumentIds.get(e.spaceId);
       this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
@@ -530,33 +559,47 @@ export class EchoHost extends Resource {
 
   /**
    * Indexes the secondary-index backlog to completion, which the debounced flush otherwise gets to
-   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}).
+   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}). Runs one at a time: a call
+   * made during a run waits for it, then runs on its own to cover what the run may have missed.
    *
    * @returns Number of records indexed.
    */
   async updateSecondaryIndexes(): Promise<number> {
+    return this.#secondaryIndexLock.executeSynchronized(() => this.#indexSecondary());
+  }
+
+  async #indexSecondary(): Promise<number> {
     const ctx = this._ctx;
     const startedAt = performance.now();
     let records = 0;
     let batches = 0;
     let hint: InvalidationHint | undefined;
-    while (!ctx.disposed && this.isOpen) {
-      if (batches > 0) {
-        await yieldBehindQueuedTasks();
-        if (ctx.disposed) {
+    try {
+      while (!ctx.disposed && this.isOpen) {
+        if (batches > 0) {
+          await yieldBehindQueuedTasks();
+          if (ctx.disposed) {
+            break;
+          }
+        }
+        const result = await this.indexEngine
+          .updateSecondaryIndexes(ctx)
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        records += result.updated;
+        batches++;
+        const batch = hintFromIndexingResult(result);
+        if (batch) {
+          hint = hint ? mergeHints(hint, batch) : batch;
+        }
+        if (result.done || ctx.disposed || !this.isOpen) {
           break;
         }
+        await this.indexStatus.afterFullTextBatch(() =>
+          this.indexEngine.countSecondaryBacklog().pipe(RuntimeProvider.runPromise(this._runtime)),
+        );
       }
-      const result = await this.indexEngine.updateSecondaryIndexes(ctx).pipe(RuntimeProvider.runPromise(this._runtime));
-      records += result.updated;
-      batches++;
-      const batch = hintFromIndexingResult(result);
-      if (batch) {
-        hint = hint ? mergeHints(hint, batch) : batch;
-      }
-      if (result.done) {
-        break;
-      }
+    } finally {
+      this.indexStatus.fullTextEnded();
     }
 
     // A text query issued before this catch-up matched nothing and would never re-run on its own:
@@ -790,6 +833,21 @@ export class EchoHost extends Resource {
 
   async closeSpace(spaceId: SpaceId): Promise<void> {
     todo();
+  }
+
+  /**
+   * Runs `wipe`, which deletes this host's rows while it stays open, with indexing stopped and the feed
+   * store's caches dropped after it: either would otherwise write cursors under tokens the wipe deleted.
+   */
+  async wipeStorage(wipe: () => Promise<void>): Promise<void> {
+    // Closing drains the pass under way.
+    await this._indexScheduler.close();
+    try {
+      await wipe();
+    } finally {
+      this._feedStore.resetCaches();
+      await this._indexScheduler.open(this._ctx);
+    }
   }
 
   async removeSpace(spaceId: SpaceId): Promise<void> {
@@ -1576,11 +1634,12 @@ export class EchoHost extends Resource {
 
     try {
       const combinedResult = _makeEmptyMergedResult();
+      const countCatchUp = this.indexStatus.beginPass();
 
       {
         performance.mark('indexEngine.update.automerge:start');
         const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
 
@@ -1689,6 +1748,10 @@ export class EchoHost extends Resource {
         this._queryService.invalidateQueries(hint);
       }
 
+      if (!this._ctx.disposed && this.isOpen) {
+        await this.indexStatus.afterPass(combinedResult);
+      }
+
       return {
         updated: combinedResult.updated,
         done: combinedResult.done,
@@ -1701,7 +1764,6 @@ export class EchoHost extends Resource {
       if (this._ctx.disposed || !this.isOpen) {
         return undefined;
       }
-      log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
       throw err;
@@ -1725,6 +1787,7 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   drained: boolean;
+  catchUp?: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1747,6 +1810,9 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
   acc.drained = acc.drained && r.drained;
+  if (r.catchUp !== undefined) {
+    acc.catchUp = (acc.catchUp ?? 0) + r.catchUp;
+  }
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }

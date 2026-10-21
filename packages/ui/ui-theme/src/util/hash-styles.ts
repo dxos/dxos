@@ -173,9 +173,7 @@ export const palette = {
   hues: styles,
 };
 
-const validHues: ReadonlySet<string> = new Set<string>([neutral.hue, ...styles.map((s) => s.hue)]);
-
-const isHue = (hue: string | undefined): hue is Hue => hue !== undefined && validHues.has(hue);
+const validHues: ReadonlySet<Hue> = new Set<Hue>([neutral.hue, ...styles.map((s) => s.hue)]);
 
 /**
  * Normalise an arbitrary string into a known `Hue`, falling back to `'neutral'` when the
@@ -183,7 +181,7 @@ const isHue = (hue: string | undefined): hue is Hue => hue !== undefined && vali
  * values from user-authored data (e.g. ECHO objects, plugin settings) that need to be
  * forwarded to a hue-keyed prop like `Tag`'s `palette`.
  */
-export const toHue = (hue: string | undefined): Hue => (isHue(hue) ? hue : 'neutral');
+export const toHue = (hue: string | undefined): Hue => (hue && validHues.has(hue as Hue) ? (hue as Hue) : 'neutral');
 
 // TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {
@@ -198,12 +196,5 @@ export const getHashStyles = (id: string | undefined): ColorStyles => {
 export const getHashHue = (id: string | undefined): Hue => {
   return id ? styles[getHash(id) % styles.length].hue : 'neutral';
 };
-
-/**
- * The object's own hue when it is one of the palette's, otherwise the hue hashed from its id, so every place that
- * shows an object without a colour of its own shows the same one.
- */
-export const getHueOrHash = (hue: string | undefined, id: string | undefined): Hue =>
-  isHue(hue) ? hue : getHashHue(id);
 
 const getHash = (id: string): number => id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

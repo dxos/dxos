@@ -10,11 +10,11 @@ import {
   GeneratorHost,
   type GeneratorSource,
 } from '../generator/index.ts';
-import { type Scene, isGeneratorNode } from '../model/index.ts';
+import { type View, isGeneratorNode } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
   /** The scene as stored: the worker samples it per step. */
-  scene: Scene;
+  scene: View;
   /** The clock's time. */
   time: number;
   sources: Readonly<Record<string, GeneratorSource>>;

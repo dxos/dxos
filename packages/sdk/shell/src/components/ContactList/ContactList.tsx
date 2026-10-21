@@ -16,7 +16,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Util from '@dxos/react-ui/Util';
-import { getHueOrHash } from '@dxos/ui-theme';
+import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -38,8 +38,7 @@ export const filterContacts = (contacts: Contact[], filter: string): Contact[] =
   );
 };
 
-/** A space contacts can share; `hue` is the space's own colour, if it has one. */
-export type ContactSpace = { id: string; key: PublicKey; name?: string; hue?: string };
+export type ContactSpace = { id: string; key: PublicKey; name?: string };
 
 export type ContactListProps = Util.ThemedClassName<{
   contacts: Contact[];
@@ -119,7 +118,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
             <Button.Root
               key={space.id}
               size='sm'
-              hue={getHueOrHash(space.hue, space.id)}
+              hue={getHashStyles(space.id).hue}
               onClick={() => onSelectSpace?.(space)}
               data-testid='contact-list.space'
             >

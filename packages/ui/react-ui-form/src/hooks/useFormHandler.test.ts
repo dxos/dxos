@@ -85,6 +85,56 @@ describe('useFormHandler reactive buffering', () => {
   });
 });
 
+describe('useFormHandler array items', () => {
+  const Item = Schema.Struct({ name: Schema.String, status: Schema.Literals(['planned', 'done']) });
+  const listSchema = Schema.Struct({ items: Schema.optional(Schema.Array(Item)) });
+  type List = Schema.Schema.Type<typeof listSchema>;
+  const arrayAst = Schema.Array(Item).ast;
+
+  test('a second added item does not resurrect the first one as it was added', ({ expect }) => {
+    // The parent persists each valid change, as an article bound to an ECHO object does.
+    let saved: Partial<List> = { items: [] };
+    const { result, rerender } = renderHook(
+      ({ values }) =>
+        useFormHandler<List>({
+          schema: listSchema,
+          values,
+          onValuesChanged: (next, { isValid }) => {
+            if (isValid) {
+              saved = next;
+            }
+          },
+        }),
+      { initialProps: { values: saved } },
+    );
+
+    // As `ArrayField` does: append a blank item to the list it reads, then edit the item's own fields.
+    const addItem = (name: string, status: 'planned' | 'done') => {
+      const index = result.current.getValue<unknown[]>(['items'])?.length ?? 0;
+      act(() =>
+        result.current.onValueChange(['items'], arrayAst, [
+          ...(result.current.getValue<unknown[]>(['items']) ?? []),
+          { name: undefined, status: undefined },
+        ]),
+      );
+      act(() => result.current.onValueChange(['items', index, 'name'], stringAst, name));
+      act(() => result.current.onValueChange(['items', index, 'status'], stringAst, status));
+      act(() => rerender({ values: saved }));
+    };
+
+    addItem('first', 'planned');
+    expect(saved.items).toEqual([{ name: 'first', status: 'planned' }]);
+
+    addItem('second', 'done');
+    expect(result.current.isValid).toBe(true);
+    expect(saved.items).toEqual([
+      { name: 'first', status: 'planned' },
+      { name: 'second', status: 'done' },
+    ]);
+    expect(result.current.getValue(['items', 0, 'status'])).toBe('planned');
+  });
+});
+
 describe('useFormHandler field overrides', () => {
   test('an indeterminate path reads as unset until it is edited', ({ expect }) => {
     const fieldOverrides = { city: { indeterminate: true }, name: { label: 'Display name' } };

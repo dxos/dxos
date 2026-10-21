@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import { type DataFlowSpec, createDataFlowScene, layoutDataFlow, partitionHub } from './layout.ts';
+import { type DataFlowSpec, createDataFlowView, layoutDataFlow, partitionHub } from './layout.ts';
 import {
   createRandom,
   generateMolecule,
@@ -65,7 +65,7 @@ describe('layout', () => {
     invariant(sink && sinkGrid);
     expect(sink.frame.y).toBeGreaterThan(layout.hub.frame.y + layout.hub.frame.height);
     expect(sinkGrid.bounds.width).toBeLessThan(layout.hubGrid.bounds.width);
-    const scene = createDataFlowScene(layout);
+    const scene = createDataFlowView(layout);
     expect(Object.keys(scene.nodes)).toHaveLength(6);
   });
 });

@@ -122,7 +122,6 @@ const useAdministeredAgents = (): AdministeredAgents => {
       id: space.id,
       key: space.key,
       name: space.isOpen ? space.properties.name : undefined,
-      hue: space.isOpen ? space.properties.hue : undefined,
     }));
     return { agents, spaces };
   }, [client, revision]);

@@ -14,6 +14,9 @@ export const translations = [
         'variant.label': 'Canvas',
         'lock-drawing.label': 'Read only',
         'unlock-drawing.label': 'Edit drawing',
+        'newer-format.title': 'Read only',
+        'newer-format.message':
+          'A newer version of the Canvas plugin saved this drawing. Update the plugin to edit it.',
       },
     },
   },

@@ -3,7 +3,7 @@
 //
 
 //
-// The timeline (ANIMATION.md §5): keys on node and camera properties, and `sampleScene`, the one place time meets the
+// The timeline (ANIMATION.md §5): keys on node and camera properties, and `sampleView`, the one place time meets the
 // model. Everything here is pure, so the surface, hit testing, export and a generator's worker sample the same scene
 // for the same time.
 //
@@ -19,9 +19,9 @@ import {
   type Easing,
   type Keyframe,
   type Node,
-  type Scene,
   type Timeline,
   type Track,
+  type View,
 } from './types.ts';
 
 /** Frames per second of a timeline that names none. */
@@ -234,6 +234,32 @@ export const removeKey = (timeline: Timeline, target: string, property: string, 
   return { ...timeline, tracks: keys.length > 0 ? { ...tracks, [id]: { ...track, keys } } : tracks };
 };
 
+/**
+ * The timeline with the keys of `targets` within `tolerance` of `from` moved to `to`, each keeping its value and easing
+ * and replacing a key already at `to`; the same timeline when nothing moves.
+ */
+export const moveKeys = (
+  timeline: Timeline,
+  targets: ReadonlySet<string>,
+  from: number,
+  to: number,
+  tolerance = KEY_EPSILON,
+): Timeline => {
+  let next = timeline;
+  for (const track of Object.values(timeline.tracks)) {
+    if (!targets.has(track.target)) {
+      continue;
+    }
+    for (const key of track.keys.filter((key) => Math.abs(key.t - from) <= tolerance)) {
+      next = setKey(removeKey(next, track.target, track.property, key.t), track.target, track.property, {
+        ...key,
+        t: to,
+      });
+    }
+  }
+  return next;
+};
+
 /** The timeline without the tracks of `targets` (deleted nodes), or the same timeline when it has none. */
 export const removeTargets = (timeline: Timeline, targets: ReadonlySet<string>): Timeline => {
   const entries = Object.entries(timeline.tracks);
@@ -325,6 +351,7 @@ const animatableKind = (ast: SchemaAST.AST): AnimatableKind | undefined => {
 export const BASE_ANIMATABLE: Readonly<Record<string, AnimatableKind>> = {
   center: 'point',
   size: 'size',
+  rotation: 'number',
   [OPACITY_PATH]: 'number',
 };
 
@@ -340,13 +367,13 @@ const sampleNode = (node: Node, tracks: readonly Track[], t: number): Node =>
   }, node);
 
 /** Per scene, the last time sampled and its result: playback samples each time once, and hit tests re-read it. */
-const sampled = new WeakMap<Scene, { t: number; scene: Scene }>();
+const sampled = new WeakMap<View, { t: number; scene: View }>();
 
 /**
  * The scene at time `t` (§5.3): every tracked property of every node set to its value then. Pure and memoised on the
  * scene and the time; a scene without a timeline is returned as it is.
  */
-export const sampleScene = (scene: Scene, t: number): Scene => {
+export const sampleView = (scene: View, t: number): View => {
   const { timeline } = scene;
   if (!timeline || Object.keys(timeline.tracks).length === 0) {
     return scene;

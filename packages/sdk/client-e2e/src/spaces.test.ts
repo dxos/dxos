@@ -99,7 +99,7 @@ describe('Spaces', () => {
     await expect(client.spaces.create()).rejects.toBe(error);
   });
 
-  test('a space whose database failed to open initializes again when it returns to ready', async () => {
+  const openSpaceWhoseDatabaseFailsOnce = async (error: Error) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
     const host = testBuilder.createClientServicesHost();
@@ -114,13 +114,12 @@ describe('Spaces', () => {
     await creator.destroy();
     await creatorServer.close();
 
-    const error = new Error('Database open failed.');
     const open = DatabaseImpl.prototype.open;
-    let failures = 0;
+    let attempts = 0;
     const openSpy = vi
       .spyOn(DatabaseImpl.prototype, 'open')
       .mockImplementation(async function (this: DatabaseImpl, ctx) {
-        if (this.spaceId === spaceId && failures++ === 0) {
+        if (this.spaceId === spaceId && attempts++ === 0) {
           throw error;
         }
         return open.call(this, ctx);
@@ -133,10 +132,21 @@ describe('Spaces', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    await expect.poll(() => failures).toBe(1);
+    await expect.poll(() => attempts).toBeGreaterThan(0);
     const space = client.spaces.get().find((space) => space.id === spaceId);
     invariant(space);
     await expect(space.waitUntilReady()).rejects.toBe(error);
+    return space;
+  };
+
+  test('a space whose database failed to open initializes again while it stays ready', async () => {
+    const space = await openSpaceWhoseDatabaseFailsOnce(new Error('Database open failed.'));
+    await expect.poll(() => space.isOpen, { timeout: 10_000 }).toBe(true);
+    await space.waitUntilReady();
+  });
+
+  test('a space whose database failed to open initializes again when it returns to ready', async () => {
+    const space = await openSpaceWhoseDatabaseFailsOnce(new Error('Database open failed.'));
 
     // Closing and reopening returns the space to ready, which starts initialization over.
     await space.close();

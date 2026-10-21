@@ -3,10 +3,14 @@
 //
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import React, { useEffect, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import { AiService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -31,6 +35,7 @@ import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
+import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -54,6 +59,7 @@ import { isNonNullable } from '@dxos/util';
 
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
+  aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
@@ -183,11 +189,25 @@ const withIframePath: Decorator = (Story) => {
 
 type StoryArgs = { template: string };
 
+type StoryParameters = {
+  aiServiceMiddleware?: (aiService: AiService.Service) => AiService.Service;
+};
+
+const anonymousEdgeAiService = (): AiService.Service => {
+  const remote = Layer.orDie(AiServiceTestingPreset('edge-remote'));
+  const resolveRemote = <A, E>(resolve: (service: AiService.Service) => Layer.Layer<A, E>) =>
+    Layer.unwrap(Effect.map(AiService.tag, resolve)).pipe(Layer.provide(remote));
+  return AiService.make({
+    languageModel: (model, options) => resolveRemote((service) => service.languageModel(model, options)),
+    decisionModel: (model, options) => resolveRemote((service) => service.decisionModel(model, options)),
+  });
+};
+
 const meta = {
   title: 'apps/composer-app/SpaceTemplates',
   render: ({ template }) => <TemplateSpace template={template} />,
   decorators: [
-    withPluginManager({
+    withPluginManager<StoryArgs>(({ parameters }) => ({
       plugins: [
         // Core: the subset of `getCorePlugins` the deck and navtree need, without onboarding,
         // observability or the PWA, which assume a real deployment.
@@ -208,7 +228,7 @@ const meta = {
 
         // Content: the plugins whose objects the templates seed, and which contribute them.
         // Required by projects and chess respectively.
-        AssistantPlugin.make(),
+        AssistantPlugin.make({ aiServiceMiddleware: parameters.aiServiceMiddleware }),
         GamePlugin.make(),
         BoardPlugin.make(),
         CanvasPlugin.make(),
@@ -218,6 +238,7 @@ const meta = {
         IllustratorPlugin.make(),
         InboxPlugin.make(),
         KanbanPlugin.make(),
+        MagazinePlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
         ProjectsPlugin.make(),
@@ -228,7 +249,7 @@ const meta = {
         TasksPlugin.make(),
         ThreadPlugin.make(),
       ],
-    }),
+    })),
     withIframePath,
   ],
   parameters: {
@@ -283,6 +304,12 @@ const play: Story['play'] = async ({ canvasElement }) => {
     },
     { timeout: TIMEOUT },
   );
+};
+
+export const AiBriefing: Story = {
+  args: { template: TEMPLATES.aiBriefing },
+  parameters: { aiServiceMiddleware: anonymousEdgeAiService } satisfies StoryParameters,
+  play,
 };
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };

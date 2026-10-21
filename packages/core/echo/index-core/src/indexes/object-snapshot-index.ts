@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
@@ -98,13 +99,23 @@ export class ObjectSnapshotIndex implements Index {
   /**
    * How many indexed objects have no snapshot yet. Non-zero only while the store is filling after
    * its introduction; a reader that cannot tolerate a partial store waits for this to reach zero.
+   * `spaceIds` narrows the count to those spaces, and `feeds: false` to document objects.
    */
-  countMissingSnapshots(): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
+  countMissingSnapshots(
+    opts: { spaceIds?: readonly string[]; feeds?: boolean } = {},
+  ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
+      const conditions: Statement.Fragment[] = [sql`s.recordId IS NULL`];
+      if (opts.spaceIds) {
+        conditions.push(sql.in('m.spaceId', opts.spaceIds));
+      }
+      if (opts.feeds === false) {
+        conditions.push(sql`m.queueId = ''`);
+      }
       const [row] = yield* sql<{ missing: number }>`
         SELECT COUNT(*) AS missing FROM objectMeta m LEFT JOIN objectSnapshot s ON s.recordId = m.recordId
-        WHERE s.recordId IS NULL`;
+        WHERE ${sql.and(conditions)}`;
       return row?.missing ?? 0;
     });
   }

@@ -55,6 +55,14 @@ export type MailSyncSourceOptions = {
   readonly tagIndex: TagIndex.TagIndex;
   /** Called with each enumeration page/chunk's id count, to accumulate the retrieval total. */
   readonly onEnumerated: (count: number) => void;
+  /**
+   * Called with the provider's count, or estimate, of the messages a window holds, from the window's first
+   * query; a provider that sizes a window reports this in place of that window's `onEnumerated` counts. The
+   * backward window is the rest of the backfill, not just this run's share of it, so sizing it lets the
+   * meter's total cover every run of an `Operation.runAgain()` chain. Providers that cannot size a window
+   * leave it unused.
+   */
+  readonly onEstimate: (count: number) => void;
   /** Called once per item retrieved (full fetch), to advance progress. */
   readonly onRetrieved: () => void;
 };
@@ -515,14 +523,23 @@ export const runMailSync = (
     };
     reportStatus({ current: 0 });
 
-    // Accumulate the retrieval total as each page/chunk's ids are enumerated (before any full fetch),
-    // so the meter renders a determinate bar. Enumeration runs ahead of the full fetch, so `total`
-    // leads `current`.
-    let totalToRetrieve = 0;
+    // The retrieval total: the ids each page/chunk enumerates (before any full fetch), plus the size of
+    // every window the provider could size up front. Both lead the fetch, so the meter is determinate and
+    // `total` leads `current`. A sized backward window is the whole remaining backfill, so the total spans
+    // the `runAgain` chain; each run re-sizes what is left, which corrects an estimate that was off.
+    let enumerated = 0;
+    let estimated = 0;
+    let retrieved = 0;
+    const reportTotal = () => reportStatus({ total: Math.max(progressCurrent, enumerated + estimated) });
     const addToTotal = (count: number) => {
-      totalToRetrieve += count;
-      reportStatus({ total: totalToRetrieve });
-      log('mail sync enumerated page', { provider: provider.name, page: count, totalToRetrieve });
+      enumerated += count;
+      reportTotal();
+      log('mail sync enumerated page', { provider: provider.name, page: count, enumerated });
+    };
+    const addEstimate = (count: number) => {
+      estimated += count;
+      reportTotal();
+      log('mail sync sized window', { provider: provider.name, window: count, estimated });
     };
 
     const threads = new Set<string>();
@@ -626,11 +643,9 @@ export const runMailSync = (
       filter: targetOptions.filter,
       tagIndex,
       onEnumerated: addToTotal,
-      // Advance at retrieval so `current` reaches `total`; counting after downstream dedup/decode
-      // drops would leave the bar short of 100%.
+      onEstimate: addEstimate,
       onRetrieved: () => {
-        progressCurrent += 1;
-        reportStatus({ current: progressCurrent });
+        retrieved += 1;
       },
     });
     const inserts = additions.pipe(
@@ -639,8 +654,17 @@ export const runMailSync = (
         (item) => item.foreignId,
         (item) => item.key,
       ),
+      // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
+      // the cap, and a message fetched past it is fetched again, and would be counted again, by the next
+      // run of the chain. An estimate that was low is raised to the count rather than drawn past full.
       Cursor.boundStage<MailSyncItem>(maxMessages, () => {
         taken += 1;
+        progressCurrent = taken;
+        reportStatus(
+          progressTotal !== undefined && progressCurrent > progressTotal
+            ? { current: progressCurrent, total: progressCurrent }
+            : { current: progressCurrent },
+        );
       }),
       Stage.map('decode', (item: MailSyncItem) => item.process),
     );
@@ -735,15 +759,16 @@ export const runMailSync = (
     );
 
     // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
-    // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
-    // with `enumerated` > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
+    // attributed: `enumerated` + `estimated` 0 → empty windows / provider returned no ids; `taken` 0
+    // with either > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
     // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
     // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
     log.info('mail sync funnel', {
       provider: provider.name,
       mailbox: Obj.getURI(mailbox),
-      enumerated: totalToRetrieve,
-      retrieved: progressCurrent,
+      enumerated,
+      estimated,
+      retrieved,
       taken,
       processed,
       newMessages: stats.newMessages,

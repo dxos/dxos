@@ -87,7 +87,7 @@ const drawShape = async ({ demo, page }, centre, { tool, label, width = SIZE.wid
 
 /** Draws a frame, which holds a scene of its own, and names it in the Properties panel. */
 const drawFrame = async ({ demo, page }, centre, { label, width, height }) => {
-  await demo.click({ selector: '[data-testid="palette-F"] >> nth=-1', label: 'Frame' });
+  await demo.click({ selector: '[data-testid="palette-F"] >> nth=-1', label: 'View' });
   await drag(
     page,
     { x: centre.x - width / 2, y: centre.y - height / 2 },
@@ -102,7 +102,7 @@ const drawFrame = async ({ demo, page }, centre, { label, width, height }) => {
   await typeSlowly(page, label);
   await page.keyboard.press('Enter');
   await page
-    .locator(`[data-testid="scene-view"] [data-node-id^="frame"]:has-text("${label}")`)
+    .locator(`[data-testid="scene-view"] [data-node-id^="view"]:has-text("${label}")`)
     .first()
     .waitFor({ timeout: 5_000 });
   await page.keyboard.press('Escape');
@@ -253,7 +253,7 @@ export const steps = [
       await frame.hover();
       await demo.click({
         selector: `[data-testid="scene-view"] [data-node-id]:has-text("${FRAME.label}") [data-testid="portal-open"] >> nth=0`,
-        label: 'Open scene',
+        label: 'Open view',
       });
       await page.getByTestId('toolbar-up').first().waitFor({ state: 'visible' });
       await page.waitForFunction(() => !document.querySelector('[data-testid="toolbar-up"]')?.disabled, null, {
@@ -289,7 +289,7 @@ export const steps = [
       await page.locator(toggle).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.click({ selector: `${toggle} >> nth=0`, label: 'Show contents' });
       await page
-        .locator(`[data-testid="scene-view"] [data-node-id^="frame"] [data-node-id]:has-text("${INNER[0].label}")`)
+        .locator(`[data-testid="scene-view"] [data-node-id^="view"] [data-node-id]:has-text("${INNER[0].label}")`)
         .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       // Focus is in the panel, so deselect by clicking empty canvas rather than with Escape.

@@ -6,22 +6,21 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, FeatureMap, Showcase } from '#types';
+import { Feature, Showcase } from '#types';
 
 import addDependency from './add-dependency.ts';
-import addToMap from './add-to-map.ts';
-import createMap from './create-map.ts';
 import createShowcase from './create-showcase.ts';
 import create from './create.ts';
-import getMap from './get-map.ts';
+import getFeatures from './get-features.ts';
 import linkTask from './link-task.ts';
 import removeDependency from './remove-dependency.ts';
-import removeFromMap from './remove-from-map.ts';
 import update from './update.ts';
 
 const testLayer = () =>
@@ -30,7 +29,8 @@ const testLayer = () =>
       Feature.Feature,
       Feature.DependsOn,
       Feature.Implements,
-      FeatureMap.FeatureMap,
+      Project.Project,
+      Instructions.Instructions,
       Showcase.Showcase,
       Showcase.Demonstrates,
       Task.Task,
@@ -44,12 +44,12 @@ const testLayer = () =>
 const ref = Ref.make;
 
 describe('FeatureOperation.Create', () => {
-  it.effect('defaults to planned and places the feature on the map given', () =>
+  it.effect('defaults to planned and places the feature in the project given', () =>
     Effect.gen(function* () {
-      const map = yield* Database.add(FeatureMap.make({ name: 'Inbox' }));
-      const { feature } = yield* create.handler({ name: 'Provider sync', map: ref(map) });
+      const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+      const { feature } = yield* create.handler({ name: 'Provider sync', project: ref(project) });
       expect(feature.status).toBe('planned');
-      expect(map.features).toHaveLength(1);
+      expect(feature.project?.target?.id).toBe(project.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -159,55 +159,40 @@ describe('FeatureOperation.CreateShowcase', () => {
   );
 });
 
-describe('FeatureOperation.AddToMap', () => {
-  it.effect('adds a feature once', () =>
+describe('FeatureOperation.Update project', () => {
+  it.effect('moves a feature between projects and takes it off, keeping the feature', () =>
     Effect.gen(function* () {
-      const map = yield* Database.add(FeatureMap.make({ name: 'Inbox' }));
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
-      yield* addToMap.handler({ map: ref(map), feature: ref(compose) });
-      yield* addToMap.handler({ map: ref(map), feature: ref(compose) });
-      expect(map.features).toHaveLength(1);
+      const inbox = yield* Database.add(Project.make({ name: 'Inbox' }));
+      const mail = yield* Database.add(Project.make({ name: 'Mail' }));
+      const compose = yield* Database.add(
+        Feature.make({ name: 'Compose', status: 'planned', project: ref(inbox), position: { x: 1, y: 2 } }),
+      );
+      yield* update.handler({ feature: ref(compose), project: ref(mail) });
+      expect(compose.project?.target?.id).toBe(mail.id);
+      // A position belongs to the canvas it was dragged on, so it does not follow the feature.
+      expect(compose.position).toBeUndefined();
+      yield* update.handler({ feature: ref(compose), project: null });
+      expect(compose.project).toBeUndefined();
+      expect(yield* Database.query(Filter.type(Feature.Feature)).run).toHaveLength(1);
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
-describe('FeatureOperation.CreateMap', () => {
-  it.effect('creates a map holding the features given', () =>
-    Effect.gen(function* () {
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
-      const { map } = yield* createMap.handler({ name: 'Inbox', features: [ref(compose)] });
-      expect(map.name).toBe('Inbox');
-      expect(map.features).toHaveLength(1);
-      expect(yield* Database.query(Filter.type(FeatureMap.FeatureMap)).run).toHaveLength(1);
-    }).pipe(Effect.provide(testLayer())),
-  );
-});
-
-describe('FeatureOperation.RemoveFromMap', () => {
-  it.effect('takes a feature off the map and keeps the feature', () =>
-    Effect.gen(function* () {
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
-      const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'planned' }));
-      const { map } = yield* createMap.handler({ name: 'Inbox', features: [ref(compose), ref(sync)] });
-      yield* removeFromMap.handler({ map: ref(map), feature: ref(compose) });
-      yield* removeFromMap.handler({ map: ref(map), feature: ref(compose) });
-      expect(map.features).toHaveLength(1);
-      expect(yield* Database.query(Filter.type(Feature.Feature)).run).toHaveLength(2);
-    }).pipe(Effect.provide(testLayer())),
-  );
-});
-
-describe('FeatureOperation.GetMap', () => {
+describe('FeatureOperation.GetFeatures', () => {
   it.effect('reads each member with its dependencies, tasks, showcases and subfeatures', () =>
     Effect.gen(function* () {
-      const map = yield* Database.add(FeatureMap.make({ name: 'Inbox' }));
+      const project = yield* Database.add(Project.make({ name: 'Inbox' }));
       const compose = yield* Database.add(
-        Feature.make({ name: 'Compose', status: 'in-progress', subfeatures: [{ name: 'Drafts', status: 'planned' }] }),
+        Feature.make({
+          name: 'Compose',
+          status: 'in-progress',
+          subfeatures: [{ name: 'Drafts', status: 'planned' }],
+          project: ref(project),
+        }),
       );
-      const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'prototype' }));
+      const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'prototype', project: ref(project) }));
+      yield* Database.add(Feature.make({ name: 'Elsewhere', status: 'planned' }));
       const task = yield* Database.add(Task.make({ title: 'Send through Gmail', status: 'started' }));
-      yield* addToMap.handler({ map: ref(map), feature: ref(compose) });
-      yield* addToMap.handler({ map: ref(map), feature: ref(sync) });
       yield* addDependency.handler({ feature: ref(compose), dependsOn: ref(sync) });
       yield* linkTask.handler({ task: ref(task), feature: ref(compose) });
       const { showcase } = yield* createShowcase.handler({
@@ -216,12 +201,9 @@ describe('FeatureOperation.GetMap', () => {
         targets: [ref(compose)],
       });
 
-      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
-      yield* addToMap.handler({ map: ref(map), feature: ref(gone) });
-      yield* Database.remove(gone);
       yield* Database.flush();
 
-      const result = yield* getMap.handler({ map: ref(map) });
+      const result = yield* getFeatures.handler({ project: ref(project) });
       expect(result.features.map(({ name }) => name)).toEqual(['Compose', 'Sync']);
       expect(result.features[0]).toMatchObject({
         subfeatures: [{ name: 'Drafts', status: 'planned' }],

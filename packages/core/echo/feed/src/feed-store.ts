@@ -21,7 +21,6 @@ type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
 type Block = FeedProtocol.Block;
 type BlockKey = FeedProtocol.BlockKey;
-const FeedCursor = FeedProtocol.FeedCursor;
 type FeedCursor = FeedProtocol.FeedCursor;
 const isWellKnownNamespace = FeedProtocol.isWellKnownNamespace;
 type QueryRequest = FeedProtocol.QueryRequest;
@@ -175,8 +174,18 @@ export class FeedStore {
    */
   readonly #feedNamespaces = new Map<number, string | null>();
 
-  /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
+  /** Keyed by space; a space's token is written once, so only {@link resetCaches} invalidates it. */
   readonly #cursorTokens = new Map<string, string>();
+
+  /**
+   * Forgets every cached row. A caller that deletes the store's rows while it stays in use calls this,
+   * or a cursor would be issued under a token no longer stored and fail every read after a restart.
+   */
+  resetCaches(): void {
+    this.#feedNamespaces.clear();
+    this.#cursorTokens.clear();
+    this.#heads.clear();
+  }
 
   #ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
     (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
@@ -206,6 +215,16 @@ export class FeedStore {
    */
   getServerToken = (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
     this.#ensureCursorToken(spaceId);
+
+  /**
+   * Whether this store issued `cursor` for the space. {@link query} rejects any other cursor, since its
+   * insertion id numbers another store's blocks.
+   */
+  isCursorCurrent = (
+    spaceId: string,
+    cursor: FeedCursor,
+  ): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.map(this.#ensureCursorToken(spaceId), (token) => FeedProtocol.decodeFeedCursor(cursor).token === token);
 
   /**
    * Highest insertion id per `spaceId|feedNamespace`, so a reader polling a caught-up cursor is
@@ -463,7 +482,7 @@ export class FeedStore {
         }
 
         if (request.cursor) {
-          const { token, insertionId } = decodeCursor(request.cursor as FeedCursor);
+          const { token, insertionId } = FeedProtocol.decodeFeedCursor(request.cursor as FeedCursor);
           if (!token || insertionId === undefined || isNaN(insertionId)) {
             return yield* Effect.die(new Error(`Invalid cursor format`));
           }
@@ -492,7 +511,7 @@ export class FeedStore {
             return {
               requestId: request.requestId,
               blocks: [],
-              nextCursor: request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`),
+              nextCursor: request.cursor ?? FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START),
               hasMore: false,
               serverToken,
               maxPosition,
@@ -556,7 +575,7 @@ export class FeedStore {
           return {
             requestId: request.requestId,
             blocks: [],
-            nextCursor: FeedCursor.make(`${validCursorToken}|-1`),
+            nextCursor: FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START),
             hasMore: false,
             serverToken,
             maxPosition,
@@ -599,11 +618,12 @@ export class FeedStore {
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
         const blocks = yield* this.#openRows(slice, request.spaceId, request.feedNamespace);
 
-        let nextCursor: FeedCursor = request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`);
+        let nextCursor: FeedCursor =
+          request.cursor ?? FeedProtocol.encodeFeedCursor(validCursorToken, FeedProtocol.FEED_START);
         if (blocks.length > 0 && request.spaceId) {
           const lastBlock = blocks[blocks.length - 1];
           if (lastBlock.insertionId !== undefined) {
-            nextCursor = FeedCursor.make(`${validCursorToken}|${lastBlock.insertionId}`);
+            nextCursor = FeedProtocol.encodeFeedCursor(validCursorToken, lastBlock.insertionId);
           }
         }
 
@@ -1329,8 +1349,3 @@ export class FeedStore {
 
 /** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
-
-const decodeCursor = (cursor: FeedCursor) => {
-  const [token, insertionId] = cursor.split('|');
-  return { token, insertionId: Number(insertionId) };
-};

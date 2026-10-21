@@ -38,6 +38,11 @@ export const Agents = Capability.lazyModule(
   { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
   () => import('./agents.ts'),
 );
+export const SlashCommands = Capability.lazyModule(
+  'SlashCommands',
+  { provides: [AssistantCapabilities.SlashCommands], activatesOn: ActivationEvents.Startup },
+  () => import('./slash-commands.ts'),
+);
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
 });

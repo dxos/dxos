@@ -18,6 +18,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { camelCase } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
+import { formatPrinted } from './format.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** The single tool a code-mode agent carries. */
@@ -60,6 +61,8 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
+  readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
 };
@@ -81,6 +84,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   sandbox,
   runtime,
   operations,
+  skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
 }: EvaluateOptions) {
@@ -89,7 +93,7 @@ export const evaluate = Effect.fnUntraced(function* ({
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, print: printer.print },
+      context: { runtime, operations, skills, print: printer.print },
       timeout,
     })
     .pipe(Effect.result);
@@ -195,7 +199,7 @@ const makePrinter = (maxOutput: number) => {
       if (truncated) {
         return;
       }
-      const line = values.map(format).join(' ');
+      const line = values.map(formatPrinted).join(' ');
       // The joining newline counts against the budget: a loop printing nothing at all is all
       // separators, which would otherwise grow the buffer without ever spending it.
       const separator = lines.length > 0 ? 1 : 0;
@@ -230,18 +234,6 @@ const hintFor = (message: string): string =>
   /is not iterable/.test(message)
     ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
     : '';
-
-/** Printed form of a value: strings verbatim, everything else as JSON the model can read back. */
-const format = (value: unknown): string => {
-  if (typeof value === 'string') {
-    return value;
-  }
-  try {
-    return JSON.stringify(value, null, 2) ?? String(value);
-  } catch {
-    return String(value);
-  }
-};
 
 /**
  * A failure's message cut to what the model can act on.

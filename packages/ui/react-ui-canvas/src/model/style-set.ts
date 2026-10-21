@@ -41,6 +41,9 @@ export type NodeSurface = Schema.Schema.Type<typeof NodeSurface>;
 export const Radius = Schema.Literals(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 export type Radius = Schema.Schema.Type<typeof Radius>;
 
+/** Each radius step in px, as the theme's `rounded-*` classes draw it. */
+export const RADIUS_PX: Record<Radius, number> = { 'none': 0, 'sm': 4, 'md': 6, 'lg': 8, 'xl': 12, '2xl': 16 };
+
 /**
  * How a link is drawn: `line`, a single stroke; `tube`, a shaded strip; `rails`, two edges over a faint strip;
  * `glass`, a translucent strip with fine edges.
@@ -86,8 +89,8 @@ export const StyleSet = Schema.Struct({
     /** The backdrop behind a link's caption. */
     caption: Opacity,
   }),
-  frame: Schema.Struct({
-    /** The fill of a frame showing its child scene, which must hide the grid behind it. */
+  view: Schema.Struct({
+    /** The fill of a view node showing its child View, which must hide the grid behind it. */
     contents: Opacity,
   }),
 });
@@ -165,7 +168,7 @@ export const CLASSIC_STYLE_SET: StyleSet = {
   ],
   defaultVariant: 2,
   link: { kind: 'line', width: 2, caption: 'opaque' },
-  frame: { contents: 'opaque' },
+  view: { contents: 'opaque' },
 };
 
 const FLAT_SHAPE = {
@@ -188,7 +191,7 @@ export const FLAT_STYLE_SET: StyleSet = {
   ],
   defaultVariant: 2,
   link: { kind: 'line', width: 3, caption: 'opaque' },
-  frame: { contents: 'opaque' },
+  view: { contents: 'opaque' },
 };
 
 const OUTLINE_SHAPE = { surface: 'outline', radius: 'md', roundedRadius: '2xl', label: 'default' } as const;
@@ -203,7 +206,7 @@ export const OUTLINE_STYLE_SET: StyleSet = {
   ],
   defaultVariant: 0,
   link: { kind: 'rails', width: 8, caption: 'translucent' },
-  frame: { contents: 'translucent' },
+  view: { contents: 'translucent' },
 };
 
 const GLASS_SHAPE = {
@@ -225,7 +228,7 @@ export const GLASS_STYLE_SET: StyleSet = {
   ],
   defaultVariant: 1,
   link: { kind: 'glass', width: 8, caption: 'translucent' },
-  frame: { contents: 'translucent' },
+  view: { contents: 'translucent' },
 };
 
 export const PLAIN_BACKGROUND: Background = {

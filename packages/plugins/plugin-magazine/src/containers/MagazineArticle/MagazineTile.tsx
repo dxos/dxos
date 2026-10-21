@@ -28,6 +28,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
   // All per-Post derivation (snapshot, read, starred, snippet, image, feed name) happens in
   // atom-land; this tile re-renders only when THIS post's slice changes, not when a sibling does.
   const { post: snapshot, feedName, read, starred, snippet, imageUrl } = useMagazinePostData(post, magazine);
+  const published = formatPublished(snapshot);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => {
@@ -52,30 +53,23 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
           <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Layout.Block>
+          {snapshot.title && <Card.Title lines={2}>{snapshot.title}</Card.Title>}
+          <Layout.Block rail='end'>
             <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
           </Layout.Block>
-          {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
-          <Layout.Block rail='end' />
         </Card.Header>
         <Card.Body>
           {snippet && (
             <Card.Row>
-              <Card.Text variant='muted' classNames='line-clamp-3'>
+              <Card.Text variant='muted' lines={3}>
                 {snippet}
               </Card.Text>
             </Card.Row>
           )}
-          <Card.Row>
-            <Layout.Grid
-              cols={['fill', 'auto']}
-              gap='sm'
-              align='center'
-              classNames='py-trim-xs text-sm text-fg-muted overflow-hidden'
-            >
-              <span className='truncate'>{feedName ?? ''}</span>
-              <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
-            </Layout.Grid>
+          <Card.Row trailing={published && <Card.Text variant='muted'>{published}</Card.Text>}>
+            <Card.Text variant='muted' truncate>
+              {feedName}
+            </Card.Text>
           </Card.Row>
         </Card.Body>
       </Card.Root>

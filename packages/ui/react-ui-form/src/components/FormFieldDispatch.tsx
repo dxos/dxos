@@ -204,7 +204,14 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
   if (resolution.kind === 'object') {
     return (
-      <FormFieldSet label={label} collapsible nested data-testid={`group.${jsonPath}`}>
+      <FormFieldSet
+        label={label}
+        collapsible
+        nested
+        open={override?.open}
+        onOpenChange={override?.onOpenChange}
+        data-testid={`group.${jsonPath}`}
+      >
         <FormFields
           schema={resolution.schema}
           path={path}

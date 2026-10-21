@@ -21,10 +21,11 @@ import {
   type NodeRegistry,
   type NodeStyle,
   type Point,
-  type Scene,
   type Size,
+  type View,
+  atomSource,
   isBuiltinNode,
-  isFrameNode,
+  isViewNode,
 } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
 import { type Projection } from '../projection.ts';
@@ -59,7 +60,7 @@ const DEFAULTS: Required<Omit<ConstrainedOptions, 'origin' | 'nodes'>> = {
   size: { width: 192, height: 128 },
 };
 
-export const CONSTRAINED_SCENE_ID = 'constrained';
+export const CONSTRAINED_VIEW_ID = 'constrained';
 
 type Edge = { from: string; to: string };
 
@@ -179,7 +180,7 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
 };
 
 /** Solve the model to a positioned scene. */
-export const solve = (model: ConstrainedModel, options: ConstrainedOptions): Scene => {
+export const solve = (model: ConstrainedModel, options: ConstrainedOptions): View => {
   const { pitch, size } = { ...DEFAULTS, ...options };
   const { rows, columns } = solveRanks(model);
   const extent = {
@@ -201,7 +202,7 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions): Sce
     );
     nodes[node.id] = node.style ? { ...solved, style: node.style } : solved;
   });
-  return { id: CONSTRAINED_SCENE_ID, name: 'Constrained', nodes, links: {} };
+  return { id: CONSTRAINED_VIEW_ID, name: 'Constrained', nodes, links: {} };
 };
 
 /**
@@ -209,7 +210,7 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions): Sce
  * reference; a mostly horizontal offset makes it east/west of and aligned with that node, a mostly
  * vertical one north/south of it. Returns the model unchanged when there is no neighbour.
  */
-export const rewriteForDrop = (model: ConstrainedModel, scene: Scene, id: string, delta: Point): ConstrainedModel => {
+export const rewriteForDrop = (model: ConstrainedModel, scene: View, id: string, delta: Point): ConstrainedModel => {
   const moved = scene.nodes[id];
   if (!moved) {
     return model;
@@ -285,7 +286,7 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
       }
       case 'create': {
         // The model records built-in types only; a portal or a host type has no place in it and is refused.
-        if (!isBuiltinNode(intent.node) || isFrameNode(intent.node)) {
+        if (!isBuiltinNode(intent.node) || isViewNode(intent.node)) {
           return;
         }
         const node: ConstrainedNode = {
@@ -297,7 +298,7 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
         const added = { ...current, nodes: [...current.nodes, node] };
         // Constrain the new node as if it had been dropped where it was drawn.
         const solved = registry.get(scene);
-        const provisional: Scene = { ...solved, nodes: { ...solved.nodes, [node.id]: intent.node } };
+        const provisional: View = { ...solved, nodes: { ...solved.nodes, [node.id]: intent.node } };
         registry.set(model, rewriteForDrop(added, provisional, node.id, { x: 0, y: 0 }));
         break;
       }
@@ -336,11 +337,6 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
     scene,
     apply,
     capabilities: constrainedCapabilities,
-    snapshot: () => registry.get(model),
-    restore: (snapshot) => {
-      if (isConstrainedModel(snapshot)) {
-        registry.set(model, snapshot);
-      }
-    },
+    model: atomSource(registry, model, isConstrainedModel),
   };
 };

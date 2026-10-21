@@ -1,0 +1,112 @@
+{
+  "$comment": "Alien Labs scopes the task 'Ship the Cairn dashboard as a Composer plugin'. Astrid is the local user, who joins late and waves; Lucía leads and shares her screen (the plugin-metrics-screenshare.mjs recording) `screenshare.at` seconds after the lead-in. Each `image` is a Higgsfield still, made from the participant's `higgsfield` prompts (a soul_cast character, then a gpt_image_2_5 webcam scene referencing it), that heygen.mjs turns into a HeyGen photo avatar, recorded in <out>/cast.json. Lines with `at` start that many seconds after the lead-in; lines with no `text` are silent gestures. See README.md beside this file.",
+  "leadIn": 2,
+  "gap": 0.4,
+  "tail": 3,
+  "participants": {
+    "astrid": {
+      "name": "Astrid Holm",
+      "role": "Engineering Manager",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_023228_ae3afe50-653e-4eec-849a-977b4e9552f8.png",
+      "higgsfield": {
+        "scene": "Seen through the webcam on top of her desktop monitor during a video call: a woman in her mid 20s, Scandinavian, straight blonde hair in a low ponytail, thin silver round glasses, black tailored blazer over a cream top, friendly professional expression, looking straight into the camera at eye level, centered, head, shoulders and forearms resting on the desk visible. Nothing between her and the camera: no laptop, no screen, no keyboard in the foreground. Behind her an office interior with no windows: a light grey wall, a wooden shelf with binders and a small plant, part of a glass-walled meeting room. Even office lighting, photorealistic, natural skin, slight webcam softness.",
+        "listening": [
+          "Unedited webcam footage of a business video call, fixed camera, one continuous take. The woman listens to colleagues: mouth closed, not speaking, attentive, nods, glances down and types notes on a keyboard below the frame, looks back up at the camera, a slight smile. Subtle, realistic, documentary. Ends in the same pose as it starts.",
+          "Unedited webcam footage of a business video call, fixed camera, one continuous take. The woman listens to colleagues: mouth closed, not speaking, glances at a second screen to her side, types a note on a keyboard below the frame, looks back at the camera and nods. Subtle, realistic, documentary. Ends in the same pose as it starts."
+        ]
+      }
+    },
+    "lucia": {
+      "name": "Lucía Ferreira",
+      "role": "Product Lead",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_c7e0267d-beb7-4b3e-9ef9-0bfacda9650d.png",
+      "voiceId": "16cae89929d94c25bc28b5af6f04822a",
+      "expressiveness": "medium",
+      "motion": "Friendly and professional on a video call: composed posture, measured hand gestures while she explains.",
+      "screenshare": {
+        "at": 7
+      },
+      "higgsfield": {
+        "cast": "Video call webcam view: a woman in her late 20s, Latina, long dark hair tied back, thin gold-rimmed glasses, charcoal suit jacket and cream silk blouse, warm professional smile. Sitting at her desk in a corporate office with a bookshelf and a plant behind her, daylight. Facing straight into her monitor's webcam at eye level, centered, head and shoulders and hands on the desk visible. Photorealistic, natural skin, no retouching.",
+        "scene": "The same woman as in the reference (same face, hair tied back, gold-rimmed glasses, black suit jacket, cream blouse), photographed as a laptop webcam frame on a video call: she sits at her desk in a corporate office, looking straight into the camera at eye level, centered, warm professional smile, head, shoulders and forearms on the desk visible. Behind her a bookshelf, a plant and a glass wall to the office floor, daylight. Photorealistic, natural skin, slight webcam softness."
+      }
+    },
+    "ben": {
+      "name": "Ben Achterberg",
+      "role": "Product Designer",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013055_9f08e094-2b5c-48b5-9f89-931b835e0787.png",
+      "voiceId": "26776342fd0247d8aa4055ce1060b948",
+      "expressiveness": "medium",
+      "motion": "Calm and professional on a video call, a small hand gesture toward the screen as he describes the layout.",
+      "higgsfield": {
+        "cast": "Video call webcam view: a Japanese man in his late 20s, short neat black hair, black rectangular glasses, dark grey suit, white shirt, no tie, friendly professional smile. Sitting at his desk in a Tokyo office late at night: the office is dim, lit by a warm desk lamp and his monitor; floor-to-ceiling windows behind him show the city lights at night. Facing straight into his monitor's webcam at eye level, centered, head and shoulders and hands on the desk visible. Photorealistic, natural skin, no retouching.",
+        "scene": "The same Japanese man as in the reference (same face, hair, black rectangular glasses, dark grey suit, white shirt), photographed as a laptop webcam frame on a video call: he sits at his desk in a Tokyo office late at night, looking straight into the camera at eye level, centered, friendly professional smile, head, shoulders and forearms on the desk visible. The office is dim, his face lit by a warm desk lamp and the monitor; floor-to-ceiling windows behind him show the city lights at night. Photorealistic, natural skin, slight webcam softness."
+      }
+    },
+    "tomas": {
+      "name": "Tomás Vidal",
+      "role": "Frontend Engineer",
+      "image": "https://d8j0ntlcm91z4.cloudfront.net/user_3Is0kyGcnG3JECJMB8tNlGEqTZ4/hf_20261018_013054_9d84dfec-be6b-4a6d-8488-31d2e9083665.png",
+      "voiceId": "7bb4df56d7714d33bb88ed1dde8128f6",
+      "expressiveness": "medium",
+      "motion": "Friendly and professional on a video call, nodding as he talks, one small hand gesture.",
+      "higgsfield": {
+        "cast": "Video call webcam view: a man in his early 30s, Spanish, short curly dark hair and a neatly trimmed beard, clear-framed glasses, navy suit jacket over a light blue dress shirt, friendly professional smile. Sitting at his desk in a modern open-plan office, whiteboard and colleagues softly out of focus behind him, daylight. Facing straight into his monitor's webcam at eye level, centered, head and shoulders and hands on the desk visible. Photorealistic, natural skin, no retouching.",
+        "scene": "The same man as in the reference (same face, curly hair, trimmed beard, clear-framed glasses, navy suit jacket, light blue shirt), photographed as a laptop webcam frame on a video call: he sits at his desk in a modern open-plan office, looking straight into the camera at eye level, centered, friendly professional smile, head, shoulders and forearms on the desk visible. Behind him a whiteboard and colleagues softly out of focus, daylight. Photorealistic, natural skin, slight webcam softness."
+      }
+    }
+  },
+  "lines": [
+    {
+      "speaker": "astrid",
+      "at": 0,
+      "seconds": 4,
+      "motion": "Has just joined a video call: smiles and gives a friendly wave at the camera with one hand, then lowers the hand and settles in."
+    },
+    {
+      "speaker": "ben",
+      "at": 1,
+      "seconds": 3,
+      "motion": "Glances up at the camera, smiles and gives a small, brief wave with one hand, then looks back down."
+    },
+    {
+      "speaker": "tomas",
+      "at": 1.3,
+      "seconds": 3,
+      "motion": "Looks up at the camera, smiles and gives a small nod hello, mouth closed."
+    },
+    {
+      "speaker": "lucia",
+      "at": 1.6,
+      "text": "Hi. We just got started."
+    },
+    {
+      "speaker": "lucia",
+      "text": "We're scoping the Cairn dashboard as a Composer plugin. Customers want cache hit rate per repo, and which builds missed."
+    },
+    {
+      "speaker": "ben",
+      "text": "I sketched it as a plank: a hit-rate chart across the top, and a table of recent builds underneath."
+    },
+    {
+      "speaker": "tomas",
+      "text": "The table can be a live query over build records, so it updates the moment Builder pushes a run."
+    },
+    {
+      "speaker": "lucia",
+      "text": "Can we flag the slowest misses? That's the conversation we want to have with customers."
+    },
+    {
+      "speaker": "ben",
+      "text": "Sure. A red badge on any miss over a minute, linking straight to its trace."
+    },
+    {
+      "speaker": "tomas",
+      "text": "I'll have Builder draft the query, and I can show a first cut in storybook on Thursday."
+    },
+    {
+      "speaker": "lucia",
+      "text": "Great. Ben shares the sketch today, Tomás builds the plank, and I'll check it with Okapi. Thanks, everyone."
+    }
+  ]
+}
