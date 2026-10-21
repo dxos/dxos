@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Format, Obj, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
@@ -71,6 +72,9 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),
+    // The project skill carries the feature operations (linking tasks, dependencies); a chat about a
+    // feature needs them. Plain dotted key, so the type does not import the skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
     Annotation.UserType.set(),
   ),
 ) {}

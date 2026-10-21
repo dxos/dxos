@@ -345,12 +345,15 @@ export class Request {
       });
 
       yield* Trace.emitRequestPhase('encoding-prompt');
+      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
+        // History can hold calls to tools this turn does not offer (the toolkit changed); kept as
+        // calls, they invite the model to call them again.
+        tools: toolkit ? Object.keys(toolkit.tools) : undefined,
       });
 
-      const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       markWork('request.prompt-encoded');
 
       const observer = this._observer;

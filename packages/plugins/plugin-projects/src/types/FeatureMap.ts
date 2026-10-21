@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Feature from './Feature.ts';
@@ -31,6 +32,8 @@ export class FeatureMap extends Type.makeObject<FeatureMap>(DXN.make('org.dxos.t
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--graph--regular', hue: 'violet' }),
+    // See `Feature`: the feature operations live in the project skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
     Annotation.UserType.set(),
   ),
 ) {}

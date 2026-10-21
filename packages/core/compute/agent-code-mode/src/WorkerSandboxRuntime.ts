@@ -148,6 +148,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     const bindings = dialect.bindings({
       runtime,
       operations,
+      skills: init.skills,
       // Sent as it happens rather than batched with the result, so output survives a worker that is
       // killed for outrunning its budget; sent formatted, since a live object cannot cross the port.
       print: (...values: unknown[]) => {
