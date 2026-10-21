@@ -18,9 +18,15 @@ import { type FeatureModel } from '../FeatureCard/index.ts';
 import { LAYERED_FEATURES, SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
-type StoryArgs = { arrange?: Arrangement; features?: FeatureModel[]; force?: ForceOptions; snap?: boolean };
+type StoryArgs = {
+  arrange?: Arrangement;
+  features?: FeatureModel[];
+  force?: ForceOptions;
+  lattice?: boolean;
+  snap?: boolean;
+};
 
-const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force }: StoryArgs) => {
+const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lattice }: StoryArgs) => {
   const [features, setFeatures] = useState(initial);
   const [positions, setPositions] = useState<Record<string, Point>>({});
   const update = (id: string, values: { name?: string; description?: string }) =>
@@ -33,6 +39,7 @@ const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force }: S
         onPositionsChange={setPositions}
         arrange={arrange}
         force={force}
+        lattice={lattice}
         onRename={(id, name) => update(id, { name })}
         onDescribe={(id, description) => update(id, { description })}
       />
@@ -40,14 +47,20 @@ const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force }: S
   );
 };
 
-/** The force layout with its strengths on sliders, and Snap to see it on the lattice. */
+/** The force layout with its strengths on sliders; Snap puts it on the lattice, and off it lays out freely. */
 const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: StoryArgs) => {
   const [attraction, setAttraction] = useState(DEFAULT_FORCE.attraction);
   const [repulsion, setRepulsion] = useState(DEFAULT_FORCE.repulsion);
+  const [range, setRange] = useState(DEFAULT_FORCE.range);
   const [snap, setSnap] = useState(initialSnap);
   return (
     <div className='dx-fill relative'>
-      <DefaultStory arrange={snap ? 'force' : 'force-free'} features={features} force={{ attraction, repulsion }} />
+      <DefaultStory
+        arrange={snap ? 'force' : 'force-free'}
+        features={features}
+        force={{ attraction, repulsion, range }}
+        lattice={snap}
+      />
       <div className='absolute top-2 right-2 w-64 p-3 flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
         <Input.Slider
           label={`Attraction ${attraction.toFixed(2)}`}
@@ -64,6 +77,14 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
           max={2}
           step={0.05}
           onValueChange={([value]) => setRepulsion(value)}
+        />
+        <Input.Slider
+          label={`Repulsion range ${range.toFixed(1)} cells`}
+          value={[range]}
+          min={0.5}
+          max={10}
+          step={0.5}
+          onValueChange={([value]) => setRange(value)}
         />
         <Button.Toggle pressed={snap} onPressedChange={setSnap} icon='ph--magnet--regular' label='Snap' />
       </div>

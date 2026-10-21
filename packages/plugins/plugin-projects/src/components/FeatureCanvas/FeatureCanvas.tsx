@@ -111,9 +111,8 @@ const createRegistry = (open: (id: string) => void) =>
 const LATTICE: LatticeSpec = { width: 256, height: 256, gutterX: 64, gutterY: 64 };
 
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
-  lattice: LATTICE,
   createNode: (_node, props) => createFeatureNode(props),
-  // Smart links route through the lattice's gutters, so arrows never cross a card.
+  // Smart links route through the lattice's gutters (or round the boxes without one), so arrows never cross a card.
   link: { type: 'smart', ends: { end: 'arrow' } },
 };
 
@@ -158,6 +157,8 @@ export type FeatureCanvasProps = {
   arrange?: Arrangement;
   /** Strengths of the force arrangements. */
   force?: ForceOptions;
+  /** False lays the boxes out freely, with no lattice cells to snap to or guides to draw; on by default. */
+  lattice?: boolean;
 };
 
 /**
@@ -179,6 +180,7 @@ export const FeatureCanvas = ({
   onEditingChange,
   arrange = 'crossings',
   force,
+  lattice = true,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
@@ -226,7 +228,19 @@ export const FeatureCanvas = ({
         constrained,
         graph,
         overlay,
-        options: { ...LAYOUT, nodes, arrange, force: { attraction: force?.attraction, repulsion: force?.repulsion } },
+        options: {
+          ...LAYOUT,
+          // Without a lattice the same slot sizes apply, so a free layout compares cell for cell with a snapped one.
+          ...(lattice
+            ? { lattice: LATTICE }
+            : {
+                size: { width: LATTICE.width, height: LATTICE.height },
+                pitch: { width: LATTICE.width + LATTICE.gutterX, height: LATTICE.height + LATTICE.gutterY },
+              }),
+          nodes,
+          arrange,
+          force: { attraction: force?.attraction, repulsion: force?.repulsion, range: force?.range },
+        },
         capabilities: { move: true, ...editable },
         onLink: ({ from, to }) => callbacks.current.onLink?.(from, to),
         onDelete: (ids) => {
@@ -240,7 +254,18 @@ export const FeatureCanvas = ({
           }
         },
       }),
-    [graph, overlay, nodes, arrange, force?.attraction, force?.repulsion, editable.link, editable.delete],
+    [
+      graph,
+      overlay,
+      nodes,
+      arrange,
+      force?.attraction,
+      force?.repulsion,
+      force?.range,
+      lattice,
+      editable.link,
+      editable.delete,
+    ],
   );
 
   return (

@@ -25,10 +25,13 @@ export type Slot = { column: number; row: number };
  */
 export type Arrangement = 'rank' | 'crossings' | 'force' | 'force-free' | 'routed';
 
-/** The force layouts' strengths: how hard linked nodes pull together and how hard every node pushes its neighbours. */
-export type ForceOptions = { attraction?: number; repulsion?: number };
+/**
+ * The force layouts' strengths: how hard linked nodes pull together, how hard every node pushes its neighbours, and how
+ * far (in slots) that push reaches.
+ */
+export type ForceOptions = { attraction?: number; repulsion?: number; range?: number };
 
-export const DEFAULT_FORCE: Required<ForceOptions> = { attraction: 1, repulsion: 0.2 };
+export const DEFAULT_FORCE: Required<ForceOptions> = { attraction: 1, repulsion: 0.2, range: 3 };
 
 const SWEEPS = 8;
 const FORCE_TICKS = 300;
@@ -50,8 +53,9 @@ export const arrange = (
     case 'force':
     case 'force-free':
       return forceSlots(ranks, edges, slotsOf(orderRows(rows, edges)), arrangement === 'force', {
-        ...DEFAULT_FORCE,
-        ...force,
+        attraction: force.attraction ?? DEFAULT_FORCE.attraction,
+        repulsion: force.repulsion ?? DEFAULT_FORCE.repulsion,
+        range: force.range ?? DEFAULT_FORCE.range,
       });
   }
 };
@@ -149,7 +153,7 @@ const forceSlots = (
   edges: readonly ArrangeEdge[],
   seed: ReadonlyMap<string, Slot>,
   snap: boolean,
-  { attraction, repulsion }: Required<ForceOptions>,
+  { attraction, repulsion, range }: Required<ForceOptions>,
 ): Map<string, Slot> => {
   const nodes: SimNode[] = [...ranks].map(([id, rank]) => {
     const slot = seed.get(id) ?? { column: 0, row: rank };
@@ -167,7 +171,7 @@ const forceSlots = (
         .strength(attraction),
     )
     // Short-range, so unrelated nodes make room for each other without the graph spreading across the canvas.
-    .force('charge', forceManyBody().strength(-repulsion).distanceMax(3))
+    .force('charge', forceManyBody().strength(-repulsion).distanceMax(range))
     .force('collide', forceCollide(0.5))
     // Flow stays top-down: each node is held at its rank and gently towards the middle.
     .force('y', forceY<SimNode>(({ rank }) => rank).strength(1))
