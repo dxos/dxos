@@ -7,7 +7,7 @@ import * as Order from 'effect/Order';
 
 import { Legacy } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
-import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant/types';
+import { DeliveryAnnotation, type DeliveryStatus, type ThreadLane } from '@dxos/react-ui-assistant/types';
 import { type Actor, type ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';
@@ -53,6 +53,8 @@ export type ThreadProjection = {
   queued: number;
   /** How many rows at the end of {@link messages} are prompts not yet in the history. */
   tail: number;
+  /** The lane of each row shown in a lane's gutter, when the chat ran several requests at once. */
+  lanes?: ReadonlyMap<string, ThreadLane>;
 };
 
 /** A chat with nothing in it yet. */

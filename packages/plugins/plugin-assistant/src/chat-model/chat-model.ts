@@ -46,6 +46,7 @@ import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
+import { arrangeLanes } from './lanes.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ChatRequestContext, createPromptContent } from './prompt.ts';
@@ -359,7 +360,7 @@ export class ChatModel {
     this.#feedMessages = Atom.make((get) => get(this.trajectory).messages);
     this.thread = Atom.make((get) => {
       const view = get(this.trajectory);
-      return projectThread({
+      const projection = projectThread({
         feedMessages: get(this.#feedMessages),
         pendingMessages: get(this.messages),
         discarded: view.discarded,
@@ -367,6 +368,13 @@ export class ChatModel {
         outbox: get(this.outbox),
         sender: this._options.sender,
       });
+      const arranged = arrangeLanes({
+        messages: projection.messages,
+        tail: projection.tail,
+        lanes: view.lanes,
+        laneOf: view.laneOf,
+      });
+      return { ...projection, ...arranged };
     });
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};

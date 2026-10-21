@@ -76,3 +76,36 @@ export const getDelivery = (message: object): DeliveryStatus | undefined =>
 /** A row the agent has not taken up yet: it cannot be rewound to, and it can still be removed. */
 export const isUnread = (status: DeliveryStatus | undefined): boolean =>
   status === 'sent' || status === 'delivered' || status === 'failed';
+
+/**
+ * A lane of a chat that runs several requests at once (light threads): what the thread needs to show a message's lane.
+ * A lane that never ran beside another is not given one, so a plain chat looks as it always has.
+ */
+export type ThreadLane = {
+  readonly id: string;
+  /** Gutter colour (a theme hue). */
+  readonly hue: string;
+  readonly title?: string;
+  /** Who runs the lane, when it is not the default agent. */
+  readonly owner?: string;
+  readonly status: 'running' | 'waiting' | 'done' | 'failed';
+  /** The lane this one waits for. */
+  readonly waitingOn?: { readonly hue: string; readonly title?: string };
+  /** ISO time the lane opened. */
+  readonly started: string;
+  /** Id of the lane's first message: the row that carries its header. */
+  readonly first?: string;
+};
+
+/** One line of a lane shown compactly: a background lane's tail, or a finished lane's last answer. */
+export type LaneLine = { readonly role: string; readonly name?: string; readonly text: string };
+
+/** The data a `<lane>` (running in the background) or `<lane-done>` (just finished) row carries. */
+export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly LaneLine[] };
+
+/**
+ * The text of a row standing for a whole lane: `lane` for one still working in the background, `lane-done` for one
+ * that just finished there.
+ */
+export const laneTag = (name: 'lane' | 'lane-done', data: LaneCardData): string =>
+  `<${name}>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</${name}>`;

@@ -567,6 +567,17 @@ const workOf = (state: PromptState, id: Trajectory.EventId, seen: number): Promp
     .sort((left, right) => left.at - right.at);
 };
 
+/** A turn's title when it has none of its own: the start of the request it answers. */
+const titleOf = (entries: readonly PromptEntry[]): string | undefined => {
+  const request = entries
+    .find((entry) => entry.role === 'user')
+    ?.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return request ? (request.length > 80 ? `${request.slice(0, 79)}…` : request) : undefined;
+};
+
 /**
  * Opens a light thread: a fork of main that starts with one entry holding the transcript of each running sibling.
  */
@@ -574,9 +585,11 @@ const openLight = (state: PromptState, event: Trajectory.Event, payload: Traject
   const seen = seenAt(state, payload.from);
   const siblings = (payload.siblings ?? []).flatMap((id): Transcript.Thread[] => {
     const buffer = state.threads[id];
-    return buffer
-      ? [{ id, purpose: buffer.purpose, owner: buffer.owner, status: 'running', entries: workOf(state, id, seen) }]
-      : [];
+    if (!buffer) {
+      return [];
+    }
+    const entries = workOf(state, id, seen);
+    return [{ id, purpose: buffer.purpose ?? titleOf(entries), owner: buffer.owner, status: 'running', entries }];
   });
   const entries: PromptEntry[] =
     siblings.length > 0

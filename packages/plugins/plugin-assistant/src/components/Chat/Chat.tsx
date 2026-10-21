@@ -131,7 +131,7 @@ const ChatRoot = ({
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
   // The chat model folds the feed and reconciles it with the streamed turn and the outbox.
-  const { messages, delivery, queued, tail } = useAtomValue(chatModelState.thread);
+  const { messages, delivery, queued, tail, lanes } = useAtomValue(chatModelState.thread);
   const { alarms, selfWakes } = useAtomValue(chatModelState.trajectory);
 
   const dump = useDebug({ chatModel });
@@ -353,6 +353,7 @@ const ChatRoot = ({
       <ChatThreadContextProvider
         messages={messages}
         tail={tail}
+        lanes={lanes}
         alarms={alarms}
         selfWakes={selfWakes}
         requestTiming={requestTiming}
@@ -538,7 +539,8 @@ type ChatThreadProps = Util.ThemedClassName<{
 const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
-  const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
+  const { messages, tail, lanes } = useChatThreadContext(CHAT_THREAD_NAME);
+  const getLane = useCallback((message: Message.Message) => lanes?.get(message.id), [lanes]);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -650,6 +652,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         userHue={userHue}
         userDid={identity.did}
         getAuthor={getAuthor}
+        getLane={getLane}
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
