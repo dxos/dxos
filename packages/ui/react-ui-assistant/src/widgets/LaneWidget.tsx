@@ -150,32 +150,3 @@ export const LaneCardWidget = ({ view, children }: WidgetProps) => {
     </div>
   );
 };
-
-/**
- * A lane that finished in the background: its last answer, echoed at the end of the transcript in the lane's
- * colour, so it is seen without the reader leaving their place.
- */
-export const LaneNoticeWidget = ({ view, children }: WidgetProps) => {
-  const text = getXmlTextChild(children ?? []);
-  const data = useMemo(() => parse(text), [text]);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => view?.requestMeasure());
-    return () => cancelAnimationFrame(frame);
-  }, [view]);
-
-  if (!data) {
-    return null;
-  }
-
-  return (
-    <div
-      className={mx('w-0 min-w-full border-s-2 rounded-sm px-3 py-2 bg-input-surface', getStyles(data.lane.hue).border)}
-      data-testid='chat.lane-notice'
-    >
-      <LaneHeader lane={data.lane} />
-      <div className='pt-1 text-sm'>
-        <Lines lines={data.lines} />
-      </div>
-    </div>
-  );
-};

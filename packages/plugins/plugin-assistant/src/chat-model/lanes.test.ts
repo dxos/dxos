@@ -17,21 +17,26 @@ const idOf = (name: string) => ids.get(name) ?? (ids.set(name, EntityId.random()
 const message = (name: string, role: 'user' | 'assistant', value: string) =>
   Message.make({ id: idOf(name), sender: { role }, blocks: [{ _tag: 'text', text: value }] });
 
-const lane = (id: string, status: Reducer.LaneStatus, overlapped = true): Reducer.Lane => ({
+const lane = (
+  id: string,
+  status: Reducer.LaneStatus,
+  { overlapped = true, backgrounded = false }: { overlapped?: boolean; backgrounded?: boolean } = {},
+): Reducer.Lane => ({
   id,
   kind: id === 'a' ? 'turn' : 'light',
   status,
   owner: { role: 'assistant' },
   created: '2026-10-21T00:00:00.000Z',
   ...(overlapped ? { overlapped } : {}),
+  ...(backgrounded ? { backgrounded } : {}),
 });
 
-/** Each row's text; a lane's card or notice as its tag and lane. */
+/** Each row's text; a lane's card as `card:<lane>`. */
 const texts = (messages: readonly Message.Message[]) =>
   messages.map((entry) => {
     const value = Message.extractText(entry);
-    const tag = /^<(lane(?:-done)?)>.*?"id":"(\w)"/.exec(value);
-    return tag ? `${tag[1]}:${tag[2]}` : value;
+    const card = /^<lane>.*?"id":"(\w)"/.exec(value);
+    return card ? `card:${card[1]}` : value;
   });
 
 describe('arrangeLanes', () => {
@@ -53,19 +58,19 @@ describe('arrangeLanes', () => {
   ]);
 
   test('a chat whose lanes never overlapped is left as it is', ({ expect }) => {
-    const arranged = arrangeLanes({ messages, tail: 1, lanes: [lane('a', 'done', false)], laneOf });
+    const arranged = arrangeLanes({ messages, tail: 1, lanes: [lane('a', 'done', { overlapped: false })], laneOf });
     expect(arranged.messages).to.deep.eq(messages);
     expect(arranged.lanes.size).to.eq(0);
   });
 
-  test('older running lanes collapse into a card at their first row; the queued tail stays last', ({ expect }) => {
+  test('a lane sent to the background is one card in its original place; the queued tail stays last', ({ expect }) => {
     const arranged = arrangeLanes({
       messages,
       tail: 1,
-      lanes: [lane('a', 'running'), lane('b', 'done'), lane('c', 'waiting')],
+      lanes: [lane('a', 'running', { backgrounded: true }), lane('b', 'done'), lane('c', 'waiting')],
       laneOf,
     });
-    expect(texts(arranged.messages)).to.deep.eq(['lane:a', '17 x 23', '391', 'translate', 'lane-done:b', 'queued']);
+    expect(texts(arranged.messages)).to.deep.eq(['card:a', '17 x 23', '391', 'translate', 'queued']);
     expect(arranged.lanes.get(idOf('c1'))?.status).to.eq('waiting');
     expect(arranged.lanes.get(idOf('b1'))?.first).to.eq(idOf('b1'));
     // Each lane wears its own colour.
@@ -74,21 +79,20 @@ describe('arrangeLanes', () => {
     expect(card._tag === 'text' && card.text).to.include('computing');
   });
 
-  test('when every lane has finished they show in full, in feed order, with no echoes', ({ expect }) => {
+  test('a finished background lane keeps its card and shows its answer where it completed', ({ expect }) => {
     const arranged = arrangeLanes({
       messages: [...messages.slice(0, 5), message('a3', 'assistant', 'summary'), message('c2', 'assistant', 'résumé')],
       tail: 0,
-      lanes: [lane('a', 'done'), lane('b', 'done'), lane('c', 'done')],
+      lanes: [lane('a', 'done', { backgrounded: true }), lane('b', 'done'), lane('c', 'done')],
       laneOf: new Map([...laneOf, [idOf('a3'), 'a'], [idOf('c2'), 'c']]),
     });
-    expect(texts(arranged.messages)).to.deep.eq([
-      'research',
-      '17 x 23',
-      'computing',
-      '391',
-      'translate',
-      'summary',
-      'résumé',
-    ]);
+    expect(texts(arranged.messages)).to.deep.eq(['card:a', '17 x 23', '391', 'translate', 'summary', 'résumé']);
+    // The answer carries the lane's header.
+    expect(arranged.lanes.get(idOf('a3'))?.first).to.eq(idOf('a3'));
+  });
+
+  test('lanes of different agents are not backgrounded, so they interleave', ({ expect }) => {
+    const arranged = arrangeLanes({ messages, tail: 1, lanes: [lane('a', 'running'), lane('b', 'running')], laneOf });
+    expect(texts(arranged.messages)).to.deep.eq(['research', '17 x 23', 'computing', '391', 'translate', 'queued']);
   });
 });

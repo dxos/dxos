@@ -93,6 +93,8 @@ type ThreadLane
     purpose?: string
     owner: Sender
     waitingOn?: EventId
+    overlapped?: boolean         # another lane ran while this one did
+    backgrounded?: boolean       # a newer lane of the same owner opened while this one ran
 ```
 
 ## Features
@@ -169,17 +171,20 @@ feat F-4: Show threads in the chat
 
   req F-4.1:
     when: two or more lanes overlapped in time
-    then: each of them gets a colour-coded left gutter; a lane that never overlapped another looks as it does today
+    then: each of them gets a colour-coded left gutter; a lane that never overlapped another looks as it does today.
+      Lanes of different owners (several agents talking to the reader at once) show in place, interleaved
 
   req F-4.2:
-    when: a lane is running and is not the newest running lane
-    then: it renders as a background thread: a fixed-height scroll container that follows its tail, with a header
-      showing the colour, the purpose, the status and how long it has run; the container expands on request
+    when: a newer lane of the same owner opens while a lane runs
+    then: the older lane goes to the background for good: it renders as one fixed-height scroll container in its
+      original position, holding all of its work and following its tail, with a header showing the colour, the
+      purpose, the status and how long it has run; the container expands on request. Its rows never interleave with
+      the newer lane's
 
   req F-4.3:
     when: a background lane ends
-    then: a completion notice with its final assistant message appears at the end of the transcript, in the lane's
-      colour, and links to the lane
+    then: its final assistant message shows full height at the point in the transcript where it completed, under the
+      lane's header and gutter; its container stays in its original position
 
   req F-4.4:
     when: a lane waits on another lane
@@ -510,4 +515,31 @@ decision D-18: The multi-tenant story runs both agents as scripted stand-ins, la
   affects: [QA-2]
   why: The sandbox that recorded it has no Claude Code credentials and storybook cannot host the ACP adapter's
     process; the runtime routing and the ACP and EDGE producers' thread wiring are the real code paths.
+```
+
+```mdl
+decision D-19: Light threads do not interleave. While a background thread runs it appears as a fixed-height
+  scrollable container in its original position; once it completes, its final message is printed full height at the
+  time of completion. Interleaving suits distinct agents chatting with the reader live, not threading.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  supersedes: D-15
+  affects: [F-4.1, F-4.2, F-4.3]
+```
+
+```mdl
+decision D-20: A lane goes to the background, for good, when a newer lane of the same owner opens while it runs
+  (`Lane.backgrounded`); a lane of another owner does not background it, so multi-agent chats keep interleaving.
+  The container stays in place after the lane ends, and completion notices are gone: the final answer in place
+  replaces them. Fills in [D-19].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2, F-4.3, ThreadLane]
+  why: Deciding by owner gives threading cards and agents interleaving from one rule, and keeping a lane in the
+    background until it ends stops the transcript switching between card and inline rows mid-request. The answer
+    lands at its own feed position, so no row the virtual list placed ever moves.
+  rejected:
+    - Bringing a lane back inline when it becomes the newest running one; the demo showed it switch between
+      representations.
 ```

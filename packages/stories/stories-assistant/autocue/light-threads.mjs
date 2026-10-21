@@ -73,11 +73,11 @@ export const steps = [
   {
     name: 'Watch the research finish',
     narration:
-      'When the research finishes, its answer is echoed at the end, and the waiting thread continues with it. Every thread lives in the same local-first chat log.',
+      'When the research finishes, its answer appears where it completed, and the waiting thread continues with it. Every thread lives in the same local-first chat log.',
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'The research finishes',
-        subtitle: 'its answer is echoed; the waiting thread continues',
+        subtitle: 'its answer appears as it completes; the waiting thread continues',
       });
       await page
         .getByText(/chacun est le précédent/)

@@ -62,11 +62,12 @@ const laneRow = (key: string, created: string, text: string): Message.Message =>
 };
 
 /**
- * Arranges the thread's rows by lane for a chat that ran several requests at once (light threads): rows keep feed
- * order, so lanes interleave and their gutters tell them apart (moving a row the list already placed makes the
- * virtual list re-anchor without end); the newest running lane is the foreground and shows in full, other running
- * lanes collapse into a card at their first row that follows their tail, and a lane that finished in the background
- * is echoed at the end. A chat whose lanes never overlapped is returned as it is.
+ * Arranges the thread's rows for a chat that ran several requests at once (light threads). Rows keep feed order:
+ * moving a row the virtual list has already placed makes it re-anchor without end. A lane a newer lane of the same
+ * owner sent to the background becomes a fixed-height card at its first row, holding all of its work, so its rows
+ * never interleave with the newer request's; once it has finished, its final answer shows full height where it
+ * landed, at the time it completed. Every other lane that overlapped one shows in place with its gutter, which is
+ * how agents talking to the reader at once stay side by side. A chat whose lanes never overlapped is returned as it is.
  *
  * `tail` rows at the end (prompts not taken up yet) stay last.
  */
@@ -85,15 +86,13 @@ export const arrangeLanes = ({
   /** A prompt's row is keyed by its outbox id; its delivery names the message it became. */
   delivery?: ReadonlyMap<string, { entryId?: string; turnId?: string }>;
 }): LaneArrangement => {
-  const laneOf = {
-    get: (id: string): string | undefined => {
-      const row = delivery?.get(id);
-      return (
-        laneOfMessage.get(id) ??
-        (row?.turnId !== undefined ? laneOfMessage.get(row.turnId) : undefined) ??
-        (row?.entryId !== undefined ? laneOfMessage.get(row.entryId) : undefined)
-      );
-    },
+  const laneOf = (id: string): string | undefined => {
+    const row = delivery?.get(id);
+    return (
+      laneOfMessage.get(id) ??
+      (row?.turnId !== undefined ? laneOfMessage.get(row.turnId) : undefined) ??
+      (row?.entryId !== undefined ? laneOfMessage.get(row.entryId) : undefined)
+    );
   };
   const overlapped = lanes.filter((lane) => lane.overlapped);
   if (overlapped.length === 0) {
@@ -102,18 +101,29 @@ export const arrangeLanes = ({
 
   const hues = new Map(overlapped.map((lane, index) => [lane.id, LANE_HUES[index % LANE_HUES.length]]));
   const byId = new Map(overlapped.map((lane) => [lane.id, lane]));
-  const running = overlapped.filter((lane) => lane.status === 'running' || lane.status === 'waiting');
-  const foreground = running.at(-1)?.id;
-  const background = new Set(running.filter((lane) => lane.id !== foreground).map((lane) => lane.id));
 
   const body = messages.slice(0, messages.length - tail);
   const buckets = new Map<string, Message.Message[]>();
   for (const message of body) {
-    const lane = laneOf.get(message.id);
+    const lane = laneOf(message.id);
     if (lane !== undefined && byId.has(lane)) {
       buckets.set(lane, [...(buckets.get(lane) ?? []), message]);
     }
   }
+
+  // A finished background lane's answer: its last message from the agent with prose in it.
+  const finals = new Map(
+    overlapped.flatMap((lane) => {
+      const finished = lane.backgrounded && (lane.status === 'done' || lane.status === 'failed');
+      const final = finished
+        ? (buckets.get(lane.id) ?? []).findLast(
+            (message) =>
+              message.sender.role === 'assistant' && toLines(message).some((line) => line.role === 'assistant'),
+          )
+        : undefined;
+      return final ? [[lane.id, final.id] as const] : [];
+    }),
+  );
 
   const toThreadLane = (lane: Reducer.Lane): ThreadLane => {
     const waitingOn = lane.waitingOn !== undefined ? byId.get(lane.waitingOn) : undefined;
@@ -125,57 +135,42 @@ export const arrangeLanes = ({
       status: lane.status,
       ...(waitingOn ? { waitingOn: { hue: hues.get(waitingOn.id) ?? LANE_HUES[0], title: waitingOn.purpose } } : {}),
       started: lane.created,
-      first: buckets.get(lane.id)?.[0]?.id,
+      // A background lane's header rides on its final answer; its card carries one of its own.
+      first: finals.get(lane.id) ?? buckets.get(lane.id)?.[0]?.id,
     };
-  };
-
-  const card = (lane: Reducer.Lane, kind: 'lane' | 'lane-done', lines: readonly LaneLine[]) => {
-    const data: LaneCardData = { lane: toThreadLane(lane), lines };
-    return laneRow(`${kind}:${lane.id}`, lane.created, laneTag(kind, data));
   };
 
   const arranged: Message.Message[] = [];
   const chrome = new Map<string, ThreadLane>();
-  const carded = new Set<string>();
   const threadLanes = new Map<string, ThreadLane>();
+  const carded = new Set<string>();
+  const shown = (lane: Reducer.Lane, message: Message.Message) => {
+    const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
+    threadLanes.set(lane.id, threadLane);
+    chrome.set(message.id, threadLane);
+    arranged.push(message);
+  };
   for (const message of body) {
-    const id = laneOf.get(message.id);
+    const id = laneOf(message.id);
     const lane = id !== undefined ? byId.get(id) : undefined;
     if (!lane) {
       arranged.push(message);
-    } else if (background.has(lane.id)) {
+    } else if (!lane.backgrounded) {
+      shown(lane, message);
+    } else {
       if (!carded.has(lane.id)) {
         carded.add(lane.id);
-        arranged.push(card(lane, 'lane', (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES)));
+        const data: LaneCardData = {
+          lane: { ...toThreadLane(lane), first: undefined },
+          lines: (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES),
+        };
+        arranged.push(laneRow(`lane:${lane.id}`, lane.created, laneTag(data)));
       }
-    } else {
-      const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
-      threadLanes.set(lane.id, threadLane);
-      chrome.set(message.id, threadLane);
-      arranged.push(message);
+      if (finals.get(lane.id) === message.id) {
+        shown(lane, message);
+      }
     }
   }
 
-  // Lanes that finished in the latest run of overlapping lanes, other than the newest: their answer is echoed last.
-  const burst: Reducer.Lane[] = [];
-  for (const lane of [...lanes].reverse()) {
-    if (!lane.overlapped) {
-      break;
-    }
-    burst.unshift(lane);
-  }
-  // Only while a lane still runs: once every lane has finished, each answer is in view where its lane is.
-  const notices = (running.length > 0 ? burst : [])
-    .slice(0, -1)
-    .filter((lane) => lane.status === 'done' || lane.status === 'failed')
-    .flatMap((lane) => {
-      const answer = (buckets.get(lane.id) ?? [])
-        .filter((message) => message.sender.role === 'assistant')
-        .flatMap(toLines)
-        .filter((line) => line.role === 'assistant')
-        .at(-1);
-      return answer ? [card(lane, 'lane-done', [answer])] : [];
-    });
-
-  return { messages: [...arranged, ...notices, ...messages.slice(messages.length - tail)], lanes: chrome };
+  return { messages: [...arranged, ...messages.slice(messages.length - tail)], lanes: chrome };
 };

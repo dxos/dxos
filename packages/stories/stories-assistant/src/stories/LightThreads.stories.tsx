@@ -14,9 +14,9 @@ import { Calculate, CalculatorSkill, ModuleContainer, createDecorators, storyPar
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
 /**
- * Light threads: a prompt sent while the agent works starts a thread of its own that runs beside the first. Each lane
- * of the chat has a colour in its gutter; a lane still working in the background shows as a fixed-height card that
- * follows its tail; a lane that finishes there is echoed at the end of the transcript. See
+ * Light threads: a prompt sent while the agent works starts a thread of its own that runs beside the first, which goes
+ * to the background as a fixed-height card in its original place; its final answer shows full height where it
+ * completes. Each thread has a colour in its gutter. See
  * `packages/core/compute/trajectory/LIGHT-THREADS.mdl`.
  */
 const meta: Meta<typeof ModuleContainer> = {
@@ -146,7 +146,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Scripted (offline): the research runs on main; the three prompts sent during it start light threads. The quick ones
- * finish first and their answers are echoed at the end, and the translation waits for the research.
+ * finish first, and the translation waits for the research and answers once it completes.
  */
 export const Scripted: Story = {
   decorators: createDecorators({

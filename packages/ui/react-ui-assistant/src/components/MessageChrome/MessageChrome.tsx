@@ -356,9 +356,9 @@ const Row = ({
   </div>
 );
 
-/** A row standing for a whole lane (its background card or completion notice), which frames itself. */
+/** A row standing for a lane working in the background (its card), which frames itself. */
 const isLaneRow = (message: Message.Message): boolean =>
-  message.blocks.length === 1 && message.blocks[0]._tag === 'text' && /^<lane(-done)?>/.test(message.blocks[0].text);
+  message.blocks.length === 1 && message.blocks[0]._tag === 'text' && /^<lane>/.test(message.blocks[0].text);
 
 const promptReveal = mx('justify-end', reveal);
 

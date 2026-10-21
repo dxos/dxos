@@ -100,12 +100,9 @@ export type ThreadLane = {
 /** One line of a lane shown compactly: a background lane's tail, or a finished lane's last answer. */
 export type LaneLine = { readonly role: string; readonly name?: string; readonly text: string };
 
-/** The data a `<lane>` (running in the background) or `<lane-done>` (just finished) row carries. */
+/** The data a `<lane>` row (a lane working in the background) carries. */
 export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly LaneLine[] };
 
-/**
- * The text of a row standing for a whole lane: `lane` for one still working in the background, `lane-done` for one
- * that just finished there.
- */
-export const laneTag = (name: 'lane' | 'lane-done', data: LaneCardData): string =>
-  `<${name}>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</${name}>`;
+/** The text of a row standing for a lane working in the background, which renders as its card. */
+export const laneTag = (data: LaneCardData): string =>
+  `<lane>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;

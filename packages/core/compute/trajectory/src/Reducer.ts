@@ -194,6 +194,12 @@ export type Lane = {
   readonly waitingOn?: Trajectory.EventId;
   /** Whether another lane was running at some point while this one was. */
   readonly overlapped?: boolean;
+  /**
+   * Whether a newer lane of the same owner opened while this one ran: the reader moved on to the newer request, so
+   * this one works in the background from then on. Another owner's lane does not background it; agents talking to the
+   * reader at once stay side by side.
+   */
+  readonly backgrounded?: boolean;
 };
 
 export type ThreadView = {
@@ -246,7 +252,12 @@ const openLane = (
   }
   const running = view.lanes.filter(isRunning);
   for (const other of running) {
-    updateLane(view, other.id, (existing) => ({ ...existing, overlapped: true }));
+    const sameOwner = other.owner.name === event.sender.name;
+    updateLane(view, other.id, (existing) => ({
+      ...existing,
+      overlapped: true,
+      ...(sameOwner ? { backgrounded: true } : {}),
+    }));
   }
   view.laneOf[event.id] = event.id;
   view.lanes.push({
@@ -808,6 +819,7 @@ const ThreadViewSchema = Schema.Struct({
       purpose: Schema.optional(Schema.String),
       waitingOn: Schema.optional(Trajectory.EventId),
       overlapped: Schema.optional(Schema.Boolean),
+      backgrounded: Schema.optional(Schema.Boolean),
     }),
   ),
   laneOf: Schema.Record(Trajectory.EventId, Trajectory.EventId),
@@ -862,7 +874,7 @@ export const session: Durable<SessionState> = {
   }),
 };
 
-export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@2', schema: ThreadViewSchema };
+export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@3', schema: ThreadViewSchema };
 
 export const prompt: Durable<PromptState> = {
   ...promptFold,

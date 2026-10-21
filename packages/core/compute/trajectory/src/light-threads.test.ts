@@ -141,9 +141,18 @@ describe('light threads', () => {
     const { head, tail, turnA, light, turnB } = parallel();
     const wait = event({ _tag: 'threadWait', on: turnA.id }, assistant, turnB.id);
     const running = Reducer.run(Reducer.thread, [...head, wait]).state;
-    expect(running.lanes.map(({ id, kind, status, overlapped }) => ({ id, kind, status, overlapped }))).to.deep.eq([
-      { id: turnA.id, kind: 'turn', status: 'running', overlapped: true },
-      { id: light.id, kind: 'light', status: 'waiting', overlapped: true },
+    expect(
+      running.lanes.map(({ id, kind, status, overlapped, backgrounded }) => ({
+        id,
+        kind,
+        status,
+        overlapped,
+        backgrounded,
+      })),
+    ).to.deep.eq([
+      // The newer lane of the same owner sent the first one to the background.
+      { id: turnA.id, kind: 'turn', status: 'running', overlapped: true, backgrounded: true },
+      { id: light.id, kind: 'light', status: 'waiting', overlapped: true, backgrounded: undefined },
     ]);
     expect(running.lanes[1].waitingOn).to.eq(turnA.id);
     expect(running.items.map((item) => item.lane)).to.deep.eq([turnA.id, turnA.id, light.id]);
@@ -155,6 +164,20 @@ describe('light threads', () => {
         .filter((item) => item.lane === light.id)
         .flatMap((item) => item.blocks.map((block) => (block._tag === 'text' ? block.text : block._tag))),
     ).to.deep.eq(['What is 17 times 23?', '391.']);
+  });
+
+  test("another owner's lane does not send a lane to the background", ({ expect }) => {
+    const prompt = message('plan it', user);
+    const turn = event({ _tag: 'turnBegin', from: { event: prompt.id } });
+    const other = event(
+      { _tag: 'threadOpen', mode: 'light', from: { event: turn.id }, siblings: [turn.id] },
+      { role: 'assistant', name: 'claude' },
+    );
+    const { state } = Reducer.run(Reducer.thread, [prompt, turn, other]);
+    expect(state.lanes.map((lane) => [lane.overlapped, lane.backgrounded])).to.deep.eq([
+      [true, undefined],
+      [true, undefined],
+    ]);
   });
 
   test('a turn that never overlapped is a lane without overlap', ({ expect }) => {
