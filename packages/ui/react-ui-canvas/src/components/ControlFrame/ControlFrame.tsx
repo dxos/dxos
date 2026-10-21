@@ -163,8 +163,9 @@ export const ControlFrame = memo(
     // rather than the only way in.
     const portNodes = new Set<Node>();
     const hovered = hover ? scene.nodes[hover] : undefined;
-    // A selected node shows its handles instead: ports on the same frame crowd them and the label.
-    if (hovered && capabilities.link && !selection.has(hovered.id)) {
+    // A selected node shows its handles instead: ports on the same frame crowd them and the label. While anything is
+    // selected, another node's ports would read as part of the selection, so hover shows them only with none.
+    if (hovered && capabilities.link && selection.size === 0) {
       portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
