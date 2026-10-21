@@ -1,5 +1,116 @@
 # @dxos/app-framework
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/operation@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/web-context@0.16.0
+  - @dxos/web-context-react@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/react-error-boundary@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- b82150a: An operation invoked with `on: 'edge'` now runs as one request to EDGE's operation host (`POST /functions/dxn:<key>`) instead of spawning a process there, so a call such as the Brain panel's `InspectBrain` poll no longer creates a Durable Object per invocation. `RemoteOperationInvoker.invoke` takes the space per call and carries input and output in their wire form, which the invoker encodes and decodes with the operation's schemas. `@dxos/plugin-routine` provides the EDGE invoker once for the application instead of per space, and `EdgeOperationInvoker` presents the current identity on every call.
+- Updated dependencies [5490cbc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/operation@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/react-error-boundary@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/web-context@0.15.0
+  - @dxos/web-context-react@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 0715304: An app now has one process manager: the stack's `Process.ManagerService`, which the app's operation invoker, `Capabilities.ProcessManager` and `AgentService` all use. Operations the app invokes with `on: 'edge'` therefore run on EDGE instead of dying with "Remote process requested, but RemoteProcessManager offers no process control", which an agent's watches and Brain store views logged every three seconds. `@dxos/app-framework` now owns the unified-manager spec that `@dxos/plugin-routine` used to contribute, with a no-op remote manager as a fallback, and a `LayerStack` spec now outranks an ambient service of the same tag.
+- Updated dependencies [0715304]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/operation@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/web-context@0.14.0
+  - @dxos/web-context-react@0.14.0
+  - @dxos/react-error-boundary@0.14.0
+  - @dxos/react-hooks@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

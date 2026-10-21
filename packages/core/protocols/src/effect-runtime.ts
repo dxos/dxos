@@ -17,24 +17,39 @@ import { RpcClosedError, TimeoutError } from './errors/index.ts';
 // and ECHO. Kept protobufjs-free (no proto codec imports) so edge/workerd consumers can run
 // effect-rpc calls without pulling the protobuf runtime into their bundle.
 
+type ServiceMethod = (payload: any) => Effect.Effect<any, any, never>;
+
 /**
- * Runs a service-rpc call at a Promise boundary.
+ * Calls the `tag` method of a service-rpc client at a Promise boundary; the tag names the call in
+ * timeout errors.
+ */
+export const runServiceCall = <C extends { readonly [K in T]: ServiceMethod }, const T extends string>(
+  runtime: Context.Context<never>,
+  client: C,
+  tag: T,
+  payload: Parameters<C[T]>[0],
+  options?: { timeout?: number },
+): Promise<Effect.Success<ReturnType<C[T]>>> =>
+  runServiceEffect(runtime, client[tag](payload), { ...options, label: tag });
+
+/**
+ * Runs a service-rpc effect at a Promise boundary.
  * Interruption (connection closed underneath the call) surfaces as {@link RpcClosedError} so
  * callers can suppress shutdown races; other failures rethrow with their original identity.
  */
-export const runServiceCall = <A>(
+export const runServiceEffect = <A>(
   runtime: Context.Context<never>,
   effect: Effect.Effect<A, any, never>,
-  options?: { timeout?: number; label?: string },
+  options: { timeout?: number; label: string },
 ): Promise<A> => {
-  const call = options?.timeout
+  const call = options.timeout
     ? effect.pipe(
         Effect.timeoutOrElse({
           duration: options.timeout,
           orElse: () =>
             Effect.fail(
               new TimeoutError({
-                message: `RPC timeout: ${options.label ?? 'call'}`,
+                message: `RPC timeout: ${options.label}`,
                 context: { timeout: options.timeout },
               }),
             ),

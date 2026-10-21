@@ -1,5 +1,60 @@
 # @dxos/mcp-server
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [16bde33]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

@@ -6,6 +6,36 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: autocue-ui
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-16
+    summary: 'Factor the on-screen UI of autocue (frame/title band, captions, action feed, cursor) into a private tools/autocue package: each piece a plain-DOM core the skill injects into recorded pages, plus a React wrapper with a storybook. the DXOS ident (formerly tools/ident) lives in it too, in src/ident.'
+    tasks: .agents/projects/autocue-ui/TASKS.md
+    design: .agents/projects/autocue-ui/DESIGN.md
+    prs: [14028]
+    resume: 'Draft PR #14028. Phase 1: Frame (title band + content slot + caption band) built in tools/autocue; driver captions use it. NEXT: feed/cursor, stage.html, compose.mjs bands.'
+  - name: showcase
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-15
+    summary: 'Composer showcase video: Grid story tours three autocue demos at full frame, slides between them, and zooms out to a 6x6 grid of plugin clips, rendered frame by frame at 60 fps; plus the plugin autocue flows (Terra, Chess, Spacetime) and the Terra fixes they surfaced.'
+    tasks: .agents/projects/showcase/TASKS.md
+    design: .agents/projects/showcase/DESIGN.md
+    prs: [14026, 14027, 14029]
+    resume: 'Overnight run recorded 48/52 and rendered the composite; publish failed on masked keys. NEXT: re-cache keys with op run --no-masking, run publish.mjs --run temp/showcase/overnight, commit dx.config.ts; then real gestures for the 8 static clips.'
+  - name: canvas-animation
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-15
+    summary: 'Canvas animation phases 1-2 (react-ui-canvas ANIMATION.md): composite objects (instance nodes, ObjectsPanel, isolation), a per-view clock, Scene.timeline with sampleScene and an animated projection that keys edits, a timeline bar, export by seeking the clock; then agent-written generators run in a sandboxed worker with plugin-canvas operations and a skill. Demo: the DXOS end card rebuilt as a canvas document.'
+    tasks: .agents/projects/canvas-animation/TASKS.md
+    design: packages/ui/react-ui-canvas/docs/ANIMATION.md
+    prs: [14007]
+    resume: 'Draft PR #14007 (stacked on #13992): phases 1-2 built, end card exported and compared (temp/anim). NEXT: review; follow-ups in TASKS.md (overrides UI, palette Objects group, bare-type style toggles in Properties, pinned-bundle export); phase 3.'
   - name: plugin-messenger
     status: active
     user: burdon
@@ -36,6 +66,16 @@ projects:
     design: .agents/projects/composer-e2e/DESIGN.md
     prs: [13247]
     resume: 'PR #13247 GREEN and mergeable (2026-09-20, head 51b95495): package extraction, 28 live tests bound two-sided to mdl QA flows (+QA-5..QA-9), BEST-PRACTICES.md, ci.e2e-test published from main/composer shard, PostHog dashboard 963444. Four CI-fix commits followed the first — vitest project, two orphaned deps, and (three rounds) knip: this package has NO production code, so its deps belong in devDependencies, which is what react-ui-table/mosaic/lit-grid/testbench-app all do. table:QA-1 and inbox:QA-1 lost their automated claims (whole-suite skips). NEXT: awaiting review; then the TASKS.md follow-ups.'
+  - name: canvas-views
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-18
+    summary: 'Reconcile the canvas containers: scenes and frames become Views (the root included), groups become (anonymous) Objects, layers become Tags with drawing order taken from the tree; a Views panel shows the full hierarchy and an Objects panel the library, replacing AboutInspector.'
+    tasks: packages/ui/react-ui-canvas/docs/TASKS.md
+    design: packages/ui/react-ui-canvas/docs/VIEWS.md
+    prs: [14030, 14049, 14050]
+    resume: 'PR #14049 (crossfade, text leading) MERGED. Draft PR #14050: Phase 0 (DESIGN.md §13) — context pruned, no pan re-renders (Renders story test), CanvasController with Selection/Editing/Tools/Time (unit-tested), folder-barrel-imports on (#14048 merged), Canvas.tsx split per part; ViewsInspector + Objects stories over shared src/testing fixtures. NEXT: controller Navigation and Look; aspect hooks and Time/Gesture/Editing providers; split Viewport; then Phase 1 (View rename). #14047 (HistoryTracker) is a draft awaiting review.'
   - name: plugin-canvas
     status: active
     user: burdon
@@ -215,6 +255,16 @@ projects:
     design: packages/core/echo/blob/docs/DESIGN.md
     prs: [12789]
     resume: 'Package extracted and published (@dxos/blob@0.11.1 on npm, contract + ni-uri + ./s3 + ./hosted; 42 tests green). NEXT: decide how the File properties panel surfaces a blob URL (three options in DESIGN.md discussion, recommendation is the stable s3:// URI plus backend name, NOT the presigned URL which expires). THEN the `edge`->`blob` storage-name and `ni:`->`blob:///` scheme migration, which is dual-read (backend declares both schemes, writes the new one) and must ship in ONE pass with any further package moves since both touch the same persisted objects. HARD CONSTRAINT, do not retry: BlobManager CANNOT move into @dxos/blob — @dxos/echo imports BlobBackend for Hypergraph.registerBlobBackend, so the package sits BELOW echo, while BlobManager creates Blob.Blob objects and throws EchoError. moon reports it as project_graph::would_cycle. The blob schema cannot come down to meet it either (Blob.ts is built on echo Obj/Type/Annotation/Database). Both backends DO live in @dxos/blob because neither needs echo — the hosted one takes its scheme from ni-uri SCHEME rather than Blob.Scheme.ni, which is what keeps the edge out of the graph. PACKAGING TRAP that cost a cycle: a NEW public package fails check-packages-published until someone runs `node scripts/publish-package.ts <name>` and configures npm trusted publishing, and a private one fails check-public-dependencies the moment a published package imports it — so the name must be published BEFORE the wiring lands. knip runs only under Node 22+ (its config uses node:fs globSync); on Node 20 it dies with a misleading config-load error, so run it under proto Node 24.'
+  - name: blob-local-first
+    status: active
+    user: dmaretskyi
+    host: claude-cloud
+    created: 2026-10-10
+    summary: 'Make the EDGE blob backend local-first: bytes land in a `blobs` table in the client services SQLite database (served over a new BlobStoreService RPC); a separate host layer replicates them to EDGE asynchronously, only when an EDGE URL is configured.'
+    tasks: packages/core/echo/blob/TASKS.md
+    design: packages/core/echo/blob/docs/LOCAL-FIRST.md
+    prs: [13880]
+    resume: 'Phase 5 of packages/core/echo/blob/TASKS.md implemented: client writes are confirmed once stored locally; EDGE replication is a separate client-services layer (BlobReplicationLayer) present only with an EDGE URL. NEXT: land PR #13880, then eviction (needs BlobBackend.remove + refcounting), per-blob failure isolation, online-event wake, p2p transfer for no-EDGE spaces.'
   - name: plugin-s3
     status: active
     user: burdon
@@ -796,8 +846,8 @@ projects:
     host: burdon-mbp-2141
     created: 2026-09-28
     summary: 'Next-generation react-ui primitives as a parallel `Next.*` namespace: sizes/levels as data-attribute CSS variables, zag-machine behavior (Solid-ready layering), components own padding and containers own gaps, grid/Column model for scrolling containers with gutters.'
-    tasks: packages/ui/react-ui/src/next/TASKS.md
-    design: packages/ui/react-ui/src/next/DESIGN.md
+    tasks: packages/ui/react-ui/docs/TASKS.md
+    design: packages/ui/react-ui/docs/DESIGN.md
     prs: [13502, 13504, 13512]
     resume: '#13512 OPEN: Phase 4 steps 0-4 (Field follow-ups, Next.Panel, popup size inheritance, Next.Listbox, DragHandle/DropIndicator/DragPreview) + AUDIT.md §6 decision points. NEXT: react-ui-list/next (Listbox, OrderedList) with plugin-registry pilot; then answer AUDIT §6 open points and start react-ui-form/next core.'
 

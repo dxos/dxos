@@ -218,10 +218,8 @@ export default Capability.makeModule(
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
-                  AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
-                  Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
-                    spacesOrder.order = nextOrder;
-                  });
+                  AppGraph.sortEdges(graph, GraphNode.RootId, AppGraphNode.child, nextOrder);
+                  SpaceSchema.setSpacesOrder(spacesOrder, nextOrder);
                 };
                 workspaceRearrangeCache.set(workspace.id, onRearrange);
               }

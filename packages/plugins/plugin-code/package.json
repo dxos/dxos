@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-code",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
@@ -186,6 +186,8 @@
     "@agentclientprotocol/sdk": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
@@ -215,6 +217,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
@@ -248,6 +251,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

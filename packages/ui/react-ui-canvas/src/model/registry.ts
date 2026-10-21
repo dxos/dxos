@@ -6,7 +6,7 @@
 // Node and link type definitions (decision 12): what a type's schema is, what it renders, where its
 // ports are, how it may be manipulated, and how the palette presents it. Per type, not per instance, so
 // the data stays small and ports come for free; a node may still carry its own `ports`. A host composes
-// its own registry (and with `createSceneSchema` its scene schema) from the built-ins and its types.
+// its own registry (and with `createViewSchema` its scene schema) from the built-ins and its types.
 //
 // A type may be built on a prototype (`extends`): it inherits every definition field it leaves unset, so
 // shapes that look and behave alike share one definition and differ only where they say so. Prototypes
@@ -18,29 +18,23 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
-import { type PartEditing, type PartField } from '../utils/parts.ts';
-import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
-import { type SceneStore } from './store.ts';
+import { type PartEditing, type PartField } from '../utils/index.ts';
+import { type ViewStore } from './store.ts';
 import {
-  EllipseNode,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeType,
-  NoteNode,
   type Point,
   type Port,
-  PortalNode,
-  RectNode,
-  type Scene,
   type Size,
+  type View,
 } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: Scene;
-  store: SceneStore;
+  scene: View;
+  store: ViewStore;
   registry: NodeRegistry;
   /** Effective screen zoom of the layer (camera zoom × portal scales), for level-of-detail choices. */
   zoom: number;
@@ -53,6 +47,8 @@ export type NodeViewProps = {
   opening?: boolean;
   /** The text part of this node being edited in place, with the editor's callbacks. */
   editing?: PartEditing;
+  /** The node's embedded content takes input (`CanvasAtoms.active`); otherwise it should be inert. */
+  active?: boolean;
   /** Opens the node (drills into a portal); absent where the layer is read-only. */
   onOpen?: () => void;
 };
@@ -63,11 +59,11 @@ export type NodeDef = {
   type: NodeType;
   name: string;
   icon: string;
-  /** Palette shortcut; a registry of many types leaves most without one. */
+  /** Tools panel shortcut; a registry of many types leaves most without one. */
   key?: string;
-  /** Palette group; types without one share the default group. */
+  /** Tools panel group; types without one share the default group. */
   group?: string;
-  /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */
+  /** The type's schema; the host's scene schema is the union of its registry's (`createViewSchema`). */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
@@ -81,12 +77,38 @@ export type NodeDef = {
   resizable?: boolean;
   minSize?: Size;
   maxSize?: Size;
-  /** Double-click opens the node (a portal drills in; a text node edits, later). */
+  /** Double-click opens the node (a frame drills in; a text node edits, later). */
   openable?: boolean;
+  /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
+  ellipse?: boolean;
+  /**
+   * The frame's fill and border take this outline (SVG path data in the frame's px, kept `inset` px inside it) rather
+   * than the box: a cloud is a box drawn as a cloud. `radius` is the look's corner radius in px, for an outline with
+   * corners of its own to round.
+   */
+  silhouette?: (node: Node, inset: number, radius: number) => string;
+  /** The outline drawn while the node is moved or drawn: its frame unless the shape fits a `circle` inside it. */
+  bounds?: (node: Node) => 'frame' | 'circle';
+  /**
+   * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
+   * opening calls it instead of drilling in, and auto-drill passes the node by.
+   */
+  hostOpen?: (node: Node) => (() => void) | undefined;
+  /**
+   * Controls floating above the node, flush with its right edge and at screen size, so they neither cover the node's
+   * content nor scale with the camera; renders nothing when it returns `null`.
+   */
+  toolbar?: ComponentType<NodeViewProps>;
   /** The text properties edited in place, in order; the first is the node's main text. */
   parts?: readonly PartField[];
   /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
   fields?: FormFieldMap;
+  /** The palette and the create menu offer the type; false for a type placed some other way (an instance). */
+  palette?: boolean;
+  /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
+  bare?: boolean;
+  /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
+  unclipped?: boolean;
 };
 
 /**
@@ -143,78 +165,3 @@ export type LinkDef = {
 
 export type NodeRegistry = Readonly<Record<NodeType, NodeDef>>;
 export type LinkRegistry = Readonly<Record<LinkType, LinkDef>>;
-
-const MIN_SIZE: Size = { width: 64, height: 32 };
-
-/**
- * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
- * built-in rectangle and scene are both boxes; a host type can extend it too.
- */
-export const boxPrototype: NodeDefSpec = {
-  component: BoxNodeView,
-  parts: [{ field: 'label' }],
-  defaultSize: NOMINAL_SIZES.rect,
-  resizable: true,
-  minSize: MIN_SIZE,
-};
-
-export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = { box: boxPrototype };
-
-export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
-  rect: {
-    extends: 'box',
-    name: 'Rectangle',
-    icon: 'ph--rectangle--regular',
-    key: 'R',
-    schema: RectNode,
-    create: (props) => createNode({ type: 'rect', ...props }),
-  },
-  ellipse: {
-    name: 'Ellipse',
-    icon: 'ph--circle--regular',
-    key: 'E',
-    schema: EllipseNode,
-    component: EllipseNodeView,
-    create: (props) => createNode({ type: 'ellipse', ...props }),
-    defaultSize: NOMINAL_SIZES.ellipse,
-    // Only the side centres of the frame lie on the curve.
-    portsPerSide: 1,
-    parts: [{ field: 'label' }],
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-
-  note: {
-    name: 'Note',
-    icon: 'ph--text-t--regular',
-    key: 'T',
-    schema: NoteNode,
-    component: NoteNodeView,
-    parts: [{ field: 'text', multiline: true }],
-    create: (props) => createNode({ type: 'note', ...props }),
-    defaultSize: NOMINAL_SIZES.note,
-    resizable: true,
-    minSize: MIN_SIZE,
-  },
-  scene: {
-    extends: 'box',
-    name: 'Scene',
-    icon: 'ph--frame-corners--regular',
-    key: 'S',
-    schema: PortalNode,
-    component: PortalNodeView,
-    create: (props) => createNode({ type: 'scene', ...props }),
-    defaultSize: NOMINAL_SIZES.scene,
-    minSize: { width: 96, height: 60 },
-    openable: true,
-  },
-};
-
-export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
-
-export const defaultLinkRegistry: LinkRegistry = {
-  line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
-  curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
-  spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
-};

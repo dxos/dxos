@@ -15,9 +15,9 @@ Everything routes through `moon`, and `.moon/workspace.yml` decides where the re
 
 ### What runs is decided once per job, not per step
 
-`.depot/actions/affected` resolves the trigger to `MOON_AFFECTED`/`MOON_BASE` (or to nothing, for a
-full run) immediately after setup, and every `moon` step is then unconditional — no `--affected`
-flag, no `if:`. The previous shape carried an Affected and an All variant of each step gated on
+`.depot/actions/affected` resolves the trigger to `MOON_AFFECTED`/`MOON_BASE` (or to nothing for a full
+run, and `MOON_FORCE` on the scheduled run) immediately after setup, and every `moon` step is then
+unconditional — no `--affected` flag, no `if:`. The previous shape carried an Affected and an All variant of each step gated on
 `branch != 'main'`, which is a proxy that gets several triggers wrong and which doubled again in
 `test` for the presence of `TRUNK_TOKEN` (four steps for one command). Three things follow:
 
@@ -41,8 +41,8 @@ Stage boundaries are the dependency edges. Within a stage, independent steps run
    the price of reporting one failure per run; concurrent + report-all gets both, and a PR with an
    unformatted file _and_ a bad publish config learns both in one cycle. The peer-dependency check
    is **excluded** and stays sequential: `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`, an
-   input to every moon task, and the `trap` that restores it does not survive a hard cancellation —
-   a cancelled sibling would leave stages 2 and 3 missing the cache.
+   input to `check-module-structure`, and the `trap` that restores it does not survive a hard
+   cancellation — a cancelled sibling would leave stage 2 missing the cache.
 2. **The compile gate** — `moon run :lint :build :test-types`, ~15 s warm and the job's floor cold.
    `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
    `deps: [build]`, so ahead of the gate it would pull the builds along with it.
@@ -73,10 +73,10 @@ per unit and merged back on join.
 
 Two facts the ordering depends on, both verified rather than assumed:
 
-- **`pnpm-lock.yaml` is an input to every moon task** (`.moon/tasks/all.yml`). Editing it and
-  re-running a cached task changes the hash, so the peer-dependency step — which passes
-  `--no-frozen-lockfile` and may rewrite the lockfile — restores it under a `trap` instead of
-  invalidating stages 2 and 3. That is why the step could not simply be moved to the front.
+- **`pnpm-lock.yaml` is an input to every `check-module-structure` task.** Editing it and re-running
+  one changes the hash, so the peer-dependency step — which passes `--no-frozen-lockfile` and may
+  rewrite the lockfile — restores it under a `trap` instead of invalidating stage 2. That is why the
+  step could not simply be moved to the front.
 - **The production `bundle` is not otherwise built anywhere in Check.** `:build` does not include it
   and `e2e-bundle` builds `bundle-e2e`, a separate cache entry by design (`DX_PWA=false` changes the
   very boot graph the budget measures). So `check-boot-budget` pays for that bundle wherever it

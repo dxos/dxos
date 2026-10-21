@@ -38,7 +38,7 @@ describe('TailSampler', () => {
 
   test('keeps a model call the ratio would have dropped', ({ expect }) => {
     const sampler = new TailSampler();
-    expect(sampler.keep(span({ attributes: { 'gen_ai.system': 'anthropic' } }))).toEqual(true);
+    expect(sampler.keep(span({ attributes: { 'gen_ai.provider.name': 'anthropic' } }))).toEqual(true);
   });
 
   test('keeps a turn or tool-call span the ratio would have dropped', ({ expect }) => {

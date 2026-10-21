@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
+import { useAtom, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 // Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
@@ -27,6 +27,7 @@ import * as Util from '@dxos/react-ui/Util';
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
 
+import { registryFilterAtom } from '../../filter.ts';
 import { useDisableConfirmation } from '../../hooks/index.ts';
 import { getPluginPath } from '../../paths.ts';
 
@@ -85,7 +86,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
     const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
     const settingsSync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
-    const [filter, setFilter] = useState('');
+    const [filter, setFilter] = useAtom(registryFilterAtom);
 
     const filtered = useMemo(() => {
       const query = filter.trim().toLowerCase();

@@ -1,6 +1,6 @@
 # Migrating canvas-editor and canvas-compute to the scene engine
 
-Status: M1–M4 done; M5 (retiring the old packages and `src/archive`) in progress, steps 1–2 of §5.3 done (updated 2026-10-08).
+Status: M1–M5 done: `react-ui-canvas-editor` and `src/archive` are deleted and the package root exports the scene engine (updated 2026-10-09).
 Original gap analysis and plan: 2026-09-20. Inputs: `DESIGN.md` (the engine), the source of
 `packages/ui/react-ui-canvas-editor` and `packages/ui/react-ui-canvas-compute` on `main`, and their consumers
 (`plugin-conductor`, `plugin-debug`). Every feature the two packages implement is mapped to what the engine has
@@ -38,19 +38,19 @@ of this document.
 
 ### 2.1 Data model
 
-| canvas-editor / compute                                          | Engine                                                                                                        | Status | Plan                                                                                                                               |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `Polygon {center, size}` shapes                                  | `NodeBase` with `center` + `size` on every node, plus per-type properties                                     | ✓      |                                                                                                                                    |
-| `type: string` open shape type                                   | `Node` is the open `NodeBase`; a host registers its types with their schema and `createSceneSchema`           | ✓      | M1 (decision 1)                                                                                                                    |
-| `Connection {source, target, input?, output?}`                   | `Link {source: {node, port?}, target: {node, port?}}`; `input`/`output` are the two port ids                  | ✓      |                                                                                                                                    |
-| `PathShape {path, start?, end?}` (stored SVG string, markers)    | `ends?: {start?, end?}` markers on every link; a free path is a spline whose ends are `{point}` endpoints     | ✓      | M2 (decision 3)                                                                                                                    |
-| `guide: boolean`, `classNames`                                   | `NodeStyle.guide` (dashed, unfilled) and `NodeStyle.className`, rendered by the frame                         | ✓      | M2                                                                                                                                 |
-| `text` on every shape                                            | `label` (rect, ellipse), `text` (text), `name` (class)                                                        | ≈      | keep per type; the migration maps `text` to the type's field                                                                       |
-| `rounded?` on rectangle                                          | none (declared but unused upstream)                                                                           | ✗      | drop                                                                                                                               |
-| `ComputeShape.node` (compute node id)                            | each compute shape schema plus `z` is a node schema (`scene/defs.ts`); the projection writes `node` on create | ✓      | M3                                                                                                                                 |
-| `CanvasBoard {name, computeGraph: Ref, layout: GraphModel.Data}` | in-memory `SceneStore`; ECHO store is phase 3 (`Drawing.Canvas.content` via `@dxos/diagram` builders)         | ✗      | M4: a `SceneStore` over `CanvasBoard.layout` first (keeps the ECHO type and every existing board), phase 3's `Drawing` store later |
-| Fractional `z`                                                   | ✓ on nodes and links                                                                                          | ✓      | editor has no z; migration assigns `initialKeys` in array order                                                                    |
-| Ids                                                              | `ElementId` shared namespace; editor uses `Obj.ID.random()`                                                   | ✓      |                                                                                                                                    |
+| canvas-editor / compute                                          | Engine                                                                                                        | Status | Plan                                                                                                                              |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `Polygon {center, size}` shapes                                  | `NodeBase` with `center` + `size` on every node, plus per-type properties                                     | ✓      |                                                                                                                                   |
+| `type: string` open shape type                                   | `Node` is the open `NodeBase`; a host registers its types with their schema and `createViewSchema`            | ✓      | M1 (decision 1)                                                                                                                   |
+| `Connection {source, target, input?, output?}`                   | `Link {source: {node, port?}, target: {node, port?}}`; `input`/`output` are the two port ids                  | ✓      |                                                                                                                                   |
+| `PathShape {path, start?, end?}` (stored SVG string, markers)    | `ends?: {start?, end?}` markers on every link; a free path is a spline whose ends are `{point}` endpoints     | ✓      | M2 (decision 3)                                                                                                                   |
+| `guide: boolean`, `classNames`                                   | `NodeStyle.guide` (dashed, unfilled) and `NodeStyle.className`, rendered by the frame                         | ✓      | M2                                                                                                                                |
+| `text` on every shape                                            | `label` (rect, ellipse), `text` (text), `name` (class)                                                        | ≈      | keep per type; the migration maps `text` to the type's field                                                                      |
+| `rounded?` on rectangle                                          | none (declared but unused upstream)                                                                           | ✗      | drop                                                                                                                              |
+| `ComputeShape.node` (compute node id)                            | each compute shape schema plus `z` is a node schema (`scene/defs.ts`); the projection writes `node` on create | ✓      | M3                                                                                                                                |
+| `CanvasBoard {name, computeGraph: Ref, layout: GraphModel.Data}` | in-memory `ViewStore`; ECHO store is phase 3 (`Drawing.Canvas.content` via `@dxos/diagram` builders)          | ✗      | M4: a `ViewStore` over `CanvasBoard.layout` first (keeps the ECHO type and every existing board), phase 3's `Drawing` store later |
+| Fractional `z`                                                   | ✓ on nodes and links                                                                                          | ✓      | editor has no z; migration assigns `initialKeys` in array order                                                                   |
+| Ids                                                              | `ElementId` shared namespace; editor uses `Obj.ID.random()`                                                   | ✓      |                                                                                                                                   |
 
 ### 2.2 Shapes and anchors
 
@@ -110,26 +110,26 @@ of this document.
 
 ### 2.5 Compute integration
 
-| canvas-compute                                                                            | Engine                                                                                                                                                                                                        | Status | Plan                                                                             |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
-| `GraphMonitor {onCreate, onLink, onDelete}` mirroring canvas → compute graph              | `createComputeProjection({controller})` (`scene/projection.ts`): `create` / `link` / `delete` reach the compute graph through the shared `graph/sync.ts`, which `useGraphMonitor` uses too                    | ✓      | M3                                                                               |
-| `ComputeShapeLayout`: anchors from runtime schema                                         | the projection writes `node.ports` from the compute node's input / output schemas (`anchorsToPorts` over `createFunctionAnchors`); static ports come from each def's `getAnchors`                             | ✓      | M3                                                                               |
-| `useComputeNodeState(shape)` → `{node, meta, runtime}`                                    | unchanged: the engine node is the shape plus `z`, so every component renders verbatim under `computeNodeView`                                                                                                 | ✓      | M3                                                                               |
-| `ComputeContext` / `useComputeGraphController` (repaint on `update`, bullets on `output`) | `useControllerUpdates` re-renders each node view on `update`; `Bullets` (a `SceneView` overlay) runs a dot along the link path on `output`; `ComputeContext` carries the shape registry, `debug` and `resize` | ✓      | M3                                                                               |
-| `AUTO_TRIGGER_NODES`, `exec`, `evalNode`, `setOutput`, diagnostics                        | controller is untouched by the migration                                                                                                                                                                      | ✓      | none                                                                             |
-| `DiagnosticOverlay`                                                                       | rendered over the view as before                                                                                                                                                                              | ✓      | M3                                                                               |
-| Trigger shape rewrites its own `size.height` on kind change                               | still a direct write; the engine node is the store's value                                                                                                                                                    | ≈      | M4: an `update {size}` intent through the projection                             |
-| `createComputeGraph(canvasGraph)` and the `testing/circuits.ts` factories                 | unchanged; `sceneFromCircuit` turns a circuit into a scene (notes become note nodes, edges pin the property ports)                                                                                            | ✓      | M3; M4 replaces `sceneFromCircuit` with the ECHO store over `CanvasBoard.layout` |
-| `Box` reads the shape def and `debug` from the editor context                             | `ComputeContext.registry` / `debug` on both surfaces; a function body grows through `resize` (an `update {size}` in the engine) or the frame element in the editor                                            | ✓      | M3                                                                               |
+| canvas-compute                                                                            | Engine                                                                                                                                                                                                     | Status | Plan                                                                            |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+| `GraphMonitor {onCreate, onLink, onDelete}` mirroring canvas → compute graph              | `createComputeProjection({controller})` (`scene/projection.ts`): `create` / `link` / `delete` reach the compute graph through the shared `graph/sync.ts`, which `useGraphMonitor` uses too                 | ✓      | M3                                                                              |
+| `ComputeShapeLayout`: anchors from runtime schema                                         | the projection writes `node.ports` from the compute node's input / output schemas (`anchorsToPorts` over `createFunctionAnchors`); static ports come from each def's `getAnchors`                          | ✓      | M3                                                                              |
+| `useComputeNodeState(shape)` → `{node, meta, runtime}`                                    | unchanged: the engine node is the shape plus `z`, so every component renders verbatim under `computeNodeView`                                                                                              | ✓      | M3                                                                              |
+| `ComputeContext` / `useComputeGraphController` (repaint on `update`, bullets on `output`) | `useControllerUpdates` re-renders each node view on `update`; `Bullets` (a `Canvas` overlay) runs a dot along the link path on `output`; `ComputeContext` carries the shape registry, `debug` and `resize` | ✓      | M3                                                                              |
+| `AUTO_TRIGGER_NODES`, `exec`, `evalNode`, `setOutput`, diagnostics                        | controller is untouched by the migration                                                                                                                                                                   | ✓      | none                                                                            |
+| `DiagnosticOverlay`                                                                       | rendered over the view as before                                                                                                                                                                           | ✓      | M3                                                                              |
+| Trigger shape rewrites its own `size.height` on kind change                               | still a direct write; the engine node is the store's value                                                                                                                                                 | ≈      | M4: an `update {size}` intent through the projection                            |
+| `createComputeGraph(canvasGraph)` and the `testing/circuits.ts` factories                 | unchanged; `viewFromCircuit` turns a circuit into a scene (notes become note nodes, edges pin the property ports)                                                                                          | ✓      | M3; M4 replaces `viewFromCircuit` with the ECHO store over `CanvasBoard.layout` |
+| `Box` reads the shape def and `debug` from the editor context                             | `ComputeContext.registry` / `debug` on both surfaces; a function body grows through `resize` (an `update {size}` in the engine) or the frame element in the editor                                         | ✓      | M3                                                                              |
 
 ### 2.6 Persistence and collaboration
 
-| canvas-editor                                                                         | Engine                                             | Status | Plan                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CanvasGraphModel.create(layout, fn => Obj.update(...))`, `sync()` on `Obj.subscribe` | `SceneStore` seam with an in-memory implementation | ✗      | M4: `createEchoStore(board)`: `scenes` atom derived from `Obj.subscribe`, `updateScene` under `Obj.update`; nodes/links map 1:1 onto `layout.nodes` / `layout.edges` |
-| Direct field writes outside the change function (drop, text, layout, trigger)         | every write is an intent through the projection    | ✓      | the migration removes the bypasses                                                                                                                                   |
-| Nested-record ownership (`structuredClone` of `inputSchema`)                          | store-level concern                                |        | M4 keeps the clone in the compute projection                                                                                                                         |
-| No presence / awareness                                                               | none                                               |        | out of scope                                                                                                                                                         |
+| canvas-editor                                                                         | Engine                                            | Status | Plan                                                                                                                                                                |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CanvasGraphModel.create(layout, fn => Obj.update(...))`, `sync()` on `Obj.subscribe` | `ViewStore` seam with an in-memory implementation | ✗      | M4: `createEchoStore(board)`: `scenes` atom derived from `Obj.subscribe`, `updateView` under `Obj.update`; nodes/links map 1:1 onto `layout.nodes` / `layout.edges` |
+| Direct field writes outside the change function (drop, text, layout, trigger)         | every write is an intent through the projection   | ✓      | the migration removes the bypasses                                                                                                                                  |
+| Nested-record ownership (`structuredClone` of `inputSchema`)                          | store-level concern                               |        | M4 keeps the clone in the compute projection                                                                                                                        |
+| No presence / awareness                                                               | none                                              |        | out of scope                                                                                                                                                        |
 
 ### 2.7 Testing and stories
 
@@ -168,7 +168,7 @@ for M1–M3.
 
 - **M1: registry openness (engine)** — done. `NodeBase` (centre + size on every node; the ellipse's radii became
   its size), `Node` open to host types with `isRectNode`-style guards for the built-ins, `NodeDef.schema` /
-  `create` / `defaultSize` / `group?` and `createSceneSchema` (decision 1); `Port.accepts?` in `pairPorts` and
+  `create` / `defaultSize` / `group?` and `createViewSchema` (decision 1); `Port.accepts?` in `pairPorts` and
   the drop target, `Link.directed` with an arrowhead (decision 2). Tests for both; the stories are unchanged.
 - **M2: editor parity (engine)** — done. `{point}` endpoints and `ends` markers (decision 3), `guide` /
   `className` on `NodeStyle`, hover border and selection painted on top, the type's view as the ghost of a create
@@ -181,8 +181,8 @@ for M1–M3.
   `computeNodeView`, ports from `getAnchors`, the palette groups); `createComputeProjection` mirrors `create` /
   `link` / `delete` and a re-attached link end into the compute graph through `graph/sync.ts` (shared with
   `useGraphMonitor`), reconciles the graph with a restored scene so undo / redo take the compute nodes and edges
-  along, and writes runtime ports from the compute node's schemas; `Bullets` animates outputs along the link paths; `sceneFromCircuit` maps
-  the circuit factories to scenes; `scene.test.ts` and the twelve `scene` stories over `SceneView`. The engine gained
+  along, and writes runtime ports from the compute node's schemas; `Bullets` animates outputs along the link paths; `viewFromCircuit` maps
+  the circuit factories to scenes; `scene.test.ts` and the twelve `scene` stories over `Canvas`. The engine gained
   `Port.snap`, `data-link-id`, an `overlay` slot, a host-owned `projection` and keyless palette entries. The
   controller, `useComputeNodeState`, `node-defs.ts` and the conductor runtime are untouched.
 - **M4: persistence and the plugin switch** — done. `createEchoStore(board)` over `CanvasBoard.layout` (nodes ↔
@@ -194,7 +194,7 @@ for M1–M3.
   projection, ranking the scene into rows through `@dxos/diagram`'s `Layout.rank` — the engine the dynamic
   projection already uses — rather than dagre / ELK: `@antv` is dropped and, unlike it, every node keeps its type,
   size and content and only its centre moves. `Capabilities.layout` enables the toolbar's button.
-  `plugin-conductor`'s `CanvasArticle` renders `SceneView` with the compute projection and the ECHO store, hotkey
+  `plugin-conductor`'s `CanvasArticle` renders `Canvas` with the compute projection and the ECHO store, hotkey
   scope still wired by `KeyboardContainer`; Composer's `optimizeDeps` regenerated. `plugin-debug`'s presets are
   untouched **by design** — they write shapes into `layout` exactly as the editor did, which is what the store
   reads. canvas-editor and canvas-compute keep exporting until M5.
@@ -222,11 +222,11 @@ also a declared workspace dependency (`package.json` and a `tsconfig.json` refer
 
 ### 5.2 Who still uses `react-ui-canvas-editor`
 
-| Consumer                  | What                                                                                                                                                                                                                                                                                                                                                                                                                                  | Replacement                                                                                                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plugin-conductor`        | `CanvasBoard` (ECHO type: schema, create-object, translations, article); `KeyboardContainer` (hotkey scope); `ShapeRegistry` (only to fill `ComputeContext.registry`)                                                                                                                                                                                                                                                                 | Move `CanvasBoard` (`types/`: schema, model, shapes) into `react-ui-canvas-compute`, its only real owner; a plain attention/hotkey wrapper in the plugin; drop `registry` from `ComputeContext` (below). |
-| `plugin-debug`            | `CanvasBoard`, `CanvasGraphModel`, `pointMultiply` / `pointsToRect` / `rectToPoints` (circuit presets written into `layout`)                                                                                                                                                                                                                                                                                                          | Build presets as scenes (`sceneFromCircuit` already exists) or keep writing `layout` through the moved `CanvasBoard` model; the point helpers become local or come from the engine.                      |
-| `react-ui-canvas-compute` | Shape authoring API: `ShapeDef` (26), `ShapeComponentProps` (24), `createAnchorMap` (12), `TextBox` / `TextBoxControl` / `TextBoxProps`, `createAnchors`, `getAnchorPoints`, `getParentShapeElement`, `rowHeight`, `Polygon`, `isPolygon`, `Anchor`, `ShapeLayout`; graph: `CanvasGraphModel`, `GraphMonitor`; legacy path: `Editor`, `EditorController`, `EditorRootProps`, `ShapeRegistry`, `testing` (`Container`, `useSelection`) | See §5.3. `scene/defs.ts` already adapts every `ShapeDef` into a `NodeDef`; the rest is moving the shapes onto `NodeDef` / `NodeViewProps` directly.                                                     |
+| Consumer                  | What                                                                                                                                                                                               | Replacement                                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `plugin-conductor`        | `KeyboardContainer` (hotkey scope)                                                                                                                                                                 | A plain attention/hotkey wrapper in the plugin (step 5). `CanvasBoard` now comes from `react-ui-canvas-compute` (step 4). |
+| `plugin-debug`            | Nothing: `CanvasBoard` / `CanvasGraphModel` come from `react-ui-canvas-compute` and the grid-to-pixel helper is local (step 4).                                                                    | _Done._                                                                                                                   |
+| `react-ui-canvas-compute` | Nothing: it owns `CanvasBoard` (`src/types/`, also the `./types` entry point), `CanvasGraphModel` and `GraphMonitor`, and `testing/circuits.ts` has its own `createNote` and grid helper (step 4). | _Done._                                                                                                                   |
 
 ### 5.3 Steps (one PR each)
 
@@ -235,21 +235,32 @@ also a declared workspace dependency (`package.json` and a `tsconfig.json` refer
 2. **Move the cell grid.** _Done (2026-10-08)._ `archive/components/CellGrid` is now
    `plugin-sequencer/src/components/CellGrid` (with its `viewport.test.ts`), and plugin-sequencer no longer depends on
    `@dxos/react-ui-canvas`.
-3. **Shapes as `NodeDef`s.** Rewrite the ~30 compute shapes against `NodeViewProps` and `NodeDef` (ports from the
-   node's schema, the frame chrome from the def), replacing `ShapeDef` / `ShapeComponentProps` / `createAnchorMap`
-   and the editor's `TextBox` (the engine's `TextPart` covers in-place text). `scene/defs.ts`'s adapter and
-   `ComputeContext.registry` go; the twelve `scene` stories are the check. The largest step.
-4. **Own the board type.** Move `CanvasBoard` (schema, `CanvasGraphModel`, shape types) from the editor's `types/` into
-   `react-ui-canvas-compute` (or a `types` entry of it), keeping the ECHO typename `org.dxos.type.canvasBoard` so
-   existing boards open unchanged; point plugin-conductor, plugin-debug and `createEchoStore` at it. Replace
-   `GraphMonitor` with the projection's sync (already shared through `graph/sync.ts`).
-5. **Drop the legacy paths.** Delete compute's editor-based stories and hooks (`compute.stories.tsx`, the
-   `EditorController` / `useSelection` paths), plugin-conductor's `KeyboardContainer` (a plugin-local hotkey scope), and
-   plugin-debug's editor helpers.
+3. **Shapes as `NodeDef`s.** _Done (2026-10-08)._ Each compute shape module exports a `NodeDef` built with
+   `defineComputeNode` (schema with `z`, palette group, factory, ports from `createPorts` / `createFunctionPorts` with
+   the anchors' ids, sides and offsets), and its component takes `ComputeNodeViewProps` (the engine's view props). The
+   frame chrome (`Box`) reads the def from the registry the scene renders with, so `ComputeContext.registry` and
+   plugin-conductor's `ShapeRegistry` are gone, as are `scene/defs.ts`'s adapter, `NodeView.tsx` and `ports.ts`.
+   The editor's `TextBox` became compute's own (`shapes/common/TextBox.tsx`): the engine's `TextPart` edits only an
+   opened part and focuses on mount, which an always-on input cannot use. Step 5's compute part is folded in.
+4. **Own the board type.** _Done (2026-10-08)._ `CanvasBoard` (schema, `CanvasGraphModel`, shape types) lives in
+   `react-ui-canvas-compute/src/types` (root and `./types` exports) under the same ECHO typename
+   `org.dxos.type.canvasBoard` and version `0.1.0`; `types/canvas-board.test.ts` round-trips a board as the editor saved
+   it through a test database. plugin-conductor, plugin-debug and `createEchoStore` import it from compute, and
+   `GraphMonitor` is defined beside `useGraphMonitor`. The editor keeps its own identical copy of `types/` until step 6
+   deletes it, since the editor must not depend on compute; both declare the same type, so only compute's is
+   registered by plugin-conductor.
+5. **Drop the legacy paths.** _Done (2026-10-09)._ Compute's part was done with step 3 (`compute.stories.tsx`,
+   `useComputeGraphController`, `ComputeShapeLayout`, `computeShapes`) and plugin-debug's with step 4. plugin-conductor's
+   `KeyboardContainer` is removed without a replacement: it only activated a `@dxos/react-focus` hotkey scope, which
+   nothing in the engine registers into, since `Canvas` handles every shortcut in the `onKeyDown` of its own focused
+   root — so the shortcuts already apply only to the board the user is in.
 6. **Delete.** Remove `packages/ui/react-ui-canvas-editor`, `src/archive`, the root `src/index.ts` re-export and the
    `./types` entry point of `@dxos/react-ui-canvas` (the root export then is the scene engine); drop the editor from
    Composer's `optimizeDeps`, the app-framework allowlist (`vite-plugin/packages.ts`), `tsconfig.all.json`, and the
    `package.json` dependency and `tsconfig.json` reference of each consumer above (then `pnpm install`). A changeset marks the removal as breaking.
+   _Done (2026-10-09)._ `src/index.ts` is the engine's barrel and `src/scene.ts` re-exports it, so `@dxos/react-ui-canvas`
+   and `@dxos/react-ui-canvas/scene` are the same module list; the editor's `@antv/graphlib` / `@antv/layout` left the
+   catalog with it.
 
 Order: 1 and 2 are independent of the rest and unblock the archive's removal except for the editor. 3–5 retire the
 editor; 6 needs all of them. Sizes: 1 small, 2 small (a move), 3 large (thirty shapes), 4 medium, 5 small, 6 small.

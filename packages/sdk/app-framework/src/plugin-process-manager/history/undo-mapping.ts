@@ -20,6 +20,11 @@ export type InputOf<T> = T extends Operation.Definition<infer I, any> ? I : neve
 export type OutputOf<T> = T extends Operation.Definition<any, infer O> ? O : never;
 
 /**
+ * One invocation of an operation: what {@link UndoMapping.merge} folds.
+ */
+export type Invocation<Op extends Operation.Definition<any, any>> = { input: InputOf<Op>; output: OutputOf<Op> };
+
+/**
  * Message provider for undo toast.
  * Can be a static Label or a function that derives the message from input/output.
  */
@@ -57,6 +62,37 @@ export interface UndoMapping<
    * Can be a static Label or a function that derives the message from input/output.
    */
   readonly message?: MessageProvider<Op>;
+
+  /**
+   * Optional scope (document or subject id) so scoped undo/redo can act on this entry alone.
+   * Return undefined to leave the entry reachable only by unscoped undo/redo.
+   */
+  readonly scope?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional merge key; consecutive entries in one scope with equal keys inside the tracker's merge
+   * window fold into one undo step (e.g. typing into one field).
+   */
+  readonly mergeKey?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional opaque context (e.g. view path and selection) returned on undo and redo so the UI can
+   * return to where the change happened.
+   */
+  readonly context?: (input: InputOf<Op>, output: OutputOf<Op>) => unknown;
+
+  /**
+   * Optional fold of two merged invocations into one forward, from which the inverse is derived again; without it
+   * the entry keeps the earliest inverse and the latest forward, which suits absolute writes but not relative ones
+   * (a delta, or a patch between versions).
+   */
+  readonly merge?: (earlier: Invocation<Op>, later: Invocation<Op>) => Invocation<Op>;
+
+  /**
+   * Whether recording an entry offers the undo toast; true when absent. An editor with undo keys of its own (a
+   * canvas) turns it off, since every gesture would raise one.
+   */
+  readonly toast?: boolean;
 }
 
 /**
@@ -83,6 +119,34 @@ export interface UndoMappingProps<
    * Can be a static Label or a function that derives the message from input/output.
    */
   message?: MessageProvider<Op>;
+
+  /**
+   * Optional scope (document or subject id) so scoped undo/redo can act on this entry alone.
+   * Return undefined to leave the entry reachable only by unscoped undo/redo.
+   */
+  scope?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional merge key; consecutive entries in one scope with equal keys inside the tracker's merge
+   * window fold into one undo step (e.g. typing into one field).
+   */
+  mergeKey?: (input: InputOf<Op>, output: OutputOf<Op>) => string | undefined;
+
+  /**
+   * Optional opaque context (e.g. view path and selection) returned on undo and redo so the UI can
+   * return to where the change happened.
+   */
+  context?: (input: InputOf<Op>, output: OutputOf<Op>) => unknown;
+
+  /**
+   * Optional fold of two merged invocations into one forward, from which the inverse is derived again.
+   */
+  merge?: (earlier: Invocation<Op>, later: Invocation<Op>) => Invocation<Op>;
+
+  /**
+   * Whether recording an entry offers the undo toast; true when absent.
+   */
+  toast?: boolean;
 }
 
 /**

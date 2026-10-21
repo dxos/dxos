@@ -12,9 +12,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
@@ -23,7 +20,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 // A cross-plugin contribution rides the consuming plugin's start event.

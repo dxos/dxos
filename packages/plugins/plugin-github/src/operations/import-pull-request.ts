@@ -20,6 +20,7 @@ import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 import { githubToken } from './pull-request.ts';
 import { ensureRefreshTrigger } from './refresh.ts';
+import { ensureRepo, findRepo } from './repo.ts';
 
 /**
  * Statuses that may report the token's reach rather than the repository's absence, and so are worth
@@ -121,7 +122,8 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         Effect.orDie,
       );
       if (existing) {
-        return { pullRequest: Ref.make(existing), imported: false };
+        const known = yield* findRepo(owner, repo).pipe(Effect.orDie);
+        return { pullRequest: Ref.make(existing), ...(known && { repo: Ref.make(known) }), imported: false };
       }
 
       const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubToken());
@@ -141,7 +143,8 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         Effect.catchDefect((defect) => Effect.sync(() => log.warn('refresh trigger setup failed', { defect }))),
       );
 
-      return { pullRequest: Ref.make(object), imported: true };
+      const filed = pull.base?.repo ? yield* ensureRepo(pull.base.repo).pipe(Effect.orDie) : undefined;
+      return { pullRequest: Ref.make(object), ...(filed && { repo: Ref.make(filed) }), imported: true };
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

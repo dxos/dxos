@@ -1,5 +1,183 @@
 # @dxos/plugin-sheet
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-review@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-grid@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-plot@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/compute-hyperformula@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/lit-grid@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 1f5491a: Every sheet gets a Charts companion that charts its ranges as bar, pie, or xy plots, saved on the sheet in a new optional `charts` field, and sheets publish their selected range through the shared `Selection` view state so companions can read and set it. A new `header` cell style gives header rows a light green look in both themes. In every grid, the focus ring and the cell editor line up with the grid lines on all four sides, and a selected range shows as a faint translucent fill with an outline instead of a solid blue block. In light mode the boot loader's mark keeps its colours at half opacity. A text crawl's line stays vertically centred when its root carries a text-size utility, so a progress meter's label lines up with its percentage.
+
+### Patch Changes
+
+- Updated dependencies [3b03db7]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [1f5491a]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-grid@0.15.0
+  - @dxos/plugin-review@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-plot@0.15.0
+  - @dxos/compute-hyperformula@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/lit-grid@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 085dcb1: `@dxos/brand` ships Poiret One (`assets/fonts/poiret-one`), the face of the Composer wordmark. The Markdown, Sheet, Tables and Projects plugins' details now include a narrated demo video, opening on the Composer ident.
+- Updated dependencies [0715304]
+- Updated dependencies [085dcb1]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [27b542c]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-review@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-grid@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/compute-hyperformula@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/lit-grid@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

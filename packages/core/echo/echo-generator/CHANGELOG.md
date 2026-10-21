@@ -1,5 +1,61 @@
 # @dxos/echo-generator
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/random@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [16bde33]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/random@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/random@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

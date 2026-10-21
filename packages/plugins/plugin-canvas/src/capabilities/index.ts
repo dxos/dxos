@@ -21,6 +21,24 @@ export const DrawingVariant = Capability.lazyModule(
   },
   () => import('./drawing-variant.ts'),
 );
+// Where the canvas variant is: a conversion to it needs the variant too.
+export const TldrawConverter = Capability.lazyModule(
+  'tldraw-converter',
+  {
+    provides: [IllustratorCapabilities.Converter],
+    activatesOn: IllustratorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./tldraw-converter.ts'),
+);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const CanvasSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [CanvasCapabilities.Settings],
@@ -28,4 +46,6 @@ export const CanvasSettings = AppCapability.settings(() => import('./settings.ts
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
   roles: ['org.dxos.role.objectProperties'],
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

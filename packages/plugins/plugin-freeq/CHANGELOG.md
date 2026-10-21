@@ -1,5 +1,61 @@
 # @dxos/plugin-freeq
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/plugin-thread@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [098a536]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/plugin-thread@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/log@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+  - @dxos/app-framework@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-thread@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

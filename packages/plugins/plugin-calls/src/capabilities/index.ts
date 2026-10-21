@@ -3,6 +3,7 @@
 //
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
@@ -12,9 +13,6 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { CallsCapabilities, CallsEvents } from '#types';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [CallsCapabilities.Manager],
@@ -49,6 +47,9 @@ export const CallTransport = Capability.lazyModule(
   },
   () => import('./call-transport.ts'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.ts'), {
   activatesOn: ClientEvents.Initialized,
 });
@@ -59,6 +60,6 @@ export const Translations = AppCapability.translations(translations, { environme
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

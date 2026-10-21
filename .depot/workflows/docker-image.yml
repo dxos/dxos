@@ -11,6 +11,7 @@ on:
       - gh-docker
     paths:
       - .github/Dockerfile
+      - .github/ci-packages.sh
       - .depot/workflows/docker-image.yml
   workflow_dispatch:
 
@@ -25,6 +26,7 @@ jobs:
       matrix:
         node_version: ['20.19.5', '24.11.1']
     runs-on: depot-ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code

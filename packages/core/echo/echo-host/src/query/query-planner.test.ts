@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Annotation, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Annotation, DXN, Feed, Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -2316,17 +2316,30 @@ describe('QueryPlanner', () => {
       }
     });
 
-    test('a skip is folded into the scanned page, which the SkipStep then drops from', () => {
-      const query = Query.select(Filter.everything()).orderBy(Order.natural()).skip(2).limit(3).from(feedScope);
+    test('a skip is folded into the scan, so no SkipStep drops rows after their documents load', () => {
+      const query = Query.select(Filter.everything()).orderBy(Order.natural('desc')).skip(2).limit(3).from(feedScope);
       const plan = planner.createPlan(query.ast);
 
-      expect(plan.steps.find((step) => step._tag === 'SelectStep')).toMatchObject({ limit: 5, feedScan: {} });
-      expect(plan.steps.some((step) => step._tag === 'SkipStep')).toBe(true);
+      expect(plan.steps.find((step) => step._tag === 'SelectStep')).toMatchObject({
+        limit: 3,
+        feedScan: { direction: 'desc', skip: 2 },
+      });
+      expect(plan.steps.some((step) => step._tag === 'SkipStep')).toBe(false);
     });
 
     test('the typename re-check beside a TypeSelector does not block the scan', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).limit(5).from(feedScope);
       expect(selectStep(query.ast)).toMatchObject({ limit: 5, feedScan: { direction: 'asc' } });
+    });
+
+    // `Cursor.seedDedupSet` pages a feed this way: by bare typename, so every schema version matches.
+    test('a page of a bare-typename select scans only the page', () => {
+      const query = Query.select(Filter.type(DXN.make('com.example.type.task')))
+        .orderBy(Order.natural('desc'))
+        .skip(50)
+        .limit(50)
+        .from(feedScope);
+      expect(selectStep(query.ast)).toMatchObject({ limit: 50, feedScan: { direction: 'desc', skip: 50 } });
     });
 
     test('a `deleted: only` read scans the deleted rows, so the cap counts them', () => {

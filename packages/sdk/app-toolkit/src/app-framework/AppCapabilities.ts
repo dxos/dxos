@@ -204,7 +204,7 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Contributed once the settings space is open, so consumers must tolerate its absence.
+ * Absent without an identity. Until the settings space opens, `unsynced` is empty and the actions do nothing.
  */
 export type SettingsSync = {
   /** Settings prefixes this device writes locally rather than sharing. */
@@ -256,9 +256,10 @@ export const SkillDefinition = Capability$.make<Skill.Definition>()(
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
- * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability from a dependency-mode module. Consumers
- * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * Contributors load the raw file (e.g. `() => import('../PLUGIN.mdl?raw')`) through
+ * `AppCapability.pluginAsset`, whose module is gated on `ActivationEvents.PluginAssetsRequested`.
+ * Consumers fire that event, then read all contributions with
+ * `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
@@ -294,8 +295,11 @@ export type SpaceTemplate = Readonly<{
   hue?: string;
   /** Omit from the create picker; reachable only by id. */
   hidden?: boolean;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+  /** Registers the content's types on the client, then writes it into the space; `SpaceOperation.ApplyTemplate` runs it. */
+  apply: (options: {
+    readonly client: Client;
+    readonly space: Space;
+  }) => Effect$.Effect<void, Error, Operation.Service>;
 }>;
 
 /**
@@ -419,6 +423,20 @@ export type NavigationTargetResolver = (
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
+
+/**
+ * Changes that exist only in this page, which leaving it would lose: consulted before the page or the
+ * app goes away.
+ * @category Capability
+ */
+export type UnsavedChanges = {
+  /** Synchronous, so a `beforeunload` handler can decide. */
+  has(): boolean;
+  /** Hands the changes on to where they are kept, resolving whether none is left. */
+  save(): Promise<boolean>;
+};
+
+export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-framework.capability.unsavedChanges');
 
 /**
  * What a {@link NavigationTargetLoader} was able to determine about a target.

@@ -1,0 +1,25 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+  - vite
+tasks:
+  # `@dxos/*` resolve from source (vite-plugin-import-source), so only dist consumed at runtime or by the
+  # config itself is built first; the `vite` tag's `^:build` would build the whole plugin graph.
+  bundle:
+    options:
+      mergeDeps: replace
+    deps:
+      - '#dist-runtime:build'
+      - '#vite-plugin:build'
+      # The plugins' generated capability barrels, which their sources import.
+      - '^:#prebuild'
+  serve:
+    options:
+      mergeDeps: replace
+    deps:
+      - '#dist-runtime:build'
+      - '#vite-plugin:build'
+      # The plugins' generated capability barrels, which their sources import.
+      - '^:#prebuild'

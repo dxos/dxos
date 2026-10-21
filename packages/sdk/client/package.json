@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -90,6 +90,11 @@
       "source": "./src/services/local.ts",
       "types": "./dist/types/src/services/local.d.ts",
       "import": "./dist/lib/local.mjs"
+    },
+    "./lock-key": {
+      "source": "./src/lock-key.ts",
+      "types": "./dist/types/src/lock-key.d.ts",
+      "import": "./dist/lib/lock-key.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -1,5 +1,224 @@
 # @dxos/devtools
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/echo-host@0.16.0
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-debug@0.16.0
+  - @dxos/react-ui-graph@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/react-ui-table@0.16.0
+  - @dxos/react-ui-trace@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/conductor@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/display-name@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/timeframe@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/messaging@0.16.0
+  - @dxos/network-manager@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 1eaa8b4: The devtools Objects panel has a new layout. Objects can be shown as a tree with icons, a table, or a force graph, chosen with a toolbar toggle. All three are filtered with the same query language the mailbox and task lists use (`type:`, `#tag`, free text, `{ prop: value }`). The selected object's properties appear in a property tree that opens two levels deep. A reference shows the target's icon and name, and clicking the name selects that object. Opening a reference loads its target's properties in place, one level at a time. The edit history lists changes newest first, and selecting a version shows the object, and any blob preview, as it was at that version. Blobs, and objects that reference a blob, open a third column that renders images, PDFs, audio and video, and text.
+
+  New exports: `PropertyTree`, `BlobPreview`, `findBlob` and `ObjectsGraph`. `ObjectsTree` takes two new props, `ids` and `selected`. `matchesFilter` in `@dxos/echo-query` now accepts any entity, so a query can match relations as well as objects.
+
+### Patch Changes
+
+- 019891d: The devtools objects tree no longer stalls on large spaces: it lists top-level objects a page at a time as you scroll, asks whether the rows in view have children with a single query, and queries an object's relations only while it is expanded, instead of holding two live queries for every listed object.
+- 5bbc891: The devtools overview polls EDGE far less while open. Indexer heads back off from every 5 s to once a minute, and a status report with issues is re-fetched after a delay that doubles up to a minute instead of every second. Refresh still fetches at once.
+- 37edd53: Service-RPC timeouts name the call that timed out, e.g. `RPC timeout: DataService.getDocumentHeads`, instead of `RPC timeout: call`.
+
+  - `@dxos/protocols`: `runServiceCall` now takes `(runtime, client, tag, payload, options?)` and uses the tag as the timeout label; payload and result types come from the client method. The old effect form is `runServiceEffect(runtime, effect, { label, timeout? })`, with `label` required.
+  - `@dxos/devtools`: the Indexer card logs a failed heads comparison as a warning instead of reporting an exception for every space on every poll.
+
+- Updated dependencies [ad1686c]
+- Updated dependencies [5490cbc]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [0858217]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [5162e12]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [d98e8b9]
+- Updated dependencies [8190cc5]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo-host@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-query@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-query@0.15.0
+  - @dxos/react-ui-trace@0.15.0
+  - @dxos/conductor@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-debug@0.15.0
+  - @dxos/react-ui-graph@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/react-ui-table@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/messaging@0.15.0
+  - @dxos/network-manager@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/display-name@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/timeframe@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 716c951: The devtools EDGE card no longer reports spurious red flags right after startup: its first status query waits until each active space is replicating with EDGE, and it re-queries every second while EDGE still reports issues.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [5528d65]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [4ea1487]
+- Updated dependencies [ea0f796]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/echo-host@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/conductor@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-ui-trace@0.14.0
+  - @dxos/react-ui-table@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-debug@0.14.0
+  - @dxos/react-ui-graph@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/network-manager@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/messaging@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/timeframe@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

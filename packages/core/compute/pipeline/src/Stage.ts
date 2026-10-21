@@ -26,7 +26,7 @@ export const DEFAULT_BUFFER_SIZE = 16;
  * `Stream.filter` already have — generic over the *input* stream's own error/requirements (`E0`/
  * `R0`) and unioning in the stage's own `E`/`R`, so stages compose in a `pipe` chain the same way
  * Effect's own Stream operators do. Authors build stages with {@link map} / {@link window} /
- * {@link filter}; shared dependencies flow through `R`, provided once at the edge via
+ * {@link batch} / {@link filter}; shared dependencies flow through `R`, provided once at the edge via
  * `Effect.provide`.
  */
 export type Stage<In, Out, E = never, R = never> = <E0 = never, R0 = never>(
@@ -124,6 +124,53 @@ export const window = <In, Out, E, R>(
       Stream.mapEffect((buffer) => fn(buffer).pipe(Effect.withSpan(id)), { concurrency: 1 }),
       withBuffer(options),
       Stream.filter((item): item is Exclude<Out, undefined> => item !== undefined),
+    );
+};
+
+export type BatchOptions<In> = BufferOptions & {
+  /** Budget a batch closes at: the sum of its items' {@link weight}s. Must be a positive integer. */
+  readonly size: number;
+  /**
+   * What an item costs against {@link size} (default 1). A zero-weight item never closes a batch: it rides
+   * along, in order, with the next weighted items, or is flushed when the stream ends.
+   */
+  readonly weight?: (item: In) => number;
+};
+
+/**
+ * Batching transform: groups consecutive items until their summed weight reaches `size`, invokes `fn`
+ * once per batch, and emits `fn`'s outputs in order. A batch closes on the item that fills it, so
+ * nothing is pulled from upstream beyond that item; the final partial batch is flushed when the
+ * stream ends. Batching is count-based, not timed (no `groupedWithin`): a partial batch on a
+ * pull-based stream waits only for the next upstream pull, and a timer would add a clock fiber to
+ * every stage. A stream that never ends and stalls with a partial batch therefore holds it until more
+ * items or the end arrive. Type parameters follow {@link map}.
+ */
+export const batch = <In, Out, E, R>(
+  id: string,
+  options: BatchOptions<In>,
+  fn: (items: readonly In[]) => Effect.Effect<readonly Out[], E, R>,
+): Stage<In, Out, E, R> => {
+  const { size, weight = () => 1 } = options;
+  if (!Number.isInteger(size) || size < 1) {
+    throw new RangeError(`Stage.batch size must be a positive integer: ${size}`);
+  }
+
+  type Pending = { readonly items: readonly In[]; readonly weight: number };
+  const empty: Pending = { items: [], weight: 0 };
+  return <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
+    self.pipe(
+      Stream.mapAccum(
+        () => empty,
+        (pending, item): readonly [Pending, ReadonlyArray<readonly In[]>] => {
+          const next = { items: [...pending.items, item], weight: pending.weight + weight(item) };
+          return next.weight >= size ? [empty, [next.items]] : [next, []];
+        },
+        { onHalt: (pending) => (pending.items.length > 0 ? [pending.items] : []) },
+      ),
+      Stream.mapEffect((items) => fn(items).pipe(Effect.withSpan(id)), { concurrency: 1 }),
+      Stream.flattenIterable,
+      withBuffer(options),
     );
 };
 

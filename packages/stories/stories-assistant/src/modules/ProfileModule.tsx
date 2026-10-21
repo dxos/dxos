@@ -16,7 +16,7 @@ import { Person } from '@dxos/types';
 
 /**
  * The properties panel of the first Person in the space — where plugin-agent appends the
- * goals and memories its agents hold about them — so an interview can be watched filling it in.
+ * goals and the facts its agents hold about them — so an interview can be watched filling it in.
  */
 export const ProfileModule = () => {
   const space = Hooks.useActiveSpace();

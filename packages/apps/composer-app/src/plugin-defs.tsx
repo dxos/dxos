@@ -44,6 +44,7 @@ import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as HandpanPlugin from '@dxos/plugin-handpan/HandpanPlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
 import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
@@ -62,6 +63,7 @@ import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MapSolidMapPlugin from '@dxos/plugin-map-solid/MapPlugin';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
+import * as MeetingRecorderPlugin from '@dxos/plugin-meeting-recorder/MeetingRecorderPlugin';
 import * as MeetingPlugin from '@dxos/plugin-meeting/MeetingPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as OsrmPlugin from '@dxos/plugin-osrm/OsrmPlugin';
@@ -128,6 +130,8 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
+    // The illustrator's canvas variant; activation makes no network call.
+    CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
@@ -155,6 +159,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      HandpanPlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -167,6 +172,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       LingoPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       MeetingPlugin.meta.profile.key,
+      MeetingRecorderPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
@@ -292,6 +298,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isLocal && MapSolidMapPlugin.make(),
     MarkdownPlugin.make(),
     MeetingPlugin.make(),
+    // Records meetings held in other apps; detection and system audio need the desktop host.
+    MeetingRecorderPlugin.make(),
     MermaidPlugin.make(),
     // Desktop-only, and not core: the native file picker is a full-catalog capability, unlike
     // plugin-native's host integration.
@@ -335,6 +343,7 @@ const experimental: Plugin.Plugin[] = [
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HandpanPlugin.make(),
   HeyGenPlugin.make(),
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),

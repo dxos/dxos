@@ -14,21 +14,22 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
+import { type QueryFilterOwner } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox } from '#types';
 
-export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
+export const SaveFilterPopover = ({ owner, filter }: { owner: QueryFilterOwner; filter: string }) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.update(mailbox, (mailbox) => {
-      (mailbox.filters ??= []).push({ name, filter });
+    // Assigned rather than `??=`-then-push: on a detached record the push would land on the plain RHS.
+    Obj.update(owner, (owner) => {
+      owner.filters = [...(owner.filters ?? []), { name, filter }];
     });
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-  }, [mailbox, name, filter, invokePromise]);
+  }, [owner, name, filter, invokePromise]);
 
   return (
     <Layout.Flex gap='sm' classNames='p-2'>

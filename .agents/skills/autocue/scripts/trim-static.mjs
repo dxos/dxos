@@ -20,14 +20,19 @@
  * spinner moves a few pixels every frame), while a mean over the frame is dominated by frame area and
  * reads a small moving object — a dragged chess piece — as stillness.
  *
+ * `--open <video>` / `--close <video>` bookend the trimmed demo with another clip (scaled and letterboxed
+ * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
+ * `--ident` uses the DXOS ident from `tools/autocue`, rendering it on first use.
+ *
  * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
  */
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
 
@@ -35,11 +40,16 @@ const parseArgs = () => {
   const args = process.argv.slice(2);
   const options = {
     'fps': 15,
+    // The recording's theme, which the ident is rendered in; `--logo-color <tailwind name>` recolours its logo.
+    'theme': 'dark',
     'max-static': 1.5,
     // Fraction of sampled pixels that must change materially. A mean-difference metric fails here: a
     // chess piece crossing two squares is ~0.7% of the frame, which averages down to noise, and the
     // drags were being trimmed as if they were still.
     'threshold': 0.002,
+    // An absolute floor beside the fraction: one typed character at 2x is ~10 samples, far under 0.2% of the
+    // frame, so without it a typing step reads as stillness and is trimmed away.
+    'min-changed': 6,
     'delta': 12,
     // Constant quality rather than a bitrate: a fixed rate that suits 1280x800 smears a 2x recording,
     // and most of an agent-paced demo is still frames that cost next to nothing at any quality.
@@ -78,11 +88,67 @@ const escapeHtml = (value) =>
 
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
-  console.error('usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4]');
+  console.error(
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --open <video> --close <video>] [--theme dark|light] [--logo-color <tailwind>] [--voiceover steps|<cues.json>] [--voice <name>] [--open-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
+  );
   process.exit(1);
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
 
+/** The ident's formats (`tools/autocue/src/components/Ident/brand.ts` `FORMATS`) by aspect ratio. */
+const IDENT_FORMATS = { '16x9': 16 / 9, '16x10': 16 / 10, '9x16': 9 / 16, '1x1': 1, '4x5': 4 / 5 };
+
+/** The ident format nearest the recording's aspect ratio, so the bookends fill the frame instead of being padded. */
+const identFormat = (width, height) =>
+  Object.entries(IDENT_FORMATS).reduce((best, entry) =>
+    Math.abs(Math.log(entry[1] / (width / height))) < Math.abs(Math.log(best[1] / (width / height))) ? entry : best,
+  )[0];
+
+/**
+ * The DXOS ident's opening title and end card in `format`, rendered by `tools/autocue` into its `out/` on first use.
+ */
+const ident = (id, format) => {
+  const variant = `${options.theme === 'light' ? '_light' : ''}${options['logo-color'] ? `_${options['logo-color']}` : ''}`;
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../tools/autocue');
+  const dir = path.join(root, 'out', id);
+  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x10_v01.mp4`), so find it rather than spell it;
+  // the newest wins, since a changed duration leaves the old clip beside the new one.
+  const find = () =>
+    existsSync(dir)
+      ? readdirSync(dir)
+          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith(`_${format}${variant}_v01.mp4`))
+          .map((name) => path.join(dir, name))
+          .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0]
+      : undefined;
+  // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
+  // Sources and the assets they render with (an installed or replaced font changes the clip too).
+  const newest = Math.max(
+    ...['src/components/Ident', 'public'].flatMap((dir) =>
+      readdirSync(path.join(root, dir), { recursive: true }).map(
+        (name) => statSync(path.join(root, dir, String(name))).mtimeMs,
+      ),
+    ),
+  );
+  let file = find();
+  if (!file || statSync(file).mtimeMs < newest) {
+    console.error(`rendering ${id} ident (${format})…`);
+    const palette = [
+      '--theme',
+      options.theme,
+      ...(options['logo-color'] ? ['--logo-color', options['logo-color']] : []),
+    ];
+    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', format, ...palette], {
+      cwd: root,
+      stdio: ['ignore', 'ignore', 'inherit'],
+    });
+    file = find();
+    if (render.status !== 0 || !file) {
+      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/autocue/IDENT.md)`);
+      process.exit(1);
+    }
+  }
+  return file;
+};
 /** Geometry and duration come off ffmpeg's stderr, so the script needs no ffprobe. */
 const probe = async (file) => {
   const proc = spawn(FFMPEG, ['-hide_banner', '-i', file]);
@@ -106,18 +172,91 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
   process.exit(1);
 });
 
+if (options.ident) {
+  // `--ident composer` opens on the Composer logo instead of the DXOS title.
+  const format = identFormat(width, height);
+  options.open ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN', format);
+  options.close ??= ident('CLOSE', format);
+}
+for (const clip of [options.open, options.close]) {
+  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
+    console.error(`no such clip: ${clip}`);
+    process.exit(1);
+  }
+}
+
+/**
+ * `--duration <min>-<max>` (default 45-60 seconds, bookends included) picks the still-frame cap instead of a
+ * fixed `--max-static`: the longest cap whose result fits under the maximum, from one `--report` pass. A take
+ * too short to reach the minimum even untrimmed needs more steps, which no cap can supply.
+ */
+const fitDuration = async () => {
+  const [min, max] = String(options.duration ?? '45-60')
+    .split('-')
+    .map(Number);
+  const bookends = (
+    await Promise.all(
+      [options.open, options.close].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
+    )
+  ).reduce((total, value) => total + value, 0);
+  const report = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(import.meta.url),
+      ...process.argv.slice(2).filter((arg, index, all) => arg !== '--duration' && all[index - 1] !== '--duration'),
+      '--report',
+    ],
+    { encoding: 'utf8', maxBuffer: 1 << 24 },
+  );
+  if (report.status !== 0) {
+    console.error(`--duration: the report pass failed\n${report.stderr}`);
+    process.exit(1);
+  }
+  const { atCap } = JSON.parse(report.stdout);
+  const fits = Object.entries(atCap)
+    .map(([cap, length]) => ({ cap: parseFloat(cap), total: length + bookends }))
+    .sort((left, right) => left.cap - right.cap);
+  const choice = fits.filter((entry) => entry.total <= max).pop() ?? fits[0];
+  if (choice.total > max) {
+    console.error(`--duration: even a ${choice.cap}s cap gives ${choice.total.toFixed(1)}s; shorten the flow`);
+  } else if (choice.total < min) {
+    console.error(`--duration: the take gives at most ${choice.total.toFixed(1)}s; add steps to reach ${min}s`);
+  }
+  options['max-static'] = choice.cap;
+  return { range: `${min}-${max}s`, cap: choice.cap, expected: +choice.total.toFixed(1) };
+};
+const fitted =
+  !options.report && !process.argv.includes('--max-static') && options.duration !== 'off'
+    ? await fitDuration()
+    : undefined;
+
 /**
  * Caption times as the driver recorded them, in source frames. `timeline.json` is written by
  * `driver.mjs` on `stop`; without it every pause gets the plain `--max-static` cap.
  */
-const captions = (() => {
+const timeline = (() => {
   const file = options.timeline ?? path.join(path.dirname(options.in), 'timeline.json');
-  if (!existsSync(file)) {
-    return [];
-  }
-  const { steps = [] } = JSON.parse(readFileSync(file, 'utf8'));
-  return steps.map((step) => ({ ...step, frame: Math.round((step.ms / 1000) * options.fps) }));
+  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 })();
+// The driver commits a step's chapter after the step's own captions, so the entries arrive out of time order.
+const captions = (timeline.steps ?? [])
+  .toSorted((a, b) => a.ms - b.ms)
+  .map((step) => ({
+    ...step,
+    frame: Math.round((step.ms / 1000) * options.fps),
+  }));
+
+/**
+ * Frames from a caption onwards during which a pause is worth holding, keyed by source frame, valued in frames to hold.
+ * A caption sent with `hold` (ms) asks the viewer to linger that long, so its window outlasts `--caption-hold`.
+ */
+const readingWindow = new Map();
+for (const caption of captions) {
+  const hold = Math.max(1, Math.round(Math.max(options['caption-hold'], (caption.hold ?? 0) / 1000) * options.fps));
+  for (let offset = 0; offset <= hold; offset++) {
+    readingWindow.set(caption.frame + offset, Math.max(readingWindow.get(caption.frame + offset) ?? 0, hold));
+  }
+}
 const frameBytes = (width * height * 3) / 2; // yuv420p
 const holdFrames = Math.max(1, Math.round(options['max-static'] * options.fps));
 
@@ -137,8 +276,11 @@ const moved = (frame, previous) => {
       changed++;
     }
   }
-  return changed / samples.length > options.threshold;
+  return changed / samples.length > options.threshold || changed >= options['min-changed'];
 };
+
+/** The still-frame caps `--report` prices, and `--duration` chooses among. */
+const CAPS = [0.3, 0.5, 0.8, 1, 1.5, 2, 3, 4, 6, 10, 1000];
 
 const decodeArgs = [
   '-hide_banner',
@@ -204,17 +346,10 @@ if (options.report) {
   }
 
   const seconds = (count) => +(count / options.fps).toFixed(1);
-  const captionHold = Math.max(1, Math.round(options['caption-hold'] * options.fps));
-  const captionFrames = new Set();
-  for (const caption of captions) {
-    for (let offset = 0; offset <= captionHold; offset++) {
-      captionFrames.add(caption.frame + offset);
-    }
-  }
   const capped = (cap) =>
     runs.reduce(
       (total, { length, start }) =>
-        total + Math.min(length, captionFrames.has(start) ? captionHold : cap * options.fps),
+        total + Math.min(length, Math.max(readingWindow.get(start) ?? 0, cap * options.fps)),
       0,
     );
   console.log(
@@ -230,9 +365,7 @@ if (options.report) {
         captionHold: `${options['caption-hold']}s`,
         // What each candidate `--max-static` would leave, motion and caption holds included: the still
         // runs are the only part a cap can shrink, and there are enough of them that it dominates.
-        atCap: Object.fromEntries(
-          [0.3, 0.5, 0.8, 1.0, 1.5, 2.0].map((cap) => [`${cap}s`, seconds(motion + capped(cap))]),
-        ),
+        atCap: Object.fromEntries(CAPS.map((cap) => [`${cap}s`, seconds(motion + capped(cap))])),
       },
       null,
       2,
@@ -289,6 +422,50 @@ const encoderClosed = once(encoder, 'close');
 decoder.stderr.pipe(process.stderr);
 encoder.stderr.pipe(process.stderr);
 
+/**
+ * Pipes a whole clip into the encoder at the demo's size and rate. The ident is rendered at the recording's aspect
+ * ratio; any other clip (`--open` / `--close`) is letterboxed rather than cropped. Video only, since the recording
+ * has no audio.
+ */
+const bookend = async (clip) => {
+  const proc = spawn(FFMPEG, [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-i',
+    clip,
+    '-vf',
+    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:${
+      options.theme === 'light' ? 'white' : 'black'
+    },setsar=1`,
+    '-r',
+    String(options.fps),
+    '-pix_fmt',
+    'yuv420p',
+    '-an',
+    '-f',
+    'rawvideo',
+    '-',
+  ]);
+  const closed = once(proc, 'close');
+  proc.stderr.pipe(process.stderr);
+  let frames = 0;
+  for await (const chunk of proc.stdout) {
+    frames += chunk.length;
+    if (!encoder.stdin.write(chunk)) {
+      await once(encoder.stdin, 'drain');
+    }
+  }
+  const [code] = await closed;
+  if (code !== 0) {
+    console.error(`ffmpeg failed to decode ${clip} (exit ${code})`);
+    process.exit(1);
+  }
+  return frames / frameBytes;
+};
+
+const openFrames = options.open ? await bookend(options.open) : 0;
+
 let pending = Buffer.alloc(0);
 let previous;
 let staticRun = 0;
@@ -296,14 +473,13 @@ let read = 0;
 let kept = 0;
 let longestRun = 0;
 
-const captionHoldFrames = Math.max(1, Math.round(options['caption-hold'] * options.fps));
-/** Frames from a caption onwards during which a pause is worth holding, keyed by source frame. */
-const readingWindow = new Set();
-for (const caption of captions) {
-  for (let offset = 0; offset <= captionHoldFrames; offset++) {
-    readingWindow.add(caption.frame + offset);
-  }
-}
+// The driver's `speed` ops, as source frame ranges: inside one only every `factor`-th frame survives.
+const speedRanges = (timeline.speed ?? []).map((change, index, all) => ({
+  from: Math.round((change.ms / 1000) * options.fps),
+  to: all[index + 1] ? Math.round((all[index + 1].ms / 1000) * options.fps) : Infinity,
+  factor: change.factor,
+}));
+const speedAt = (frame) => speedRanges.find(({ from, to }) => frame >= from && frame < to);
 
 // Source frame -> output frame, so the caption times can be remapped onto the trimmed timeline.
 const outputFrameOf = new Map();
@@ -318,10 +494,13 @@ for await (const chunk of decoder.stdout) {
     staticRun = !previous || moved(frame, previous) ? 0 : staticRun + 1;
     longestRun = Math.max(longestRun, staticRun);
 
-    const cap = readingWindow.has(index) ? captionHoldFrames : holdFrames;
+    // A caption's reading pause is never held for less than any other pause.
+    const cap = Math.max(readingWindow.get(index) ?? 0, holdFrames);
     // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
     // frame fewer than it promised, so the estimate could never be trusted for tuning.
-    if (staticRun <= cap) {
+    const range = speedAt(index);
+    const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
+    if (staticRun <= cap && !skipped) {
       if (!encoder.stdin.write(frame)) {
         await once(encoder.stdin, 'drain');
       }
@@ -333,6 +512,7 @@ for await (const chunk of decoder.stdout) {
   }
 }
 
+const closeFrames = options.close ? await bookend(options.close) : 0;
 encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
 const [decodeStatus] = await decoderClosed;
@@ -347,15 +527,18 @@ if (decodeStatus !== 0 || encoderStatus !== 0) {
  * the WebM spec. A caption's source frame may itself have been dropped, so the remap walks forward to
  * the next surviving frame.
  */
+/** One spoken line per chapter, for `--voiceover steps`. */
+let stepCues = [];
+
 const annotate = async () => {
   const at = (sourceFrame) => {
     for (let frame = sourceFrame; frame < read; frame++) {
       const output = outputFrameOf.get(frame);
       if (output !== undefined) {
-        return output / options.fps;
+        return (openFrames + output) / options.fps;
       }
     }
-    return kept / options.fps;
+    return (openFrames + kept) / options.fps;
   };
 
   // Two captions issued back to back describe the same instant — the earlier one was never really on
@@ -367,6 +550,8 @@ const annotate = async () => {
       const next = all[index + 1];
       return !next || next.start - mark.start >= options['min-chapter'];
     });
+  // A beat after the chapter starts, so the line lands on the step rather than on the cut into it.
+  stepCues = marks.map((mark) => ({ at: +(mark.start + 0.3).toFixed(2), text: mark.narration ?? mark.text }));
   if (!marks.length) {
     return undefined;
   }
@@ -378,7 +563,7 @@ const annotate = async () => {
     return `${hours}:${minutes}:${secs}`;
   };
 
-  const end = kept / options.fps;
+  const end = (openFrames + kept) / options.fps;
   const metadata = [';FFMETADATA1'];
   const vtt = ['WEBVTT', ''];
   marks.forEach((mark, index) => {
@@ -520,6 +705,146 @@ const toMp4 = async () => {
 
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
+/** Spoken as the open clip starts; `--open-line <text>` replaces it and `--open-line off` drops it. */
+const OPEN_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
+
+/**
+ * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
+ * takes hand-written lines timed against the final video. With an open clip, the open line starts either. Both
+ * run `voiceover.mjs` once over every output.
+ */
+const voiceover = async () => {
+  const fromSteps = options.voiceover === 'steps' || options.voiceover === true;
+  const cues = fromSteps ? stepCues : JSON.parse(readFileSync(options.voiceover, 'utf8'));
+  if (!cues.length) {
+    console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
+    return undefined;
+  }
+  const openLine = typeof options['open-line'] === 'string' ? options['open-line'] : OPEN_LINE;
+  const openSeconds = openFrames / options.fps;
+  if (openFrames && options['open-line'] !== 'off' && !cues.some((cue) => cue.at < openSeconds)) {
+    cues.unshift({ at: 0.3, text: openLine });
+  }
+  const cuesFile = `${output.replace(/\.webm$/, '')}.cues.json`;
+  writeFileSync(cuesFile, JSON.stringify(cues, null, 2));
+  const inputs = [annotated?.video ?? output, mp4].filter(Boolean);
+  const narrate = spawn(
+    process.execPath,
+    [
+      path.join(path.dirname(fileURLToPath(import.meta.url)), 'voiceover.mjs'),
+      '--in',
+      inputs.join(','),
+      '--cues',
+      cuesFile,
+      ...(typeof options.voice === 'string' ? ['--voice', options.voice] : []),
+    ],
+    { stdio: ['ignore', 'pipe', 'inherit'] },
+  );
+  let text = '';
+  narrate.stdout.on('data', (chunk) => (text += chunk));
+  const [code] = await once(narrate, 'close');
+  return code === 0 ? JSON.parse(text) : undefined;
+};
+
+const voiced = options.voiceover ? await voiceover() : undefined;
+
+/**
+ * The Composer media bucket, served from its custom domain: demos land under `<folder>/<yyyy-mm-dd>-<name>.<ext>`,
+ * in `demos/` unless `--folder` says otherwise (blog videos use `blog/`), named after the package the flow
+ * exercises (`plugin-markdown`) unless `--name` says otherwise.
+ */
+const MEDIA = {
+  bucket: process.env.AUTOCUE_R2_BUCKET || 'composer',
+  publicBase: 'https://assets.composer.space',
+  folder: typeof options.folder === 'string' ? options.folder.replace(/^\/+|\/+$/g, '') : 'demos',
+};
+
+/** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/…`). */
+const flowPackage = timeline.flow?.match(/packages\/(?:[^/]+\/)*?([^/]+)\/autocue\//);
+
+const uploadName = (() => {
+  if (typeof options.name === 'string') {
+    return options.name;
+  }
+  return flowPackage?.[1];
+})();
+
+/** Uploads the finished video (narrated MP4 first, since it plays everywhere) and returns its public URL. */
+const upload = async () => {
+  const video = [
+    voiced?.outputs?.find((file) => file.endsWith('.mp4')),
+    mp4,
+    voiced?.outputs?.[0],
+    annotated?.video,
+    output,
+  ]
+    .filter(Boolean)
+    .find((file) => existsSync(file));
+  if (!uploadName) {
+    console.error('upload skipped: no --name and the timeline names no flow package');
+    return undefined;
+  }
+  if (!video) {
+    console.error('upload skipped: no finished video found');
+    return undefined;
+  }
+  const key = `${MEDIA.folder}/${new Date().toLocaleDateString('en-CA')}-${uploadName}${path.extname(video)}`;
+  const script = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../../hosting-artifacts/scripts/upload-artifact.mjs',
+  );
+  const proc = spawn(process.execPath, [script, video, '--key', key], {
+    env: { ...process.env, R2_BUCKET: MEDIA.bucket, R2_PUBLIC_BASE: MEDIA.publicBase },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
+  let text = '';
+  proc.stdout.on('data', (chunk) => (text += chunk));
+  const [code] = await once(proc, 'close');
+  return code === 0 ? text.trim().split('\n').pop() : undefined;
+};
+
+const uploaded = options.upload !== 'off' && options.upload !== false ? await upload() : undefined;
+
+/**
+ * `--screenshot` adds the uploaded video to the flow's plugin as a `screenshots` entry in its `dx.config.ts`,
+ * which is what the plugin registry shows.
+ */
+const addScreenshot = (url) => {
+  const config = flowPackage && path.join(timeline.flow.slice(0, timeline.flow.indexOf('/autocue/')), 'dx.config.ts');
+  if (!config || !existsSync(config)) {
+    console.error(`--screenshot: no dx.config.ts beside the flow (${config ?? 'no flow in the timeline'})`);
+    return undefined;
+  }
+  let source = readFileSync(config, 'utf8');
+  if (source.includes(url)) {
+    return config;
+  }
+  const entry = `{ dark: '${url}' }`;
+  // A re-upload of the same demo replaces its earlier version (the URL differs only in `?v=`).
+  const base = url.split('?')[0];
+  if (source.includes(base)) {
+    writeFileSync(
+      config,
+      source.replace(new RegExp(`${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\?v=[0-9a-f]+)?`), url),
+    );
+    return config;
+  }
+  const list = source.match(/screenshots: \[([\s\S]*?)\n?(\s*)\],/);
+  if (list) {
+    const [whole, items] = list;
+    const body = items.trim() ? `${items.replace(/,?\s*$/, '')}, ${entry}` : entry;
+    source = source.replace(whole, `screenshots: [${body}],`);
+  } else {
+    source = source.replace(/(\n(\s*)icon: [^\n]*\n)/, `$1$2screenshots: [${entry}],\n`);
+  }
+  writeFileSync(config, source);
+  // The insertion is not formatted to house style; oxfmt is what CI checks.
+  spawnSync('npx', ['oxfmt', '--write', config], { stdio: 'ignore' });
+  return config;
+};
+
+const screenshot = options.screenshot && uploaded ? addScreenshot(uploaded) : undefined;
+
 const before = seconds ?? read / options.fps;
 const after = kept / options.fps;
 console.log(
@@ -528,11 +853,15 @@ console.log(
       output,
       annotated,
       mp4,
-      frames: { read, kept, dropped: read - kept },
+      voiced,
+      uploaded,
+      screenshot,
+      frames: { read, kept, dropped: read - kept, open: openFrames, close: closeFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,
       cap: `${options['max-static']}s`,
+      fitted,
     },
     null,
     2,

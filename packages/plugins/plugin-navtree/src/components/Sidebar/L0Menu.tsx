@@ -39,7 +39,7 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
+import { getHashHue, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useNavTreeState } from '#hooks';
@@ -71,6 +71,8 @@ type L0ItemRootProps = {
   item: AppGraphNode.Node;
   parent?: AppGraphNode.Node;
   path: string[];
+  dragging?: boolean;
+  dropTarget?: Edge | null;
   onMouseEnter?: () => void;
 };
 
@@ -119,7 +121,7 @@ const l0Breakpoints: Record<string, string> = {
 
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
-    ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+    ({ item, parent, path, dragging, dropTarget, onMouseEnter, children }, forwardedRef) => {
       const { t } = Hooks.useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
@@ -143,6 +145,8 @@ const L0ItemRoot = memo(
               data-type={type}
               data-testid={testId}
               data-object-id={id}
+              {...(dragging && { 'data-dragging': true })}
+              {...(dropTarget && { 'data-drop-target': dropTarget })}
               {...(item.properties.pending === true && { 'aria-disabled': true })}
               onClick={handleClick}
               onMouseEnter={onMouseEnter}
@@ -171,8 +175,9 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const { t } = Hooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
+  const [dragging, setDragging] = useState(false);
   const localizedString = Theme.toLocalizedString(item.properties.label, t);
-  const hue = item.properties.hue ?? null;
+  const hue = itemHue(item);
   const pending = item.properties.pending === true;
 
   useLayoutEffect(() => {
@@ -194,10 +199,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
           nativeSetDragImage?.(element, x, y);
         },
         onDragStart: () => {
+          setDragging(true);
           document.body.removeAttribute('data-drag-preview');
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
         },
         onDrop: () => {
+          setDragging(false);
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
         },
       }),
@@ -233,7 +240,15 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
 
   return (
-    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
+    <L0ItemRoot
+      ref={itemElement}
+      item={item}
+      parent={parent}
+      path={path}
+      dragging={dragging}
+      dropTarget={closestEdge}
+      onMouseEnter={handleMouseEnter}
+    >
       <Layout.Flex
         data-frame={true}
         {...(pending && { 'data-pending': true, 'aria-busy': true })}
@@ -257,6 +272,14 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   );
 });
 
+/** A workspace's tab (as opposed to an action or a pinned item), which shows the space's avatar. */
+const isWorkspaceTab = (item: L0ItemProps['item']): boolean =>
+  l0ItemType(item) === 'tab' && item.properties.disposition !== 'pin-end';
+
+/** The item's own hue; a workspace without one takes a stable hue from its id, so every space avatar is coloured. */
+const itemHue = (item: L0ItemProps['item']): string | undefined =>
+  item.properties.hue ?? (isWorkspaceTab(item) && item.properties.pending !== true ? getHashHue(item.id) : undefined);
+
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
 
@@ -271,9 +294,8 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
     return <Icon.Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
   }
 
-  const type = l0ItemType(item);
-  if (type === 'tab' && item.properties.disposition !== 'pin-end') {
-    const hue = item.properties.hue ?? null;
+  if (isWorkspaceTab(item)) {
+    const hue = itemHue(item);
     const localizedString = Theme.toLocalizedString(item.properties.label, t);
     return <DxAvatar hue={hue} hueVariant='surface' variant='square' size={12} fallback={localizedString} />;
   }
@@ -343,7 +365,9 @@ export const L0Menu = ({
       {...landmark}
       data-tauri-drag-region='deep'
       classNames={[
-        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-s',
+        'group/l0 absolute z-[1] inset-y-0 start-0',
+        // Its bottom-start corner is the window's in a rounded macOS window (`data-window-corners`).
+        '[html[data-window-corners="rounded"]_&]:rounded-es-(--dx-window-radius)',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
         'w-(--dx-l0-size) dx-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
@@ -365,9 +389,8 @@ export const L0Menu = ({
         </div>
       </ActionMenu>
 
-      {/* Space list. */}
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1' data-testid='navtree.workspaces'>
           {topLevelItems.map((item) => (
             <L0Item
               key={item.id}

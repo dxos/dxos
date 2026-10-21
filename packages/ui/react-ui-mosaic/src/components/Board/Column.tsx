@@ -71,7 +71,8 @@ const BoardColumnRootInner = Util.composable<HTMLDivElement, BoardColumnRootProp
           border
           classNames={mx(
             'group/column',
-            'dx-fill md:w-card-default-width snap-center dx-deck-surface',
+            // The cards' own surface, so a column reads as one raised panel holding them.
+            'dx-fill md:w-card-default-width snap-center rounded-md bg-card-surface',
             'overflow-hidden',
             classNames,
           )}
@@ -124,7 +125,7 @@ const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps
       <>
         {/* TODO(burdon): Use Card.Header. */}
         <Toolbar.Root
-          {...Util.composableProps(props, { classNames: 'gap-0 border-b border-separator' })}
+          {...Util.composableProps(props, { classNames: 'gap-0' })}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
@@ -215,7 +216,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
 
     return (
-      <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
+      <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
         {handleAdd && (
           <Button.Root
             data-testid='board-column-add-item'
@@ -277,12 +278,12 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={setDragHandle} />
+        <BoardColumnHeader label={(column && Obj.getLabel(column)) ?? data.id} dragHandleRef={setDragHandle} />
         <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
-        <div className='flex flex-col col-span-full'>
+        <Layout.Flex column classNames='col-span-full'>
           <BoardColumnFooter data={data} />
           <DebugInfo />
-        </div>
+        </Layout.Flex>
       </BoardColumnRootInner>
     );
   },

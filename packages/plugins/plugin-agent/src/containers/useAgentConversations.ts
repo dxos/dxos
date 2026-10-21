@@ -20,16 +20,17 @@ export const useAgentChannelList = (agent: Agent.Agent): AgentChannels.AgentChan
   return lists.at(0);
 };
 
-/** The agent's channel conversations, newest first. */
+/** The agent's channel conversations, in the order they started. */
 export const useAgentConversations = (agent: Agent.Agent): Chat.Chat[] => {
   const filter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
   const chats: Chat.Chat[] = useQuery(Obj.getDatabase(agent), filter);
-  // Channel chats carry their conversation key from creation, so membership alone decides the list; ULID ids sort by age.
+  // Channel chats carry their conversation key from creation, so membership alone decides the list; ULID ids sort by
+  // creation, which is when the conversation's first message arrived, so they list in the order they started.
   return useMemo(
     () =>
       chats
         .filter((chat) => AgentChannels.conversationOf(chat) !== undefined)
-        .sort((left, right) => right.id.localeCompare(left.id)),
+        .sort((left, right) => left.id.localeCompare(right.id)),
     [chats],
   );
 };

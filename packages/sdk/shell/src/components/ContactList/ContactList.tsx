@@ -64,11 +64,7 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
     <Listbox.Root
       items={visible.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) }))}
     >
-      <Listbox.Content
-        classNames={[classNames, 'flex flex-col gap-2']}
-        aria-label={t('contacts.label')}
-        data-testid='contact-list'
-      >
+      <Listbox.Content classNames={classNames} aria-label={t('contacts.label')} data-testid='contact-list'>
         {visible.map((contact) => (
           <ContactListItem
             key={contactKeyHex(contact)}
@@ -87,7 +83,6 @@ type ContactListItemProps = Pick<ContactListProps, 'spaces' | 'onSelectSpace'> &
 /** The avatar in the icon rail, the name over its shared-space tags, and the key with its copy button at the end. */
 const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const labelId = Hooks.useId('contactListItem__label');
   const identityKey = requirePublicKey(contact.identityKey);
   const fallback = keyToFallback(identityKey);
   const displayName = contactDisplayName(contact);
@@ -96,16 +91,15 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
     .filter((space): space is ContactSpace => space !== undefined);
 
   return (
-    <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
+    <Listbox.Item id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemIcon>
         <Avatar.Root
-          aria-labelledby={labelId}
           size='md'
           hue={Avatar.toAvatarHue(profileString(contact, 'hue') ?? fallback.hue)}
           fallback={profileString(contact, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
-      <Listbox.ItemText id={labelId}>{displayName}</Listbox.ItemText>
+      <Listbox.ItemText>{displayName}</Listbox.ItemText>
       {common.length > 0 && (
         <Listbox.ItemDescription classNames='flex flex-wrap gap-1 pt-2'>
           {common.map((space) => (

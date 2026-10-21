@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../effect"
+    },
+    {
+      "path": "../errors"
+    },
+    {
+      "path": "../keys"
+    }
+  ]
+}

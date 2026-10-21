@@ -1,5 +1,147 @@
 # @dxos/plugin-lingo
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/nlp@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3b03db7]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/nlp@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [085dcb1]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [27b542c]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-ui-editor@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/nlp@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

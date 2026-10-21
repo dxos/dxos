@@ -1,5 +1,145 @@
 # @dxos/plugin-illustrator
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/diagram@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 647b4bd: `@dxos/diagram` renders a scene to SVG text without React (`SvgFile.toSvgFile`, `SvgFile.sceneMarkup`), so CLIs and
+  workers can write diagrams to files; plugin-illustrator's `SceneSvgFile` component is removed in its favor.
+
+  The DXOS CLI gains `dx drawing render | import | list | export`, which lay out a `.dx` file, import a `.dx.svg` (including
+  one that carries only its DSL source) into a space, and export it back out. A laid-out drawing can be converted to an
+  editable Canvas, tldraw or Excalidraw drawing with the new `Convert` operation and its plank actions. `dx space share`
+  and other space commands fall back to the first visible space when no default is set, and sharing waits for the space to
+  be ready.
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [647b4bd]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/diagram@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- 3c4d73d: Nodes and links share one `style`: a link's `LineStyle` (colour and `lineStyle`) is the common base a node's `NodeStyle` extends with fill, tone, frame, font size and text alignment (`alignHorizontal`, `alignVertical`); `styleFields` lets a shape extend it further. The properties panel edits the fields a mixed selection shares with one style picker. Drawings gain style classes (`StyleClass`, `SceneStore.styles`, kept in a new optional `Canvas.styles` map beside `content`): an element naming a class derives its style from it, and editing a classed element's look edits the class. Shapes and links of an unregistered type render as the core base (`BaseNode`): a box showing its `label`, or a straight line. A scene shape can open any scene of its drawing, and "New scene from selection" (`groupIntoScene`) moves the selected nodes into a new scene behind one scene shape. Breaking: a link's `line` (`{ hue, dash }`, `LinkLine`) is now `style` (`{ hue, lineStyle }`), which plugin-canvas reads from drawings saved the old way; a node style's `className` is removed; the UML class shape keeps its name in `label` instead of `name`.
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/diagram@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-search@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

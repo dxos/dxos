@@ -98,7 +98,7 @@ export type ProjectsResult = {
   roasteryOps: Project.Project;
 };
 
-export const Projects: SampleSpace.Phase<ProjectsResult, ProjectsInput> = SampleSpace.phase('projects', {
+export const Projects: SampleSpace.Partial<ProjectsResult, ProjectsInput> = SampleSpace.partial('projects', {
   schemas: [Project.Project, Instructions.Instructions, Routine.Routine, Trigger.Trigger, Outline.Outline],
   run: ({ taskSets, notes, drawings, about, mailbox, organizations }) =>
     Effect.gen(function* () {

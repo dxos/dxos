@@ -12,9 +12,7 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ControlPointRef, type Drag, type Handle, isMoving } from '../../model/atoms.ts';
-import { nodeDef } from '../../model/node-def.ts';
-import { type NodeRegistry } from '../../model/registry.ts';
+import { type ControlPointRef, type Drag, type Handle, type LinkEnd, isMoving } from '../../engine/index.ts';
 import {
   type Bounds,
   type Capabilities,
@@ -23,42 +21,35 @@ import {
   type Link,
   type LinkId,
   type Node,
+  type NodeRegistry,
   type Point,
   type Port,
-  type Scene,
   type SplineLink,
+  type View,
   endpointNode,
   isPointEndpoint,
-} from '../../model/types.ts';
-import { boundsFromPoints } from '../../utils/hit.ts';
-import { type LatticeSpec } from '../../utils/lattice.ts';
-import { nodePorts, oppositeSide, portPoint } from '../../utils/ports.ts';
-import { curvePath, linkGeometry, sceneLinkGeometry } from '../../utils/route.ts';
-import { nodeBounds } from '../../utils/shapes.ts';
+  nodeDef,
+} from '../../model/index.ts';
+import {
+  type LatticeSpec,
+  boundsFromPoints,
+  curvePath,
+  handlePoint,
+  linkGeometry,
+  nodeBounds,
+  nodePorts,
+  oppositeSide,
+  portPoint,
+  viewLinkGeometry,
+} from '../../utils/index.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
-
-export const handlePoint = (bounds: Bounds, handle: Handle): Point => {
-  const x = handle.includes('w')
-    ? bounds.x
-    : handle.includes('e')
-      ? bounds.x + bounds.width
-      : bounds.x + bounds.width / 2;
-  const y = handle.includes('n')
-    ? bounds.y
-    : handle.includes('s')
-      ? bounds.y + bounds.height
-      : bounds.y + bounds.height / 2;
-  return { x, y };
-};
 
 const cursorFor = (handle: Handle) =>
   ({ n: 'ns', s: 'ns', e: 'ew', w: 'ew', ne: 'nesw', sw: 'nesw', nw: 'nwse', se: 'nwse' })[handle] + '-resize';
 
-export type LinkEnd = 'source' | 'target';
-
 export type ControlFrameProps = {
-  scene: Scene;
+  scene: View;
   registry: NodeRegistry;
   /** What the view may do: no handle is drawn for a gesture that could not apply. */
   capabilities: Capabilities;
@@ -97,6 +88,9 @@ const midpoints = (source: Point, points: readonly Point[], target: Point) => {
   }));
 };
 
+/** A port's radius at 100%, in scene px. */
+const PORT_RADIUS = 5;
+
 export const ControlFrame = memo(
   ({
     scene,
@@ -122,7 +116,9 @@ export const ControlFrame = memo(
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
-    const portRadius = 5 * unit;
+    // A port is part of the node, so it scales with the zoom like the node does, but stays big enough to hit zoomed out.
+    const portRadius = Math.max(PORT_RADIUS, 3 * unit);
+    const portStroke = portRadius / PORT_RADIUS;
     const midpointRadius = 4 * unit;
     // A move in flight shows the shapes themselves: no outlines or handles, just where they will land.
     const chrome = isMoving(drag) ? [] : [...selection];
@@ -133,7 +129,7 @@ export const ControlFrame = memo(
     const lanes =
       lattice && (selectedLinks.length > 0 || linkUnder !== undefined)
         ? new Map(
-            sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
               geometry.link.id,
               geometry,
             ]),
@@ -205,7 +201,7 @@ export const ControlFrame = memo(
                 'stroke-focus pointer-events-auto cursor-move hover:fill-focus',
                 drag?.kind === 'end' && drag.id === link.id && drag.end === end ? 'fill-focus' : 'fill-base-surface',
               )}
-              strokeWidth={unit}
+              strokeWidth={portStroke}
               onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
               onPointerEnter={hoverOnly ? () => onLinkHover?.(link.id) : undefined}
               onPointerLeave={hoverOnly ? () => onLinkHover?.(undefined) : undefined}
@@ -281,7 +277,7 @@ export const ControlFrame = memo(
                   'stroke-focus pointer-events-auto cursor-crosshair hover:fill-focus',
                   active ? 'fill-focus' : 'fill-base-surface',
                 )}
-                strokeWidth={unit}
+                strokeWidth={portStroke}
                 onPointerDown={(event) => onPortPointerDown?.(node, port, event)}
               />
             );
@@ -328,7 +324,7 @@ export const ControlFrame = memo(
             cy={drag.to.y}
             r={portRadius}
             className='fill-focus stroke-focus pointer-events-none'
-            strokeWidth={unit}
+            strokeWidth={portStroke}
           />
         )}
         {marquee && (

@@ -1,5 +1,199 @@
 # @dxos/plugin-markdown
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-dnd@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/versioning@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/halo@0.16.0
+  - @dxos/halo-react@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-focus@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 417247b: A Markdown document whose content is slow to load now shows a "Loading…" placeholder, and one whose content is missing from this device or deleted shows a message saying so in place of the editor, instead of an editor that silently ignores clicks.
+- 1bc475e: Typing `@` in a document filters the link picker inline again, so focus stays in the editor and arrow keys and Enter pick a row. The query can hold spaces, so a whole phrase can match an object or name a new one; a double space, moving the cursor out of the query, Escape (which keeps the text) or Enter ends it. The picker lists the same objects as `ObjectCombobox`, labelled the same way and with each type's coloured icon; the editor menu gains `multiWordTriggers` and `EditorMenuItem.iconHue` for this. Creating an object from the picker now makes exactly one object, keeps the typed name for a drawing too, and leaves the cursor after the new link: the create dialog ignores a second pick while it closes, and closing any app dialog returns focus to where it was before it opened.
+- 098a536: `SampleSpace.phase` is replaced by `SampleSpace.partial`: the content one `CONTENT.md` spec describes, which may compose smaller partials and carries their schemas. `SampleSpace.make` takes `partials` instead of `phases`. The debug plugin adds a Fieldstone Labs space template, a software team run mostly by agents, built from four partials plus the DXOS architecture diagrams; `@dxos/plugin-canvas` now publishes and exports its architecture partial from `@dxos/plugin-canvas/Architecture`. A contact card shows the employer's name instead of only an icon, related events no longer swap recent and upcoming, a conversation's message header keeps its date and actions to the right with the subject at full width, an event's star sits beside its title, cards have a visible edge in light mode, a calendar card lists at most three attendees, a sheet embedded in a document renders instead of failing, and object links past a document's first screen render as links instead of raw markdown.
+- Updated dependencies [3b03db7]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [b82150a]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/plugin-attention@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-dnd@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/versioning@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/halo@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/halo-react@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/react-focus@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 085dcb1: `@dxos/brand` ships Poiret One (`assets/fonts/poiret-one`), the face of the Composer wordmark. The Markdown, Sheet, Tables and Projects plugins' details now include a narrated demo video, opening on the Composer ident.
+- 27b542c: Composer plugins lay out their panels with react-ui's `Layout.Flex` / `Layout.Grid` and theme colour tokens instead of hand-written flex/grid classes and raw palette colours, so status colours now follow the theme in light and dark mode.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-attention@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/react-ui-dnd@0.14.0
+  - @dxos/react-ui-editor@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/versioning@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/halo-react@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/react-hooks@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

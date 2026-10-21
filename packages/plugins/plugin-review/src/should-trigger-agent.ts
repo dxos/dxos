@@ -24,7 +24,7 @@ export const textOf = (message: Message.Message | undefined): string => {
  * Trigger gate for the comment-thread agent.
  *
  * Returns true iff the agent should respond to the latest message. All of:
- *   - `thread.agent` exists and `enabled === true`
+ *   - the agent config (`agent`, the thread's own by default) exists and `enabled === true`
  *   - `message.sender.role !== 'assistant'` (structural self-loop guard).
  *     Note: user-authored messages typically have NO role set; only assistant
  *     messages carry an explicit role.
@@ -32,8 +32,13 @@ export const textOf = (message: Message.Message | undefined): string => {
  *   - Either mode === 'auto', OR text contains an `@{agentName}` mention
  *     (case-insensitive substring match; v1 — promote to a parser later).
  */
-export const shouldTriggerAgent = (thread: Thread.Thread, message: Message.Message, agentName: string): boolean => {
-  if (!thread.agent?.enabled) {
+export const shouldTriggerAgent = (
+  thread: Thread.Thread,
+  message: Message.Message,
+  agentName: string,
+  agent: Thread.Thread['agent'] = thread.agent,
+): boolean => {
+  if (!agent?.enabled) {
     return false;
   }
   if (message.sender.role === 'assistant') {
@@ -42,7 +47,7 @@ export const shouldTriggerAgent = (thread: Thread.Thread, message: Message.Messa
   if (thread.status === 'resolved') {
     return false;
   }
-  if (thread.agent.mode === 'auto') {
+  if (agent.mode === 'auto') {
     return true;
   }
   const needle = '@' + agentName.toLowerCase();

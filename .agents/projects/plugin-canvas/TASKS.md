@@ -42,7 +42,7 @@ Design: DESIGN.md §6b, decision 14, open questions 6–7. Same scene, same proj
 
 ## Phase 1: first PR (in progress on the PR 0 branch, stacked)
 
-Engine lives in `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`), exported as `@dxos/react-ui-canvas/scene`. Stories: `ui/react-ui-canvas/scene/SceneView`.
+Engine lives in `packages/ui/react-ui-canvas/src/` (`model`, `utils`, `hooks`, `components`), exported as `@dxos/react-ui-canvas/scene`. Stories: `ui/react-ui-canvas/SceneView`.
 
 - [x] Types (`types.ts`), fractional order (`order.ts`), camera + portal math (`camera.ts`), derived bounds + hit testing (`hit.ts`), ports + automatic pairing (`ports.ts`), curve routes (`route.ts`), atom store (`store.ts`), projection seam + freehand reducer (`projection.ts`); unit tests for each.
 - [x] Surface: per-view atoms, cell registry, `SceneLayer` (links, nested live portals with tiers), `ControlFrame` (outline, 8 handles, ports, marquee, rubber band), `Palette`, `Breadcrumbs`, `SceneView` (wheel/pinch/pan, select/marquee, move + resize via intents, port-drag linking incl. drop-on-canvas create, R/T/S create tools, Delete, arrows nudge, cmd+A, Shift+1/2/0, Alt+←/→ history, double-click / auto / Escape / breadcrumb drill).
@@ -214,6 +214,24 @@ before), not reasoned about from the source.
 
 ## Backlog
 
+- [x] **Import a tldraw diagram as a canvas** (tracked 2026-10-18; built 2026-10-19). `src/import/tldraw.ts`
+      (`tldrawToViews`, pure, fixtures in `src/import/testing.ts`), `CanvasOperation.ImportTldraw` and the
+      "Copy as canvas" action keyed by `Canvas.TLDRAW_SCHEMA`; stories `plugins/plugin-canvas/import/ImportTldraw`.
+      Groups become anonymous Objects (via `composeSelection`), rotation carries over, frames map to `view` nodes, only the
+      first page is read, and freehand / image / embed shapes are skipped (counted in the result). The original plan: An operation in plugin-canvas transforms a
+      plugin-tldraw diagram into a new canvas document (shapes → nodes, arrows → links, frames → Views, groups →
+      Objects per `packages/ui/react-ui-canvas/docs/VIEWS.md`), creates the Canvas object in the same space and opens
+      it. plugin-canvas contributes a menu action to plugin-tldraw's diagram (object menu / toolbar) that invokes the
+      operation, so plugin-tldraw takes no dependency on plugin-canvas. Needs: a tldraw-store → `Scene` mapper with
+      unit tests over representative tldraw fixtures; the operation's schema and handler; the menu contribution;
+      a story or e2e step that converts a sample drawing.
+
+- [ ] **Default test drawing.** A canvas drawing seeded in the personal space by default, next to the DXOS
+      README, exercising the engine (shapes, links, nested scene, layers, style classes).
+- [ ] **Slide decks laid out on a canvas.** Extend the slide deck so its slides are placed and arranged on a
+      canvas (one scene per deck, a slide per frame).
+- [ ] **Frame node.** Rename the scene shape "Frame", and let a frame hold either a nested scene or any app
+      surface (an ECHO object rendered through `Surface`), not only a scene.
 - [x] **Type prototypes.** `createNodeRegistry(types, prototypes)` with `extends`; `rect` and `scene` share the
       `box` prototype (DESIGN §4c). Scene shapes: centred label, `contents` option, zoom-in control.
 - [ ] **Instance prototypes** (DESIGN §4c): `prototype?: NodeId`, `resolveNode`, inherited values as

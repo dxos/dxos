@@ -15,6 +15,12 @@ import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
+import {
+  CallSimulation,
+  type SimulatedAvatarRenderer,
+  type SimulatedParticipantProps,
+  type SimulatedUtterance,
+} from './call-simulation.ts';
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
 import { MediaManager, type MediaState } from './media-manager.ts';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
@@ -32,6 +38,8 @@ export class CallManager extends Resource {
   // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
   public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
   public readonly left = new Event<string>();
+  /** Each scripted line of a simulated call as it starts playing (see `simulate`). */
+  public readonly simulatedUtterance = new Event<SimulatedUtterance>();
 
   /**
    * Atom-based state. Updated via `_updateState()`.
@@ -236,6 +244,7 @@ export class CallManager extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    await this.#simulation?.close();
     await this._swarmSynchronizer.leave();
     await this._swarmSynchronizer.close();
     await this._mediaManager.close();
@@ -246,9 +255,39 @@ export class CallManager extends Resource {
     return peers.length;
   }
 
+  /**
+   * Test seam: replaces the network with participants played from video files (see `CallSimulation`).
+   * While set, `join` stays local — no swarm, no SFU session — so a call renders with no EDGE reachable.
+   * Pass `undefined` to remove them. `transcript` lines are emitted on `simulatedUtterance` as they play.
+   * `renderAvatar` draws participants with an `avatar`; without it they show their file's picture.
+   */
+  @synchronized
+  async simulate(
+    participants: SimulatedParticipantProps[] | undefined,
+    transcript?: SimulatedUtterance[],
+    renderAvatar?: SimulatedAvatarRenderer,
+  ): Promise<void> {
+    await this.#simulation?.close();
+    this.#simulation = undefined;
+    if (participants) {
+      const simulation = new CallSimulation(participants, transcript, renderAvatar);
+      await simulation.open();
+      simulation.changed.on(this._ctx, () => this._updateState());
+      simulation.spoke.on(this._ctx, (utterance) => this.simulatedUtterance.emit(utterance));
+      this.#simulation = simulation;
+    }
+    this._updateState();
+  }
+
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
   async join(): Promise<void> {
+    if (this.#simulation) {
+      await this.#simulation.join();
+      this._updateState();
+      return;
+    }
+
     const callsServiceUrl = getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls);
     invariant(callsServiceUrl, 'The calls service is not configured (runtime.services.edge.url).');
     this._swarmSynchronizer.setJoined(true);
@@ -261,9 +300,11 @@ export class CallManager extends Resource {
 
   @synchronized
   async leave(): Promise<void> {
+    this.#simulation?.leave();
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
+    this._updateState();
     const roomId = this._registry.get(this._roomIdAtom);
     roomId && this.left.emit(roomId);
   }
@@ -304,11 +345,14 @@ export class CallManager extends Resource {
     if (this.#seeded) {
       return;
     }
-    this._registry.set(this._stateAtom, {
-      call: this._swarmSynchronizer._getState(),
-      media: this._mediaManager._getState(),
-    });
+    const state = { call: this._swarmSynchronizer._getState(), media: this._mediaManager._getState() };
+    this._registry.set(
+      this._stateAtom,
+      this.#simulation ? this.#simulation.merge(state, this._swarmSynchronizer._getLocalUser()) : state,
+    );
   }
+
+  #simulation?: CallSimulation;
 
   /** Set once a harness seeds state; freezes `_updateState` so deterministic story state survives. */
   #seeded = false;

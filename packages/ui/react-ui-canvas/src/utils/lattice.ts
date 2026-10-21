@@ -8,7 +8,7 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node } from '../model/types.ts';
+import { type Bounds, type ElementId, type Node } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
@@ -110,6 +110,12 @@ export const coveredCells = ({ col, row, spanX, spanY }: LatticeCell): string[] 
 /** Which node covers each lattice position, for the nodes not in `except` (those being moved or resized). */
 export type Occupancy = ReadonlyMap<string, ElementId>;
 
+/**
+ * Whether a node takes part in the lattice: a guide (a group's backdrop) or a bare caption annotates the shapes rather
+ * than being one, so it neither snaps, occupies cells nor blocks a gutter route.
+ */
+export const onLattice = (node: Node): boolean => !node.style?.guide && node.style?.border !== false;
+
 export const occupancy = (
   nodes: Iterable<Node>,
   spec: LatticeSpec,
@@ -117,7 +123,7 @@ export const occupancy = (
 ): Occupancy => {
   const cells = new Map<string, ElementId>();
   for (const node of nodes) {
-    if (!except.has(node.id)) {
+    if (!except.has(node.id) && onLattice(node)) {
       for (const key of coveredCells(toCell(nodeBounds(node), spec))) {
         cells.set(key, node.id);
       }

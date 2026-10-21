@@ -183,7 +183,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       related={part === 'complementary'}
       actions={sigilActions}
       onAction={onAction}
-      breadcrumbs={breadcrumbs}
+      breadcrumbs={flatten && part === 'main' ? breadcrumbs : undefined}
       onSelectBreadcrumb={onSelectBreadcrumb}
       popoverAnchorId={popoverAnchorId}
       articleData={articleData}

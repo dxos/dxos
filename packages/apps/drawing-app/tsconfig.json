@@ -1,0 +1,102 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "outDir": "dist/types",
+    "types": [
+      "node",
+      "sharedworker"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/vite-plugin-icons"
+    },
+    {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../../tools/vite-plugin-module-url"
+    },
+    {
+      "path": "../../common/diagram"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../plugins/plugin-attention"
+    },
+    {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
+      "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
+      "path": "../../plugins/plugin-theme"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    }
+  ]
+}

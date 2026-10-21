@@ -50,7 +50,9 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
-    const addIds = request.addIds ?? [];
+    // A passive add holds the bytes a query row brought; a function is one call, so nothing it reads
+    // changes under it and fetching the document would undo the point of the row.
+    const addIds = (request.add ?? []).filter(({ passive }) => !passive).map(({ id }) => id);
     const self = this;
     return Effect.gen(function* () {
       const sub =
@@ -126,11 +128,25 @@ export class DataServiceImpl implements DataService.Handlers {
     return Effect.tryPromise({
       try: async () => {
         invariant(SpaceId.isValid(request.spaceId));
+        if (request.initialValue && !request.initialDocument) {
+          log.warn('document created from deprecated `initialValue`; send `initialDocument` bytes', {
+            spaceId: request.spaceId,
+          });
+        }
         using response = await this._dataService.createDocument(
           this._executionContext,
           request.spaceId,
-          request.initialValue,
+          request.initialDocument ? undefined : request.initialValue,
         );
+        // EDGE's create takes only JSON, so the bytes are applied as the document's first change.
+        if (request.initialDocument) {
+          await this._dataService.changeDocument(
+            this._executionContext,
+            request.spaceId,
+            response.documentId,
+            request.initialDocument,
+          );
+        }
         return { documentId: response.documentId };
       },
       catch: toServiceError,
@@ -190,6 +206,14 @@ export class DataServiceImpl implements DataService.Handlers {
         message: 'subscribeSpaceSyncState is not implemented.',
       }),
     );
+  }
+
+  ['DataService.subscribeIndexStatus'](): EffectStream.Stream<DataService.IndexStatus, Error> {
+    return EffectStream.make({ phase: 'idle' as const, done: 0, total: 0 });
+  }
+
+  ['DataService.subscribeIndexActivity'](): EffectStream.Stream<DataService.IndexActivity, Error> {
+    return EffectStream.make({});
   }
 
   ['DataService.getDocumentHeads'](

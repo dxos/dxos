@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
@@ -15,7 +18,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
-import { getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -24,6 +27,11 @@ import { useBoardColumn } from './BoardColumnContext.ts';
 import { useBoard } from './BoardContext.ts';
 
 const BOARD_ITEM_NAME = 'Board.Item';
+
+const useDescription = (object: Obj.Unknown | undefined): string | undefined =>
+  useAtomValue(
+    useMemo(() => Atom.make((get) => (object ? Obj.getDescription(get(Obj.atom(object))) : undefined)), [object]),
+  );
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TItem>,
@@ -39,6 +47,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     // Refs don't trigger re-renders, so reading `.current` at render time leaves the prop null.
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
+    const label = useLabel(data);
+    const description = useDescription(data);
     const { model } = useBoard(BOARD_ITEM_NAME);
     const column = useBoardColumn();
     const items = useMemo(
@@ -58,9 +68,6 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
       return null;
     }
 
-    const label = Obj.getLabel(data);
-    const description = Obj.getDescription(data);
-
     return (
       <Mosaic.Tile
         ref={rootRef}
@@ -74,14 +81,17 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
       >
         <Focus.Item asChild>
           <Card.Root
-            classNames={classNames}
+            // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
+            classNames={mx('not-data-selected:border-separator-subtle', classNames)}
             data-testid='board-item'
             ref={composedRef}
             onClick={(event) => event.currentTarget.focus()}
           >
             <Card.Header>
               <DragHandle.DragHandle ref={setDragHandle} data-testid='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
+              <Card.Title truncate data-testid='mosaicBoard.cardTitle'>
+                {label}
+              </Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>
                 <ActionMenu disabled={!items?.length} actions={items}>

@@ -123,7 +123,7 @@ const recoveryHelpers: RecoveryHelpers = {
     await destroyRecoveryClient();
     mountDevtoolsHooks({});
     attachRecoveryHelpers(recoveryHelpers);
-    await resetComposerStorage(print);
+    return resetComposerStorage(print);
   },
   log: (message: string) => print(String(message)),
   status: () => ({
@@ -212,7 +212,13 @@ const actions: Record<RecoveryAction, () => void> = {
       print('Reset aborted.');
       return;
     }
-    void runAction('Reset', () => recoveryHelpers.reset());
+    void runAction('Reset', async () => {
+      const { ok } = await recoveryHelpers.reset();
+      // Only the button reloads: an agent calling `recovery.reset()` over the debug port must get its result first.
+      if (ok) {
+        window.location.href = '/';
+      }
+    });
   },
 
   'export': () =>

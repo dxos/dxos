@@ -7,18 +7,19 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
+import * as AiContext from '@dxos/assistant/AiContext';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentChannels, AgentOperation, Mode } from '#types';
+import { AgentChannels, AgentEmail, AgentOperation, Mode } from '#types';
 
 import { makeTestChannel } from './testing.ts';
 
@@ -35,6 +36,7 @@ const TestLayer = AssistantTestLayer({
     Instructions.Instructions,
     Channel.Channel,
     AgentChannels.AgentChannels,
+    AgentEmail.AgentEmail,
     Mode.Mode,
   ],
   disableLlmMemoization: true,
@@ -96,6 +98,38 @@ describe('EnsureChannelChat', () => {
 
         // A bridged chat never shadows the agent's primary chat.
         expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'binds the skills the channel declares, once',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const channel = yield* Database.add(
+          Channel.make({ backend: { kind: AgentEmail.BACKEND_KIND, config: AgentEmail.make({ handle: 'kai' }) } }),
+        );
+        yield* Database.flush();
+
+        const { feed } = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
+          agent,
+          channel: Ref.make(channel),
+          thread: 'mail-1',
+        });
+        yield* Database.flush();
+        yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
+          agent,
+          channel: Ref.make(channel),
+          thread: 'mail-1',
+        });
+        yield* Database.flush();
+
+        const bindings = yield* Feed.query(yield* Database.load(feed), Filter.type(AiContext.Binding)).run;
+        const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
+        expect(skills.filter((uri) => uri === Skill.registryURI(AgentEmail.SKILL_KEY))).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

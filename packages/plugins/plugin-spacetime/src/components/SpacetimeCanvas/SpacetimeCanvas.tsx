@@ -133,8 +133,12 @@ export const SpacetimeCanvas = Util.composable<HTMLDivElement, SpacetimeCanvasPr
       });
       window.addEventListener('pagehide', reportCamera);
 
-      // Load WASM once, then build meshes from scene objects.
-      void getManifold().then((wasm) => {
+      // Load WASM once, then build meshes from scene objects. A ref's `target` is undefined until it has loaded, and
+      // this first build is the only one that sees the initial objects, so it waits for them.
+      void Promise.all([
+        getManifold(),
+        Promise.all((sceneData?.objects ?? []).map((ref) => ref?.load().catch(() => undefined))),
+      ]).then(([wasm]) => {
         wasmRef.current = wasm;
         if (sceneData?.objects?.length) {
           for (const ref of sceneData.objects) {

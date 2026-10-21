@@ -9,7 +9,7 @@ import { type Assertion, type ExtractDocument } from '../types/index.ts';
 // facts a correct extraction should yield, so the benchmark can score precision/recall/F1 in addition
 // to raw counts. Sentences are single, unambiguous propositions spanning distinct predicate shapes
 // (employment, membership, location, temporal, dependency, authorship, family, …); predicates follow
-// the extraction rules (e.g. `is-a` for membership, timeless present, "works for" → "works at").
+// the extraction rules (e.g. `is a` for membership, `has role` for a job, timeless present, "works for" → "works at").
 
 /** One expected fact as surface strings (subject/predicate/object) for a document. */
 export type ExpectedFact = { readonly subject: string; readonly predicate: string; readonly object: string };
@@ -28,7 +28,7 @@ const fact = (subject: string, predicate: string, object: string): ExpectedFact[
 
 export const EVAL_DOCS: readonly EvalDoc[] = [
   doc(1, 'Alice works at Acme.', fact('Alice', 'works at', 'Acme')),
-  doc(2, 'Bob is a software engineer.', fact('Bob', 'is-a', 'software engineer')),
+  doc(2, 'Bob is a software engineer.', fact('Bob', 'has role', 'software engineer')),
   doc(3, 'Carol lives in Berlin.', fact('Carol', 'lives in', 'Berlin')),
   doc(4, 'Dave founded Globex.', fact('Dave', 'founded', 'Globex')),
   doc(5, 'Acme acquired Initech in 2021.', fact('Acme', 'acquired', 'Initech')),

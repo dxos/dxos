@@ -50,7 +50,6 @@
 //   `rawTarget(this)` and keep `this` as the receiver for any re-entrant reads.
 //
 
-import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
@@ -389,10 +388,9 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
 
 /** Backs the `ObjectVersionId` slot, i.e. `Obj.version`. The only version accessor in this package. */
 const getVersion = (target: ProxyTarget): Obj.Version => {
-  const accessor = target[symbolInternals].getDocAccessor();
-  const doc = accessor.handle.doc();
-  invariant(doc);
-  const heads = A.getHeads(doc);
+  const core = target[symbolInternals];
+  invariant(core.hasDoc);
+  const heads = core.getHeads();
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
     versioned: true,
@@ -717,7 +715,7 @@ export class EchoRoot extends EchoRecord {
     const core = this[symbolInternals];
     const target = rawTarget(this);
     const receiver = this;
-    return (callback: (mutableObj: any) => void) => executeChange(core, target, receiver, callback);
+    return (callback: (mutableObj: any) => void) => core.batch(() => executeChange(core, target, receiver, callback));
   }
 
   get [RelationSourceDXNId](): URI.URI | undefined {

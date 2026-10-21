@@ -6,13 +6,15 @@ import React, { type PropsWithChildren, memo, useEffect, useState } from 'react'
 
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
+import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import type * as Util from '@dxos/react-ui/Util';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type Actor, type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
+import { stringToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
 import { type DeliveryStatus, getDelivery, isUnread } from '../../types.ts';
@@ -35,6 +37,19 @@ type MessageChromeContextValue = {
   debug?: boolean;
   /** The reader's identity hue; a prompt's edge wears it, so whose turn it is reads by colour too. */
   userHue?: string;
+  /** The reader's DID: their own prompts keep {@link userHue}, and only others' are named. */
+  userDid?: string;
+  /** Show each prompt's author — set when anyone besides the reader has written in the thread. */
+  showAuthors?: boolean;
+  /** Resolves a prompt's sender to a profile (e.g. a space member); the sender's own fields are the fallback. */
+  getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
+};
+
+/** How a prompt's author is shown. */
+export type MessageAuthor = {
+  name?: string;
+  hue?: string;
+  emoji?: string;
 };
 
 // Every field is optional configuration, so a missing provider defaults instead of throwing.
@@ -247,9 +262,9 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
     <div className='pb-1 opacity-60' data-testid='chat.context'>
       <TogglePanel.Root>
         <TogglePanel.Content classNames='border border-separator-subtle rounded-sm'>
-          <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-fg-muted truncate'>{t('context.label')}</span>
-            <Icon.Icon icon='ph--brain--regular' size='md' tone='muted' />
+          {/* The header's own layout: the disclosure and the icon each sit in a `Layout.Block` either side of the title. */}
+          <TogglePanel.Header icon={<Icon.Icon icon='ph--brain--regular' size='md' tone='muted' />}>
+            <span className='text-sm text-fg-muted truncate'>{t('context.label')}</span>
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-fg-muted whitespace-pre-wrap'>
@@ -260,6 +275,49 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
       </TogglePanel.Root>
     </div>
   );
+};
+
+//
+// Author
+//
+
+/**
+ * Whether the thread's prompts come from anyone other than the reader: a thread written by one
+ * person has no need to say who wrote each prompt. Without the reader's DID, two distinct authors.
+ * Keyed by DID alone, since a name is no identity: prompts from before DIDs were recorded carry only
+ * the reader's own name.
+ */
+export const hasOtherAuthors = (messages: readonly Message.Message[], userDid?: string): boolean => {
+  const authors = new Set<string>();
+  for (const message of messages) {
+    const key = isPrompt(message) ? message.sender.identityDid : undefined;
+    if (key && key !== userDid) {
+      authors.add(key);
+      if (userDid || authors.size > 1) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+/** A prompt's author: hue and emoji from their profile, else seeded from their DID as elsewhere in the app. */
+const useAuthor = (sender: Actor.Actor) => {
+  const { userDid, userHue, getAuthor } = useMessageChromeContext('Author');
+  const did = sender.identityDid;
+  if (!did) {
+    return undefined;
+  }
+
+  const self = did === userDid;
+  const author = getAuthor?.(sender);
+  const fallback = stringToFallback(did);
+  return {
+    self,
+    name: author?.name ?? sender.name ?? sender.email,
+    hue: author?.hue ?? (self ? userHue : undefined) ?? fallback.hue,
+    emoji: author?.emoji ?? fallback.emoji,
+  };
 };
 
 //
@@ -311,9 +369,12 @@ const hasToolbar = (message: Message.Message): boolean =>
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming, userHue } = useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const { streaming, userHue, showAuthors } = useMessageChromeContext(MESSAGE_CHROME_NAME);
   const prompt = isPrompt(message);
   const delivery = prompt ? getDelivery(message) : undefined;
+  const author = useAuthor(message.sender);
+  const showAuthor = prompt && showAuthors && !!author;
+  const hue = showAuthor ? author.hue : userHue;
 
   return (
     <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
@@ -321,20 +382,40 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
-            {/* Sized by its own text, not the column: the toolbar below shares the column, and its
-                relative timestamp changing width ("just now" → "1 minute ago") resized the bubble. */}
-            <div
-              className={mx(
-                'relative w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
-                userHue ? getStyles(userHue).border : 'border-accent-bg',
+            {showAuthor && !author.self && author.name && (
+              <div className='pb-1 pe-8 text-end text-xs text-fg-muted truncate' data-testid='chat.author'>
+                {author.name}
+              </div>
+            )}
+            <div className='flex items-start gap-2'>
+              {/* Sized by its own text, not the column: the toolbar below shares the column, and its
+                  relative timestamp changing width ("just now" → "1 minute ago") resized the bubble. */}
+              <div
+                className={mx(
+                  'relative w-fit max-w-full ms-auto px-3 py-2 border-s-2 rounded-sm bg-input-surface',
+                  hue ? getStyles(hue).border : 'border-accent-bg',
+                )}
+              >
+                {children}
+                {delivery && <Delivery status={delivery} />}
+              </div>
+              {showAuthor && (
+                <Avatar.Root
+                  classNames='shrink-0 mt-1'
+                  size='sm'
+                  hue={Avatar.toAvatarHue(author.hue)}
+                  fallback={author.emoji}
+                  label={author.name}
+                  data-testid='chat.avatar'
+                />
               )}
-            >
-              {children}
-              {delivery && <Delivery status={delivery} />}
             </div>
             {/* A removable prompt keeps its toolbar shown: it waits behind a streaming answer, which
                 otherwise hides the toolbar, and remove is the one control it needs then. */}
-            <PromptToolbar classNames={isRemovable(delivery) ? 'justify-end pt-1' : promptReveal} message={message} />
+            <PromptToolbar
+              classNames={mx(isRemovable(delivery) ? 'justify-end pt-1' : promptReveal, showAuthor && 'pe-8')}
+              message={message}
+            />
           </div>
         </div>
       ) : (

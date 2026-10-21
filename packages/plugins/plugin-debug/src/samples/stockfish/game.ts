@@ -26,7 +26,7 @@ const OPENING_PGN = '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 *';
 export type GameResult = { game: Game.Game; state: Chess.State };
 
 /** The position the deployed engine is asked about, as a game the chess chat can open. */
-export const ChessGame: SampleSpace.Phase<GameResult> = SampleSpace.phase('game', {
+export const ChessGame: SampleSpace.Partial<GameResult> = SampleSpace.partial('game', {
   schemas: [Game.Game, Chess.State],
   run: () =>
     Effect.gen(function* () {

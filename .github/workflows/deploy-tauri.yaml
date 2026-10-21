@@ -45,6 +45,10 @@ env:
   # Empty disables moon's remote cache; set here rather than via the setup action's
   # `remote-cache` input because this workflow does not use that action.
   MOON_REMOTE_HOST: ''
+  # The commit deploy-apps' `packages` job publishes, which the Composer Plugin template pins. In a called
+  # workflow `github.sha` is the caller's commit; on production the bundle builds the release commit,
+  # which only bumps app versions.
+  DX_PLUGIN_TOOLCHAIN_COMMIT: ${{ github.sha }}
 
 jobs:
   draft_tauri:

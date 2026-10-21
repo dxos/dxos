@@ -16,7 +16,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { EntityId, URI } from '@dxos/keys';
 import * as ThreadOperationHandlerSet from '@dxos/plugin-thread/ThreadOperationHandlerSet';
 import { Text } from '@dxos/schema';
 import { Channel, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
@@ -26,7 +26,14 @@ import { BrainSkill, ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, 
 import { AgentChannels, AgentOperation, ChatParticipant, MemoryOperation, Mode, Relay, RelayOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
-import { TEST_HANDLE_LABEL, makeChannelCapabilities, makeTestChannel, makeTestChannelBackend } from './testing.ts';
+import { ensureChannelChat } from './ensure-channel-chat.ts';
+import {
+  TEST_HANDLE_LABEL,
+  TEST_MIRRORED_BACKEND_KIND,
+  makeChannelCapabilities,
+  makeTestChannel,
+  makeTestChannelBackend,
+} from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -34,6 +41,7 @@ EntityId.dangerouslyDisableRandomness();
 const CLOSED_DMS = '300';
 
 const backend = makeTestChannelBackend({ refuse: [CLOSED_DMS] });
+const mirrored = makeTestChannelBackend({ mirrored: true });
 
 // Deliveries into a Composer chat wake it; this suite checks where they go, not the turn that follows.
 const brain = makeTestBrain({ wake: 'record' });
@@ -43,7 +51,7 @@ const TestLayer = AssistantTestLayer({
   // plugin-thread's channel operations resolve the backend from the capability registry.
   extraServices: Layer.mergeAll(
     testSpaceLayer,
-    Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider)),
+    Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider, mirrored.provider)),
     brain.layer,
   ),
   types: [
@@ -68,10 +76,10 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** An agent that converses in one channel on the test backend. */
-const setupAgent = Effect.fnUntraced(function* (options: { channels?: boolean } = {}) {
+const setupAgent = Effect.fnUntraced(function* (options: { channels?: boolean; kind?: string } = {}) {
   const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
   const agent = yield* Database.load(agentRef);
-  const channel = yield* Database.add(makeTestChannel());
+  const channel = yield* Database.add(makeTestChannel('general', options.kind));
   if (options.channels !== false) {
     yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
   }
@@ -94,9 +102,17 @@ const chatMessages = (chat: Chat.Chat) =>
     return messages.filter((message) => Obj.instanceOf(Message.Message, message));
   });
 
+/** A channel thread's chat, named as EDGE names the conversation an agent turn runs in. */
+const conversationIn = (agentRef: Ref.Ref<Agent.Agent>, channel: Channel.Channel, thread: string) =>
+  Effect.gen(function* () {
+    const chat = yield* ensureChannelChat({ agent: yield* Database.load(agentRef), channel, thread });
+    return URI.make(`echo:///${chat.id}`);
+  });
+
 describe('Relay', () => {
   beforeEach(() => {
     backend.posts.length = 0;
+    mirrored.posts.length = 0;
     brain.wakes.length = 0;
   });
 
@@ -190,14 +206,16 @@ describe('Relay', () => {
         const { agentRef, channel } = yield* setupAgent();
         const rich = yield* resolve('Rich', '100');
         const josiah = yield* resolve('Josiah', '200');
-        const { relay: relayRef } = yield* Operation.invoke(RelayOperation.CreateRelay, {
-          agent: agentRef,
-          recipient: josiah,
-          requester: rich,
-          message: 'Review the PR.',
-          replyChannel: Ref.make(channel),
-          replyThread: 'thread-9',
-        });
+        const { relay: relayRef } = yield* Operation.invoke(
+          RelayOperation.CreateRelay,
+          {
+            agent: agentRef,
+            recipient: josiah,
+            requester: rich,
+            message: 'Review the PR.',
+          },
+          { conversation: yield* conversationIn(agentRef, channel, 'thread-9') },
+        );
 
         const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
           agent: agentRef,
@@ -238,6 +256,161 @@ describe('Relay', () => {
           text: 'Josiah will review it today.',
         });
         expect((yield* Database.load(relayRef)).status).toBe('reported');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "on a mirrored channel is appended to the conversation's chat for its host to post, never sent",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const rich = yield* resolve('Rich', '100');
+        const josiah = yield* resolve('Josiah', '200');
+        const { relay: relayRef } = yield* Operation.invoke(
+          RelayOperation.CreateRelay,
+          {
+            agent: agentRef,
+            recipient: josiah,
+            requester: rich,
+            message: 'Review the PR.',
+          },
+          { conversation: yield* conversationIn(agentRef, channel, 'thread-9') },
+        );
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+          relay: relayRef,
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect((yield* Database.load(relayRef)).status).toBe('delivered');
+
+        // The direct chat is keyed so the host can find the DM it has to open, and carries no receipt.
+        expect(delivered.chat).toBeDefined();
+        if (delivered.chat) {
+          const dmChat = yield* Database.load(delivered.chat);
+          expect(ChatParticipant.get(dmChat)).toBe((yield* Database.load(josiah)).id);
+          expect(AgentChannels.conversationOf(dmChat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+          expect(Obj.getMeta(dmChat).keys).toContainEqual(AgentChannels.directKey(channel.id));
+
+          // A second delivery reuses Josiah's chat.
+          yield* Operation.invoke(RelayOperation.SendMessage, { agent: agentRef, recipient: josiah, text: 'Thanks!' });
+          const messages = yield* chatMessages(dmChat);
+          expect(messages.map((message) => [message.sender.role, Message.extractText(message)])).toEqual([
+            ['assistant', 'Rich asked me to ask you to review the PR.'],
+            ['assistant', 'Thanks!'],
+          ]);
+          // Marked for the host to post: the only messages it posts for the agent.
+          expect(messages.map((message) => message.properties)).toEqual([
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+            { [AgentChannels.OUTBOUND_PROPERTY]: true },
+          ]);
+        }
+
+        const reported = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: rich,
+          text: 'Josiah will review it today.',
+          relay: relayRef,
+        });
+        expect(reported).toMatchObject({ delivered: true, via: 'channel' });
+        expect((yield* Database.load(relayRef)).status).toBe('reported');
+        if (reported.chat) {
+          const threadChat = yield* Database.load(reported.chat);
+          expect(AgentChannels.conversationOf(threadChat)).toEqual({ channelId: channel.id, thread: 'thread-9' });
+          expect(Obj.getMeta(threadChat).keys).not.toContainEqual(AgentChannels.directKey(channel.id));
+          expect((yield* chatMessages(threadChat)).map((message) => Message.extractText(message))).toEqual([
+            'Josiah will review it today.',
+          ]);
+        }
+
+        expect(mirrored.posts).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'skips a conversation on a channel the agent no longer has',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        // A conversation on a channel since disconnected: the chat stays, but no host posts there.
+        const former = yield* Database.add(makeTestChannel('former', TEST_MIRRORED_BACKEND_KIND));
+        const stale = yield* ensureChannelChat({ agent, channel: former, thread: 'thread-1' });
+        const person = yield* Database.load(josiah);
+        Obj.update(stale, (stale) => ChatParticipant.set(stale, person));
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        if (delivered.chat) {
+          const chat = yield* Database.load(delivered.chat);
+          expect(chat.id).not.toBe(stale.id);
+          expect(AgentChannels.conversationOf(chat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a chat first made without the direct key gets it when a DM is delivered into it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        // As the `EnsureChannelChat` handler makes it: the DM's thread key, but no direct key.
+        const earlier = yield* ensureChannelChat({ agent, channel, thread: 'dm-200' });
+        expect(Obj.getMeta(earlier).keys).not.toContainEqual(AgentChannels.directKey(channel.id));
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(delivered.chat && (yield* Database.load(delivered.chat)).id).toBe(earlier.id);
+        expect(Obj.getMeta(earlier).keys).toContainEqual(AgentChannels.directKey(channel.id));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'reaches a person through a direct conversation before a Composer chat they may not have open',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        const composerChat = yield* Database.add(
+          Chat.make({ [Obj.Parent]: agent, name: 'Josiah', feed: Ref.make(yield* Database.add(Feed.make())) }),
+        );
+        yield* Operation.invoke(RelayOperation.AssignChatParticipant, { chat: Ref.make(composerChat), person: josiah });
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(woken()).toEqual([]);
+        if (delivered.chat) {
+          const dmChat = yield* Database.load(delivered.chat);
+          expect(dmChat.id).not.toBe(composerChat.id);
+          expect(AgentChannels.conversationOf(dmChat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

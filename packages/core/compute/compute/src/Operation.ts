@@ -836,23 +836,27 @@ export const getVersion = (record: PersistentOperation): string | undefined => O
 /**
  * Serialize an operation definition to a persistent operation record.
  */
-export const serialize = (operation: Definition.Any): PersistentOperation => {
-  return Obj.make(PersistentOperation, {
-    [Obj.Meta]: {
-      key: operation.meta.key,
-      version: operation.meta.version ?? '0.0.0',
-      keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
-      annotations: operation.meta.annotations,
+export const serialize = (operation: Definition.Any, options?: Obj.MakeOptions): PersistentOperation => {
+  return Obj.make(
+    PersistentOperation,
+    {
+      [Obj.Meta]: {
+        key: operation.meta.key,
+        version: operation.meta.version ?? '0.0.0',
+        keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+        annotations: operation.meta.annotations,
+      },
+      name: operation.meta.name ?? '',
+      description: operation.meta.description,
+      icon: operation.meta.icon,
+      updated: undefined,
+      source: undefined,
+      inputSchema: JsonSchema.toJsonSchema(operation.input),
+      outputSchema: JsonSchema.toJsonSchema(operation.output),
+      services: operation.services.map((service) => service.key),
     },
-    name: operation.meta.name ?? '',
-    description: operation.meta.description,
-    icon: operation.meta.icon,
-    updated: undefined,
-    source: undefined,
-    inputSchema: JsonSchema.toJsonSchema(operation.input),
-    outputSchema: JsonSchema.toJsonSchema(operation.output),
-    services: operation.services.map((service) => service.key),
-  });
+    options,
+  );
 };
 
 /**
@@ -1113,6 +1117,23 @@ export const isVisible = (op: PersistentOperation): boolean =>
 export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
+ * What an operation requires of the process that invokes it, in the vocabulary of the permission
+ * system that interprets it (`@dxos/permission` requirements). Present ⇒ the runtime refuses the
+ * call unless the invoking process holds a guard that admits it; absent ⇒ the operation is never
+ * checked, which is what keeps permissions opt-in.
+ */
+export const RequiresAnnotation = Annotation.make({
+  id: 'org.dxos.operation.requires',
+  schema: Schema$.Array(Schema$.Unknown),
+});
+
+/** The operation's declared requirements; empty when it declares none. */
+export const getRequirements = (op: Definition.Any): readonly unknown[] =>
+  op.meta.annotations
+    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, RequiresAnnotation), (): readonly unknown[] => [])
+    : [];
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */
@@ -1288,4 +1309,5 @@ export {
   InvalidOperationOutputError,
   InvokerNotInitializedError,
   NoHandlerError,
+  OperationDeniedError,
 } from './errors.ts';

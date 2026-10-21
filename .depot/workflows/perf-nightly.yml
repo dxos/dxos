@@ -44,12 +44,10 @@ jobs:
   perf:
     # A fixed, unshared runner size, because the numbers are only comparable night to night if the
     # machine is. Changing this resets every series in the dashboard.
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
+    runs-on:
+      size: 8x32
+      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
     timeout-minutes: 180
     steps:
       - name: Checkout
@@ -196,13 +194,10 @@ jobs:
   # `src/bench-score/budgets.json`. A job of its own on its own runner of the same fixed size, so the
   # benches and the browser flows never share cores: each measures the other when they do.
   echo-bench:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 60
+    runs-on:
+      size: 8x32
+      image: *ci-image
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -268,12 +263,9 @@ jobs:
   # static build of the Storybook chat story (`storybook-react:bundle-perf`), in a blank space and a busy
   # one, scored together into the `chat` suite against `src/playwright/perf/budgets.json`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
   chat-bench:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on:
+      size: 8x32
+      image: *ci-image
     timeout-minutes: 120
     steps:
       - name: Checkout
@@ -349,13 +341,10 @@ jobs:
   # Only the costed counts are scored, as the `composer-work` and `chat-work` suites; the rows stay in
   # the artifacts for `score-perf.ts calibrate --counters`.
   perf-counters:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 120
+    runs-on:
+      size: 8x32
+      image: *ci-image
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -424,13 +413,10 @@ jobs:
 
   # The chat flow's counters-on pass, for the reason `perf-counters` exists.
   chat-counters:
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 120
+    runs-on:
+      size: 8x32
+      image: *ci-image
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v5

@@ -5,7 +5,7 @@
 //
 // The scene store over a `CanvasBoard` (MIGRATION.md M4): `layout.nodes` are the scene's nodes and
 // `layout.edges` its links, so a board written by the old editor opens on the engine unchanged. The
-// store is the only seam that changes — `SceneView` takes this exactly as it takes the memory store.
+// store is the only seam that changes — `Canvas` takes this exactly as it takes the memory store.
 //
 // The two representations differ in three places, and each is translated rather than migrated:
 // z-order (an array in the layout, a fractional key in the scene), style (`guide` / `classNames` at the
@@ -18,28 +18,28 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import {
   type Link,
   LINK_TYPES,
   type LinkType,
   type Node,
   type NodeStyle,
-  type Scene,
-  type SceneId,
-  type SceneMap,
-  type SceneStore,
+  type View,
+  type ViewId,
+  type ViewMap,
+  type ViewStore,
   initialKeys,
   sortByZ,
 } from '@dxos/react-ui-canvas/scene';
 
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
+import { type CanvasBoard } from '../types/index.ts';
 
 /** A board's layout as both representations see it: the arrays, whether live (ECHO) or plain. */
 type Layout = { nodes: CanvasBoard.Shape[]; edges: CanvasBoard.Connection[] };
 
 /** The scene id a board's own layout takes; a board holds one scene, so it is the board's id. */
-export const boardSceneId = (board: CanvasBoard.CanvasBoard): SceneId => board.id;
+export const boardViewId = (board: CanvasBoard.CanvasBoard): ViewId => board.id;
 
 /** An edge naming a type the engine does not have is drawn as a curve, which is what the editor drew. */
 const DEFAULT_LINK_TYPE: LinkType = 'curve';
@@ -55,7 +55,7 @@ const linkType = (type: string | undefined): LinkType =>
  * first read of an existing board reproduces its stacking exactly; every later read uses the key the
  * write path put the node's position in the array for.
  */
-export const sceneFromLayout = (id: SceneId, layout: Partial<Layout> | undefined, name?: string): Scene => {
+export const viewFromLayout = (id: ViewId, layout: Partial<Layout> | undefined, name?: string): View => {
   const shapes = layout?.nodes ?? [];
   const edges = layout?.edges ?? [];
   const nodeKeys = initialKeys(shapes.length);
@@ -114,7 +114,7 @@ const linkFromEdge = (edge: CanvasBoard.Connection, z: string): Link => {
  * arrays left in z order. A wholesale rebuild would be one Automerge delta per drag frame covering the
  * whole board, so every change here touches only what changed.
  */
-export const applySceneToLayout = (layout: Layout, scene: Scene): void => {
+export const applyViewToLayout = (layout: Layout, scene: View): void => {
   applyElements(layout.nodes, sortByZ(Object.values(scene.nodes)).map(shapeFromNode));
   applyElements(layout.edges, sortByZ(Object.values(scene.links)).map(edgeFromLink));
 };
@@ -202,36 +202,36 @@ const assignFields = (element: Record<string, unknown>, next: Record<string, unk
 
 export type EchoStoreOptions = {
   /** The scene the board's own layout is; defaults to the board's id. */
-  sceneId?: SceneId;
+  sceneId?: ViewId;
 };
 
 /**
- * A `SceneStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
+ * A `ViewStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
  * ECHO announces a change, including a peer's edit), writes go back through `Obj.update`. Only the
  * board's own scene lives here — a nested scene needs another object and is not part of M4.
  */
-export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): SceneStore => {
-  const sceneId = options.sceneId ?? boardSceneId(board);
+export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): ViewStore => {
+  const sceneId = options.sceneId ?? boardViewId(board);
   const scenes = Atom.keepAlive(
-    Atom.writable<SceneMap, SceneMap>(
+    Atom.writable<ViewMap, ViewMap>(
       (get) => {
         const snapshot = get(Obj.atom(board));
-        return { [sceneId]: sceneFromLayout(sceneId, snapshot.layout as Partial<Layout>, snapshot.name) };
+        return { [sceneId]: viewFromLayout(sceneId, snapshot.layout as Partial<Layout>, snapshot.name) };
       },
       (ctx, next) => {
         const scene = next[sceneId];
         if (scene) {
-          Obj.update(board, (board) => applySceneToLayout(board.layout as Layout, scene));
+          Obj.update(board, (board) => applyViewToLayout(board.layout as Layout, scene));
         }
         ctx.refreshSelf();
       },
     ),
   );
 
-  const derived = new Map<SceneId, Atom.Atom<Scene | undefined>>();
+  const derived = new Map<ViewId, Atom.Atom<View | undefined>>();
   return {
-    scenes,
-    scene: (id) => {
+    views: scenes,
+    view: (id) => {
       let atom = derived.get(id);
       if (!atom) {
         atom = Atom.keepAlive(Atom.make((get) => get(scenes)[id]));

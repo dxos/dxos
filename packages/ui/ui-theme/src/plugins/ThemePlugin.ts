@@ -7,8 +7,8 @@
 import tailwindcssPostcss from '@tailwindcss/postcss';
 import tailwindcssVite from '@tailwindcss/vite';
 import autoprefixer from 'autoprefixer';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve, sep } from 'node:path';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
@@ -82,8 +82,51 @@ const skipHotUpdateInBundledDev = (plugin: Plugin): Plugin => {
 
 export type ThemePluginOptions = {
   srcCssPath?: string;
+  /** Extra Tailwind scan globs (absolute, or relative to the Vite root) for a consumer of the published package. */
+  content?: string[];
   virtualFileId?: string;
   verbose?: boolean;
+};
+
+const toCssString = (path: string): string => JSON.stringify(path.split(sep).join('/'));
+
+/**
+ * Writes the theme entry for a consumer of the published package and returns its path.
+ * `workspace.css` cannot serve them: its scan paths are relative to this package, which from inside
+ * `node_modules` reaches every installed package, and Tailwind walks all of it before answering.
+ */
+const writeConsumerTheme = ({
+  packageRoot,
+  root,
+  outPath,
+  content,
+}: {
+  packageRoot: string;
+  root: string;
+  outPath: string;
+  content: string[];
+}): string => {
+  // The scope this package was installed into, and the consumer's own, which differ under pnpm's isolated layout.
+  const scopeDirs = new Set([dirname(packageRoot), resolve(root, 'node_modules/@dxos')]);
+  const sources = [
+    // Tailwind skips `node_modules` below an explicit base, so this covers only the consumer's own files.
+    join(root, '**/*.{ts,tsx,js,jsx,html}'),
+    ...[...scopeDirs].map((scopeDir) => join(scopeDir, '*/dist/lib/**/*.mjs')),
+    ...content.map((glob) => resolve(root, glob)),
+  ];
+  const css = [
+    `@import ${toCssString(join(packageRoot, 'src/main.css'))};`,
+    ...sources.map((source) => `@source ${toCssString(source)};`),
+    '',
+  ].join('\n');
+
+  // Rewriting identical content would bump the mtime, which Tailwind reads as a reason to rebuild.
+  if (!existsSync(outPath) || readFileSync(outPath, 'utf-8') !== css) {
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, css);
+  }
+
+  return outPath;
 };
 
 /**
@@ -91,10 +134,9 @@ export type ThemePluginOptions = {
  * Returns the official Tailwind Vite plugin (persistent incremental scanner) alongside the theme plugin.
  */
 export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
-  // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
-  const srcThemePath = resolve(import.meta.dirname, ROOT, 'src/main.css');
-  const distThemePath = resolve(import.meta.dirname, 'main.css');
-  const isMonorepo = existsSync(srcThemePath);
+  // `src` is published too, so only the location tells a workspace checkout from an installed copy.
+  const packageRoot = realpathSync(resolve(import.meta.dirname, ROOT));
+  const isMonorepo = !packageRoot.split(sep).includes('node_modules');
 
   // Static assets shipped via "files": ["src"] in package.json.
   // Both monorepo and installed package resolve to the same src/plugins/ directory.
@@ -103,14 +145,11 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   const mainCssPath = resolve(pluginsDir, 'main.css');
 
   const config = {
-    srcCssPath: options.srcCssPath ?? (isMonorepo ? srcThemePath : distThemePath),
+    // Installed copies get theirs from `configResolved`, which knows the consumer's root.
+    srcCssPath: options.srcCssPath ?? (isMonorepo ? resolve(packageRoot, 'src/workspace.css') : ''),
     virtualFileId: options.virtualFileId ?? '@dxos-theme',
     verbose: options.verbose,
   };
-
-  if (process.env.DEBUG || options.verbose) {
-    console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
-  }
 
   // Set under `vite dev --experimentalBundle`; see the guard in `hotUpdate`.
   let bundledDev = false;
@@ -130,6 +169,18 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
     name: 'vite-plugin-dxos-ui-theme',
     configResolved: (resolved) => {
       bundledDev = resolved.experimental.bundledDev === true;
+      if (!config.srcCssPath) {
+        config.srcCssPath = writeConsumerTheme({
+          packageRoot,
+          root: resolved.root,
+          outPath: resolve(resolved.cacheDir, '..', '.dxos-ui-theme.css'),
+          content: options.content ?? [],
+        });
+      }
+
+      if (process.env.DEBUG || options.verbose) {
+        console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
+      }
     },
     config: (): UserConfig => {
       return {

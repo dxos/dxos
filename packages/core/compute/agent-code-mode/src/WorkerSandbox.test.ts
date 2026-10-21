@@ -212,6 +212,28 @@ describe('worker sandbox', () => {
     expect(output).toEqual('tasks 1 tagged Failure');
   }, 60_000);
 
+  test('prints a live object as its JSON', async () => {
+    const { db, run } = await setup();
+    db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
+    await db.flush();
+
+    const output = await run(`
+      const [task] = await query('${TASK_TYPENAME}');
+      print('task:', task);
+    `);
+    expect(output).toContain('task: {');
+    expect(output).toContain('"title": "Write the docs"');
+  }, 60_000);
+
+  test('shows a returned live object when nothing was printed', async () => {
+    const { db, run } = await setup();
+    db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
+    await db.flush();
+
+    const output = await run(`return await query('${TASK_TYPENAME}');`);
+    expect(output).toContain('"title": "Write the docs"');
+  }, 60_000);
+
   test('reports a throw in the worker as a failed tool call rather than failing the turn', async () => {
     const { run } = await setup();
     expect(await run("throw new Error('boom');")).toEqual('Error: boom');

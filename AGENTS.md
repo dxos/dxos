@@ -234,7 +234,8 @@ is invisible there until something publishes it.
   trip, depends on no external service, and picks up an export or subpath that does not exist in any
   published build yet — which is exactly the inner loop for a feature spanning both repos.
 - Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
-  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+  commit someone else consumes (a catalog bump, edge CI), not for iterating. It publishes `main` once a
+  day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
 
@@ -289,6 +290,10 @@ Deeper conventions:
 - Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
   comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for
   one pass.
+- Text that must be parsed with no help — procedures, runbooks, error messages, prompts,
+  tool descriptions, or anything the user asks for in STE / ASD-STE100 →
+  `simplified-technical-english` skill (controlled vocabulary, 20/25-word sentence caps,
+  and a check script).
 
 ## Git & PR workflow
 
@@ -306,8 +311,16 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
+- **Browser, storybook and e2e tests run in the merge queue, not on PRs.** A browser or storybook failure
+  there drops the PR from the queue; reproduce it with `moon run <project>:test-storybook` (or
+  `:test-browser`), fix, and re-queue. `depot ci dispatch --workflow check.yml --ref <branch>` runs every
+  suite on a branch once, when a change needs them before queueing.
+- **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
+  in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
+  iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
-  skills. Always surface the Composer preview URL next to the PR link.
+  skills. A PR gets a Composer preview only with the `preview` label, added only on request; when it
+  has one, surface the preview URL next to the PR link.
 - **Every PR body is built from the `pr-description` skill's templates.** Summary
   and Safety always; Bugfix, Architecture (diagrams, new cross-component
   dependencies) and UI (screenshots, Autocue videos) whenever they apply, and
@@ -319,6 +332,13 @@ Deeper conventions:
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential
+
+**Absence is a claim; check it before you make it.** Never report a credential or tool missing (in a reply,
+a PR body, a comment) without a direct check: `printenv NAME` presence (`[ -n "$(printenv NAME)" ]`, never the
+value) or `command -v tool`. The `SessionStart` environment inventory (`.claude/hooks/env-inventory.sh`) lists every
+credential name; when a session starts outside the repo (a parent directory holding several checkouts) that hook does
+not run, so run it yourself from the checkout root (`bash <checkout>/.claude/hooks/env-inventory.sh`). A `env | grep` you filtered for one task is not an
+inventory.
 
 **In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
 credential with `op run` / `op read` before asking the user for anything, since the value then never
@@ -374,6 +394,21 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **A status page for a long session** — one Artifact board with questions, work in progress and
+  results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
+- **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
+  list, and `scripts/ste_check.py` → `simplified-technical-english` skill
+  (`.agents/skills/simplified-technical-english/SKILL.md`).
+- **Performance** — `perf` skill (`.agents/skills/perf/SKILL.md`). Perf numbers come only from
+  `pnpm perf` output (verdict, interval, rounds), never a one-off timing or a devtools recording.
+  - Did this change make it faster or slower? `pnpm perf compare --base main --metric '<id>'`.
+  - Where does the time go? `pnpm perf summarize`, then `pnpm perf expand <handle>`.
+  - Users say X is slow? `pnpm perf capture`, then `pnpm perf scenario new` and `scenario check`.
+  - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
+    runs the boot budget locally, the same target CI runs as `moon run composer-app:check-boot-budget`.
+  - A node test suite is slow or leaks? `test-perf-leaks` skill.
+- **Publishing a package to npm** — first publish of a new package and its trusted publisher via
+  `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).
@@ -383,6 +418,9 @@ Do not paste real credential values into any shell command, and do not paste the
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
+  decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
+  (`.agents/skills/mdl/SKILL.md`).
 - **SQLite schema changes** — adding a migration, creating a new SQLite-backed
   store, or anything under `src/migrations/` →
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).

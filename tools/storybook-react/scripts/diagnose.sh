@@ -143,7 +143,14 @@ pid_age() {
   etime_seconds "$etime"
 }
 probe_path() { if [ "$1" = storybook ]; then printf '/index.json'; else printf '/'; fi; }
-answers() { curl -sf -m "$TIMEOUT" -o /dev/null "http://localhost:$1$(probe_path "$2")"; }
+# Prints the HTTP status, or 000 when the transfer did not complete — a body that stalls after
+# the headers is no answer, whatever status line arrived first.
+probe_code() {
+  local code
+  code="$(curl -s -m "$TIMEOUT" -o /dev/null -w '%{http_code}' "http://localhost:$1$(probe_path "$2")")" || code='000'
+  printf '%s' "${code:-000}"
+}
+answers() { [ "$(probe_code "$1" "$2")" = '200' ]; }
 
 # Captures land in the tree that owns the server, so the report sits beside its own cache and log.
 capture() {
@@ -181,8 +188,23 @@ capture() {
     echo
 
     echo "--- responsive? ---"
-    curl -sf -m "${TIMEOUT}" -o /dev/null -w "probe ${probe}: HTTP %{http_code} in %{time_total}s\n" \
-      "http://localhost:${port}${probe}" || echo "probe ${probe}: NO RESPONSE within ${TIMEOUT}s"
+    local body status
+    body="$(mktemp)"
+    # A body that stalls after the headers times out with the code already read, so a failed transfer is no answer.
+    status="$(curl -s -m "${TIMEOUT}" -o "${body}" -w "%{http_code} %{time_total}" "http://localhost:${port}${probe}")" ||
+      status="000"
+    if [ "${status%% *}" = "000" ] || [ -z "${status}" ]; then
+      echo "probe ${probe}: NO RESPONSE within ${TIMEOUT}s"
+    else
+      echo "probe ${probe}: HTTP ${status%% *} in ${status#* }s"
+    fi
+    # An answer other than 200 is the story index failing, not a hang: the body names the story file it could not index.
+    if [ "${status%% *}" != "200" ] && [ -s "${body}" ]; then
+      echo "--- probe error ---"
+      head -c 2000 "${body}"
+      echo
+    fi
+    rm -f "${body}"
     echo
 
     echo "--- vite dep optimizer ---"
@@ -283,7 +305,7 @@ sanitize_field() { printf '%s' "$1" | tr -c '[:print:]' '?'; }
 # One pass over every known port; rewrites the status file atomically at the end.
 cycle() {
   mkdir -p "$WATCH_DIR"
-  local tmp rows='' seen='' port pid kind tree age state reason cpu hot captured previous etime last
+  local tmp rows='' seen='' port pid kind tree age state reason cpu hot captured previous etime last code
   tmp=$(mktemp "$STATUS.XXXXXX") || return 1
   for port in $(known_ports); do
     pid=$(listener_pid "$port")
@@ -303,8 +325,11 @@ cycle() {
     if [ -n "$(wedge_path "$port")" ]; then
       # Wait for the server to answer again before re-arming, so one wedge is one report.
       if answers "$port" "$kind"; then wedge_clear "$port"; state=answered; else state=wedged; fi
-    elif ! answers "$port" "$kind"; then
+    elif code=$(probe_code "$port" "$kind") && [ "$code" = '000' ]; then
       if [ -n "$age" ] && [ "$age" -lt "$WARMUP" ]; then state=starting; else reason="no response within ${TIMEOUT}s"; fi
+    elif [ "$code" != '200' ]; then
+      # The server answers, so this is a story file that failed to index rather than a wedge; the capture shows which.
+      reason="probe HTTP ${code}"
     else
       state=answered
       cpu=$(cpu_of "$pid")

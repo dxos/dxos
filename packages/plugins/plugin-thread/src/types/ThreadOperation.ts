@@ -93,6 +93,25 @@ export const SendToChannel = Operation.make({
   }),
 });
 
+/** Deletes a thread inside a channel through the channel's backend (a Discord thread, for everyone in it). */
+export const DeleteThread = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.thread.delete'),
+    name: 'Delete thread',
+    description: "Deletes a thread inside a channel, for everyone in it, through the channel's backend.",
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel the thread is in.' }),
+    thread: Schema.String.annotate({ description: 'A backend-scoped thread id (a Discord thread id).' }),
+  }),
+  output: Schema.Struct({
+    deleted: Schema.Boolean,
+    reason: Schema.optional(Schema.String.annotate({ description: 'Why the thread was not deleted.' })),
+  }),
+});
+
 /** Opens (or finds) a direct conversation with a person through the channel's account. */
 export const OpenDirect = Operation.make({
   meta: {

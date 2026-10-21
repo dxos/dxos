@@ -21,8 +21,11 @@ import { type Planet } from './generate-planet.ts';
 import { type Vec3 } from './noise.ts';
 import { palette } from './palette.ts';
 
-// Neutral space backdrop; theme-derived background is the container's concern.
-const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);
+/** The scene's backdrop per theme: near-black space in dark mode, a mid-gray in light mode so the scene sits in the light UI. */
+const BACKGROUND_COLORS = {
+  dark: new Color4(0.043, 0.051, 0.071, 1),
+  light: new Color4(0.5, 0.5, 0.5, 1),
+} as const;
 
 const clampChannel = (value: number): number => Math.min(1, Math.max(0, value));
 
@@ -103,14 +106,49 @@ export class SceneManager {
   #scatterBases: Mesh[] = [];
   #waterSheen = false;
   #panning = false;
+  #turnFrame = 0;
   #lastPointerX = 0;
   #lastPointerY = 0;
+
+  /**
+   * Turns the orbit camera to face a point on the planet (a unit vector in the terrain's y-up frame), easing over
+   * `durationMs` and keeping the zoom; any pan is re-centred, since the turn orbits the planet's centre.
+   */
+  lookAt(unit: Vec3, durationMs = 900): void {
+    cancelAnimationFrame(this.#turnFrame);
+    const camera = this.#camera;
+    const fromAlpha = camera.alpha;
+    const fromBeta = camera.beta;
+    const fromTarget = camera.target.clone();
+    // The ArcRotateCamera places itself at (cos α sin β, cos β, sin α sin β); solve that for the point's direction.
+    const toBeta = Math.acos(Math.min(1, Math.max(-1, unit[1])));
+    const rawAlpha = Math.atan2(unit[2], unit[0]);
+    // The shortest way round, so a turn never spins the long way past the far side.
+    const toAlpha = fromAlpha + ((((rawAlpha - fromAlpha) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      camera.alpha = fromAlpha + (toAlpha - fromAlpha) * eased;
+      camera.beta = fromBeta + (toBeta - fromBeta) * eased;
+      camera.target = Vector3.Lerp(fromTarget, Vector3.Zero(), eased);
+      if (t < 1) {
+        this.#turnFrame = requestAnimationFrame(step);
+      }
+    };
+    this.#turnFrame = requestAnimationFrame(step);
+  }
+
+  /** Matches the scene's backdrop to the app's theme. */
+  setThemeMode(mode: 'light' | 'dark'): void {
+    this.#scene.clearColor = BACKGROUND_COLORS[mode];
+  }
 
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
     this.#engine = new Engine(canvas, true, { adaptToDeviceRatio: true });
     this.#scene = new Scene(this.#engine);
-    this.#scene.clearColor = BACKGROUND_COLOR;
+    this.#scene.clearColor = BACKGROUND_COLORS.dark;
 
     this.#camera = new ArcRotateCamera('camera', Math.PI * 0.6, Math.PI * 0.42, 6.5, Vector3.Zero(), this.#scene);
     this.#camera.attachControl(canvas, true);
@@ -184,6 +222,7 @@ export class SceneManager {
   }
 
   dispose(): void {
+    cancelAnimationFrame(this.#turnFrame);
     this.#canvas.removeEventListener('pointerdown', this.#handlePointerDown);
     window.removeEventListener('pointerup', this.#handlePointerUp);
     window.removeEventListener('pointermove', this.#handlePointerMove);

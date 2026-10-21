@@ -193,6 +193,9 @@ export const translations = [
         'persisted-locally.message': 'All changes have been saved to disk on this device.',
         'persistence-pending.label': 'Saving…',
         'persistence-error.label': 'Error saving changes.',
+        'persistence-error.message':
+          'Changes are not reaching disk. Keep Composer open until this clears, or the changes since will be lost.',
+        'persistence-recovered.label': 'Changes saved.',
         'more-actions.label': 'More actions',
         'invitations.heading': 'Invitations',
         'keyshortcuts.label': 'Keyboard shortcuts',
@@ -350,6 +353,8 @@ export const translations = [
         'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
         'search-placeholder.label': 'Filter objects...',
+        'collection-filter.label': 'Filter objects',
+        'collection-filter.placeholder': 'Filter…',
         'search-no-results.message': 'No matches.',
         'item-count.label_zero': 'No items',
         'item-count.label_one': '1 item',

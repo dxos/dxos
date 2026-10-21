@@ -134,7 +134,12 @@ const GitHubPullSchema = Schema.Struct({
   deletions: Schema.Number.pipe(Schema.optional),
   // `sha` pins the commit a derived artefact (a generated walkthrough) describes; `ref` is a branch
   // name and moves under it.
-  base: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  // `repo` is the repository the pull request merges into, which an import files alongside it.
+  base: Schema.Struct({
+    ref: Schema.String,
+    sha: Schema.String.pipe(Schema.optional),
+    repo: GitHubRepoSchema.pipe(Schema.optional),
+  }).pipe(Schema.optional),
   head: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
 });
 export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
@@ -676,6 +681,7 @@ export const createIssueComment = (
   );
 
 const GitHubCheckRunSchema = Schema.Struct({
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   /** `queued`, `in_progress` or `completed`. */
   status: Schema.String,

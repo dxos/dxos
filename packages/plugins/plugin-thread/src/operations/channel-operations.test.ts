@@ -19,6 +19,7 @@ import { ChannelBackend, ThreadCapabilities, type ThreadOperation } from '#types
 
 import { feedChannelBackend } from '../capabilities/channel-backend-feed.ts';
 import connectChannel from './connect-channel.ts';
+import deleteThread from './delete-thread.ts';
 import disconnectChannel from './disconnect-channel.ts';
 import getChannelStatus from './get-channel-status.ts';
 import openDirect from './open-direct.ts';
@@ -31,6 +32,7 @@ class RefusedError extends BaseError.extend('RefusedError', 'The backend refused
 /** A backend with every optional member, recording what it was asked to do. */
 const makeFakeBackend = () => {
   const sent: { thread?: string; text: string }[] = [];
+  const removed: string[] = [];
   let running = false;
   const status = (): ThreadOperation.ConnectionStatus => ({ running, state: running ? 'ready' : 'idle' });
   const record = (message: Message.Message, thread?: string) =>
@@ -52,14 +54,18 @@ const makeFakeBackend = () => {
     send: (_channel, message) => record(message),
     openDirect: (_channel, person) =>
       Effect.succeed(person.identities?.find((identity) => identity.label === 'fake')?.value),
-    threads: { send: (_channel, thread, message) => record(message, thread) },
+    threads: {
+      send: (_channel, thread, message) => record(message, thread),
+      remove: (_channel, thread) =>
+        thread === 'locked' ? Effect.fail(new RefusedError()) : Effect.sync(() => void removed.push(thread)),
+    },
     connection: {
       start: () => Effect.sync(() => ((running = true), status())),
       stop: () => Effect.sync(() => ((running = false), status())),
       status: () => Effect.sync(status),
     },
   };
-  return { provider, sent };
+  return { provider, sent, removed };
 };
 
 /** Capability manager holding the given channel backends, as plugin-thread and backend plugins contribute them. */
@@ -122,8 +128,39 @@ describe('channel operations', () => {
         .pipe(Effect.provideService(Capability.Service, capabilities(feedChannelBackend)), Effect.exit);
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        expect(String(exit.cause)).toContain(ChannelBackend.ChannelBackendNotFoundError.name);
+        expect(String(exit.cause)).toContain('ChannelBackendNotFoundError');
       }
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('deleteThread removes the thread on the backend and reports a refusal as an outcome', () =>
+    Effect.gen(function* () {
+      const { provider, removed } = makeFakeBackend();
+      const channel = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const withBackend = Effect.provideService(Capability.Service, capabilities(feedChannelBackend, provider));
+
+      expect(yield* deleteThread.handler({ channel: Ref.make(channel), thread: 't1' }).pipe(withBackend)).toEqual({
+        deleted: true,
+      });
+      expect(removed).toEqual(['t1']);
+
+      const refused = yield* deleteThread.handler({ channel: Ref.make(channel), thread: 'locked' }).pipe(withBackend);
+      expect(refused.deleted).toBe(false);
+      expect(refused.reason).toContain('refused');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('deleteThread reports a backend that cannot delete threads', () =>
+    Effect.gen(function* () {
+      const { provider } = makeFakeBackend();
+      const threads: ThreadCapabilities.ChannelThreads = {
+        send: (_channel, _thread, message) => provider.send(channel, message),
+      };
+      const channel = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const result = yield* deleteThread
+        .handler({ channel: Ref.make(channel), thread: 't1' })
+        .pipe(Effect.provideService(Capability.Service, capabilities({ ...provider, threads })));
+      expect(result).toEqual({ deleted: false, reason: 'The Fake channel backend cannot delete threads.' });
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -166,6 +203,26 @@ describe('channel operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('a backend is mirrored only when it says so', () =>
+    Effect.gen(function* () {
+      const { provider } = makeFakeBackend();
+      const fake = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const feed = yield* Database.add(Channel.make({ name: 'general' }));
+      const orphan = yield* Database.add(
+        Channel.make({ backend: { kind: 'org.dxos.channel.backend.missing', config: Feed.make() } }),
+      );
+      const mirrored = (...providers: ThreadCapabilities.ChannelBackendProvider[]) =>
+        Effect.forEach([fake, feed, orphan], (channel) =>
+          ChannelBackend.isMirrored(channel).pipe(
+            Effect.provideService(Capability.Service, capabilities(feedChannelBackend, ...providers)),
+          ),
+        );
+
+      expect(yield* mirrored(provider)).toEqual([false, false, false]);
+      expect(yield* mirrored({ ...provider, mirrored: true })).toEqual([true, false, false]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('openDirect and the connection fail with a typed error on a backend without them', () =>
     Effect.gen(function* () {
       const channel = yield* Database.add(Channel.make({ name: 'general' }));
@@ -177,8 +234,8 @@ describe('channel operations', () => {
         .pipe(withFeed, Effect.exit);
       const connect = yield* connectChannel.handler({ channel: Ref.make(channel) }).pipe(withFeed, Effect.exit);
       expect([failureOf(direct), failureOf(connect)]).toEqual([
-        expect.stringContaining(ChannelBackend.ChannelBackendUnsupportedError.name),
-        expect.stringContaining(ChannelBackend.ChannelBackendUnsupportedError.name),
+        expect.stringContaining('ChannelBackendUnsupportedError'),
+        expect.stringContaining('ChannelBackendUnsupportedError'),
       ]);
     }).pipe(Effect.provide(testLayer())),
   );

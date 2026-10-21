@@ -336,18 +336,35 @@ export const tourFragment = (
   );
 };
 
-/** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
-export const pluginAsset = (
-  asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
-  options?: { name?: string; environments?: readonly Capability$.Environment[] },
-) => {
-  const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
-  return Capability$.inlineModule(
-    options?.name ?? 'plugin-asset',
-    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? ['browser', 'tauri'] },
-    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
-  );
+/** A {@link AppCapabilities.PluginAsset} whose text is loaded by the module rather than imported with it. */
+export type PluginAssetSource = Omit<AppCapabilities.PluginAsset, 'content'> & {
+  /** Typically `() => import('../../PLUGIN.mdl?raw')`. */
+  content: () => Promise<{ default: string }>;
 };
+
+/**
+ * Module contributing a static plugin asset (typically the bundled `PLUGIN.mdl` spec).
+ *
+ * Gated on {@link ActivationEvents.PluginAssetsRequested}, since nothing reads a spec at boot, and
+ * loader-only so the text stays in its own chunk rather than the plugin definition's closure.
+ */
+export const pluginAsset = (
+  { content, ...asset }: PluginAssetSource,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.lazyModule<readonly [typeof AppCapabilities.PluginAsset]>(
+    options?.name ?? 'plugin-asset',
+    {
+      activatesOn: ActivationEvents.PluginAssetsRequested,
+      provides: [AppCapabilities.PluginAsset],
+      environments: options?.environments ?? ['browser', 'tauri'],
+    },
+    () =>
+      content().then(({ default: text }) => ({
+        default: () =>
+          Effect.succeed([Capability$.contribute(AppCapabilities.PluginAsset, { ...asset, content: text })]),
+      })),
+  );
 
 /**
  * Module contributing CLI commands.

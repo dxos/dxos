@@ -8,8 +8,8 @@ import * as Exit from 'effect/Exit';
 import * as EffectScope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Event, sleep } from '@dxos/async';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -287,6 +287,48 @@ describe('IndexQuerySource', () => {
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
   });
 
+  test('a row whose database closes under its load is dropped', async () => {
+    const spaceId = SpaceId$.random();
+    const [kept, closed] = [EntityId.random(), EntityId.random()];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: kept, spaceId, rank: 0 },
+                  { id: closed, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === closed) {
+            throw new ContextDisposedError();
+          }
+          return { id: objectId } as unknown as Entity.Unknown;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+    expect(results.map((entry) => entry.id)).toEqual([kept]);
+  });
+
   // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single
   // document that never arrived held the query open for the whole 20s and then reported itself as
   // an "index query" timeout — naming the index, which had in fact answered in microseconds.
@@ -383,6 +425,39 @@ describe('IndexQuerySource', () => {
       await rehydrated;
       expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
     });
+  });
+
+  test('index progress restarts the one-shot budget', async () => {
+    const spaceId = SpaceId$.random();
+    let answer: (() => void) | undefined;
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          answer = () => void emit.single({ queryId: request.queryId, results: [] });
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const indexProgress = new Event();
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: { loadObject: async () => undefined, updateEvent: noopUpdateEvent },
+      graph: mockGraph,
+      queryTimeout: 100,
+      indexProgress,
+    });
+    onTestFinished(() => source.close());
+
+    const result = source.run(Context.default(), makeQuery(spaceId));
+    for (let i = 0; i < 5; i++) {
+      await sleep(50);
+      indexProgress.emit();
+    }
+    await expect.poll(() => answer).toBeDefined();
+    answer?.();
+    await expect(result).resolves.toEqual([]);
   });
 });
 

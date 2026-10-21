@@ -34,6 +34,47 @@ describe('switchActionKind', () => {
     expect(trigger.runnable?.uri).toBe(operation.uri);
   });
 
+  test("a round trip through instructions leaves the operation's trigger input as it was", ({ expect }) => {
+    const { routine, trigger } = makeSyncRoutine();
+    Obj.update(trigger, (trigger) => {
+      trigger.input = { priority: '{{event.data.priority}}', options: { full: true } };
+    });
+    const stash: ActionStash = {};
+
+    switchActionKind(routine, 'instructions', stash);
+    switchActionKind(routine, 'runnable', stash);
+
+    expect(trigger.input).toEqual({ priority: '{{event.data.priority}}', options: { full: true } });
+  });
+
+  test("switching to instructions carries none of the operation's trigger input", ({ expect }) => {
+    const { routine, trigger } = makeSyncRoutine();
+    Obj.update(trigger, (trigger) => {
+      trigger.input = { priority: '{{event.data.priority}}', options: { full: true } };
+    });
+
+    switchActionKind(routine, 'instructions', {});
+
+    expect(Object.keys(trigger.input ?? {}).sort()).toEqual(['input', 'instructions']);
+    expect(trigger.input?.input).toEqual({});
+  });
+
+  test("a round trip through an operation restores the instructions' trigger input", ({ expect }) => {
+    const instructions = Instructions.make({ name: 'Body', text: 'do something' });
+    const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });
+    const routine = makeRoutine({ name: 'R', instructions, trigger });
+    Obj.update(trigger, (trigger) => {
+      trigger.input = { ...trigger.input, input: { topic: 'news' } };
+    });
+    const stash: ActionStash = {};
+
+    switchActionKind(routine, 'runnable', stash);
+    expect(trigger.input).toBeUndefined();
+    switchActionKind(routine, 'instructions', stash);
+
+    expect(trigger.input?.input).toEqual({ topic: 'news' });
+  });
+
   test('a round trip through an operation restores the authored instructions', ({ expect }) => {
     const instructions = Instructions.make({ name: 'Body', text: 'do something' });
     const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });

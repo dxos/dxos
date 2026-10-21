@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..8145da3c154e94a0db9b6fd7760f2a40eff926ce 100644
+index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4ece0f7b9522ae7dcf0e5dcb13a2e718a94b8602 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -35,7 +35,19 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..8145da3c154e94a0db9b6fd7760f2a40
      /**
       * Drain pending writes for the given documents (or all documents
       * when `documents` is omitted) so they are durable in storage.
-@@ -345,6 +357,12 @@ export interface RepoEvents {
+@@ -222,6 +234,11 @@ export interface RepoConfig {
+      * loading documents that are known to be too resource intensive.
+      */
+     denylist?: AutomergeUrl[];
++    /**
++     * DXOS patch: checked by every source just before it inflates a document's bytes, so a document
++     * refused while its load was in flight is never inflated again.
++     */
++    isLoadBlocked?: (documentId: DocumentId) => boolean;
+     /**
+      * The debounce rate in milliseconds for saving documents. Defaults to 100ms.
+      */
+@@ -345,6 +362,18 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -45,14 +57,29 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..8145da3c154e94a0db9b6fd7760f2a40
 +    "subduction-detached-data": (payload: {
 +        documentId: DocumentId;
 +    }) => void;
++    /** DXOS patch: a source could not apply a document's bytes, e.g. Automerge ran out of memory. */
++    "document-load-failed": (payload: {
++        documentId: DocumentId;
++        error: unknown;
++        source: "storage" | "subduction";
++    }) => void;
      /**
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154db5d85e0 100644
+index adfddd9b3926510604274217c42f97f104e119a3..66de2cd053546ae18157d63278d8e8ea92d193dd 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
-@@ -157,6 +157,26 @@ export class Repo extends EventEmitter {
+@@ -57,7 +57,7 @@ export class Repo extends EventEmitter {
+     #subductionEphemeralCount = 0;
+     #idFactory;
+     #peerId;
+-    constructor({ storage, network = [], peerId = randomPeerId(), sharePolicy, shareConfig, isEphemeral = storage === undefined, enableRemoteHeadsGossiping = false, denylist = [], saveDebounceRate = 100, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, } = {}) {
++    constructor({ storage, network = [], peerId = randomPeerId(), sharePolicy, shareConfig, isEphemeral = storage === undefined, enableRemoteHeadsGossiping = false, denylist = [], saveDebounceRate = 100, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, isLoadBlocked, } = {}) {
+         super();
+         this.#peerId = peerId;
+         this.#remoteHeadsGossipingEnabled = enableRemoteHeadsGossiping;
+@@ -157,13 +157,38 @@ export class Repo extends EventEmitter {
              onConnectionChanged: connected => {
                  this.emit("subduction-connection", { connected });
              },
@@ -76,10 +103,23 @@ index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154
 +                    this.#log.error("subduction-detached-data listener threw", { err });
 +                }
 +            },
++            onLoadError: (documentId, error) => this.#emitLoadFailed(documentId, error, "subduction"),
++            isLoadBlocked,
          });
          this.#subductionSource = subductionSource;
          this.#sources.set("subduction", subductionSource);
-@@ -377,6 +397,14 @@ export class Repo extends EventEmitter {
+         this.storageSubsystem = storageSubsystem;
+         this.#syncStateTracker = new SyncStateTracker(this.storageSubsystem, saveDebounceRate);
+         if (storageSubsystem) {
+-            this.#sources.set("storage", new StorageSource(storageSubsystem, saveDebounceRate));
++            this.#sources.set("storage", new StorageSource(storageSubsystem, saveDebounceRate, {
++                onLoadError: (documentId, error) => this.#emitLoadFailed(documentId, error, "storage"),
++                isLoadBlocked,
++            }));
+         }
+         // NETWORK
+         const myPeerMetadata = (async () => ({
+@@ -377,6 +402,26 @@ export class Repo extends EventEmitter {
          }
          return result;
      }
@@ -91,10 +131,22 @@ index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154
 +    getHandle(documentId) {
 +        return this.#queries[documentId]?.handle;
 +    }
++    /**
++     * DXOS patch: a source could not apply a document's bytes. Sources only mark themselves
++     * unavailable, so without this the cause never reaches the application.
++     */
++    #emitLoadFailed(documentId, error, source) {
++        try {
++            this.emit("document-load-failed", { documentId, error, source });
++        }
++        catch (err) {
++            this.#log.error("document-load-failed listener threw", { err });
++        }
++    }
      /** Returns a list of all connected peer ids */
      get peers() {
          return this.synchronizer.peers;
-@@ -492,6 +520,12 @@ export class Repo extends EventEmitter {
+@@ -492,6 +537,12 @@ export class Repo extends EventEmitter {
      // ability to not create a doc handle if we abort while loading. Once the DocHandle
      // was running the abort signal didn't have much effect
      _options) {
@@ -107,7 +159,7 @@ index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154
          const parsed = isValidAutomergeUrl(id)
              ? parseAutomergeUrl(id)
              : {
-@@ -667,6 +701,14 @@ export class Repo extends EventEmitter {
+@@ -667,6 +718,14 @@ export class Repo extends EventEmitter {
      resyncSubduction = (documentId) => {
          this.#subductionSource?.resync(documentId);
      };
@@ -122,20 +174,49 @@ index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154
      /**
       * Drain pending writes for the given documents (or all documents
       * when `documents` is omitted) so they are durable in storage.
+diff --git a/dist/StorageSource.d.ts b/dist/StorageSource.d.ts
+index b6866657601c8a6b93e438e0050e7b24eecc78b7..8ce2b7f8856143ab4f442b7923e4baf16608e4b2 100644
+--- a/dist/StorageSource.d.ts
++++ b/dist/StorageSource.d.ts
+@@ -10,8 +10,12 @@ import type { DocumentId } from "./types.js";
+ export declare class StorageSource implements DocumentSource {
+     #private;
+     readonly priority: SourcePriority;
+-    constructor(storage: StorageSubsystem, saveDebounceRate: number, { priority }?: {
++    constructor(storage: StorageSubsystem, saveDebounceRate: number, { priority, onLoadError, isLoadBlocked }?: {
+         priority?: SourcePriority;
++        /** DXOS patch: a document's stored bytes could not be loaded; the query only sees "unavailable". */
++        onLoadError?: (documentId: DocumentId, error: unknown) => void;
++        /** DXOS patch: checked right before inflating; a blocked document resolves as unavailable. */
++        isLoadBlocked?: (documentId: DocumentId) => boolean;
+     });
+     attach(query: DocumentQuery<unknown>): void;
+     detach(documentId: DocumentId): void;
 diff --git a/dist/StorageSource.js b/dist/StorageSource.js
-index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b4270b31742 100644
+index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59c8645c88 100644
 --- a/dist/StorageSource.js
 +++ b/dist/StorageSource.js
-@@ -11,6 +11,8 @@ export class StorageSource {
+@@ -11,17 +11,26 @@ export class StorageSource {
      #storage;
      #saveDebounceRate;
      #saveFns = {};
 +    /** The handle each save listener is attached to, so {@link detach} can remove it. */
 +    #handles = {};
      #log = makeLogger("automerge-repo:storage-source");
-     constructor(storage, saveDebounceRate, { priority = 1 } = {}) {
+-    constructor(storage, saveDebounceRate, { priority = 1 } = {}) {
++    /** DXOS patch: reports a document whose stored bytes could not be loaded. */
++    #onLoadError;
++    /** DXOS patch: refuses to inflate a document blocked while its read was in flight. */
++    #isLoadBlocked;
++    constructor(storage, saveDebounceRate, { priority = 1, onLoadError, isLoadBlocked } = {}) {
          this.#storage = storage;
-@@ -22,6 +24,7 @@ export class StorageSource {
+         this.#saveDebounceRate = saveDebounceRate;
+         this.priority = priority;
++        this.#onLoadError = onLoadError;
++        this.#isLoadBlocked = isLoadBlocked;
+     }
+     attach(query) {
+         const handle = query.handle;
          const saveFn = this.#makeSaveFn(handle.documentId);
          // Attach throttled save listener
          handle.on("heads-changed", saveFn);
@@ -143,7 +224,26 @@ index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b42
          // If the handle already has data (e.g. from create/import), persist it
          // immediately rather than waiting for a future heads-changed event.
          if (Automerge.getHeads(handle.fullDoc()).length > 0) {
-@@ -57,7 +60,15 @@ export class StorageSource {
+@@ -32,7 +41,7 @@ export class StorageSource {
+         // Load from storage
+         query.sourcePending("storage");
+         void this.#storage
+-            .loadDoc(handle.documentId)
++            .loadDoc(handle.documentId, { isLoadBlocked: this.#isLoadBlocked })
+             .then(loaded => {
+             if (loaded && Automerge.getHeads(loaded).length > 0) {
+                 // Sync may have delivered data while we were loading from disk —
+@@ -54,10 +63,25 @@ export class StorageSource {
+             // sources (e.g. sync) may still deliver the document.
+             this.#log.error(`Error loading document ${handle.documentId} from storage`, err);
+             query.sourceUnavailable("storage");
++            // DXOS patch: the query only sees "unavailable", so the cause is reported separately.
++            try {
++                this.#onLoadError?.(handle.documentId, err);
++            }
++            catch (listenerErr) {
++                this.#log.error("onLoadError listener threw", listenerErr);
++            }
          });
      }
      detach(documentId) {
@@ -179,8 +279,24 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WebSocketEndpoint, WorkerWebSocketEndpoint, type ManagedTransport, type WebSocketEndpointInterface, type WorkerWebSocketEndpointOptions, } from "./subduction/websocket-endpoint.js";
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
+diff --git a/dist/storage/StorageSubsystem.d.ts b/dist/storage/StorageSubsystem.d.ts
+index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..60908e0acd5c450a51abb77dd50bd30e8e5919b5 100644
+--- a/dist/storage/StorageSubsystem.d.ts
++++ b/dist/storage/StorageSubsystem.d.ts
+@@ -59,7 +59,10 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
+     /**
+      * Loads the Automerge document with the given ID from storage.
+      */
+-    loadDoc<T>(documentId: DocumentId): Promise<A.Doc<T> | null>;
++    loadDoc<T>(documentId: DocumentId, options?: {
++        /** DXOS patch: resolves `null` instead of inflating a document this returns true for. */
++        isLoadBlocked?: (documentId: DocumentId) => boolean;
++    }): Promise<A.Doc<T> | null>;
+     /**
+      * Saves the provided Automerge document to storage.
+      *
 diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
-index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0fd313f619 100644
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..3ac4a6b65fd10429600aebf752176651a6c19195 100644
 --- a/dist/storage/StorageSubsystem.js
 +++ b/dist/storage/StorageSubsystem.js
 @@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
@@ -191,7 +307,25 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0f
  import { SavedHeads } from "./SavedHeads.js";
  /**
   * The storage subsystem is responsible for saving and loading Automerge documents to and from
-@@ -158,6 +157,22 @@ export class StorageSubsystem extends EventEmitter {
+@@ -128,12 +127,16 @@ export class StorageSubsystem extends EventEmitter {
+     /**
+      * Loads the Automerge document with the given ID from storage.
+      */
+-    async loadDoc(documentId) {
++    async loadDoc(documentId, { isLoadBlocked } = {}) {
+         const headsHandle = this.#storedHeads.lastSavedHeads(documentId);
+         // Load and combine chunks
+         const binary = await this.loadDocData(documentId);
+         if (!binary)
+             return null;
++        // DXOS patch: checked after the read and right before inflating, so a document refused while the read
++        // was in flight is never inflated.
++        if (isLoadBlocked?.(documentId))
++            return null;
+         // Load into an Automerge document
+         const start = performance.now();
+         const newDoc = A.loadIncremental(A.init(), binary);
+@@ -158,6 +161,22 @@ export class StorageSubsystem extends EventEmitter {
          // Don't bother saving if the document hasn't changed
          if (!this.#shouldSave(documentId, doc))
              return;
@@ -214,7 +348,7 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0f
          const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
          if (this.#shouldCompact(sourceChunks)) {
              await this.#saveTotal(documentId, doc, sourceChunks);
-@@ -271,7 +286,9 @@ export class StorageSubsystem extends EventEmitter {
+@@ -271,7 +290,9 @@ export class StorageSubsystem extends EventEmitter {
              return true;
          }
          const newHeads = A.getHeads(doc);
@@ -572,7 +706,7 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
      };
      /** Send a tagged frame over the adapter. */
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b51419ac190ae 100644
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..ea01cae216eb538380f6468be3b33f5d14357b4c 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -610,7 +744,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
  /** Intercepts and transforms incoming and outgoing blobs (e.g., for E2EE). */
  export interface BlobInterceptor {
      /**
-@@ -106,6 +128,12 @@ export interface SubductionSourceOptions {
+@@ -106,6 +128,16 @@ export interface SubductionSourceOptions {
       * dropping → `false`). Lets a consumer surface online/offline status.
       */
      onConnectionChanged?: (connected: boolean) => void;
@@ -620,10 +754,14 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
 +     * applied it; the consumer decides whether to load the document.
 +     */
 +    onDetachedData?: (documentId: DocumentId) => void;
++    /** DXOS patch: stored or received bytes for a document could not be applied to its handle. */
++    onLoadError?: (documentId: DocumentId, error: unknown) => void;
++    /** DXOS patch: checked right before inflating; a blocked document's bytes are not applied. */
++    isLoadBlocked?: (documentId: DocumentId) => boolean;
      policy?: Policy;
      /**
       * What priority this source should have w.r.t to other sources
-@@ -123,15 +151,18 @@ export interface SubductionSourceOptions {
+@@ -123,15 +155,18 @@ export interface SubductionSourceOptions {
  export declare class SubductionSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
@@ -644,7 +782,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -147,6 +178,9 @@ export declare class SubductionSource implements DocumentSource {
+@@ -147,6 +182,9 @@ export declare class SubductionSource implements DocumentSource {
       *      {@link SubductionSource.#needsOutboundSync} re-opens a round, then
       *   3. schedule a recompute walk to act on it.
       *
@@ -655,7 +793,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
       */
      resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e199c0fbd 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d65bc6a94 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -669,7 +807,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
   *
   * Override per-Repo via `RepoConfig.subductionTimeouts.syncMs`.
   */
-@@ -41,12 +41,55 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
+@@ -41,12 +41,56 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
   * `RepoConfig.subductionCompactionDeleteConcurrency`.
   */
  const DEFAULT_COMPACTION_DELETE_CONCURRENCY = 16;
@@ -722,35 +860,44 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
 +    #outstandingPeerSyncs = new Set();
 +    // Bounds concurrent `#doSync` rounds; see MAX_IN_FLIGHT_DOC_SYNCS.
 +    #syncGate = semaphore(MAX_IN_FLIGHT_DOC_SYNCS);
++    #policy;
      /** Normalized endpoints; kept so `shutdown()` can run their teardown hooks. */
      #websocketEndpoints = [];
      #scheduler;
-@@ -55,6 +98,7 @@ export class SubductionSource {
+@@ -55,6 +99,11 @@ export class SubductionSource {
      #compactionDeleteConcurrency;
      #blobInterceptor;
      #onRemoteHeadsChanged;
 +    #onDetachedData;
++    /** DXOS patch: reports bytes that could not be applied to a document's handle. */
++    #onLoadError;
++    /** DXOS patch: refuses to inflate a document blocked while its blobs were being read. */
++    #isLoadBlocked;
      #onConnectionChanged;
      /** Last reported aggregate connectedness, to fire onConnectionChanged only
       *  on transitions. */
-@@ -70,7 +114,7 @@ export class SubductionSource {
+@@ -70,8 +119,9 @@ export class SubductionSource {
       */
      #shuttingDown = false;
      priority;
 -    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, onDetachedData, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, onDetachedData, onLoadError, isLoadBlocked, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
          this.#blobInterceptor = blobInterceptor;
++        this.#policy = policy;
          this.#onConnectionChanged = onConnectionChanged;
          this.priority = priority;
-@@ -105,6 +149,7 @@ export class SubductionSource {
+         this.#syncTimeoutMs = timeouts?.syncMs ?? DEFAULT_SYNC_TIMEOUT_MS;
+@@ -105,6 +155,9 @@ export class SubductionSource {
          this.#log = makeLogger(`automerge-repo:subduction(${peerId})`);
          this.#storage = storage;
          this.#onRemoteHeadsChanged = onRemoteHeadsChanged;
 +        this.#onDetachedData = onDetachedData;
++        this.#onLoadError = onLoadError;
++        this.#isLoadBlocked = isLoadBlocked;
          // Registered unconditionally so a peer's heads are persisted (and
          // replayed on attach) even when there's no live consumer.
          const onRemoteHeads = (sedimentreeId, remotePeerId, heads) => {
-@@ -133,12 +178,23 @@ export class SubductionSource {
+@@ -133,12 +186,23 @@ export class SubductionSource {
          // the shared manager owns the reconnect/backoff loop. Plain URL
          // strings are shorthand for in-thread endpoints.
          this.#websocketEndpoints = websocketEndpoints.map(endpoint => typeof endpoint === "string" ? new WebSocketEndpoint(endpoint) : endpoint);
@@ -776,7 +923,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -147,6 +203,15 @@ export class SubductionSource {
+@@ -147,6 +211,15 @@ export class SubductionSource {
              mgr.onChange(() => {
                  this.#scheduleRecompute();
                  this.#notifyConnectionChange();
@@ -792,7 +939,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              });
          }
          this.#storage.on("commit-saved", (sid, commitId, blob) => {
-@@ -163,6 +228,8 @@ export class SubductionSource {
+@@ -163,6 +236,8 @@ export class SubductionSource {
          });
          // ── Sync scheduler ────────────────────────────────────────────────
          this.#scheduler = new SyncScheduler({
@@ -801,7 +948,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              subduction: this.#subduction,
              log: this.#log,
              onSyncDataReceived: async (sedimentreeId, subduction) => {
-@@ -230,8 +297,12 @@ export class SubductionSource {
+@@ -230,8 +305,12 @@ export class SubductionSource {
      // ── Storage events ──────────────────────────────────────────────────
      #handleDataFound(id, commitId, blob) {
          const entry = this.#entries.get(id.toString());
@@ -815,7 +962,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          // During "initializing", let #loadBlobsAndTransition handle the
          // complete blob load atomically. Applying individual commits here
          // would cause premature "ready" transitions (the handle gets heads > 0
-@@ -244,6 +315,9 @@ export class SubductionSource {
+@@ -244,6 +323,9 @@ export class SubductionSource {
          // — recomputes are targeted, so other entries' completions no
          // longer walk this one. Mark it dirty so the walk retries the load.
          if (entry.syncState === "initializing") {
@@ -825,7 +972,25 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              this.#scheduleRecompute(entry);
              return;
          }
-@@ -392,9 +466,21 @@ export class SubductionSource {
+@@ -321,6 +403,9 @@ export class SubductionSource {
+             return;
+         const blobs = entry.pendingInbound;
+         entry.pendingInbound = [];
++        // DXOS patch: a blocked document's inbound bytes are dropped rather than inflated.
++        if (this.#isLoadBlocked?.(entry.query.documentId))
++            return;
+         const merged = blobs.length === 1 ? blobs[0] : mergeArrays(blobs);
+         try {
+             entry.handle.update(d => Automerge.loadIncremental(d, merged));
+@@ -328,6 +413,7 @@ export class SubductionSource {
+         catch (e) {
+             this.#log.debug(`flushInbound ${entry.sedimentreeId.toString().slice(0, 8)}: ` +
+                 `loadIncremental failed for %d blob(s): %O`, blobs.length, e);
++            this.#reportLoadError(entry, e);
+             return;
+         }
+         // Inbound data may absorb older loose commits or lower-level
+@@ -392,9 +478,21 @@ export class SubductionSource {
              hasUntransformedBlobs: false,
              retryTransformAfterSync: false,
              transformRetryScheduled: false,
@@ -848,7 +1013,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          throttledSave();
          // Subscribe to ephemeral messages for this sedimentree
          void (async () => {
-@@ -415,8 +501,8 @@ export class SubductionSource {
+@@ -415,8 +513,8 @@ export class SubductionSource {
          // compaction even though it may be defunct relative to the
          // current minimal sedimentree.
          void (async () => {
@@ -858,7 +1023,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
                  if (!entry)
                      return;
                  const [commitIds, fragmentIds] = await Promise.all([
-@@ -424,10 +510,17 @@ export class SubductionSource {
+@@ -424,10 +522,17 @@ export class SubductionSource {
                      this.#storage.listFragmentIds(sid),
                  ]);
                  for (const c of commitIds) {
@@ -878,7 +1043,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
                  }
                  if (entry.persistedCommitHashes.size > 0 ||
                      entry.persistedFragmentHashes.size > 0) {
-@@ -440,6 +533,13 @@ export class SubductionSource {
+@@ -440,6 +545,13 @@ export class SubductionSource {
              catch (e) {
                  this.#log.debug(`failed to seed persistedHashes for ${sidStr.slice(0, 8)}: %O`, e);
              }
@@ -892,7 +1057,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          })();
          // Replay the last-known remote heads for this sedimentree so the
          // DocHandle reflects the last sync state immediately on (re)attach,
-@@ -457,7 +557,21 @@ export class SubductionSource {
+@@ -457,7 +569,21 @@ export class SubductionSource {
          })();
          this.#scheduleRecompute(this.#entries.get(sidStr));
      }
@@ -915,7 +1080,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,32 +703,55 @@ export class SubductionSource {
+@@ -589,32 +715,55 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -976,7 +1141,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
                  if (!entry.syncInFlight && !entry.blobLoadInFlight) {
                      if (this.#needsOutboundSync(entry)) {
                          // Sync when we haven't tried yet (null) or when the last
-@@ -626,7 +763,8 @@ export class SubductionSource {
+@@ -626,7 +775,8 @@ export class SubductionSource {
                          void this.#doSync(entry);
                      }
                      else if (Automerge.getHeads(entry.handle.fullDoc()).length === 0 &&
@@ -986,7 +1151,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
                          // All connections settled and sync failed — give up.
                          this.#log.debug("marking as unavailable");
                          entry.query.sourceUnavailable("subduction");
-@@ -647,12 +785,27 @@ export class SubductionSource {
+@@ -647,12 +797,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -1015,7 +1180,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,8 +815,28 @@ export class SubductionSource {
+@@ -662,8 +827,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -1046,7 +1211,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
              // Check if any data was received from peers
-@@ -671,6 +844,9 @@ export class SubductionSource {
+@@ -671,6 +856,9 @@ export class SubductionSource {
                  const s = r.stats;
                  return s && (s.commitsReceived > 0 || s.fragmentsReceived > 0);
              });
@@ -1056,7 +1221,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              // If new data was received, immediately load it into the handle.
              // This makes sync reactive — the handle updates as soon as data
              // arrives, without waiting for further state transitions.
-@@ -702,6 +878,7 @@ export class SubductionSource {
+@@ -702,6 +890,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -1064,7 +1229,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +886,10 @@ export class SubductionSource {
+@@ -709,6 +898,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -1075,7 +1240,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -730,6 +911,202 @@ export class SubductionSource {
+@@ -730,6 +923,216 @@ export class SubductionSource {
              this.#scheduleRecompute(entry);
          }
      }
@@ -1087,7 +1252,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
 +     * settles is recorded as still pending.
 +     */
 +    async #syncWithConnectedPeers(entry, subduction, timeoutMs) {
-+        const peerIds = await subduction.getConnectedPeerIds();
++        const peerIds = await this.#peersFor(subduction, entry.sedimentreeId);
 +        if (peerIds.length === 0)
 +            return [];
 +        return new Promise(resolve => {
@@ -1124,6 +1289,20 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
 +            }
 +        });
 +    }
++    async #peersFor(subduction, sedimentreeId) {
++        const peerIds = await subduction.getConnectedPeerIds();
++        if (this.#policy === undefined || peerIds.length < 2)
++            return peerIds;
++        const allowed = [];
++        for (const peerId of peerIds) {
++            const ids = await Promise.resolve()
++                .then(() => this.#policy.filterAuthorizedFetch(peerId, [sedimentreeId]))
++                .catch(() => [sedimentreeId]);
++            if (ids.length > 0)
++                allowed.push(peerId);
++        }
++        return allowed.length > 0 ? allowed : peerIds;
++    }
 +    /**
 +     * DXOS patch: a heal retry's round, asked of each peer as `#doSync` asks, so a peer that never
 +     * answers holds neither the retry nor its slot in MAX_IN_FLIGHT_DOC_SYNCS.
@@ -1141,7 +1320,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
 +     * the first peer to succeed settles it and the others' requests carry on outside it.
 +     */
 +    async #syncStoredTree(sedimentreeId, subduction, timeoutMs) {
-+        const peerIds = await subduction.getConnectedPeerIds();
++        const peerIds = await this.#peersFor(subduction, sedimentreeId);
 +        if (peerIds.length === 0)
 +            return [];
 +        return new Promise(resolve => {
@@ -1278,7 +1457,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
      /**
       * Pair each stored blob with the commit or fragment id it belongs to.
       */
-@@ -758,7 +1135,7 @@ export class SubductionSource {
+@@ -758,9 +1161,18 @@ export class SubductionSource {
       * handle via `Automerge.loadIncremental`. If new data was loaded, signal
       * the query so it can transition to "ready".
       *
@@ -1286,8 +1465,42 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
 +     * This is called reactively after any sync round that received
       * data, making handle updates immediate.
       */
++    /** DXOS patch: forwards a failure to apply a document's bytes; a throwing listener never breaks the load path. */
++    #reportLoadError(entry, error) {
++        try {
++            this.#onLoadError?.(entry.query.documentId, error);
++        }
++        catch (listenerErr) {
++            this.#log.debug("onLoadError listener threw: %O", listenerErr);
++        }
++    }
      async #loadBlobsIntoHandle(entry, subduction) {
-@@ -875,6 +1252,40 @@ export class SubductionSource {
+         const sid = entry.sedimentreeId.toString().slice(0, 8);
+         const headCount = () => Automerge.getHeads(entry.handle.fullDoc()).length;
+@@ -824,9 +1236,21 @@ export class SubductionSource {
+         // Apply all blobs in a single `loadIncremental`: one `handle.update()`,
+         // so one `A.diff`/patch materialization and one listener-dispatch round
+         // (the same reason `#flushInbound` coalesces inbound bursts).
++        // DXOS patch: checked after every await above, so a document blocked while its blobs were read is
++        // never inflated.
++        if (this.#isLoadBlocked?.(entry.query.documentId))
++            return false;
+         if (toApply.length > 0) {
+             const merged = toApply.length === 1 ? toApply[0] : mergeArrays(toApply);
+-            entry.handle.update(d => Automerge.loadIncremental(d, merged));
++            try {
++                entry.handle.update(d => Automerge.loadIncremental(d, merged));
++            }
++            catch (e) {
++                // DXOS patch: every caller swallows this at debug level and retries, so the cause is
++                // reported here; rethrown so each caller's own handling is unchanged.
++                this.#reportLoadError(entry, e);
++                throw e;
++            }
+         }
+         // The bulk-loaded blobs may include fragments that absorb loose
+         // commits also persisted on disk, or earlier fragments superseded
+@@ -875,6 +1299,40 @@ export class SubductionSource {
          }
          finally {
              entry.blobLoadInFlight = false;
@@ -1328,7 +1541,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              this.#scheduleRecompute(entry);
          }
      }
-@@ -1026,7 +1437,10 @@ export class SubductionSource {
+@@ -1026,7 +1484,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -1340,7 +1553,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1297,6 +1711,27 @@ export class SubductionSource {
+@@ -1297,6 +1758,27 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -1368,7 +1581,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1321,6 +1756,11 @@ export class SubductionSource {
+@@ -1321,6 +1803,11 @@ export class SubductionSource {
              return;
          this.#scheduler.resetHealState(sid);
          entry.lastSyncResult = null;
@@ -1380,7 +1593,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e
          this.#scheduleRecompute(entry);
      }
      // ── Flush ───────────────────────────────────────────────────────────
-@@ -1478,12 +1918,28 @@ export class SubductionSource {
+@@ -1478,12 +1965,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }

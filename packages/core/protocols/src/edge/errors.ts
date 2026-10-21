@@ -28,13 +28,15 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     return error;
   }
 
-  public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
+  /** Reads the response body, unless `text` is the body already read. */
+  public static async fromHttpFailure(response: Response, text?: string): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
       message: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
       status: response.status,
-      cause: await EdgeHttpErrorCodec.decode(response),
+      cause:
+        text === undefined ? await EdgeHttpErrorCodec.decode(response) : EdgeHttpErrorCodec.decodeText(response, text),
     });
   }
 
@@ -74,6 +76,16 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
     data: EdgeErrorData,
   ) {
     super({ message: 'Auth challenge.', data, isRetryable: false });
+  }
+}
+
+/**
+ * EDGE refused this client SDK as older than the oldest it serves (`data.type` `EDGE_CLIENT_TOO_OLD`). Not
+ * retryable: every retry carries the same version, and only updating the app clears it.
+ */
+export class EdgeClientTooOldError extends EdgeCallFailedError {
+  constructor(body: EdgeFailure, status?: number) {
+    super({ message: body.message, data: body.data, status, isRetryable: false });
   }
 }
 

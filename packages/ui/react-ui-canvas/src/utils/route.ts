@@ -11,23 +11,34 @@
 
 import { Nudge } from '@dxos/diagram';
 
-import { type NodeRegistry } from '../model/registry.ts';
 import {
   DEFAULT_GRID,
   type Endpoint,
   type Link,
   MAJOR_GRID,
   type Node,
+  type NodeRegistry,
   type Point,
   type Port,
   type PortEndpoint,
-  type Scene,
   type Side,
+  type View,
+  isCloudNode,
+  isEllipseNode,
   isPointEndpoint,
-} from '../model/types.ts';
-import { gutterRoute } from './gutter-route.ts';
+} from '../model/index.ts';
+import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
+import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec } from './lattice.ts';
-import { type PortTerminal, nearestPort, nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
+import {
+  type PortTerminal,
+  nearestPort,
+  nodePorts,
+  pairPorts,
+  portCandidates,
+  portPoint,
+  sideNormal,
+} from './ports.ts';
 import { nodeBounds } from './shapes.ts';
 
 const MIN_TANGENT = 40;
@@ -154,7 +165,45 @@ export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
   return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
 };
 
-export type LinkGeometry = { link: Link; path: string; source: RouteEnd; target: RouteEnd };
+export type LinkGeometry = {
+  link: Link;
+  path: string;
+  source: RouteEnd;
+  target: RouteEnd;
+  /** A diagram connector's route, which the diagram renderer draws in place of `path`. */
+  diagram?: DiagramRoute;
+};
+
+/** The straight segments through `points`, as the diagram renderer draws a route. */
+const polylinePath = (points: readonly Point[]): string =>
+  points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
+
+/** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
+const diagramGeometry = (scene: View, link: Link): LinkGeometry | undefined => {
+  if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
+    return undefined;
+  }
+  const [source, target] = [scene.nodes[link.source.node], scene.nodes[link.target.node]];
+  if (!source || !target) {
+    return undefined;
+  }
+  const obstacles = Object.values(scene.nodes)
+    .filter((node) => node !== source && node !== target && isRouteObstacle(node))
+    .map(nodeBounds);
+  const route = diagramRoute(link.connector, nodeBounds(source), nodeBounds(target), obstacles);
+  const { points } = route;
+  if (points.length < 2) {
+    return undefined;
+  }
+  const [first, second, last, previous] = [points[0], points[1], points[points.length - 1], points[points.length - 2]];
+  return {
+    link,
+    path: polylinePath(points),
+    source: { point: first, side: sideToward(first, second) },
+    target: { point: last, side: sideToward(last, previous) },
+    diagram: route,
+  };
+};
 
 /** The side of a free end: the one facing the other end, so the route leaves it toward that end. */
 export const sideToward = (from: Point, to: Point): Side => {
@@ -164,7 +213,7 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: Scene, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (scene: View, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
   return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
 };
@@ -174,31 +223,182 @@ const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
   side: port.side,
 });
 
+/** Port pairs searched per tier of fewest possible bends. */
+const PAIRS_PER_TIER = 3;
+
+/**
+ * The fewest bends any right-angled route between two ports could take: none when they face each other on one line,
+ * one when their sides are perpendicular and each points toward the corner they share, otherwise at least two.
+ */
+const leastBends = (from: RouteEnd, to: RouteEnd): number => {
+  const out = sideNormal(from.side);
+  // A route arrives at its target moving against the target side's normal.
+  const arrive = sideNormal(to.side);
+  const [dx, dy] = [to.point.x - from.point.x, to.point.y - from.point.y];
+  const ahead = (normal: Point, x: number, y: number) => normal.x * x + normal.y * y > 0;
+  if (out.x === -arrive.x && out.y === -arrive.y) {
+    const aligned = out.x !== 0 ? dy === 0 : dx === 0;
+    return aligned && ahead(out, dx, dy) ? 0 : 2;
+  }
+  if (out.x * arrive.x + out.y * arrive.y === 0) {
+    // The corner is where the source's line meets the target's.
+    const corner = out.x !== 0 ? { x: to.point.x, y: from.point.y } : { x: from.point.x, y: to.point.y };
+    const first = ahead(out, corner.x - from.point.x, corner.y - from.point.y);
+    const second = ahead({ x: -arrive.x, y: -arrive.y }, to.point.x - corner.x, to.point.y - corner.y);
+    return first && second ? 1 : 2;
+  }
+  return 2;
+};
+
+/**
+ * The ends and gutter route of a smart link between two nodes on a lattice: of the pairs of side-centre ports (or the
+ * pinned ones), the one whose route is cheapest, fewest bends first, so a link leaves straight down a free column
+ * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
+ */
+const latticeEnds = (
+  scene: View,
+  registry: NodeRegistry,
+  link: Link,
+  route: LatticeRoute,
+): { from: RouteEnd; to: RouteEnd; points: Point[] } | undefined => {
+  if (link.type !== 'smart' || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
+    return undefined;
+  }
+  const source = terminalOf(scene, registry, link.source);
+  const target = terminalOf(scene, registry, link.target);
+  if (!source || !target) {
+    return undefined;
+  }
+  // A side's centre, where a side has one; a pinned port or a custom layout keeps what it offers.
+  const centres = (ports: readonly Port[]) => {
+    const middle = ports.filter((port) => port.offset === 0.5);
+    return middle.length > 0 ? middle : ports;
+  };
+  const sources = centres(portCandidates(source, 'out'));
+  const targets = centres(portCandidates(target, 'in'));
+  // Fewest possible bends first, then nearest: the search stops once no pair left could bend less than the best found.
+  const pairs = sources
+    .flatMap((from) => targets.map((to) => ({ from: routeEnd(source, from), to: routeEnd(target, to) })))
+    .map((pair) => ({
+      ...pair,
+      least: leastBends(pair.from, pair.to),
+      distance: Math.hypot(pair.from.point.x - pair.to.point.x, pair.from.point.y - pair.to.point.y),
+    }))
+    .sort((left, right) => left.least - right.least || left.distance - right.distance);
+  let best: { from: RouteEnd; to: RouteEnd; points: Point[]; bends: number } | undefined;
+  // Within a tier only the nearest few are searched: a farther pair seldom routes better, and each search has a cost.
+  const tried = new Map<number, number>();
+  for (const pair of pairs) {
+    if (best && pair.least >= best.bends) {
+      break;
+    }
+    const count = tried.get(pair.least) ?? 0;
+    if (count >= PAIRS_PER_TIER) {
+      continue;
+    }
+    tried.set(pair.least, count + 1);
+    const routed = gutterRouteWithCost(route.nodes, route.spec, pair.from, pair.to);
+    // The route's points are its ends and its corners.
+    const bends = routed ? routed.points.length - 2 : Infinity;
+    if (routed && (!best || bends < best.bends)) {
+      best = { from: pair.from, to: pair.to, points: routed.points, bends };
+    }
+  }
+  return best;
+};
+
 /**
  * Resolve a link's ends and route it by its type: two node ends take the automatic (or pinned) port pair,
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
 export const linkGeometry = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
 ): LinkGeometry | undefined => {
-  const ends = resolveEnds(scene, registry, link.source, link.target);
+  const diagram = diagramGeometry(scene, link);
+  if (diagram) {
+    return diagram;
+  }
+  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  const routed = route && latticeEnds(scene, registry, link, route);
+  if (routed) {
+    return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
+  }
+  const ends = resolveEnds(scene, registry, link.source, link.target, link.type);
   if (!ends) {
     return undefined;
   }
   const [from, to] = ends;
-  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
   return { link, path: linkPath(link, from, to, route), source: from, target: to };
 };
 
+/**
+ * Where a line aimed at `node`'s centre from `toward` meets its outline (an ellipse for ellipses and clouds, else its
+ * frame), and the side it crosses: a plain line to a node bound to no port points straight at the shape.
+ */
+const centredEnd = (node: Node, toward: Point): RouteEnd => {
+  const { center } = node;
+  const [halfWidth, halfHeight] = [node.size.width / 2, node.size.height / 2];
+  const [dx, dy] = [toward.x - center.x, toward.y - center.y];
+  if ((dx === 0 && dy === 0) || halfWidth === 0 || halfHeight === 0) {
+    return { point: center, side: 'e' };
+  }
+  const round = isEllipseNode(node) || isCloudNode(node);
+  const scale = round
+    ? 1 / Math.hypot(dx / halfWidth, dy / halfHeight)
+    : Math.min(dx === 0 ? Infinity : halfWidth / Math.abs(dx), dy === 0 ? Infinity : halfHeight / Math.abs(dy));
+  return {
+    point: { x: center.x + dx * scale, y: center.y + dy * scale },
+    side: sideToward(center, toward),
+  };
+};
+
+/**
+ * A plain (non-smart) link's ends: a free point stays where it is, a named port is used as given, and a node end with
+ * no port points at the node's centre, from the other end's centre (or port, or point), stopping at its outline.
+ */
+const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
+  const anchor = (end: Endpoint): Point | undefined => {
+    if (isPointEndpoint(end)) {
+      return end.point;
+    }
+    const terminal = terminalOf(scene, registry, end);
+    const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
+    return terminal && port ? portPoint(terminal.bounds, port) : scene.nodes[end.node]?.center;
+  };
+  const [from, to] = [anchor(source), anchor(target)];
+  if (!from || !to) {
+    return undefined;
+  }
+  const endOf = (end: Endpoint, other: Point): RouteEnd | undefined => {
+    if (isPointEndpoint(end)) {
+      return { point: end.point, side: sideToward(end.point, other), free: true };
+    }
+    const node = scene.nodes[end.node];
+    if (!node) {
+      return undefined;
+    }
+    const terminal = terminalOf(scene, registry, end);
+    const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
+    return terminal && port ? routeEnd(terminal, port) : centredEnd(node, other);
+  };
+  const sourceEnd = endOf(source, to);
+  const targetEnd = endOf(target, from);
+  return sourceEnd && targetEnd ? ([sourceEnd, targetEnd] as [RouteEnd, RouteEnd]) : undefined;
+};
+
 const resolveEnds = (
-  scene: Scene,
+  scene: View,
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
+  type?: Link['type'],
 ): [RouteEnd, RouteEnd] | undefined => {
+  if (type !== undefined && type !== 'smart') {
+    return centredEnds(scene, registry, source, target);
+  }
   if (isPointEndpoint(source)) {
     if (isPointEndpoint(target)) {
       return [
@@ -238,8 +438,8 @@ const resolveEnds = (
  * gutter run side by side in their own lanes, ordered so their turn-offs do not cross (DESIGN §8b).
  * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
  */
-export const sceneLinkGeometry = (
-  scene: Scene,
+export const viewLinkGeometry = (
+  scene: View,
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,
@@ -247,6 +447,13 @@ export const sceneLinkGeometry = (
   if (!lattice) {
     return links.flatMap((link) => linkGeometry(scene, registry, link) ?? []);
   }
+  // A diagram connector keeps its own route, so it neither takes the gutters nor is nudged into a lane.
+  const diagrams = new Map(
+    links.flatMap((link) => {
+      const geometry = diagramGeometry(scene, link);
+      return geometry ? [[link.id, geometry] as const] : [];
+    }),
+  );
   const nodes = Object.values(scene.nodes);
   const rect = (bounds: { x: number; y: number; width: number; height: number }) => ({
     x: bounds.x,
@@ -258,15 +465,23 @@ export const sceneLinkGeometry = (
     const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
     return node ? rect(nodeBounds(node)) : undefined;
   };
-  const routed = links.flatMap((link) => {
-    const ends = resolveEnds(scene, registry, link.source, link.target);
-    if (!ends) {
-      return [];
-    }
-    const [from, to] = ends;
-    const points = link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
-    return [{ link, from, to, points }];
-  });
+  const route = { spec: lattice, nodes };
+  const routed = links
+    .filter((link) => !diagrams.has(link.id))
+    .flatMap((link) => {
+      const chosen = latticeEnds(scene, registry, link, route);
+      if (chosen) {
+        return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
+      }
+      const ends = resolveEnds(scene, registry, link.source, link.target, link.type);
+      if (!ends) {
+        return [];
+      }
+      const [from, to] = ends;
+      const points =
+        link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
+      return [{ link, from, to, points }];
+    });
   const smart = routed.filter((entry) => entry.points !== undefined);
   const nudged = Nudge.nudge(
     smart.map(({ link, points }) => ({
@@ -277,16 +492,20 @@ export const sceneLinkGeometry = (
     { spacing: DEFAULT_GRID, obstacles: nodes.map((node) => rect(nodeBounds(node))) },
   );
   const lanes = new Map(smart.map((entry, index) => [entry.link.id, nudged[index]]));
-  return routed.map(({ link, from, to }) => {
-    const points = lanes.get(link.id);
-    if (!points || points.length < 2) {
-      return { link, path: linkPath(link, from, to), source: from, target: to };
-    }
-    // A nudged port may slide along its side, so the ends are read back from the lane.
-    const source = { point: points[0], side: from.side };
-    const target = { point: points[points.length - 1], side: to.side };
-    return { link, path: splinePath(points), source, target };
-  });
+  const geometries = new Map(
+    routed.map(({ link, from, to }) => {
+      const points = lanes.get(link.id);
+      if (!points || points.length < 2) {
+        return [link.id, { link, path: linkPath(link, from, to), source: from, target: to }] as const;
+      }
+      // A nudged port may slide along its side, so the ends are read back from the lane.
+      const source = { point: points[0], side: from.side };
+      const target = { point: points[points.length - 1], side: to.side };
+      return [link.id, { link, path: splinePath(points), source, target }] as const;
+    }),
+  );
+  // In the order given, which is the paint order.
+  return links.flatMap((link) => diagrams.get(link.id) ?? geometries.get(link.id) ?? []);
 };
 
 /** Index at which a new control point at `point` keeps the polyline `ends`+`points` in order. */

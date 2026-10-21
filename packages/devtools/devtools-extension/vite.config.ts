@@ -19,14 +19,11 @@ import packageJson from './package.json';
 // https://vitejs.dev/config
 export default defineConfig({
   root: __dirname,
-  esbuild: {
-    keepNames: true,
-  },
   build: {
     outDir: 'out/devtools-extension',
     sourcemap: true,
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
@@ -37,6 +34,9 @@ export default defineConfig({
       // require(); externalize the tokenizer chain. The Chrome extension bundle
       // never actually exercises this LLM tokenization code path.
       external: ['@anthropic-ai/tokenizer', 'tiktoken', 'tiktoken/lite', /^tiktoken\//],
+      output: {
+        keepNames: true,
+      },
     },
   },
   resolve: {
@@ -48,6 +48,11 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+    rolldownOptions: {
+      output: {
+        keepNames: true,
+      },
+    },
     plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [

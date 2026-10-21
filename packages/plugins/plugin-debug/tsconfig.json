@@ -125,9 +125,6 @@
       "path": "../../ui/react-ui-canvas-compute"
     },
     {
-      "path": "../../ui/react-ui-canvas-editor"
-    },
-    {
       "path": "../../ui/react-ui-components"
     },
     {
@@ -137,6 +134,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-geo"
+    },
+    {
       "path": "../../ui/react-ui-list"
     },
     {
@@ -144,6 +144,9 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-table"
     },
     {
       "path": "../../ui/react-ui-terminal"
@@ -156,6 +159,9 @@
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-canvas"
     },
     {
       "path": "../plugin-chess"
@@ -180,6 +186,9 @@
     },
     {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-kanban"
     },
     {
       "path": "../plugin-markdown"

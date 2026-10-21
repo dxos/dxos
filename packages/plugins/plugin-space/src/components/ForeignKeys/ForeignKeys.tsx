@@ -20,11 +20,13 @@ export type ForeignKeysProps = {
 export const ForeignKeys = ({ keys, onDelete }: ForeignKeysProps) => {
   return (
     <Listbox.Root items={keys.map((key) => ({ value: key.id, label: key.source, description: key.id }))}>
-      <Listbox.Content classNames='gap-2'>
-        {keys.map((key) => (
-          <KeyItem key={key.id} forignKey={key} onDelete={onDelete} />
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content classNames='gap-2'>
+          {keys.map((key) => (
+            <KeyItem key={key.id} forignKey={key} onDelete={onDelete} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

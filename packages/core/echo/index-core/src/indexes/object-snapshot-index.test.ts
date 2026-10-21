@@ -6,7 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
@@ -102,6 +103,75 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
+    "stores a document object's meta and heads; an update without heads clears them",
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
+      yield* metaIndex.migrate();
+
+      const id = EntityId.random();
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_META]: { keys: [], tags: ['t'] }, value: 'alpha' },
+        heads: ['h1', 'h2'],
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* store.update([object]);
+      const [backing] = yield* store.queryBackings([object.recordId!]);
+      expect(backing.heads).toEqual(['h1', 'h2']);
+      expect(JSON.parse(backing.json)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
+
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stores the document bytes a host passes with heads, and drops them with the heads',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+        heads: ['h1'],
+        bytes: new Uint8Array([1, 2, 3]),
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      const { recordId } = object;
+      invariant(recordId !== null);
+      yield* store.update([object]);
+      const [backing] = yield* store.queryBackings([recordId]);
+      expect(backing.bytes).toEqual(new Uint8Array([1, 2, 3]));
+
+      yield* store.update([{ ...object, bytes: undefined }]);
+      const [withoutBytes] = yield* store.queryBackings([recordId]);
+      expect(withoutBytes.heads).toEqual(['h1']);
+      expect(withoutBytes.bytes).toBeUndefined();
+
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* store.queryBackings([recordId])).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'handles more than 999 recordIds without exceeding SQLite variable limit',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
@@ -133,6 +203,37 @@ describe('ObjectSnapshotIndex', () => {
       for (const id of recordIds) {
         expect(returnedIds.has(id)).toBe(true);
       }
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'counts missing snapshots only in the requested spaces and sources',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const [spaceA, spaceB] = [SpaceId.random(), SpaceId.random()];
+      const make = (spaceId: SpaceId, source: 'document' | 'feed'): IndexerObject => ({
+        spaceId,
+        queueId: source === 'feed' ? EntityId.random() : null,
+        queueNamespace: source === 'feed' ? 'trace' : null,
+        documentId: source === 'document' ? EntityId.random() : null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON },
+      });
+      const indexed = [make(spaceA, 'document'), make(spaceB, 'feed')];
+      const orphan = make(spaceA, 'feed');
+      yield* metaIndex.update([...indexed, orphan]);
+      yield* metaIndex.lookupRecordIds(indexed);
+      yield* store.update(indexed);
+
+      expect(yield* store.countMissingSnapshots()).toBe(1);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceA] })).toBe(1);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceB] })).toBe(0);
+      expect(yield* store.countMissingSnapshots({ spaceIds: [spaceA], feeds: false })).toBe(0);
     }, Effect.provide(TestLayer)),
   );
 });

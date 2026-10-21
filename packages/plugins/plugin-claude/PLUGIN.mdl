@@ -30,6 +30,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat` | `org.dxos.mdl.feat@1.0`        |
 | `scenario` | `org.dxos.mdl.scenario@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`        |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -281,6 +282,33 @@ feat F-8: Claude Code on this computer
       the chat's space; its read-only tools run without asking
 ```
 
+```mdl
+feat F-9: Claude Code (cloud)
+
+  req F-9.1:
+    when: the plugin is enabled
+    then: |
+      "Claude Code (cloud)" is offered as a chat's agent and in a task's menu,
+      and runs Claude Code in an EDGE sandbox rather than on this computer
+
+  req F-9.2:
+    when: a turn runs on Claude Code (cloud)
+    then: |
+      the agent runs with the space's Claude subscription OAuth token as
+      `CLAUDE_CODE_OAUTH_TOKEN`, never with an Anthropic API key, and with its
+      GitHub token as `GITHUB_TOKEN`/`GH_TOKEN`, so `git` and `gh` can clone,
+      push and open pull requests; a space holding only an API key lends no
+      Claude credential and logs a warning
+
+  req F-9.3:
+    when: the chat belongs to a project with repositories
+    then: the sandbox checks them out before the agent's first turn
+
+  req F-9.4:
+    when: a chat is switched to Claude Code (cloud) before its first message
+    then: that first message runs on Claude Code (cloud), not on the default assistant
+```
+
 ## Acceptance
 
 ```mdl
@@ -464,6 +492,98 @@ test QA-3: Claude Code asks before every edit and command
     - name: Ask for more in a follow-up
       do: As QA-2, answering each card with Yes.
       expect: as QA-2, with a card before the commit
+```
+
+```mdl
+test QA-4: A standalone chat on Claude Code (cloud) opens a pull request
+  desc: |
+    A chat switched to Claude Code (cloud) clones dxos/dxos in its EDGE sandbox
+    with the space's GitHub token, opens a draft pull request, and closes it
+    when asked. Walked by the autocue flow
+    `packages/plugins/plugin-claude/autocue/claude-code-cloud-pr.mjs`.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.4]
+  status: verified
+  given:
+    - Composer against an EDGE that runs the coding agent
+    - space: holds a Claude subscription token and a GitHub token that can push to dxos/dxos
+  steps:
+    - name: Create a chat
+      do: Click + on the space and choose Chat.
+      expect: an empty chat opens
+    - name: Run the chat on Claude Code (cloud)
+      do: Open the chat's options, choose the agent "Claude Code (cloud)", and close the options.
+      expect: the prompt is labelled Claude Code (cloud)
+    - name: Ask it to clone dxos/dxos and open a pull request
+      do: |
+        Ask it to clone dxos/dxos, commit a one-line file on a new branch, push
+        it and open a draft pull request with `gh pr create --draft`.
+      expect: |
+        the first reply comes from Claude Code, not the default assistant, and
+        ends with the URL of an open draft pull request on dxos/dxos
+    - name: Show the pull request on GitHub
+      do: Open the pull request's URL.
+      expect: the draft pull request with the one-line file
+    - name: Ask it to close the pull request
+      do: Ask it to close the pull request with `gh pr close --delete-branch`.
+      expect: the pull request is closed and its branch deleted
+```
+
+```mdl
+test QA-5: A project task on Claude Code (cloud) opens a pull request
+  desc: |
+    A project names dxos/dxos as its repository; a task assigned to Claude Code
+    (cloud) is worked in an EDGE sandbox that checked the repository out, and
+    the agent opens the draft pull request the task asks for. Walked by the
+    autocue flow `packages/plugins/plugin-claude/autocue/claude-code-cloud-task.mjs`.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.3]
+  status: verified
+  given:
+    - as QA-4
+  steps:
+    - name: Create a project
+      do: Click + on the space, choose Project, name it "DXOS" and save.
+      expect: the project opens
+    - name: Give the project the dxos/dxos repository
+      do: Add dxos/dxos to the project's repositories.
+      expect: the project lists dxos/dxos
+    - name: Add a task
+      do: |
+        Open Tasks and add a task asking for a short file on a new branch,
+        pushed, with a draft pull request opened by `gh pr create --draft`.
+      expect: the task is listed
+    - name: Assign the task to Claude Code (cloud)
+      do: Open the task's menu and choose "Assign to Claude Code (cloud)".
+      expect: the task is started and the project's chat opens on Claude Code (cloud)
+    - name: Watch it open the pull request
+      do: Open the Assistant companion.
+      expect: the turn ends with the URL of an open draft pull request on dxos/dxos
+    - name: Ask it to close the pull request
+      do: Ask it in the same chat to close the pull request with `gh pr close --delete-branch`.
+      expect: the pull request is closed and its branch deleted
+```
+
+---
+
+## Changelog
+
+```mdl
+decision D-1: Claude Code (cloud) always runs with a Claude subscription OAuth token; an Anthropic API key is never lent to it.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-9.2]
+```
+
+```mdl
+decision D-2: An OAuth token stored under the Anthropic source is still lent, and a space holding only an API key lends no Claude credential and logs a warning. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2]
+  why: The token's kind, not where it is stored, decides what it costs; a subscription token pasted into the Anthropic connector is still a subscription token.
+  rejected:
+    - Fail the turn when only an API key is connected: the agent already reports a missing credential when Claude Code starts without one.
 ```
 
 ---

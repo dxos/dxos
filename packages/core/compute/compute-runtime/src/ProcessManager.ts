@@ -200,6 +200,8 @@ export interface ImplOpts {
 export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
+  /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
+  readonly #guards = new Map<Process.ID, Process.Guard>();
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -251,11 +253,16 @@ export class Impl implements Manager {
       spawn: (definition, { location, ...options } = {}) =>
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot spawn a remote process.'))
-          : this.spawn(definition, {
-              origin,
-              ...options,
-              parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
-            }),
+          : this.#spawn(
+              definition,
+              {
+                origin,
+                ...options,
+                parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
+              },
+              // A detached child must not shed the guard of the process that spawned it.
+              this.#guards.get(pid),
+            ),
       handles: ({ location, ...options } = {}) =>
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot list remote processes.'))
@@ -343,6 +350,7 @@ export class Impl implements Manager {
       return;
     }
     this.#handles.delete(pid);
+    this.#guards.delete(pid);
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -377,6 +385,7 @@ export class Impl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#guards.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
@@ -403,6 +412,14 @@ export class Impl implements Manager {
     definition: Operation.Durable<I, O, any, _Rpcs>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
+    return this.#spawn(definition, options, undefined);
+  }
+
+  #spawn<I, O, _Rpcs extends Rpc.Any>(
+    definition: Operation.Durable<I, O, any, _Rpcs>,
+    options: Process.SpawnOptions | undefined,
+    spawnerGuard: Process.Guard | undefined,
+  ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
@@ -426,6 +443,14 @@ export class Impl implements Manager {
         ...(parentHandle !== undefined ? parentHandle.environment : {}),
         ...options?.environment,
       };
+      const parentGuard =
+        options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
+      const guard = [...new Set([spawnerGuard, parentGuard, options?.guard])]
+        .filter((candidate): candidate is Process.Guard => candidate !== undefined)
+        .reduce<Process.Guard | undefined>(
+          (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+          undefined,
+        );
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -493,10 +518,14 @@ export class Impl implements Manager {
         ),
       );
 
+      if (guard !== undefined) {
+        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, guard));
+      }
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
@@ -596,6 +625,9 @@ export class Impl implements Manager {
       );
       handleRef = handle;
       this.#handles.set(id, handle);
+      if (guard !== undefined) {
+        this.#guards.set(id, guard);
+      }
       this.#refreshProcessTree();
 
       // Write the initial durable record, spawn event included, before running onSpawn: one write
@@ -706,6 +738,7 @@ export class Impl implements Manager {
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,

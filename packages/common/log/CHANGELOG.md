@@ -1,5 +1,26 @@
 # @dxos/log
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/util@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

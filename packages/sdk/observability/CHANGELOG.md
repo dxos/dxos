@@ -1,5 +1,93 @@
 # @dxos/observability
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/log-store-idb@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- cd70a43: Move Effect from 4.0.0 to 4.0.4. In 4.0.0, `PartitionedSemaphore` lost its only permit once about a thousand waiters were queued, because each release resumed the next waiter on the same stack until it overflowed. The OPFS SQLite client guards its connection with that semaphore, so a statement backlog behind one index transaction left every later statement and query waiting forever.
+
+  Effect 4.0.4 follows the current OpenTelemetry GenAI conventions, so model-call spans carry the serving product as `gen_ai.provider.name` instead of `gen_ai.system`. `ChatCompletionsAdapter` reports it under the new key, and `AiObservability` reads it from there, so `$ai_provider` on PostHog events keeps its value. `ChatCompletionsClientConfig.provider` is now required: it no longer falls back to the API format, which named an OpenAI-compatible server `openai`.
+
+  The `effect` patch is dropped: 4.0.4 ships the `DecisionModel` image support it added.
+
+- ad4c7cf: PostHog error tracking no longer records "ResizeObserver loop completed with undelivered notifications". The browser raises it without a stack and delivers the skipped notifications on the next frame, so there is nothing to act on. An exception event is dropped only when every exception in it is this message, and a `before_send` passed through the PostHog config still runs.
+- afba7ce: Session replay no longer keeps removed DOM alive. An element whose direct child is an iframe is left out of recordings, since the recorder never releases a cross-origin iframe removed along with an ancestor, and that iframe kept the whole removed tree in memory. `<body>` is always recorded, and an iframe given the `ObservabilityExtension.PostHog.REPLAY_IFRAME_CLASS` class is recorded with its content.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/log-store-idb@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- 1fe9218: Skill hooks can now run in the background: an end-request `Skill.Hook` with `async: true` no longer holds up the request, and the agent process waits for it before finishing. Composer uses this for an opt-in **Report agent struggles** assistant setting (telemetry must also be on): a small model reviews each turn and, when the agent struggled because of its instructions or tools, the conversation is uploaded and an `agent_struggle` analytics event is emitted. `Observability.support` gains `uploadNdjson(ndjson, kind)` for uploading caller-built NDJSON bundles.
+
+### Patch Changes
+
+- 1819960: Invitation spans are no longer lost to sampling. Tail sampling now keeps every span marked `dxos.sampling.keep`, and both the host's `handleInvitationFlow` span and the guest's `acceptInvitation` span carry that mark, so short invitation flows are no longer dropped 70% of the time. The host span also records `ctx.outcome` when it ends.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/log-store-idb@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

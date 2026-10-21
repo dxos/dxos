@@ -1,0 +1,28 @@
+diagram flow=down
+group discord "Discord" {
+  node App "Discord App"
+  node Guild "Guild"
+  node DChannel "Discord Channel"
+}
+group cloud "EDGE" {
+  node Service "Discord Service" ref="packages/services/discord-service/src/agent-bot/discord-bot.ts"
+  node Install "Installation"
+  node Binding "Binding"
+  node Process "Agent Process"
+}
+group space "Space" {
+  node Plugin "plugin-agent" ref="packages/plugins/plugin-agent/src/AgentPlugin.ts"
+  node Agent "Agent"
+  node Chat "Chat"
+}
+edge Guild one-to-many DChannel
+edge Install -> App
+edge Install -> Guild
+edge Service one-to-many Install
+edge Install one-to-many Binding
+edge Binding -> DChannel
+edge Binding -> Agent
+edge Service -> Process "routes"
+edge Process -> Chat
+edge Agent one-to-many Chat
+edge Plugin -> Binding "administers"

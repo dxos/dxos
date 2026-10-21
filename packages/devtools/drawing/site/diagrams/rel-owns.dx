@@ -1,0 +1,3 @@
+node A "Team"
+node B "Player" right-of A
+edge A owns B

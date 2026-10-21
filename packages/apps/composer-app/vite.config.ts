@@ -33,6 +33,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
@@ -251,8 +252,8 @@ const PLUGIN_SHARED_PACKAGES = [
 ];
 
 /**
- * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
- * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (`main` publishes daily, and every
+ * deploy publishes the commit it builds) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
  * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
  * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
  */
@@ -279,6 +280,26 @@ const pluginToolchain = (): string => {
   const cli = process.env.DX_PLUGIN_TOOLCHAIN_CLI;
   return JSON.stringify({ commit, versions, ...(cli && { cli }) });
 };
+
+/**
+ * Re-arms the watch on a file after every change it reports. Under `useFsEvents: false` each file is watched by a
+ * descriptor bound to its inode, and chokidar re-attaches after a rename-over save only on Linux, so on macOS every
+ * save after the first would be lost (same as storybook's `dxos:rearm-watch`).
+ */
+const rearmWatchPlugin = (): PluginOption => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (file) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (file.includes('\0') || !file.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(file);
+      server.watcher.add(file);
+    });
+  },
+});
 
 /**
  * https://vitejs.dev/config
@@ -315,6 +336,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
@@ -535,10 +559,14 @@ export default defineConfig((env) => ({
     format: 'es' as const,
 
     plugins: () => [...sharedPlugins(env)],
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
+    rearmWatchPlugin(),
     ...sharedPlugins(env),
 
     // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
@@ -637,8 +665,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
-    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
@@ -812,7 +841,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**
