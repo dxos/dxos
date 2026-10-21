@@ -141,14 +141,8 @@ export const Routed: StoryObj<typeof meta> = {
   args: { arrange: 'routed', features: LAYERED_FEATURES },
 };
 
-/** A force layout seeded from the ranks, run to rest, then snapped to the nearest free lattice cell. */
-export const ForceSnapped: StoryObj<typeof meta> = {
-  render: ForceStory,
-  args: { snap: true },
-};
-
-/** The same force layout where it came to rest, before snapping, to see what the snap changes. */
-export const ForceUnsnapped: StoryObj<typeof meta> = {
+/** A force layout run to rest and laid out freely; Snap puts it on the lattice's nearest free cells. */
+export const Force: StoryObj<typeof meta> = {
   render: ForceStory,
   args: { snap: false },
 };
