@@ -94,7 +94,6 @@ type EditFieldProps = {
   placeholder: string;
   label: string;
   testId: string;
-  multiline?: boolean;
   autoFocus?: boolean;
   onCommit: (value: string) => void;
 };
@@ -102,37 +101,39 @@ type EditFieldProps = {
 const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
 
 /**
- * A field of a card in edit mode, committed when it loses focus (Enter does that for a single line). Keys and presses
- * stay in the field: the card would toggle its selection, and a canvas would delete the box on Backspace.
+ * A single-line field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in
+ * the field: the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
-const EditField = ({ value, placeholder, label, testId, multiline, autoFocus, onCommit }: EditFieldProps) => {
-  const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+const EditField = ({ value, placeholder, label, testId, autoFocus, onCommit }: EditFieldProps) => {
+  const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
       onCommit(next);
     }
   };
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.stopPropagation();
-    if (event.key === 'Enter' && !(multiline && event.shiftKey)) {
+    if (event.key === 'Enter') {
       event.preventDefault();
       event.currentTarget.blur();
     }
   };
-  const props = {
-    // Inert boxes on a canvas still let the field take the pointer.
-    'classNames': 'pointer-events-auto',
-    'defaultValue': value,
-    placeholder,
-    'aria-label': label,
-    'data-testid': testId,
-    autoFocus,
-    'onBlur': handleBlur,
-    'onKeyDown': handleKeyDown,
-    'onPointerDown': stopPropagation,
-    'onClick': stopPropagation,
-  };
-  return multiline ? <Input.Textarea {...props} rows={2} autoResize /> : <Input.Root {...props} />;
+  return (
+    <Input.Root
+      // Inert boxes on a canvas still let the field take the pointer; pulled out by its padding and its height over a
+      // line, so the text stays where it was read and the card keeps its size.
+      classNames='pointer-events-auto -ms-2 -my-0.5'
+      defaultValue={value}
+      placeholder={placeholder}
+      aria-label={label}
+      data-testid={testId}
+      autoFocus={autoFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      onPointerDown={stopPropagation}
+      onClick={stopPropagation}
+    />
+  );
 };
 
 const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
@@ -328,7 +329,6 @@ export const FeatureCardBody = ({
             placeholder={t('feature-card.description.placeholder')}
             label={t('feature-card.description.label')}
             testId='feature-card.description.input'
-            multiline
             onCommit={(description) => onDescribe(feature, description)}
           />
         </Card.Row>
