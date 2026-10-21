@@ -133,13 +133,10 @@ export const useCanvasSelection = (
 /** The active tool and the grid aids. */
 export const useCanvasTools = (
   consumer: string,
-): CanvasAspect<
-  Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'lattice' | 'debug'>,
-  ToolsCommands
-> => {
+): CanvasAspect<Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'debug'>, ToolsCommands> => {
   const { atoms, controller } = useCanvasServices(consumer);
-  const { tool, linkType, layer, snap, guides, lattice, debug } = atoms;
-  return { atoms: { tool, linkType, layer, snap, guides, lattice, debug }, commands: controller.tools };
+  const { tool, linkType, layer, snap, guides, debug } = atoms;
+  return { atoms: { tool, linkType, layer, snap, guides, debug }, commands: controller.tools };
 };
 
 /**

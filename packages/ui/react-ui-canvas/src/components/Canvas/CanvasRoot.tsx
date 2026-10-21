@@ -296,7 +296,7 @@ export const CanvasRoot = ({
     viewport,
   });
 
-  const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
+  const { setTool, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
   const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
@@ -397,7 +397,6 @@ export const CanvasRoot = ({
     select,
     toggleSnap,
     toggleGuides,
-    toggleLattice,
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,

@@ -56,7 +56,6 @@ export type UseSceneKeysOptions = {
   select: (ids: Iterable<ElementId>) => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
-  toggleLattice: () => void;
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -88,7 +87,6 @@ export const useSceneKeys = ({
   select,
   toggleSnap,
   toggleGuides,
-  toggleLattice,
   toggleDebug,
   onUndo,
   onRedo,
@@ -284,9 +282,6 @@ export const useSceneKeys = ({
         case 'guides':
           toggleGuides();
           break;
-        case 'lattice':
-          toggleLattice();
-          break;
         case 'debug':
           toggleDebug();
           break;
@@ -331,7 +326,6 @@ export const useSceneKeys = ({
       setTool,
       toggleSnap,
       toggleGuides,
-      toggleLattice,
       toggleDebug,
       onUndo,
       onRedo,

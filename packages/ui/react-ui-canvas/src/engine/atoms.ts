@@ -116,8 +116,6 @@ export type CanvasAtoms = {
   snap: Atom.Writable<boolean>;
   /** Guides shown: on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
-  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
-  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** The last cut or copied fragment (`clipboard.ts`). */
@@ -154,7 +152,6 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   linkType: Atom.keepAlive(Atom.make<LinkType>('smart')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),
-  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),

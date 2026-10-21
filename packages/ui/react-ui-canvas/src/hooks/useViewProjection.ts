@@ -51,11 +51,11 @@ export const useViewProjection = ({
           registry,
           store,
           sceneId,
-          // Snap lands on the lattice only while both snap and the lattice toggle are on.
-          constrained: () => registry.get(atoms.snap) && registry.get(atoms.lattice),
+          // On a lattice scene, snap lands on the lattice's cells.
+          constrained: () => registry.get(atoms.snap),
         }),
         history,
       ),
-    [projection, createProjection, registry, store, sceneId, history, atoms.snap, atoms.lattice],
+    [projection, createProjection, registry, store, sceneId, history, atoms.snap],
   );
 };

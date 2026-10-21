@@ -229,7 +229,6 @@ export type ToolsCommands = {
   setTool: (tool: Tool) => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
-  toggleLattice: () => void;
   toggleDebug: () => void;
 };
 
@@ -473,7 +472,6 @@ export const createCanvasController = ({
     },
     toggleSnap: toggle(atoms.snap),
     toggleGuides: toggle(atoms.guides),
-    toggleLattice: toggle(atoms.lattice),
     toggleDebug: toggle(atoms.debug),
   };
 
