@@ -201,6 +201,11 @@ export const useFollow = ({
   // the tail, by any means, opts back in.
   const lastOffset = useRef(0);
   const gestureAt = useRef(0);
+  /** A backwards move since the last offset seen, within a gesture: the reader leaving. */
+  const readerLeft = useCallback(
+    (current: number) => current < lastOffset.current - 1 && performance.now() - gestureAt.current < GESTURE_WINDOW,
+    [],
+  );
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || !enabled) {
@@ -215,7 +220,7 @@ export const useFollow = ({
       const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
       const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
       const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
-      const back = current < lastOffset.current - 1;
+      const left = readerLeft(current);
       lastOffset.current = current;
       const end = total - current - viewport <= STICKY_THRESHOLD;
       // Same threshold as the intent, one listener: React bails out on an unchanged value, so a
@@ -223,7 +228,7 @@ export const useFollow = ({
       setAtEnd(end);
       if (end) {
         setFollowing(true);
-      } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
+      } else if (left) {
         setFollowing(false);
         follower?.cancel();
       }
@@ -243,7 +248,7 @@ export const useFollow = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing]);
+  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing, readerLeft]);
 
   // The correction. Following is a navigation, not a correction in the §7 sense: the content the
   // reader is pinned to has moved, so the scroll has to as well.
@@ -270,6 +275,14 @@ export const useFollow = ({
 
     const target = endTarget();
     const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+    // The reader's scroll event is dispatched at the next frame, and content arriving before then
+    // commits first: correcting now would drag them back to the tail they are leaving.
+    if (readerLeft(current)) {
+      setFollowing(false);
+      follower?.cancel();
+      return;
+    }
+
     const gap = target - current;
     if (Math.abs(gap) <= 1) {
       return;
