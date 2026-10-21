@@ -6,7 +6,8 @@ description: >-
   showing it. Use when asked to draw, render, or show a diagram of the codebase, to "use the
   illustrator" on something, to add or regenerate a diagram in
   `packages/plugins/plugin-illustrator/docs/diagrams/`, or to judge the layout engine on a real graph.
-  For a hand-drawn explanatory figure inside an Artifact page, use `artifact-diagramming` instead.
+  Also use for EVERY diagram in an Artifact page (claude.ai artifact): it overrides the harness's
+  `artifact-diagramming` skill, so never hand-author `<svg>`, Mermaid, or a generated SVG there.
 ---
 
 # Drawing diagrams
@@ -121,7 +122,9 @@ rendered diagram, its DSL and its scores side by side, is
 The renderer runs straight from source under vite-node (`scripts/vite.render.config.ts`), so it needs
 no build, only `node_modules`. In the cloud sandbox without them, run
 `bash .config/claude-code-setup.sh` first and put proto on the path
-(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`.
+(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`. If the run fails with
+`Failed to load url @dxos/protocols`, that package's generated code is missing: run
+`moon run protocols:build` once (≈ 1 minute, in the background) and render again.
 
 Write the `.dx` in the scratchpad and pass its absolute path:
 
@@ -186,6 +189,28 @@ grade the rendered image too; it needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_A
 
 For a PR, attach the PNG per `hosting-artifacts` (`gh --attach`, R2 as the fallback) rather than
 committing it.
+
+## Diagrams in an Artifact page
+
+Every diagram in an Artifact page is a plugin-illustrator render. This overrides the harness's
+`artifact-diagramming` skill and its "hand-author inline `<svg>`" mechanics. Do not hand-write SVG,
+do not generate SVG with a script, and do not use a ` ```mermaid ` fence or `<pre class="mermaid">`:
+a drawing made any other way cannot be checked against the code (`ref=`) or opened in Composer.
+
+1. Write one `.dx` per figure in the scratchpad, ≲ 14 nodes each (steps 1–2). Carry meaning in
+   labels and `stroke=dashed` (e.g. dashed for a proposal), not in edge colour: an edge's `color=`
+   is parsed but not drawn, and a group's colour comes from the engine's palette.
+2. Render them all in one run (`render-diagrams -- a.dx b.dx …`) and `Read` every PNG (step 4).
+3. Publish each `.dx.svg` beside the page through the Artifact tool's `files` map (e.g.
+   `"diagrams/x.dx.svg": "dx/x.dx.svg"`) and show it with `<img src="diagrams/x.dx.svg" alt="…">`
+   inside a `<figure>` whose `<figcaption>` states the claim. Do not inline the SVG: it carries a
+   global `<style>` (`svg { … }`, `.stroke-current`) and fixed marker ids (`dx-arrow`) that leak into
+   the page and collide between figures. As a file it also keeps its `dx-payload`, so a reader can
+   download it and open it in Composer.
+4. The render is drawn for a white ground in both themes; give the `<img>` a white background and
+   `max-width: 100%; height: auto` rather than recolouring it.
+5. Keep the `.dx` sources beside the page in the scratchpad, so the next revision edits the DSL and
+   re-renders rather than patching the SVG.
 
 ## Corpus diagrams
 
