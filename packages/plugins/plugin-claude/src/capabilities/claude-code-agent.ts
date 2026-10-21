@@ -27,7 +27,7 @@ export default Capability.makeModule(
       }),
     });
     return [
-      Capability.contribute(AssistantCapabilities.Agent, agent),
+      Capability.contribute(AssistantCapabilities.Agent, { ...agent, ownModel: true }),
       Capability.contribute(AssistantCapabilities.AgentProcess, ClaudeCodeProcess.make(options)),
     ];
   }),
