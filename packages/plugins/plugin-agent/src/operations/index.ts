@@ -25,6 +25,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CustomizeSkill.pipe(Operation.lazyHandler(() => import('./customize-skill.ts'))),
   AgentOperation.ResetSkill.pipe(Operation.lazyHandler(() => import('./reset-skill.ts'))),
   AgentOperation.EnsureParticipantChat.pipe(Operation.lazyHandler(() => import('./ensure-participant-chat.ts'))),
+  AgentOperation.OpenSession.pipe(Operation.lazyHandler(() => import('./open-session.ts'))),
   AgentOperation.OpenPrivateChat.pipe(Operation.lazyHandler(() => import('./open-private-chat.ts'))),
   AgentOperation.InviteAgent.pipe(Operation.lazyHandler(() => import('./invite-agent.ts'))),
   AgentOperation.ReadSource.pipe(Operation.lazyHandler(() => import('./read-source.ts'))),

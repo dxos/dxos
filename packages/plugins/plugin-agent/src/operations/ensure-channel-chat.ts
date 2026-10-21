@@ -108,7 +108,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
  * The skills the channel's backend declares on its config type ({@link Skill.SkillsAnnotation}): how the agent
  * answers there (posting, reacting, mailing) is the backend's to provide, so the agent core names no channel.
  */
-const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
+export const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
   const config = yield* Database.load(channel.backend.config).pipe(Effect.orElseSucceed(() => undefined));
   return config ? Skill.annotatedSkillRefs(config) : [];
 });

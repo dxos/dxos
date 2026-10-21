@@ -101,6 +101,15 @@ export const DIRECT_SOURCE = 'org.dxos.agent/direct';
 /** Second foreign key of a direct conversation's chat on a mirrored channel; see {@link DIRECT_SOURCE}. */
 export const directKey = (channelId: string) => ({ source: DIRECT_SOURCE, id: channelId });
 
+/**
+ * `Obj.Meta` key source of a session chat (`AgentOperation.OpenSession`): a conversation outside any channel, keyed so
+ * it is never taken for the agent's primary chat. The id is the session's feed id, unique per session.
+ */
+export const SESSION_SOURCE = 'org.dxos.agent/session';
+
+/** Foreign key of a session chat; see {@link SESSION_SOURCE}. */
+export const sessionKey = (feedId: string) => ({ source: SESSION_SOURCE, id: feedId });
+
 /** The channel (and thread) a chat mirrors, read back from its {@link chatKey}. */
 export const conversationOf = (chat: Chat.Chat): { channelId: string; thread?: string } | undefined => {
   const id = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_SOURCE)?.id;
