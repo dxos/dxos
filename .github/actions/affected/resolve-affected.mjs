@@ -16,7 +16,7 @@ import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 
 const USAGE = `Resolve the moon affected scope for a CI trigger.
 
-Usage: node .depot/actions/affected/resolve-affected.mjs [options]
+Usage: node .github/actions/affected/resolve-affected.mjs [options]
 
   --event <name>  Resolve as if this trigger fired. Default: $GITHUB_EVENT_NAME, else a local run.
   --base <ref>    Compare against this revision instead of the trigger's own base.

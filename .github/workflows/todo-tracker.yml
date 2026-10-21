@@ -25,10 +25,7 @@ jobs:
     # Skip for fork PRs (head.repo != base repo) — TODO linking requires GITHUB_TOKEN write access.
     # workflow_dispatch has no pull_request context so allow it through unconditionally.
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
-    # The `ci-image.yml` snapshot: toolchains and browsers already in place.
-    runs-on:
-      size: 8x32
-      image: &ci-image t8fblrl00n.registry.depot.dev/dxos-ci:latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -42,7 +39,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Track TODOs
         run: node scripts/find-todos.mjs --github

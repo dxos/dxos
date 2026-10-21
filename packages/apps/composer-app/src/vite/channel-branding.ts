@@ -49,7 +49,7 @@ const CONTENT_TYPES: Record<string, string> = {
 
 /**
  * Environments whose bundle is the released app: production itself, and CI's e2e bundle, which is
- * built under `DX_ENVIRONMENT=ci` (a moon hash input, see `.depot/workflows/check.yml`) and never
+ * built under `DX_ENVIRONMENT=ci` (a moon hash input, see `.github/workflows/check.yml`) and never
  * deployed.
  */
 const UNBRANDED_ENVIRONMENTS = new Set(['production', 'ci']);
