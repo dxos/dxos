@@ -187,6 +187,50 @@ describe('UrlLoader', () => {
     );
   });
 
+  describe('pluginFromModule', () => {
+    const context = { locator: 'https://example.com/manifest.json', entryUrl: 'https://example.com/index.mjs' };
+
+    const expectReason = (mod: unknown, reason: string) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(UrlLoader.pluginFromModule(mod, context));
+        assert.instanceOf(error, UrlLoader.RemotePluginLoadError);
+        assert.strictEqual(error.context.reason, reason);
+        assert.strictEqual(error.context.locator, context.locator);
+        assert.strictEqual(error.context.entryUrl, context.entryUrl);
+      });
+
+    it.effect('fails with a typed error when the import resolves to undefined', () =>
+      expectReason(undefined, 'missing-default'),
+    );
+
+    it.effect('fails with a typed error when the module has only named exports', () =>
+      expectReason({ TestPlugin: Plugin.make(Plugin.define(testMeta)) }, 'missing-default'),
+    );
+
+    it.effect('fails when the default export is not a plugin', () => expectReason({ default: 42 }, 'invalid-plugin'));
+
+    it.effect('fails with a typed error when the factory throws', () =>
+      expectReason(
+        {
+          default: () => {
+            throw new Error('boom');
+          },
+        },
+        'factory-failed',
+      ),
+    );
+
+    it.effect('accepts a plugin or a zero-arg plugin factory as the default export', () =>
+      Effect.gen(function* () {
+        const plugin = Plugin.make(Plugin.define(testMeta))();
+        const direct = yield* UrlLoader.pluginFromModule({ default: plugin }, context);
+        assert.strictEqual(direct, plugin);
+        const fromFactory = yield* UrlLoader.pluginFromModule({ default: () => plugin }, context);
+        assert.strictEqual(fromFactory, plugin);
+      }),
+    );
+  });
+
   describe('preload', () => {
     it('returns empty array when storage has no entries', async ({ expect }) => {
       const storage: UrlLoader.Storage = {

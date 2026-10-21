@@ -17,8 +17,9 @@ const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
 /**
  * Tagged error for any failure during remote plugin loading. Construction sites
  * set `context.locator` and `context.reason` (one of `'invalid-locator' |
- * 'manifest-error' | 'cache-error' | 'import-failed' | 'meta-missing' |
- * 'meta-mismatch' | 'duplicate-id'`) so handlers can route on the failure mode.
+ * 'manifest-error' | 'cache-error' | 'import-failed' | 'missing-default' |
+ * 'factory-failed' | 'invalid-plugin' | 'meta-missing' | 'meta-mismatch' |
+ * 'duplicate-id'`) so handlers can route on the failure mode.
  */
 export class RemotePluginLoadError extends BaseError.extend('RemotePluginLoadError', 'Failed to load remote plugin') {}
 
@@ -186,19 +187,38 @@ export const getInstalledVersion = (id: string, options: Options = {}): string |
   return getPersistedRemotePlugins(storage, key).find((entry) => entry.id === id)?.version;
 };
 
-const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
-  const exported = mod.default;
-  if (Plugin.isPlugin(exported)) {
-    return exported;
-  }
-  if (typeof exported === 'function') {
-    const result = (exported as () => unknown)();
-    if (Plugin.isPlugin(result)) {
-      return result;
+/**
+ * Extracts the plugin from a remote entry module: its default export, or the result of calling it as a
+ * zero-arg factory. The module is `unknown` because `import()` can resolve to `undefined` — Vite's preload
+ * helper does so when a `vite:preloadError` listener cancels the event.
+ */
+export const pluginFromModule = (
+  mod: unknown,
+  context: { locator: string; entryUrl: string },
+): Effect.Effect<Plugin.Plugin, RemotePluginLoadError> =>
+  Effect.gen(function* () {
+    if (typeof mod !== 'object' || mod === null || !('default' in mod)) {
+      return yield* Effect.fail(
+        new RemotePluginLoadError({
+          context: { ...context, reason: 'missing-default', moduleType: mod === null ? 'null' : typeof mod },
+        }),
+      );
     }
-  }
-  throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
-};
+    const exported = mod.default;
+    if (Plugin.isPlugin(exported)) {
+      return exported;
+    }
+    if (typeof exported === 'function') {
+      const result = yield* Effect.try({
+        try: () => exported(),
+        catch: (cause) => new RemotePluginLoadError({ context: { ...context, reason: 'factory-failed' }, cause }),
+      });
+      if (Plugin.isPlugin(result)) {
+        return result;
+      }
+    }
+    return yield* Effect.fail(new RemotePluginLoadError({ context: { ...context, reason: 'invalid-plugin' } }));
+  });
 
 /**
  * Loads stylesheets declared in the manifest by appending `<link rel="stylesheet">` elements to the host document.
@@ -259,9 +279,9 @@ const loadFromManifest = (
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
       catch: (cause) =>
-        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
+        new RemotePluginLoadError({ context: { locator: manifestUrl, entryUrl, reason: 'import-failed' }, cause }),
     });
-    const plugin = normalizePluginExport(mod);
+    const plugin = yield* pluginFromModule(mod, { locator: manifestUrl, entryUrl });
     if (!plugin.meta.profile.key || !plugin.meta.profile.name) {
       return yield* Effect.fail(
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'meta-missing' } }),
