@@ -4,8 +4,10 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,7 +19,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, EID, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, type Error as EchoError, EID, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -409,7 +411,7 @@ export const syncAll = <A, E, R>({
     // working set still loads; only a ref with no resolver at all cannot. A connection created just
     // before the sync fired may not have replicated yet, so the load waits for it.
     const connection = connectionRef.isAvailable
-      ? yield* Operation.loadReplicated(connectionRef).pipe(
+      ? yield* loadReplicated(connectionRef).pipe(
           Effect.orElseSucceed((): Connection.Connection | undefined => undefined),
         )
       : undefined;
@@ -499,6 +501,43 @@ export const syncAll = <A, E, R>({
     };
   });
 
+/** In-run retries before {@link loadReplicated} hands a missing object to a continuation (about 7.5 s). */
+const REPLICATION_RETRIES = Schedule.exponential(Duration.millis(500), 2).pipe(Schedule.upTo({ times: 4 }));
+
+/** How long after an object's creation a miss is still put down to replication lag. */
+const REPLICATION_MAX_AGE = Duration.minutes(5);
+
+export interface LoadReplicatedOptions extends Ref.LoadOptions {
+  /** Retries within this run before `Operation.runAgain()`. */
+  readonly retries?: Schedule.Schedule<unknown, unknown>;
+  /** Age (from the object's id) past which a miss is final. */
+  readonly maxAge?: Duration.Input;
+}
+
+/**
+ * Loads an object a sync may start before it has replicated, such as a binding the client created just
+ * before firing the sync. Retries briefly within the run, then calls `Operation.runAgain()` so a
+ * continuation tries again. Fails with `EntityNotFoundError` once the object is older than `maxAge`.
+ */
+export const loadReplicated = <T>(
+  ref: Ref.Ref<T>,
+  { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE, ...options }: LoadReplicatedOptions = {},
+): Effect.Effect<T, EchoError.EntityNotFoundError> =>
+  Database.load(ref, options).pipe(
+    Effect.retry({ schedule: retries }),
+    Effect.catchTag('EntityNotFoundError', (error) => {
+      const eid = EID.tryParse(ref.uri);
+      const entityId = eid && EID.getEntityId(eid);
+      const age = entityId ? Date.now() - Key.EntityId.getTimestamp(entityId) : Infinity;
+      if (age < Duration.toMillis(maxAge)) {
+        log.info('object not replicated yet; running again', { uri: ref.uri, age });
+        // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
+        return Operation.runAgain().pipe(Effect.orDie);
+      }
+      return Effect.fail(error);
+    }),
+  );
+
 /**
  * The binding a sync was fired for (`priority`), once it and its target have replicated: a target
  * bound and synced straight away can reach the runtime after the run starts, and the cursor query
@@ -513,11 +552,11 @@ const loadExpectedBinding = (
     if (!Key.EntityId.isValid(cursorId)) {
       return undefined;
     }
-    const cursor = yield* Operation.loadReplicated(db.makeRef(EID.make({ entityId: cursorId })));
+    const cursor = yield* loadReplicated(db.makeRef(EID.make({ entityId: cursorId })));
     if (!Obj.instanceOf(Cursor.Cursor, cursor) || !isForConnection(cursor, connection)) {
       return undefined;
     }
-    yield* Operation.loadReplicated(cursor.spec.target, { deleted: 'include' });
+    yield* loadReplicated(cursor.spec.target, { deleted: 'include' });
     return cursor;
   }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
 

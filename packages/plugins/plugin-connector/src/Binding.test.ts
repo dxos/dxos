@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -17,11 +18,12 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
+import { Database, DXN, EID, Filter, Key, Obj, Ref, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -686,6 +688,49 @@ describe('binding lifecycle', () => {
     expect(rebound.max).toBeUndefined();
     expect((await cursors()).map((cursor) => cursor.id)).toContain(rebound.id);
     expect((await cursors()).length).toBe(2);
+  });
+});
+
+describe('Binding.loadReplicated', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const retries = Schedule.spaced('20 millis').pipe(Schedule.upTo({ times: 10 }));
+
+  /** Loads `entityId`, reporting how the load ended; `arriving` is added to the database shortly after. */
+  const load = async (entityId: Key.EntityId, arriving?: Expando.Expando) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Expando.Expando]);
+    if (arriving) {
+      setTimeout(() => db.add(arriving), 50);
+    }
+    return EffectEx.runPromise(
+      Binding.loadReplicated(db.makeRef<Expando.Expando>(EID.make({ entityId })), { retries }).pipe(
+        Effect.map((object) => object.name),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('not found')),
+        Effect.catchDefect((defect) => Effect.succeed(Process.RunAgainError.is(defect) ? 'run again' : 'died')),
+      ),
+    );
+  };
+
+  test('an object that arrives during the retries loads', async ({ expect }) => {
+    const object = Obj.make(Expando.Expando, { name: 'late' });
+    expect(await load(object.id, object)).toBe('late');
+  });
+
+  test('a new object that does not arrive runs the operation again', async ({ expect }) => {
+    expect(await load(Key.EntityId.random())).toBe('run again');
+  });
+
+  test('an old object that does not arrive is not found', async ({ expect }) => {
+    expect(await load(Key.EntityId.deterministic('long gone'))).toBe('not found');
   });
 });
 

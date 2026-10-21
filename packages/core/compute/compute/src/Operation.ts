@@ -6,7 +6,6 @@
 
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
@@ -15,27 +14,15 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
-import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
-import {
-  Annotation,
-  Database,
-  DXN,
-  type Error as EchoError,
-  JsonSchema,
-  type Key,
-  Migration,
-  Obj,
-  Ref,
-  Type,
-} from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors.ts';
@@ -1244,43 +1231,6 @@ export const schedule = <I, O>(
  * defect and does not auto-continue.
  */
 export const runAgain = (): Effect.Effect<never, void> => Effect.failCauseSync(() => Cause.die(new RunAgainError()));
-
-/** In-run retries before {@link loadReplicated} hands a missing object to a continuation (about 7.5 s). */
-const REPLICATION_RETRIES = Schedule.exponential(Duration.millis(500), 2).pipe(Schedule.upTo({ times: 4 }));
-
-/** How long after an object's creation a miss is still put down to replication lag. */
-const REPLICATION_MAX_AGE = Duration.minutes(5);
-
-export interface LoadReplicatedOptions extends Ref.LoadOptions {
-  /** Retries within this run before {@link runAgain}. */
-  readonly retries?: Schedule.Schedule<unknown, unknown>;
-  /** Age (from the object's id) past which a miss is final. */
-  readonly maxAge?: Duration.Input;
-}
-
-/**
- * Loads an object that may not have replicated to this runtime yet, such as one a client created just
- * before triggering the operation. Retries briefly within the run, then calls {@link runAgain} so a
- * continuation tries again. Fails with `EntityNotFoundError` once the object is older than `maxAge`.
- */
-export const loadReplicated = <T>(
-  ref: Ref.Ref<T>,
-  { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE, ...options }: LoadReplicatedOptions = {},
-): Effect.Effect<T, EchoError.EntityNotFoundError> =>
-  Database.load(ref, options).pipe(
-    Effect.retry({ schedule: retries }),
-    Effect.catchTag('EntityNotFoundError', (error) => {
-      const eid = EID.tryParse(ref.uri);
-      const entityId = eid && EID.getEntityId(eid);
-      const age = entityId ? Date.now() - EntityId.getTimestamp(entityId) : Infinity;
-      if (age < Duration.toMillis(maxAge)) {
-        log.info('object not replicated yet; running again', { uri: ref.uri, age });
-        // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
-        return runAgain().pipe(Effect.orDie);
-      }
-      return Effect.fail(error);
-    }),
-  );
 
 /**
  * Provides additional invocation options to all invocations.

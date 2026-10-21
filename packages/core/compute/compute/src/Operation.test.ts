@@ -3,17 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
-import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Database, Obj, Type } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import * as EffectEx from '@dxos/effect/EffectEx';
-import { DXN, EID, EntityId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
-import { RunAgainError } from './errors.ts';
 import * as Operation from './Operation.ts';
 
 const KEY = DXN.make('com.example.test.op');
@@ -139,50 +133,5 @@ describe('tryToolNameFromKey', () => {
     expect(Operation.tryToolNameFromKey('org.dxos.operation.9bad.go')).toBeUndefined();
     expect(Operation.tryToolNameFromKey('')).toBeUndefined();
     expect(() => Operation.toolNameFromKey('org.dxos.operation.9bad.go')).toThrow();
-  });
-});
-
-class Item extends Type.makeObject<Item>(DXN.make('com.example.type.item', '0.1.0'))(
-  Schema.Struct({ name: Schema.String }),
-) {}
-
-describe('loadReplicated', () => {
-  const retries = Schedule.spaced('20 millis').pipe(Schedule.upTo({ times: 10 }));
-
-  /** Loads `entityId` from a test database, reporting how the load ended. */
-  const load = (entityId: EntityId, arriving?: Item) =>
-    EffectEx.runPromise(
-      Effect.gen(function* () {
-        const { db } = yield* Database.Service;
-        const ref = db.makeRef<Item>(EID.make({ entityId }));
-        const arrival = arriving
-          ? yield* Effect.sleep('50 millis').pipe(
-              Effect.andThen(Effect.sync(() => db.add(arriving))),
-              Effect.forkChild,
-            )
-          : undefined;
-        const outcome = yield* Operation.loadReplicated(ref, { retries }).pipe(
-          Effect.map((item) => item.name),
-          Effect.catchTag('EntityNotFoundError', () => Effect.succeed('not found')),
-          Effect.catchDefect((defect) => Effect.succeed(RunAgainError.is(defect) ? 'run again' : 'died')),
-        );
-        if (arrival) {
-          yield* Fiber.join(arrival);
-        }
-        return outcome;
-      }).pipe(Effect.provide(TestDatabaseLayer({ types: [Item] }))),
-    );
-
-  test('an object that arrives during the retries loads', async ({ expect }) => {
-    const item = Obj.make(Item, { name: 'late' });
-    expect(await load(item.id, item)).toBe('late');
-  });
-
-  test('a new object that does not arrive runs the operation again', async ({ expect }) => {
-    expect(await load(EntityId.random())).toBe('run again');
-  });
-
-  test('an old object that does not arrive is not found', async ({ expect }) => {
-    expect(await load(EntityId.deterministic('long gone'))).toBe('not found');
   });
 });
