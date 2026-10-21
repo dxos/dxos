@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as AiContext from '@dxos/assistant/AiContext';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -19,14 +19,14 @@ const aiContextRuntime = () => import('@dxos/assistant/AiContext');
  * The agent's chats — its primary chat and the Discord thread chats bridged to it.
  * A child-of filter rather than `.children()`, which EDGE's query planner cannot run.
  */
-export const loadChats = (agent: Agent.Agent): Effect.Effect<Chat.Chat[], never, Database.Service> =>
-  Database.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run.pipe(
-    Effect.map((chats): Chat.Chat[] => chats.filter((chat) => Obj.instanceOf(Chat.Chat, chat))),
+export const loadChats = (agent: Agent.Agent): Effect.Effect<Session.Session[], never, Database.Service> =>
+  Database.query(Filter.and(Filter.type(Session.Session), Filter.childOf(agent))).run.pipe(
+    Effect.map((chats): Session.Session[] => chats.filter((chat) => Obj.instanceOf(Session.Session, chat))),
     Effect.orDie,
   );
 
 /** Opens the context binder on a chat's feed for the enclosing scope. */
-export const openBinder = Effect.fnUntraced(function* (chat: Chat.Chat) {
+export const openBinder = Effect.fnUntraced(function* (chat: Session.Session) {
   const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
   const runtime = yield* Effect.context<Database.Service>();
   const { Binder } = yield* Effect.promise(aiContextRuntime);

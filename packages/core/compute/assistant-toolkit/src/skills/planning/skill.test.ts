@@ -10,7 +10,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ const TestLayer = AssistantTestLayer({
     Outline.Outline,
     Task.Task,
     Text.Text,
-    Chat.Chat,
+    Session.Session,
     Skill.Skill,
     Feed.Feed,
     Message.Message,
@@ -72,9 +72,9 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(true);
 
         // The reminder is only worth firing if it actually drives the plan to completion.
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(TASKS);
-        expect(tasks.filter(Chat.isOpenTask)).toEqual([]);
+        expect(tasks.filter(Session.isOpenTask)).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -99,8 +99,8 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(false);
 
-        const tasks = yield* Chat.loadTasks(chat);
-        expect(tasks.filter(Chat.isOpenTask).map((task) => task.title)).toEqual(TASKS.slice(1));
+        const tasks = yield* Session.loadTasks(chat);
+        expect(tasks.filter(Session.isOpenTask).map((task) => task.title)).toEqual(TASKS.slice(1));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -118,10 +118,10 @@ const setupChatWithChecklist = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   // The checklist goes on the session's own chat — the one the harness resolves for the
   // conversation. A second chat on the same feed would be invisible to the planning tools.
-  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
+  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Session.Session);
   const { db } = yield* Database.Service;
   for (const title of TASKS) {
-    Chat.addTask(db, chat, title, { status: 'todo' });
+    Session.addTask(db, chat, title, { status: 'todo' });
   }
   yield* Database.flush();
   yield* agent.addContext([Ref.make(chat)]);

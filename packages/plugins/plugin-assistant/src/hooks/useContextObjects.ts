@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { type Database, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 
@@ -30,9 +30,12 @@ export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseC
   const boundObjects = useAtomValue(context?.objects ?? emptyObjectsAtom);
   // The session's own chat is bound into its context so the agent harness can resolve it
   // (`get-context` requires a bound chat to read the plan when no agent is present); it is not a
-  // user-added reference, so exclude it from the UI. Mirrors the `!Obj.instanceOf(Chat.Chat, …)`
+  // user-added reference, so exclude it from the UI. Mirrors the `!Obj.instanceOf(Session.Session, …)`
   // filter applied when copying context objects in `assistant-toolkit` `Agent`.
-  const objects = useMemo(() => boundObjects.filter((object) => !Obj.instanceOf(Chat.Chat, object)), [boundObjects]);
+  const objects = useMemo(
+    () => boundObjects.filter((object) => !Obj.instanceOf(Session.Session, object)),
+    [boundObjects],
+  );
 
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
     async (dxn: URI.URI, checked: boolean) => {

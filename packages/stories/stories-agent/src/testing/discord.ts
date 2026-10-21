@@ -4,7 +4,7 @@
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
@@ -125,8 +125,8 @@ const ensureAgent = async (db: Database.Database, invoker: Capabilities.Operatio
     (await createAgent(db, invoker));
 
   // Applied to a reused agent too: its chat may have been created for the other mode. An agent's chat runs on EDGE unless told otherwise.
-  const [chat] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
-  if (chat && Obj.instanceOf(Chat.Chat, chat) && chat.remote !== remote) {
+  const [chat] = await db.query(Filter.and(Filter.type(Session.Session), Filter.childOf(agent))).run();
+  if (chat && Obj.instanceOf(Session.Session, chat) && chat.remote !== remote) {
     Obj.update(chat, (chat) => {
       chat.remote = remote;
     });
@@ -139,8 +139,8 @@ const ensureAgent = async (db: Database.Database, invoker: Capabilities.Operatio
  * conversation it creates, so each Discord thread starts with the community-support skill bound.
  */
 const enableSupport = async (db: Database.Database, invoker: Capabilities.OperationInvoker, agent: Agent.Agent) => {
-  const [chat] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
-  if (!chat || !Obj.instanceOf(Chat.Chat, chat)) {
+  const [chat] = await db.query(Filter.and(Filter.type(Session.Session), Filter.childOf(agent))).run();
+  if (!chat || !Obj.instanceOf(Session.Session, chat)) {
     return;
   }
   const { error } = await invoker.invokePromise(

@@ -9,7 +9,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj, type Registry } from '@dxos/echo';
@@ -50,7 +50,7 @@ export type ChatPromptProps = Merge<
     settings?: boolean;
     expandable?: boolean;
     db?: Database.Database;
-    chat?: Chat.Chat;
+    chat?: Session.Session;
     /** Undefined while the chat model is still opening: the prompt takes text but holds it until then. */
     chatModel?: ChatModel;
     /**
@@ -180,7 +180,7 @@ export const ChatPrompt = ({
   );
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
-  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the chat model's
+  // queued behind the running turn rather than dropped (`Session.Root` sends it through the chat model's
   // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -240,41 +240,40 @@ export const ChatPrompt = ({
         />
       </Layout.Flex>
 
-      {db &&
-        settings && (
-          // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
-          <ChatActions
-            classNames='p-1.5'
-            attendableId={attendableId}
-            customActions={customActions}
-            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
-            // and the reader still needs a way to stop it.
-            processing={active}
-            canSend={canSend}
-            tasksVisible={tasksVisible}
-            onSend={handleSend}
-            onEvent={handleEvent}
-            leading={
-              <>
-                <ChatOptions
-                  db={db}
-                  chat={chat}
-                  registry={registry}
-                  context={context}
-                  started={started}
-                  preset={preset}
-                  presets={presets}
-                  onPresetChange={onPresetChange}
-                />
-                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
-                  {context && <ChatReferences db={db} context={context} />}
-                </Layout.Flex>
-              </>
-            }
-          />
-        )}
+      {db && settings && (
+        // One toolbar for the row: the options and context chips lead, the chips' track takes the slack, the actions end it.
+        <ChatActions
+          classNames='p-1.5'
+          attendableId={attendableId}
+          customActions={customActions}
+          // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+          // and the reader still needs a way to stop it.
+          processing={active}
+          canSend={canSend}
+          tasksVisible={tasksVisible}
+          onSend={handleSend}
+          onEvent={handleEvent}
+          leading={
+            <>
+              <ChatOptions
+                db={db}
+                chat={chat}
+                registry={registry}
+                context={context}
+                started={started}
+                preset={preset}
+                presets={presets}
+                onPresetChange={onPresetChange}
+              />
+              <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
+                {context && <ChatReferences db={db} context={context} />}
+              </Layout.Flex>
+            </>
+          }
+        />
+      )}
     </Layout.Flex>
   );
 };
 
-ChatPrompt.displayName = 'Chat.Prompt';
+ChatPrompt.displayName = 'Session.Prompt';

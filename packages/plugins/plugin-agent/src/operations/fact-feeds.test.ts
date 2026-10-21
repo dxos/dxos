@@ -9,7 +9,7 @@ import { afterEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -25,7 +25,7 @@ const EDGE_URL = 'https://edge.test';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
-  types: [Agent.Agent, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions, Mode.Mode],
+  types: [Agent.Agent, Session.Session, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions, Mode.Mode],
   disableLlmMemoization: true,
   extraServices: Layer.succeed(EdgeHttpClientService, new EdgeHttpClient(EDGE_URL)),
 });

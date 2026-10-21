@@ -5,7 +5,7 @@
 import { Model } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
@@ -123,7 +123,7 @@ export type SetupPlaygroundProps = {
   /** Receives the refs once the objects exist. */
   refs?: PlaygroundRefs;
   /**
-   * Runs every chat on EDGE (`Chat.remote`): turns, tools and the end-of-turn hook execute there and the
+   * Runs every chat on EDGE (`Session.remote`): turns, tools and the end-of-turn hook execute there and the
    * agent's brain is EDGE's, so a relay wakes the recipient's chat even with the story closed.
    */
   remote?: boolean;
@@ -152,8 +152,8 @@ export const setupPlayground = async ({ db, invoker, model, read, refs, remote }
   const { people, team, document } = await seedPlayground(db);
   const { agent: agentRef } = await invoke(invoker, db, AgentOperation.CreateAgent, { name: AGENT_NAME });
   const agent = await agentRef.load();
-  const [primary] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
-  if (!(primary && Obj.instanceOf(Chat.Chat, primary))) {
+  const [primary] = await db.query(Filter.and(Filter.type(Session.Session), Filter.childOf(agent))).run();
+  if (!(primary && Obj.instanceOf(Session.Session, primary))) {
     throw new Error('The agent has no chat.');
   }
   if (model) {

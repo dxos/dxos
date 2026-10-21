@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
@@ -118,7 +118,7 @@ export const findMode = (modes: readonly Mode.Mode[], name: string): Mode.Mode |
  * Puts the chat in `mode`: unbinds the skills of every other mode (never the base skills), binds the
  * mode's skills (the agent's customized copies where they exist), and records the mode on the chat.
  */
-export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, name: string) {
+export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Session.Session, name: string) {
   const modes = yield* ensureModes(agent);
   const mode = findMode(modes, name);
   if (!mode) {

@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -249,7 +249,7 @@ const entityIdOf = (uri: string): string | undefined => {
 };
 
 type ConversationTileProps = {
-  chat: Chat.Chat;
+  chat: Session.Session;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
 };
@@ -295,7 +295,7 @@ const useAgentSkills = (agent: Agent.Agent) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const spaceId = db?.spaceId;
-  const chats = useQuery(db, Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)));
+  const chats = useQuery(db, Filter.and(Filter.type(Session.Session), Filter.childOf(agent)));
   const primary = useMemo(() => selectPrimaryChat(chats), [chats]);
   const bindings = useBindingCount(primary);
   const [skills, setSkills] = useState<ListedSkill[]>([]);

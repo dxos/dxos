@@ -3,7 +3,7 @@
 //
 
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -258,7 +258,7 @@ export const seedBusySpace = async ({
     }),
     ...scale.chatHistories.map((count, chatIndex) => {
       const feed = db.add(Feed.make({}));
-      db.add(Chat.make({ name: `Earlier chat ${chatIndex + 1}`, feed: Ref.make(feed) }));
+      db.add(Session.make({ name: `Earlier chat ${chatIndex + 1}`, feed: Ref.make(feed) }));
       return appendInBlocks(
         db,
         feed,

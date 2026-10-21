@@ -12,7 +12,7 @@ import { SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Alarm } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as AssistantSession from '@dxos/assistant/Session';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -837,7 +837,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     ({ title, ...props }: Task.Draft) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.addTask(db, chat, title, props);
+        AssistantSession.addTask(db, chat, title, props);
       }
     },
     [chat],
@@ -849,7 +849,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     (task: Task.Task) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.deleteTask(db, chat, tasks, task);
+        AssistantSession.deleteTask(db, chat, tasks, task);
       }
     },
     [chat, tasks],

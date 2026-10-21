@@ -14,7 +14,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiModelNotAvailableError } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -25,7 +25,7 @@ import { Message } from '@dxos/types';
 import { AiUsageQuotaError, ChatModel, parseError } from './chat-model.ts';
 import { type ThreadProjection } from './thread.ts';
 
-const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed, Message.Message] });
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Session.Session, Feed.Feed, Message.Message] });
 
 describe('ChatModel', () => {
   it.effect(

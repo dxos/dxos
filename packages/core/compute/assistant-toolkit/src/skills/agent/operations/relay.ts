@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
@@ -65,7 +65,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 );
 
 /** Cheap-model relevance check, ported from the retired Qualifier's prompt (chat-centric per phase B). */
-const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
+const qualifyEvent = (chat: Session.Session, event: unknown) =>
   Effect.gen(function* () {
     const agent = yield* Agent.loadForChat(chat);
     const instructions = chat.instructions
@@ -77,7 +77,7 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
         )
       : '';
-    const checklistText = yield* Chat.formatChecklist(chat);
+    const checklistText = yield* Session.formatChecklist(chat);
 
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({

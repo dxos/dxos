@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { Annotation, Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
@@ -102,7 +102,7 @@ export const DIRECT_SOURCE = 'org.dxos.agent/direct';
 export const directKey = (channelId: string) => ({ source: DIRECT_SOURCE, id: channelId });
 
 /** The channel (and thread) a chat mirrors, read back from its {@link chatKey}. */
-export const conversationOf = (chat: Chat.Chat): { channelId: string; thread?: string } | undefined => {
+export const conversationOf = (chat: Session.Session): { channelId: string; thread?: string } | undefined => {
   const id = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_SOURCE)?.id;
   if (id === undefined) {
     return undefined;

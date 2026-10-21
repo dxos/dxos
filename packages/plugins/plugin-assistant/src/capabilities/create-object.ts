@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -24,7 +24,7 @@ export default Capability.makeModule(
     // typing — `createObject`'s parameters come from `CreateObjectEntry`.
     const entries: (SpaceCapabilities.CreateObjectEntry | false)[] = [
       {
-        id: Type.getTypename(Chat.Chat),
+        id: Type.getTypename(Session.Session),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const { object } = yield* Operation.invoke(

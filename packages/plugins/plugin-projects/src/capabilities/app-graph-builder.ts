@@ -15,7 +15,7 @@ import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
@@ -220,7 +220,7 @@ export const createProjectChatsChildrenExtension = () =>
       );
       return Effect.succeed(
         children
-          .filter(Obj.instanceOf(Chat.Chat))
+          .filter(Obj.instanceOf(Session.Session))
           .map((chat) => AppNode.makeObject({ get, db, object: chat, navigable: true }))
           // `makeObject` yields null for an object it cannot resolve a node for.
           .filter((node): node is NonNullable<typeof node> => node !== null),
@@ -282,7 +282,7 @@ export const createProjectActionExtension = () =>
               const spaceId = db.spaceId;
               const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
               // Parent edge before the add: it files the chat under the project, not the space root.
-              Chat.linkCompanion({ chat, subject: project });
+              Session.linkCompanion({ chat, subject: project });
               yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
               yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),

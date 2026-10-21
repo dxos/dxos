@@ -10,7 +10,7 @@ import { Provider, SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -54,7 +54,7 @@ const styles = {
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
-  chat?: Chat.Chat;
+  chat?: Session.Session;
   context?: AiContext.Binder;
   registry?: Registry.Registry;
   /** Whether the conversation has begun; its agent is fixed from then on. */
@@ -163,7 +163,7 @@ export const ChatOptions = ({
 };
 
 /** The chat's agent and the picker's rows, live with each agent's availability. */
-const useChatAgent = (chat: Chat.Chat | undefined) => {
+const useChatAgent = (chat: Session.Session | undefined) => {
   const agents = Hooks.useOptionalCapabilities(AssistantCapabilities.Agent);
   const availabilityAtom = useMemo(() => Atom.make((get) => agents.map((agent) => get(agent.availability))), [agents]);
   const availability = useAtomValue(availabilityAtom);

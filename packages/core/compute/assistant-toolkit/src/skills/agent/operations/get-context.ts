@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Harness, HarnessContextError } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -36,7 +36,7 @@ export default GetContext.pipe(
           id: chat.id,
           name: chat.name ?? '',
           instructions: 'No agent context.',
-          checklist: yield* Chat.formatChecklist(chat),
+          checklist: yield* Session.formatChecklist(chat),
         };
       }
 
@@ -49,7 +49,7 @@ export default GetContext.pipe(
           Effect.map((_) => _.text),
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
-        checklist: yield* chat ? Chat.formatChecklist(chat) : Effect.succeed('No checklist found.'),
+        checklist: yield* chat ? Session.formatChecklist(chat) : Effect.succeed('No checklist found.'),
       };
     }) as any,
   ),

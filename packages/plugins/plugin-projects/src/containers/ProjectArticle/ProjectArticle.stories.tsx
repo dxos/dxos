@@ -12,7 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -453,7 +453,7 @@ export const TaskAction: Story = {
     // The chat is named for the task and carries it in its checklist.
     await waitFor(
       async () => {
-        const chats = await space.db.query(Filter.type(Chat.Chat)).run();
+        const chats = await space.db.query(Filter.type(Session.Session)).run();
         const chat = chats.find((chat) => chat.name === TASK_TITLE);
         if (!chat) {
           throw new Error('Chat not found.');
@@ -603,7 +603,7 @@ export const DelegateCheckedTasks: Story = {
     // One chat holding both, in the order the list shows them — not the order they were ticked.
     await waitFor(
       async () => {
-        const chats = await space.db.query(Filter.type(Chat.Chat)).run();
+        const chats = await space.db.query(Filter.type(Session.Session)).run();
         const chat = chats.find((chat) => chat.tasks.length === 2);
         if (!chat) {
           throw new Error('Chat not found.');

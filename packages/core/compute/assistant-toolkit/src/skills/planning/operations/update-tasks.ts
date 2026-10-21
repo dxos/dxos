@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Harness } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { type TaskChange, UpdateTasks } from './definitions.ts';
  * `subject` ref is what tells a self-assignment apart from a delegation (`{ role: 'assistant' }`
  * with no subject), which the supervisor would otherwise treat as a sub-agent task.
  */
-export const selfActor = (chat: Chat.Chat): Effect.Effect<Actor.Actor> =>
+export const selfActor = (chat: Session.Session): Effect.Effect<Actor.Actor> =>
   Effect.map(Agent.loadForChat(chat), (agent) => ({ role: 'assistant', subject: Ref.make(agent ?? chat) }));
 
 /** Why a change cannot be applied as written, or undefined when its fields combine. */
@@ -90,7 +90,7 @@ export default UpdateTasks.pipe(
             ${errors.join('\n')}
 
             <checklist>
-            ${yield* Chat.formatChecklist(chat)}
+            ${yield* Session.formatChecklist(chat)}
             </checklist>
           `),
         );
@@ -100,7 +100,7 @@ export default UpdateTasks.pipe(
         const { title, status, assign, unassign } = change;
         if (!task) {
           // A task the conversation creates is its own work, so it starts out assigned.
-          const created = Chat.addTask(db, chat, title ?? '', { status: status ?? 'todo', assignee: self });
+          const created = Session.addTask(db, chat, title ?? '', { status: status ?? 'todo', assignee: self });
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: created.id,
             title: created.title,
@@ -119,9 +119,9 @@ export default UpdateTasks.pipe(
           ...(assigning ? { assignee: self } : unassign ? { assignee: null } : {}),
         });
         if (assigning) {
-          Chat.assignTasks(chat, [Ref.make(task)]);
+          Session.assignTasks(chat, [Ref.make(task)]);
         } else if (unassign) {
-          Chat.unassignTasks(chat, [Ref.make(task)]);
+          Session.unassignTasks(chat, [Ref.make(task)]);
         }
 
         // The resolved status, not the requested one: a reviewed task lands in `review`.
@@ -140,7 +140,7 @@ export default UpdateTasks.pipe(
         You must update a task to 'done' when complete, and keep exactly one task in progress.
 
         <checklist>
-        ${yield* Chat.formatChecklist(chat)}
+        ${yield* Session.formatChecklist(chat)}
         </checklist>
       `;
     }),

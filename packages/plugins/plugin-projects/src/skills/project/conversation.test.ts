@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -43,7 +43,7 @@ const entityId = (uri: string): string => {
 const TYPES = [
   Project.Project,
   Instructions.Instructions,
-  Chat.Chat,
+  Session.Session,
   AiContext.Binding,
   Feed.Feed,
   Message.Message,
@@ -62,13 +62,13 @@ const seedProjectChat = Effect.fnUntraced(function* () {
 
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
-    Chat.make({
+    Session.make({
       name: `${PROJECT_NAME} chat`,
       feed: Ref.make(feed),
       instructions: Ref.make(instructions),
     }),
   );
-  Chat.linkCompanion({ chat, subject: project });
+  Session.linkCompanion({ chat, subject: project });
   Obj.setParent(feed, chat);
 
   const skill = yield* Database.add(ProjectSkill.make());

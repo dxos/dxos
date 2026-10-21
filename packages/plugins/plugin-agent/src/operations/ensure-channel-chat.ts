@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -37,7 +37,7 @@ export const loadAgentBindings = Effect.fnUntraced(function* (agent: Agent.Agent
     skills: binder.getSkills().map(Skill.makeRef),
     objects: binder
       .getObjects()
-      .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+      .filter((object) => !Obj.instanceOf(Session.Session, object))
       .map((object) => Ref.make(object)),
   } satisfies ContextBindings;
 });
@@ -64,7 +64,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
   // The same conversation may be bridged to more than one agent.
-  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
+  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Session.Session, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
     // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
@@ -82,7 +82,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
 
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
-    Chat.make({
+    Session.make({
       [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
       [Obj.Parent]: agent,
       name: title,
@@ -114,7 +114,7 @@ const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
 });
 
 /** Binds the channel's skills to a chat made before the channel declared them; a skill already bound is skipped. */
-const bindChannelSkills = Effect.fnUntraced(function* (chat: Chat.Chat, channel: Channel.Channel) {
+const bindChannelSkills = Effect.fnUntraced(function* (chat: Session.Session, channel: Channel.Channel) {
   const skills = yield* channelSkills(channel);
   if (skills.length === 0) {
     return;

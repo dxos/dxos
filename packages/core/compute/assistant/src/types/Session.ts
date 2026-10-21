@@ -18,10 +18,9 @@ import { ArchivableAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 /**
- * AI chat session.
+ * AI session (conversation with an agent). The persisted typename stays `org.dxos.type.assistant.chat` so existing data resolves.
  */
-// TODO(burdon): Rename to Session?
-export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.2.0'))(
+export class Session extends Type.makeObject<Session>(DXN.make('org.dxos.type.assistant.chat', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
     viewType: Schema.String.pipe(Schema.optional),
@@ -66,12 +65,12 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
   ),
 ) {}
 
-/** Module-level alias so callers importing the namespace avoid the doubled `Chat.Chat.fields`. */
-export const fields = Chat.fields;
+/** Module-level alias so callers importing the namespace avoid the doubled `Session.Session.fields`. */
+export const fields = Session.fields;
 
 export const make = (
-  props: Omit<Obj.MakeProps<typeof Chat>, 'tasks'> & { tasks?: ReadonlyArray<Ref.Ref<Task.Task>> },
-): Chat => Obj.make(Chat, { ...props, tasks: props.tasks ?? [] });
+  props: Omit<Obj.MakeProps<typeof Session>, 'tasks'> & { tasks?: ReadonlyArray<Ref.Ref<Task.Task>> },
+): Session => Obj.make(Session, { ...props, tasks: props.tasks ?? [] });
 
 /**
  * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
@@ -81,16 +80,16 @@ export const make = (
  */
 export const CompanionChatAnnotation = Annotation.make({
   id: 'org.dxos.assistant.companionChats',
-  schema: Schema.Array(Ref.Ref(Chat)),
+  schema: Schema.Array(Ref.Ref(Session)),
 });
 
 /**
  * Links a chat to the subject it accompanies (a Project, an Agent, a document, ...): a ref on the
  * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
  */
-export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unknown }): void => {
+export const linkCompanion = ({ chat, subject }: { chat: Session; subject: Obj.Unknown }): void => {
   const existing = Annotation.get(subject, CompanionChatAnnotation);
-  const chats = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Chat>[] => []));
+  const chats = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Session>[] => []));
   if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
     if (Option.isNone(existing)) {
       Obj.update(subject, (subject) => {
@@ -110,7 +109,7 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
  * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
  * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.
  */
-export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | undefined): void => {
+export const seedSession = (chat: Session, session: SessionConfig.SessionConfig | undefined): void => {
   if (!session || chat.session) {
     return;
   }
@@ -123,7 +122,7 @@ export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | u
 /** Creates a task the chat owns and appends it to the checklist. */
 export const addTask = (
   db: Database.Database,
-  chat: Chat,
+  chat: Session,
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {
@@ -142,7 +141,7 @@ export const addTask = (
  * borrowed from a project's set stays in that set. Refs already on the checklist are skipped.
  * Returns the refs actually appended.
  */
-export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+export const assignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
   const added: Ref.Ref<Task.Task>[] = [];
   Obj.update(chat, (chat) => {
     // Matched on entity id rather than target, so an unloaded ref still de-duplicates.
@@ -165,7 +164,7 @@ export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): R
  * distinct from {@link deleteTask}, which also removes the members the chat owns. Returns the refs
  * actually removed.
  */
-export const unassignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+export const unassignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
   const ids = new Set(tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
   const removed = chat.tasks.filter((ref) => {
     const id = Task.refEntityId(ref);
@@ -192,7 +191,7 @@ export const unassignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]):
  */
 export const deleteTask = (
   db: Database.Database,
-  chat: Chat,
+  chat: Session,
   tasks: readonly Task.Task[],
   task: Task.Task,
 ): Task.Task[] => {
@@ -215,19 +214,19 @@ export const deleteTask = (
 };
 
 /** The chat's feed entity id, readable without resolving the ref. */
-export const feedEntityId = (chat: Chat): string | undefined => Task.refEntityId(chat.feed);
+export const feedEntityId = (chat: Session): string | undefined => Task.refEntityId(chat.feed);
 
 /**
  * The chat that owns `feed`. The chat owns its feed (`SetParent`), so the parent edge answers this
  * without a query; the scan is the fallback for a feed whose parent was never stamped.
  */
-export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, never, Database.Service> =>
+export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Session | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const parent = Obj.getParent(feed);
-    if (parent && Obj.instanceOf(Chat, parent)) {
+    if (parent && Obj.instanceOf(Session, parent)) {
       return parent;
     }
-    const chats = yield* Database.query(Filter.type(Chat)).run;
+    const chats = yield* Database.query(Filter.type(Session)).run;
     return chats.find((chat) => feedEntityId(chat) === feed.id);
     // A chat-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
     // so callers get `undefined` rather than a failure — but a query that actually broke is logged,
@@ -250,7 +249,7 @@ const MAX_OWNER_DEPTH = 8;
  * Walks the parent chain rather than reading the immediate parent, because a chat reaches its project
  * through whatever owns it — directly for a project chat, through the agent for an agent's chat.
  */
-export const peekProject = (chat: Chat): Project.Project | undefined => {
+export const peekProject = (chat: Session): Project.Project | undefined => {
   let owner: Obj.Unknown | undefined = Obj.getParent(chat);
   for (let depth = 0; owner && depth < MAX_OWNER_DEPTH; depth++) {
     if (Obj.instanceOf(Project.Project, owner)) {
@@ -262,7 +261,7 @@ export const peekProject = (chat: Chat): Project.Project | undefined => {
 };
 
 /** Loads the checklist in order, de-duplicated: a concurrent merge can land the same ref twice. */
-export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Database.Service> =>
+export const loadTasks = (chat: Session): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
     const tasks = yield* Effect.forEach(chat.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
@@ -272,7 +271,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
   });
 
 /** Sync twin of {@link loadTasks}; an unresolved ref contributes nothing rather than throwing. */
-export const resolveTasks = (chat: Chat): Task.Task[] =>
+export const resolveTasks = (chat: Session): Task.Task[] =>
   Task.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
 
 /** A task is open until it reaches a terminal status. */
@@ -283,7 +282,7 @@ export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') 
  * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
  * status/dependencies are noted so the model can reason about readiness.
  */
-export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Database.Service> =>
+export const formatChecklist = (chat: Session): Effect.Effect<string, never, Database.Service> =>
   Effect.gen(function* () {
     const tasks = yield* loadTasks(chat);
     if (tasks.length === 0) {

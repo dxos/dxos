@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
-import { Chat } from '@dxos/assistant';
+import { Session } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -45,7 +45,7 @@ const streamedText = (payload: unknown): string | undefined =>
 
 const setup = Effect.fn(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'fake' } }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), session: { harness: 'fake' } }));
   const app = makeFakeAgent();
   const sessions = yield* AcpAgent.Sessions.make();
   const options: AcpAgent.AgentOptions = {
@@ -105,7 +105,7 @@ const findRequest = (feed: Feed.Feed) =>
 describe('AcpAgent', () => {
   const written: Written[] = [];
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Session.Session] }),
     Layer.succeed(Trace.TraceService, { write: (event, payload) => void written.push({ key: event.key, payload }) }),
   );
 

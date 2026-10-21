@@ -11,7 +11,7 @@ import { SessionConfig } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ChessPlugin } from '@dxos/plugin-chess/testing';
@@ -63,7 +63,7 @@ type StoryArgs = Pick<ChatOptionsProps, 'presets' | 'started'>;
 const DefaultStory = ({ presets, started }: StoryArgs) => {
   const [space] = useSpaces();
   const [feed] = useQuery(space?.db, Filter.type(Feed.Feed));
-  const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
+  const [chat] = useQuery(space?.db, Filter.type(Session.Session));
   const registry = useRegistry();
   const binder = useContextBinder(space, feed);
   const [preset, setPreset] = useState(presets?.[0]?.id);
@@ -94,7 +94,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [Chat.Chat, Feed.Feed, Organization.Organization, Person.Person],
+          types: [Session.Session, Feed.Feed, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -109,7 +109,7 @@ const meta = {
 
               // Create the chat feed used by the context binder.
               const feed = space.db.add(Feed.make());
-              space.db.add(Chat.make({ name: 'Test chat', feed: Ref.make(feed) }));
+              space.db.add(Session.make({ name: 'Test chat', feed: Ref.make(feed) }));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -24,12 +24,12 @@ import { useChatContext } from '../components/Chat/context.ts';
  * story showing every chat in a space, a panel scoped to a project) passes its own.
  */
 export type ChatSwitcher = {
-  chats: Chat.Chat[];
-  onSelect: (chat: Chat.Chat) => void;
+  chats: Session.Session[];
+  onSelect: (chat: Session.Session) => void;
 };
 
 export type ChatToolbarActionsProps = {
-  chat?: Chat.Chat;
+  chat?: Session.Session;
   companionTo?: Obj.Unknown;
   switcher?: ChatSwitcher;
 };
@@ -44,7 +44,9 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
       const chats =
         switcher?.chats ??
         (companionTo && db
-          ? get(db.query(Query.select(Filter.id(companionTo.id)).children()).atom).filter(Obj.instanceOf(Chat.Chat))
+          ? get(db.query(Query.select(Filter.id(companionTo.id)).children()).atom).filter(
+              Obj.instanceOf(Session.Session),
+            )
           : []);
 
       const builder = MenuBuilder.make().root({
@@ -118,7 +120,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
                 builder.action(
                   chat.id,
                   {
-                    label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Type.getTypename(Chat.Chat) }],
+                    label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Type.getTypename(Session.Session) }],
                   },
                   () => {
                     if (switcher) {

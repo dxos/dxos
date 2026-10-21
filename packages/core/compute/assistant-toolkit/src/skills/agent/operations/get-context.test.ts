@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -47,7 +47,7 @@ describe('GetContext', () => {
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const { db } = yield* Database.Service;
-        Chat.addTask(db, chat, 'Buy eggs');
+        Session.addTask(db, chat, 'Buy eggs');
         yield* Database.flush();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));

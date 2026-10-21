@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { Alarm } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -37,7 +37,7 @@ const ORGANIZATIONS: { name: string; status: Organization.Organization['status']
 ];
 
 const types = [
-  Chat.Chat,
+  Session.Session,
   Skill.Skill,
   Instructions.Instructions,
   Operation.PersistentOperation,

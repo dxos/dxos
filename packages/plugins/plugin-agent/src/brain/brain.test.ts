@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -112,7 +112,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Session.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -147,25 +147,25 @@ const setup = Effect.fnUntraced(function* () {
 });
 
 /** Submits a prompt as `name` and waits for the turn and its end-of-turn hooks. */
-const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: string) {
+const say = Effect.fnUntraced(function* (chat: Session.Session, name: string, prompt: string) {
   const session = yield* AgentService.getSession(chat);
   yield* session.submitPrompt(prompt, { sender: { name } });
   yield* session.waitForCompletion();
 });
 
 /** Waits for the chat's current turn, e.g. one the brain woke. */
-const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const settle = Effect.fnUntraced(function* (chat: Session.Session) {
   const session = yield* AgentService.getSession(chat);
   yield* session.waitForCompletion();
 });
 
 /** The agent's replies in the chat. */
-const messages = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const messages = Effect.fnUntraced(function* (chat: Session.Session) {
   const feed = yield* Database.load(chat.feed);
   return yield* Feed.query(feed, Filter.type(Message.Message)).run;
 });
 
-const replies = (chat: Chat.Chat) =>
+const replies = (chat: Session.Session) =>
   messages(chat).pipe(
     Effect.map((all) => all.filter((message) => message.sender.role === 'assistant').map(Message.extractText)),
   );

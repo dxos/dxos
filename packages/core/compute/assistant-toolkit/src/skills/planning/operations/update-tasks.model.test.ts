@@ -10,7 +10,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ const TestLayer = AssistantTestLayer({
     Outline.Outline,
     Task.Task,
     Text.Text,
-    Chat.Chat,
+    Session.Session,
     Skill.Skill,
     Feed.Feed,
     Message.Message,
@@ -64,7 +64,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         );
         yield* agent.waitForCompletion();
 
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map((task) => task.id)).toEqual([existing.id]);
         expect(existing.status).toEqual('started');
         expect(existing.assignee?.subject?.target?.id).toEqual(chat.id);
@@ -85,7 +85,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         const { agent, chat } = yield* setupChat();
         const kept = yield* Database.add(Task.make({ title: 'Renew the domain', status: 'todo' }));
         const dropped = yield* Database.add(Task.make({ title: 'Rotate the API keys', status: 'todo' }));
-        Chat.assignTasks(chat, [Ref.make(kept), Ref.make(dropped)]);
+        Session.assignTasks(chat, [Ref.make(kept), Ref.make(dropped)]);
         yield* Database.flush();
 
         yield* agent.submitPrompt(
@@ -93,7 +93,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         );
         yield* agent.waitForCompletion();
 
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual([kept.title]);
         expect(dropped.assignee).toBeUndefined();
         // Unassigning leaves the task for whoever else holds it.
@@ -111,7 +111,7 @@ const setupChat = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   // The session's own chat, not a second one on the same feed: the harness resolves the
   // conversation's chat, so a chat created beside it would be invisible to the planning tools.
-  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
+  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Session.Session);
   yield* Database.flush();
   yield* agent.addContext([Ref.make(chat)]);
   return { agent, chat };

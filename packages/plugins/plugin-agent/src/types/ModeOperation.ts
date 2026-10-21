@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
@@ -30,7 +30,7 @@ export const ListModes = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat).annotate({ description: 'The conversation (the chat in your context).' }),
+    chat: Ref.Ref(Session.Session).annotate({ description: 'The conversation (the chat in your context).' }),
   }),
   output: Schema.Struct({
     current: Schema.String,
@@ -49,7 +49,7 @@ export const SwitchMode = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat).annotate({ description: 'The conversation (the chat in your context).' }),
+    chat: Ref.Ref(Session.Session).annotate({ description: 'The conversation (the chat in your context).' }),
     mode: Schema.String.annotate({ description: 'The name of the mode to switch to.' }),
   }),
   output: Schema.Struct({

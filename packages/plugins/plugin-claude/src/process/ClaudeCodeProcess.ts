@@ -16,7 +16,7 @@ import * as Scope from 'effect/Scope';
 
 import { AgentInput, type AgentProcessDefinition, makeInputMessage } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as ShellService from '@dxos/compute/ShellService';
@@ -60,7 +60,7 @@ export const make = (options: Options): AgentProcessDefinition =>
     output: Schema.Void,
     // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
     // and the agent's subscription token is found with one.
-    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
+    types: [Session.Session, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
     services: [Database.Service, ShellService.ShellService],
     rpcs: HarnessControl,
   }).pipe(
@@ -72,7 +72,7 @@ export const make = (options: Options): AgentProcessDefinition =>
         if (chatDxn == null) {
           return yield* Effect.die(new Error('Claude Code process requires spawn options.target set to a Chat DXN.'));
         }
-        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const chat = yield* Database.resolve(chatDxn, Session.Session).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
         const shell = yield* ShellService.ShellService;
         const database = yield* Database.Service;

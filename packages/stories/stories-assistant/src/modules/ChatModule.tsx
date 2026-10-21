@@ -7,13 +7,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as AssistantSession from '@dxos/assistant/Session';
 import { Filter } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
-import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
+import * as Session from '@dxos/plugin-assistant/Session';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -60,7 +60,7 @@ const ChatModuleContainer = ({
   hue?: string;
   initialPrompt?: string;
 }) => {
-  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(space.db, Filter.type(AssistantSession.Session));
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
     ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
@@ -78,7 +78,7 @@ const ChatModuleContainer = ({
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
-  const onSelect = useCallback((chat: AssistantChat.Chat) => setSelected(chat.id), []);
+  const onSelect = useCallback((chat: AssistantSession.Session) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
@@ -106,10 +106,10 @@ const ChatModuleContainer = ({
   }
 
   return (
-    <Chat.Root chat={chat} chatModel={chatModel}>
+    <Session.Root chat={chat} chatModel={chatModel}>
       <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
         <Panel.Header>
-          <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
+          <Session.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
             <Toolbar.Text classNames='text-fg-subtle'>
               {sender ? `${sender.name} · ${chat?.name ?? ''}` : chat?.name}
             </Toolbar.Text>
@@ -121,18 +121,18 @@ const ChatModuleContainer = ({
                 <ExecutionGraphModule />
               </Popover.Content>
             </Popover.Root>
-          </Chat.Toolbar>
+          </Session.Toolbar>
         </Panel.Header>
         <Panel.Body asChild>
-          <Chat.Content>
-            <Chat.Thread viewType={view} userHue={hue} />
+          <Session.Content>
+            <Session.Thread viewType={view} userHue={hue} />
             <div className='flex flex-col gap-1 p-1'>
-              <Chat.Activity />
-              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+              <Session.Activity />
+              <Session.Prompt {...chatProps} outline preset={preset?.id} />
             </div>
-          </Chat.Content>
+          </Session.Content>
         </Panel.Body>
       </Panel.Root>
-    </Chat.Root>
+    </Session.Root>
   );
 };

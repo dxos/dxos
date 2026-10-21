@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -29,7 +29,7 @@ export const ProjectChatsArticle = ({ role, project, attendableId }: ProjectBran
   const db = Obj.getDatabase(project);
   // The same membership rule the branch's connector uses: a project's chats are its ECHO children.
   const children = useQuery(db, Query.select(Filter.id(project.id)).children());
-  const chats = useMemo(() => children.filter(Obj.instanceOf(Chat.Chat)), [children]);
+  const chats = useMemo(() => children.filter(Obj.instanceOf(Session.Session)), [children]);
 
   return (
     <Containers.ObjectMasonryArticle

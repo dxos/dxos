@@ -10,7 +10,7 @@ import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -79,10 +79,10 @@ describe('PlanReminder', () => {
 /** Creates a chat bound to its feed, carrying a checklist with the given item states. */
 const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boolean[]) {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
   const { db } = yield* Database.Service;
   states.forEach((done, index) => {
-    Chat.addTask(db, chat, `Task ${index}`, { status: done ? 'done' : 'todo' });
+    Session.addTask(db, chat, `Task ${index}`, { status: done ? 'done' : 'todo' });
   });
   yield* Database.flush();
 
@@ -98,7 +98,7 @@ const types = [
   Outline.Outline,
   Task.Task,
   Text.Text,
-  Chat.Chat,
+  Session.Session,
   Skill.Skill,
   Feed.Feed,
   Message.Message,

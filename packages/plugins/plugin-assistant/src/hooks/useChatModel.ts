@@ -11,7 +11,7 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiSession } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -27,7 +27,7 @@ import { type AiServicePreset, ChatModel } from '../chat-model/index.ts';
 
 export type UseChatModelProps = {
   db?: Database.Database;
-  chat?: Chat.Chat;
+  chat?: Session.Session;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
   registry?: Registry.Registry;

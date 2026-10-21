@@ -24,7 +24,7 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
@@ -79,7 +79,7 @@ export type ChatModelOptions = {
   /**
    * For tracing.
    */
-  chat?: Ref.Ref<Chat.Chat>;
+  chat?: Ref.Ref<Session.Session>;
   system?: string;
   /** Who this chat model's prompts come from, when the chat is one of several people's with one agent. */
   sender?: AgentService.PromptSender;
@@ -758,7 +758,7 @@ export class ChatModel {
   /**
    * Update the current chat's name.
    */
-  async updateName(chat: Chat.Chat): Promise<void> {
+  async updateName(chat: Session.Session): Promise<void> {
     const spaceId = Obj.getDatabase(chat)?.spaceId;
     if (!spaceId) {
       return;

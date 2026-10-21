@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
@@ -87,7 +87,7 @@ export const EnsureChannelChat = Operation.make({
     title: Schema.optional(Schema.String.annotate({ description: 'The conversation title; names a new chat.' })),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Session.Session),
     feed: Ref.Ref(Feed.Feed).annotate({ description: "The chat's message feed." }),
   }),
 });
@@ -136,7 +136,7 @@ export const ListSkills = Operation.make({
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     chat: Schema.optional(
-      Ref.Ref(Chat.Chat).annotate({ description: "One of the agent's chats; the primary chat if omitted." }),
+      Ref.Ref(Session.Session).annotate({ description: "One of the agent's chats; the primary chat if omitted." }),
     ),
   }),
   output: Schema.Struct({
@@ -205,7 +205,7 @@ export const EnsureParticipantChat = Operation.make({
     remote: Schema.optional(Schema.Boolean.annotate({ description: 'Run a chat created here on EDGE.' })),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Session.Session),
   }),
 });
 
@@ -234,7 +234,7 @@ export const OpenPrivateChat = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Session.Session),
     person: Ref.Ref(Obj.Unknown),
   }),
 });

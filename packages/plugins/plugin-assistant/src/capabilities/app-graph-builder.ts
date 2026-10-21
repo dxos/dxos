@@ -20,7 +20,7 @@ import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -47,7 +47,7 @@ const whenNonChatObject = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObject,
   GraphNodeMatcher.whenNot(
     GraphNodeMatcher.whenAny(
-      AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+      AppNodeMatcher.whenEchoTypeMatches(Session.Session),
       AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
     ),
   ),
@@ -81,7 +81,7 @@ export default Capability.makeModule(
 
       AppGraphBuilder.createTypeExtension({
         id: 'root',
-        type: Chat.Chat,
+        type: Session.Session,
         actions: (chat) => {
           return Effect.succeed([
             AppGraphNode.makeAction({
@@ -231,7 +231,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      TypeSection.createTypeSectionExtension(Chat.Chat, {
+      TypeSection.createTypeSectionExtension(Session.Session, {
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',
@@ -242,7 +242,7 @@ export default Capability.makeModule(
         id: 'chatsSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
+          return node.type === Type.getTypename(Session.Session) && space ? Option.some(space) : Option.none();
         },
         actions: (space) =>
           Effect.succeed([

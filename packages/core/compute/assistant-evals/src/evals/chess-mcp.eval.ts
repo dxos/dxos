@@ -11,7 +11,7 @@ import { Model } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Config } from '@dxos/client';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
@@ -430,11 +430,11 @@ const task = createEvalRunner({
 
       // What delegation does to the chat and the tasks, minus opening the deck.
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Session.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
       Obj.update(chat, (chat) => {
         chat.tasks.push(...stages.map((stage) => Ref.make(stage)));
       });
-      Chat.linkCompanion({ chat, subject: project });
+      Session.linkCompanion({ chat, subject: project });
       for (const stage of stages) {
         Task.setStatus(stage, 'started', { actor: REVIEWER });
         Obj.update(stage, (stage) => {

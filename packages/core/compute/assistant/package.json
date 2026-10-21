@@ -43,10 +43,10 @@
       "types": "./dist/types/src/session/Alarm.d.ts",
       "import": "./dist/lib/session/Alarm.mjs"
     },
-    "./Chat": {
-      "source": "./src/types/Chat.ts",
-      "types": "./dist/types/src/types/Chat.d.ts",
-      "import": "./dist/lib/types/Chat.mjs"
+    "./Session": {
+      "source": "./src/types/Session.ts",
+      "types": "./dist/types/src/types/Session.d.ts",
+      "import": "./dist/lib/types/Session.mjs"
     },
     "./ExecutionGraph": {
       "source": "./src/util/execution-graph.ts",

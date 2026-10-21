@@ -8,7 +8,7 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as AgentService from '@dxos/compute/AgentService';
 import type { Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
@@ -35,7 +35,7 @@ export interface FactQuery extends Schema.Schema.Type<typeof FactQuery> {}
 
 /** A request to start a turn in a chat: the prompt lands as a synthetic note ({@link wakeBlocks}), so the agent replies there. */
 export type WakeRequest = {
-  readonly chat: Chat.Chat;
+  readonly chat: Session.Session;
   readonly prompt: string;
   readonly sender?: AgentService.PromptSender;
 };

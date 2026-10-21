@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -20,7 +20,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   types: [
-    Chat.Chat,
+    Session.Session,
     Outline.Outline,
     Task.Task,
     TaskSet.TaskSet,
@@ -34,26 +34,26 @@ const TestLayer = AssistantTestLayer({
 
 const makeChat = Effect.gen(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Session.make({ name: 'Test', feed: Ref.make(feed) }));
   yield* Database.flush();
   return chat;
 });
 
-describe('Chat', () => {
+describe('Session', () => {
   it.effect(
     'is a standalone type carrying no agent reference',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
 
-        expect(Type.getTypename(Chat.Chat)).toBe('org.dxos.type.assistant.chat');
-        expect(Type.getVersion(Chat.Chat)).toBe('0.2.0');
+        expect(Type.getTypename(Session.Session)).toBe('org.dxos.type.assistant.chat');
+        expect(Type.getVersion(Session.Session)).toBe('0.2.0');
         expect(chat.name).toBe('Test');
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.fields).sort()).toEqual([
+        expect(Object.keys(Session.fields).sort()).toEqual([
           'feed',
           'instructions',
           'name',
@@ -83,7 +83,7 @@ describe('Chat', () => {
         expect(chat.session?.model).toBe(model);
 
         // Survives a round trip through the database.
-        const [reloaded] = yield* Database.query(Filter.type(Chat.Chat)).run;
+        const [reloaded] = yield* Database.query(Filter.type(Session.Session)).run;
         expect(reloaded.session?.model).toBe(model);
 
         Obj.update(chat, (chat) => {
@@ -105,8 +105,8 @@ describe('Chat', () => {
         expect(chat.tasks).toEqual([]);
         const { db } = yield* Database.Service;
 
-        const first = Chat.addTask(db, chat, 'Buy eggs');
-        const second = Chat.addTask(db, chat, 'Bake the cake', { status: 'started' });
+        const first = Session.addTask(db, chat, 'Buy eggs');
+        const second = Session.addTask(db, chat, 'Bake the cake', { status: 'started' });
         yield* Database.flush();
 
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(first).uri, Ref.make(second).uri]);
@@ -114,7 +114,7 @@ describe('Chat', () => {
         expect(Obj.getParent(first)?.id).toBe(chat.id);
         expect(Obj.getParent(second)?.id).toBe(chat.id);
 
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map(({ title, status }) => ({ title, status }))).toEqual([
           { title: 'Buy eggs', status: 'todo' },
           { title: 'Bake the cake', status: 'started' },
@@ -132,18 +132,18 @@ describe('Chat', () => {
         const chat = yield* makeChat;
         const { db } = yield* Database.Service;
 
-        const parent = Chat.addTask(db, chat, 'Ship the release');
-        const child = Chat.addTask(db, chat, 'Write the changelog');
+        const parent = Session.addTask(db, chat, 'Ship the release');
+        const child = Session.addTask(db, chat, 'Write the changelog');
         nest(parent, child);
-        const sibling = Chat.addTask(db, chat, 'Unrelated');
+        const sibling = Session.addTask(db, chat, 'Unrelated');
         yield* Database.flush();
 
-        const deleted = Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), parent);
+        const deleted = Session.deleteTask(db, chat, yield* Session.loadTasks(chat), parent);
         yield* Database.flush();
 
         expect(deleted.map((task) => task.id).sort()).toEqual([parent.id, child.id].sort());
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(sibling).uri]);
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(['Unrelated']);
       },
       Effect.provide(TestLayer),
@@ -172,11 +172,11 @@ describe('Chat', () => {
         // The chat works on the task; it does not take it. An owning checklist would re-parent it
         // here — and again on every later update of the chat.
         expect(Obj.getParent(delegated)?.id).toBe(owner.id);
-        const own = Chat.addTask(db, chat, 'Draft an outline');
+        const own = Session.addTask(db, chat, 'Draft an outline');
         expect(Obj.getParent(own)?.id).toBe(chat.id);
 
         // Off the checklist, still in the space: deleting is the owner's call, not the chat's.
-        Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), delegated);
+        Session.deleteTask(db, chat, yield* Session.loadTasks(chat), delegated);
         yield* Database.flush();
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(own).uri]);
         expect(yield* Database.query(Filter.id(delegated.id)).run).toHaveLength(1);
@@ -193,25 +193,25 @@ describe('Chat', () => {
         const chat = yield* makeChat;
         const { db } = yield* Database.Service;
 
-        const parent = Chat.addTask(db, chat, 'Ship the release');
-        const child = Chat.addTask(db, chat, 'Write the changelog');
+        const parent = Session.addTask(db, chat, 'Ship the release');
+        const child = Session.addTask(db, chat, 'Write the changelog');
         nest(parent, child);
         yield* Database.flush();
 
         // What the sync reader yields when a child is not in the working set: the walk cannot see
         // the child, so its entry survives in the array though the cascade deletes the task itself.
-        expect(Chat.deleteTask(db, chat, [parent], parent)).toEqual([parent]);
+        expect(Session.deleteTask(db, chat, [parent], parent)).toEqual([parent]);
         yield* Database.flush();
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(child).uri]);
         expect(Obj.isDeleted(child)).toBe(true);
 
         // The loaded checklist takes the entry with its parent, which is the contract callers must meet.
-        const restored = Chat.addTask(db, chat, 'Ship again');
-        const step = Chat.addTask(db, chat, 'Tag the release');
+        const restored = Session.addTask(db, chat, 'Ship again');
+        const step = Session.addTask(db, chat, 'Tag the release');
         nest(restored, step);
         yield* Database.flush();
         expect(
-          Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), restored)
+          Session.deleteTask(db, chat, yield* Session.loadTasks(chat), restored)
             .map((task) => task.id)
             .sort(),
         ).toEqual([restored.id, step.id].sort());
@@ -228,16 +228,16 @@ describe('Chat', () => {
       function* (_) {
         const chat = yield* makeChat;
         const subject = yield* Database.add(Instructions.make({ text: 'Steer.' }));
-        Chat.linkCompanion({ chat, subject });
+        Session.linkCompanion({ chat, subject });
         yield* Database.flush();
 
         expect(Obj.getParent(chat)?.id).toBe(subject.id);
-        const chats = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        const chats = Annotation.get(subject, Session.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
         expect(chats.map((ref) => ref.uri)).toEqual([Ref.make(chat).uri]);
 
         // Idempotent per chat: linking again adds no duplicate ref.
-        Chat.linkCompanion({ chat, subject });
-        const again = Annotation.get(subject, Chat.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        Session.linkCompanion({ chat, subject });
+        const again = Annotation.get(subject, Session.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
         expect(again).toHaveLength(1);
       },
       Effect.provide(TestLayer),

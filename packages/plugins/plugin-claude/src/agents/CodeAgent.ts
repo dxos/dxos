@@ -14,7 +14,7 @@ import type * as Scope from 'effect/Scope';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant';
+import { Session } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
@@ -121,7 +121,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       }),
     );
     const composerTools = (
-      chat: Chat.Chat,
+      chat: Session.Session,
     ): Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined, AgentError> =>
       Effect.gen(function* () {
         const agentHelper = helper();
@@ -303,7 +303,7 @@ const sweepOne = ({
     const chat = yield* Effect.tryPromise(() =>
       space.db.query(Query.select(Filter.id(parsed.chatId))).firstOrUndefined(),
     );
-    if (!chat || !Obj.instanceOf(Chat.Chat, chat) || chat.session?.harness !== agent) {
+    if (!chat || !Obj.instanceOf(Session.Session, chat) || chat.session?.harness !== agent) {
       return;
     }
     const tasks = yield* Effect.forEach(chat.tasks, (ref) => Effect.tryPromise(() => ref.tryLoad()));

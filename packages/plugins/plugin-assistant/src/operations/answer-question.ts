@@ -5,7 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj } from '@dxos/echo';
@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.AnswerQuestion> =
       // the record is the point; there is simply nobody to wake.
       const conversation = thread.question.conversation;
       const chat = conversation && (yield* Database.load(conversation).pipe(Effect.orElseSucceed(() => undefined)));
-      if (!chat || !Obj.instanceOf(Chat.Chat, chat)) {
+      if (!chat || !Obj.instanceOf(Session.Session, chat)) {
         return { accepted: true, resumed: false };
       }
 

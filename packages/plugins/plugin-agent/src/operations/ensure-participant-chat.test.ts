@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Hypergraph } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { ensureParticipantChat } from './ensure-participant-chat.ts';
 
 const TYPES = [
   Agent.Agent,
-  Chat.Chat,
+  Session.Session,
   Skill.Skill,
   Feed.Feed,
   Text.Text,
@@ -62,7 +62,7 @@ describe('A person’s chat with an agent', () => {
       Database.add(Person.make({ identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: MEMBER }] })),
     );
     const open = () => run(ensureParticipantChat(agent, person, { owner: MEMBER }));
-    const say = (chat: Chat.Chat, text: string, created: string) =>
+    const say = (chat: Session.Session, text: string, created: string) =>
       run(
         Effect.gen(function* () {
           const feed = yield* Database.load(chat.feed);

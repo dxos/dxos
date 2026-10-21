@@ -11,7 +11,7 @@ import { test } from 'vitest';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -31,7 +31,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const layerOptions = {
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Session.Session, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 };
@@ -63,7 +63,7 @@ describe('UpdateTasks', () => {
           { create: true, title: 'Hello', status: 'started' },
           { create: true, title: 'World' },
         ]);
-        const [hello, world] = yield* Chat.loadTasks(chat);
+        const [hello, world] = yield* Session.loadTasks(chat);
         expect(hello?.status).toEqual('started');
         expect(world?.status).toEqual('todo');
         // What the conversation creates is its own work, whatever the status.
@@ -75,7 +75,7 @@ describe('UpdateTasks', () => {
           { task: Ref.make(hello), status: 'done' },
           { task: Ref.make(world), title: 'World, renamed' },
         ]);
-        expect((yield* Chat.loadTasks(chat)).map(({ title, status }) => ({ title, status }))).toEqual([
+        expect((yield* Session.loadTasks(chat)).map(({ title, status }) => ({ title, status }))).toEqual([
           { title: 'Hello', status: 'done' },
           { title: 'World, renamed', status: 'todo' },
         ]);
@@ -96,7 +96,7 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(subTask), status: 'started' }]);
 
-        expect((yield* Chat.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
+        expect((yield* Session.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
         expect(subTask.status).toEqual('started');
         expect(subTask.assignee?.role).toEqual('assistant');
         // A plain chat is its own session object.
@@ -181,7 +181,7 @@ describe('UpdateTasks', () => {
         const { chat, invoke } = yield* setupChat();
 
         yield* invoke([{ create: true, title: 'Hello' }]);
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         invariant(task);
         yield* invoke([{ task: Ref.make(task), status: 'started' }]);
         // Same status twice: nothing changed, so nothing is traced.
@@ -246,7 +246,7 @@ const invokeOn = (feed: Feed.Feed) => (changes: readonly TaskChange[]) =>
 /** A chat with no agent above it, bound to its own feed. */
 const setupChat = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));

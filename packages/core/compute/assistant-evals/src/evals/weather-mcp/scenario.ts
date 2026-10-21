@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -167,12 +167,12 @@ export const seed = ({
 
     // The chat the session runs on, carrying the four steps and filed under the project.
     const feed = yield* Database.add(Feed.make());
-    const chat = yield* Database.add(Chat.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
-    Chat.assignTasks(
+    const chat = yield* Database.add(Session.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
+    Session.assignTasks(
       chat,
       steps.map((step: Task.Task) => Ref.make(step)),
     );
-    Chat.linkCompanion({ chat, subject: project });
+    Session.linkCompanion({ chat, subject: project });
     yield* Database.flush();
 
     return { objects: [Ref.make(project)], chat: Ref.make(chat) };

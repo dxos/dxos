@@ -7,7 +7,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
@@ -199,7 +199,7 @@ const readReplies = async (db: Database.Database, participant: string) => {
   const person = (await db.query(Filter.type(Person.Person)).run()).find(
     ({ preferredName }) => preferredName === participant,
   );
-  const chat = (await db.query(Filter.type(Chat.Chat)).run()).find(
+  const chat = (await db.query(Filter.type(Session.Session)).run()).find(
     (chat) => person !== undefined && ChatParticipant.get(chat) === person.id,
   );
   const feed = await chat?.feed.load();
@@ -370,7 +370,9 @@ const readQuotes = async (db: Database.Database) => (await readFacts(db)).map(({
 
 /** The text of every message the agent posted in Rich's chat; tool calls, which quote the watch's message, are left out. */
 const readRichReplies = async (db: Database.Database) => {
-  const chat = (await db.query(Filter.type(Chat.Chat)).run()).find((chat) => Obj.getURI(chat) === refs.chats.Rich);
+  const chat = (await db.query(Filter.type(Session.Session)).run()).find(
+    (chat) => Obj.getURI(chat) === refs.chats.Rich,
+  );
   const feed = await chat?.feed.load();
   if (!feed) {
     return [];

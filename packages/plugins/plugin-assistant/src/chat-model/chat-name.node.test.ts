@@ -10,7 +10,7 @@ import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -43,9 +43,9 @@ const script = [
   { match: () => true, turns: [{ parts: [text('Sure.')] }] },
 ];
 
-const setup = Effect.fn(function* (session?: Chat.Chat['session']) {
+const setup = Effect.fn(function* (session?: Session.Session['session']) {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), ...(session && { session }) }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), ...(session && { session }) }));
   const runtime = yield* Effect.context<Database.Service>();
   const aiSession = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   const registry = yield* AtomRegistry.AtomRegistry;
@@ -56,7 +56,7 @@ const setup = Effect.fn(function* (session?: Chat.Chat['session']) {
   return { chat, chatModel };
 });
 
-const untilNamed = (chat: Chat.Chat) =>
+const untilNamed = (chat: Session.Session) =>
   Effect.gen(function* () {
     while (!chat.name) {
       yield* Effect.sleep('20 millis');
@@ -66,7 +66,7 @@ const untilNamed = (chat: Chat.Chat) =>
 
 const layer = (agent?: MakeTurnProducer) =>
   AssistantTestLayer({
-    types: [Chat.Chat, Feed.Feed, Message.Message],
+    types: [Session.Session, Feed.Feed, Message.Message],
     operationHandlers: [OperationHandlerSet.make(UpdateChatName)],
     aiService: scriptedAiService(script),
     ...(agent && { agent: { makeTurnProducer: agent } }),

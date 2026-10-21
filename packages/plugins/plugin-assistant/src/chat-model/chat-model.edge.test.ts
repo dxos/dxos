@@ -13,7 +13,7 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService, Model, OpaqueToolkit, Provider } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import {
@@ -127,7 +127,7 @@ describe.each(ENVS)('ChatModel (edge-hosted agent, %s)', { tags: ['manual'], tim
   beforeAll(async () => {
     client = await new Client({
       config: configPreset({ edge: env }),
-      types: [Chat.Chat, Feed.Feed, Message.Message],
+      types: [Session.Session, Feed.Feed, Message.Message],
     }).initialize();
     await client.halo.createIdentity();
     space = await client.spaces.create();
@@ -166,7 +166,7 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
     // The model is the chat's own from the start: one stamped later reads as a reconfiguration, which
     // replaces the hosted process.
     const chat = yield* Database.add(
-      Chat.make({ name: 'Latency', feed: Ref.make(feed), remote: true, session: { model: MODEL } }),
+      Session.make({ name: 'Latency', feed: Ref.make(feed), remote: true, session: { model: MODEL } }),
     );
     yield* Database.flush();
     // The hosted process reads the chat from EDGE's copy of the space.

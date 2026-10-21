@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
-import { AiContext, Chat } from '@dxos/assistant';
+import { AiContext, Session } from '@dxos/assistant';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
@@ -126,7 +126,7 @@ const ENV = { ANTHROPIC_API_KEY: 'sk-ant-test' };
 
 const setup = Effect.fn(function* (script: Script, mode?: string) {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'edge' } }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), session: { harness: 'edge' } }));
   const edge = new FakeEdge(script);
   const options: EdgeAgent.Options = {
     definition: {
@@ -164,7 +164,7 @@ describe('EdgeAgent', () => {
         Feed.Feed,
         Message.Message,
         AiContext.Binding,
-        Chat.Chat,
+        Session.Session,
         Project.Project,
         Repo.Repo,
         TaskSet.TaskSet,

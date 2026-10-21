@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Ref } from '@dxos/echo';
 
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
       //  memory too — nothing needs to write to a feed before its chat is in the database.
       const feed = db.add(Feed.make());
-      const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
+      const chat = Session.make({ name, feed: Ref.make(feed), instructions });
 
       const pluginManager = contributesPluginManager(yield* Capability.getAll(AppCapabilities.SkillDefinition));
 

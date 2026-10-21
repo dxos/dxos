@@ -3,7 +3,7 @@
 //
 
 import { type Alarm } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
@@ -35,7 +35,7 @@ export type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   db?: Database.Database;
-  chat?: Chat.Chat;
+  chat?: Session.Session;
   /** Undefined while the chat model is still opening; the chat renders from the feed meanwhile. */
   chatModel?: ChatModel;
   /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
@@ -56,14 +56,14 @@ export type ChatThreadContextValue = {
   /** Alarms that have woken the agent since the last user prompt. */
   selfWakes: number;
   requestTiming: ChatRequestTiming | null;
-  /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
+  /** The thread's controller, shared between `Session.Thread` and `Session.Outline`. */
   controller: ChatThreadController | null;
-  /** The visible index range, published by `Chat.Thread` as the reader scrolls. */
+  /** The visible index range, published by `Session.Thread` as the reader scrolls. */
   visibleRange?: MessageRange;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this
-// package (e.g. `ChatStreamStatus`) without dragging in `Chat.tsx`'s heavy transitive
+// package (e.g. `ChatStreamStatus`) without dragging in `Session.tsx`'s heavy transitive
 // imports (transcription, etc.).
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 

@@ -11,7 +11,7 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation } from '@dxos/client/testing';
@@ -64,7 +64,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
 
   const TYPES = [
     Agent.Agent,
-    Chat.Chat,
+    Session.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -213,7 +213,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
   };
 
   /** A peer talks to Kai in their own chat, as themselves. */
-  const say = (peer: Peer, chat: Chat.Chat, prompt: string) =>
+  const say = (peer: Peer, chat: Session.Session, prompt: string) =>
     run(
       peer,
       Effect.gen(function* () {
@@ -242,7 +242,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
   };
 
   /** The agent's replies in a chat, as the peer's own replica has them. */
-  const replies = (peer: Peer, chat: Chat.Chat) =>
+  const replies = (peer: Peer, chat: Session.Session) =>
     run(
       peer,
       Effect.gen(function* () {

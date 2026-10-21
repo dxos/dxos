@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
 import { Channel, Task } from '@dxos/types';
@@ -129,7 +129,7 @@ export const SendMessage = Operation.make({
       description: "Whether the message was delivered, or on a mirrored channel queued for the channel's host to post.",
     }),
     via: Schema.optional(DeliveryChannel),
-    chat: Schema.optional(Ref.Ref(Chat.Chat).annotate({ description: 'The chat the message was recorded in.' })),
+    chat: Schema.optional(Ref.Ref(Session.Session).annotate({ description: 'The chat the message was recorded in.' })),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
   }),
 });
@@ -144,7 +144,7 @@ export const AssignChatParticipant = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Session.Session),
     person: Ref.Ref(Obj.Unknown).annotate({ description: 'The person the chat is with.' }),
   }),
   output: Schema.Struct({}),

@@ -7,7 +7,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { Annotation, Obj } from '@dxos/echo';
 
 /**
@@ -26,14 +26,14 @@ export const ParticipantAnnotation = Annotation.make({
 export const PARTICIPANT_SOURCE = 'org.dxos.agent/participant';
 
 /** The entity id of the person the chat is with, if one was assigned. */
-export const get = (chat: Chat.Chat): string | undefined =>
+export const get = (chat: Session.Session): string | undefined =>
   Annotation.get(chat, ParticipantAnnotation).pipe(Option.getOrUndefined);
 
 /**
  * Marks the chat as the conversation with `person`; replaces any earlier participant.
  * Call inside the caller's `Obj.update`, so it batches with the chat's other writes.
  */
-export const set = (chat: Obj.Mutable<Chat.Chat>, person: Obj.Unknown): void => {
+export const set = (chat: Obj.Mutable<Session.Session>, person: Obj.Unknown): void => {
   Annotation.set(chat, ParticipantAnnotation, person.id);
 };
 
@@ -48,16 +48,16 @@ export const OwnerAnnotation = Annotation.make({
 });
 
 /** The DID of the identity the chat is private to, if any. */
-export const getOwner = (chat: Chat.Chat): string | undefined =>
+export const getOwner = (chat: Session.Session): string | undefined =>
   Annotation.get(chat, OwnerAnnotation).pipe(Option.getOrUndefined);
 
 /** Makes the chat private to the identity. Call inside the caller's `Obj.update`. */
-export const setOwner = (chat: Obj.Mutable<Chat.Chat>, identityDid: string): void => {
+export const setOwner = (chat: Obj.Mutable<Session.Session>, identityDid: string): void => {
   Annotation.set(chat, OwnerAnnotation, identityDid);
 };
 
 /** Whether the identity may see the chat: shared chats are visible to everyone, private ones to their owner. */
-export const isVisibleTo = (chat: Chat.Chat, identityDid: string | undefined): boolean => {
+export const isVisibleTo = (chat: Session.Session, identityDid: string | undefined): boolean => {
   const owner = getOwner(chat);
   return owner === undefined || owner === identityDid;
 };

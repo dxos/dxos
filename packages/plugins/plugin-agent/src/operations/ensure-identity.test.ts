@@ -11,7 +11,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -42,7 +42,7 @@ manager.contribute({ module: 'test', interface: ClientCapabilities.EdgeHttpClien
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
-  types: [Agent.Agent, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions, Mode.Mode],
+  types: [Agent.Agent, Session.Session, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions, Mode.Mode],
   extraServices: Layer.succeed(Capability.Service, manager),
 });
 

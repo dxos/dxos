@@ -8,7 +8,7 @@ import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiAssistantError } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
 import * as Project from '@dxos/compute/Project';
@@ -82,13 +82,15 @@ const setup = Effect.fnUntraced(function* () {
     yield* Database.add(Obj.make(AccessToken.AccessToken, { source: CLAUDE_CODE_TOKEN_SOURCE, token: OAUTH_TOKEN }));
   }
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: CLAUDE_CODE_EDGE_AGENT } }));
+  const chat = yield* Database.add(
+    Session.make({ feed: Ref.make(feed), session: { harness: CLAUDE_CODE_EDGE_AGENT } }),
+  );
   const session = yield* AgentService.getSession(chat);
   return { chat, session };
 });
 
 /** The EDGE process the chat recorded, and its control RPCs. */
-const processOf = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const processOf = Effect.fnUntraced(function* (chat: Session.Session) {
   const [key] = Obj.getKeys(chat, EdgeAgent.processKeySource(CLAUDE_CODE_EDGE_AGENT));
   const spaceId = Obj.getDatabase(chat)?.spaceId;
   if (!key || !spaceId) {

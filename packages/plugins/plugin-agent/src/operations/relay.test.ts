@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -56,7 +56,7 @@ const TestLayer = AssistantTestLayer({
   ),
   types: [
     Agent.Agent,
-    Chat.Chat,
+    Session.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -95,7 +95,7 @@ const resolve = (name: string, handle?: string) =>
 
 const hoursUntil = (iso: string) => (Date.parse(iso) - Date.now()) / 3_600_000;
 
-const chatMessages = (chat: Chat.Chat) =>
+const chatMessages = (chat: Session.Session) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(chat.feed);
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
@@ -129,10 +129,10 @@ describe('Relay', () => {
 
         // Two Composer chats with the same agent, one per person.
         const richChat = yield* Database.add(
-          Chat.make({ [Obj.Parent]: agent, name: 'Rich', feed: Ref.make(yield* Database.add(Feed.make())) }),
+          Session.make({ [Obj.Parent]: agent, name: 'Rich', feed: Ref.make(yield* Database.add(Feed.make())) }),
         );
         const dimaChat = yield* Database.add(
-          Chat.make({ [Obj.Parent]: agent, name: 'Dima', feed: Ref.make(yield* Database.add(Feed.make())) }),
+          Session.make({ [Obj.Parent]: agent, name: 'Dima', feed: Ref.make(yield* Database.add(Feed.make())) }),
         );
         yield* Operation.invoke(RelayOperation.AssignChatParticipant, { chat: Ref.make(richChat), person: rich });
         yield* Operation.invoke(RelayOperation.AssignChatParticipant, { chat: Ref.make(dimaChat), person: dima });
@@ -395,7 +395,7 @@ describe('Relay', () => {
         const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
         const josiah = yield* resolve('Josiah', '200');
         const composerChat = yield* Database.add(
-          Chat.make({ [Obj.Parent]: agent, name: 'Josiah', feed: Ref.make(yield* Database.add(Feed.make())) }),
+          Session.make({ [Obj.Parent]: agent, name: 'Josiah', feed: Ref.make(yield* Database.add(Feed.make())) }),
         );
         yield* Operation.invoke(RelayOperation.AssignChatParticipant, { chat: Ref.make(composerChat), person: josiah });
 
@@ -431,7 +431,7 @@ describe('Relay', () => {
         expect(result.delivered).toBe(false);
         expect(result.reason).toContain('direct messages are closed');
         expect(backend.posts).toHaveLength(0);
-        const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
+        const chats = yield* Database.query(Filter.type(Session.Session)).run;
         expect(chats.some((chat) => AgentChannels.conversationOf(chat)?.thread === `dm-${CLOSED_DMS}`)).toBe(false);
       },
       Effect.provide(TestLayer),

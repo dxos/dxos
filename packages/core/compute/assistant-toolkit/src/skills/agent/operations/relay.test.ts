@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -22,7 +22,7 @@ import relayHandler from './relay.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(relayHandler),
-  types: [Chat.Chat, Instructions.Instructions, Text.Text, Feed.Feed],
+  types: [Session.Session, Instructions.Instructions, Text.Text, Feed.Feed],
 });
 
 // Control-plane only: the qualify:false path needs no LLM turn, so it runs ungated in CI.
@@ -37,7 +37,7 @@ describe('Agent relay (control plane)', () => {
         const instructions = yield* Database.add(Instructions.make({ text: 'Relay target.' }));
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(
-          Chat.make({ name: 'Relay chat', feed: Ref.make(feed), instructions: Ref.make(instructions) }),
+          Session.make({ name: 'Relay chat', feed: Ref.make(feed), instructions: Ref.make(instructions) }),
         );
         yield* Database.flush();
 

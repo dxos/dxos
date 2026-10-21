@@ -12,7 +12,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { Chat } from '@dxos/assistant';
+import { Session } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -99,7 +99,7 @@ const findRequest = (feed: Feed.Feed) =>
 
 describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Session.Session] }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
   );
 
@@ -139,7 +139,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on th
     );
 
     const feed = yield* Database.add(Feed.make());
-    const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
+    const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
     const options = (sessions: AcpAgent.Sessions): AcpAgent.AgentOptions => ({
       id: 'claude-code',
       sessions,

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -67,7 +67,7 @@ export const DelegateTaskToChat = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
   }),
 }).pipe(Operation.mutation('write'));
 

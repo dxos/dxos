@@ -9,7 +9,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Chat } from '@dxos/assistant';
+import { Session } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -27,7 +27,7 @@ import { type AgentHost, startAgentHost } from './testing.ts';
 const FAKE_AGENT = new URL('../testing/fake-acp-agent.mjs', import.meta.url);
 
 const TestLayer = Layer.mergeAll(
-  TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+  TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Session.Session] }),
   Layer.succeed(Trace.TraceService, { write: () => {} }),
 );
 
@@ -68,7 +68,7 @@ describe('dev shell agent host', () => {
     const transcript = await EffectEx.runPromise(
       Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
         const sessions = yield* AcpAgent.Sessions.make();
         // Wired as `CodeAgent` wires Claude Code: the session's stream comes from the helper, and the chat works in
         // the folder the dev server reports when its project names none.

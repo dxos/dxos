@@ -29,7 +29,7 @@ import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -167,7 +167,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
-  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
+  const chats = useQuery(space?.db, Filter.type(Session.Session));
 
   UiHooks.useAsyncEffect(async () => {
     if (!space) {
@@ -225,7 +225,7 @@ const toStoryDecoratorsProps = ({
   config: configProp,
   types: [
     AccessToken.AccessToken,
-    Chat.Chat,
+    Session.Session,
     Collection.Collection,
     Outline.Outline,
     Task.Task,
@@ -286,7 +286,7 @@ type StoryPluginOptions = {
    */
   createAgent?: boolean | CreateAgentOptions;
 
-  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
+  onChatCreated?: (props: { db: Database.Database; chat: Session.Session; binder: AiContext.Binder }) => Promise<void>;
 
   /**
    * Runs once the space is available and operations can be invoked — for seeding that goes through
@@ -409,7 +409,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
         // chat, since a seeded space can hold earlier chats of its own.
         const [existing] = yield* Effect.promise(() =>
-          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+          space.db.query(Filter.foreignKeys(Session.Session, [HARNESS_CHAT_KEY])).run(),
         );
         if (existing) {
           return;

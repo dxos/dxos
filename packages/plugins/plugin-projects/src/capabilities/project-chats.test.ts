@@ -10,7 +10,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -40,7 +40,7 @@ describe('project chats graph extension', () => {
   });
 
   const setupTestContext = async () => {
-    const { db } = await builder.createDatabase({ types: [Project.Project, Chat.Chat, Feed.Feed] });
+    const { db } = await builder.createDatabase({ types: [Project.Project, Session.Session, Feed.Feed] });
     const project = db.add(Project.make({ name: 'Test' }));
     await db.flush();
 
@@ -119,8 +119,8 @@ describe('project chats graph extension', () => {
 
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
-      const chat = db.add(Chat.make({ name, feed: Ref.make(feed) }));
-      Chat.linkCompanion({ chat, subject: project });
+      const chat = db.add(Session.make({ name, feed: Ref.make(feed) }));
+      Session.linkCompanion({ chat, subject: project });
       await db.flush();
       await context.flush();
       return chat;

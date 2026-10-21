@@ -18,7 +18,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -124,7 +124,7 @@ type StoryTurn = { prompt: string; reply: string; delay?: Duration.Input };
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: StoryTurn[];
-  /** Seed the chat's checklist, so the article renders its `Chat.TaskList`. */
+  /** Seed the chat's checklist, so the article renders its `Session.TaskList`. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
@@ -132,7 +132,7 @@ type StoryArgs = {
 
 const DefaultStory = ({ debug }: StoryArgs) => {
   const [space] = useSpaces();
-  const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
+  const [chat] = useQuery(space?.db, Filter.type(Session.Session));
   if (!chat) {
     return <Loading />;
   }
@@ -150,7 +150,7 @@ const meta = {
         plugins: [
           ...CorePlugins.make(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
+            types: [Session.Session, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -158,9 +158,9 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                const chat = space.db.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+                const chat = space.db.add(Session.make({ name: 'Test', feed: Ref.make(feed) }));
                 for (const { title, status } of tasks) {
-                  Chat.addTask(space.db, chat, title, { status });
+                  Session.addTask(space.db, chat, title, { status });
                 }
                 // The task list reads the rows through resolve-once ref atoms; load them so the
                 // story renders without waiting on a lazy resolution nothing triggers.
@@ -233,7 +233,7 @@ export const Default: Story = {
 /**
  * The article's working tasks, and the disclosure that shows them.
  *
- * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
+ * The checklist is `Session.Prompt`'s own collapsible region rather than a sibling the article places,
  * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
  * what asserts that wiring, since the button is not the collapsible's own trigger.
  */

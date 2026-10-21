@@ -12,7 +12,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -111,7 +111,7 @@ export class ChatProcessor {
       .filter(isTruthy);
 
     const feed = space.db.add(Feed.make());
-    const chat = Chat.make({ feed: Ref.make(feed) });
+    const chat = Session.make({ feed: Ref.make(feed) });
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(

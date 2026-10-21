@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { Outline } from '@dxos/types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Agent.Agent, Outline.Outline, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
+  types: [Agent.Agent, Outline.Outline, Session.Session, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
   disableLlmMemoization: true,
 });
 
@@ -65,7 +65,7 @@ describe('Agent (0.2.0)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.add(
-          Chat.make({
+          Session.make({
             [Obj.Meta]: { keys: [{ source: 'discord.com', id: 'thread-1' }] },
             [Obj.Parent]: agent,
             feed: Ref.make(feed),

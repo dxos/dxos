@@ -18,7 +18,7 @@ import type * as Scope from 'effect/Scope';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
-import { AiAssistantError, AiContext, type Chat } from '@dxos/assistant';
+import { AiAssistantError, AiContext, type Session } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
@@ -165,7 +165,7 @@ const makeTurnProducer =
 /** One turn of the EDGE agent against a chat. */
 export const runTurn = (
   options: Options,
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  { chat, feed }: { chat: Session.Session; feed: Feed.Feed },
   request: TurnRequest,
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
@@ -375,7 +375,7 @@ const respond = (
   }).pipe(Effect.scoped);
 
 /** The chat's process, spawned on its first turn and recorded on the chat for every later one. */
-const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target, AgentError, Database.Service> =>
+const ensureProcess = (options: Options, chat: Session.Session): Effect.Effect<Target, AgentError, Database.Service> =>
   Effect.gen(function* () {
     const { definition } = options;
     const control = options.control();
@@ -407,7 +407,7 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
     return { control, spaceId, pid: snapshot.pid };
   });
 
-const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
+const processOf = (chat: Session.Session, agent: string): Process.ID | undefined => {
   const id = Obj.getKeys(chat, processKeySource(agent)).at(-1)?.id;
   return id === undefined ? undefined : Process.ID.make(id);
 };
@@ -419,7 +419,7 @@ const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
  * the chat's at its start.
  */
 export const checkoutsOf = (
-  chat: Chat.Chat,
+  chat: Session.Session,
 ): Effect.Effect<EdgeProtocol.RepositoryCheckout[], never, Database.Service> =>
   Effect.gen(function* () {
     const project = Workspace.projectOf(chat);
@@ -575,7 +575,7 @@ type PendingTurn = { turnId: string; cursor: number; folded: number };
 const encodePendingTurn = ({ turnId, cursor, folded }: PendingTurn): string => `${turnId}:${cursor}:${folded}`;
 
 /** The turn the chat recorded as still running on EDGE, if a client closed before it ended. */
-const pendingTurnOf = (chat: Chat.Chat, agent: string): PendingTurn | undefined => {
+const pendingTurnOf = (chat: Session.Session, agent: string): PendingTurn | undefined => {
   const id = Obj.getKeys(chat, turnKeySource(agent)).at(-1)?.id;
   const [turnId, cursor, folded] = id?.split(':') ?? [];
   return turnId && cursor !== undefined && folded !== undefined

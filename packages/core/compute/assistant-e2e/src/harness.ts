@@ -18,7 +18,7 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -194,10 +194,10 @@ const runInstructions = (
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
 
-      let chatRef: Ref.Ref<Chat.Chat> | undefined;
+      let chatRef: Ref.Ref<Session.Session> | undefined;
       if (sessionChat) {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Agent E2E Chat' }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), name: 'Agent E2E Chat' }));
         yield* Database.flush();
         chatRef = Ref.make(chat);
       }

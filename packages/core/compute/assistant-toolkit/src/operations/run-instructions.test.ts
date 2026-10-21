@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -34,7 +34,7 @@ describe('RunInstructions', () => {
         const feed = yield* Database.add(Feed.make());
         const messageCountBefore = yield* countFeedMessages(feed);
 
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const instructions = yield* Database.add(
           Instructions.make({
             name: 'chat-mode-test',
@@ -162,7 +162,7 @@ describe('RunInstructions', () => {
 function layerWithToolCall(input: unknown) {
   return AssistantTestLayer({
     operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
-    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
+    types: [Session.Session, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
     aiService: ScriptedLanguageModel.scriptedAiService([
       { parts: [ScriptedLanguageModel.toolCall('completeJob', input)] },
       // The loop asks again once the tool result is fed back; a text-only turn stops it.

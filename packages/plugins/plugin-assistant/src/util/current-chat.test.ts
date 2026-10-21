@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -23,9 +23,9 @@ describe('currentChatRef', () => {
   });
 
   test('resolves the chat from the URI SetCurrentChat stores', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Chat.Chat, Project.Project, Feed.Feed] });
+    const { db } = await builder.createDatabase({ types: [Session.Session, Project.Project, Feed.Feed] });
     const subject = db.add(Project.make({ name: 'Project' }));
-    const chat = db.add(Chat.make({ name: 'Delegated', feed: Ref.make(db.add(Feed.make())) }));
+    const chat = db.add(Session.make({ name: 'Delegated', feed: Ref.make(db.add(Feed.make())) }));
 
     const ref = currentChatRef(subject, Obj.getURI(chat));
     expect(ref?.target?.id).toEqual(chat.id);

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { RDF } from '@dxos/pipeline-rdf';
@@ -30,7 +30,7 @@ const POLL_MS = 3_000;
 const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): RDF.Fact[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const agents = useQuery(db, Filter.type(Agent.Agent));
-  const chats = useQuery(db, Filter.type(Chat.Chat));
+  const chats = useQuery(db, Filter.type(Session.Session));
   const remote = useMemo(
     () =>
       new Set(

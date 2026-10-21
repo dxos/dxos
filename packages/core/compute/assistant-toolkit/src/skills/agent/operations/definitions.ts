@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
@@ -23,7 +23,7 @@ export const Relay = Operation.make({
   },
   input: Schema.Struct({
     /** The chat whose durable session receives the event (carries feed, instructions, and agent). */
-    chat: Schema.suspend(() => Ref.Ref(Chat.Chat)),
+    chat: Schema.suspend(() => Ref.Ref(Session.Session)),
     event: Schema.optional(TriggerEvent.TriggerEvent),
     /** Synthetic wake prompt (e.g. a cron tick) delivered instead of an event payload. */
     prompt: Schema.optional(Schema.String),

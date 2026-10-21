@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
 
         // Idempotent, so it runs on every branch rather than only on creation: re-binding an existing
         // chat backfills whatever its subject's providers contribute now but did not when it was made.
-        const bindContext = (chat: Chat.Chat) =>
+        const bindContext = (chat: Session.Session) =>
           Operation.invoke(AssistantOperation.BindChatContext, { chat, subject: companionTo });
 
         // 1. Look for an existing persisted companion chat in the space: the subject's latest
@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
           db.query(Query.select(Filter.id(companionTo.id)).children()).run(),
         );
         const existingChat = children
-          .filter(Obj.instanceOf(Chat.Chat))
+          .filter(Obj.instanceOf(Session.Session))
           .sort((left, right) => left.id.localeCompare(right.id))
           .at(-1);
         if (existingChat) {
@@ -56,7 +56,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
 
         // 2. Return cached transient chat for this companion if present.
         const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.CompanionChatCache);
-        const cached = cache[companionUri] as Chat.Chat | undefined;
+        const cached = cache[companionUri] as Session.Session | undefined;
         if (cached) {
           yield* bindContext(cached);
           return { chat: cached, persisted: false };

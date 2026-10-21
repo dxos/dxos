@@ -20,7 +20,7 @@ import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
@@ -702,7 +702,7 @@ describe('Agent Service (control plane)', () => {
       function* ({ expect }) {
         const processManager = yield* ProcessManager.ProcessManagerService;
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         yield* Database.flush();
 
         // Both callers start before either writes the session cache, which is what serializing the
@@ -732,7 +732,7 @@ describe('Agent Service (control plane)', () => {
         const registry = yield* Registry.AtomRegistry;
         const processManager = yield* ProcessManager.ProcessManagerService;
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
@@ -764,7 +764,7 @@ describe('Agent Service (control plane)', () => {
       function* (_) {
         const processManager = yield* ProcessManager.ProcessManagerService;
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
@@ -805,7 +805,7 @@ describe('Agent Service (control plane)', () => {
         const instructionsA = yield* Database.add(Instructions.make({ text: 'Steering A.' }));
         const instructionsB = yield* Database.add(Instructions.make({ text: 'Steering B.' }));
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), instructions: Ref.make(instructionsA) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), instructions: Ref.make(instructionsA) }));
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
@@ -854,7 +854,7 @@ describe('Agent Service (control plane)', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
@@ -898,7 +898,7 @@ describe('Agent Service (control plane)', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
 
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         yield* Database.flush();
         const target = Obj.getURI(chat);
 
