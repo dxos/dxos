@@ -14,7 +14,8 @@ Writes <out dir>/page.html plus the build's files, adjusted for the artifact pub
   - tabs switch stories through Storybook's preview channel (links cannot leave the artifact frame),
   - <html>/<head>/<body> wrappers are removed (the publisher adds its own skeleton),
   - control bytes and U+FFFD in JS become escapes, and the icon sprite loses its DOCTYPE
-    (the publisher rejects both).
+    (the publisher rejects both),
+  - GitHub avatars are downloaded into avatars/ and the bundle points at them (no external images).
 """
 
 import argparse
@@ -24,6 +25,7 @@ import json
 import os
 import re
 import shutil
+import urllib.request
 
 parser = argparse.ArgumentParser()
 parser.add_argument('build')
@@ -111,6 +113,23 @@ for script in glob.glob('**/*.js', recursive=True):
     data = re.sub(rb'[\x00-\x08\x0e-\x1f]', lambda match: ('\\x%02x' % match.group()[0]).encode(), data)
     data = data.replace('�'.encode(), b'\\uFFFD')
     open(script, 'wb').write(data)
+
+# The artifact page cannot load images from other hosts, so GitHub avatars ship as files beside it.
+AVATAR_URL = rb'`https://avatars\.githubusercontent\.com/\$\{(\w+)\}\?s=64`'
+handles = set()
+for script in glob.glob('**/*.js', recursive=True):
+    data = open(script, 'rb').read()
+    if re.search(AVATAR_URL, data):
+        handles.update(re.findall(rb'by: *(?:user|agent):([A-Za-z\d-]+)', b'\n'.join(
+            open(bundle, 'rb').read() for bundle in glob.glob('**/*.js', recursive=True))))
+        open(script, 'wb').write(re.sub(AVATAR_URL, rb'`avatars/${\1}.jpg`', data))
+os.makedirs('avatars', exist_ok=True)
+for handle in sorted(handle.decode() for handle in handles):
+    try:
+        with urllib.request.urlopen(f'https://avatars.githubusercontent.com/{handle}?s=64', timeout=20) as response:
+            open(f'avatars/{handle}.jpg', 'wb').write(response.read())
+    except OSError as error:
+        print(f'avatar {handle}: {error}')
 
 for sprite in glob.glob('**/*.svg', recursive=True):
     text = open(sprite, encoding='utf-8', errors='surrogateescape').read()
