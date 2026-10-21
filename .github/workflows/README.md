@@ -21,10 +21,10 @@ shard count never changes the required checks.
 
 | Job | Cells | Why |
 | :-- | :-- | :-- |
-| `test (node)` | 2 shards, 4 targets at a time | Peaks under 10 GB with no browser. |
-| `test (browser)` | Up to 8 cells of affected targets from `plan`: build the cell's closure at concurrency 4, then test 1 target at a time | Each target drives its own Chromium; sharing 4 vCPU with another target or a build made timing-sensitive stories fail. |
-| `e2e (composer)` | Chromium and Firefox 2 shards × 2 workers, WebKit 4 shards × 1 worker | One WebKit page holds ~6 GB and two-peer specs open two, so WebKit cannot run two tests at once. The cell table is in [`plan.mjs`](../actions/plan/plan.mjs). |
-| `e2e (rest)` | 2 target halves per browser, 1 worker | Storybook's cold start lost module loads with two workers. |
+| `test node` | 2 shards, 4 targets at a time | Peaks under 10 GB with no browser. |
+| `test browser` | Up to 8 cells of affected targets from `plan`: build the cell's closure at concurrency 4, then test 1 target at a time | Each target drives its own Chromium; sharing 4 vCPU with another target or a build made timing-sensitive stories fail. |
+| `e2e composer` | Chromium and Firefox 2 shards × 2 workers, WebKit 4 shards × 1 worker | One WebKit page holds ~6 GB and two-peer specs open two, so WebKit cannot run two tests at once. The cell table is in [`plan.mjs`](../actions/plan/plan.mjs). |
+| `e2e rest` | 2 target halves per browser, 1 worker | Storybook's cold start lost module loads with two workers. |
 
 `moon exec --job N --job-total` splits targets by count and Playwright's `--shard` splits tests by count,
 so shard times vary with which heavy targets land together.

@@ -49,9 +49,9 @@ const main = () => {
   const outputs = {
     'node': String(plan.node),
     'browser': String(plan.browser),
-    'browser-cells': JSON.stringify(browserCells(browserTargets)),
-    'composer-cells': JSON.stringify(plan.composer ? composerCells(browsers) : []),
-    'rest-cells': JSON.stringify(plan.rest ? restCells(browsers) : []),
+    ...cellOutputs('browser', browserCells(browserTargets)),
+    ...cellOutputs('composer', plan.composer ? composerCells(browsers) : []),
+    ...cellOutputs('rest', plan.rest ? restCells(browsers) : []),
   };
   for (const [key, value] of Object.entries(outputs)) {
     console.log(`${key}=${value}`);
@@ -66,10 +66,24 @@ const main = () => {
   }
 };
 
+// A matrix over the labels alone: GitHub names a cell `<job name> (<label>)`, and shows a skipped matrix
+// job's name unevaluated, so a name built from matrix fields reads as raw `${{ matrix.* }}` there. Each
+// job looks its cell's fields up in `<suite>-config` by label.
+const cellOutputs = (suite, cells) => ({
+  [`${suite}-cells`]: JSON.stringify(cells.map(({ cell }) => cell)),
+  [`${suite}-config`]: JSON.stringify(Object.fromEntries(cells.map(({ cell, ...fields }) => [cell, fields]))),
+});
+
 const composerCells = (browsers) =>
   browsers.flatMap((browser) => {
     const { shards, workers } = COMPOSER_SHARDS[browser];
-    return Array.from({ length: shards }, (_, index) => ({ browser, shard: index + 1, total: shards, workers }));
+    return Array.from({ length: shards }, (_, index) => ({
+      cell: `${browser} ${index + 1}/${shards}`,
+      browser,
+      shard: index + 1,
+      total: shards,
+      workers,
+    }));
   });
 
 // The test step gets an explicit list: moon counts a task whose env input is set as affected, and the
@@ -78,6 +92,7 @@ const browserCells = (pairs) => {
   const targets = pairs.map(([project, task]) => `${project}:${task}`).sort();
   const total = Math.min(BROWSER_SHARDS, targets.length);
   return Array.from({ length: total }, (_, shard) => ({
+    cell: `${shard + 1}/${total}`,
     shard,
     total,
     targets: targets.filter((_, index) => index % total === shard).join(' '),
@@ -86,7 +101,12 @@ const browserCells = (pairs) => {
 
 const restCells = (browsers) =>
   browsers.flatMap((browser) =>
-    Array.from({ length: REST_SHARDS }, (_, shard) => ({ browser, shard, total: REST_SHARDS })),
+    Array.from({ length: REST_SHARDS }, (_, shard) => ({
+      cell: `${browser} ${shard + 1}/${REST_SHARDS}`,
+      browser,
+      shard,
+      total: REST_SHARDS,
+    })),
   );
 
 /** Affected `[project, task]` pairs, or undefined for a full run. */

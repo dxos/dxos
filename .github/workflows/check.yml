@@ -362,8 +362,11 @@ jobs:
       node: ${{ steps.plan.outputs.node }}
       browser: ${{ steps.plan.outputs.browser }}
       browser-cells: ${{ steps.plan.outputs.browser-cells }}
+      browser-config: ${{ steps.plan.outputs.browser-config }}
       composer-cells: ${{ steps.plan.outputs.composer-cells }}
+      composer-config: ${{ steps.plan.outputs.composer-config }}
       rest-cells: ${{ steps.plan.outputs.rest-cells }}
+      rest-config: ${{ steps.plan.outputs.rest-config }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -396,7 +399,7 @@ jobs:
   # stories fail when it shares 4 vCPU with another target or a build. File parallelism stays disabled:
   # overloaded runners flake. Both need a successful `plan`; the `test` gate fails when it did not.
   test-node:
-    name: test (node, shard=${{ matrix.shard }})
+    name: test node
     needs: plan
     if: >-
       ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
@@ -404,8 +407,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1]
-    # `statuses: write` lets shard 1 post the advisory suites' results.
+        cell: ['1/2', '2/2']
+    # `statuses: write` lets the second cell post the advisory suites' results.
     permissions:
       contents: read
       packages: read
@@ -453,18 +456,18 @@ jobs:
         with:
           suite: node
           targets: ':test :test-workerd'
-          shard: ${{ matrix.shard }}
+          shard: ${{ strategy.job-index }}
           of: ${{ strategy.job-total }}
 
-      # Shard 1 also runs the advisory suites, memory retention and the model-fixture replay, which once
+      # The second cell also runs the advisory suites, memory retention and the model-fixture replay, which once
       # had a runner each for under 30 s of work. Each reports as its own commit status; neither fails
       # this cell. Not in the merge queue, where nobody reads those statuses and the PR already ran them.
       - name: Advisory suites
-        if: ${{ !cancelled() && matrix.shard == 1 && github.event_name != 'merge_group' }}
+        if: ${{ !cancelled() && strategy.job-index == 1 && github.event_name != 'merge_group' }}
         uses: ./.github/actions/advisory
 
   test-browser:
-    name: test (browser, ${{ matrix.shard }}/${{ matrix.total }})
+    name: test browser
     needs: plan
     if: >-
       ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
@@ -472,13 +475,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
+        cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
     # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
     timeout-minutes: 90
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
+      CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
       # The nightly's tests must execute, but its force flag stays on the build step.
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       NODE_VERSION: '24.11.1'
@@ -507,9 +512,8 @@ jobs:
         env:
           MOON_CONCURRENCY: 4
           MOON_FORCE: ${{ github.event_name == 'schedule' }}
-          TARGETS: ${{ matrix.targets }}
         run: |
-          builds=$(node .github/actions/plan/closure.mjs $TARGETS < /dev/null)
+          builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
           [ -z "$builds" ] || moon exec --on-failure continue $builds
 
       - name: Install Playwright
@@ -522,8 +526,8 @@ jobs:
         uses: ./.github/actions/vitest
         with:
           suite: browser
-          targets: ${{ matrix.targets }}
-          shard: ${{ matrix.shard }}
+          targets: ${{ env.CELL_TARGETS }}
+          shard: ${{ env.CELL_SHARD }}
 
   # One check per suite for branch protection to require, whatever the shard count: it fails if any cell
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
@@ -554,13 +558,13 @@ jobs:
   # `--on-failure continue` because moon's default bail drops a failing cell's remaining targets,
   # hiding what they cost.
   e2e-composer:
-    name: e2e (composer, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
+    name: e2e composer
     needs: plan
     if: ${{ needs.plan.outputs.composer-cells != '[]' && inputs.only != 'test' }}
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.plan.outputs.composer-cells) }}
+        cell: ${{ fromJSON(needs.plan.outputs.composer-cells) }}
     runs-on: ubuntu-24.04
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
@@ -571,7 +575,10 @@ jobs:
       DX_ENVIRONMENT: ci
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
-      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].browser }}
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].shard }}
+      CELL_TOTAL: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].total }}
+      CELL_WORKERS: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].workers }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -596,7 +603,7 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -619,7 +626,7 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue composer-e2e:e2e --
-            --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=${{ matrix.workers }}
+            --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
 
       # A fork PR gets no secrets, and the uploader cannot run without a token.
       - name: Test (no analytics)
@@ -627,7 +634,7 @@ jobs:
         timeout-minutes: 35
         run: >-
           moon exec --on-failure continue composer-e2e:e2e --
-          --shard=${{ matrix.shard }}/${{ matrix.total }} --workers=${{ matrix.workers }}
+          --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
 
       # Trends every test's outcome in PostHog; the event contract and the gate are documented in
       # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
@@ -643,18 +650,18 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}-composer-${{ matrix.shard }}
+          name: playwright-report-${{ env.PLAYWRIGHT_BROWSER }}-composer-${{ env.CELL_SHARD }}
           path: test-results/playwright
           retention-days: 7
 
   e2e-rest:
-    name: e2e (rest, ${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.total }})
+    name: e2e rest
     needs: plan
     if: ${{ needs.plan.outputs.rest-cells != '[]' && inputs.only != 'test' }}
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.plan.outputs.rest-cells) }}
+        cell: ${{ fromJSON(needs.plan.outputs.rest-cells) }}
     runs-on: ubuntu-24.04
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
@@ -665,7 +672,9 @@ jobs:
       DX_ENVIRONMENT: ci
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
-      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].browser }}
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].shard }}
+      CELL_TOTAL: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].total }}
       # Storybook's cold start lost module loads on Firefox and WebKit with two workers on 4 vCPU.
       PLAYWRIGHT_WORKERS: 1
     steps:
@@ -692,7 +701,7 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -706,7 +715,7 @@ jobs:
         id: shard
         run: |
           targets=$(moon query tasks "task=e2e" < /dev/null |
-            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().filter((_,i)=>i%${{ matrix.total }}===${{ matrix.shard }}).map((project)=>project+':e2e').join(' ')))")
+            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().filter((_,i)=>i%${{ env.CELL_TOTAL }}===${{ env.CELL_SHARD }}).map((project)=>project+':e2e').join(' ')))")
           [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
@@ -737,7 +746,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}-rest-${{ matrix.shard }}
+          name: playwright-report-${{ env.PLAYWRIGHT_BROWSER }}-rest-${{ env.CELL_SHARD }}
           path: test-results/playwright
           retention-days: 7
 
