@@ -213,7 +213,7 @@ export const EventSpec = Schema.Struct({
   events: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Events' })),
   /** The credential whose account access is checked against. */
   credential: Ref.Ref(AccessToken.AccessToken).annotate({ title: 'Credential' }),
-  /** UCAN issued by EDGE after checking access; renewed before `exp`. Written by EDGE, never by a user. */
+  /** UCAN issued by EDGE after checking access; valid until `exp`. Written by EDGE, never by a user. */
   grant: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
 });
 export type EventSpec = Schema.Schema.Type<typeof EventSpec>;
@@ -345,10 +345,6 @@ feat F-2: Event trigger and grant
   req F-2.2:
     when: compute-service loads an event trigger without a valid grant
     then: it calls EventGrants.issue; on success it writes the grant to the trigger and registers the route
-
-  req F-2.3:
-    when: a grant is within 2 hours of exp
-    then: compute-service renews it the same way; a refused renewal unregisters the route and records lastError on the trigger
 
   req F-2.4: Access is never inferred from the trigger alone; it comes from Provider.checkAccess with the space's own managed token.
 ```
@@ -537,4 +533,12 @@ decision D-10: kms-service also serves the webhook ingress and calls compute-ser
   why: Verifying a webhook needs the provider module and its secret, both of which now live only in kms-service; routing by resource URI stays generic.
   rejected:
     - Ingress in compute-service calling kms-service per delivery to verify: one extra service-binding hop per event and webhook secrets readable outside kms.
+```
+
+```mdl
+decision D-11: The spec omits renewing a grant before it expires (formerly F-2.3).
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-2, EventSpec]
+  source: https://claude.ai/code/artifact/3c2feabe-985f-479a-aeea-1d598f6bf1e0
 ```
