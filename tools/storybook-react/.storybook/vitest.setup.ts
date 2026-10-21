@@ -4,8 +4,15 @@
 
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { afterEach, beforeAll, beforeEach } from 'vitest';
+import { commands } from 'vitest/browser';
 
 import * as preview from './preview.ts';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    throttleCpu: () => Promise<void>;
+  }
+}
 
 /**
  * https://storybook.js.org/docs/api/portable-stories/portable-stories-vitest#setprojectannotations
@@ -14,6 +21,9 @@ const annotations = setProjectAnnotations([preview]);
 
 // Run Storybook's beforeAll hook.
 beforeAll(annotations.beforeAll);
+
+// Emulate a slower CPU when `DX_STORYBOOK_CPU_THROTTLE` is set (see `throttleCpu` in vite.base.config.ts).
+beforeAll(() => commands.throttleCpu());
 
 // Clear ErrorBoundary error tracking before each test.
 beforeEach(() => {

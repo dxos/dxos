@@ -18,6 +18,7 @@ import './cubes.css';
 
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
+import { configure } from 'storybook/test';
 
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
@@ -27,6 +28,10 @@ import { docsTheme } from './theme.tsx';
 
 // Restores the "Download logs" action on a crashed story.
 globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
+
+// A play starts while its story is still booting (a client, a space, wasm), which takes longer than
+// testing-library's 1 s default for `findBy*` and `waitFor` on CI's 4 vCPU runners.
+configure({ asyncUtilTimeout: 5_000 });
 
 /**
  * Configure Storybook rendering.
