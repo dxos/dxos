@@ -113,8 +113,9 @@ const totalCrossings = (rows: readonly string[][], edges: readonly ArrangeEdge[]
 /** Barycenter sweeps: each row sorted by the mean position of its neighbours in the row just placed. */
 const orderRows = (rows: readonly string[][], edges: readonly ArrangeEdge[]): string[][] => {
   const neighbours = neighboursOf(edges);
-  let current = rows.map((row) => [...row]);
-  let best = current;
+  const current = rows.map((row) => [...row]);
+  // A copy, since sweeps reorder `current` in place: an alias would let a worse sweep overwrite the seed.
+  let best = current.map((row) => [...row]);
   let bestScore = totalCrossings(current, edges);
   for (let sweep = 0; sweep < SWEEPS && bestScore > 0; sweep++) {
     const down = sweep % 2 === 0;

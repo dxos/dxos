@@ -46,6 +46,38 @@ describe('arrange', () => {
     expect([...slots.values()].map(({ row }) => row).sort()).toEqual([0, 0, 0, 1, 1, 1]);
   });
 
+  test('crossings never has more crossings than the rank order it starts from', ({ expect }) => {
+    // A small deterministic generator, so the graphs are varied but the test is repeatable.
+    let state = 1;
+    const random = () => (state = (state * 48271) % 2147483647) / 2147483647;
+    for (let graph = 0; graph < 2000; graph++) {
+      const ranks = new Map<string, number>();
+      const rows = Array.from({ length: 4 }, (_, row) =>
+        Array.from({ length: 2 + Math.floor(random() * 6) }, (_, column) => `${row}-${column}`),
+      );
+      rows.forEach((row, rank) => row.forEach((id) => ranks.set(id, rank)));
+      const graphEdges: ArrangeEdge[] = rows
+        .slice(1)
+        .flatMap((row, index) =>
+          rows[index].flatMap((from) => row.filter(() => random() < 0.4).map((to) => ({ from, to }))),
+        );
+      const count = (slots: ReadonlyMap<string, Slot>) => {
+        const pairs = graphEdges.map(({ from, to }) => [slots.get(from)?.column ?? 0, slots.get(to)?.column ?? 0]);
+        let total = 0;
+        for (let i = 0; i < pairs.length; i++) {
+          for (let j = i + 1; j < pairs.length; j++) {
+            const sameRows = (slots.get(graphEdges[i].from)?.row ?? 0) === (slots.get(graphEdges[j].from)?.row ?? 0);
+            total += sameRows && (pairs[i][0] - pairs[j][0]) * (pairs[i][1] - pairs[j][1]) < 0 ? 1 : 0;
+          }
+        }
+        return total;
+      };
+      expect(count(arrange(ranks, graphEdges, 'crossings'))).toBeLessThanOrEqual(
+        count(arrange(ranks, graphEdges, 'rank')),
+      );
+    }
+  });
+
   test('force gives every node its own slot, the same every time', ({ expect }) => {
     const slots = arrange(ranks, edges, 'force');
     const keys = [...slots.values()].map(({ column, row }) => `${column},${row}`);

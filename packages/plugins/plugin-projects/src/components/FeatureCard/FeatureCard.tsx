@@ -115,6 +115,10 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, on
   };
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     event.stopPropagation();
+    // An IME's Enter confirms a composition candidate, not the field.
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
     if (event.key === 'Enter' && !(multiline && event.shiftKey)) {
       event.preventDefault();
       event.currentTarget.blur();
@@ -199,7 +203,8 @@ export const FeatureCard = ({
               label={t('feature-card.name.label')}
               testId='feature-card.name.input'
               autoFocus
-              onCommit={(name) => onRename(feature, name)}
+              // A feature always has a name, so clearing the field keeps the old one.
+              onCommit={(name) => name && onRename(feature, name)}
             />
           ) : (
             feature.name
