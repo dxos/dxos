@@ -7,8 +7,11 @@ import { type AutomergeUrl, generateAutomergeUrl } from '@automerge/automerge-re
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as EffectStream from 'effect/Stream';
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop } from '@dxos/async';
@@ -488,6 +491,59 @@ describe('RepoProxy', () => {
     expect(refusing.requests).toEqual(requests);
   });
 
+  test('a document whose initial value holds Automerge values reaches the host intact', async () => {
+    const { dataService, host } = await setup();
+    const [clientRepo] = createProxyRepos(withJsonEncodedCreations(dataService));
+    await openAndClose(clientRepo);
+
+    // A space root's links are `RawString`s, which the transport's JSON codec rejects as an initial value.
+    const objectId = EntityId.random();
+    const url = generateAutomergeUrl();
+    const handle = clientRepo.create<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      links: { [objectId]: new A.RawString(url) },
+    });
+    await handle.whenReady();
+    invariant(handle.url);
+    const hostHandle = await host.loadDoc<DatabaseDirectory>(Context.default(), handle.url);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    const link = hostHandle.doc()?.links?.[objectId];
+    expect(link).toBeInstanceOf(A.RawString);
+    expect(link?.toString()).toEqual(url);
+  });
+
+  test('a creation the transport refuses as invalid is reported once, not retried', { timeout: 5_000 }, async () => {
+    const { dataService } = await setup();
+    const { client, attempts } = withRefusedCreations(dataService);
+    const [clientRepo] = createProxyRepos(client);
+    await openAndClose(clientRepo);
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    const handle = clientRepo.create<{ text: string }>({ text: 'refused' });
+    await expect(handle.whenReady()).rejects.toThrow('Missing key');
+    expect(states.at(-1)?.failing).toBe(true);
+    // The next flush reports the refusal; later ones are not blocked by it.
+    await expect(clientRepo.flush()).rejects.toThrow('Missing key');
+    expect(states.at(-1)?.failing).toBe(false);
+
+    // Successful update passes reset the send backoff; they must not re-request the refused creation.
+    attempts.refuse = false;
+    const other = clientRepo.create<{ count: number }>({ count: 0 });
+    await other.whenReady();
+    for (let count = 1; count <= 5; count++) {
+      other.change((doc: { count: number }) => {
+        doc.count = count;
+      });
+      await clientRepo.flush();
+    }
+    await sleep(500);
+    expect(attempts.count).toBe(2);
+  });
+
   test('document mutation persists with `flush`', async () => {
     const dbPath = createTmpPath();
     let url: AutomergeUrl;
@@ -956,6 +1012,45 @@ describe('RepoProxy', () => {
     expect(clientRepo.hasUnsavedChanges()).toBe(false);
   });
 
+  test('a proxy that is never closed is still collectable', { timeout: 30_000 }, async () => {
+    makeGlobalAnEventTargetLikeWorkerd();
+    setFlagsFromString('--expose_gc');
+    const gc: () => void = runInNewContext('gc');
+
+    let props: DataServiceProps | undefined;
+    await setup(undefined, (captured) => new DataServiceImpl((props = captured)));
+    invariant(props);
+    let live = 0;
+    const registry = new FinalizationRegistry(() => {
+      live--;
+    });
+    // Opened in its own frame so no local of the test's suspended frame still points at the last one.
+    const openUnclosedOnOwnTransport = async (handlers: DataService.Handlers) => {
+      const dataService = await EffectEx.runPromise(
+        makeInProcessClient(DataService.Rpcs, handlers).pipe(
+          Effect.provideService(Scope.Scope, Effect.runSync(Scope.make())),
+        ),
+      );
+      const repo = new RepoProxy(dataService, EffectContext.empty(), SpaceId.random());
+      await repo.open();
+      registry.register(repo, undefined);
+      live++;
+    };
+    for (let index = 0; index < 10; index++) {
+      await openUnclosedOnOwnTransport(new SubscriberlessDataService(props));
+    }
+
+    await expect
+      .poll(
+        () => {
+          gc();
+          return live;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(0);
+  });
+
   test('a closed proxy has nothing unsaved', { timeout: 5_000 }, async () => {
     let failing: FailingUpdateDataService | undefined;
     const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
@@ -1019,6 +1114,17 @@ describe('RepoProxy', () => {
  * A repo whose document handle is registered with a first subscription that
  * {@link DroppableDataService.dropSubscription} ends on demand.
  */
+const makeGlobalAnEventTargetLikeWorkerd = () => {
+  const target = new EventTarget();
+  for (const method of ['addEventListener', 'removeEventListener'] as const) {
+    const previous = Reflect.get(globalThis, method);
+    Reflect.set(globalThis, method, target[method].bind(target));
+    onTestFinished(() => {
+      Reflect.set(globalThis, method, previous);
+    });
+  }
+};
+
 const setupWithDroppableSubscription = async () => {
   let droppable: DroppableDataService | undefined;
   const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
@@ -1034,6 +1140,12 @@ const setupWithDroppableSubscription = async () => {
   return { droppable, host, clientRepo, clientHandle };
 };
 
+class SubscriberlessDataService extends DataServiceImpl {
+  override ['DataService.subscribe'](): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectStream.never;
+  }
+}
+
 /** Fails every document creation, as a host that is gone or refuses the call does. */
 class RefusingDataService extends DataServiceImpl {
   'refuse' = true;
@@ -1048,6 +1160,28 @@ class RefusingDataService extends DataServiceImpl {
       : super['DataService.createDocument'](request);
   }
 }
+
+/** Encodes each creation request as the worker transport's client does before sending it. */
+const withJsonEncodedCreations = (dataService: DataService.Client): DataService.Client => {
+  const encode = Schema.encodeUnknownEffect(Schema.toCodecJson(DataService.CreateDocumentRequest));
+  return Object.assign(Object.create(dataService), {
+    'DataService.createDocument': (request: DataService.CreateDocumentRequest) =>
+      encode(request).pipe(Effect.flatMap(() => dataService['DataService.createDocument'](request))),
+  });
+};
+
+/** Fails each creation with a `SchemaError` while {@link refuse} is set, as a transport that cannot encode it does. */
+const withRefusedCreations = (dataService: DataService.Client) => {
+  const attempts = { count: 0, refuse: true };
+  const invalid = Schema.decodeUnknownEffect(DataService.CreateDocumentResponse)({});
+  const client: DataService.Client = Object.assign(Object.create(dataService), {
+    'DataService.createDocument': (request: DataService.CreateDocumentRequest) => {
+      attempts.count++;
+      return attempts.refuse ? invalid : dataService['DataService.createDocument'](request);
+    },
+  });
+  return { client, attempts };
+};
 
 /**
  * Fails every update batch while {@link fail} is set, as a host that times out the call does; while

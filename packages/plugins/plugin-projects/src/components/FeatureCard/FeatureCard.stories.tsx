@@ -3,16 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import * as Layout from '@dxos/react-ui/Layout';
+import { Masonry } from '@dxos/react-ui-masonry';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { makeFeatureLookup } from './feature.ts';
+import { type FeatureLookup, type FeatureModel, makeFeatureLookup } from './feature.ts';
 import { FeatureCard } from './FeatureCard.tsx';
 import { SAMPLE_FEATURES } from './testing.ts';
 
@@ -22,25 +22,37 @@ type StoryArgs = {
   onSelectDependency?: (id: string) => void;
 };
 
+type TileData = Pick<StoryArgs, 'expanded' | 'onSelectDependency'> & {
+  feature: FeatureModel;
+  lookup: FeatureLookup;
+  onRename: (feature: FeatureModel, name: string) => void;
+  onDescribe: (feature: FeatureModel, description: string) => void;
+};
+
+const FeatureTile = ({ data: { feature, ...props } }: { data: TileData }) => (
+  <FeatureCard feature={feature} {...props} />
+);
+
 const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
-  const lookup = useMemo(() => makeFeatureLookup(SAMPLE_FEATURES), []);
+  const [features, setFeatures] = useState(SAMPLE_FEATURES);
+  const lookup = useMemo(() => makeFeatureLookup(features), [features]);
+  const items = useMemo(() => {
+    const update = (id: string, values: Partial<FeatureModel>) =>
+      setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
+    const onRename = (feature: FeatureModel, name: string) => update(feature.id, { name });
+    const onDescribe = (feature: FeatureModel, description: string) => update(feature.id, { description });
+    return ids.flatMap((id): TileData[] => {
+      const feature = lookup(id);
+      return feature ? [{ feature, lookup, expanded, onSelectDependency, onRename, onDescribe }] : [];
+    });
+  }, [ids, lookup, expanded, onSelectDependency]);
+
   return (
-    <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]'>
-      {ids.flatMap((id) => {
-        const feature = lookup(id);
-        return feature
-          ? [
-              <FeatureCard
-                key={id}
-                feature={feature}
-                lookup={lookup}
-                expanded={expanded}
-                onSelectDependency={onSelectDependency}
-              />,
-            ]
-          : [];
-      })}
-    </Layout.Grid>
+    <Masonry.Root Tile={FeatureTile} minColumnWidth={18}>
+      <Masonry.Content>
+        <Masonry.Viewport items={items} getId={({ feature }) => feature.id} />
+      </Masonry.Content>
+    </Masonry.Root>
   );
 };
 

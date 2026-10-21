@@ -18,10 +18,10 @@ import {
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 
-import { type BoundCanvasStore, CanvasFrameNode, ImageNode, bindCanvasStore } from '#model';
+import { type BoundCanvasStore, CanvasViewNode, ImageNode, bindCanvasStore } from '#model';
 import { CanvasCapabilities, Generator } from '#types';
 
-import { CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx';
 import { ImageNodeView } from './ImageNodeView.tsx';
 
 /** The canvas's scene store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
@@ -47,11 +47,11 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
       createNodeRegistry(
         {
           ...defaultNodeTypes,
-          frame: {
-            ...defaultNodeTypes.frame,
-            schema: CanvasFrameNode,
-            component: CanvasFrameNodeView,
-            toolbar: CanvasFrameToolbar,
+          view: {
+            ...defaultNodeTypes.view,
+            schema: CanvasViewNode,
+            component: CanvasViewNodeView,
+            toolbar: CanvasViewToolbar,
             hostOpen,
           },
           image: {

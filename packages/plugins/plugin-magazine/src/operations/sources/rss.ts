@@ -115,7 +115,7 @@ const parseFeed = (url: string, xml: string): FetchResult => {
       ? (text(item.author?.name) ?? text(item.author))
       : (text(item['dc:creator']) ?? text(item.author));
 
-    const description = markdown(text(item.description));
+    const description = withMediaImage(markdown(text(item.description)), mediaImageUrl(item));
     const content = isAtom
       ? (markdown(text(item.summary)) ?? markdown(text(item.content)))
       : markdown(text(item['content:encoded']));
@@ -139,6 +139,33 @@ const parseFeed = (url: string, xml: string): FetchResult => {
   });
 
   return { feed, posts };
+};
+
+/**
+ * fast-xml-parser's shape for a Media RSS `<media:content>` or `<media:thumbnail>` element; an empty
+ * element (`<media:content/>`) parses to a string.
+ */
+type MediaElement = string | { '@_url'?: string; '@_medium'?: string; '@_type'?: string };
+
+type MediaItem = { 'media:content'?: MediaElement | MediaElement[]; 'media:thumbnail'?: MediaElement | MediaElement[] };
+
+const mediaUrls = (value: MediaElement | MediaElement[] | undefined, isImage = (_: MediaElement) => true) =>
+  (Array.isArray(value) ? value : value !== undefined ? [value] : [])
+    .filter(isImage)
+    .flatMap((media) => (typeof media === 'object' && media['@_url'] ? [media['@_url']] : []));
+
+const mediaImageUrl = (item: MediaItem): string | undefined => {
+  const isImage = (media: MediaElement) =>
+    typeof media === 'object' &&
+    (media['@_medium'] ? media['@_medium'] === 'image' : (media['@_type']?.startsWith('image/') ?? true));
+  return mediaUrls(item['media:content'], isImage)[0] ?? mediaUrls(item['media:thumbnail'])[0];
+};
+
+const withMediaImage = (description: string | undefined, imageUrl: string | undefined): string | undefined => {
+  if (!imageUrl || (description && /!\[[^\]]*\]\(|<img\s/i.test(description))) {
+    return description;
+  }
+  return description ? `${description}\n\n![](${imageUrl})` : `![](${imageUrl})`;
 };
 
 /** fast-xml-parser's shape for an Atom `<link>` element, or the plain text an RSS `<link>` parses to. */

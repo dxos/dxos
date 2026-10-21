@@ -17,7 +17,7 @@ import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -39,8 +39,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
-import { Message, Task } from '@dxos/types';
-import { keyToFallback, markWork } from '@dxos/util';
+import { type Actor, Message, Task } from '@dxos/types';
+import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
 import { meta } from '#meta';
@@ -603,6 +603,25 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
     model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
   }, [model, streaming, messages, tail]);
 
+  // Prompts carry their author's DID; members resolve it to the name and colours presence shows them with.
+  const members = useMembers(db?.spaceId);
+  const getAuthor = useCallback(
+    (sender: Actor.Actor) => {
+      const member = sender.identityDid ? members.find((member) => member.did === sender.identityDid) : undefined;
+      if (!member) {
+        return undefined;
+      }
+
+      const fallback = member.identityKey ? hexToFallback(member.identityKey) : undefined;
+      return {
+        name: member.displayName,
+        hue: member.data?.hue ?? fallback?.hue,
+        emoji: member.data?.emoji ?? fallback?.emoji,
+      };
+    },
+    [members],
+  );
+
   const userHue = useMemo(
     () =>
       userHueProp ||
@@ -660,6 +679,8 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         objectImage={objectImage}
         getObjectLabel={getObjectLabel}
         userHue={userHue}
+        userDid={identity.did}
+        getAuthor={getAuthor}
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.

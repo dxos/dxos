@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
-import { Chat } from '@dxos/assistant';
+import { AiContext, Chat } from '@dxos/assistant';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
@@ -163,6 +163,7 @@ describe('EdgeAgent', () => {
       types: [
         Feed.Feed,
         Message.Message,
+        AiContext.Binding,
         Chat.Chat,
         Project.Project,
         Repo.Repo,
@@ -349,6 +350,37 @@ describe('EdgeAgent', () => {
             { name: 'dxos', url: 'https://github.com/dxos/dxos.git', branch: 'main' },
             { name: 'edge', url: 'https://github.com/dxos/edge.git' },
             { name: 'someone-edge', url: 'https://github.com/someone/edge.git' },
+          ],
+        },
+      });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('checks out the repositories bound to a chat outside a project, leaving EDGE-hosted ones out', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos', defaultBranch: 'main' }));
+      const removed = yield* Database.add(Repo.make({ owner: 'dxos', name: 'edge' }));
+      const hosted = yield* Database.add(Repo.makeEdge({ spaceId: 'space', name: 'scratch' }));
+      const outline = yield* Database.add(Outline.make({ name: 'notes' }));
+      const bind = (added: Obj.Unknown[], removedObjects: Obj.Unknown[] = []) =>
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: {
+            added: added.map((object) => Ref.make(object)),
+            removed: removedObjects.map((object) => Ref.make(object)),
+          },
+        });
+      yield* Feed.append(feed, [bind([dxos, removed, hosted, outline])]);
+      yield* Feed.append(feed, [bind([], [removed])]);
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
+
+      expect(edge.spawned[0]).toMatchObject({
+        annotations: {
+          [EdgeProtocol.Annotation.repositories]: [
+            { name: 'dxos', url: 'https://github.com/dxos/dxos.git', branch: 'main' },
           ],
         },
       });

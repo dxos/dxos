@@ -323,7 +323,6 @@
     "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },

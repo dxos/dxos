@@ -107,6 +107,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }
