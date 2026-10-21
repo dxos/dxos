@@ -154,8 +154,12 @@ emit their changes as the same patches instead of model snapshots.
 
 1. ~~Scope~~ Decided: one document-wide log per canvas; undo returns to the View it changed.
 2. ~~Entry shape~~ Decided: patches computed by the change, on the evolved `HistoryTracker`.
-3. ~~How gestures reach the tracker~~ Decided: every committed intent (pointer-up, panel edit, key command) invokes
-   `CanvasOperation.Apply`; gestures, agents and MCP share one path, one log and one permission check.
+3. ~~How gestures reach the tracker~~ Decided: every committed edit (pointer-up, panel edit, key command) is applied
+   by the canvas in the frame it ends and recorded as `CanvasOperation.Patch` from its heads before to its heads
+   after, a forward already done; agents and MCP invoke `CanvasOperation.Apply` with intents. Both share one log and
+   one inverse (a `Patch` back). Revised 2026-10-20 from "every intent invokes `Apply`": the invoker is asynchronous,
+   so the gesture's result would land a frame late, and controller commands write records (Group's Object, pruned
+   orphans) that no intent expresses.
 4. ~~Conflicts with later edits~~ Decided: field-level and best effort. Undo writes back only the fields the entry
    wrote and nobody has changed since; a field changed by someone else, or an element deleted since, is skipped and
    the toast says the undo was partial.

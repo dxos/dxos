@@ -35,6 +35,7 @@ import {
   sortByZ,
   trackId,
   withLegacyNodeType,
+  withLegacyParams,
 } from '@dxos/react-ui-canvas/headless';
 
 /**
@@ -455,29 +456,32 @@ const withLegacyLine = (link: Link): Link => {
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /**
- * A node saved before its opacity moved into its style, or a frame saved before its `object` and `contents` moved
- * into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
+ * A node saved before its opacity moved into its style, or a frame saved before its `object`, `contents` and `role`
+ * moved into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
  * place.
  */
 const withLegacyNode = (node: Node): Node => {
   const opacity: unknown = Reflect.get(node, 'opacity');
   const object: unknown = Reflect.get(node, 'object');
   const contents: unknown = Reflect.get(node, 'contents');
+  const role: unknown = Reflect.get(node, 'role');
   Reflect.deleteProperty(node, 'opacity');
   let style = node.style;
   if (typeof opacity === 'number' && style?.opacity === undefined) {
     style = { ...style, opacity };
   }
-  // Only a frame ever carried `object` and `contents`; on another type they are a host's own fields.
-  const framed = isViewNode(node) && (object !== undefined || contents !== undefined);
+  // Only a frame ever carried `object`, `contents` and `role`; on another type they are a host's own fields.
+  const framed = isViewNode(node) && (object !== undefined || contents !== undefined || role !== undefined);
   if (!framed) {
     return style === node.style ? node : { ...node, style };
   }
   Reflect.deleteProperty(node, 'object');
   Reflect.deleteProperty(node, 'contents');
+  Reflect.deleteProperty(node, 'role');
   const current: unknown = Reflect.get(node, 'link');
   const link = {
     ...(object !== undefined ? { object } : {}),
+    ...(typeof role === 'string' ? { role } : {}),
     ...(typeof contents === 'boolean' ? { contents } : {}),
     ...(isRecord(current) ? current : {}),
   };
@@ -502,6 +506,38 @@ const withLegacyTimeline = (timeline: Timeline): Timeline => {
   return { ...timeline, tracks };
 };
 
+/**
+ * A stored node in the current shape: its legacy type name (`frame`), settings beside the shared fields, opacity
+ * and frame fields moved. Returns a fresh clone.
+ */
+export const upgradeNode = (node: Node): Node => withLegacyNode(withLegacyParams(withLegacyNodeType(clone(node))));
+
+/** A stored link in the current shape: the retired `directed` and `line` moved into `ends` and `style`. Returns a fresh clone. */
+export const upgradeLink = (link: Link): Link => withLegacyLine(withLegacyDirection(clone(link)));
+
+/** A stored timeline in the current shape: opacity tracks keyed by `style.opacity`. Returns a fresh clone. */
+export const upgradeTimeline = (timeline: Timeline): Timeline => withLegacyTimeline(clone(timeline));
+
+/**
+ * The content with every record in the current shape: the legacy root scene renamed (`migrateContent`) and each
+ * node, link and timeline upgraded. Pure, so peers migrating one canvas write the same records; returns a new map.
+ */
+export const upgradeSceneContent = (content: ContentMap): ContentMap => {
+  const next = clone(content);
+  migrateContent(next);
+  for (const [key, value] of Object.entries(next)) {
+    const record: unknown = value;
+    if (isNodeRecord(record)) {
+      next[key] = { ...record, node: upgradeNode(record.node) } satisfies NodeRecord;
+    } else if (isLinkRecord(record)) {
+      next[key] = { ...record, link: upgradeLink(record.link) } satisfies LinkRecord;
+    } else if (isSceneRecord(record) && record.timeline) {
+      next[key] = { ...record, timeline: upgradeTimeline(record.timeline) } satisfies SceneRecord;
+    }
+  }
+  return next;
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readViews = (content: ContentMap): ViewMap => {
   const headers: Record<ViewId, SceneRecord> = {};
@@ -516,9 +552,9 @@ export const readViews = (content: ContentMap): ViewMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = withLegacyNode(withLegacyNodeType(clone(record.node)));
+      nodes[record.scene][record.node.id] = upgradeNode(record.node);
     } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
+      links[record.scene][record.link.id] = upgradeLink(record.link);
     }
   }
   const scenes: Record<ViewId, View> = {};
@@ -531,7 +567,7 @@ export const readViews = (content: ContentMap): ViewMap => {
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
       ...(header.anonymous ? { anonymous: true } : {}),
-      ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
+      ...(header.timeline ? { timeline: upgradeTimeline(header.timeline) } : {}),
     };
   }
   return scenes;

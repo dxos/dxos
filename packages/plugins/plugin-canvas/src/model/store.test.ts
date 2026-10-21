@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { isViewNode } from '@dxos/react-ui-canvas/scene';
+import { isViewNode, patchSource, recordChanges, storeVersions, updateView } from '@dxos/react-ui-canvas/scene';
 
 import { clone, isNodeRecord, nodeKey, readViews } from './content.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
@@ -208,8 +208,7 @@ describe('bindCanvasStore', () => {
           z: 'a0',
           ...frame,
           scene: 'f',
-          link: { object: Ref.make(person) },
-          role: 'section',
+          link: { object: Ref.make(person), role: 'section' },
         },
       };
     });
@@ -222,7 +221,7 @@ describe('bindCanvasStore', () => {
     const scenes = registry.get(bound.store.views);
     expect(Object.keys(scenes).some((id) => parseLinkedViewId(id))).toBe(false);
     const node = scenes.root.nodes.f;
-    expect(node).toMatchObject({ scene: 'f', role: 'section' });
+    expect(node).toMatchObject({ scene: 'f', link: { role: 'section' } });
     expect(await objectRef(node)?.load()).toBe(person);
     bound.dispose();
   });
@@ -295,6 +294,74 @@ describe('bindCanvasStore', () => {
     await expect.poll(linkedRoot).toBeDefined();
     expect(bound.store.isRoot?.(linkedRoot() ?? '')).toBe(true);
     expect(bound.store.isRoot?.('root')).toBe(false);
+    bound.dispose();
+  });
+});
+
+describe('versions', () => {
+  /** A drawing with two boxes on its root, bound, and the store's versions read through Automerge heads. */
+  const setup = async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      for (const id of ['a', 'b']) {
+        canvas.content[nodeKey(id)] = { kind: 'node', scene: 'root', node: { id, type: 'rect', z: 'a0', ...frame } };
+      }
+    });
+    await db.flush();
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    const versions = storeVersions(registry, bound.store);
+    const stored = (id: string) => readViews(clone(canvas.content)).root.nodes[id];
+    const move = (id: string, x: number) =>
+      updateView(registry, bound.store, 'root', (view) => ({
+        ...view,
+        nodes: { ...view.nodes, [id]: { ...view.nodes[id], center: { x, y: 0 } } },
+      }));
+    return { canvas, bound, versions, stored, move };
+  };
+
+  test('heads are Automerge heads: an undo patch writes the drawing back as it was', async ({ expect }) => {
+    const { bound, versions, stored, move } = await setup();
+    expect(bound.store.versions).toBeDefined();
+    const [change] = recordChanges([versions], () => move('a', 10));
+    expect(change?.paths).toEqual([['root', 'nodes', 'a', 'center', 'x']]);
+    expect(stored('a')?.center.x).toBe(10);
+    if (!change) {
+      return;
+    }
+    expect(change.before).toEqual({ '': expect.any(Array) });
+    patchSource(versions, { from: change.after, to: change.before, paths: change.paths });
+    expect(stored('a')?.center.x).toBe(0);
+    patchSource(versions, { from: change.before, to: change.after, paths: change.paths });
+    expect(stored('a')?.center.x).toBe(10);
+    bound.dispose();
+  });
+
+  test('a field a collaborator changed since is skipped, and the rest is undone', async ({ expect }) => {
+    const { canvas, bound, versions, stored, move } = await setup();
+    const [change] = recordChanges([versions], () => {
+      move('a', 10);
+      move('b', 20);
+    });
+    // Another peer's edit to `b` arrives in the document, not through this store.
+    Obj.update(canvas, (canvas) => {
+      const record = canvas.content[nodeKey('b')];
+      if (isNodeRecord(record)) {
+        record.node.center = { x: 30, y: 0 };
+      }
+    });
+    if (!change) {
+      return;
+    }
+    expect(patchSource(versions, { from: change.after, to: change.before, paths: change.paths })).toMatchObject({
+      written: 1,
+      skipped: 1,
+    });
+    expect(stored('a')?.center.x).toBe(0);
+    expect(stored('b')?.center.x).toBe(30);
     bound.dispose();
   });
 });
