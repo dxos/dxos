@@ -14,7 +14,7 @@ import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 import type * as Scope from 'effect/Scope';
 
-import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { AiTelemetry, OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
@@ -36,6 +36,7 @@ import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
 import * as Legacy from './Legacy.ts';
 import * as SkillHooks from './SkillHooks.ts';
+import * as ThreadToolkit from './thread-toolkit.ts';
 import { createToolkit } from './toolkit.ts';
 import * as TrajectoryStore from './TrajectoryStore.ts';
 
@@ -67,6 +68,12 @@ export type RunProps<R = never> = {
 
   /** Model the turn runs on, recorded on its `turnBegin`. */
   model?: Trajectory.TurnBegin['model'];
+
+  /**
+   * The light thread the turn runs in (`TrajectoryStore.openLightThread`); absent for main. Its history is the
+   * thread's prompt, and it gets the tools for waiting on the threads beside it.
+   */
+  thread?: Trajectory.EventId;
 };
 
 export type TurnSource = TrajectoryStore.TurnSource;
@@ -185,16 +192,19 @@ export class Session extends Resource {
     });
   }
 
-  /** The open turn's `turnBegin` id, which its events carry as their thread. */
+  /** The latest open turn's `turnBegin` id, which its events carry as their thread; several run at once in light threads. */
   #turn: Trajectory.EventId | undefined;
 
   /**
    * Opens a turn, recording first a rewind the UI left on the feed.
    */
-  #beginTurn(model: RunProps['model']): Effect.Effect<Trajectory.EventId, never, Database.Service> {
+  #beginTurn(
+    model: RunProps['model'],
+    thread: RunProps['thread'],
+  ): Effect.Effect<Trajectory.EventId, never, Database.Service> {
     return Effect.gen({ self: this }, function* () {
       yield* this.applyPendingRewind();
-      const begin = yield* TrajectoryStore.beginTurn(this._feed, { model });
+      const begin = yield* TrajectoryStore.beginTurn(this._feed, { model, thread });
       this.#turn = begin;
       return begin;
     });
@@ -226,6 +236,8 @@ export class Session extends Resource {
   public createRequest<R = never>(
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
+    // This request's own turn: turns in light threads run concurrently on one session.
+    let begun: Trajectory.EventId | undefined;
     return Effect.gen({ self: this }, function* () {
       yield* AiTelemetry.annotateKind(AiTelemetry.KIND.turn);
       const inputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.input, () =>
@@ -235,8 +247,16 @@ export class Session extends Resource {
       yield* Trace.emitRequestPhase('loading-history');
       // Before the history is read, so a redelivered prompt's interrupted turn is part of it.
       const resumed = yield* TrajectoryStore.resumeInterrupted(this._feed, params.source);
-      const history = yield* TrajectoryStore.history(this._feed);
-      const turn = yield* this.#beginTurn(params.model);
+      const history = yield* TrajectoryStore.history(this._feed, params.thread);
+      const turn = yield* this.#beginTurn(params.model, params.thread);
+      begun = turn;
+      const turnToolkit =
+        params.thread === undefined
+          ? params.toolkit
+          : OpaqueToolkit.merge(
+              ...(params.toolkit ? [params.toolkit] : []),
+              ThreadToolkit.make(this._feed, turn, Context.get(this._runtime, Database.Service).db),
+            );
       const prompt = { source: params.source, resumed, written: false };
       markWork('session.history-loaded');
       const skills = this.context.getSkills();
@@ -322,7 +342,7 @@ export class Session extends Resource {
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
-          toolkit: params.toolkit,
+          toolkit: turnToolkit,
           skills: currentSkills,
           opaqueToolkits: mcps,
         });
@@ -366,8 +386,11 @@ export class Session extends Resource {
     }).pipe(
       // A turn that began ends, so its thread merges into the conversation even when the request failed.
       Effect.onExit((exit) => {
-        const turn = this.#turn;
-        this.#turn = undefined;
+        const turn = begun;
+        begun = undefined;
+        if (this.#turn === turn) {
+          this.#turn = undefined;
+        }
         return turn !== undefined
           ? TrajectoryStore.endTurn(this._feed, turn, exit, { source: params.source })
           : Effect.void;

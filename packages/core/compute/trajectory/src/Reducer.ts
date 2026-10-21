@@ -13,6 +13,7 @@ import { type Obj, type Ref } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
 
 import * as Trajectory from './Trajectory.ts';
+import * as Transcript from './Transcript.ts';
 
 /**
  * A left fold over events in feed order; every view of a trajectory is one of these, so state after `n + k` events
@@ -171,10 +172,37 @@ export type ThreadItem = {
   readonly created: string;
   /** Thread the message was written in; absent for the main thread. */
   readonly thread?: Trajectory.EventId;
+  /** The lane the message belongs to: the top-level thread or turn its thread nests in; absent outside any. */
+  readonly lane?: Trajectory.EventId;
   readonly status: ItemStatus;
 };
 
-export type ThreadView = { readonly items: readonly ThreadItem[] };
+export type LaneStatus = 'running' | 'waiting' | 'done' | 'failed';
+
+/**
+ * One top-level unit of work: a light (or other) thread opened on main, or a turn that runs on main. Several lanes
+ * running at once are what the chat shows side by side.
+ */
+export type Lane = {
+  readonly id: Trajectory.EventId;
+  readonly kind: 'turn' | Trajectory.ThreadMode;
+  readonly status: LaneStatus;
+  readonly owner: Trajectory.Sender;
+  readonly created: string;
+  readonly purpose?: string;
+  /** The lane this one is waiting for (`threadWait`). */
+  readonly waitingOn?: Trajectory.EventId;
+  /** Whether another lane was running at some point while this one was. */
+  readonly overlapped?: boolean;
+};
+
+export type ThreadView = {
+  readonly items: readonly ThreadItem[];
+  /** In the order they opened. */
+  readonly lanes: readonly Lane[];
+  /** The lane of every thread and turn opened so far. */
+  readonly laneOf: Readonly<Record<Trajectory.EventId, Trajectory.EventId>>;
+};
 
 /** `blocks` with the request the resolution answers settled; a request already settled keeps its first answer. */
 const resolveRequest = (
@@ -187,20 +215,109 @@ const resolveRequest = (
       : block,
   );
 
-/** Applies one event to `items`, in place; `false` when the event leaves the view as it was. */
-const applyThread = (items: ThreadItem[], event: Trajectory.Event): boolean => {
+type MutableView = { items: ThreadItem[]; lanes: Lane[]; laneOf: Record<Trajectory.EventId, Trajectory.EventId> };
+
+const isRunning = (lane: Lane) => lane.status === 'running' || lane.status === 'waiting';
+
+const updateLane = (view: MutableView, id: Trajectory.EventId | undefined, update: (lane: Lane) => Lane): boolean => {
+  const index = id === undefined ? -1 : view.lanes.findIndex((lane) => lane.id === id);
+  if (index === -1) {
+    return false;
+  }
+  view.lanes[index] = update(view.lanes[index]);
+  return true;
+};
+
+/** Records a thread or turn opening: a lane of its own on main, or a member of its parent's lane. */
+const openLane = (
+  view: MutableView,
+  event: Trajectory.Event,
+  parent: Trajectory.EventId | undefined,
+  lane: Omit<Lane, 'id' | 'status' | 'owner' | 'created'>,
+): boolean => {
+  if (parent !== undefined) {
+    const parentLane = view.laneOf[parent];
+    if (parentLane !== undefined) {
+      view.laneOf[event.id] = parentLane;
+      // A lane that runs another turn (after a wait, or for a queued prompt) is running again.
+      updateLane(view, parentLane, (existing) => ({ ...existing, status: 'running', waitingOn: undefined }));
+    }
+    return parentLane !== undefined;
+  }
+  const running = view.lanes.filter(isRunning);
+  for (const other of running) {
+    updateLane(view, other.id, (existing) => ({ ...existing, overlapped: true }));
+  }
+  view.laneOf[event.id] = event.id;
+  view.lanes.push({
+    id: event.id,
+    status: 'running',
+    owner: event.sender,
+    created: event.created,
+    ...lane,
+    ...(running.length > 0 ? { overlapped: true } : {}),
+  });
+  return true;
+};
+
+const laneOfThread = (view: MutableView, thread: Trajectory.EventId | undefined) =>
+  thread === undefined ? undefined : view.laneOf[thread];
+
+/** Applies one event to the view, in place; `false` when the event leaves the view as it was. */
+const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
+  const items = view.items;
   const payload = event.payload;
   switch (payload._tag) {
-    case 'message':
+    case 'message': {
+      const lane = laneOfThread(view, event.thread);
       items.push({
         id: event.id,
         sender: event.sender,
         blocks: payload.blocks,
         created: event.created,
         thread: event.thread,
+        ...(lane !== undefined ? { lane } : {}),
         status: event.sender.role === 'user' ? 'queued' : 'sent',
       });
+      // A message after a wait means the lane is working again.
+      updateLane(view, lane, (existing) =>
+        existing.status === 'waiting' ? { ...existing, status: 'running', waitingOn: undefined } : existing,
+      );
       return true;
+    }
+    case 'turnBegin':
+      return openLane(view, event, payload.from?.thread ?? event.thread, { kind: 'turn' });
+    case 'threadOpen':
+      return openLane(view, event, payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread), {
+        kind: payload.mode,
+        ...(payload.purpose !== undefined ? { purpose: payload.purpose } : {}),
+      });
+    case 'turnEnd':
+      // A turn that is its own lane ends it; a turn inside a thread leaves the thread to its merge or close.
+      return view.laneOf[payload.begin] === payload.begin
+        ? updateLane(view, payload.begin, (lane) => ({
+            ...lane,
+            status: payload.finishReason === 'error' ? 'failed' : 'done',
+            waitingOn: undefined,
+          }))
+        : false;
+    case 'threadMerge':
+    case 'threadClose': {
+      const failed = payload._tag === 'threadClose' && payload.status !== 'completed';
+      return view.laneOf[payload.thread] === payload.thread
+        ? updateLane(view, payload.thread, (lane) => ({
+            ...lane,
+            status: failed ? 'failed' : 'done',
+            waitingOn: undefined,
+          }))
+        : false;
+    }
+    case 'threadWait':
+      return updateLane(view, laneOfThread(view, event.thread), (lane) => ({
+        ...lane,
+        status: 'waiting',
+        waitingOn: view.laneOf[payload.on] ?? payload.on,
+      }));
     case 'promptConsume': {
       // A second consume of the same message lost the claim, so the message stays where the first one put it.
       const index = items.findLastIndex((item) => item.id === payload.message && item.status === 'queued');
@@ -208,7 +325,8 @@ const applyThread = (items: ThreadItem[], event: Trajectory.Event): boolean => {
         return false;
       }
       const [item] = items.splice(index, 1);
-      items.push({ ...item, thread: event.thread, status: 'consumed' });
+      const lane = laneOfThread(view, event.thread);
+      items.push({ ...item, thread: event.thread, ...(lane !== undefined ? { lane } : {}), status: 'consumed' });
       return true;
     }
     case 'requestResolve': {
@@ -246,20 +364,19 @@ const applyThread = (items: ThreadItem[], event: Trajectory.Event): boolean => {
  * the model sees it at, and joins the consuming turn's thread. A consume or cancel whose message lies outside the loaded window is ignored, so the UI can
  * fold just the tail of a long conversation.
  */
+const foldThread = (state: ThreadView, events: readonly Trajectory.Event[]): ThreadView => {
+  const view: MutableView = { items: [...state.items], lanes: [...state.lanes], laneOf: { ...state.laneOf } };
+  let changed = false;
+  for (const event of events) {
+    changed = applyThread(view, event) || changed;
+  }
+  return changed ? view : state;
+};
+
 const threadFold: Reducer<ThreadView> = {
-  initial: { items: [] },
-  step: (state, event) => {
-    const items = [...state.items];
-    return applyThread(items, event) ? { items } : state;
-  },
-  fold: (state, events) => {
-    const items = [...state.items];
-    let changed = false;
-    for (const event of events) {
-      changed = applyThread(items, event) || changed;
-    }
-    return changed ? { items } : state;
-  },
+  initial: { items: [], lanes: [], laneOf: {} },
+  step: (state, event) => foldThread(state, [event]),
+  fold: foldThread,
 };
 
 //
@@ -275,6 +392,8 @@ export type PromptEntry = {
   readonly source: readonly Trajectory.EventId[];
   /** Feed position of the event that placed the entry in its current buffer. */
   readonly at: number;
+  /** A light thread's snapshot of the threads running beside it; dropped when the thread merges. */
+  readonly ephemeral?: boolean;
 };
 
 /**
@@ -291,6 +410,9 @@ export type ThreadBuffer = {
   readonly seen: number;
   /** Merged or closed while a child was still open; kept, frozen, so the child's prompt does not change under it. */
   readonly closed?: boolean;
+  /** Title and owner a light thread's siblings see it by. */
+  readonly purpose?: string;
+  readonly owner?: string;
   readonly entries: readonly PromptEntry[];
 };
 
@@ -356,11 +478,13 @@ const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: re
   const parent = buffer?.parent;
   const target = parent !== undefined && live(state, parent) ? parent : undefined;
   const unseen = buffer && !buffer.fresh ? placedAfter(promptFor(state, target), buffer.seen) : [];
-  return entries.reduce<PromptState>((next, entry) => append(next, target, entry), {
-    ...state,
-    threads: end(state.threads, threadId),
-    stale: unseen.length > 0 ? { ...state.stale, [threadId]: unseen } : state.stale,
-  });
+  return entries
+    .filter((entry) => !entry.ephemeral)
+    .reduce<PromptState>((next, entry) => append(next, target, entry), {
+      ...state,
+      threads: end(state.threads, threadId),
+      stale: unseen.length > 0 ? { ...state.stale, [threadId]: unseen } : state.stale,
+    });
 };
 
 /**
@@ -427,6 +551,53 @@ export const promptFor = (state: PromptState, thread?: Trajectory.EventId): read
   return buffer.fresh
     ? buffer.entries
     : [...promptFor(state, buffer.parent).filter((entry) => entry.at <= buffer.seen), ...buffer.entries];
+};
+
+/**
+ * A thread's own entries and those of its open children, as a sibling sees them: placed at or before `seen`, in
+ * placement order.
+ */
+const workOf = (state: PromptState, id: Trajectory.EventId, seen: number): PromptEntry[] => {
+  const own = state.threads[id]?.entries ?? [];
+  const children = Object.entries(state.threads).flatMap(([childId, buffer]) =>
+    buffer.parent === id ? workOf(state, childId, seen) : [],
+  );
+  return [...own, ...children]
+    .filter((entry) => entry.at <= seen && !entry.ephemeral)
+    .sort((left, right) => left.at - right.at);
+};
+
+/**
+ * Opens a light thread: a fork of main that starts with one entry holding the transcript of each running sibling.
+ */
+const openLight = (state: PromptState, event: Trajectory.Event, payload: Trajectory.ThreadOpen): PromptState => {
+  const seen = seenAt(state, payload.from);
+  const siblings = (payload.siblings ?? []).flatMap((id): Transcript.Thread[] => {
+    const buffer = state.threads[id];
+    return buffer
+      ? [{ id, purpose: buffer.purpose, owner: buffer.owner, status: 'running', entries: workOf(state, id, seen) }]
+      : [];
+  });
+  const entries: PromptEntry[] =
+    siblings.length > 0
+      ? [
+          {
+            role: 'event',
+            name: 'threads',
+            blocks: [{ _tag: 'text', text: Transcript.snapshot(siblings, event.id) }],
+            source: [event.id],
+            at: state.position,
+            ephemeral: true,
+          },
+        ]
+      : [];
+  return open(state, event.id, {
+    fresh: false,
+    seen,
+    purpose: payload.purpose,
+    owner: event.sender.name,
+    entries,
+  });
 };
 
 const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory.EventId) => {
@@ -503,6 +674,9 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
         ? append(state, event.thread, { role: 'event', blocks: payload.blocks, source: [event.id] })
         : state;
     case 'threadOpen':
+      if (payload.mode === 'light') {
+        return openLight(state, event, payload);
+      }
       // A fork of another conversation has no parent in this log, so its history starts empty.
       return open(state, event.id, {
         parent: payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread),
@@ -607,9 +781,23 @@ const ThreadViewSchema = Schema.Struct({
       blocks: Schema.Array(ContentBlock.Any),
       created: Schema.String,
       thread: Schema.optional(Trajectory.EventId),
+      lane: Schema.optional(Trajectory.EventId),
       status: Schema.Literals(['queued', 'consumed', 'cancelled', 'sent', 'rewound']),
     }),
   ),
+  lanes: Schema.Array(
+    Schema.Struct({
+      id: Trajectory.EventId,
+      kind: Schema.Literals(['turn', 'fork', 'fresh', 'light']),
+      status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
+      owner: Trajectory.Sender,
+      created: Schema.String,
+      purpose: Schema.optional(Schema.String),
+      waitingOn: Schema.optional(Trajectory.EventId),
+      overlapped: Schema.optional(Schema.Boolean),
+    }),
+  ),
+  laneOf: Schema.Record(Trajectory.EventId, Trajectory.EventId),
 });
 
 const PromptEntrySchema = Schema.Struct({
@@ -618,6 +806,7 @@ const PromptEntrySchema = Schema.Struct({
   blocks: Schema.Array(ContentBlock.Any),
   source: EventIds,
   at: Schema.Number,
+  ephemeral: Schema.optional(Schema.Boolean),
 });
 
 const PromptStateSchema = Schema.Struct({
@@ -630,6 +819,8 @@ const PromptStateSchema = Schema.Struct({
       fresh: Schema.Boolean,
       seen: Schema.Number,
       closed: Schema.optional(Schema.Boolean),
+      purpose: Schema.optional(Schema.String),
+      owner: Schema.optional(Schema.String),
       entries: Schema.Array(PromptEntrySchema),
     }),
   ),
@@ -658,7 +849,7 @@ export const session: Durable<SessionState> = {
   }),
 };
 
-export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@1', schema: ThreadViewSchema };
+export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@2', schema: ThreadViewSchema };
 
 export const prompt: Durable<PromptState> = {
   ...promptFold,

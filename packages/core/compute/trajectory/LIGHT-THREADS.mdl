@@ -1,0 +1,388 @@
+---
+id: org.dxos.trajectory.light-threads
+name: Light threads
+version: 0.1.0
+---
+
+A **light thread** lets one agent chat work on several requests at once. When a person sends a prompt while the
+agent is still working, the agent starts a new light thread for it instead of queueing it. The new thread starts
+with everything the conversation has seen and done so far, including the work in progress of every thread that is
+still running, then a separator that says that work belongs to other threads, then the new prompt. Threads run in
+parallel. A thread can wait for another thread and continue with its result. A thread that finishes joins the main
+conversation, so a later prompt sees the closure of all finished threads.
+
+Light threads are opt-in (assistant setting **Parallel threads**). With the setting off, nothing changes: a prompt
+sent during a turn waits in the queue as before.
+
+The same mechanism is meant to host several agents in one chat (multi-tenancy): a thread records who runs it, and
+the separator names the owner of every other thread.
+
+Light threads are built on the trajectory events in [`README.md`](README.md): a light thread is a `threadOpen` with
+mode `light`, its turns are ordinary turns whose parent is the thread, and a `threadMerge` joins it to main.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`      |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Model
+
+### Events
+
+```mdl
+type ThreadOpen
+  desc: |
+    Opens a thread whose id is this event's id. A light thread forks main at `from.event` and starts with a
+    snapshot of each thread in `siblings`: its entries up to `from.event`, rendered as one transcript entry.
+    The event's `sender` is the thread's owner (role `assistant`, plus `subject`/`name` for the agent).
+  fields:
+    mode: fork | fresh | light
+    from?: ThreadOrigin          # where the thread branches from; required for `light`
+    purpose?: string             # short title, shown in the thread header and the separator
+    siblings?: EventId[]         # light only: the threads still running when it opened
+```
+
+```mdl
+type ThreadWait
+  desc: |
+    A turn waits for another thread to end before it continues; written in the waiting turn's thread. Display and
+    recovery only: the wait itself is the `thread_wait` tool call.
+  fields:
+    on: EventId                  # the thread waited for
+```
+
+```mdl
+type Compact
+  desc: Replaces the range `from`..`to` of main with `summary`.
+  fields:
+    from: EventId
+    to: EventId
+    summary: ContentBlock[]
+    closure?: EventId[]          # threads whose merged entries the range holds; a running thread is never in it
+```
+
+### Prompt state
+
+```mdl
+type PromptEntry
+  fields:
+    role: user | assistant | tool | event
+    name?: string
+    blocks: ContentBlock[]
+    source: EventId[]
+    at: number
+    ephemeral?: boolean          # a sibling snapshot; dropped when its thread merges
+```
+
+```mdl
+type ThreadLane
+  desc: |
+    One top-level unit of work as the UI shows it: a light thread, or a turn that runs on main. Nested turns and
+    threads belong to the lane of their top-level ancestor.
+  fields:
+    id: EventId
+    kind: light | turn
+    status: running | waiting | done | failed
+    opened: number               # fold position of the opener; lanes are ordered by it
+    purpose?: string
+    owner: Sender
+    waitingOn?: EventId
+```
+
+## Features
+
+```mdl
+feat F-1: Start a light thread for a prompt sent while the agent works
+
+  req F-1.1:
+    when: Parallel threads is on, a turn is running, and a person sends a prompt
+    then: the agent opens a light thread (`threadOpen` mode `light`) for the prompt and runs its turn at once,
+      in parallel with the running turn
+
+  req F-1.2:
+    when: a light thread opens
+    then: its prompt is main up to `from.event`, then one `event` entry holding a transcript of each sibling's
+      work up to `from.event` (work in progress included), then the separator, then the new prompt
+
+  req F-1.3:
+    when: Parallel threads is off, or no turn is running
+    then: the prompt runs as a turn on main, as it does today
+
+  req F-1.4:
+    when: as many light threads are running as the limit allows (default 3)
+    then: the prompt stays queued, in order, and starts when a thread ends
+```
+
+```mdl
+feat F-2: Keep threads apart in the prompt
+
+  req F-2.1:
+    when: a sibling snapshot is rendered
+    then: each sibling is wrapped in `<thread id title owner status>` … `</thread>`; tool calls show name and
+      arguments, tool results are cut to a fixed length, and the separator states that the work above belongs to
+      other threads that are still running, must not be continued, and can be waited for with `thread_wait`
+
+  req F-2.2:
+    when: a sibling's work is longer than the snapshot budget
+    then: the snapshot keeps the sibling's prompt and its most recent entries and says how many it left out
+
+  req F-2.3:
+    when: a turn in a light thread starts
+    then: the snapshot entry stays where it is (so the prompt keeps its cache prefix); the latest state of every
+      other running thread is appended after the history as one short `event` status line per thread
+
+  req F-2.4:
+    when: a thread is rendered for the model
+    then: a snapshot never contains raw tool-call/tool-result pairs of another thread, only text
+```
+
+```mdl
+feat F-3: Join
+
+  req F-3.1:
+    when: a turn in a light thread calls `thread_wait { thread }`
+    then: the turn records `threadWait`, waits until that thread ends, and receives its transcript since the
+      waiting thread opened as the tool result
+
+  req F-3.2:
+    when: a thread ends (all of its turns ended and no prompt is queued for it)
+    then: the writer appends `threadMerge { mode: raw }`; its entries join main in one block and its snapshot
+      entries are dropped
+
+  req F-3.3:
+    when: a thread merges while another is still running
+    then: the running thread's prompt does not change; when it merges later, `stale` lists what it did not see
+
+  req F-3.4:
+    when: a person sends a prompt after threads have merged
+    then: its prompt holds the closure of every merged thread in merge order
+```
+
+```mdl
+feat F-4: Show threads in the chat
+
+  req F-4.1:
+    when: two or more lanes overlapped in time
+    then: each of them gets a colour-coded left gutter; a lane that never overlapped another looks as it does today
+
+  req F-4.2:
+    when: a lane is running and is not the newest running lane
+    then: it renders as a background thread: a fixed-height scroll container that follows its tail, with a header
+      showing the colour, the purpose, the status and how long it has run; the container expands on request
+
+  req F-4.3:
+    when: a background lane ends
+    then: a completion notice with its final assistant message appears at the end of the transcript, in the lane's
+      colour, and links to the lane
+
+  req F-4.4:
+    when: a lane waits on another lane
+    then: its header says so, with the other lane's colour
+```
+
+```mdl
+feat F-5: Settings
+
+  req F-5.1:
+    when: the assistant settings are shown
+    then: **Parallel threads** (off by default) turns light threads on for agents started after the change, and
+      **Parallel thread limit** sets how many run at once
+```
+
+```mdl
+feat F-6: Compaction
+
+  req F-6.1:
+    when: a compaction runs while threads are running
+    then: it covers main only; it lists in `closure` the threads whose merges fall inside its range; running
+      threads keep their buffers and see the summary in place of the entries they saw
+```
+
+## Scenarios
+
+```mdl
+scenario T-1: A prompt sent mid-turn runs in parallel
+  given: Parallel threads is on; turn A on main is calling a tool
+  when: the person sends prompt B
+  then:
+    - a `threadOpen { mode: light, siblings: [A] }` is written and a turn starts in it at once
+    - the turn's prompt is main, a snapshot of A's work so far, the separator and B
+    - when B's turn ends, the thread merges into main before A ends
+```
+
+```mdl
+scenario T-2: Five independent prompts
+  given: Parallel threads is on with a limit of 3; turn A is running
+  when: the person sends prompts B, C, D, E in quick succession
+  then:
+    - B, C and D start light threads; E waits in the queue
+    - E starts when the first of A–D ends
+    - every thread answers its own prompt only
+```
+
+```mdl
+scenario T-3: Five dependent prompts serialize
+  given: Parallel threads is on; turn A is running
+  when: the person sends B, C, D, E, each of which builds on the previous answer
+  then:
+    - each thread calls `thread_wait` on the thread before it
+    - the answers arrive in order and each one uses the previous result
+```
+
+```mdl
+scenario T-4: A mix
+  given: Parallel threads is on; turn A ("write a poem about the sea") is running
+  when: the person sends B ("what is 17 × 23?") and C ("now translate the poem to French")
+  then:
+    - B answers at once without waiting
+    - C waits for A and translates A's poem
+```
+
+```mdl
+scenario T-5: Off by default
+  given: Parallel threads is off; turn A is running
+  when: the person sends prompt B
+  then: B is queued and runs after A, and no `threadOpen` is written
+```
+
+## Changelog
+
+```mdl
+decision D-1: When a person sends a prompt while the agent works, a light thread starts in the same session. It
+  begins with everything the running thread has seen and done (its work in progress included), then a separator
+  that tells the model the work above is a separate thread that is still running, then the new prompt. The new
+  thread runs in parallel and the earlier one goes to the background.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-1, F-1.2]
+```
+
+```mdl
+decision D-2: A light thread runs on its own, or joins an earlier thread: it waits for it to end and continues with
+  that thread's context. Finished threads join the context automatically, so a new prompt sees the closure of all
+  threads, or at least their last messages.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-3]
+```
+
+```mdl
+decision D-3: Background threads are shown in fixed-height scroll containers; threads are told apart by a
+  colour-coded left gutter.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-4.1, F-4.2]
+```
+
+```mdl
+decision D-4: Light threads are opt-in in the assistant settings.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-5: When the model prompt is built, other threads are delineated clearly so the model does not confuse
+  their work with its own; other running threads may be summarized.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-6: The same threading may later host several agents in one chat (multi-tenancy).
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [ThreadOpen, ThreadLane]
+```
+
+```mdl
+decision D-7: A light thread is a `threadOpen` with a new mode `light`, its turns are ordinary turns parented to it,
+  and `threadMerge { mode: raw }` joins it to main. Fills in [D-1] and [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ThreadOpen, F-1.1, F-3.2]
+  why: The prompt reducer already keeps a buffer per thread, records what each saw (`from.event`), merges a thread
+    into its parent in one block and flags stale merges, which is the behaviour light threads need.
+  rejected:
+    - A second feed per thread; loses the shared history and doubles the cache.
+    - Converting the running turn into a thread when the second prompt arrives; rewrites an event already written.
+```
+
+```mdl
+decision D-8: The sibling snapshot is a reducer-built `event` entry, marked ephemeral and dropped on merge; the
+  writer names the siblings in `threadOpen.siblings`. Fills in [D-1] and [D-5].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.1, PromptEntry]
+  why: Built from events, the snapshot is the same on every replica and costs no extra writes; fixed at open, it
+    keeps the thread's prompt prefix stable for the provider cache. Rendering it as text rather than raw messages
+    keeps another thread's unmatched tool calls out of the prompt, which a provider rejects.
+  rejected:
+    - Copying the sibling's raw messages; an open tool call without a result is an invalid prompt.
+    - An LLM summary at open; adds a model call and latency before the new thread can start. Kept as a later
+      option for the per-turn status line.
+```
+
+```mdl
+decision D-9: Joining is a blocking tool, `thread_wait`, whose result is the waited thread's transcript. Fills in
+  [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, ThreadWait]
+  why: The model decides when it depends on another thread, and a tool call is how it decides; a blocking tool
+    needs no new scheduling state and survives a restart as an interrupted turn.
+  rejected:
+    - Rebasing the waiting thread onto main after the other merges; needs a new event and changes a running prompt.
+```
+
+```mdl
+decision D-10: The chat shows lanes (a light thread, or a turn on main) in the order they opened. The newest running
+  lane is the foreground and renders in full; other running lanes are background containers; a gutter appears
+  only on lanes that overlapped another. When a background lane ends, its final message is echoed at the end of the
+  transcript. Fills in [D-3].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: Grouping by lane keeps each request readable; the echo keeps a finished background answer visible without
+    moving the reader's place.
+```
+
+```mdl
+decision D-11: At most 3 light threads run at once by default; further prompts wait in the queue in order. Fills in
+  [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-5.1]
+  why: Bounds parallel model spend and rate-limit pressure from a burst of prompts.
+```
+
+```mdl
+decision D-12: A compaction covers main only and records the merged threads it reached in `closure`. Fills in
+  [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1, Compact]
+  why: Threads form a DAG through merges; naming the merged threads makes the cut point explicit, and a running
+    thread has nothing merged to compact yet.
+```
+
+```mdl
+decision D-13: A thread's owner is the `sender` of its `threadOpen`; the separator and the lane header name it.
+  Fills in [D-6].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ThreadOpen, ThreadLane, F-2.1]
+  why: `Sender` already carries identity, subject and name, so two agents in one chat need no new field.
+```

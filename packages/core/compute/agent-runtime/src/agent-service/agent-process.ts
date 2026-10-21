@@ -12,6 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -42,11 +43,13 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
+import { type Trajectory } from '@dxos/trajectory';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { type ThreadingOptions, runLanes } from './thread-scheduler.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -92,6 +95,12 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Light threads: read when the process spawns; when it returns options, a prompt that arrives while a turn runs
+   * opens a light thread and runs in parallel instead of waiting (see `trajectory/LIGHT-THREADS.mdl`).
+   */
+  threading?: () => ThreadingOptions | undefined;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -231,6 +240,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           instructions: instructions ? [instructions] : [],
         });
         const sessionStore = new SessionStore();
+        const threading = options.threading?.();
+        // Signals the lane scheduler that a prompt was queued while it runs; the alarm that also fires waits its turn.
+        const wake = yield* Queue.sliding<void>(1);
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
@@ -435,6 +447,79 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         const maybeComplete = Effect.flatMap(sessionStore.loadPending(feed), maybeCompleteWith);
 
+        // One turn, answering a dequeued message or alarm (or a tool result, with none); in `thread` when it runs in a
+        // light thread. Acks what it answered.
+        const executeTurn = Effect.fnUntraced(function* ({
+          prompt,
+          dequeued,
+          thread,
+        }: {
+          prompt: ContentBlock.Any[];
+          dequeued: Message.Message | Alarm.Alarm | undefined;
+          thread?: Trajectory.EventId;
+        }) {
+          // The MCP servers are read concurrently with the writes below: neither depends on the
+          // other, and each is a round trip to the database that the turn would otherwise wait on in series.
+          const [mcpServers] = yield* Effect.all(
+            [
+              loadSpaceMcpServers(),
+              Effect.gen(function* () {
+                log('begin request', { prompt });
+                log('trace agent request begin');
+                yield* Trace.write(Trace.AgentRequestBegin, {});
+              }),
+            ],
+            { concurrency: 'unbounded' },
+          );
+          markWork('agent.turn-begin');
+          yield* session
+            .runTurn({
+              prompt,
+              // The turn rewrites the queued message as its own, so the sender has to travel with it.
+              sender: dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued) ? dequeued.sender : undefined,
+              // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+              // toolkit: AsynchronousExectionToolkit,
+              system: options.systemPrompt,
+              mcpServers,
+              source:
+                dequeued === undefined
+                  ? undefined
+                  : Obj.instanceOf(Message.Message, dequeued)
+                    ? { message: dequeued.id }
+                    : { alarm: dequeued.id },
+              model,
+              thread,
+            })
+            .pipe(
+              Effect.onExit((exit) =>
+                Effect.gen(function* () {
+                  yield* Trace.write(Trace.AgentRequestEnd, {
+                    status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                    error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                  });
+                  // The failure ends the process below, skipping the reconcile, so the strategy
+                  // hears of it here or not at all. A stop the reader asked for is not a failure.
+                  const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;
+                  if (onTurnFailed && Exit.isFailure(exit) && !Cause.hasInterrupts(exit.cause)) {
+                    yield* onTurnFailed(chat, exit.cause);
+                  }
+                }),
+              ),
+            );
+          log('end request');
+          turnRan = true;
+          endHooksFired = false;
+          yield* ToolResultsCell.set(toolResults);
+
+          // The turn consumed or fired the entry when it began; recording it as acked keeps a read that
+          // has not caught up with that from handing the same entry to the next wake.
+          if (dequeued !== undefined) {
+            yield* sessionStore.ack(feed, dequeued);
+            ackedEntries = [...ackedEntries, dequeued.id];
+            yield* AckedEntriesCell.set(ackedEntries);
+          }
+        });
+
         return {
           // Runs on a fresh spawn only — never on a resume, which is what a hibernated process gets.
           // So anything already pending here was left by a process that is gone for good: stopped by
@@ -467,6 +552,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const message = Message.make({ sender: { role: 'user' }, blocks: [...content] });
               yield* sessionStore.enqueueMessage(feed, message);
               unseenWriteIds.add(message.id);
+              Queue.offerUnsafe(wake, undefined);
               yield* ctx.setAlarm(0);
             }),
           }),
@@ -476,6 +562,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             yield* sessionStore.enqueueMessage(feed, message);
             markWork('agent.prompt-queued');
             unseenWriteIds.add(message.id);
+            Queue.offerUnsafe(wake, undefined);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
@@ -533,7 +620,34 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                     unseenAlarms.delete(id);
                   }
                 }
-                if (message !== undefined) {
+                if (message !== undefined && threading !== undefined) {
+                  // Every queued prompt runs in a lane of its own, in parallel up to the limit; the scheduler
+                  // returns once the queue is drained and every lane has ended.
+                  unseenWriteIds.clear();
+                  unseenWriteWakes = 0;
+                  if (selfWakes > 0) {
+                    selfWakes = 0;
+                    yield* SelfWakesCell.set(selfWakes);
+                  }
+                  yield* Trace.emitRequestPhase('preparing');
+                  yield* runLanes(
+                    {
+                      pending: Effect.map(sessionStore.loadPending(feed), ({ pendingMessages }) =>
+                        pendingMessages.filter((pending) => !ackedEntries.includes(pending.id)),
+                      ),
+                      run: (pending, thread) =>
+                        executeTurn({ prompt: [...pending.blocks], dequeued: pending, thread }).pipe(Effect.orDie),
+                      open: (pending) => TrajectoryStore.openLightThread(feed, { purpose: purposeOf(pending) }),
+                      merge: (thread) => TrajectoryStore.mergeThread(feed, thread),
+                      interrupted: (pending) => TrajectoryStore.interruptedThread(feed, pending.id),
+                    },
+                    { ...threading, wake },
+                  );
+                  const after = yield* sessionStore.loadPending(feed);
+                  yield* reconcileAlarmWith(after);
+                  yield* maybeCompleteWith(after);
+                  return;
+                } else if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWriteIds.delete(message.id);
                   unseenWriteWakes = 0;
@@ -605,66 +719,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 yield* Trace.emitRequestPhase('preparing');
               }
 
-              // The MCP servers are read concurrently with the writes below: neither depends on the
-              // other, and each is a round trip to the database that the turn would otherwise wait on in series.
-              const [mcpServers] = yield* Effect.all(
-                [
-                  loadSpaceMcpServers(),
-                  Effect.gen(function* () {
-                    log('begin request', { prompt });
-                    log('trace agent request begin');
-                    yield* Trace.write(Trace.AgentRequestBegin, {});
-                  }),
-                ],
-                { concurrency: 'unbounded' },
-              );
-              markWork('agent.turn-begin');
-              yield* session
-                .runTurn({
-                  prompt,
-                  // The turn rewrites the queued message as its own, so the sender has to travel with it.
-                  sender:
-                    dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued) ? dequeued.sender : undefined,
-                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                  // toolkit: AsynchronousExectionToolkit,
-                  system: options.systemPrompt,
-                  mcpServers,
-                  source:
-                    dequeued === undefined
-                      ? undefined
-                      : Obj.instanceOf(Message.Message, dequeued)
-                        ? { message: dequeued.id }
-                        : { alarm: dequeued.id },
-                  model,
-                })
-                .pipe(
-                  Effect.onExit((exit) =>
-                    Effect.gen(function* () {
-                      yield* Trace.write(Trace.AgentRequestEnd, {
-                        status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                        error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
-                      });
-                      // The failure ends the process below, skipping the reconcile, so the strategy
-                      // hears of it here or not at all. A stop the reader asked for is not a failure.
-                      const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;
-                      if (onTurnFailed && Exit.isFailure(exit) && !Cause.hasInterrupts(exit.cause)) {
-                        yield* onTurnFailed(chat, exit.cause);
-                      }
-                    }),
-                  ),
-                );
-              log('end request');
-              turnRan = true;
-              endHooksFired = false;
-              yield* ToolResultsCell.set(toolResults);
-
-              // The turn consumed or fired the entry when it began; recording it as acked keeps a read that
-              // has not caught up with that from handing the same entry to the next wake.
-              if (dequeued !== undefined) {
-                yield* sessionStore.ack(feed, dequeued);
-                ackedEntries = [...ackedEntries, dequeued.id];
-                yield* AckedEntriesCell.set(ackedEntries);
-              }
+              yield* executeTurn({ prompt, dequeued });
               const after = yield* sessionStore.loadPending(feed);
 
               // Reconcile outstanding work into linked child processes (supervisor behaviour). The
@@ -882,6 +937,16 @@ const SelfWakesCell = StorageService.cell(Schema.fromJsonString(Schema.Number), 
 );
 
 /** A prompt someone typed, as opposed to one the system wrote (a report, a tool result). */
+/** A light thread's title: the start of its prompt's text. */
+const purposeOf = (message: Message.Message): string | undefined => {
+  const text = message.blocks
+    .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length === 0 ? undefined : text.length > 80 ? `${text.slice(0, 79)}…` : text;
+};
+
 const isUserPrompt = (message: Message.Message): boolean =>
   message.sender.role === 'user' &&
   message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');

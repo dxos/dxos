@@ -74,6 +74,19 @@ export const Settings = Schema.Struct({
         'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
     }),
   ),
+  parallelThreads: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Parallel threads (experimental)',
+      description:
+        'A prompt sent while the agent is working starts a new thread that runs in parallel instead of waiting. Each thread sees what the others have done so far, and finished threads join the conversation. Applies to agents started after the change.',
+    }),
+  ),
+  parallelThreadLimit: Schema.optional(
+    Schema.Number.annotate({
+      title: 'Parallel thread limit',
+      description: 'How many parallel threads run at once; further prompts wait their turn. Defaults to 3.',
+    }),
+  ),
   defaultAgent: Schema.optional(
     Schema.String.annotate({
       title: 'Default agent',

@@ -45,6 +45,7 @@ const payloads: Trajectory.Payload[] = [
   { _tag: 'threadOpen', mode: 'fork', from: { event: anchor }, purpose: 'turn' },
   { _tag: 'threadMerge', thread: anchor, mode: 'summary', summary: [{ _tag: 'text', text: 'subagent result' }] },
   { _tag: 'threadClose', thread: anchor, status: 'completed' },
+  { _tag: 'threadWait', on: anchor },
   { _tag: 'modelChange', model },
   { _tag: 'custom', type: 'org.example.checkpoint', visible: false, data: { step: 3 } },
 ];

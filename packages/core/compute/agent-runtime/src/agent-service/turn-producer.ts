@@ -47,6 +47,8 @@ export type TurnRequest = {
   source?: AiSession.TurnSource;
   /** Model the turn runs on. */
   model?: Parameters<AiSession.Session['createRequest']>[0]['model'];
+  /** The light thread the turn runs in; absent for main. A producer that ignores it runs the turn on main. */
+  thread?: Parameters<AiSession.Session['createRequest']>[0]['thread'];
 };
 
 export type MakeTurnProducerOptions = {
