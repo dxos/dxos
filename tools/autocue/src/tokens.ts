@@ -28,13 +28,11 @@ export const TOKENS = `
     --autocue-caption-fade: 300ms;
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
     /* Final Cut Pro's caption: white bold type on translucent black, the same in both themes. Only the background is
-       translucent (the frame's \`captionBackground\`): text colours, muted ones included, are solid so they never blend
-       with the frame behind. */
+       translucent (the frame's \`captionBackground\`); the title and subtitle share one solid text colour. */
     --autocue-caption-rgb: 0, 0, 0;
     --autocue-caption-alpha: 0.6;
     --autocue-caption-blur: 8px;
     --autocue-caption-fg: #fff;
-    --autocue-caption-muted: #bfbfbf;
     --autocue-caption-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --autocue-caption-radius: 14px;
     --autocue-caption-inset: 56px;
