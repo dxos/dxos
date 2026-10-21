@@ -9,13 +9,14 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type Repo } from '@dxos/types';
 
 import { type RepositoryView, RepositoryViewer } from '#components';
-import { type Repository, RepositoryOperation } from '#types';
+import { RepositoryOperation } from '#types';
 
 import type { BranchInfo, CommitInfo, RepositoryFile, TreeEntry } from '../../services/RepositoryClient.ts';
 
-export type RepositoryArticleProps = AppSurface.ObjectArticleProps<Repository.Repository>;
+export type RepositoryArticleProps = AppSurface.ObjectArticleProps<Repo.Repo>;
 
 const PAGE_SIZE = 30;
 

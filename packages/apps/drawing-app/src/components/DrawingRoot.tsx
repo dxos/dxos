@@ -74,7 +74,8 @@ const EditActions = ({ space, drawing, onError }: Opened & { onError: (message: 
       onClick={() =>
         void invokePromise(
           DrawingOperation.Convert,
-          { drawing: Ref.make(drawing), variant: variant.id },
+          // In place: the app shows this one drawing, so it must become editable itself rather than gain a copy.
+          { drawing: Ref.make(drawing), variant: variant.id, replace: true },
           { spaceId: space.id },
         ).then(({ error }) => error && onError(error.message))
       }

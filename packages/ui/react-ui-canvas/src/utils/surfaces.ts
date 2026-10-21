@@ -802,8 +802,8 @@ export const BORDER_CLASSES: Record<1 | 2 | 4, { border: string; padding: string
   4: { border: 'border-4', padding: 'p-1' },
 };
 
-/** The fill of a frame showing its child scene. */
-export const FRAME_FILLS: Record<Opacity, ByTone<string>> = {
+/** The fill of a view node showing its child View. */
+export const VIEW_FILLS: Record<Opacity, ByTone<string>> = {
   opaque: { theme: 'bg-base-surface', light: 'bg-white', dark: 'bg-neutral-900' },
   translucent: { theme: 'bg-base-surface/70', light: 'bg-white/70', dark: 'bg-neutral-900/70' },
 };

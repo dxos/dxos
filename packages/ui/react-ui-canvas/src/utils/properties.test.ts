@@ -37,6 +37,7 @@ describe('properties', () => {
     expect(struct?._tag === 'Objects' && struct.propertySignatures.map((property) => property.name)).toEqual([
       'hue',
       'lineStyle',
+      'fontSize',
     ]);
     expect(commonSchema([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.String })])).toBeUndefined();
   });

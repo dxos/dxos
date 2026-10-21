@@ -8,9 +8,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_LATTICE, isFrameNode, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LATTICE, isViewNode, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
 
-import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedSceneId } from '#model';
+import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedViewId } from '#model';
 
 import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import { DIAGRAM_BOX_TONE, DIAGRAM_GROUP_TONE, loadDiagramDrawings, loadDiagramSet } from './diagrams.ts';
@@ -46,13 +46,13 @@ describe('loadDiagramSet', () => {
     const drills = Object.keys(set.drills[set.root]).map((box) => elementId(box, 'box'));
     const linked = () =>
       drills.filter((id) => {
-        const node = registry.get(bound.store.scenes)[bound.root].nodes[id];
-        return isFrameNode(node) && parseLinkedSceneId(node.scene) !== undefined;
+        const node = registry.get(bound.store.views)[bound.root].nodes[id];
+        return isViewNode(node) && parseLinkedViewId(node.scene) !== undefined;
       });
     await expect.poll(linked).toEqual(drills);
 
     // The layout lands every box on a lattice cell, so links route along the gutters; group frames stay off it.
-    const nodes = Object.values(registry.get(bound.store.scenes)[bound.root].nodes);
+    const nodes = Object.values(registry.get(bound.store.views)[bound.root].nodes);
     const offLattice = nodes
       .filter((node) => onLattice(node))
       .filter((node) => {
@@ -135,7 +135,7 @@ describe('loadDiagramSet', () => {
       const boxes = Object.values(drawing.canvas.target?.content ?? {})
         .filter(isNodeRecord)
         .map((record) => record.node)
-        .filter((node) => !node.style?.guide && (node.type === 'rect' || node.type === 'frame'));
+        .filter((node) => !node.style?.guide && (node.type === 'rect' || node.type === 'view'));
       const coloured = boxes.filter((node) => (node.style?.hue ?? 'neutral') !== 'neutral').length;
       return { id, coloured: coloured > 0 && coloured < boxes.length };
     });

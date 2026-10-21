@@ -12,7 +12,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Projection, type Scene, endpointNode } from '@dxos/react-ui-canvas/scene';
+import { type Projection, type View, endpointNode } from '@dxos/react-ui-canvas/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
 import { parseAnchorId } from '../shapes/index.ts';
@@ -27,7 +27,7 @@ export type BulletsProps = {
 };
 
 /** Links leaving the compute node `nodeId` through `property`. */
-const outgoing = (scene: Scene, nodeId: string, property: string) =>
+const outgoing = (scene: View, nodeId: string, property: string) =>
   Object.values(scene.links).filter((link) => {
     const source = endpointNode(link.source);
     const node = source ? scene.nodes[source] : undefined;

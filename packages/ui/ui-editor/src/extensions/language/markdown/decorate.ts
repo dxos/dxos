@@ -611,24 +611,23 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           break;
         }
 
-        decoRanges.push({
-          from: node.from,
-          to: node.to,
-          deco: Decoration.mark({
-            tagName: 'a',
-            attributes: {
-              class: 'cm-link',
-              href: url,
-              rel: 'noreferrer',
-              target: '_blank',
-              // See `linkMark`: a tabbable anchor inside the editing host traps Tab.
-              tabindex: '-1',
-            },
-          }),
-        });
+        const editing = editingRange(state, parent?.name === 'Autolink' ? parent : node, focus);
+        const withButton = !editing && !!options.renderLinkButton;
+        decoRanges.push({ from: node.from, to: node.to, deco: linkMark(url, withButton) });
+
+        // The same button a `[label](url)` link shows in place of its `(url)`; a bare URL has no markup to replace, so it
+        // follows the URL as a widget.
+        if (withButton && options.renderLinkButton) {
+          const end = parent?.name === 'Autolink' ? parent.to : node.to;
+          atomicDecoRanges.push({
+            from: end,
+            to: end,
+            deco: Decoration.widget({ widget: new LinkButton(url, options.renderLinkButton), side: 1 }),
+          });
+        }
 
         // The angle brackets of `<url>` are markup, so they are hidden unless the cursor is inside.
-        if (parent?.name === 'Autolink' && !editingRange(state, parent, focus)) {
+        if (parent?.name === 'Autolink' && !editing) {
           for (const mark of parent.getChildren('LinkMark')) {
             atomicDecoRanges.push({ from: mark.from, to: mark.to, deco: hide });
           }

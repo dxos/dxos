@@ -3,6 +3,7 @@
 //
 
 export * from './Tree.tsx';
+export * from './filter-tree-model.ts';
 export * from './static-tree-model.ts';
 export * from './tree-data.ts';
 export * from './tree-model.ts';

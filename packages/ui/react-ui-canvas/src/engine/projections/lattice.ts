@@ -14,7 +14,7 @@ import {
   type ElementId,
   type Intent,
   type Node,
-  type Scene,
+  type View,
 } from '../../model/index.ts';
 import {
   DEFAULT_LATTICE,
@@ -58,7 +58,7 @@ const isSize = (value: unknown): value is { width: number; height: number } =>
   typeof value === 'object' && value !== null && 'width' in value && 'height' in value;
 
 /** Whether `bounds` (snapped) would overlap a node other than `except`. */
-const blocked = (scene: Scene, spec: LatticeSpec, bounds: Bounds, except: ReadonlySet<ElementId>): boolean =>
+const blocked = (scene: View, spec: LatticeSpec, bounds: Bounds, except: ReadonlySet<ElementId>): boolean =>
   collides(toCell(bounds, spec), occupancy(Object.values(scene.nodes), spec, except));
 
 /**
@@ -66,7 +66,7 @@ const blocked = (scene: Scene, spec: LatticeSpec, bounds: Bounds, except: Readon
  * (create, move, resize, a centre or size `update`) is snapped; everything else passes through. A batch
  * is checked step by step against the scene each step leaves, and is refused whole if any step is.
  */
-export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec): Intent | undefined => {
+export const constrainIntent = (scene: View, intent: Intent, spec: LatticeSpec): Intent | undefined => {
   switch (intent.kind) {
     case 'create': {
       if (!onLattice(intent.node)) {

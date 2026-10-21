@@ -10,7 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { SceneBuilder } from '../../../builder/index.ts';
+import { ViewBuilder } from '../../../builder/index.ts';
 import { type InspectorMode, createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry } from '../../../hooks/index.ts';
 import { type Layer, createMemoryStore } from '../../../model/index.ts';
@@ -23,11 +23,11 @@ const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 const createTree = () => {
   const background: Layer = { id: 'background', name: 'Background', z: between() };
   const diagram: Layer = { id: 'diagram', name: 'Diagram', z: between(background.z) };
-  const tree = SceneBuilder.scene('root', [
-    SceneBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram' }),
-    SceneBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
+  const tree = ViewBuilder.view('root', [
+    ViewBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram' }),
+    ViewBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
   ]).build();
-  const [scene, ...rest] = tree.scenes;
+  const [scene, ...rest] = tree.views;
   return { root: tree.root, scenes: [{ ...scene, layers: { background, diagram } }, ...rest] };
 };
 
@@ -53,7 +53,8 @@ const DefaultStory = ({ select }: StoryArgs) => {
     <Canvas.Root store={store} root={root} atoms={atoms} inspectors={inspectors} onInspectorsChange={setInspectors}>
       <Canvas.Properties />
       <Canvas.Layers />
-      <Canvas.About />
+      <Canvas.Objects />
+      <Canvas.Objects />
     </Canvas.Root>
   );
 };
@@ -95,9 +96,5 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
-    // 4. Opened, the about section's figures are those of the scene.
-    await userEvent.click(within(dock).getByRole('button', { name: 'About' }));
-    await waitFor(() => expect(within(dock).getByTestId('about-nodes')).toHaveTextContent('2'));
-    await expect(within(dock).getByTestId('about-layers')).toHaveTextContent('2');
   },
 };

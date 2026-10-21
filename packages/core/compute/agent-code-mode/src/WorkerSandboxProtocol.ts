@@ -21,8 +21,9 @@ const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(S
  * handlers live here with the conversation), and the evaluation's own result.
  */
 export const SandboxHostRpcs = RpcGroup.make(
+  // Printed forms, not values: the code's values include live objects, which cannot cross the port.
   Rpc.make('Sandbox.print', {
-    payload: Schema.Struct({ values: Schema.Array(Schema.Any) }),
+    payload: Schema.Struct({ values: Schema.Array(Schema.String) }),
     success: Schema.Void,
   }),
   Rpc.make('Sandbox.invokeOperation', {
@@ -44,7 +45,8 @@ export const SandboxHostRpcs = RpcGroup.make(
   }),
   Rpc.make('Sandbox.complete', {
     payload: Schema.Struct({
-      value: Schema.Any,
+      /** The result's printed form, since the host only prints it. */
+      value: Schema.UndefinedOr(Schema.String),
       failure: Schema.NullOr(Schema.String),
       heads: DocumentHeads,
     }),

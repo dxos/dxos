@@ -50,9 +50,15 @@
   .dx-row:focus-visible::before,
   [role='listbox']:focus-visible > .dx-row[data-highlighted]::before,
   [role='listbox']:focus-visible > * > .dx-row[data-highlighted]::before,
-  /* The current row is the one the list's keys act on, so it is ringed whenever the list has focus, a click included. */
-  [role='listbox']:focus-within > .dx-row[aria-current='true']::before,
-  [role='listbox']:focus-within > * > .dx-row[aria-current='true']::before {
+  /*
+   * The current row is ringed whenever the list has focus, a click included, until the keys move to another row: the
+   * ring marks one row, the one the keys act on.
+   */
+  [role='listbox']:focus-within:not(:has(.dx-row[data-highlighted]:not([aria-current='true'])))
+    > .dx-row[aria-current='true']::before,
+  [role='listbox']:focus-within:not(:has(.dx-row[data-highlighted]:not([aria-current='true'])))
+    > *
+    > .dx-row[aria-current='true']::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -63,9 +69,15 @@
   }
 
   /* The source row stays in place, dimmed, while its preview is dragged. Not the parts of zag controls whose drag is a
-     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam or slider thumb is
-     pulled, and they must stay as they are. */
-  [data-dragging]:not([data-scope='splitter'], [data-scope='slider'], [data-scope='angle-slider']) {
+     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam, slider thumb or
+     floating panel is pulled, and they must stay as they are. */
+  [data-dragging]:not(
+    [data-scope='splitter'],
+    [data-scope='slider'],
+    [data-scope='angle-slider'],
+    [data-scope='floating-panel'],
+    [data-floating-panel-trigger]
+  ) {
     opacity: 0.5;
   }
 

@@ -143,6 +143,21 @@ describe('IndexEngine', () => {
     return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
 
+  it.effect(
+    'counts pending migrations before migrating and reports each store applied',
+    Effect.fnUntraced(function* () {
+      const engine = new IndexEngine(yield* SqlClient.SqlClient);
+      const pending = yield* engine.pendingMigrations();
+      expect(pending).toBeGreaterThan(0);
+
+      const progress: number[] = [];
+      yield* engine.migrate({ onProgress: (applied) => progress.push(applied) });
+      expect(progress.at(-1)).toBe(pending);
+      expect(progress).toEqual([...progress].sort((a, b) => a - b));
+      expect(yield* engine.pendingMigrations()).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
   // `done` needs an empty batch, which writes arriving faster than passes never leave; `drained` is
   // what lets a caller waiting for its own writes settle anyway.
   it.effect(
@@ -175,6 +190,34 @@ describe('IndexEngine', () => {
       legacySource.push([makeObject('doc-4')]);
       const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
       expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an empty batch still moves the cursors of what it read, and the next goes past them',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const reads: DataSourceCursor[][] = [];
+      const dataSource: IndexDataSource = {
+        sourceName: 'skipping-source',
+        getChangedObjects: (_ctx, cursors, opts) =>
+          Effect.sync(() => {
+            if (opts?.objects !== false) {
+              reads.push(cursors);
+            }
+            const read = cursors.some(({ resourceId, cursor }) => resourceId === 'root' && cursor === 'root@1');
+            return {
+              objects: [],
+              cursors: read ? [] : [{ spaceId: null, resourceId: 'root', cursor: 'root@1' }],
+              more: false,
+            };
+          }),
+      };
+      const first = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(first).toMatchObject({ done: false, drained: true });
+      const second = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(second).toMatchObject({ done: true, drained: true });
+      expect(reads.at(-1)).toMatchObject([{ resourceId: 'root', cursor: 'root@1' }]);
     }, Effect.provide(TestLayer)),
   );
 

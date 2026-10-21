@@ -56,7 +56,7 @@ export const Settings = Schema.Struct({
   liveDepth: Schema.optional(
     Schema.Number.annotate({
       title: 'Live depth',
-      description: 'How many nested scenes render live; deeper portals draw as previews.',
+      description: 'How many nested views render live; deeper views draw as previews.',
     }),
   ),
   theme: Schema.optional(

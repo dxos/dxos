@@ -40,7 +40,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const published = formatDate(post.published);
   // snippet/imageUrl are derived from the Post's description (no content-feed entry in this surface).
   const imageUrl = getImageUrl(post);
-  const snippet = useMemo(() => getSnippet(post) || undefined, [post.description]);
+  const snippet = useMemo(() => getSnippet(post) || undefined, [post.description, post.content]);
 
   return (
     <Card.Body>

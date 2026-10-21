@@ -330,11 +330,11 @@ jobs:
             --entitlements packages/apps/composer-app/src-tauri/SandboxHelper.entitlements.plist \
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
-      # plugin-code's coding-agent helper and the agents plugins ship for it (plugin-claude's Claude Code
-      # adapter), bundled like the sandbox helper (see plugin-code's capabilities/agent-launcher.ts).
+      # plugin-claude's coding-agent helper and the agents plugins ship for it (plugin-claude's Claude Code
+      # adapter), bundled like the sandbox helper (see plugin-claude's capabilities/agent-launcher.ts).
       - name: Build agent helper
         run: proto run bun -- ./scripts/build-agent-helper.ts
-        working-directory: ./packages/plugins/plugin-code
+        working-directory: ./packages/plugins/plugin-claude
 
       - name: Build Claude Code agent
         run: proto run bun -- ./scripts/build-agent.ts
