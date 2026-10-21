@@ -145,7 +145,7 @@ export type FeatureCanvasProps = {
   onLink?: (featureId: string, dependsOnId: string) => void;
   /** A selected arrow deleted; without it, arrows cannot be deleted. */
   onUnlink?: (featureId: string, dependsOnId: string) => void;
-  /** A selected box deleted: the feature leaves the map and is kept. Without it, boxes cannot be deleted. */
+  /** A selected box deleted: the feature leaves its project and is kept. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
   /** Add each box's edit button, whose edit mode changes the name and description. */
   onRename?: (id: string, name: string) => void;
@@ -162,7 +162,7 @@ export type FeatureCanvasProps = {
 };
 
 /**
- * The canvas view of a feature map: each feature's card in a box, laid out by dependency rank with a
+ * The canvas view of a project's features: each feature's card in a box, laid out by dependency rank with a
  * gutter-routed arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
  * each callback given, and change the model rather than the picture, so a refused edit never appears.
  */

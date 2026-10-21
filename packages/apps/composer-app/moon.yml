@@ -178,11 +178,11 @@ tasks:
       - scripts/stage-sandbox-helper.mjs
     outputs:
       - src-tauri/sandbox
-  # Stages plugin-code's coding-agent helper and the agents plugins ship for it.
+  # Stages plugin-claude's coding-agent helper and the agents plugins ship for it.
   stage-agent-helper:
     command: node scripts/stage-agent-helper.mjs --required
     deps:
-      - plugin-code:compile-agent-helper
+      - plugin-claude:compile-agent-helper
       - plugin-claude:compile-agent
     inputs:
       - scripts/stage-agent-helper.mjs

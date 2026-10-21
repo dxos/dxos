@@ -72,6 +72,7 @@ describe('createSingleCursor', () => {
   const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });

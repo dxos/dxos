@@ -17,10 +17,10 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Obj, type Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
-import * as ComposerMcp from '@dxos/plugin-code/ComposerMcp';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import * as AcpAgent from '../agents/AcpAgent.ts';
+import * as ComposerMcp from '../agents/ComposerMcp.ts';
 import type * as ClaudeCodeProcess from '../process/ClaudeCodeProcess.ts';
 
 /**

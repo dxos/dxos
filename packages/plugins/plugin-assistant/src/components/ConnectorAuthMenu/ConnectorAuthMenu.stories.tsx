@@ -53,12 +53,14 @@ const testConnectors: ConnectorSpec.ConnectorEntry[] = [
     id: 'connector-a',
     source: 'connector-a.example',
     label: 'ConnectorSpec.Connector A',
+    kind: 'custom',
     credentialForm: makeCredentialForm('connector-a'),
   },
   {
     id: 'connector-b',
     source: 'connector-b.example',
     label: 'ConnectorSpec.Connector B',
+    kind: 'custom',
     credentialForm: makeCredentialForm('connector-b'),
   },
 ];

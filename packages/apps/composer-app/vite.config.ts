@@ -584,9 +584,9 @@ export default defineConfig((env) => ({
       },
     },
 
-    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
-    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+    import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {

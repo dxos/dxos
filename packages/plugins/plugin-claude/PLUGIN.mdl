@@ -14,10 +14,12 @@ locally and pushed to Anthropic by an explicit deploy step, so a half-configured
 agent never reaches the API. Session events are not mirrored into the space; the
 transcript is fetched on demand from the session id.
 
-In the desktop app the plugin also offers Claude Code on this computer as an
-agent a project's tasks can be assigned to. plugin-code's agent helper runs it
-through the Claude Code ACP adapter this plugin ships, against the user's own
-`claude`, and the chat holds its session.
+The plugin also offers Claude Code on this computer as an agent a project's
+tasks can be assigned to. An `AgentHelper` host runs it through the Claude Code
+ACP adapter this plugin ships, against the user's own `claude`, and the chat
+holds its session. The plugin owns that host's interface and the agent server
+behind it; its Tauri-only module runs the server as the desktop app's `dx-agent`
+sidecar, and plugin-dev-shell runs the same server inside a Vite dev server.
 
 ## Extensions
 
@@ -588,7 +590,17 @@ decision D-2: An OAuth token stored under the Anthropic source is still lent, an
 ```
 
 ```mdl
-decision D-3: QA-4 and QA-5 describe the agent picker that replaced the chat's options and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again.
+decision D-3: The local coding-agent runtime lives in this plugin, not plugin-code: the agent entry, the `AgentHelper` host interface, the agent server and worktrees, the project's code folder, and a Tauri-only module that runs the server as the `dx-agent` sidecar. Any `AgentHelper` makes the agent available, so plugin-dev-shell can host it in a Vite dev server.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [AgentHelper]
+  why: Only Claude Code uses the runtime, and plugin-code is the plugin-authoring workbench; a dev server should run the same agent without the desktop app.
+  rejected:
+    - The host interface in plugin-assistant or a shared types package: the runtime is Claude-specific, so dev-shell depends on this plugin instead.
+```
+
+```mdl
+decision D-4: QA-4 and QA-5 describe the agent picker that replaced the chat's options and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again.
   date: 2026-10-21
   by: agent:claude-code
   for: user:wittjosiah

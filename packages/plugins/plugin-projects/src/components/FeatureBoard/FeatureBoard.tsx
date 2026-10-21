@@ -33,8 +33,12 @@ export type FeatureBoardProps = {
   onSelect?: (id: string | undefined) => void;
   /** Each given action is offered in every card's menu. */
   onOpen?: (id: string) => void;
+  /** Opens a spec, task or showcase listed on a card. */
+  onOpenObject?: (id: string) => void;
+  /** How a spec listed on a card opens in the app; specs it cannot open link to GitHub. */
+  openSpec?: (spec: string) => (() => void) | undefined;
   onSetStatus?: (id: string, status: FeatureStatus) => void;
-  /** Takes a feature off the map; the feature itself is kept. */
+  /** Takes a feature off its project; the feature itself is kept. */
   onRemove?: (id: string) => void;
   /** Make each card's name and description editable in place. */
   onRename?: (id: string, name: string) => void;
@@ -59,6 +63,8 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
     selectedId,
     onSelect,
     onOpen,
+    onOpenObject,
+    openSpec,
     onSetStatus,
     onRemove,
     onRename,
@@ -79,6 +85,8 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         relation={relation}
         onSelectDependency={onSelect}
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
+        onOpenObject={onOpenObject}
+        openSpec={openSpec}
         onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
         onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
@@ -92,7 +100,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
 };
 
 /**
- * The cards view of a feature map: one card per feature in map order, under a count per status.
+ * The cards view of a project's features: one card per feature, under a count per status.
  * Selecting a card labels the features it needs and the features that need it, and fades the rest,
  * so a dependency chain reads without drawing edges.
  */
@@ -102,6 +110,8 @@ export const FeatureBoard = ({
   defaultSelectedId,
   onSelect,
   onOpen,
+  onOpenObject,
+  openSpec,
   onSetStatus,
   onRemove,
   onRename,
@@ -125,6 +135,8 @@ export const FeatureBoard = ({
     selectedId,
     onSelect: handleSelect,
     onOpen,
+    onOpenObject,
+    openSpec,
     onSetStatus,
     onRemove,
     onRename,

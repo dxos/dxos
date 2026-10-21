@@ -25,9 +25,9 @@ import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import { ContentBlock, Message } from '@dxos/types';
 
+import * as AcpAgent from '../agents/AcpAgent.ts';
 import { claudeCodeToken } from '../claude-code-token.ts';
 import { CLAUDE_CODE_OAUTH_TOKEN_ENV } from '../constants.ts';
 
