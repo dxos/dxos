@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Context } from '@dxos/context';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { IdentityDid, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,18 +18,6 @@ import { EdgeCallFailedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { AgentSpace } from '#types';
-
-/** A request to EDGE as the client's EDGE HTTP client makes it: it answers the envelope's data, or rejects. */
-export type EdgeRequest = (
-  path: string,
-  init: { method: 'GET' | 'POST'; body?: Record<string, unknown> },
-) => Promise<unknown>;
-
-/** `GET /compute/brain/:agent`, as far as confirming the agent's space reads it. */
-const BrainInfo = Schema.Struct({
-  identity: Schema.Struct({ identityDid: Schema.String, defaultSpaceId: Schema.String }),
-  role: Schema.String,
-});
 
 /**
  * How EDGE answered a request of the sync: it did what was asked or had already, it refused, or it was down (no answer,
@@ -69,7 +58,7 @@ const answerTo = (error: AdminSyncRequestError): Answer => {
  * an admin. A pass answers whether it could not reach EDGE for something, which is then worth a pass even if nothing
  * changes (`runOnWake`).
  */
-export const makeAdminSync = (request: EdgeRequest) => {
+export const makeAdminSync = (edge: Pick<EdgeHttpClient, 'getBrain' | 'addBrainAdmin'>) => {
   /** Agent spaces EDGE confirmed are their agent's own, with this identity its admin. */
   const confirmed = new Set<SpaceId>();
   /** The identity keys of each agent space's members EDGE took as the agent's admins this session. */
@@ -78,20 +67,20 @@ export const makeAdminSync = (request: EdgeRequest) => {
   /** A space can claim to be any agent's: EDGE, which minted the agent's space, must name it. */
   const confirm = (space: AgentSpace.Space, did: IdentityDid): Effect.Effect<Answer> =>
     Effect.tryPromise({
-      try: () => request(`/compute/brain/${encodeURIComponent(did)}`, { method: 'GET' }),
+      try: () => edge.getBrain(Context.default(), did),
       catch: (cause) => new AdminSyncRequestError({ cause }),
     }).pipe(
-      Effect.flatMap(Schema.decodeUnknownEffect(BrainInfo)),
       Effect.map(({ identity, role }): Answer =>
         identity.identityDid === did && identity.defaultSpaceId === space.id && role === 'admin' ? 'done' : 'refused',
       ),
-      Effect.catch((error) => Effect.succeed(error instanceof AdminSyncRequestError ? answerTo(error) : 'refused')),
+      // An answer EDGE gave in a shape the client does not read would be the same next time.
+      Effect.catch((error) => Effect.succeed(Schema.isSchemaError(error.cause) ? 'refused' : answerTo(error))),
     );
 
   /** Asks EDGE to make a member the agent's admin; an add EDGE settled already counts as done. */
   const add = (did: IdentityDid, identityKey: string): Effect.Effect<Answer> =>
     Effect.tryPromise({
-      try: () => request(`/compute/brain/${encodeURIComponent(did)}/admins`, { method: 'POST', body: { identityKey } }),
+      try: () => edge.addBrainAdmin(Context.default(), did, identityKey),
       catch: (cause) => new AdminSyncRequestError({ cause }),
     }).pipe(
       Effect.as<Answer>('done'),
@@ -164,8 +153,7 @@ export default Capability.makeModule(
       return [];
     }
 
-    const request: EdgeRequest = (path, init) => edge.value.request(Context.default(), path, init);
-    let sync = makeAdminSync(request);
+    let sync = makeAdminSync(edge.value);
     const wake = yield* Queue.sliding<void>(1);
     const notify = () => void Queue.offerUnsafe(wake, undefined);
     // An agent space's members change without the list of spaces changing, so each agent space is watched too.
@@ -179,7 +167,7 @@ export default Capability.makeModule(
     // The client replaces its space list when its services reconnect, so the subscriptions follow it. The services may
     // hold another identity by then, so what EDGE confirmed and took starts over.
     const unsubscribeReloaded = client.reloaded.on(() => {
-      sync = makeAdminSync(request);
+      sync = makeAdminSync(edge.value);
       unwatch();
       spaces = client.spaces.subscribe(notify);
       notify();

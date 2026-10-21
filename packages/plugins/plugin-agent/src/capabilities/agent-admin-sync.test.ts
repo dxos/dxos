@@ -9,6 +9,7 @@ import * as TestClock from 'effect/testing/TestClock';
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeCallFailedError } from '@dxos/protocols';
@@ -18,7 +19,7 @@ import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AgentSpace } from '#types';
 
-import { type EdgeRequest, makeAdminSync, runOnWake } from './agent-admin-sync.ts';
+import { makeAdminSync, runOnWake } from './agent-admin-sync.ts';
 
 const member = (key: PublicKey, role: SpaceMember_Role, did = '') =>
   createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key), did }, role });
@@ -48,23 +49,32 @@ const agentSpace = (initial: Member[]) => {
 const fakeEdge = (agents: Record<string, { defaultSpaceId: SpaceId; role?: string }>) => {
   const calls: string[] = [];
   const failures = new Map<string, number>();
-  const request: EdgeRequest = async (path, { method, body }) => {
-    const call = `${method} ${decodeURIComponent(path)}${body ? ` ${JSON.stringify(body)}` : ''}`;
+  const answer = (call: string, did: string) => {
     calls.push(call);
     const status = failures.get(call);
     if (status !== undefined) {
       throw new EdgeCallFailedError({ message: `HTTP ${status}.`, status, isRetryable: false });
     }
-    const [, did] = decodeURIComponent(path).match(/^\/compute\/brain\/([^/]+)/) ?? [];
     const agent = agents[did];
     if (!agent) {
       throw new EdgeCallFailedError({ message: 'Brain not found.', status: 404, isRetryable: false });
     }
-    return method === 'GET'
-      ? { identity: { identityDid: did, defaultSpaceId: agent.defaultSpaceId }, role: agent.role ?? 'admin' }
-      : { adminKeys: [] };
+    return agent;
   };
-  return { request, calls, failures };
+  const edge: Pick<EdgeHttpClient, 'getBrain' | 'addBrainAdmin'> = {
+    getBrain: async (_ctx, did) => {
+      const agent = answer(`GET /compute/brain/${did}`, did);
+      return {
+        identity: { identityDid: did, label: 'Kai', defaultSpaceId: agent.defaultSpaceId },
+        role: agent.role ?? 'admin',
+      };
+    },
+    addBrainAdmin: async (_ctx, did, identityKey) => {
+      answer(`POST /compute/brain/${did}/admins ${JSON.stringify({ identityKey })}`, did);
+      return { adminKeys: [] };
+    },
+  };
+  return { client: edge, calls, failures };
 };
 
 describe('AgentAdminSync', () => {
@@ -83,7 +93,7 @@ describe('AgentAdminSync', () => {
       member(reader, SpaceMember_Role.READER),
     ]);
     const edge = fakeEdge({ [did]: { defaultSpaceId: kai.space.id } });
-    const sync = makeAdminSync(edge.request);
+    const sync = makeAdminSync(edge.client);
 
     await run(sync, [kai.space]);
     expect(edge.calls).toEqual([
@@ -116,16 +126,16 @@ describe('AgentAdminSync', () => {
       member(editor, SpaceMember_Role.EDITOR),
     ]);
     const elsewhere = fakeEdge({ [did]: { defaultSpaceId: SpaceId.random() } });
-    expect(await run(makeAdminSync(elsewhere.request), [claimed.space])).toBe(false);
+    expect(await run(makeAdminSync(elsewhere.client), [claimed.space])).toBe(false);
     expect(elsewhere.calls).toEqual([`GET /compute/brain/${did}`]);
 
     const contact = fakeEdge({ [did]: { defaultSpaceId: claimed.space.id, role: 'contact' } });
-    expect(await run(makeAdminSync(contact.request), [claimed.space])).toBe(false);
+    expect(await run(makeAdminSync(contact.client), [claimed.space])).toBe(false);
     expect(contact.calls).toEqual([`GET /compute/brain/${did}`]);
 
     // An agent EDGE does not know (404) is a refusal too, so it asks for no retry.
     const unknown = fakeEdge({});
-    expect(await run(makeAdminSync(unknown.request), [claimed.space])).toBe(false);
+    expect(await run(makeAdminSync(unknown.client), [claimed.space])).toBe(false);
     expect(unknown.calls).toEqual([`GET /compute/brain/${did}`]);
   });
 
@@ -143,7 +153,7 @@ describe('AgentAdminSync', () => {
     // An EDGE without the admins route answers 404, as it does a caller with no role on the agent.
     edge.failures.set(listMe, 404);
     edge.failures.set(listEditor, 503);
-    const sync = makeAdminSync(edge.request);
+    const sync = makeAdminSync(edge.client);
     expect(await run(sync, [kai.space])).toBe(true);
 
     edge.calls.length = 0;
@@ -162,7 +172,7 @@ describe('AgentAdminSync', () => {
     const confirmKai = `GET /compute/brain/${did}`;
     const listMe = `POST /compute/brain/${did}/admins {"identityKey":"${me.toHex()}"}`;
     const listEditor = `POST /compute/brain/${did}/admins {"identityKey":"${editor.toHex()}"}`;
-    const sync = makeAdminSync(edge.request);
+    const sync = makeAdminSync(edge.client);
 
     edge.failures.set(confirmKai, 503);
     expect(await run(sync, [kai.space])).toBe(true);
