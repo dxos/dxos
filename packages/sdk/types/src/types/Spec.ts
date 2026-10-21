@@ -10,17 +10,13 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
-
+/** A spec in the Deus language (`.mdl`), its text owned by the object. */
 export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Owned body: `SetParent` cascades it with the spec. */
     content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
-  }).pipe(
-    Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
-    Annotation.UserType.set(),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--code--regular', hue: 'indigo' }), Annotation.UserType.set()),
 ) {}
 
 export const isSpec = (object: unknown): object is Spec =>

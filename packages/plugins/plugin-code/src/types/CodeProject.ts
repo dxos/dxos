@@ -7,11 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Spec } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import * as SourceFile from './SourceFile.ts';
-import * as Spec from './Spec.ts';
 
 export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos.type.codeProject', '0.1.0'))(
   Schema.Struct({

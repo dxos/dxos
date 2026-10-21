@@ -261,8 +261,8 @@ export const steps = [
       await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
       await page.waitForTimeout(1_500);
       await demo.click({
-        selector: '[role="menuitem"]:has-text("Assign to Claude Code (cloud)")',
-        label: 'Assign to Claude Code (cloud)',
+        selector: '[role="menuitem"]:has-text("Assign to Claude Code (EDGE)")',
+        label: 'Assign to Claude Code (EDGE)',
       });
       await page.waitForTimeout(LINGER);
     },
