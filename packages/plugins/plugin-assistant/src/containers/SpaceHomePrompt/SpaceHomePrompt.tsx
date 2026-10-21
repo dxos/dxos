@@ -11,6 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
+import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { Database, Feed, Ref } from '@dxos/echo';
@@ -20,10 +21,11 @@ import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
-import { usePresets } from '#hooks';
+import { bindMentions, usePresets, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
+import { makeSkillCommands, runDraftCommand } from '../../commands/index.ts';
 import { getChatPath } from '../../paths.ts';
 import { bindChatDefaults, contributesPluginManager } from '../../util/default-skills.ts';
 
@@ -52,7 +54,9 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { preset, ...presetProps } = usePresets(settings, chat);
 
   const startNewDraft = useCallback(() => setDraftGeneration((current) => current + 1), []);
-  const event = useDraftSend({ space, draft, context, onSent: startNewDraft });
+  const skills = useSkills({ registry, db: space?.db });
+  const slashCommands = useMemo(() => makeSkillCommands(skills), [skills]);
+  const event = useDraftSend({ space, draft, context, slashCommands, onSent: startNewDraft });
 
   if (!space) {
     return null;
@@ -65,7 +69,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       chat={chat}
       db={space.db}
       context={context}
-      registry={registry}
+      slashCommands={slashCommands}
       event={event}
       preset={preset?.id}
       placeholder={t('space-home.prompt.placeholder')}
@@ -79,11 +83,12 @@ type UseDraftSendProps = {
   space?: Space;
   draft?: { feed: Feed.Feed; chat: Chat.Chat };
   context?: AiContext.Binder;
+  slashCommands: readonly SlashCommand.SlashCommand[];
   onSent: () => void;
 };
 
 /** Stores the draft's chat and bindings, then opens it; a failed send removes what it stored and restores the text. */
-const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
+const useDraftSend = ({ space, draft, context, slashCommands, onSent }: UseDraftSendProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
@@ -103,13 +108,18 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
       onSent();
-      void context
-        .flush()
-        .then(() => {
-          atomRegistry.update(stateAtom, (current) => ({
-            ...current,
-            pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },
-          }));
+      void runDraftCommand(text, slashCommands, { db: space.db, chat, invoke: invokePromise, binder: context })
+        .then(async (prompt) => {
+          if (prompt) {
+            await bindMentions(context, space.db, prompt);
+          }
+          await context.flush();
+          if (prompt) {
+            atomRegistry.update(stateAtom, (current) => ({
+              ...current,
+              pendingPrompts: { ...current.pendingPrompts, [chatPath]: prompt },
+            }));
+          }
           void invokePromise(LayoutOperation.Open, { subject: [chatPath] });
         })
         .catch((err) => {
@@ -119,7 +129,7 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
           event.emit({ type: 'update-prompt', text });
         });
     });
-  }, [event, space, draft, context, atomRegistry, stateAtom, invokePromise, onSent]);
+  }, [event, space, draft, context, slashCommands, atomRegistry, stateAtom, invokePromise, onSent]);
   return event;
 };
 

@@ -13,6 +13,7 @@ import type * as WorkerThreads from 'node:worker_threads';
 
 import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -95,6 +96,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         dialect: dialect.name,
         space,
         types: registrySnapshot(db),
+        skills: context.skills,
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
           name: operation.name,
@@ -264,9 +266,10 @@ const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
     }
     const typename = Type.getTypename(entity);
     const version = Type.getVersion(entity);
+    const skills = Skill.annotatedSkillKeys(entity);
     return typename === undefined || version === undefined
       ? []
-      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity) }];
+      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity), ...(skills.length > 0 && { skills }) }];
   });
 
 /**

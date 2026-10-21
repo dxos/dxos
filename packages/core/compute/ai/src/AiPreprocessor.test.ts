@@ -783,6 +783,56 @@ describe('AiPreprocessor.preprocessPrompt', () => {
   );
 });
 
+describe('AiPreprocessor.preprocessPrompt with offered tools', () => {
+  const history = () => [
+    makeMessage('user', [{ _tag: 'text', text: 'Find the tasks.' }]),
+    makeMessage('assistant', [
+      { _tag: 'toolCall', toolCallId: 'old', name: 'space-query', input: '{"type":"task"}', providerExecuted: false },
+      { _tag: 'toolCall', toolCallId: 'new', name: 'eval', input: '{"code":"1"}', providerExecuted: false },
+    ]),
+    makeMessage('tool', [
+      { _tag: 'toolResult', toolCallId: 'old', name: 'space-query', result: '["a","b"]', providerExecuted: false },
+      { _tag: 'toolResult', toolCallId: 'new', name: 'eval', result: '"1"', providerExecuted: false },
+    ]),
+  ];
+
+  const partsOf = (prompt: Prompt.Prompt) =>
+    prompt.content.flatMap((message) =>
+      typeof message.content === 'string' ? [] : message.content.map((part) => ({ role: message.role, part })),
+    );
+
+  it.effect(
+    'rewrites a call to a tool the request does not offer, and its result, as text',
+    Effect.fn(function* ({ expect }) {
+      const prompt = yield* AiPreprocessor.preprocessPrompt(history(), { tools: ['eval'] });
+      const parts = partsOf(prompt);
+
+      const calls = parts.filter(({ part }) => part.type === 'tool-call');
+      expect(calls.map(({ part }) => (part.type === 'tool-call' ? part.name : undefined))).toEqual(['eval']);
+      const results = parts.filter(({ part }) => part.type === 'tool-result');
+      expect(results.map(({ part }) => (part.type === 'tool-result' ? part.name : undefined))).toEqual(['eval']);
+
+      const texts = parts.flatMap(({ role, part }) => (part.type === 'text' ? [{ role, text: part.text }] : []));
+      expect(texts).toContainEqual({
+        role: 'assistant',
+        text: '[Earlier call to `space-query`, which is not a tool you can call now. Input: {"type":"task"}]',
+      });
+      expect(texts).toContainEqual({ role: 'user', text: '[Result of the earlier `space-query` call: ["a","b"]]' });
+      // The retired result follows the offered tool's result, which must stay first after its call.
+      const roles = prompt.content.map((message) => message.role);
+      expect(roles.slice(-2)).toEqual(['tool', 'user']);
+    }),
+  );
+
+  it.effect(
+    'keeps every call as a call when the offered tools are not given',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt(history()));
+      expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(2);
+    }),
+  );
+});
+
 describe('AiPreprocessor.estimateTokens', () => {
   it.effect(
     'should estimate tokens for a simple user message with text',

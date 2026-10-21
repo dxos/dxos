@@ -5,11 +5,10 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef } from 'react';
 
-import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
+import { Editor, type EditorController, type UseEditorMenuProps, type UseTextEditorProps } from '@dxos/react-ui-editor';
 import type * as Util from '@dxos/react-ui/Util';
 import { type BasicExtensionsOptions, type SubmitOptions } from '@dxos/ui-editor';
 
-import { type ReferencesOptions } from './references.ts';
 import { useChatExtensions } from './useChatExtensions.ts';
 
 export interface ChatEditorController extends EditorController {}
@@ -17,7 +16,8 @@ export interface ChatEditorController extends EditorController {}
 export type ChatEditorProps = Util.ThemedClassName<
   {
     extensions?: Extension;
-    references?: ReferencesOptions;
+    /** A popover menu opened by trigger characters (e.g. `@` to mention an object). */
+    menu?: Omit<UseEditorMenuProps, 'viewRef'>;
     /** Enable inline markdown formatting (decoration, syntax highlighting, and formatting shortcuts). */
     markdown?: boolean;
   } & (SubmitOptions &
@@ -31,6 +31,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
       classNames,
       autoFocus,
       extensions: extensionsProp,
+      menu,
       markdown = false,
       lineWrapping = false,
       placeholder,
@@ -40,9 +41,8 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   ) => {
     const extensions = useChatExtensions({ extensions: extensionsProp, markdown, lineWrapping, placeholder, onSubmit });
 
-    // TODO(burdon): Popover.
     return (
-      <Editor.Root ref={forwardRef}>
+      <Editor.Root ref={forwardRef} {...menu}>
         <Editor.View classNames={classNames} autoFocus={autoFocus} extensions={extensions} />
       </Editor.Root>
     );
