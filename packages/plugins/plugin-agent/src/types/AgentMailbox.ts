@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
+import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
@@ -81,7 +82,8 @@ export interface Service {
   readonly claim: (request: ClaimRequest) => Effect.Effect<MailboxStatus, AgentMailboxError>;
   /** Releases the handle; mail to it bounces from then on. */
   readonly release: (handle: string) => Effect.Effect<MailboxStatus, AgentMailboxError>;
-  readonly status: (handle: string) => Effect.Effect<MailboxStatus, AgentMailboxError>;
+  /** None while the EDGE it reaches has no mailboxes (an older deployment): email is unavailable, not failing. */
+  readonly status: (handle: string) => Effect.Effect<Option.Option<MailboxStatus>, AgentMailboxError>;
   /** Sends an email from the mailbox. */
   readonly send: (request: SendRequest) => Effect.Effect<SendResult, AgentMailboxError>;
 }

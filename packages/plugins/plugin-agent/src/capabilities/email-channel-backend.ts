@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -146,10 +147,20 @@ const disconnect = Effect.fnUntraced(function* (channel: Channel.Channel) {
   return toConnectionStatus(status, spaceId);
 });
 
+/** The status of a channel whose EDGE has no mailboxes: nothing to connect to, which is not a failure to report. */
+export const UNAVAILABLE_STATUS: ThreadOperation.ConnectionStatus = {
+  running: false,
+  state: 'unavailable',
+  detail: 'Email is not available on this EDGE.',
+};
+
 const readStatus = Effect.fnUntraced(function* (channel: Channel.Channel) {
   const { config, spaceId } = yield* loadConfig(channel);
   const mailbox = yield* AgentMailbox.AgentMailboxService;
-  return toConnectionStatus(yield* mailbox.status(config.claimedHandle ?? config.handle), spaceId);
+  return Option.match(yield* mailbox.status(config.claimedHandle ?? config.handle), {
+    onNone: () => UNAVAILABLE_STATUS,
+    onSome: (status) => toConnectionStatus(status, spaceId),
+  });
 });
 
 const loadConfig = Effect.fnUntraced(function* (channel: Channel.Channel) {
