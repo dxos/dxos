@@ -11,7 +11,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -23,6 +23,7 @@ import {
   useCanvasHistory,
   useClock,
   useDocumentCommands,
+  useEditMode,
   useElementHandlers,
   useExposedClock,
   useGeneratorFrames,
@@ -295,7 +296,8 @@ export const CanvasRoot = ({
     viewport,
   });
 
-  const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
+  const { setTool, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
+  const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
     onPointerMove,
@@ -313,9 +315,14 @@ export const CanvasRoot = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
+    deleteVertex,
     setDrag,
     toScene,
     removePoint,
+    finishVertices,
+    removeVertex,
     createdNode,
     commitCreated,
     menu,
@@ -346,6 +353,7 @@ export const CanvasRoot = ({
     snapMinor,
     isClick,
     moveDelta,
+    exitEdit,
   });
 
   // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
@@ -353,11 +361,12 @@ export const CanvasRoot = ({
   useEffect(() => {
     if (readonly) {
       cancelDrag();
+      exitEdit();
       if (registry.get(atoms.tool).kind !== 'hand') {
         setTool({ kind: 'select' });
       }
     }
-  }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
+  }, [readonly, cancelDrag, exitEdit, registry, atoms.tool, setTool]);
 
   const { copy, cut, paste } = controller.editing;
   const documentCommands = useDocumentCommands({
@@ -388,7 +397,6 @@ export const CanvasRoot = ({
     select,
     toggleSnap,
     toggleGuides,
-    toggleLattice,
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
@@ -402,8 +410,13 @@ export const CanvasRoot = ({
     ungroup: controller.selection.ungroup,
     cancelDrag,
     removePoint,
+    finishVertices,
+    removeVertex,
+    deleteVertex,
     setTool,
     timeline: timelineKeys,
+    editNode,
+    exitEdit,
   });
 
   // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
@@ -429,7 +442,7 @@ export const CanvasRoot = ({
     createdNode,
   });
 
-  const { handlers, onDoubleClick } = useElementHandlers({
+  const { handlers, onDoubleClick: onElementDoubleClick } = useElementHandlers({
     registry,
     atoms,
     nodeRegistry,
@@ -437,13 +450,25 @@ export const CanvasRoot = ({
     capabilities,
     navigation,
     scene,
-    select,
     toScene,
+    editNode,
     onNodePointerDown,
     onLinkPointerDown,
     onLinkDoubleClick,
     onLinkContextMenu,
   });
+
+  // A double-click ends a line drawn vertex by vertex, rather than opening what lies under it.
+  const onDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      if (registry.get(atoms.drag)?.kind === 'vertices') {
+        finishVertices(false);
+      } else {
+        onElementDoubleClick(event);
+      }
+    },
+    [registry, atoms.drag, finishVertices, onElementDoubleClick],
+  );
 
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 
@@ -507,6 +532,8 @@ export const CanvasRoot = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onVertexPointerDown={onVertexPointerDown}
+              onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}
