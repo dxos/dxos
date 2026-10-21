@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { type EventMessage } from 'posthog-node';
 
 import { getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -27,6 +28,27 @@ const isEncrypted = (host: string): boolean => {
     return false;
   }
 };
+
+/** Marks a tool call failed by its own input; set on both events, read only on the `$exception`. */
+const EXPECTED_ERROR = '$dx_mcp_expected_error';
+
+/**
+ * A caller's mistake (bad input, a skill not loaded) is the model's to correct from the message, not
+ * a defect to triage: its `$mcp_tool_call` still counts toward the error rate, but no exception is filed.
+ */
+const dropExpectedExceptions = (event: EventMessage | null): EventMessage | null =>
+  event?.event === '$exception' && event.properties?.[EXPECTED_ERROR] === true ? null : event;
+
+/**
+ * Classed by the failure's type, so error tracking names the category rather than a bare `Error`; the
+ * stack is dropped because it would be this function's, not the failure's.
+ */
+const toolError = ({ type, message }: ObservabilityExtension.McpToolError): Error =>
+  Object.assign(new Error(message), { name: type, stack: undefined });
+
+/** One issue per tool, operation and failure type; without it every dispatch failure is one issue. */
+const fingerprint = (toolName: string, operationKey: string | undefined, type: string | undefined): string =>
+  ['mcp', toolName, operationKey ?? '-', type ?? 'unknown'].join(':');
 
 /**
  * PostHog for a node host, over `posthog-node`.
@@ -56,7 +78,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     }
 
     const { PostHogMCP } = yield* Effect.promise(() => import('@posthog/mcp'));
-    const client = new PostHogMCP(apiKey, { host, enableExceptionAutocapture: true });
+    const client = new PostHogMCP(apiKey, {
+      host,
+      enableExceptionAutocapture: true,
+      before_send: dropExpectedExceptions,
+    });
 
     const superProperties: ObservabilityExtension.Attributes = {
       sdkVersion: DXOS_VERSION,
@@ -139,7 +165,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
               });
             }
           },
-          captureToolCall: ({ clientName, clientVersion, sessionId, protocolVersion, ...call }) => {
+          captureToolCall: ({
+            clientName,
+            clientVersion,
+            sessionId,
+            protocolVersion,
+            error,
+            operationKey,
+            ...call
+          }) => {
             const id = attribution();
             if (id) {
               client.captureToolCall({
@@ -147,11 +181,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                 sessionId,
                 protocolVersion,
                 distinctId: id,
-                // `captureToolCall` takes no client name, so the calls carry it as a property.
+                ...(error ? { error: toolError(error), errorType: error.type } : {}),
+                // `captureToolCall` takes no client name, so the calls carry it as a property; the
+                // rest are copied onto the `$exception` sibling too, which is how it groups.
                 properties: {
                   ...mcpProperties(),
                   $mcp_client_name: clientName || ObservabilityExtension.UNKNOWN_MCP_CLIENT,
                   ...(clientVersion ? { $mcp_client_version: clientVersion } : {}),
+                  ...(operationKey ? { $mcp_operation_key: operationKey } : {}),
+                  ...(call.isError
+                    ? { $exception_fingerprint: fingerprint(call.toolName, operationKey, error?.type) }
+                    : {}),
+                  ...(error?.expected ? { [EXPECTED_ERROR]: true } : {}),
                 },
               });
             }
