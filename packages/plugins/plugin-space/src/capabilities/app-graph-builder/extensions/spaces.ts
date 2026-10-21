@@ -24,7 +24,6 @@ import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
-import { getHueOrHash } from '@dxos/ui-theme';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
 
@@ -485,8 +484,7 @@ export const constructSpaceNode = ({
     properties: {
       label: getSpaceDisplayName(space, { namesCache }),
       description: ready ? space.properties.description : undefined,
-      // Hashed from the space id when the space has no colour, as its pills in the contact list are.
-      hue: getHueOrHash(ready ? space.properties.hue : undefined, space.id),
+      hue: ready ? space.properties.hue : undefined,
       icon: ready && space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
       iconHue: ready ? space.properties.iconHue : undefined,
       disabled: !navigable || !ready || hasPendingMigration,
