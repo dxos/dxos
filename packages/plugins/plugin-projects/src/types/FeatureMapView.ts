@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { ViewState } from '@dxos/react-ui-attention/types';
 
-/** Cards lists the features by name; Canvas lays them out as a dependency graph. */
-export const Mode = Schema.Literals(['cards', 'canvas']);
+/** Cards lists the features by name; Canvas lays them out as a dependency graph; Kanban groups them by status. */
+export const Mode = Schema.Literals(['cards', 'canvas', 'kanban']);
 export type Mode = Schema.Schema.Type<typeof Mode>;
 
 export const State = Schema.Struct({ mode: Mode });

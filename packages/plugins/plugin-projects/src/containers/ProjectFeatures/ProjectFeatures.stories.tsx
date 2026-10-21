@@ -18,6 +18,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -61,6 +62,29 @@ const findCard = async (canvasElement: HTMLElement, name: string) => {
   return card;
 };
 
+const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
+
+const dispatchDrag = (element: HTMLElement, type: string, dataTransfer: DataTransfer) => {
+  const { x, y, width, height } = element.getBoundingClientRect();
+  element.dispatchEvent(
+    new DragEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      dataTransfer,
+      clientX: x + width / 2,
+      clientY: y + height / 2,
+    }),
+  );
+};
+
+const findKanbanColumn = (canvasElement: HTMLElement, status: string) => {
+  const column = canvasElement.querySelector<HTMLElement>(`[data-testid="board-column"][data-status="${status}"]`);
+  if (!column) {
+    throw new Error(`No column for ${status}`);
+  }
+  return column;
+};
+
 const openCardMenu = async (card: HTMLElement) => {
   await userEvent.click(within(within(card).getByTestId('feature-card.menu')).getByRole('button'));
 };
@@ -88,6 +112,8 @@ const meta = {
         FeatureEditingPlugin.make(),
       ],
     }),
+    // The deck provides the drag-and-drop root in the app; the Kanban view needs one here.
+    withMosaic(),
     withTheme(),
   ],
   parameters: {
@@ -241,5 +267,56 @@ export const CanvasRename: Story = {
     await userEvent.click(within(node).getByTestId('feature-card.done'));
     await expect(await within(node).findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
     await expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8);
+  },
+};
+
+/** Kanban: a column per status, and dragging a card to another column sets the feature's status. */
+export const Kanban: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByTestId('projectsPlugin.featureMap.kanban', undefined, { timeout: 10_000 }),
+    );
+    await waitFor(() => expect(canvas.getAllByTestId('board-column')).toHaveLength(5), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.getAllByTestId('feature-kanban.card')).toHaveLength(8), { timeout: 10_000 });
+
+    const cardIn = (status: string, name: string) =>
+      [
+        ...findKanbanColumn(canvasElement, status).querySelectorAll<HTMLElement>('[data-testid="feature-kanban.card"]'),
+      ].find((card) => within(card).queryByText(name));
+    await waitFor(() => expect(cardIn('planned', 'Smart triage')).toBeDefined(), { timeout: 10_000 });
+    const source = cardIn('planned', 'Smart triage');
+    if (!source) {
+      throw new Error('Smart triage is not in the planned column');
+    }
+    await expect(source).toHaveAttribute('draggable', 'true');
+
+    const target = findKanbanColumn(canvasElement, 'in-progress').querySelector<HTMLElement>(
+      '[data-mosaic-container-state]',
+    );
+    if (!target) {
+      throw new Error('No drop container in the in-progress column');
+    }
+    const dataTransfer = new DataTransfer();
+    dispatchDrag(source, 'dragstart', dataTransfer);
+    let dropped = false;
+    try {
+      // pragmatic-dnd starts the drag a frame after `dragstart`, once the native preview has been taken.
+      await nextFrame();
+      await nextFrame();
+      dispatchDrag(target, 'dragenter', dataTransfer);
+      dispatchDrag(target, 'dragover', dataTransfer);
+      await waitFor(() => expect(target.dataset.mosaicContainerState).toBe('active'), { timeout: 5_000 });
+      dispatchDrag(target, 'drop', dataTransfer);
+      dropped = true;
+    } finally {
+      dropped || dispatchDrag(source, 'dragend', dataTransfer);
+    }
+
+    await waitFor(() => expect(cardIn('in-progress', 'Smart triage')).toBeDefined(), { timeout: 5_000 });
+    await expect(cardIn('planned', 'Smart triage')).toBeUndefined();
+    await expect(
+      within(cardIn('in-progress', 'Smart triage') ?? canvasElement).getByTestId('feature-card').dataset.status,
+    ).toBe('in-progress');
   },
 };

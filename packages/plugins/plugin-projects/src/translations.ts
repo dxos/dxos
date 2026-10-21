@@ -144,6 +144,7 @@ export const translations = [
         'feature-map.mode.label': 'View',
         'feature-map.mode.cards.label': 'Cards',
         'feature-map.mode.canvas.label': 'Canvas',
+        'feature-map.mode.kanban.label': 'Kanban',
       },
     },
   },

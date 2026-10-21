@@ -14,7 +14,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
-import { FeatureBoard } from '#components';
+import { FeatureBoard, FeatureKanban } from '#components';
 import { meta } from '#meta';
 import { Feature, FeatureMapView } from '#types';
 
@@ -35,9 +35,10 @@ const projectIdOf = (feature: Feature.Feature) => feature.project && EID.getEnti
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
   { mode: 'cards', icon: 'ph--cards--regular' },
   { mode: 'canvas', icon: 'ph--graph--regular' },
+  { mode: 'kanban', icon: 'ph--kanban--regular' },
 ];
 
-/** A project's Features tab: the features that belong to it, as cards (the default) or on a canvas. */
+/** A project's Features tab: the features that belong to it, as cards (the default), on a canvas, or by status. */
 export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { mode } = useViewState(FeatureMapView.aspect, project.id);
@@ -156,6 +157,20 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               onOpen={handleOpen}
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
+              onRemove={editing.removeFromProject}
+              onRename={editing.rename}
+              onDescribe={editing.describe}
+              editingId={editingId}
+              onEditingChange={setEditingId}
+            />
+          </div>
+        ) : mode === 'kanban' ? (
+          <div className='grid min-h-0' data-testid='feature-map.kanban'>
+            <FeatureKanban
+              features={features}
+              onSetStatus={editing.setStatus}
+              onOpen={handleOpen}
+              onOpenObject={handleOpen}
               onRemove={editing.removeFromProject}
               onRename={editing.rename}
               onDescribe={editing.describe}
