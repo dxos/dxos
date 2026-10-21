@@ -8,24 +8,31 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
+import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
+import { translations as searchTranslations } from '@dxos/plugin-search/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -34,10 +41,12 @@ import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task } from '@dxos/types';
+import { File, Message, Organization, Outline, Person, Task } from '@dxos/types';
 
+import { ChatDetailsSection } from '#components';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
+import { ChatSurface } from '#types';
 
 import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
@@ -128,16 +137,48 @@ type StoryArgs = {
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
-} & Pick<ChatArticleProps, 'debug'>;
+  workspace?: boolean;
+} & Pick<ChatArticleProps, 'debug' | 'onSubmit'>;
 
-const DefaultStory = ({ debug }: StoryArgs) => {
+const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
+  const spec = db.add(
+    Markdown.make({
+      name: 'Prompt redesign spec',
+      content: '# Prompt redesign\n\nModel and agent pickers in the prompt row; context in a drawer above it.',
+    }),
+  );
+  db.add(Markdown.make({ name: 'Q4 roadmap', content: '# Q4 roadmap\n\n- Ship the new prompt.' }));
+  db.add(Markdown.make({ name: 'Meeting notes', content: '# Meeting notes\n\nAgreed on one PR.' }));
+  db.add(Person.make({ fullName: 'Rich Burdon' }));
+  db.add(Person.make({ fullName: 'Dmytro Maretskyi' }));
+  db.add(Organization.make({ name: 'DXOS' }));
+  for (const [name, url] of [
+    ['Linear', 'https://mcp.linear.app/mcp'],
+    ['GitHub', 'https://api.githubcopilot.com/mcp/'],
+  ]) {
+    db.add(Connection.make({ name, connectorId: 'mcp', mcp: { url, protocol: 'http' } }));
+  }
+  return [spec];
+};
+
+const changesSection = Surface.create({
+  id: 'storyChanges',
+  filter: Surface.makeFilter(ChatSurface.ChatDetails),
+  component: () => (
+    <ChatDetailsSection icon='ph--git-diff--regular' title='Changes' count={3}>
+      <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
+    </ChatDetailsSection>
+  ),
+});
+
+const DefaultStory = ({ debug, onSubmit }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
   if (!chat) {
     return <Loading />;
   }
 
-  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} />;
+  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} onSubmit={onSubmit} />;
 };
 
 const meta = {
@@ -145,12 +186,25 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
+    withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform, workspace } }) => {
       return {
         plugins: [
           ...CorePlugins.make(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
+            types: [
+              Blob.Blob,
+              Chat.Chat,
+              Connection.Connection,
+              Feed.Feed,
+              File.File,
+              Markdown.Document,
+              Message.Message,
+              Organization.Organization,
+              Outline.Outline,
+              Person.Person,
+              Task.Task,
+              Text.Text,
+            ],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -166,7 +220,9 @@ const meta = {
                 // story renders without waiting on a lazy resolution nothing triggers.
                 yield* Effect.promise(() => Promise.all(chat.tasks.map((task) => task.load())));
 
-                if (tasks.length > 0) {
+                const mentioned = workspace ? seedWorkspace(space.db) : [];
+
+                if (tasks.length > 0 || mentioned.length > 0) {
                   // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
                   // holding tasks is not the same as working them: the planning skill's update-tasks
                   // tool and its end-request reminder both reach the checklist through
@@ -180,8 +236,8 @@ const meta = {
                   yield* Effect.promise(() =>
                     binder.use((binder: AiContext.Binder) =>
                       binder.bind({
-                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
-                        objects: [Ref.make(chat)],
+                        skills: [Ref.fromURI(Skill.registryURI(workspace ? MemorySkill.key : PlanningSkill.key))],
+                        objects: [Ref.make(chat), ...mentioned.map((object) => Ref.make(object))],
                       }),
                     ),
                   );
@@ -204,19 +260,23 @@ const meta = {
           SpacePlugin({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
+          ...(workspace ? [FilePlugin.make()] : []),
+          ...(workspace ? [SearchPlugin.make()] : []),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this
         // one value, so a story can stand in for the mobile shell without its layout.
-        capabilities: platform
-          ? [...capabilities, Capability.contribute(DeckCapabilities.Platform, platform)]
-          : capabilities,
+        capabilities: [
+          ...capabilities,
+          ...(platform ? [Capability.contribute(DeckCapabilities.Platform, platform)] : []),
+          ...(workspace ? [Capability.contribute(Capabilities.ReactSurface, changesSection)] : []),
+        ],
       };
     }),
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...searchTranslations],
   },
 } satisfies Meta<StoryArgs>;
 
@@ -271,6 +331,11 @@ export const Tasks: Story = {
     await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
     await expect(region().textContent ?? '').toContain('Gather the requirements');
+
+    const contextDrawer = () => canvasElement.querySelector('[data-testid="assistant.details"]');
+    await expect(contextDrawer()).toBeNull();
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-context"]')!);
+    await waitFor(() => void expect(contextDrawer()).not.toBeNull(), { timeout: 10_000 });
   },
 };
 
@@ -431,6 +496,13 @@ export const MobilePlatform: Story = {
     platform: 'mobile',
     messages: TWO_TURNS,
   },
+  decorators: [
+    (Story) => (
+      <div className='w-[375px] h-[700px] flex flex-col'>
+        <Story />
+      </div>
+    ),
+  ],
   play: async ({ canvasElement, args: { messages = [] } }) => {
     await driveTurns(canvasElement, messages);
 
@@ -438,7 +510,24 @@ export const MobilePlatform: Story = {
     await expect(outlineRail).toBeNull();
     await expect(statusPill).toBeNull();
 
-    await expect(sendButton(canvasElement)).toBeTruthy();
+    const send = sendButton(canvasElement).getBoundingClientRect();
+    const prompt = canvasElement.querySelector('[data-testid="assistant.prompt"]')!.getBoundingClientRect();
+    await expect(send.right).toBeLessThanOrEqual(prompt.right);
+  },
+};
+
+export const SkillCommandWithText: Story = {
+  args: {
+    messages: [{ prompt: 'find the roadmap', reply: 'Here is the roadmap.' }],
+  },
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, '/planning find the roadmap');
+    await waitFor(() => void expect(threadText(canvasElement)).toContain('Here is the roadmap.'), {
+      timeout: 15_000,
+      interval: 200,
+    });
+    await expect(threadText(canvasElement)).toContain('Loaded the Planning skill.');
+    await expect(threadText(canvasElement).split('find the roadmap').length - 1).toBe(1);
   },
 };
 
@@ -526,4 +615,121 @@ const clearPrompt = async (canvasElement: HTMLElement) => {
     await userEvent.click(content);
     await userEvent.keyboard('{Control>}a{/Control}{Backspace}');
   }
+};
+
+export const FullExperience: Story = {
+  args: {
+    workspace: true,
+    tasks: [
+      { title: 'Read the spec', status: 'done' },
+      { title: 'Compare with the roadmap', status: 'started' },
+      { title: 'Review with Rich', status: 'todo' },
+    ],
+    messages: [
+      { prompt: 'first', reply: 'Got it. The spec and the roadmap are in context; ask me anything about them.' },
+      { prompt: 'second', reply: 'The roadmap ships the new prompt this quarter, which matches the spec.' },
+      { prompt: 'third', reply: 'Done. I would review the tray behavior with Rich next.' },
+      { prompt: 'fourth', reply: 'Anything else?' },
+      { prompt: 'fifth', reply: 'That is the end of the scripted replies.' },
+    ],
+  },
+};
+
+class UnreadableFile extends globalThis.File {
+  override arrayBuffer(): Promise<ArrayBuffer> {
+    return Promise.reject(new Error('The file could not be read.'));
+  }
+}
+
+class HeldFile extends globalThis.File {
+  #release!: () => void;
+  readonly #released = new Promise<void>((resolve) => (this.#release = resolve));
+  release() {
+    this.#release();
+  }
+  override async arrayBuffer(): Promise<ArrayBuffer> {
+    await this.#released;
+    return super.arrayBuffer();
+  }
+}
+
+export const AttachFiles: Story = {
+  args: {
+    workspace: true,
+  },
+  play: async ({ canvasElement }) => {
+    const input = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<HTMLInputElement>('input[type="file"]');
+        if (!element) {
+          throw new Error('File input not found.');
+        }
+        return element;
+      },
+      { timeout: 15_000, interval: 300 },
+    );
+    const banner = (state: string) =>
+      canvasElement.querySelector<HTMLElement>(`[data-testid="assistant.attachments.${state}"]`);
+
+    await typePrompt(canvasElement, 'Summarise ');
+    const agenda = new HeldFile(['Agenda for Thursday.'], 'agenda.txt', { type: 'text/plain' });
+    await userEvent.upload(input, agenda);
+    await waitFor(() => void expect(banner('pending')?.textContent).toContain('agenda.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(sendButton(canvasElement)).toBeDisabled();
+
+    await userEvent.keyboard('and compare it{Enter}');
+    await expect(threadText(canvasElement)).not.toContain('Summarise');
+
+    agenda.release();
+    await waitFor(() => void expect(composerText(canvasElement)).toMatch(/Summarise\s*agenda\.txt\s*and compare it/), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(banner('pending')).toBeNull();
+    await expect(sendButton(canvasElement)).toBeEnabled();
+
+    const stuck = new HeldFile(['Draft.'], 'draft.txt', { type: 'text/plain' });
+    await userEvent.upload(input, stuck);
+    await waitFor(() => void expect(banner('pending')?.textContent).toContain('draft.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-testid="assistant.attachments.cancel"]')!);
+    await expect(banner('pending')).toBeNull();
+    await expect(sendButton(canvasElement)).toBeEnabled();
+    stuck.release();
+    await userEvent.upload(input, new globalThis.File(['Notes.'], 'notes.txt', { type: 'text/plain' }));
+    await waitFor(() => void expect(composerText(canvasElement)).toContain('notes.txt'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(composerText(canvasElement)).not.toContain('draft.txt');
+    await expect(banner('failed')).toBeNull();
+
+    await userEvent.upload(input, new UnreadableFile([], 'archive.bin'));
+    await waitFor(() => void expect(banner('failed')?.textContent).toContain('archive.bin'), {
+      timeout: 10_000,
+      interval: 200,
+    });
+    await expect(composerText(canvasElement)).not.toContain('archive.bin');
+  },
+};
+
+export const ViewCommandLeavesChatUnsent: Story = {
+  args: {
+    onSubmit: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    await submitPrompt(canvasElement, '/view normal');
+    await submitPrompt(canvasElement, '/planning');
+    await waitFor(() => void expect(threadText(canvasElement)).toContain('Loaded the Planning skill.'), {
+      timeout: 15_000,
+      interval: 200,
+    });
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await expect(args.onSubmit).toHaveBeenCalledWith('/planning');
+  },
 };

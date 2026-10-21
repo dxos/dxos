@@ -166,9 +166,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-search"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -208,6 +205,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
@@ -227,6 +227,9 @@
     },
     {
       "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
