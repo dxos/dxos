@@ -3,39 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/http/FetchHttpClient';
-import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Ref } from '@dxos/echo';
-import * as InboxResolver from '@dxos/extractor-lib';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
-import { GoogleCredentials, GoogleMailApi } from '#services';
 import { GoogleOperation } from '#types';
 
-import { googleMailSyncProvider } from './sync-provider.ts';
+import { syncBinding } from './sync-binding.ts';
 
 const handler = GoogleOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ connection, priority, userId = 'me', label = 'all' }) =>
     Binding.syncAll({
       connection,
       priority,
-      sync: (binding) =>
-        // Layer stack, top-down: the provider needs GoogleMailApi + Resolver; GoogleMailApi.Live needs
-        // the HTTP client + credentials. Chained `Layer.provide` reads as that dependency stack.
-        MailSync.runMailSync({ binding: Ref.make(binding) }).pipe(
-          Effect.provide(
-            googleMailSyncProvider({ userId, label }).pipe(
-              Layer.provide(InboxResolver.Live),
-              Layer.provide(GoogleMailApi.Live),
-              Layer.provide(FetchHttpClient.layer),
-              Layer.provide(GoogleCredentials.fromAccessToken(binding.spec.source)),
-            ),
-          ),
-          Effect.withSpan('google-sync'),
-        ),
+      sync: (binding) => syncBinding(binding, { userId, label }),
     }).pipe(
       Effect.map(({ outputs }) => ({
         newMessages: outputs.reduce((total, output) => total + output.newMessages, 0),

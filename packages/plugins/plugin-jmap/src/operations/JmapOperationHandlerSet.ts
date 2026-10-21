@@ -13,4 +13,5 @@ export const handlers = OperationHandlerSet.lazy([
   JmapOperation.MaterializeJmapTarget.pipe(Operation.lazyHandler(() => import('./mail/materialize/handler.ts'))),
   JmapOperation.JmapSend.pipe(Operation.lazyHandler(() => import('./mail/send/index.ts'))),
   JmapOperation.JmapSync.pipe(Operation.lazyHandler(() => import('./mail/sync/index.ts'))),
+  JmapOperation.LegacyJmapSync.pipe(Operation.lazyHandler(() => import('./mail/sync/legacy-handler.ts'))),
 ]);

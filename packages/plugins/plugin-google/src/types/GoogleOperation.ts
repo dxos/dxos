@@ -11,7 +11,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { Connection, Cursor } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
 // Referenced in the emitted .d.ts of the operations below; importing it lets TypeScript name it.
@@ -76,6 +76,31 @@ export const GoogleMailSync = Operation.make({
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
 }).pipe(Operation.visible, Operation.idempotent);
+
+/**
+ * The per-binding Gmail sync, under the key {@link GoogleMailSync} had in plugin-inbox: spaces still
+ * hold the per-binding sync Routines of that time, and their triggers fire this key. Hidden from
+ * pickers so no new Routine is wired to it.
+ */
+export const LegacyGoogleMailSync = Operation.make({
+  meta: {
+    // Persisted triggers name this key, so it keeps the shape that predates the rule.
+    // eslint-disable-next-line @dxos/rules/operation-key-shape
+    key: DXN.make('org.dxos.plugin.inbox.operation.googleMailSync'),
+    name: 'Sync Google Mail (legacy)',
+    description: 'Sync emails from Gmail to the mailbox feed of one binding.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    binding: Ref.Ref(Cursor.Cursor),
+    userId: Schema.String.pipe(Schema.optional),
+    label: Schema.String.pipe(Schema.optional),
+  }),
+  output: Schema.Struct({
+    newMessages: Schema.Number,
+  }),
+  services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+}).pipe(Operation.idempotent);
 
 export const MaterializeGmailTarget = Operation.make({
   meta: {

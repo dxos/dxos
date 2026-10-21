@@ -21,4 +21,5 @@ export const handlers = OperationHandlerSet.lazy([
   GoogleOperation.MaterializeGmailTarget.pipe(Operation.lazyHandler(() => import('./mail/materialize/handler.ts'))),
   GoogleOperation.GmailSend.pipe(Operation.lazyHandler(() => import('./mail/send/index.ts'))),
   GoogleOperation.GoogleMailSync.pipe(Operation.lazyHandler(() => import('./mail/sync/index.ts'))),
+  GoogleOperation.LegacyGoogleMailSync.pipe(Operation.lazyHandler(() => import('./mail/sync/legacy-handler.ts'))),
 ]);
