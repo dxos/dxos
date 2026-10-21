@@ -41,7 +41,7 @@ const FORCE_TICKS = 300;
 export const arrange = (
   ranks: ReadonlyMap<string, number>,
   edges: readonly ArrangeEdge[],
-  arrangement: Arrangement = 'rank',
+  arrangement: Arrangement = 'crossings',
   force: ForceOptions = {},
 ): Map<string, Slot> => {
   const rows = rowsOf(ranks);

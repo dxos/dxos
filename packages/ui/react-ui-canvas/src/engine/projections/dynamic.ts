@@ -84,7 +84,7 @@ export type DynamicOptions = {
    * overrides `pitch` and `size`.
    */
   lattice?: LatticeSpec;
-  /** How nodes take their slots once ranked; `rank` by default. */
+  /** How nodes take their slots once ranked; `crossings` (fewest crossings) by default. */
   arrange?: Arrangement;
   /** Strengths of the `force` and `force-free` arrangements. */
   force?: ForceOptions;
