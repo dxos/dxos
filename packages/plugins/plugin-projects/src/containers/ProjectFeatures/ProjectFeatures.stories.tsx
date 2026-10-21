@@ -177,8 +177,6 @@ export const RemoveFromProject: Story = {
 
 /** The toolbar's add button creates a feature named from the query and puts it in the project. */
 export const CreateFeature: Story = {
-  // TODO(wittjosiah): Flaky in CI (fails intermittently); fix and re-enable.
-  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });

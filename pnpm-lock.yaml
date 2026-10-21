@@ -1673,9 +1673,9 @@ overrides:
   '@remotion/elevenlabs>zod': 4.3.6
   '@remotion/media>zod': 4.3.6
   '@remotion/openai-whisper>zod': 4.3.6
-  '@remotion/studio>zod': 4.3.6
   '@remotion/studio-protocol>zod': 4.3.6
   '@remotion/studio-server>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
   '@swc/core': 1.16.13
   '@types/node': 22.10.2
   '@types/react': ~19.2.17
@@ -1729,6 +1729,9 @@ patchedDependencies:
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
+  '@zag-js/combobox@1.43.3':
+    hash: 60769cdbe29bfee170f46569c6930ca2ed76d8c05e50422a8cffd8481c9aa9a1
+    path: patches/@zag-js__combobox@1.43.3.patch
   '@zag-js/presence@1.43.3':
     hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
     path: patches/@zag-js__presence@1.43.3.patch
@@ -46682,7 +46685,7 @@ snapshots:
       '@zag-js/collection': 1.43.3
       '@zag-js/color-picker': 1.43.3
       '@zag-js/color-utils': 1.43.3
-      '@zag-js/combobox': 1.43.3
+      '@zag-js/combobox': 1.43.3(patch_hash=60769cdbe29bfee170f46569c6930ca2ed76d8c05e50422a8cffd8481c9aa9a1)
       '@zag-js/core': 1.43.3
       '@zag-js/date-input': 1.43.3(@internationalized/date@3.12.3)
       '@zag-js/date-picker': 1.43.3(@internationalized/date@3.12.3)
@@ -58704,7 +58707,7 @@ snapshots:
     dependencies:
       '@zag-js/utils': 1.43.3
 
-  '@zag-js/combobox@1.43.3':
+  '@zag-js/combobox@1.43.3(patch_hash=60769cdbe29bfee170f46569c6930ca2ed76d8c05e50422a8cffd8481c9aa9a1)':
     dependencies:
       '@zag-js/anatomy': 1.43.3
       '@zag-js/collection': 1.43.3

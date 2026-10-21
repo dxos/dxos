@@ -1,0 +1,24 @@
+diff --git a/dist/combobox.machine.js b/dist/combobox.machine.js
+index 754a6313f52a07ec3531e70b5cbc9495a092c756..c9e5f66f56d94ee1224990d7bb2761dfe2f46f78 100644
+--- a/dist/combobox.machine.js
++++ b/dist/combobox.machine.js
+@@ -839,6 +839,7 @@ var machine = createMachine({
+       syncInputValue({ context, scope, event }) {
+         const inputEl = dom.getInputEl(scope);
+         if (!inputEl) return;
++        if (event.current().type === "INPUT.CHANGE") return;
+         inputEl.value = context.get("inputValue");
+         queueMicrotask(() => {
+           if (event.current().type === "INPUT.CHANGE") return;
+diff --git a/dist/combobox.machine.mjs b/dist/combobox.machine.mjs
+index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..e9c4d695ace7ca18b41406d7659cbf072e160d21 100644
+--- a/dist/combobox.machine.mjs
++++ b/dist/combobox.machine.mjs
+@@ -817,6 +817,7 @@ var machine = createMachine({
+       syncInputValue({ context, scope, event }) {
+         const inputEl = dom.getInputEl(scope);
+         if (!inputEl) return;
++        if (event.current().type === "INPUT.CHANGE") return;
+         inputEl.value = context.get("inputValue");
+         queueMicrotask(() => {
+           if (event.current().type === "INPUT.CHANGE") return;

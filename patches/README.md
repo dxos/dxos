@@ -27,6 +27,28 @@ DX_STORYBOOK_BROWSER=webkit pnpm --dir packages/ui/react-ui exec vitest run --pr
 Measured on 1.43.3: it fails without the patch and passes with it, in WebKit only. A pass without the
 patch means the upgrade carries the fix, and the patch and this section can go.
 
+## `@zag-js/combobox@1.43.3`
+
+**What.** `syncInputValue` leaves the field alone when the last event was the user typing in it.
+
+**Why.** Zag handles each event in a microtask, so the state a keystroke sets renders at default
+priority, and the effect that copies that state into the field can run after the next keystroke has
+already landed. It then writes the older value back and the newer key is gone: on a slow device,
+typing "Offline mode" into a picker could leave "Offlie mode". After a keystroke the field already
+holds the value zag would write, so skipping the write loses nothing. Unchanged in zag 1.46.0.
+
+**Retesting after a zag upgrade.** `CreateFeature` in
+[`ProjectFeatures.stories.tsx`](../packages/plugins/plugin-projects/src/containers/ProjectFeatures/ProjectFeatures.stories.tsx)
+types a feature name into a picker and needs the race to lose; it takes a slow CPU to hit it. Drop
+this patch's line from `pnpm-workspace.yaml`, reinstall, and run it repeatedly:
+
+```bash
+for i in $(seq 8); do DX_STORYBOOK_CPU_THROTTLE=4 pnpm --dir packages/plugins/plugin-projects exec vitest run --project=storybook src/containers/ProjectFeatures -t 'Create Feature'; done
+```
+
+Measured on 1.43.3: three of eight runs fail without the patch, twelve of twelve pass with it. If the
+upgrade's `syncInputValue` checks for `INPUT.CHANGE` before writing, the patch and this section can go.
+
 ## `memory-pager@1.5.0`
 
 **What.** Starts each level of the pager's radix tree as an empty array that grows as pages are set,
