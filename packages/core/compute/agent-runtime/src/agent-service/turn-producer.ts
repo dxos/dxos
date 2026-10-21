@@ -43,6 +43,10 @@ export type TurnRequest = {
   sender?: Parameters<AiSession.Session['createRequest']>[0]['sender'];
   system?: string;
   mcpServers?: Parameters<AiSession.Session['createRequest']>[0]['mcpServers'];
+  /** The queued message or alarm the turn answers, which it consumes rather than copies. */
+  source?: AiSession.TurnSource;
+  /** Model the turn runs on. */
+  model?: Parameters<AiSession.Session['createRequest']>[0]['model'];
 };
 
 export type MakeTurnProducerOptions = {

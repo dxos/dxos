@@ -1,0 +1,21 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../compute"
+    }
+  ]
+}

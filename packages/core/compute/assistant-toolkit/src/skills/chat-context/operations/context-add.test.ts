@@ -5,9 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
@@ -30,8 +30,10 @@ describe('ContextAdd', () => {
           Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
         );
 
-        const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
-        const added = bindings.flatMap((binding) => entityIds(binding.objects.added));
+        const events = yield* TrajectoryStore.read(feed);
+        const added = events.flatMap((event) =>
+          event.payload._tag === 'contextBind' ? entityIds(event.payload.objects) : [],
+        );
         expect(added).toContain(organization.id);
       },
       Effect.provide(OperationTestLayer),

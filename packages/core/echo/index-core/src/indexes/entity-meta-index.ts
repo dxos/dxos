@@ -231,7 +231,7 @@ const buildSourceRefsCondition = (
  * caller-visible orderings differ, so a caller must not apply this to a query that also selects
  * from a space's documents.
  */
-export type QueueWindow = CursorQueueWindow | NaturalQueueWindow;
+export type QueueWindow = CursorQueueWindow | LocalQueueWindow | NaturalQueueWindow;
 
 /**
  * Resume a feed after a cursor position: positioned blocks only, in position order.
@@ -241,6 +241,22 @@ export interface CursorQueueWindow {
   /** Exclusive lower bound: only blocks positioned strictly after this are returned. */
   readonly after: number;
   /** Exclusive upper bound: only blocks positioned strictly before this are returned. */
+  readonly before?: number;
+  /** Maximum rows to return, applied after ordering. */
+  readonly limit?: number;
+}
+
+/**
+ * Resume a feed after a local cursor: every block, positioned or not, in the order this replica indexed it.
+ *
+ * `recordId` is that order: a block keeps its row when it is repositioned or re-appended, so the order never changes
+ * under a reader that has already passed it.
+ */
+export interface LocalQueueWindow {
+  readonly kind: 'local';
+  /** Exclusive lower bound on `recordId`. */
+  readonly after: number;
+  /** Exclusive upper bound on `recordId`. */
   readonly before?: number;
   /** Maximum rows to return, applied after ordering. */
   readonly limit?: number;
@@ -291,6 +307,12 @@ export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow |
     return sql`${deleted}${order} LIMIT ${window.limit}${offset}`;
   }
 
+  if (window.kind === 'local') {
+    const upper = window.before !== undefined ? sql` AND recordId < ${window.before}` : sql``;
+    const limit = window.limit !== undefined ? sql` LIMIT ${window.limit}` : sql``;
+    return sql` AND recordId > ${window.after}${upper} ORDER BY recordId ASC${limit}`;
+  }
+
   // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
   // that is the intent: an unpositioned block has no place in the ordering yet, so admitting it
   // would let it slip past a later read that resumes beyond its eventual position.
@@ -318,6 +340,9 @@ const queueWindowMerge = (
       limit: window.limit,
     };
   }
+  if (window.kind === 'local') {
+    return { compare: (left, right) => left.recordId - right.recordId, limit: window.limit };
+  }
   return {
     // A cursor read selects positioned rows only, so neither position is null here.
     compare: (left, right) => (left.queuePosition ?? 0) - (right.queuePosition ?? 0) || left.recordId - right.recordId,
@@ -333,7 +358,7 @@ const widenQueueWindow = (window: QueueWindow | undefined, extra = 0): QueueWind
   if (window?.limit === undefined) {
     return window;
   }
-  if (window.kind === 'cursor') {
+  if (window.kind !== 'natural') {
     return { ...window, limit: window.limit + extra };
   }
   const { skip = 0, ...rest } = window;

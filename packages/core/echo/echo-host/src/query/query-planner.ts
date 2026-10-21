@@ -1133,6 +1133,10 @@ export class QueryPlanner {
         return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        // A local-order read is ordered by its window; a natural order would sort it by id instead.
+        if (step._tag === 'SelectStep' && step.feedCursorRange?.order === 'local') {
+          return processedPlan;
+        }
         // An outgoing reference traversal emits each anchor's refs in array order, which is the only
         // order a ref array has. Order the anchors instead, so the result stays deterministic.
         if (isOutgoingReferenceTraversal(step)) {
@@ -1689,9 +1693,12 @@ const _splitFeedCursor = (
   };
 };
 
-const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string } => ({
+const _feedCursorRange = (
+  filter: QueryAST.FilterFeedCursor,
+): { begin?: string; end?: string; order?: 'position' | 'local' } => ({
   ...(filter.begin !== undefined ? { begin: filter.begin } : {}),
   ...(filter.end !== undefined ? { end: filter.end } : {}),
+  ...(filter.order !== undefined ? { order: filter.order } : {}),
 });
 
 const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {

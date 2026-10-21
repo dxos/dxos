@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as McpServer from '@dxos/compute/McpServer';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { startTestServer } from '@dxos/mcp-client/testing';
-import { ContentBlock, Message } from '@dxos/types';
+import { ContentBlock } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
 import * as AgentService from './AgentService.ts';
@@ -30,9 +31,8 @@ const withTestServer = Effect.acquireRelease(
 /** Text of every tool result in the conversation. */
 const toolResults = (feed: Feed.Feed) =>
   Effect.gen(function* () {
-    const items = yield* Feed.query(feed, Filter.everything()).run;
-    return items
-      .filter(Obj.instanceOf(Message.Message))
+    const messages = yield* TrajectoryStore.history(feed);
+    return messages
       .flatMap((message) => message.blocks)
       .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult')
       .map((block) => JSON.stringify(block.result));

@@ -8,10 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AcpAgent from './AcpAgent.ts';
@@ -57,9 +58,14 @@ const setup = Effect.fn(function* () {
   return { feed, chat, app, sessions, options };
 });
 
+/** The conversation as the thread shows it, answers to requests included. */
 const transcript = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-    Effect.map((messages) => messages.map((message) => [message.sender.role, ...message.blocks.map(summarize)])),
+  TrajectoryStore.load(feed, Reducer.thread).pipe(
+    Effect.map(({ state }) =>
+      state.items
+        .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')
+        .map((item) => [item.sender.role, ...item.blocks.map(summarize)]),
+    ),
   );
 
 const summarize = (block: ContentBlock.Any): string => {
@@ -80,11 +86,23 @@ const summarize = (block: ContentBlock.Any): string => {
 /** The first message in the feed that matches, as soon as it lands: a live query, so nothing polls. */
 const awaitMessage = (feed: Feed.Feed, matches: (message: Message.Message) => boolean) =>
   Effect.gen(function* () {
-    const query = yield* Feed.query(feed, Filter.type(Message.Message));
+    const query = yield* Feed.query(feed, Filter.type(Trajectory.Event));
     return yield* Effect.callback<Message.Message>((resume) => {
       const unsubscribe = query.subscribe(
         (result) => {
-          const found = result.results.find(matches);
+          const found = result.results
+            .flatMap((event) =>
+              event.payload._tag === 'message'
+                ? [
+                    Message.make({
+                      id: event.id,
+                      sender: TrajectoryStore.toActor(event.sender),
+                      blocks: [...event.payload.blocks],
+                    }),
+                  ]
+                : [],
+            )
+            .find(matches);
           if (found) {
             resume(Effect.succeed(found));
           }
@@ -105,7 +123,7 @@ const findRequest = (feed: Feed.Feed) =>
 describe('AcpAgent', () => {
   const written: Written[] = [];
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
     Layer.succeed(Trace.TraceService, { write: (event, payload) => void written.push({ key: event.key, payload }) }),
   );
 
@@ -138,7 +156,7 @@ describe('AcpAgent', () => {
       expect(partials.map(({ payload }) => streamedText(payload))).toEqual(['echo: ', 'echo: hi']);
 
       // The thread replaces a streamed message with the stored one by id, so they must agree.
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+      const messages = yield* TrajectoryStore.messages(feed);
       const reply = messages.find((message) => Message.extractText(message) === 'echo: hi');
       expect(new Set(partials.map(({ payload }) => streamedId(payload)))).toEqual(new Set([reply?.id]));
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
@@ -263,7 +281,7 @@ describe('AcpAgent', () => {
           },
         ],
       });
-      yield* Feed.append(feed, [message]);
+      yield* TrajectoryStore.appendMessages(feed, [message]);
 
       const answered = yield* AcpAgent.respond(sessions, {
         chat,

@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
-import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
+import { Legacy } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
 import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant/types';
 import { type Actor, type ContentBlock, Message } from '@dxos/types';
@@ -79,9 +79,12 @@ export const projectThread = ({
   pendingMessages = [],
   rewindFrom,
   outbox = [],
+  discarded = [],
   sender,
 }: {
   feedMessages: readonly Message.Message[];
+  /** Messages a rewind discarded: neither they nor a prompt that became one come back as rows. */
+  discarded?: readonly Message.Message[];
   /** Messages produced by the current turn that are not in the feed yet. */
   pendingMessages?: readonly Message.Message[];
   /** Earliest message a pending rewind discards. */
@@ -95,24 +98,18 @@ export const projectThread = ({
   // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
   // they follow the lineage rather than join it: with no parent of their own, lineage would chain them
   // to whatever sorts before them, which after a rewind is the abandoned reply.
-  const feedIds = new Set(feedMessages.map((message) => message.id));
+  const feedIds = new Set([...feedMessages, ...discarded].map((message) => message.id));
   const unrecorded = Array.sort(
     Array.dedupeWith(
-      pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+      pendingMessages.filter((message) => !feedIds.has(message.id) && !Legacy.isQueued(message)),
       ({ id: a }, { id: b }) => a === b,
     ),
     byAppendOrder,
   );
-  // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
-  // entry never joins the history. Until the agent takes it up, it is a row after the history instead.
-  const sorted = Array.sort(
-    feedMessages.filter((message) => !isQueued(message)),
-    byAppendOrder,
-  );
-  const entries = Array.sort(
-    all.filter((message) => isQueued(message)),
-    byAppendOrder,
-  );
+  // Feed messages arrive in thread order (a consumed prompt already sits where the agent took it up), so they keep
+  // it. A prompt still waiting is not part of the history yet: until the agent takes it up, it is a row after it.
+  const sorted = feedMessages.filter((message) => !Legacy.isQueued(message));
+  const entries = all.filter((message) => Legacy.isQueued(message));
 
   const history = projectHistory(sorted, unrecorded, rewindFrom);
   // The turn's own user message may still be only in the streaming turn, ahead of the feed.
@@ -136,8 +133,11 @@ export const projectThread = ({
   for (const entry of outbox) {
     const queueEntry = claim(entries, entry);
     const turn = claim(turnCandidates, entry);
+    if (!queueEntry && !turn && claim(discarded, entry)) {
+      continue;
+    }
     const status: DeliveryStatus =
-      turn || (queueEntry && (isInFlight(queueEntry) || isConsumed(queueEntry)))
+      turn || (queueEntry && (Legacy.isInFlight(queueEntry) || Legacy.isConsumed(queueEntry)))
         ? 'read'
         : queueEntry
           ? 'delivered'
@@ -157,7 +157,7 @@ export const projectThread = ({
 
   // Waiting entries this chat did not send (another device, or a reload) — they predate the outbox.
   for (const entry of entries) {
-    if (!claimed.has(entry.id) && !isConsumed(entry) && !isInFlight(entry)) {
+    if (!claimed.has(entry.id) && !Legacy.isConsumed(entry) && !Legacy.isInFlight(entry)) {
       tail.push(deliveryRow(entry.id, entry, entry.created, 'delivered', undefined));
       delivery.set(entry.id, { status: 'delivered', entryId: entry.id });
     }
@@ -241,36 +241,6 @@ const deliveryRow = (
   deliveryRows.set(source, { id, status, sender, row });
   return row;
 };
-
-/**
- * Alarms that have woken the agent since the last prompt the user typed: the count the runtime caps at
- * `Alarm.MAX_SELF_WAKES`, read from the feed so the status can show it.
- */
-export const projectSelfWakes = ({
-  feedAlarms,
-  messages,
-}: {
-  feedAlarms: readonly Alarm.Alarm[];
-  messages: readonly Message.Message[];
-}): number => {
-  const lastPrompt = messages.findLast(
-    (message) =>
-      message.sender.role === 'user' &&
-      message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic'),
-  );
-  const since = lastPrompt?.created ?? '';
-  return feedAlarms.filter((alarm) => isConsumed(alarm) && alarm.created >= since).length;
-};
-
-/**
- * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
- * cancelled one) not removed from the feed.
- */
-export const projectAlarms = ({ feedAlarms }: { feedAlarms: readonly Alarm.Alarm[] }): Alarm.Alarm[] =>
-  Array.sort(
-    feedAlarms.filter((alarm) => !isConsumed(alarm)),
-    Order.mapInput(Order.Number, (alarm: Alarm.Alarm) => alarm.wakeAt),
-  );
 
 /**
  * Blocks that are the machinery of a turn rather than anything the reader wrote or read.

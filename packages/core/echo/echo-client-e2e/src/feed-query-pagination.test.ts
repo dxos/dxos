@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 
 describe('Feed query pagination', () => {
   let builder: EchoTestBuilder;
@@ -322,6 +323,58 @@ describe('Feed query pagination', () => {
   });
 });
 
+describe('Feed query in local order', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('reads in the order this replica indexed items and resumes after a local cursor', async ({ expect }) => {
+    const { db, feedUri } = await setupFeedWithTasks(builder, ['a', 'b', 'c', 'd']);
+    const scope = Scope.feed(feedUri);
+
+    const all = await db
+      .query(Query.select(Filter.feedCursor({ begin: Feed.START, order: 'local' })).from(scope))
+      .run();
+    expect(all.map(titleOf)).toEqual(['a', 'b', 'c', 'd']);
+    const cursors = all.map((obj) => Feed.getLocalCursor(obj));
+    expect(cursors.every((cursor) => cursor !== undefined)).toBe(true);
+
+    const after = await db
+      .query(Query.select(Filter.feedCursor({ begin: cursors[1], order: 'local' })).from(scope))
+      .run();
+    expect(after.map(titleOf)).toEqual(['c', 'd']);
+
+    const page = await db
+      .query(
+        Query.select(Filter.feedCursor({ begin: cursors[0], order: 'local' }))
+          .limit(2)
+          .from(scope),
+      )
+      .run();
+    expect(page.map(titleOf)).toEqual(['b', 'c']);
+  });
+
+  test('follows append order, not id order, within one append', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'local-order-feed' }));
+    const later = Obj.make(TestSchema.Task, { title: 'created first, appended second' });
+    const earlier = Obj.make(TestSchema.Task, { title: 'created second, appended first' });
+    await db.appendToFeed(feed, [earlier, later]);
+
+    const all = await db
+      .query(Query.select(Filter.feedCursor({ begin: Feed.START, order: 'local' })).from(Scope.feed(feedUriOf(feed))))
+      .run();
+    expect(all.map(titleOf)).toEqual(['created second, appended first', 'created first, appended second']);
+  });
+});
+
 const setupFeedWithTasks = async (builder: EchoTestBuilder, titles: string[]) => {
   const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
   const db = await peer.createDatabase();
@@ -332,4 +385,13 @@ const setupFeedWithTasks = async (builder: EchoTestBuilder, titles: string[]) =>
   }
 
   return { db, feed, feedUri: Feed.getFeedUri(feed)! };
+};
+
+/** The title of a task read back from a feed; anything else has none. */
+const titleOf = (obj: unknown) => (Obj.instanceOf(TestSchema.Task, obj) ? obj.title : undefined);
+
+const feedUriOf = (feed: Feed.Feed) => {
+  const uri = Feed.getFeedUri(feed);
+  invariant(uri, 'Feed has no URI.');
+  return uri;
 };

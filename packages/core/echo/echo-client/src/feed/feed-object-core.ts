@@ -163,6 +163,7 @@ export class FeedObjectCore {
    * block already applied does not: a position it gained is adopted here, from the reference alone.
    */
   accepts(ref: FeedBlockRef): boolean {
+    this.#adoptLocalOrder(ref.localOrder);
     const classification = this.#classify(ref);
     if (classification === 'reposition') {
       this.#setPosition(ref.position);
@@ -220,6 +221,35 @@ export class FeedObjectCore {
       return newerPosition ? 'apply' : 'ignore';
     }
     return order === 'newer' ? 'apply' : 'ignore';
+  }
+
+  /**
+   * Stamps the order a read reported for this replica's index, which a local-order reader resumes from; it is not
+   * part of the block, so it never marks the entity dirty or changes which block it reflects.
+   */
+  #adoptLocalOrder(order: number | undefined): void {
+    if (order === undefined || this.#deleted) {
+      return;
+    }
+    const current = Entity.getKeys(this.entity, FeedProtocol.KEY_FEED_LOCAL_ORDER).at(0)?.id;
+    if (current === String(order)) {
+      return;
+    }
+    this.#applyingRemote = true;
+    try {
+      change(this.entity, (mutable: Entity.Mutable<Entity.Unknown>) => {
+        // In place: the existing key records belong to this array, and ECHO refuses to re-home them.
+        const keys = getMetaChecked(mutable as AnyProperties).keys;
+        for (let index = keys.length - 1; index >= 0; index--) {
+          if (keys[index].source === FeedProtocol.KEY_FEED_LOCAL_ORDER) {
+            keys.splice(index, 1);
+          }
+        }
+        keys.push({ source: FeedProtocol.KEY_FEED_LOCAL_ORDER, id: String(order) });
+      });
+    } finally {
+      this.#applyingRemote = false;
+    }
   }
 
   #setPosition(position: number | undefined): void {

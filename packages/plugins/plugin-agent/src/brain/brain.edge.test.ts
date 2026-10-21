@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
@@ -247,7 +248,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       peer,
       Effect.gen(function* () {
         const feed = yield* Database.load(chat.feed);
-        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(feed);
         return messages.filter((message) => message.sender.role === 'assistant').map(Message.extractText);
       }),
     );

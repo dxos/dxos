@@ -318,9 +318,17 @@ export class SqlPlanCompiler {
     // pushed a limit into this step: then the first rows in natural order (rank for a text search,
     // id otherwise) are the ones kept, and numbering them costs a sort of the candidates.
     const selected = this.#define('sel', base);
-    const orderNew = step.selector._tag === 'TextSelector' ? sql`s.rank DESC, s.objectId` : sql`s.objectId`;
+    // A local-order read carries no order step, so its rows are numbered in the order the window reads them.
+    const local = step.feedCursorRange?.order === 'local';
+    const orderNew = local
+      ? sql`s.recordId`
+      : step.selector._tag === 'TextSelector'
+        ? sql`s.rank DESC, s.objectId`
+        : sql`s.objectId`;
     const ord =
-      step.limit !== undefined ? sql`${UNION_BRANCH_STRIDE} + ROW_NUMBER() OVER (ORDER BY ${orderNew})` : sql`0`;
+      step.limit !== undefined || local
+        ? sql`${UNION_BRANCH_STRIDE} + ROW_NUMBER() OVER (ORDER BY ${orderNew})`
+        : sql`0`;
     const appended = sql`
       SELECT recordId, objectId, spaceId, rank, ord FROM ${this.#ref(ws)}
       UNION ALL
@@ -1457,6 +1465,16 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
   if (!step.scope.every((scope) => scope._tag === 'feed')) {
     throw new QueryError({ message: 'A feed cursor filter can only be used with a feed scope.', context: {} });
   }
+  if (range.order === 'local') {
+    // The empty string is the start sentinel; `recordId` starts at 1.
+    return {
+      kind: 'local',
+      after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : 0,
+      ...(range.end ? { before: parseCursor(range.end, 0) } : {}),
+      ...(step.limit !== undefined ? { limit: step.limit } : {}),
+    };
+  }
+
   return {
     kind: 'cursor',
     after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
