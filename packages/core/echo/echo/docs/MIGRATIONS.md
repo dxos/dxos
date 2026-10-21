@@ -1,6 +1,6 @@
 # Migrations: upgrading stored data across plugin versions
 
-Status: design. Nothing below the "Object migrations" section is implemented yet.
+Status: object and content migrations are implemented (the canvas is the first content user). The update warning, consent gating, retiring steps and `dx migrate` are not.
 
 A plugin that changes the shape of data it stores declares the change as a **migration**: a pure
 function from the old shape to the new one, keyed by a version. The client runs every contributed
@@ -74,8 +74,9 @@ export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canv
 
 `Drawing.Canvas` already stores `schema`, which names the renderer dialect, so the canvas needs the
 annotation and no new field. One type can hold several formats: each migration matches one version
-string, so tldraw's steps never touch a scene canvas. The field is optional today, so a canvas with
-no `schema` is treated as the oldest version of its variant's default format.
+string, so tldraw's steps never touch a scene canvas. The field is optional in the schema, but a canvas
+with no `schema` is never migrated: its format cannot be known, and a step that guessed would rewrite another
+format's records as its own. Every scene canvas has carried a `schema` since plugin-canvas was introduced.
 
 ### Declaring a step
 

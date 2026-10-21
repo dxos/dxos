@@ -47,13 +47,11 @@ export type CodeModeOptions = {
   maxOutput?: number;
 
   /**
-   * Cap on the model/tool turns of a single request. A code-mode agent's loop is driven entirely by
-   * what its own code printed, so a model misreading its output can iterate indefinitely.
+   * Cap on the model/tool turns of a single request; uncapped when omitted. A code-mode agent's loop is driven
+   * entirely by what its own code printed, so a host that cannot watch the turn can bound it here.
    */
   maxTurns?: number;
 };
-
-const DEFAULT_MAX_TURNS = 16;
 
 /**
  * Runs each turn in "code mode": the model carries ONE tool, `eval`, and reaches the workspace by
@@ -120,7 +118,7 @@ const runCodeModeTurn = ({
       system: params.system,
     });
 
-    const maxTurns = options.maxTurns ?? DEFAULT_MAX_TURNS;
+    const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
     for (let turn = 0; ; turn++) {
       yield* Effect.promise(() => session.context.sync());
       const skills = session.context.getSkills();
@@ -131,6 +129,7 @@ const runCodeModeTurn = ({
         sandbox,
         runtime,
         operations,
+        skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
         maxOutput: options.maxOutput,
         timeout: options.timeout,
       });

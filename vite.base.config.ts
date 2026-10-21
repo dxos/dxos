@@ -593,11 +593,6 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
       name: 'storybook',
-      // The playwright/chromium session occasionally dies mid-run with
-      // "Browser connection was closed while running tests", causing every
-      // subsequent story file to fail to import. Retry once so a transient
-      // browser-side flake doesn't fail the whole job.
-      retry: 1,
       // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
       // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
       ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),

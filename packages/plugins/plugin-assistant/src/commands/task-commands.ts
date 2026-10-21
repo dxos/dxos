@@ -17,7 +17,7 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
     command: '/task:create',
     description: 'Create a task',
     execute: async (args, { db, chat }) => {
-      const title = args.trim();
+      const title = args.replace(/\s+/g, ' ').trim();
       if (title.length === 0) {
         return new Error('Usage: /task:create <description>');
       }

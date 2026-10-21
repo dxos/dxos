@@ -6,6 +6,8 @@ import React, { type CSSProperties, type PropsWithChildren, useEffect, useLayout
 
 import {
   type BandStyle,
+  type CaptionPosition,
+  type FrameColors,
   type FrameHandle,
   type FrameMode,
   type FrameSize,
@@ -21,6 +23,12 @@ export type FrameProps = PropsWithChildren<{
   size?: FrameSize;
   /** Floating `panel` (default) or full-width `band`. */
   captionStyle?: BandStyle;
+  /** Top, middle or bottom (default). */
+  captionPosition?: CaptionPosition;
+  /** Opacity (0–1) of the caption panel's background; unset keeps the token's default. */
+  captionBackground?: number;
+  /** White on black or black on white for the title and captions; unset, panels invert the page's theme. */
+  colors?: FrameColors;
   /** On, the header also shows as a translucent band over the top; off (default), only as the open title. */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel on mount; remount (a new `key`) to replay it. */
@@ -39,6 +47,9 @@ export const Frame = ({
   caption,
   size,
   captionStyle = 'panel',
+  captionPosition = 'bottom',
+  captionBackground,
+  colors,
   headerBand = false,
   open,
   style,
@@ -76,6 +87,15 @@ export const Frame = ({
   useEffect(() => {
     handle.current?.setCaptionStyle(captionStyle);
   }, [mode, captionStyle]);
+  useEffect(() => {
+    handle.current?.setCaptionPosition(captionPosition);
+  }, [mode, captionPosition]);
+  useEffect(() => {
+    handle.current?.setCaptionBackground(captionBackground);
+  }, [mode, captionBackground]);
+  useEffect(() => {
+    handle.current?.setColors(colors);
+  }, [mode, colors]);
   useEffect(() => {
     handle.current?.setHeaderBand(headerBand);
   }, [mode, headerBand]);

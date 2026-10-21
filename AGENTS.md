@@ -297,18 +297,12 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
-- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
-  GitHub API returns empty output for every `Check / …` check run and its `details_url`
-  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
-  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
-  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
-  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
+- **Retry a failed Check job** with `gh run rerun <run-id> --failed`, or `--job <job-id>` for one.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **Browser, storybook and e2e tests run in the merge queue, not on PRs.** A browser or storybook failure
-  there drops the PR from the queue; reproduce it with `moon run <project>:test-storybook` (or
-  `:test-browser`), fix, and re-queue. `depot ci dispatch --workflow check.yml --ref <branch>` runs every
-  suite on a branch once, when a change needs them before queueing.
-- **Every push to a ready PR runs Check.** Batch commits into one push. Merge `main`
+- **A draft PR runs `check` and the node tests**; marking it ready adds the browser, storybook and e2e
+  suites, and the merge queue runs them again on top of `main`. Reproduce a browser
+  or storybook failure with `moon run <project>:test-storybook` (or `:test-browser`).
+- **Every push to a PR runs Check**, a draft included. Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
@@ -402,9 +396,6 @@ Do not paste real credential values into any shell command, and do not paste the
   - A node test suite is slow or leaks? `test-perf-leaks` skill.
 - **Publishing a package to npm** — first publish of a new package and its trusted publisher via
   `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
-- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
-  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
-  (`.agents/skills/depot-ci/SKILL.md`).
 - **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
   `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up

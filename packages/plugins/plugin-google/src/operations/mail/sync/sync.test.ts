@@ -340,6 +340,51 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(statusUpdates.at(-1)?.progress?.key).toBe(MailSync.createSyncProgressKey(mailbox));
   });
 
+  // One meter for the whole chain: each run's total sizes the backfill it has left (Gmail's
+  // `resultSizeEstimate`), not just its own capped share, and its count is the messages it keeps. The
+  // progress sink places each run's numbers after the chain's, so the total is known from the first run.
+  test('each run of a capped sync reports a total covering the rest of the backfill', async ({ expect }) => {
+    const now = new Date();
+    const dataset = generateGmailDataset({ count: 25, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
+    const { db, binding } = await seedGmailBinding(builder);
+
+    const runOnce = async () => {
+      const progress: { current?: number; total?: number }[] = [];
+      const traceLayer = Trace.testTraceService().pipe(
+        Layer.provide(
+          Layer.succeed(Trace.TraceSink, {
+            write: (message) => {
+              for (const event of Trace.flatten(message)) {
+                if (Trace.isOfType(Trace.StatusUpdate, event) && event.data.progress) {
+                  progress.push(event.data.progress);
+                }
+              }
+            },
+          }),
+        ),
+      );
+      const exit = await EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 10 })).pipe(
+          Effect.provide(googleSyncTestServices(db, dataset, { traceLayer })),
+        ),
+      );
+      const totals = progress.flatMap((update) => (update.total === undefined ? [] : [update.total]));
+      return { exit, total: Math.max(...totals), current: progress.at(-1)?.current };
+    };
+
+    const runs = [await runOnce()];
+    while (Exit.isFailure(runs.at(-1)!.exit)) {
+      runs.push(await runOnce());
+    }
+    expect(runs).toHaveLength(3);
+    // The first run sizes the whole backfill; the later ones size what is left, plus a day-granular
+    // query's already-synced boundary day.
+    expect(runs.map((run) => run.current)).toEqual([10, 10, 5]);
+    expect(runs[0].total).toBe(25);
+    expect(runs[1].total).toBeGreaterThanOrEqual(15);
+    expect(runs[2].total).toBeGreaterThanOrEqual(5);
+  });
+
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
     const now = new Date();
     // Three disjoint date bands (distinct ids via idPrefix), oldest → newest: older, mid, recent.

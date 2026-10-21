@@ -61,7 +61,7 @@ describe('jmapCredentialForm', () => {
       const error = yield* Effect.flip(
         onValidate({
           values: { host: JMAP_DEFAULT_HOST, email: 'me@example.com', token: '' },
-          connector: { id: 'jmap', source: JMAP_DEFAULT_HOST },
+          connector: { id: 'jmap', source: JMAP_DEFAULT_HOST, kind: 'user' },
         }),
       );
       expect(error).toBeInstanceOf(Error);

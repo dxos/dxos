@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { createFreehandProjection, isIntent, pruneOrphaned, recordChanges } from '@dxos/react-ui-canvas/headless';
 
-import { CanvasOperation } from '#types';
+import { Canvas, CanvasOperation } from '#types';
 
 import { isCanvasHeads } from '../model/store.ts';
-import { InvalidIntentError, UnversionedCanvasError } from './canvas.ts';
+import { InvalidIntentError, NewerCanvasError, UnversionedCanvasError } from './canvas.ts';
 import { withCanvasStore } from './patch-store.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOperation.Apply.pipe(
@@ -25,9 +25,16 @@ const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOpera
       }
 
       return yield* withCanvasStore(ref, ({ registry, bound, canvas, versions }) => {
-        // Without heads the edit could not be undone, so a canvas outside a database is refused before it is changed.
-        if (!isCanvasHeads(versions.heads())) {
-          return Effect.fail(new UnversionedCanvasError({ message: `Canvas ${canvas.id} has no version history.` }));
+        // A newer plugin's format may hold fields this one would drop; without heads the edit could not be undone.
+        const refusal = Canvas.isNewerScene(canvas.schema)
+          ? new NewerCanvasError({
+              message: `Canvas ${canvas.id} is at ${canvas.schema}; update the Canvas plugin to edit it.`,
+            })
+          : !isCanvasHeads(versions.heads())
+            ? new UnversionedCanvasError({ message: `Canvas ${canvas.id} has no version history.` })
+            : undefined;
+        if (refusal) {
+          return Effect.fail(refusal);
         }
 
         const projection = createFreehandProjection({ registry, store: bound.store, sceneId: view ?? bound.root });
