@@ -32,9 +32,25 @@ import {
   combinedSource,
   endpointNode,
 } from '../../model/index.ts';
-import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
+import {
+  type Arrangement,
+  type ForceOptions,
+  type GridExtent,
+  type LatticeSpec,
+  type Slot,
+  arrange,
+  boundsCenter,
+  centeredOrigin,
+  createNode,
+  improveSlots,
+  initialKeys,
+  latticeEnds,
+  routeCost,
+  withTitle,
+} from '../../utils/index.ts';
 import { type Projection } from '../projection.ts';
 import { labelOf } from './constrained.ts';
+import { constrainIntent } from './lattice.ts';
 
 export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
 export type GraphEdge = {
@@ -63,6 +79,15 @@ export type DynamicOptions = {
   nodes: NodeRegistry;
   pitch?: Size;
   size?: Size;
+  /**
+   * Lays the graph out on a lattice's cells, one per node, and keeps moved nodes on them (DESIGN §8b);
+   * overrides `pitch` and `size`.
+   */
+  lattice?: LatticeSpec;
+  /** How nodes take their slots once ranked; `crossings` (fewest crossings) by default. */
+  arrange?: Arrangement;
+  /** Strengths of the `force` and `force-free` arrangements. */
+  force?: ForceOptions;
   /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
   /**
@@ -84,38 +109,31 @@ export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
 export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
-  const { pitch, size } = { ...DEFAULTS, ...options };
+  const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
-  const ranks = Layout.rank(
-    ids,
-    graph.edges.filter(({ from, to }) => known.has(from) && known.has(to)),
-  );
-  const byRow = new Map<number, string[]>();
-  for (const id of ids) {
-    const row = ranks.get(id) ?? 0;
-    byRow.set(row, [...(byRow.get(row) ?? []), id]);
-  }
-  const columns = new Map<string, number>();
-  for (const members of byRow.values()) {
-    [...members].sort().forEach((id, index) => columns.set(id, index));
-  }
+  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
+  const ranks = Layout.rank(ids, edges);
+  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const slots =
+    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
 
-  // Taken from the ranks rather than from the placed nodes, so dragging a node (which only writes an
+  // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
   const extent = {
-    columns: Math.max(...[...byRow.values()].map(({ length }) => length), 1),
-    rows: Math.max(...byRow.keys(), 0) + 1,
+    columns: Math.max(...[...slots.values()].map(({ column }) => column + 1), 1),
+    rows: Math.max(...[...slots.values()].map(({ row }) => row + 1), 1),
   };
-  const origin = options.origin ?? centeredOrigin(extent, pitch, size);
+  const origin =
+    options.origin ?? (options.lattice ? latticeOrigin(extent, pitch) : centeredOrigin(extent, pitch, size));
 
   const keys = initialKeys(graph.nodes.length + graph.edges.length);
   const nodes: Record<string, Node> = {};
   graph.nodes.forEach((node, index) => {
     const override = overlay.positions[node.id];
     const center = override ?? {
-      x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
-      y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
+      x: origin.x + (slots.get(node.id)?.column ?? 0) * pitch.width,
+      y: origin.y + (slots.get(node.id)?.row ?? 0) * pitch.height,
     };
     const props = { id: node.id, z: keys[graph.edges.length + index], center, size };
     nodes[node.id] = options.createNode
@@ -139,6 +157,83 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   });
   return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
 };
+
+/** Weights of a routed arrangement's score: a crossing outweighs any number of bends, a bend any detour. */
+const CROSSING_COST = 1_000;
+const BEND_COST = 20;
+
+/** The last few routed arrangements by graph, so a drag (which re-runs the layout) does not re-run the search. */
+const routedCache = new Map<string, Map<string, Slot>>();
+const ROUTED_CACHE_SIZE = 8;
+
+/**
+ * `seed` improved by moving and swapping nodes on the lattice, scored by routing every edge through the gutters as the
+ * canvas draws it.
+ */
+const routedSlots = (
+  graph: GraphModel,
+  edges: readonly GraphEdge[],
+  seed: ReadonlyMap<string, Slot>,
+  options: DynamicOptions,
+  lattice: LatticeSpec,
+): Map<string, Slot> => {
+  const key = JSON.stringify([lattice, graph.nodes.map(({ id }) => id), edges.map(({ from, to }) => [from, to])]);
+  const cached = routedCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const { pitch, size } = latticeSlots(lattice);
+  const links: Link[] = edges.map(({ id, from, to }) => ({
+    type: 'smart',
+    id,
+    z: 'a0',
+    source: { node: from },
+    target: { node: to },
+  }));
+  const score = (slots: ReadonlyMap<string, Slot>) => {
+    const nodes: Record<string, Node> = {};
+    for (const node of graph.nodes) {
+      const slot = slots.get(node.id) ?? { column: 0, row: 0 };
+      const props = {
+        id: node.id,
+        z: 'a0',
+        center: { x: slot.column * pitch.width, y: slot.row * pitch.height },
+        size,
+      };
+      nodes[node.id] = options.createNode
+        ? options.createNode(node, props)
+        : createNode({ type: node.type ?? 'rect', ...props });
+    }
+    const view: View = { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links: {} };
+    const route = { spec: lattice, nodes: Object.values(nodes) };
+    const routes = links.flatMap((link) => {
+      const routed = latticeEnds(view, options.nodes, link, route);
+      return routed ? [routed.points] : [];
+    });
+    const cost = routeCost(routes);
+    const unrouted = links.length - routes.length;
+    return (cost.crossings + unrouted) * CROSSING_COST + cost.bends * BEND_COST + cost.length / pitch.width;
+  };
+  const slots = improveSlots(seed, score);
+  routedCache.set(key, slots);
+  if (routedCache.size > ROUTED_CACHE_SIZE) {
+    routedCache.delete(routedCache.keys().next().value ?? '');
+  }
+  return slots;
+};
+
+/** One-cell slots, a cell plus a gutter apart. */
+const latticeSlots = ({ width, height, gutterX, gutterY }: LatticeSpec): { pitch: Size; size: Size } => ({
+  pitch: { width: width + gutterX, height: height + gutterY },
+  size: { width, height },
+});
+
+/** The centre of the cell the layout starts at, chosen so the arrangement straddles the origin. */
+const latticeOrigin = (extent: GridExtent, pitch: Size): Point => ({
+  // `+ 0` folds -0 into 0, as the lattice's own cell keys do.
+  x: Math.round(-(extent.columns - 1) / 2) * pitch.width + 0,
+  y: Math.round(-(extent.rows - 1) / 2) * pitch.height + 0,
+});
 
 /** Drop overrides whose nodes are gone. */
 export const pruneOverlay = (graph: GraphModel, overlay: Overlay): Overlay => {
@@ -169,6 +264,8 @@ export type DynamicProjectionOptions = {
   onLink?: (edge: { from: string; to: string }) => void;
   /** Called for deleted nodes and edges instead of removing them from `graph`, for the same reason as `onLink`. */
   onDelete?: (ids: readonly string[]) => void;
+  /** Whether moves snap to `options.lattice` now; the view passes its snap and lattice toggles. */
+  constrained?: () => boolean;
 };
 
 export const createDynamicProjection = ({
@@ -179,10 +276,15 @@ export const createDynamicProjection = ({
   capabilities = dynamicCapabilities,
   onLink,
   onDelete,
+  constrained = () => true,
 }: DynamicProjectionOptions): Projection => {
   const scene = Atom.keepAlive(
     Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
   );
+  // A free force layout leaves nodes between cells, so it keeps the lattice's sizes but not its snapping or routing.
+  const lattice = options.arrange === 'force-free' ? undefined : options.lattice;
+  const constrain =
+    lattice && ((intent: Intent) => (constrained() ? constrainIntent(registry.get(scene), intent, lattice) : intent));
   const apply = (intent: Intent) => {
     switch (intent.kind) {
       case 'move': {
@@ -195,6 +297,13 @@ export const createDynamicProjection = ({
           }
         }
         registry.set(overlay, { positions });
+        break;
+      }
+      case 'resize': {
+        // The lattice rewrites a move as the cell it lands on; nodes keep their size, so only the centre is kept.
+        registry.set(overlay, {
+          positions: { ...registry.get(overlay).positions, [intent.id]: boundsCenter(intent.bounds) },
+        });
         break;
       }
       case 'link': {
@@ -251,8 +360,14 @@ export const createDynamicProjection = ({
   };
   return {
     scene,
-    apply,
+    apply: (intent) => {
+      const next = constrain ? constrain(intent) : intent;
+      if (next) {
+        apply(next);
+      }
+    },
     capabilities,
+    ...(constrain && { constrain, lattice }),
     // Both atoms in one model, so an undo restores the layout and the overrides together; a host that takes link and
     // delete owns the graph, so an undo here must not revive what its model removed.
     model: combinedSource({

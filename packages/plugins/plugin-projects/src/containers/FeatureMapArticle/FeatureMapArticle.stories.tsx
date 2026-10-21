@@ -56,6 +56,8 @@ const findCard = async (canvasElement: HTMLElement, name: string) => {
   if (!card) {
     throw new Error(`No card for ${name}`);
   }
+  // The board's masonry hides its tiles until they are measured, and a hidden card answers no role queries.
+  await waitFor(() => expect(card).toBeVisible(), { timeout: 10_000 });
   return card;
 };
 
@@ -188,35 +190,38 @@ export const NewFeature: Story = {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });
     await userEvent.click(canvas.getByTestId('feature-map.new-feature'));
-    // Every card holds a hidden name field; the new card's is the one that takes focus.
+    // The new card opens in edit mode with its name field focused.
     await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('feature-card.name.input'), {
       timeout: 5_000,
     });
     await userEvent.keyboard('Offline mode{Enter}');
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(9));
+    await userEvent.click(canvas.getByTestId('feature-card.done'));
     await expect(await canvas.findByText('Offline mode', undefined, { timeout: 5_000 })).toBeInTheDocument();
   },
 };
 
-/** A card's name and description are edited in place with a double-click. */
+/** The header's edit button puts a card in edit mode, where its name and description are fields. */
 export const EditInline: Story = {
   play: async ({ canvasElement }) => {
     const card = within(await findCard(canvasElement, 'Smart triage'));
-    await userEvent.dblClick(card.getByTestId('feature-card.name.preview'));
+    await userEvent.click(card.getByTestId('feature-card.edit'));
     const name = card.getByTestId('feature-card.name.input');
     await userEvent.clear(name);
     await userEvent.type(name, 'Smart inbox{Enter}');
+    const description = card.getByTestId('feature-card.description.input');
+    await userEvent.clear(description);
+    await userEvent.type(description, 'Sorts mail before you read it{Enter}');
+    await userEvent.click(card.getByTestId('feature-card.done'));
     await expect(await card.findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
-
-    await userEvent.dblClick(card.getByTestId('feature-card.description.preview'));
-    await userEvent.type(card.getByTestId('feature-card.description.input'), 'Sorts mail before you read it{Enter}');
     await expect(
       await card.findByText('Sorts mail before you read it', undefined, { timeout: 5_000 }),
     ).toBeInTheDocument();
+    await expect(card.queryByTestId('feature-card.name.input')).toBeNull();
   },
 };
 
-/** On the canvas a box's name opens from its pencil, since a double-click on the box opens the feature. */
+/** On the canvas a box's edit button opens its fields, since a double-click on the box opens the feature. */
 export const CanvasRename: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -228,12 +233,12 @@ export const CanvasRename: Story = {
     if (!node) {
       throw new Error('No box for Smart triage');
     }
-    const [pencil] = within(node).getAllByTestId('editable.edit');
-    await userEvent.click(pencil);
+    await userEvent.click(within(node).getByTestId('feature-card.edit'));
     const name = within(node).getByTestId('feature-card.name.input');
     await userEvent.clear(name);
     // Backspace inside the field must edit the text, not delete the selected box.
     await userEvent.type(name, 'Smart inbox{Backspace}x{Enter}');
+    await userEvent.click(within(node).getByTestId('feature-card.done'));
     await expect(await within(node).findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
     await expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8);
   },
